@@ -375,6 +375,8 @@ paths:
     $ref: './paths/graph.graph-search.yaml'
   /api/v2/relationships/{relationship_id}:
     $ref: './paths/graph.relationships.id.yaml'
+  /api/v2/nodes/{node_id}:
+    $ref: './paths/graph.nodes.id.yaml'
   /api/v2/graphs/shortest-path:
     $ref: './paths/graph.graphs.shortest-path.yaml'
   /api/v2/graphs/edge-composition:
@@ -617,6 +619,10 @@ paths:
     $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
   /api/v2/platform/{platform_id}/data-quality-stats:
     $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
+  /api/v2/data-quality-stats:
+    $ref: './paths/data-quality.data-quality-stats.yaml'
+  /api/v2/data-quality-stats-aggregations:
+    $ref: './paths/data-quality.data-quality-stats-aggregations.yaml'
   /api/v2/clear-database:
     $ref: './paths/data-quality.clear-database.yaml'
 
@@ -698,7 +704,13 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-#  tasks (deprecated)
+  # management operations
+  /api/v2/clients/management/start:
+    $ref: './paths/clients.clients.management.start.yaml'
+  /api/v2/clients/management/end:
+    $ref: './paths/clients.clients.management.end.yaml'
+
+  #  tasks (deprecated)
   /api/v2/tasks/available:
     $ref: './paths/tasks.tasks.available.yaml'
   /api/v2/tasks/finished:
@@ -735,8 +747,8 @@ paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:
     $ref: './paths/attack-paths.attack-paths-details.yaml'
-  # /api/v2/attack-paths/findings:
-  #   $ref: './paths/attack-paths.attack-paths-findings.yaml'
+  /api/v2/attack-paths/findings:
+    $ref: './paths/attack-paths.attack-paths-findings.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:

@@ -35,9 +35,11 @@ import (
 // formatting (tabs, newlines) is not load-bearing — token order, table
 // name, column names, parameter shape and the ON CONFLICT clause are.
 const (
-	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
+	expectedAnalysisStepsFull int32 = 15
 
-	expectedInsertSQL = `INSERT INTO analysis_request_switch (requested_by, request_type, requested_at, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (singleton) DO NOTHING`
+	expectedSelectSQL = `SELECT requested_by, request_type, requested_at, analysis_step, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships FROM analysis_request_switch LIMIT $1`
+
+	expectedInsertSQL = `INSERT INTO analysis_request_switch (requested_by, request_type, requested_at, analysis_step, delete_all_graph, delete_sourceless_graph, delete_source_kinds, delete_relationships) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (singleton) DO NOTHING`
 
 	expectedDeleteSQL = `DELETE FROM analysis_request_switch`
 )
@@ -53,7 +55,7 @@ func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 func analysisRequestRowColumns() []string {
 	return []string{
 		"requested_by", "request_type", "requested_at",
-		"delete_all_graph", "delete_sourceless_graph",
+		"analysis_step", "delete_all_graph", "delete_sourceless_graph",
 		"delete_source_kinds", "delete_relationships",
 	}
 }
@@ -88,6 +90,7 @@ func TestStore_GetAnalysisRequest(t *testing.T) {
 						expected.RequestedBy,
 						string(expected.RequestType),
 						expected.RequestedAt,
+						expectedAnalysisStepsFull,
 						expected.DeleteAllGraph,
 						expected.DeleteSourcelessGraph,
 						expected.DeleteSourceKinds,
@@ -161,6 +164,7 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 			requester,
 			string(services.RequestedAnalysisTypeAnalysis),
 			pgxmock.AnyArg(), // now
+			expectedAnalysisStepsFull,
 			false,
 			false,
 			[]string{},
@@ -169,13 +173,13 @@ func TestStore_CreateAnalysisRequest(t *testing.T) {
 		existingRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
 			return pool.NewRows(analysisRequestRowColumns()).AddRow(
 				otherUser, string(services.RequestedAnalysisTypeAnalysis), time.Now().UTC(),
-				false, false, []string{}, []string{},
+				expectedAnalysisStepsFull, false, false, []string{}, []string{},
 			)
 		}
 		createdRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
 			return pool.NewRows(analysisRequestRowColumns()).AddRow(
 				requester, string(services.RequestedAnalysisTypeAnalysis), time.Now().UTC(),
-				false, false, []string{}, []string{},
+				expectedAnalysisStepsFull, false, false, []string{}, []string{},
 			)
 		}
 	)
@@ -274,13 +278,13 @@ func TestStore_DeleteAnalysisRequest(t *testing.T) {
 		analysisRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
 			return pool.NewRows(analysisRequestRowColumns()).AddRow(
 				"test-user", string(services.RequestedAnalysisTypeAnalysis), time.Now().UTC(),
-				false, false, []string{}, []string{},
+				expectedAnalysisStepsFull, false, false, []string{}, []string{},
 			)
 		}
 		deletionRow = func(pool pgxmock.PgxPoolIface) *pgxmock.Rows {
 			return pool.NewRows(analysisRequestRowColumns()).AddRow(
 				"test-user", string(services.RequestedAnalysisTypeDeletion), time.Now().UTC(),
-				false, false, []string{}, []string{},
+				int32(0), false, false, []string{}, []string{},
 			)
 		}
 	)

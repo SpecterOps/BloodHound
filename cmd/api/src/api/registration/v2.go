@@ -82,11 +82,9 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 		// Permissions
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
-		routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), managementResource.GetPermission).RequirePermissions(permissions.AuthManageSelf),
 
 		// Roles
 		routerInst.GET("/api/v2/roles", managementResource.ListRoles).RequirePermissions(permissions.AuthManageSelf),
-		routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), managementResource.GetRole).RequirePermissions(permissions.AuthManageSelf),
 
 		// User management for all BloodHound users
 		routerInst.GET("/api/v2/bloodhound-users", managementResource.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers),
@@ -154,9 +152,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// App Config API
 		routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration),
 		routerInst.PUT("/api/v2/config", resources.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration),
-
-		routerInst.GET("/api/v2/features", resources.GetFlags).RequirePermissions(permissions.AppReadApplicationConfiguration),
-		routerInst.PUT("/api/v2/features/{feature_id}/toggle", resources.ToggleFlag).RequirePermissions(permissions.AppWriteApplicationConfiguration),
 
 		routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB),
 
@@ -351,16 +346,18 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
+		routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 
 		// Custom Node Management
-		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequireAuth(),
-		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
-		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequireAuth(),
-		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
-		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
+		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequirePermissions(permissions.OpenGraphRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequirePermissions(permissions.OpenGraphRead),
+		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
+		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite),
 
 		// Open Graph Schema
 		routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphWrite),

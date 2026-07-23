@@ -30,20 +30,6 @@ import (
 
 const tableSchemaRelationshipKinds = "schema_relationship_kinds"
 
-// kindRow is the package-local DB row type for a resolved relationship kind. The id is
-// the schema_relationship_kinds row id, which is null when the kind has no
-// schema_relationship_kinds entry; the name is the kind name from the kind table.
-// db: tags drive pgx.RowToStructByName scanning.
-type kindRow struct {
-	ID   *int32 `db:"id"`
-	Name string `db:"name"`
-}
-
-// toKind translates a raw kind row into the domain model.
-func toKind(row kindRow) services.Kind {
-	return services.Kind{ID: row.ID, Name: row.Name}
-}
-
 // toRelationship translates a graph relationship into the domain model. The kind id is
 // left zero-valued here; the service resolves it from the kind table.
 func toRelationship(relationship *graph.Relationship) services.Relationship {

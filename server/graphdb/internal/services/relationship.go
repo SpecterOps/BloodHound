@@ -17,18 +17,11 @@
 package services
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"slices"
 )
-
-// Kind is the domain representation of a relationship kind, pairing the kind name
-// recorded on the graph relationship with the integer identifier assigned to it in
-// the schema_relationship_kinds table. ID is nil when the kind has no
-// schema_relationship_kinds entry.
-type Kind struct {
-	ID   *int32
-	Name string
-}
 
 // Relationship is the domain representation of a graph relationship together with
 // its resolved kind, endpoint node ids, and properties.
@@ -38,6 +31,7 @@ type Relationship struct {
 	TargetNodeID int64
 	Kind         Kind
 	Properties   map[string]any
+	KindInfos    []KindInfo
 }
 
 // ErrRelationshipNotFound indicates that no graph relationship exists for the requested id.
@@ -49,25 +43,55 @@ var ErrKindNotFound = errors.New("relationship kind not found")
 
 // GetRelationship returns the relationship identified by the graph-assigned id with its
 // kind resolved to the integer identifier from the kind table. ErrRelationshipNotFound is
-// returned when the relationship does not exist; ErrKindNotFound when the relationship's
-// kind has no entry in the kind table.
-func (s *Service) GetRelationship(ctx context.Context, id int64) (Relationship, error) {
+// returned when the relationship does not exist. If the kind has no entry in the
+// schema_relationship_kinds table, the relationship is returned with Kind.Name populated
+// and Kind.ID set to nil (best-effort resolution).
+func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo bool) (Relationship, error) {
 	var (
 		relationship Relationship
 		kind         Kind
 		err          error
 	)
 
-	relationship, err = s.db.GetRelationship(ctx, id)
-	if err != nil {
+	if relationship, err = s.db.GetRelationship(ctx, id); err != nil {
 		return Relationship{}, err
+	} else if kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name); errors.Is(err, ErrKindNotFound) {
+		// Kind exists in the graph but not in schema_relationship_kinds; return with nil ID
+		return relationship, nil
+	} else if err != nil {
+		return Relationship{}, err
+	} else {
+		relationship.Kind = kind
 	}
 
-	kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name)
-	if err != nil {
-		return Relationship{}, err
+	if includeKindInfo && relationship.Kind.ID != nil {
+		kindInfos, err := s.db.GetKindInfos(ctx, relationship.Kind.Name)
+		if err != nil {
+			return Relationship{}, err
+		}
+
+		var allKindInfos []KindInfo
+		for _, kindInfo := range kindInfos {
+			if kindInfo.RelationshipKindID == nil {
+				continue
+			}
+
+			allKindInfos = append(allKindInfos, kindInfo)
+		}
+
+		// Sort all kind infos by Position -> Title -> Kind ID
+		slices.SortFunc(allKindInfos, func(left, right KindInfo) int {
+			if result := cmp.Compare(left.Position, right.Position); result != 0 {
+				return result
+			} else if result := cmp.Compare(left.Title, right.Title); result != 0 {
+				return result
+			} else {
+				return cmp.Compare(*left.RelationshipKindID, *right.RelationshipKindID)
+			}
+		})
+
+		relationship.KindInfos = allKindInfos
 	}
 
-	relationship.Kind = kind
 	return relationship, nil
 }

@@ -84,7 +84,7 @@ const CreateUserForm: React.FC<{
                             disabled={props.isLoading}
                             role='button'
                             type='button'
-                            variant='tertiary'>
+                            variant='secondary'>
                             Close
                         </Button>
                     </DialogClose>
@@ -524,7 +524,7 @@ const CreateUserFormInner: React.FC<{
                                 <Button
                                     type='button'
                                     disabled={isLoading}
-                                    variant='tertiary'
+                                    variant='secondary'
                                     data-testid='create-user-dialog_button-cancel'>
                                     Cancel
                                 </Button>

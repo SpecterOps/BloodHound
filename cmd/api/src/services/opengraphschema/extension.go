@@ -18,6 +18,7 @@ package opengraphschema
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -35,7 +36,14 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	if err = openGraphExtension.Validate(); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+		// Translate kind info database errors to validation errors
+		if errors.Is(err, model.ErrKindInfoKindNotFound) ||
+			errors.Is(err, model.ErrKindInfoDuplicatePosition) ||
+			errors.Is(err, model.ErrKindInfoDuplicateInfoKey) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
@@ -73,10 +81,10 @@ func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionI
 	return nil
 }
 
-// GetEnvironmentKindsAndEnvironmentExtensionDisplayNames - returns all environment kinds as graph.Kinds and a map of
-// their extension display names. If the findings feature flag is not enabled, it will only return builtin environment kinds.
+// GetEnvironmentKindsAndSchemaEnvironmentData - returns all environment kinds as graph.Kinds and a map of
+// their schema environments. If the findings feature flag is not enabled, it will only return builtin environment kinds.
 // TODO: Remove the onlyBuiltin parameter once the appcfg.FeatureOpenGraphFindings feature flag is removed.
-func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(ctx context.Context, onlyBuiltin bool) (graph.Kinds, map[string]string, error) {
+func (s *OpenGraphSchemaService) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error) {
 	var filters = make(model.Filters)
 	if onlyBuiltin {
 		filters = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true", SetOperator: model.FilterAnd}}}
@@ -86,12 +94,12 @@ func (s *OpenGraphSchemaService) GetEnvironmentKindsAndEnvironmentExtensionDispl
 	} else {
 		// Build environment kind mappings
 		environmentKinds := make([]graph.Kind, 0)
-		envKindToExtensionDisplayName := make(map[string]string, len(environments))
+		envKindToEnvironment := make(model.EnvironmentKindsToEnvironment, len(environments))
 		for _, env := range environments {
 			environmentKinds = append(environmentKinds, graph.StringKind(env.EnvironmentKindName))
-			envKindToExtensionDisplayName[env.EnvironmentKindName] = env.SchemaExtensionDisplayName
+			envKindToEnvironment[env.EnvironmentKindName] = env
 		}
-		return environmentKinds, envKindToExtensionDisplayName, nil
+		return environmentKinds, envKindToEnvironment, nil
 	}
 }
 

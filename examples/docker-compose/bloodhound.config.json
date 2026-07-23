@@ -15,6 +15,6 @@
     "principal_name": "admin",
     "first_name": "BloodHound",
     "last_name": "Admin",
-    "email_address": "spam@example.com"
+    "email_address": "admin@example.com"
   }
 }

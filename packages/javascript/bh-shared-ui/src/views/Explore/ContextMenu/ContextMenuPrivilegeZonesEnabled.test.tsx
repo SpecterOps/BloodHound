@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { createAuthStateWithPermissions } from '../../../mocks';
+import { createAuthStateWithPermissions, mockSourceKindsHandler } from '../../../mocks';
 import { render, screen, waitFor } from '../../../test-utils';
 import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
@@ -37,12 +37,17 @@ const server = setupServer(
             })
         );
     }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+    rest.get('/api/v2/nodes/1234', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
-                    nodes: { abc: { objectId: 'abc' }, def: { objectId: 'def' } },
-                    edges: [],
+                    node_id: 1234,
+                    kinds: [{ node_kind_id: 3, name: 'User' }],
+                    properties: {
+                        objectid: 'abc',
+                        name: 'Test Node',
+                        lastSeen: '2025-01-01T00:00:00Z',
+                    },
                 },
             })
         );
@@ -78,7 +83,8 @@ const server = setupServer(
                 },
             })
         );
-    })
+    }),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
@@ -88,7 +94,7 @@ afterAll(() => server.close());
 describe('ContextMenu', () => {
     it('renders asset group edit options with graph write permissions', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', {
@@ -129,7 +135,7 @@ describe('ContextMenu', () => {
         );
 
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', {
@@ -160,7 +166,7 @@ describe('ContextMenu', () => {
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', {
@@ -177,7 +183,7 @@ describe('ContextMenu', () => {
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&secondarySearch=def',
+            route: '/test?selectedItem=1234&secondarySearch=def',
         });
 
         const startNodeOption = await screen.findByRole('menuitem', {
@@ -193,7 +199,7 @@ describe('ContextMenu', () => {
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const endNodeOption = await screen.findByRole('menuitem', {
@@ -209,7 +215,7 @@ describe('ContextMenu', () => {
 
     it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc&primarySearch=def',
+            route: '/test?selectedItem=1234&primarySearch=def',
         });
 
         const endNodeOption = await screen.findByRole('menuitem', {
@@ -225,7 +231,7 @@ describe('ContextMenu', () => {
 
     it('opens a submenu when user hovers over `Copy`', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const user = userEvent.setup();

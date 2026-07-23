@@ -16,7 +16,12 @@
 import { faWarning } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, CircularProgress, FormControlLabel, Switch, Typography } from '@mui/material';
-import { AssetGroupTagTypeDecoy, SeedTypeObjectId, type AssetGroup } from 'js-client-library';
+import {
+    AssetGroupTagTypeDecoy,
+    SeedTypeObjectId,
+    type AssetGroup,
+    type AssetGroupTagSelector,
+} from 'js-client-library';
 import React from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { DECOY_OBJECT_TAG, TAG_DECOY_AGT } from '../../constants';
@@ -125,13 +130,30 @@ const hasAgtDecoyTag = (kinds: string[] = []): boolean => {
     return kinds.includes(TAG_DECOY_AGT);
 };
 
+interface MatchingDecoySelectorResult {
+    hasMatchingSelector: boolean;
+    removableSelector?: AssetGroupTagSelector;
+}
+
+const isStandaloneObjectIdSelector = (selector: AssetGroupTagSelector, objectId: string): boolean => {
+    const seed = selector.seeds[0];
+
+    return (
+        selector.is_default !== true &&
+        selector.seeds.length === 1 &&
+        seed.type === SeedTypeObjectId &&
+        seed.value === objectId
+    );
+};
+
 const PotentialDecoyBanner: React.FC<{
     kinds?: string[];
+    nodeId?: number;
     nodeType: string;
     objectId: string;
     onDecoyUpdated?: () => void;
     properties?: Record<string, any>;
-}> = ({ kinds = [], nodeType, objectId, onDecoyUpdated = () => {}, properties = {} }) => {
+}> = ({ kinds = [], nodeId, nodeType, objectId, onDecoyUpdated = () => {}, properties = {} }) => {
     const [decoyStateOverride, setDecoyStateOverride] = React.useState<boolean>();
     const queryClient = useQueryClient();
     const { addNotification } = useNotifications();
@@ -173,17 +195,29 @@ const PotentialDecoyBanner: React.FC<{
 
     const agtSelectorsQuery = useQuery(
         ['decoyAssetGroupTagSelector', decoyTag?.id, objectId],
-        () =>
-            apiClient
-                .getAssetGroupTagSelectors(decoyTag!.id, {
-                    params: {
-                        disabled_at: 'eq:null',
-                        limit: 1,
-                        type: `eq:${SeedTypeObjectId}`,
-                        value: `eq:${objectId}`,
-                    },
-                })
-                .then((res) => res.data.data.selectors?.[0]),
+        async (): Promise<MatchingDecoySelectorResult> => {
+            const response = await apiClient.getAssetGroupTagSelectors(decoyTag!.id, {
+                params: {
+                    disabled_at: 'eq:null',
+                    limit: 2,
+                    type: `eq:${SeedTypeObjectId}`,
+                    value: `eq:${objectId}`,
+                },
+            });
+            const matchingSelectors = response.data.data.selectors ?? [];
+
+            if (matchingSelectors.length !== 1) {
+                return { hasMatchingSelector: matchingSelectors.length > 0 };
+            }
+
+            const selectorResponse = await apiClient.getAssetGroupTagSelector(decoyTag!.id, matchingSelectors[0].id);
+            const selector = selectorResponse.data.data.selector;
+
+            return {
+                hasMatchingSelector: true,
+                removableSelector: isStandaloneObjectIdSelector(selector, objectId) ? selector : undefined,
+            };
+        },
         {
             enabled:
                 isTierManagementEnabled &&
@@ -194,8 +228,29 @@ const PotentialDecoyBanner: React.FC<{
         }
     );
 
+    const agtMembershipQuery = useQuery(
+        ['decoyAssetGroupTagMembership', decoyTag?.id, nodeId],
+        () =>
+            apiClient
+                .getAssetGroupTagMemberInfo(decoyTag!.id, nodeId!)
+                .then((res) => res.data.data.member.selectors ?? []),
+        {
+            enabled: isTierManagementEnabled && hasPermission && !!decoyTag && nodeId !== undefined && markedByGraph,
+        }
+    );
+
+    const removableSelector = agtSelectorsQuery.data?.removableSelector;
+    const isOnlyMembershipSource =
+        !markedByGraph ||
+        (agtMembershipQuery.data?.length === 1 && agtMembershipQuery.data[0].id === removableSelector?.id);
+    const canRemoveAgtDecoy = removableSelector !== undefined && isOnlyMembershipSource;
+    const canRemoveLegacyDecoy =
+        legacyMembersQuery.data?.length === 1 && legacyMembersQuery.data[0].custom_member === true;
+
     const serverMarkedDecoy =
-        markedByGraph || (legacyMembersQuery.data?.length ?? 0) > 0 || agtSelectorsQuery.data !== undefined;
+        markedByGraph ||
+        (legacyMembersQuery.data?.length ?? 0) > 0 ||
+        agtSelectorsQuery.data?.hasMatchingSelector === true;
     const isMarkedDecoy = decoyStateOverride ?? serverMarkedDecoy;
 
     React.useEffect(() => {
@@ -225,12 +280,17 @@ const PotentialDecoyBanner: React.FC<{
                     });
                 }
 
-                if (!agtSelectorsQuery.data) return Promise.resolve();
+                if (!canRemoveAgtDecoy || !removableSelector) {
+                    return Promise.reject(new Error('Decoy membership must be removed from its rules'));
+                }
 
-                return apiClient.deleteAssetGroupTagSelector(decoyTag.id, agtSelectorsQuery.data.id);
+                return apiClient.deleteAssetGroupTagSelector(decoyTag.id, removableSelector.id);
             }
 
             if (!decoyAssetGroup) return Promise.reject(new Error('Decoy asset group not found'));
+            if (!checked && !canRemoveLegacyDecoy) {
+                return Promise.reject(new Error('Decoy membership must be removed from its selectors'));
+            }
 
             return apiClient.updateAssetGroupSelector(decoyAssetGroup.id, [
                 {
@@ -250,6 +310,7 @@ const PotentialDecoyBanner: React.FC<{
             onSuccess: (_data, checked) => {
                 queryClient.invalidateQueries(['decoyAssetGroupMembers', decoyAssetGroup?.id, objectId]);
                 queryClient.invalidateQueries(['decoyAssetGroupTagSelector', decoyTag?.id, objectId]);
+                queryClient.invalidateQueries(['decoyAssetGroupTagMembership', decoyTag?.id, nodeId]);
                 onDecoyUpdated();
                 addNotification(
                     checked ? 'Object marked as decoy.' : 'Object unmarked as decoy.',
@@ -271,9 +332,16 @@ const PotentialDecoyBanner: React.FC<{
         tierFlagQuery.isLoading ||
         legacyAssetGroupsQuery.isLoading ||
         legacyMembersQuery.isLoading ||
-        agtSelectorsQuery.isLoading;
+        agtSelectorsQuery.isLoading ||
+        agtMembershipQuery.isLoading;
 
-    const toggleDisabled = isLoading || !objectId || (isTierManagementEnabled ? !decoyTag : !decoyAssetGroup);
+    const canRemoveDecoy = isTierManagementEnabled ? canRemoveAgtDecoy : canRemoveLegacyDecoy;
+    const requiresRuleManagement = isMarkedDecoy && !isLoading && !canRemoveDecoy;
+    const toggleDisabled =
+        isLoading ||
+        !objectId ||
+        (isTierManagementEnabled ? !decoyTag : !decoyAssetGroup) ||
+        (isMarkedDecoy && !canRemoveDecoy);
 
     return (
         <Box
@@ -293,9 +361,11 @@ const PotentialDecoyBanner: React.FC<{
                     color='text.primary'
                     variant='caption'
                     className={cn('leading-[1.3]', isMarkedDecoy ? 'font-semibold' : 'font-medium')}>
-                    {isMarkedDecoy
-                        ? 'This object is marked as a decoy.'
-                        : `No recorded AD logon, enabled, older than ${POTENTIAL_DECOY_MIN_AGE_DAYS} days; this user might be a decoy.`}
+                    {isMarkedDecoy && requiresRuleManagement
+                        ? 'This object is marked as a decoy by one or more rules. Manage its Decoy rules to remove it.'
+                        : isMarkedDecoy
+                          ? 'This object is marked as a decoy.'
+                          : `No recorded AD logon, enabled, older than ${POTENTIAL_DECOY_MIN_AGE_DAYS} days; this user might be a decoy.`}
                 </Typography>
             </Box>
             {hasPermission && (

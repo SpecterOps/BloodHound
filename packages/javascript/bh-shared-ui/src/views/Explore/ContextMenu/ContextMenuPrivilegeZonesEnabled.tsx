@@ -19,17 +19,15 @@ import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
     CreateSelectorRequest,
+    NodeDetails,
     SeedTypeObjectId,
 } from 'js-client-library';
 import { FC } from 'react';
 import {
-    getIsDecoyTag,
-    getIsOwnedTag,
-    getIsTierZeroTag,
-    isDecoyObject,
-    isNode,
-    isOwnedObject,
-    isTierZero,
+    getDecoyTag,
+    getOwnedTag,
+    getTierZeroTag,
+    isNodeResponse,
     useExploreParams,
     useExploreSelectedItem,
     usePZPathParams,
@@ -45,47 +43,43 @@ const ContextMenu: FC<{
     const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
     const { tagDetailsLink } = usePZPathParams();
 
-    const node = selectedItemQuery.data && isNode(selectedItemQuery.data) ? selectedItemQuery.data : undefined;
+    const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeDetails) : undefined;
 
-    const objectIdSelectorPayload: CreateSelectorRequest | undefined = node
-        ? {
-              name: node.label ?? node.objectId,
-              seeds: [
-                  {
-                      type: SeedTypeObjectId,
-                      value: node.objectId,
-                  },
-              ],
-          }
-        : undefined;
+    const objectIdSelectorPayload: CreateSelectorRequest = {
+        name: node?.properties.name ?? node?.properties.objectid ?? '',
+        seeds: [
+            {
+                type: SeedTypeObjectId,
+                value: node?.properties.objectid ?? '',
+            },
+        ],
+    };
 
-    const tierZeroPayload: CreateSelectorRequest | undefined = objectIdSelectorPayload
-        ? {
-              ...objectIdSelectorPayload,
-              auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
-          }
-        : undefined;
+    const tierZeroPayload: CreateSelectorRequest = {
+        ...objectIdSelectorPayload,
+        auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
+    };
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             const searchType = secondarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                primarySearch: selectedItemData?.objectId,
+                primarySearch: selectedItemData?.properties.objectid,
             });
         }
     };
 
     const handleSetEndingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             const searchType = primarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                secondarySearch: selectedItemData?.objectId,
+                secondarySearch: selectedItemData?.properties.objectid,
             });
         }
     };
@@ -103,31 +97,24 @@ const ContextMenu: FC<{
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            {objectIdSelectorPayload && tierZeroPayload && (
-                <>
-                    <AssetGroupMenuItem
-                        addNodePayload={tierZeroPayload}
-                        isCurrentMemberFn={isTierZero}
-                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
-                        showConfirmationOnAdd
-                        tagIdentifierFn={getIsTierZeroTag}
-                    />
+            <AssetGroupMenuItem
+                addNodePayload={tierZeroPayload}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
+                showConfirmationOnAdd
+                tagIdentifierFn={getTierZeroTag}
+            />
 
-                    <AssetGroupMenuItem
-                        addNodePayload={objectIdSelectorPayload}
-                        isCurrentMemberFn={isOwnedObject}
-                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                        tagIdentifierFn={getIsOwnedTag}
-                    />
+            <AssetGroupMenuItem
+                addNodePayload={objectIdSelectorPayload}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                tagIdentifierFn={getOwnedTag}
+            />
 
-                    <AssetGroupMenuItem
-                        addNodePayload={objectIdSelectorPayload}
-                        isCurrentMemberFn={isDecoyObject}
-                        removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
-                        tagIdentifierFn={getIsDecoyTag}
-                    />
-                </>
-            )}
+            <AssetGroupMenuItem
+                addNodePayload={objectIdSelectorPayload}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                tagIdentifierFn={getDecoyTag}
+            />
 
             <CopyMenuItem />
         </Menu>

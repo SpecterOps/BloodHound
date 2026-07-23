@@ -20,11 +20,27 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 )
 
 // tableKind is the kind table joined when resolving entity kinds to their integer ids.
 const tableKind = "kind"
+
+// kindRow is the package-local DB row type for a resolved kind. The id is the
+// schema_node_kinds or schema_relationship_kinds row id; the name is the kind name
+// from the kind table. db: tags drive pgx.RowToStructByName scanning. ID is nullable
+// to support LEFT JOIN queries where the kind exists in the kind table but not in the
+// schema_*_kinds table.
+type kindRow struct {
+	ID   *int32 `db:"id"`
+	Name string `db:"name"`
+}
+
+// toKind translates a raw kind row into the domain model.
+func toKind(row kindRow) services.Kind {
+	return services.Kind{ID: row.ID, Name: row.Name}
+}
 
 // graphReader is the minimal graph-database surface this store relies on to read graph
 // entities. Only ReadTransaction is required, keeping the abstraction scoped to what is

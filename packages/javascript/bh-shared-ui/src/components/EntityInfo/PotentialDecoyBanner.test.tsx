@@ -40,6 +40,7 @@ const basePotentialDecoyProperties = {
 };
 
 const objectId = basePotentialDecoyProperties[CommonKindProperties.ObjectID];
+const nodeId = 42;
 
 const decoyTag = {
     id: 4,
@@ -67,6 +68,7 @@ let selectorRequestBody: any;
 let deletedSelectorId: string | undefined;
 let legacySelectorChangeset: any;
 let agtSelectors: AssetGroupTagSelector[] = [];
+let agtMemberSelectors: AssetGroupTagSelector[] = [];
 let legacyMembers: Record<string, any>[] = [];
 
 const server = setupServer(
@@ -90,6 +92,13 @@ const server = setupServer(
     rest.get('/api/v2/asset-group-tags/:tagId/selectors', (req, res, ctx) => {
         selectorQueryParams = req.url.searchParams;
         return res(ctx.json({ data: { selectors: agtSelectors } }));
+    }),
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', (req, res, ctx) => {
+        const selector = agtSelectors.find(({ id }) => id.toString() === req.params.selectorId);
+        return selector ? res(ctx.json({ data: { selector } })) : res(ctx.status(404));
+    }),
+    rest.get('/api/v2/asset-group-tags/:tagId/members/:memberId', (_req, res, ctx) => {
+        return res(ctx.json({ data: { member: { selectors: agtMemberSelectors } } }));
     }),
     rest.post('/api/v2/asset-group-tags/:tagId/selectors', async (req, res, ctx) => {
         selectorRequestBody = await req.json();
@@ -123,6 +132,7 @@ beforeEach(() => {
     deletedSelectorId = undefined;
     legacySelectorChangeset = undefined;
     agtSelectors = [];
+    agtMemberSelectors = [];
     legacyMembers = [];
 });
 
@@ -220,7 +230,7 @@ describe('PotentialDecoyBanner', () => {
         expect(await screen.findByRole('alert')).toHaveTextContent(/might be a decoy/i);
 
         await waitFor(() => {
-            expect(selectorQueryParams?.get('limit')).toBe('1');
+            expect(selectorQueryParams?.get('limit')).toBe('2');
             expect(selectorQueryParams?.get('type')).toBe(`eq:${SeedTypeObjectId}`);
             expect(selectorQueryParams?.get('value')).toBe(`eq:${objectId}`);
         });
@@ -266,18 +276,20 @@ describe('PotentialDecoyBanner', () => {
         });
     });
 
-    it('deletes the AGT selector when unmarking a decoy', async () => {
-        agtSelectors = [
-            {
-                id: 12,
-                asset_group_tag_id: decoyTag.id,
-                name: oldPotentialDecoyProperties[CommonKindProperties.Name],
-                seeds: [{ type: SeedTypeObjectId, value: objectId }],
-            } as AssetGroupTagSelector,
-        ];
+    it('deletes a standalone AGT selector when it is the only source of decoy membership', async () => {
+        const standaloneSelector = {
+            id: 12,
+            asset_group_tag_id: decoyTag.id,
+            name: oldPotentialDecoyProperties[CommonKindProperties.Name],
+            seeds: [{ type: SeedTypeObjectId, value: objectId }],
+        } as AssetGroupTagSelector;
+        agtSelectors = [standaloneSelector];
+        agtMemberSelectors = [standaloneSelector];
 
         render(
             <PotentialDecoyBanner
+                kinds={[TAG_DECOY_AGT]}
+                nodeId={nodeId}
                 nodeType={ActiveDirectoryNodeKind.User}
                 objectId={objectId}
                 properties={oldPotentialDecoyProperties}
@@ -300,9 +312,74 @@ describe('PotentialDecoyBanner', () => {
         });
     });
 
+    it('does not delete a selector that contains seeds for other objects', async () => {
+        agtSelectors = [
+            {
+                id: 12,
+                asset_group_tag_id: decoyTag.id,
+                name: oldPotentialDecoyProperties[CommonKindProperties.Name],
+                seeds: [
+                    { type: SeedTypeObjectId, value: objectId },
+                    { type: SeedTypeObjectId, value: 'another-object-id' },
+                ],
+            } as AssetGroupTagSelector,
+        ];
+
+        render(
+            <PotentialDecoyBanner
+                nodeType={ActiveDirectoryNodeKind.User}
+                objectId={objectId}
+                properties={oldPotentialDecoyProperties}
+            />
+        );
+
+        const markDecoySwitch = await screen.findByRole('checkbox', {
+            name: /mark object as decoy/i,
+        });
+
+        await waitFor(() => {
+            expect(markDecoySwitch).toBeChecked();
+            expect(markDecoySwitch).toBeDisabled();
+        });
+        expect(screen.getByRole('status')).toHaveTextContent(/manage its decoy rules/i);
+        expect(deletedSelectorId).toBeUndefined();
+    });
+
+    it('does not report inherited rule membership as directly removable', async () => {
+        agtMemberSelectors = [
+            {
+                id: 13,
+                asset_group_tag_id: decoyTag.id,
+                name: 'Inherited Decoy Membership',
+                seeds: [{ type: 2, value: 'MATCH (n) RETURN n' }],
+            } as AssetGroupTagSelector,
+        ];
+
+        render(
+            <PotentialDecoyBanner
+                kinds={[TAG_DECOY_AGT]}
+                nodeId={nodeId}
+                nodeType={ActiveDirectoryNodeKind.User}
+                objectId={objectId}
+                properties={oldPotentialDecoyProperties}
+            />
+        );
+
+        const markDecoySwitch = await screen.findByRole('checkbox', {
+            name: /mark object as decoy/i,
+        });
+
+        await waitFor(() => {
+            expect(markDecoySwitch).toBeChecked();
+            expect(markDecoySwitch).toBeDisabled();
+        });
+        expect(screen.getByRole('status')).toHaveTextContent(/manage its decoy rules/i);
+        expect(deletedSelectorId).toBeUndefined();
+    });
+
     it('removes the legacy selector when unmarking a decoy', async () => {
         featureFlagEnabled = false;
-        legacyMembers = [{ object_id: objectId }];
+        legacyMembers = [{ object_id: objectId, custom_member: true }];
 
         render(
             <PotentialDecoyBanner
@@ -332,6 +409,56 @@ describe('PotentialDecoyBanner', () => {
                 },
             ]);
         });
+    });
+
+    it('does not report inherited legacy membership as directly removable', async () => {
+        featureFlagEnabled = false;
+        legacyMembers = [{ object_id: objectId, custom_member: false }];
+
+        render(
+            <PotentialDecoyBanner
+                nodeType={ActiveDirectoryNodeKind.User}
+                objectId={objectId}
+                properties={oldPotentialDecoyProperties}
+            />
+        );
+
+        const markDecoySwitch = await screen.findByRole('checkbox', {
+            name: /mark object as decoy/i,
+        });
+
+        await waitFor(() => {
+            expect(markDecoySwitch).toBeChecked();
+            expect(markDecoySwitch).toBeDisabled();
+        });
+        expect(screen.getByRole('status')).toHaveTextContent(/manage its decoy rules/i);
+        expect(legacySelectorChangeset).toBeUndefined();
+    });
+
+    it('does not remove ambiguous legacy membership results', async () => {
+        featureFlagEnabled = false;
+        legacyMembers = [
+            { object_id: objectId, custom_member: true },
+            { object_id: objectId, custom_member: true },
+        ];
+
+        render(
+            <PotentialDecoyBanner
+                nodeType={ActiveDirectoryNodeKind.User}
+                objectId={objectId}
+                properties={oldPotentialDecoyProperties}
+            />
+        );
+
+        const markDecoySwitch = await screen.findByRole('checkbox', {
+            name: /mark object as decoy/i,
+        });
+
+        await waitFor(() => {
+            expect(markDecoySwitch).toBeChecked();
+            expect(markDecoySwitch).toBeDisabled();
+        });
+        expect(legacySelectorChangeset).toBeUndefined();
     });
 
     it('hides the toggle without graph write permission', async () => {

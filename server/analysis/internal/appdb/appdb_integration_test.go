@@ -170,6 +170,22 @@ func TestStore_CreateAnalysisRequest_Integration(t *testing.T) {
 		assert.False(t, created)
 		assert.Equal(t, "first-user", current.RequestedBy)
 	})
+
+	t.Run("created analysis request stores full analysis steps", func(t *testing.T) {
+		var (
+			analysisSteps int32
+			ctx           = context.Background()
+			store, pool   = setupStoreAndPool(t)
+		)
+
+		_, created, err := store.CreateAnalysisRequest(ctx, "test-user")
+		require.NoError(t, err)
+		require.True(t, created)
+
+		err = pool.QueryRow(ctx, `SELECT analysis_step FROM analysis_request_switch LIMIT 1`).Scan(&analysisSteps)
+		require.NoError(t, err)
+		assert.Equal(t, expectedAnalysisStepsFull, analysisSteps)
+	})
 }
 
 // setupStoreAndPool is like setupStore but also returns the underlying pgxpool.Pool so

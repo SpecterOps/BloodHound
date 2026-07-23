@@ -16,7 +16,14 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, Permission, createAuthStateWithPermissions, mockGetConfigurationHandler } from 'bh-shared-ui';
+import {
+    DeepPartial,
+    Permission,
+    createAuthStateWithPermissions,
+    mockGetConfigurationHandler,
+    mockSourceKindsHandler,
+} from 'bh-shared-ui';
+import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -28,11 +35,18 @@ const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
 const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
 
 const fakeSelectedItemId = 'abc';
+
+const mockNode: NodeDetails = {
+    node_id: 1,
+    kinds: [],
+    properties: {
+        objectid: fakeSelectedItemId,
+    },
+};
+
 mockSelectedItemQuery.mockReturnValue({
     selectedItemQuery: {
-        data: {
-            objectId: fakeSelectedItemId,
-        },
+        data: mockNode,
     },
 } as any);
 
@@ -60,7 +74,8 @@ const server = setupServer(
             })
         );
     }),
-    mockGetConfigurationHandler()
+    mockGetConfigurationHandler(),
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
@@ -73,6 +88,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
             assetGroups: [
                 { tag: 'owned', id: 1 },
                 { tag: 'admin_tier_0', id: 2 },
+                { tag: 'decoy', id: 3 },
             ],
         },
     };
@@ -106,11 +122,13 @@ describe('ContextMenu', async () => {
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         const addToHighValueOption = screen.getByRole('menuitem', { name: /add to high value/i });
         const addToOwnedOption = screen.getByRole('menuitem', { name: /add to owned/i });
+        const addToDecoyOption = screen.getByRole('menuitem', { name: /add to decoy/i });
 
         expect(startNodeOption).toBeInTheDocument();
         expect(endNodeOption).toBeInTheDocument();
         expect(addToHighValueOption).toBeInTheDocument();
         expect(addToOwnedOption).toBeInTheDocument();
+        expect(addToDecoyOption).toBeInTheDocument();
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {

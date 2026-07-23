@@ -52,10 +52,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "active-directory",
-					Name:      "Node1",
-					ObjectID:  "1",
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "active-directory"},
+					Name:                  "Node1",
+					ObjectID:              "1",
+					Collected:             false,
 				},
 			},
 		},
@@ -75,10 +75,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "azure",
-					Name:      "Node2",
-					ObjectID:  "2",
-					Collected: true,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "azure"},
+					Name:                  "Node2",
+					ObjectID:              "2",
+					Collected:             true,
 				},
 			},
 		},
@@ -93,10 +93,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "",
-					Name:      graphschema.DefaultMissingName,
-					ObjectID:  graphschema.DefaultMissingObjectId,
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{},
+					Name:                  graphschema.DefaultMissingName,
+					ObjectID:              graphschema.DefaultMissingObjectId,
+					Collected:             false,
 				},
 			},
 		},
@@ -104,7 +104,7 @@ func Test_SetNodeProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{})
+			got := BuildEnvironmentSelectors(tt.nodes, model.EnvironmentKindsToEnvironment{})
 			assert.Equal(t, tt.expected, got, tt.name)
 		})
 	}

@@ -280,7 +280,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 			}
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
-				// When T0 asset group selectors are modified, entire analysis must be re-run
+				// When T0 asset group selectors are modified, analysis must be re-run
 				var userId string
 				if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 					slog.WarnContext(
@@ -293,7 +293,7 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeNoPostProcessing); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}

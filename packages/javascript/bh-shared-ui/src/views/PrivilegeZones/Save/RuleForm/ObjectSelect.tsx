@@ -28,13 +28,13 @@ import {
     TableRow,
     Tooltip,
 } from 'doodle-ui';
-import { FC, useState } from 'react';
+import { useState } from 'react';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
 import { SearchValue } from '../../../Explore';
 import { useRuleFormContext } from './RuleFormContext';
 
-const ObjectSelect: FC = () => {
+const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
     const { selectedObjects, dispatch } = useRuleFormContext();
     const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -61,6 +61,7 @@ const ObjectSelect: FC = () => {
                 <div className='flex content-center mb-3'>
                     <div className='w-full my-2'>
                         <ExploreSearchCombobox
+                            errorMessage={errorMessage}
                             labelText='Search Objects To Add'
                             inputValue={searchTerm}
                             selectedItem={null}

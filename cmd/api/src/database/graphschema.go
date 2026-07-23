@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -90,6 +91,12 @@ type OpenGraphSchema interface {
 	DeletePrincipalKind(ctx context.Context, environmentId int32, principalKind int32) error
 
 	GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error)
+
+	// Entity Panels:
+	CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error)
+	UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error)
+	GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error)
+	DeleteKindInfo(ctx context.Context, kindInfoID int32) error
 }
 
 const (
@@ -237,6 +244,8 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 	)
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+
 		// Retrieve the extension to check if it exists and if it's built-in
 		if result := tx.Raw(fmt.Sprintf(`SELECT is_builtin FROM %s WHERE id = ?`, schemaExtension.TableName()), extensionId).Scan(&isBuiltin); result.Error != nil {
 			return CheckError(result)
@@ -247,6 +256,25 @@ func (s *BloodhoundDB) DeleteGraphSchemaExtension(ctx context.Context, extension
 		// Prevent deletion of built-in extensions
 		if isBuiltin {
 			return model.ErrGraphExtensionBuiltIn
+		}
+
+		// Before deleting the extension (which cascades to schema_node_kinds), create stubs in custom_node_kinds for all non-display
+		// node kinds. Non-display kinds are not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless
+		// node kind of the same name existed before this extension upserted it to a non-display node kind, which removes it from the custom
+		// node table. Because of this edge case, inserting stubs here for the non-display node kinds ensures that those node kinds will
+		// remain tracked even after the schema is gone, in the event any nodes of those kinds remain in the graph.
+		nodeKinds, err := bhdb.GetGraphSchemaNodeKindsByExtensionId(ctx, extensionId)
+		if err != nil {
+			return fmt.Errorf("failed to fetch node kinds for extension %d: %w", extensionId, err)
+		}
+
+		for _, nodeKind := range nodeKinds {
+			if !nodeKind.IsDisplayKind {
+				// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+				if _, err := bhdb.CreateCustomNodeKinds(ctx, model.CustomNodeKinds{{KindName: nodeKind.Name, Config: CustomNodeKindStubConfig}}); err != nil && !errors.Is(err, ErrDuplicateCustomNodeKindName) {
+					return fmt.Errorf("failed to create stub for non-display node kind %q: %w", nodeKind.Name, err)
+				}
+			}
 		}
 
 		// Delete the extension
@@ -280,7 +308,7 @@ func (s *BloodhoundDB) CreateGraphSchemaNodeKind(ctx context.Context, name strin
 		FROM dawgs_kind dk
 		RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 	)
-	SELECT isn.id, isn.schema_extension_id, dk.name, isn.display_name, isn.description, isn.is_display_kind, isn.icon, isn.icon_color, isn.created_at, isn.updated_at, isn.deleted_at
+	SELECT isn.id, isn.kind_id, isn.schema_extension_id, dk.name, isn.display_name, isn.description, isn.is_display_kind, isn.icon, isn.icon_color, isn.created_at, isn.updated_at, isn.deleted_at
 	FROM inserted_schema_node isn
 	JOIN dawgs_kind dk ON isn.kind_id = dk.id;`, name, extensionId, displayName, description,
 		isDisplayKind, icon, iconColor).Scan(&schemaNodeKind); result.Error != nil {
@@ -339,7 +367,7 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKinds(ctx context.Context, filters mode
 	if filterAndPagination, err := parseFiltersAndPagination(aliasedFilters, aliasedSorts, skip, limit); err != nil {
 		return schemaNodeKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT nk.id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
+		sqlStr := fmt.Sprintf(`SELECT nk.id, nk.kind_id, k.name, nk.schema_extension_id, nk.display_name, nk.description,
 									nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at
 									FROM %s nk
 									JOIN %s k ON nk.kind_id = k.id
@@ -380,8 +408,8 @@ func (s *BloodhoundDB) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context,
 func (s *BloodhoundDB) GetGraphSchemaNodeKindById(ctx context.Context, schemaNodeKindId int32) (model.GraphSchemaNodeKind, error) {
 	var schemaNodeKind model.GraphSchemaNodeKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-		SELECT %s.id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
-		FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaNodeKind.TableName(), schemaNodeKind.TableName(), model.Kind{}.TableName(),
+		SELECT %s.id, %s.kind_id, name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaNodeKind.TableName(), schemaNodeKind.TableName(), schemaNodeKind.TableName(), model.Kind{}.TableName(),
 		schemaNodeKind.TableName(), model.Kind{}.TableName(), schemaNodeKind.TableName()), schemaNodeKindId).First(&schemaNodeKind); result.Error != nil {
 		return model.GraphSchemaNodeKind{}, CheckError(result)
 	}
@@ -401,7 +429,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKind(ctx context.Context, schemaNode
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.kind_id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		schemaNodeKind.TableName(), model.Kind{}.TableName()), schemaNodeKind.SchemaExtensionId,
@@ -428,7 +456,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaNodeKindIconById(ctx context.Context, id
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.kind_id, k.name, schema_extension_id, display_name, description, is_display_kind, icon, icon_color, created_at, updated_at, deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		model.GraphSchemaNodeKind{}.TableName(), model.Kind{}.TableName()), icon.Name, icon.Color, id).Scan(&schemaNodeKind); result.Error != nil {
@@ -571,7 +599,7 @@ func (s *BloodhoundDB) CreateGraphSchemaRelationshipKind(ctx context.Context, na
 		FROM dawgs_kind dk
 		RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 	)
-	SELECT ie.id, ie.schema_extension_id, dk.id kind_id, dk.name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
+	SELECT ie.id, ie.schema_extension_id, ie.kind_id AS kind_id, dk.name AS name, ie.description, ie.is_traversable, ie.created_at, ie.updated_at, ie.deleted_at
 	FROM inserted_edges ie
 	JOIN dawgs_kind dk ON ie.kind_id = dk.id;`, name, schemaExtensionId, description, isTraversable).Scan(&schemaRelationshipKind); result.Error != nil {
 		if strings.Contains(result.Error.Error(), DuplicateKeyValueErrorString) {
@@ -607,7 +635,7 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 	if filterAndPagination, err := parseFiltersAndPagination(relationshipKindFilters, sort, skip, limit); err != nil {
 		return schemaRelationshipKinds, 0, err
 	} else {
-		sqlStr := fmt.Sprintf(`SELECT ek.id, k.name, ek.schema_extension_id, ek.description, ek.is_traversable,
+		sqlStr := fmt.Sprintf(`SELECT ek.id, ek.schema_extension_id, ek.kind_id, k.name, ek.description, ek.is_traversable,
 									ek.created_at, ek.updated_at, ek.deleted_at
 									FROM %s ek
 									JOIN %s k ON ek.kind_id = k.id
@@ -635,7 +663,7 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKinds(ctx context.Context, rela
 // This is a purpose-built query for the analysis pipeline that needs traversable edges for graph traversal.
 func (s *BloodhoundDB) GetTraversableRelationshipKindsByExtensionID(ctx context.Context, extensionID int32) (model.GraphSchemaRelationshipKinds, error) {
 	var query = fmt.Sprintf(`
-		SELECT rk.id, k.name, rk.schema_extension_id, rk.description, rk.is_traversable,
+		SELECT rk.id, rk.schema_extension_id, rk.kind_id, k.name, rk.description, rk.is_traversable,
 		       rk.created_at, rk.updated_at, rk.deleted_at
 		FROM %s rk
 		JOIN %s k ON rk.kind_id = k.id
@@ -690,9 +718,8 @@ func (s *BloodhoundDB) GetGraphSchemaRelationshipKindsWithSchemaName(ctx context
 func (s *BloodhoundDB) GetGraphSchemaRelationshipKindById(ctx context.Context, schemaRelationshipKindId int32) (model.GraphSchemaRelationshipKind, error) {
 	var schemaRelationshipKind model.GraphSchemaRelationshipKind
 	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
-	SELECT %s.id, name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
-	FROM %s JOIN %s ON %s.kind_id = %s.id WHERE %s.id = ?`, schemaRelationshipKind.TableName(), schemaRelationshipKind.TableName(), model.Kind{}.TableName(),
-		schemaRelationshipKind.TableName(), model.Kind{}.TableName(), schemaRelationshipKind.TableName()), schemaRelationshipKindId).First(&schemaRelationshipKind); result.Error != nil {
+	SELECT ek.id, ek.schema_extension_id, ek.kind_id AS kind_id, k.name AS name, ek.description, ek.is_traversable, ek.created_at, ek.updated_at, ek.deleted_at
+	FROM %s ek JOIN %s k ON ek.kind_id = k.id WHERE ek.id = ?`, schemaRelationshipKind.TableName(), model.Kind{}.TableName()), schemaRelationshipKindId).First(&schemaRelationshipKind); result.Error != nil {
 		return schemaRelationshipKind, CheckError(result)
 	}
 	return schemaRelationshipKind, nil
@@ -711,7 +738,7 @@ func (s *BloodhoundDB) UpdateGraphSchemaRelationshipKind(ctx context.Context, sc
 			WHERE id = ?
 			RETURNING id, kind_id, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
 		)
-		SELECT updated_row.id, k.name, schema_extension_id, description, is_traversable, created_at, updated_at, deleted_at
+		SELECT updated_row.id, updated_row.schema_extension_id, updated_row.kind_id AS kind_id, k.name AS name, updated_row.description, updated_row.is_traversable, updated_row.created_at, updated_row.updated_at, updated_row.deleted_at
 		FROM updated_row
 		JOIN %s k ON k.id = updated_row.kind_id`,
 		schemaRelationshipKind.TableName(), model.Kind{}.TableName()),
@@ -1336,55 +1363,190 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds, this pulls from both custom_node_kinds(schemaless)
-// and schema_node_kinds to create a single source of truth for all valid node kinds
+// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
+// of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
+// during ingest are also upserted.
 func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
-	if displaySchemaNodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx, model.Filters{"is_display_kind": []model.Filter{
-		{
-			Operator:    model.Equals,
-			Value:       "true",
-			SetOperator: model.FilterAnd,
-		},
-	}}, model.Sort{}, 0, 0); err != nil {
-		return nil, err
-	} else if customNodeKinds, err := s.GetCustomNodeKinds(ctx, nil); err != nil {
+	if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var customNames []string
-		var customKindsByName = make(map[string]model.CustomNodeKind)
-		for _, kind := range customNodeKinds {
-			customNames = append(customNames, kind.KindName)
-			customKindsByName[kind.KindName] = kind
+		var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
+		for _, customNodeKind := range customNodeKinds {
+			primaryDisplayKinds[graph.StringKind(customNodeKind.KindName)] = graphschema.DisplayKind{
+				Name: customNodeKind.KindName,
+				Icon: graphschema.DisplayNodeIcon{
+					Name:  customNodeKind.Config.Icon.Name,
+					Type:  customNodeKind.Config.Icon.Type,
+					Color: customNodeKind.Config.Icon.Color,
+				},
+			}
 		}
-		// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
-		if kinds, err := s.GetKindsByNames(ctx, customNames...); err != nil && !errors.Is(err, ErrNotFound) {
-			return nil, err
-		} else {
-			var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
-			for _, kind := range kinds {
-				customKind := customKindsByName[kind.Name]
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  customKind.Config.Icon.Name,
-						Type:  customKind.Config.Icon.Type,
-						Color: customKind.Config.Icon.Color,
-					},
-				}
-			}
-			for _, kind := range displaySchemaNodeKinds {
-				primaryDisplayKinds[kind.ToKind()] = graphschema.DisplayKind{
-					Name: kind.Name,
-					Icon: graphschema.DisplayNodeIcon{
-						Name:  kind.Icon,
-						Color: kind.IconColor,
-						Type:  graphschema.DisplayNodeTypeFontAwesome,
-					},
-				}
-			}
-			return primaryDisplayKinds, nil
+		return primaryDisplayKinds, nil
+	}
+}
+
+// entity panel vars
+var (
+	graphSchemaKindInfoTableName = "schema_kind_info"
+
+	graphSchemaKindInfoConstraintKindIDFKey     = "schema_kind_info_kind_id_fkey"
+	graphSchemaKindInfoConstraintUniquePosition = "schema_kind_info_unique_kind_position"
+	graphSchemaKindInfoConstraintUniqueInfoKey  = "schema_kind_info_unique_kind_info_key"
+
+	// defaultKindInfoContent is stored when a kind info entry has no content, preserving the
+	// expected {"markdown":{"content":"..."}} structure rather than an empty object.
+	defaultKindInfoContent = `{"markdown":{"content":""}}`
+)
+
+func (s *BloodhoundDB) CreateKindInfo(ctx context.Context, kindID int32, nodeKindID, relationshipKindID *int32, kindInfo model.KindInfoInput) (model.GraphSchemaKindInfo, error) {
+	var (
+		content            = kindInfo.Content
+		createdGraphSchema = model.GraphSchemaKindInfo{}
+	)
+
+	if len(content) == 0 {
+		content = []byte(defaultKindInfoContent)
+	}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		INSERT INTO %s (
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, NOW(), NOW())
+		RETURNING
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at`,
+		graphSchemaKindInfoTableName),
+		kindID,
+		nodeKindID,
+		relationshipKindID,
+		kindInfo.InfoKey,
+		kindInfo.Title,
+		kindInfo.Position,
+		string(content)).Scan(&createdGraphSchema); result.Error != nil {
+		return model.GraphSchemaKindInfo{}, checkKindInfoError(result)
+	}
+
+	return createdGraphSchema, nil
+}
+
+func (s *BloodhoundDB) UpdateKindInfo(ctx context.Context, kindInfo model.GraphSchemaKindInfo) (model.GraphSchemaKindInfo, error) {
+	var content = kindInfo.Content
+
+	if len(content) == 0 {
+		content = []byte(defaultKindInfoContent)
+	}
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		UPDATE %s
+		SET
+			kind_id = ?,
+			node_kind_id = ?,
+			relationship_kind_id = ?,
+			info_key = ?,
+			title = ?,
+			position = ?,
+			content = ?::jsonb,
+			updated_at = NOW()
+		WHERE id = ?
+		RETURNING
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at`,
+		graphSchemaKindInfoTableName),
+		kindInfo.KindID,
+		kindInfo.NodeKindID,
+		kindInfo.RelationshipKindID,
+		kindInfo.InfoKey,
+		kindInfo.Title,
+		kindInfo.Position,
+		string(content),
+		kindInfo.ID).Scan(&kindInfo); result.Error != nil {
+		return model.GraphSchemaKindInfo{}, checkKindInfoError(result)
+	} else if result.RowsAffected == 0 {
+		return model.GraphSchemaKindInfo{}, ErrNotFound
+	}
+
+	return kindInfo, nil
+}
+
+func (s *BloodhoundDB) GetKindInfos(ctx context.Context, kindID int32) ([]model.GraphSchemaKindInfo, error) {
+	var kindInfos []model.GraphSchemaKindInfo
+
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT
+			id,
+			kind_id,
+			node_kind_id,
+			relationship_kind_id,
+			info_key,
+			title,
+			position,
+			content,
+			created_at,
+			updated_at
+		FROM %s
+		WHERE kind_id = ?
+		ORDER BY position, title`,
+		graphSchemaKindInfoTableName),
+		kindID).Scan(&kindInfos); result.Error != nil {
+		return nil, CheckError(result)
+	}
+
+	return kindInfos, nil
+}
+
+func (s *BloodhoundDB) DeleteKindInfo(ctx context.Context, kindInfoID int32) error {
+	if result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+		DELETE FROM %s
+		WHERE id = ?`,
+		graphSchemaKindInfoTableName), kindInfoID); result.Error != nil {
+		return CheckError(result)
+	} else if result.RowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func checkKindInfoError(result *gorm.DB) error {
+	var pgErr *pgconn.PgError
+
+	if errors.As(result.Error, &pgErr) {
+		switch pgErr.ConstraintName {
+		case graphSchemaKindInfoConstraintKindIDFKey:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
+		case graphSchemaKindInfoConstraintUniquePosition:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
+		case graphSchemaKindInfoConstraintUniqueInfoKey:
+			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
 		}
 	}
+
+	return CheckError(result)
 }
 
 func parseFiltersAndPagination(filters model.Filters, sort model.Sort, skip, limit int) (FilterAndPagination, error) {

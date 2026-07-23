@@ -13,70 +13,44 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
+import { NodeDetails, RelationshipDetails } from 'js-client-library';
 import { render, screen } from '../../../test-utils';
-import { SelectedEdge } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeObjectInformation from './EdgeObjectInformation';
 
-const server = setupServer();
+const selectedEdge: RelationshipDetails = {
+    relationship_id: 1,
+    kind: { name: 'DCSync', relationship_kind_id: 1 },
+    properties: { lastSeen: '2023-09-07T11:10:33.664596893Z', is_traversable: true, isacl: false },
+    source_node_id: 1,
+    target_node_id: 2,
+};
 
-const selectedEdge: SelectedEdge = {
-    id: '1',
-    name: 'DCSync',
-    data: { lastseen: '2023-09-07T11:10:33.664596893Z' },
-    sourceNode: {
-        name: 'source_node',
-        id: '1',
-        objectId: '1',
-        type: 'User',
-    },
-    targetNode: { name: 'target_node', id: '2', objectId: '2', type: 'User' },
+const mockSourceNode: NodeDetails = {
+    node_id: 1,
+    kinds: [],
+    properties: { objectid: 'source-objectid', name: 'source_node', lastSeen: '2023-09-07T11:10:33.664596893Z' },
+};
+
+const mockTargetNode: NodeDetails = {
+    node_id: 2,
+    kinds: [],
+    properties: { objectid: 'target-objectid', name: 'target_node', lastSeen: '2023-09-07T11:10:33.664596893Z' },
 };
 
 const EdgeObjectInformationWithProvider = () => (
     <ObjectInfoPanelContextProvider>
-        <EdgeObjectInformation selectedEdge={selectedEdge} />
+        <EdgeObjectInformation selectedEdge={selectedEdge} sourceNode={mockSourceNode} targetNode={mockTargetNode} />
     </ObjectInfoPanelContextProvider>
 );
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-
 describe('EdgeObjectInformation', () => {
-    test('The edge properties are fetched through a cypher search which includes lastseen', async () => {
-        server.use(
-            rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            nodes: {},
-                            edges: [
-                                {
-                                    source: '48297',
-                                    target: '1238',
-                                    label: 'DCSync',
-                                    kind: 'DCSync',
-                                    lastSeen: '2023-09-07T11:10:33.664596893Z',
-                                    properties: {
-                                        lastseen: '2023-09-07T11:10:33.664596893Z',
-                                        isacl: false,
-                                    },
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-
+    test('The edge properties are fetched through the relationship endpoint which includes lastseen', async () => {
         render(<EdgeObjectInformationWithProvider />);
 
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 
-        //Display the information obtained from the cypher query for all edge properties
+        //Display the information obtained from the relationship endpoint for all edge properties
         expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
         expect(screen.getByText(/source_node/)).toBeInTheDocument();
         expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
@@ -84,35 +58,5 @@ describe('EdgeObjectInformation', () => {
         expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
         expect(screen.getByText(/FALSE/)).toBeInTheDocument();
         expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
-    });
-
-    test('Error handling for fetching edge information', async () => {
-        console.error = vi.fn();
-        server.use(
-            rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
-                return res(
-                    ctx.status(500),
-                    ctx.json({
-                        errorMessage: `Internal Server Error`,
-                    })
-                );
-            })
-        );
-
-        render(<EdgeObjectInformationWithProvider />);
-
-        expect(await screen.findByText(/source_node/)).toBeInTheDocument();
-
-        //These fields are all obtainable from the original graph response information
-        //so if there is an error we can still display at least this information
-        expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
-        expect(screen.getByText(/source_node/)).toBeInTheDocument();
-        expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
-        expect(screen.getByText(/target_node/)).toBeInTheDocument();
-
-        //These are extra fields that don't come with the graph response
-        //so if there is an error with the edge query they will not be displayed
-        expect(screen.queryByText(/Is ACL:/)).toBeNull();
-        expect(screen.queryByText(/FALSE/)).toBeNull();
     });
 });

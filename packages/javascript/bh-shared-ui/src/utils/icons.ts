@@ -236,7 +236,7 @@ export const NODE_ICONS: IconDictionary = {
 
 export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
-    color: '#FFFFFF',
+    color: DEFAULT_ICON_BACKGROUND_COLOR,
 };
 
 /**

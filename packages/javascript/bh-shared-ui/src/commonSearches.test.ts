@@ -14,7 +14,8 @@
 // //
 // // SPDX-License-Identifier: Apache-2.0
 
-import { CommonSearches } from './commonSearchesAGI';
+import { CommonSearches as CommonSearchesAGI } from './commonSearchesAGI';
+import { CommonSearches as CommonSearchesAGT } from './commonSearchesAGT';
 import {
     ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
@@ -27,7 +28,7 @@ describe('common search list', () => {
     const kindPattern = /:([^ )\n\]*]+)/gm;
 
     test('the queries in the list only include nodes and edges that are defined in our schema', () => {
-        CommonSearches.forEach((commonSearchType: CommonSearchType) => {
+        CommonSearchesAGI.forEach((commonSearchType: CommonSearchType) => {
             commonSearchType.queries.forEach((query) => {
                 const kinds = query.query.match(kindPattern);
 
@@ -54,6 +55,29 @@ describe('common search list', () => {
                     });
                 }
             });
+        });
+    });
+
+    test.each([
+        {
+            commonSearches: CommonSearchesAGI,
+            decoyExclusion: `none(n IN nodes(p) WHERE COALESCE(n.system_tags, '') CONTAINS 'decoy')`,
+            mode: 'AGI',
+        },
+        {
+            commonSearches: CommonSearchesAGT,
+            decoyExclusion: 'none(n IN nodes(p) WHERE n:Tag_Decoy)',
+            mode: 'AGT',
+        },
+    ])('Azure shortest path queries exclude Decoy nodes in $mode mode', ({ commonSearches, decoyExclusion }) => {
+        const azureShortestPathQueries = commonSearches.find(
+            (commonSearchType) =>
+                commonSearchType.category === 'Azure' && commonSearchType.subheader === 'Shortest Paths'
+        )?.queries;
+
+        expect(azureShortestPathQueries).toHaveLength(4);
+        azureShortestPathQueries?.forEach((query) => {
+            expect(query.query).toContain(decoyExclusion);
         });
     });
 });

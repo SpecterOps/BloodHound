@@ -236,7 +236,7 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulAnalysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					successfulAnalysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeFull).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
 
@@ -369,7 +369,7 @@ func TestDatabaseWipe(t *testing.T) {
 					assetGroupSelectorsAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// analysis kickoff
-					analysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					analysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeFull).Times(1)
 
 					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
 
@@ -471,6 +471,52 @@ func TestResources_BuildDeleteRequest(t *testing.T) {
 
 		if !strings.Contains(err.Error(), "requested source kind id 99 not found") {
 			t.Fatalf("expected unknown source kind error, got %v", err)
+		}
+	})
+
+	t.Run("rejects deleteCollectedGraphData combined with source kinds", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteCollectedGraphData: true,
+			DeleteSourceKinds:        []int{42},
+		})
+		if err == nil {
+			t.Fatal("expected an error when deleteCollectedGraphData is combined with source kinds")
+		}
+
+		if !strings.Contains(err.Error(), "deleteCollectedGraphData may not be combined with deleteSourceKinds or deleteRelationships") {
+			t.Fatalf("expected mutual exclusion error, got %v", err)
+		}
+	})
+
+	t.Run("rejects deleteCollectedGraphData combined with relationships", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteCollectedGraphData: true,
+			DeleteRelationships:      []string{"HasSession"},
+		})
+		if err == nil {
+			t.Fatal("expected an error when deleteCollectedGraphData is combined with relationships")
+		}
+
+		if !strings.Contains(err.Error(), "deleteCollectedGraphData may not be combined with deleteSourceKinds or deleteRelationships") {
+			t.Fatalf("expected mutual exclusion error, got %v", err)
 		}
 	})
 }

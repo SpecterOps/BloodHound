@@ -16,7 +16,6 @@
 
 import dagre from '@dagrejs/dagre';
 import AbstractGraph, { Attributes } from 'graphology-types';
-import { getEdgeDataFromKey } from 'src/ducks/graph/utils';
 
 export const NODE_DEFAULT_SIZE = 10;
 
@@ -97,9 +96,10 @@ export const copySigmaEdgesToGraphlibGraph = (
     graphlibGraph: any
 ): void => {
     sigmaGraph.forEachEdge((edge: string) => {
-        const edgeData = getEdgeDataFromKey(edge);
-        if (edgeData !== null)
-            graphlibGraph.setEdge(edgeData.source, edgeData.target, { label: edgeData.label, points: [] });
+        const source = sigmaGraph.source(edge);
+        const target = sigmaGraph.target(edge);
+        const { label } = sigmaGraph.getEdgeAttributes(edge);
+        graphlibGraph.setEdge(source, target, { label: label || '', points: [] });
     });
 };
 

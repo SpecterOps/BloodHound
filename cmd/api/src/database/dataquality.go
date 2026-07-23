@@ -40,6 +40,8 @@ type DataQualityData interface {
 	GetADDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.ADDataQualityAggregations, int, error)
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
+	GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error)
+	CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error)
 
 	DeleteAllDataQuality(ctx context.Context) error
 }
@@ -185,7 +187,7 @@ func (s *BloodhoundDB) CreateDataQualityStats(ctx context.Context, stats model.D
 	return stats, CheckError(result)
 }
 
-// GetDataQualityStats gets all rows from the Data Quality Stats table that match the given SQL Filter. If no sorting is provided, it will sort rows by the CreatedAt date in descending order.
+// GetDataQualityStats gets all rows from the Data Quality Stats table that match the given SQL Filter. If no sorting is provided, it will sort rows by the CreatedAt date in descending order with id ascending as a tiebreaker.
 func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityStats, int, error) {
 	var (
 		dataQualityStats = model.DataQualityStats{}
@@ -198,6 +200,8 @@ func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Fi
 	if err != nil {
 		return dataQualityStats, 0, err
 	}
+
+	sort = deterministicDataQualitySort(sort)
 
 	orderSql, err := buildSQLSort(sort)
 	if err != nil {
@@ -230,6 +234,9 @@ func (s *BloodhoundDB) GetDataQualityStats(ctx context.Context, filters model.Fi
 			totalRowCount = len(dataQualityStats)
 		}
 
+		if totalRowCount == 0 {
+			return dataQualityStats, totalRowCount, ErrNotFound
+		}
 		return dataQualityStats, totalRowCount, nil
 	}
 
@@ -303,8 +310,106 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, star
 	return azureDataQualityAggregations, int(count), nil
 }
 
+// CreateDataQualityAggregations batch-inserts the given slice of model.DataQualityAggregation.
+func (s *BloodhoundDB) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+	if len(aggregations) == 0 {
+		return aggregations, nil
+	}
+
+	result := s.db.WithContext(ctx).Create(&aggregations)
+	return aggregations, CheckError(result)
+}
+
+// GetDataQualityAggregations returns filtered, paginated model.DataQualityAggregations and the total count of matching rows,
+// excluding soft-deleted rows. When no sort is provided, results default to created_at descending with id ascending as a tiebreaker.
+func (s *BloodhoundDB) GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error) {
+	var (
+		aggregations  model.DataQualityAggregations
+		totalRowCount int
+		skipLimit     string
+		whereClause   = "WHERE deleted_at IS NULL" // filter out soft-deleted rows
+	)
+
+	filter, err := buildSQLFilter(filters)
+	if err != nil {
+		return aggregations, 0, err
+	}
+
+	// use a default sort when none is provided and add an id tie-breaker for created_at and updated_at columns
+	sort = deterministicDataQualitySort(sort)
+	orderSql, err := buildSQLSort(sort)
+	if err != nil {
+		return aggregations, 0, err
+	}
+
+	if skip > 0 {
+		skipLimit = fmt.Sprintf(" OFFSET %d", skip)
+	}
+	if limit > 0 {
+		skipLimit += fmt.Sprintf(" LIMIT %d ", limit)
+	}
+
+	if filter.sqlString != "" {
+		whereClause += fmt.Sprintf(" and %s", filter.sqlString)
+	}
+
+	sqlStr := fmt.Sprintf(`SELECT * FROM %s %s %s %s`,
+		model.DataQualityAggregation{}.TableName(),
+		whereClause,
+		orderSql,
+		skipLimit,
+	)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, filter.params...).Scan(&aggregations); result.Error != nil {
+		return nil, totalRowCount, CheckError(result)
+	}
+
+	if skip > 0 || limit > 0 {
+		countSqlStr := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, model.DataQualityAggregation{}.TableName(), whereClause)
+		if countResult := s.db.WithContext(ctx).Raw(countSqlStr, filter.params...).Scan(&totalRowCount); countResult.Error != nil {
+			return nil, 0, CheckError(countResult)
+		}
+	} else {
+		totalRowCount = len(aggregations)
+	}
+
+	return aggregations, totalRowCount, nil
+}
+
 func (s *BloodhoundDB) DeleteAllDataQuality(ctx context.Context) error {
 	return CheckError(
-		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_stats;"),
+		s.db.WithContext(ctx).Exec("DELETE FROM ad_data_quality_aggregations; DELETE FROM ad_data_quality_stats; DELETE FROM azure_data_quality_aggregations; DELETE FROM azure_data_quality_stats; DELETE FROM data_quality_stats; DELETE FROM data_quality_aggregations;"),
 	)
+}
+
+// deterministicDataQualitySort defaults to created_at DESC when no sort is provided, and appends id ASC as a tiebreaker
+// so pagination stays deterministic when created_at or updated_at values are not unique
+func deterministicDataQualitySort(sort model.Sort) model.Sort {
+	if len(sort) == 0 {
+		sort = model.Sort{
+			{
+				Direction: model.DescendingSortDirection,
+				Column:    "created_at",
+			},
+		}
+	}
+	// only append the id tiebreaker if sort doesn't already have it
+	if !sortContainsColumn(sort, "id") {
+		sort = append(sort, model.SortItem{
+			Direction: model.AscendingSortDirection,
+			Column:    "id",
+		})
+	}
+
+	return sort
+}
+
+// helper for deterministicDataQualitySort()
+func sortContainsColumn(sort model.Sort, column string) bool {
+	for _, item := range sort {
+		if item.Column == column {
+			return true
+		}
+	}
+	return false
 }

@@ -30,6 +30,9 @@ import (
 
 const (
 	tableAnalysisRequestSwitch = "analysis_request_switch"
+
+	// Intentionally duplicated from bhce/cmd/api/src/model/analysisrequest.go
+	analysisFull int32 = 15
 )
 
 // queryExecer is the minimal surface satisfied by both *pgxpool.Pool and pgx.Tx.
@@ -53,6 +56,7 @@ type analysisRequest struct {
 	RequestedBy           string    `db:"requested_by"`
 	RequestType           string    `db:"request_type"`
 	RequestedAt           time.Time `db:"requested_at"`
+	AnalysisSteps         int32     `db:"analysis_step"`
 	DeleteAllGraph        bool      `db:"delete_all_graph"`
 	DeleteSourcelessGraph bool      `db:"delete_sourceless_graph"`
 	DeleteSourceKinds     []string  `db:"delete_source_kinds"`
@@ -98,6 +102,7 @@ func selectAnalysisRequest(ctx context.Context, querier queryExecer) (services.R
 		"requested_by",
 		"request_type",
 		"requested_at",
+		"analysis_step",
 		"delete_all_graph",
 		"delete_sourceless_graph",
 		"delete_source_kinds",
@@ -147,6 +152,7 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 		"requested_by",
 		"request_type",
 		"requested_at",
+		"analysis_step",
 		"delete_all_graph",
 		"delete_sourceless_graph",
 		"delete_source_kinds",
@@ -156,6 +162,7 @@ func (s *Store) CreateAnalysisRequest(ctx context.Context, requestedBy string) (
 		requestedBy,
 		string(services.RequestedAnalysisTypeAnalysis),
 		now,
+		analysisFull,
 		false,
 		false,
 		[]string{},

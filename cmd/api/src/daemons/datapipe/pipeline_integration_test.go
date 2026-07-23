@@ -250,7 +250,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.True(t, datapipeStatus.LastAnalysisRunAt.IsZero())
 
 	// request analysis so that Analyze will run
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)
@@ -263,7 +263,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
 
 	// request analysis again
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)
