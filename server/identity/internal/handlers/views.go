@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
 
@@ -115,4 +116,37 @@ func BuildRoleListView(roles []services.Role) RoleListView {
 // satisfying the responses.JSONViewer contract.
 func (s RoleListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+// ValidFilters implements params.Filterable, describing the role fields that may
+// be filtered on and the operators each supports. It reproduces the legacy
+// GET /api/v2/roles contract so the filter middleware validates identically.
+func (s RoleListView) ValidFilters() map[string]params.FilterableField {
+	var numericOperators = []params.FilterOperator{
+		params.Equals,
+		params.NotEquals,
+		params.GreaterThan,
+		params.GreaterThanOrEquals,
+		params.LessThan,
+		params.LessThanOrEquals,
+	}
+
+	return map[string]params.FilterableField{
+		"name":       {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"id":         {Operators: numericOperators},
+		"created_at": {Operators: numericOperators},
+		"updated_at": {Operators: numericOperators},
+		"deleted_at": {Operators: numericOperators},
+	}
+}
+
+// IsSortable implements params.Sortable, reporting the role fields the sort
+// middleware may order on. It reproduces the legacy GET /api/v2/roles contract.
+func (s RoleListView) IsSortable(field string) bool {
+	switch field {
+	case "name", "description", "id", "created_at", "updated_at", "deleted_at":
+		return true
+	default:
+		return false
+	}
 }

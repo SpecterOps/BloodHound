@@ -25,8 +25,8 @@ import (
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
 
-// Register builds the analysis store -> service -> handler chain and attaches
-// the analysis routes to the provided router. It is called from the modules
+// Register builds the identity store -> service -> handler chain and attaches
+// the identity routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (

@@ -31,7 +31,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	authapi "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -142,13 +142,21 @@ type listRolesResponseEnvelope struct {
 	} `json:"data"`
 }
 
-// newListRolesHandler wires the legacy ManagementResource.ListRoles handler
-// backed by the given database. This mirrors the pre-migration wiring so the
-// e2e test locks in the existing HTTP contract before the endpoint is moved
-// into the identity vertical slice. Only the database is exercised by
-// ListRoles, so the remaining dependencies are left nil.
+// newListRolesHandler wires the identity slice's ListRoles handler backed by
+// the given database, wrapped in the same filter and sort middleware the route
+// applies in production (see routes.Register). The middleware parses and
+// validates the query parameters into the BloodHound context, so this exercises
+// the full request path the handler relies on.
 func newListRolesHandler(db *database.BloodhoundDB) http.HandlerFunc {
-	return authapi.NewManagementResource(config.Configuration{}, db, auth.NewAuthorizer(db), nil, nil, nil).ListRoles
+	var (
+		handlerSet = newIdentityHandlers(db)
+		roleList   = handlers.RoleListView{}
+		handler    = middleware.FilterMiddleware(roleList)(
+			middleware.SortMiddleware(roleList)(http.HandlerFunc(handlerSet.ListRoles)),
+		)
+	)
+
+	return handler.ServeHTTP
 }
 
 func TestGetPermission(t *testing.T) {

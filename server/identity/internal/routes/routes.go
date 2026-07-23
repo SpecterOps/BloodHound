@@ -26,9 +26,13 @@ import (
 )
 
 // Register attaches the identity endpoints to the given router instance.
-func Register(routerInst *router.Router, handlers *handlers.Handlers) {
-	var permissions = auth.Permissions()
+func Register(routerInst *router.Router, handler *handlers.Handlers) {
+	var (
+		permissions = auth.Permissions()
+		roleList    = handlers.RoleListView{}
+	)
 
-	routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handlers.GetRole).RequirePermissions(permissions.AuthManageSelf)
-	routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handlers.GetPermission).RequirePermissions(permissions.AuthManageSelf)
+	routerInst.GET("/api/v2/roles", handler.ListRoles).RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
+	routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole).RequirePermissions(permissions.AuthManageSelf)
+	routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission).RequirePermissions(permissions.AuthManageSelf)
 }
