@@ -1069,8 +1069,13 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 	)
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
-	err = dbInst.InsertSelectorNode(testCtx, 1, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, dbInst, model.AssetGroupSelectorNode{
+		SelectorId:  testSelectorId,
+		NodeId:      graph.ID(testNodeId),
+		Certified:   model.AssetGroupCertification(certified),
+		CertifiedBy: certifiedBy,
+		Source:      model.AssetGroupSelectorNodeSource(source),
+	})
 	selectors, err := dbInst.GetSelectorsByMemberId(testCtx, testMemberId, test1Selector.AssetGroupTagId)
 	require.NoError(t, err)
 	require.Equal(t, testSelectorId, selectors[0].ID)
@@ -1216,12 +1221,29 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	require.NoError(t, err)
 
 	// insert selector nodes
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId1, model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId1, testNodeId2, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, testAssetGroupTagId1, testSelectorId2, testNodeId1, model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId1,
+			NodeId:      testNodeId1,
+			Certified:   model.AssetGroupCertificationRevoked,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId1,
+			NodeId:      testNodeId2,
+			Certified:   model.AssetGroupCertificationPending,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  testSelectorId2,
+			NodeId:      testNodeId1,
+			Certified:   model.AssetGroupCertificationPending,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+	)
 
 	t.Run("updates certification by selector node, certified", func(t *testing.T) {
 		inputs := []database.UpdateCertificationBySelectorNodeInput{updateInputCertify}
@@ -1301,6 +1323,708 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 	})
 }
 
+func TestDatabase_InsertSelectorNodes(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("returns nil for empty input", func(t *testing.T) {
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, nil))
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{}))
+	})
+
+	t.Run("inserts selector nodes and creates asset group history records for certified nodes", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch insert selector nodes")
+			pendingNodeId   = graph.ID(50001)
+			autoNodeId      = graph.ID(50002)
+			manualNodeId    = graph.ID(50003)
+			revokedNodeId   = graph.ID(50004)
+
+			pendingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            pendingNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "pending-primary-kind",
+				NodeEnvironmentId: "pending-environment",
+				NodeObjectId:      "pending-object-id",
+				NodeName:          "insert-history-pending-node",
+			}
+			autoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "auto-primary-kind",
+				NodeEnvironmentId: "auto-environment",
+				NodeObjectId:      "auto-object-id",
+				NodeName:          "insert-history-auto-node",
+			}
+			manualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("manual-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "manual-primary-kind",
+				NodeEnvironmentId: "manual-environment",
+				NodeObjectId:      "manual-object-id",
+				NodeName:          "insert-history-manual-node",
+			}
+			revokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("revoked-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "revoked-primary-kind",
+				NodeEnvironmentId: "revoked-environment",
+				NodeObjectId:      "revoked-object-id",
+				NodeName:          "insert-history-revoked-node",
+			}
+		)
+
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			pendingNode,
+			autoNode,
+			manualNode,
+			revokedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		require.Len(t, selectorNodesBySelectorId[selector.ID], 4)
+		assertUpdateSelectorNodesTestNode(t, pendingNode, selectorNodesBySelectorId[selector.ID][pendingNodeId])
+		assertUpdateSelectorNodesTestNode(t, autoNode, selectorNodesBySelectorId[selector.ID][autoNodeId])
+		assertUpdateSelectorNodesTestNode(t, manualNode, selectorNodesBySelectorId[selector.ID][manualNodeId])
+		assertUpdateSelectorNodesTestNode(t, revokedNode, selectorNodesBySelectorId[selector.ID][revokedNodeId])
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, pendingNode.NodeName, autoNode.NodeName, manualNode.NodeName, revokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+		assert.NotContains(t, historyRecordsByTarget, pendingNode.NodeName)
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, autoNode.NodeName, assetGroupTagId, historyRecordsByTarget[autoNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, manualNode.NodeName, assetGroupTagId, historyRecordsByTarget[manualNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, revokedNode.NodeName, assetGroupTagId, historyRecordsByTarget[revokedNode.NodeName])
+
+		require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, []model.AssetGroupSelectorNode{autoNode}))
+		historyRecordsByTarget = requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, pendingNode.NodeName, autoNode.NodeName, manualNode.NodeName, revokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+	})
+}
+
+func TestDatabase_SelectorNodesBatching(t *testing.T) {
+	const selectorNodeBatchTestCount = 5001
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx                   = context.Background()
+		testActor                 = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		assetGroupTagId           = 1
+		selector                  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "temporary selector nodes batching")
+		firstBatchCertifiedIndex  = 0
+		secondBatchCertifiedIndex = selectorNodeBatchTestCount - 1
+		firstBatchBoundaryIndex   = selectorNodeBatchTestCount - 2
+		nodes                     = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
+		updatedNodes              = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
+	)
+
+	for nodeIndex := 0; nodeIndex < selectorNodeBatchTestCount; nodeIndex++ {
+		var (
+			certified          = model.AssetGroupCertificationPending
+			certifiedBy        = null.String{}
+			updatedCertified   = model.AssetGroupCertificationPending
+			updatedCertifiedBy = null.String{}
+			nodeId             = graph.ID(600000 + nodeIndex)
+		)
+
+		if nodeIndex == firstBatchCertifiedIndex || nodeIndex == secondBatchCertifiedIndex {
+			certified = model.AssetGroupCertificationAuto
+			certifiedBy = null.StringFrom(model.AssetGroupActorBloodHound)
+			updatedCertified = certified
+			updatedCertifiedBy = certifiedBy
+		}
+
+		switch nodeIndex {
+		case firstBatchCertifiedIndex:
+			updatedCertified = model.AssetGroupCertificationManual
+			updatedCertifiedBy = null.StringFrom("temporary-manual-certifier")
+		case secondBatchCertifiedIndex:
+			updatedCertified = model.AssetGroupCertificationRevoked
+			updatedCertifiedBy = null.StringFrom("temporary-revoked-certifier")
+		}
+
+		nodes = append(nodes, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            nodeId,
+			Certified:         certified,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   fmt.Sprintf("temporary-insert-kind-%d", nodeIndex),
+			NodeEnvironmentId: fmt.Sprintf("temporary-insert-environment-%d", nodeIndex),
+			NodeObjectId:      fmt.Sprintf("temporary-insert-object-%d", nodeIndex),
+			NodeName:          fmt.Sprintf("temporary-insert-node-%d", nodeIndex),
+		})
+
+		updatedNodes = append(updatedNodes, model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            nodeId,
+			Certified:         updatedCertified,
+			CertifiedBy:       updatedCertifiedBy,
+			Source:            model.AssetGroupSelectorNodeSourceParent,
+			NodePrimaryKind:   fmt.Sprintf("temporary-update-kind-%d", nodeIndex),
+			NodeEnvironmentId: fmt.Sprintf("temporary-update-environment-%d", nodeIndex),
+			NodeObjectId:      fmt.Sprintf("temporary-update-object-%d", nodeIndex),
+			NodeName:          fmt.Sprintf("temporary-update-node-%d", nodeIndex),
+		})
+	}
+
+	require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, nodes))
+
+	selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchBoundaryIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, nodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[secondBatchCertifiedIndex].NodeId])
+
+	historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, nodes[firstBatchCertifiedIndex].NodeName, nodes[secondBatchCertifiedIndex].NodeName)
+	require.Len(t, historyRecordsByTarget, 2)
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, nodes[firstBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[nodes[firstBatchCertifiedIndex].NodeName])
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, nodes[secondBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[nodes[secondBatchCertifiedIndex].NodeName])
+
+	require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, updatedNodes))
+
+	selectorNodesBySelectorId = requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchBoundaryIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, updatedNodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[secondBatchCertifiedIndex].NodeId])
+
+	historyRecordsByTarget = requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedNodes[firstBatchCertifiedIndex].NodeName, updatedNodes[secondBatchCertifiedIndex].NodeName)
+	require.Len(t, historyRecordsByTarget, 2)
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, updatedNodes[firstBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[firstBatchCertifiedIndex].NodeName])
+	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, updatedNodes[secondBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[secondBatchCertifiedIndex].NodeName])
+}
+
+func TestDatabase_UpdateSelectorNodes(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("returns nil for empty input", func(t *testing.T) {
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, nil))
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{}))
+	})
+
+	t.Run("updates existing selector nodes by selector ID and node ID", func(t *testing.T) {
+		var (
+			selectorOne  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector one")
+			selectorTwo  = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update selector two")
+			sharedNodeId = graph.ID(10001)
+			otherNodeId  = graph.ID(10002)
+
+			oldSelectorOneSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-primary-kind-1",
+				NodeEnvironmentId: "old-environment-1",
+				NodeObjectId:      "old-object-id-1",
+				NodeName:          "old-node-name-1",
+			}
+			oldSelectorOneOtherNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            otherNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("old-certifier-2"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "old-primary-kind-2",
+				NodeEnvironmentId: "old-environment-2",
+				NodeObjectId:      "old-object-id-2",
+				NodeName:          "old-node-name-2",
+			}
+			untouchedSelectorTwoSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorTwo.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("untouched-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "untouched-primary-kind",
+				NodeEnvironmentId: "untouched-environment",
+				NodeObjectId:      "untouched-object-id",
+				NodeName:          "untouched-node-name",
+			}
+			updatedSelectorOneSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-primary-kind-1",
+				NodeEnvironmentId: "new-environment-1",
+				NodeObjectId:      "new-object-id-1",
+				NodeName:          "new-node-name-1",
+			}
+			updatedSelectorOneOtherNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            otherNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "new-primary-kind-2",
+				NodeEnvironmentId: "new-environment-2",
+				NodeObjectId:      "new-object-id-2",
+				NodeName:          "new-node-name-2",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldSelectorOneSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldSelectorOneOtherNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, untouchedSelectorTwoSharedNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedSelectorOneSharedNode,
+			updatedSelectorOneOtherNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selectorOne.ID, selectorTwo.ID)
+		assertUpdateSelectorNodesTestNode(t, updatedSelectorOneSharedNode, selectorNodesBySelectorId[selectorOne.ID][sharedNodeId])
+		assertUpdateSelectorNodesTestNode(t, updatedSelectorOneOtherNode, selectorNodesBySelectorId[selectorOne.ID][otherNodeId])
+		assertUpdateSelectorNodesTestNode(t, untouchedSelectorTwoSharedNode, selectorNodesBySelectorId[selectorTwo.ID][sharedNodeId])
+	})
+
+	t.Run("creates asset group history records when certifications change", func(t *testing.T) {
+		var (
+			assetGroupTagId = 1
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update history changes")
+			autoNodeId      = graph.ID(30001)
+			manualNodeId    = graph.ID(30002)
+			revokedNodeId   = graph.ID(30003)
+
+			oldAutoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-auto-primary-kind",
+				NodeEnvironmentId: "old-auto-environment",
+				NodeObjectId:      "old-auto-object-id",
+				NodeName:          "old-history-auto-node",
+			}
+			oldManualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-manual-primary-kind",
+				NodeEnvironmentId: "old-manual-environment",
+				NodeObjectId:      "old-manual-object-id",
+				NodeName:          "old-history-manual-node",
+			}
+			oldRevokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("previous-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "old-revoked-primary-kind",
+				NodeEnvironmentId: "old-revoked-environment",
+				NodeObjectId:      "old-revoked-object-id",
+				NodeName:          "old-history-revoked-node",
+			}
+			updatedAutoNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            autoNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-auto-primary-kind",
+				NodeEnvironmentId: "new-auto-environment",
+				NodeObjectId:      "new-auto-object-id",
+				NodeName:          "history-auto-node",
+			}
+			updatedManualNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            manualNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("manual-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-manual-primary-kind",
+				NodeEnvironmentId: "new-manual-environment",
+				NodeObjectId:      "new-manual-object-id",
+				NodeName:          "history-manual-node",
+			}
+			updatedRevokedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            revokedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("revoked-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "new-revoked-primary-kind",
+				NodeEnvironmentId: "new-revoked-environment",
+				NodeObjectId:      "new-revoked-object-id",
+				NodeName:          "history-revoked-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldAutoNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldManualNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldRevokedNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedAutoNode,
+			updatedManualNode,
+			updatedRevokedNode,
+		}))
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedAutoNode.NodeName, updatedManualNode.NodeName, updatedRevokedNode.NodeName)
+		require.Len(t, historyRecordsByTarget, 3)
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeAuto, updatedAutoNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedAutoNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, updatedManualNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedManualNode.NodeName])
+		assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, updatedRevokedNode.NodeName, assetGroupTagId, historyRecordsByTarget[updatedRevokedNode.NodeName])
+	})
+
+	t.Run("does not create asset group history records when certifications are unchanged", func(t *testing.T) {
+		var (
+			selector        = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update history unchanged")
+			unchangedNodeId = graph.ID(40001)
+			missingNodeId   = graph.ID(40002)
+
+			oldUnchangedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            unchangedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-unchanged-primary-kind",
+				NodeEnvironmentId: "old-unchanged-environment",
+				NodeObjectId:      "old-unchanged-object-id",
+				NodeName:          "old-history-unchanged-node",
+			}
+			updatedUnchangedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            unchangedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "new-unchanged-primary-kind",
+				NodeEnvironmentId: "new-unchanged-environment",
+				NodeObjectId:      "new-unchanged-object-id",
+				NodeName:          "history-unchanged-node",
+			}
+			missingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            missingNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "missing-history-primary-kind",
+				NodeEnvironmentId: "missing-history-environment",
+				NodeObjectId:      "missing-history-object-id",
+				NodeName:          "history-missing-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldUnchangedNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedUnchangedNode,
+			missingNode,
+		}))
+
+		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedUnchangedNode.NodeName, missingNode.NodeName)
+		require.Empty(t, historyRecordsByTarget)
+	})
+
+	t.Run("ignores selector nodes that do not already exist", func(t *testing.T) {
+		var (
+			selector       = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch update missing row")
+			existingNodeId = graph.ID(20001)
+			missingNodeId  = graph.ID(20002)
+
+			oldExistingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            existingNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "old-existing-primary-kind",
+				NodeEnvironmentId: "old-existing-environment",
+				NodeObjectId:      "old-existing-object-id",
+				NodeName:          "old-existing-node-name",
+			}
+			updatedExistingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            existingNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("existing-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "new-existing-primary-kind",
+				NodeEnvironmentId: "new-existing-environment",
+				NodeObjectId:      "new-existing-object-id",
+				NodeName:          "new-existing-node-name",
+			}
+			missingNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            missingNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "missing-primary-kind",
+				NodeEnvironmentId: "missing-environment",
+				NodeObjectId:      "missing-object-id",
+				NodeName:          "missing-node-name",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, oldExistingNode)
+
+		require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			updatedExistingNode,
+			missingNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		require.Len(t, selectorNodesBySelectorId[selector.ID], 1)
+		assertUpdateSelectorNodesTestNode(t, updatedExistingNode, selectorNodesBySelectorId[selector.ID][existingNodeId])
+		assert.NotContains(t, selectorNodesBySelectorId[selector.ID], missingNodeId)
+	})
+}
+
+func TestDatabase_DeleteSelectorNodes(t *testing.T) {
+	t.Parallel()
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("returns nil for empty input", func(t *testing.T) {
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, nil))
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{}))
+	})
+
+	t.Run("deletes requested selector nodes", func(t *testing.T) {
+		var (
+			selector       = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete requested nodes")
+			deletedNodeId  = graph.ID(70001)
+			retainedNodeId = graph.ID(70002)
+
+			deletedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            deletedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "delete-requested-primary-kind",
+				NodeEnvironmentId: "delete-requested-environment",
+				NodeObjectId:      "delete-requested-object-id",
+				NodeName:          "delete-requested-node",
+			}
+			retainedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selector.ID,
+				NodeId:            retainedNodeId,
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("retained-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "delete-retained-primary-kind",
+				NodeEnvironmentId: "delete-retained-environment",
+				NodeObjectId:      "delete-retained-object-id",
+				NodeName:          "delete-retained-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, deletedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedNode)
+
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			deletedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		require.Len(t, selectorNodesBySelectorId[selector.ID], 1)
+		assert.NotContains(t, selectorNodesBySelectorId[selector.ID], deletedNodeId)
+		assertUpdateSelectorNodesTestNode(t, retainedNode, selectorNodesBySelectorId[selector.ID][retainedNodeId])
+	})
+
+	t.Run("leaves selector nodes not passed in untouched", func(t *testing.T) {
+		var (
+			selectorOne               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector one")
+			selectorTwo               = createUpdateSelectorNodesTestSelector(t, testCtx, suite.BHDatabase, testActor, "batch delete untouched selector two")
+			sharedNodeId              = graph.ID(80001)
+			selectorOneRetainedNodeId = graph.ID(80002)
+
+			deletedSelectorOneSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       null.StringFrom(model.AssetGroupActorBloodHound),
+				Source:            model.AssetGroupSelectorNodeSourceSeed,
+				NodePrimaryKind:   "delete-selector-one-primary-kind",
+				NodeEnvironmentId: "delete-selector-one-environment",
+				NodeObjectId:      "delete-selector-one-object-id",
+				NodeName:          "delete-selector-one-shared-node",
+			}
+			retainedSelectorOneNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorOne.ID,
+				NodeId:            selectorOneRetainedNodeId,
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       null.String{},
+				Source:            model.AssetGroupSelectorNodeSourceChild,
+				NodePrimaryKind:   "delete-selector-one-retained-primary-kind",
+				NodeEnvironmentId: "delete-selector-one-retained-environment",
+				NodeObjectId:      "delete-selector-one-retained-object-id",
+				NodeName:          "delete-selector-one-retained-node",
+			}
+			retainedSelectorTwoSharedNode = model.AssetGroupSelectorNode{
+				SelectorId:        selectorTwo.ID,
+				NodeId:            sharedNodeId,
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       null.StringFrom("selector-two-certifier"),
+				Source:            model.AssetGroupSelectorNodeSourceParent,
+				NodePrimaryKind:   "delete-selector-two-primary-kind",
+				NodeEnvironmentId: "delete-selector-two-environment",
+				NodeObjectId:      "delete-selector-two-object-id",
+				NodeName:          "delete-selector-two-shared-node",
+			}
+		)
+
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, deletedSelectorOneSharedNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedSelectorOneNode)
+		insertUpdateSelectorNodesTestNode(t, testCtx, suite.BHDatabase, retainedSelectorTwoSharedNode)
+
+		require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, []model.AssetGroupSelectorNode{
+			deletedSelectorOneSharedNode,
+		}))
+
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selectorOne.ID, selectorTwo.ID)
+		require.Len(t, selectorNodesBySelectorId[selectorOne.ID], 1)
+		require.Len(t, selectorNodesBySelectorId[selectorTwo.ID], 1)
+		assert.NotContains(t, selectorNodesBySelectorId[selectorOne.ID], sharedNodeId)
+		assertUpdateSelectorNodesTestNode(t, retainedSelectorOneNode, selectorNodesBySelectorId[selectorOne.ID][selectorOneRetainedNodeId])
+		assertUpdateSelectorNodesTestNode(t, retainedSelectorTwoSharedNode, selectorNodesBySelectorId[selectorTwo.ID][sharedNodeId])
+	})
+}
+
+func createUpdateSelectorNodesTestSelector(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, testActor model.User, name string) model.AssetGroupTagSelector {
+	t.Helper()
+
+	selector, err := bloodhoundDatabase.CreateAssetGroupTagSelector(ctx, 1, testActor, name, "test description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
+		{Type: model.SelectorTypeObjectId, Value: name + " object id"},
+	})
+	require.NoError(t, err)
+
+	return selector
+}
+
+func insertUpdateSelectorNodesTestNode(t *testing.T, ctx context.Context, bloodhoundDatabase interface {
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+}, node model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	insertAssetGroupSelectorNodes(t, ctx, bloodhoundDatabase, node)
+}
+
+func insertAssetGroupSelectorNodes(t *testing.T, ctx context.Context, bloodhoundDatabase interface {
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+}, nodes ...model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	require.NoError(t, bloodhoundDatabase.InsertSelectorNodes(ctx, nodes))
+}
+
+func requireSelectorNodesBySelectorAndNodeId(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, selectorIds ...int) map[int]map[graph.ID]model.AssetGroupSelectorNode {
+	t.Helper()
+
+	var (
+		selectorNodesBySelectorId = make(map[int]map[graph.ID]model.AssetGroupSelectorNode)
+		selectorNodes, err        = bloodhoundDatabase.GetSelectorNodesBySelectorIds(ctx, selectorIds...)
+	)
+	require.NoError(t, err)
+
+	for _, selectorNode := range selectorNodes {
+		if _, ok := selectorNodesBySelectorId[selectorNode.SelectorId]; !ok {
+			selectorNodesBySelectorId[selectorNode.SelectorId] = make(map[graph.ID]model.AssetGroupSelectorNode)
+		}
+
+		selectorNodesBySelectorId[selectorNode.SelectorId][selectorNode.NodeId] = selectorNode
+	}
+
+	return selectorNodesBySelectorId
+}
+
+func assertUpdateSelectorNodesTestNode(t *testing.T, expectedNode model.AssetGroupSelectorNode, actualNode model.AssetGroupSelectorNode) {
+	t.Helper()
+
+	assert.Equal(t, expectedNode.SelectorId, actualNode.SelectorId)
+	assert.Equal(t, expectedNode.NodeId, actualNode.NodeId)
+	assert.Equal(t, expectedNode.Certified, actualNode.Certified)
+	assert.Equal(t, expectedNode.CertifiedBy, actualNode.CertifiedBy)
+	assert.Equal(t, expectedNode.Source, actualNode.Source)
+	assert.Equal(t, expectedNode.NodePrimaryKind, actualNode.NodePrimaryKind)
+	assert.Equal(t, expectedNode.NodeEnvironmentId, actualNode.NodeEnvironmentId)
+	assert.Equal(t, expectedNode.NodeObjectId, actualNode.NodeObjectId)
+	assert.Equal(t, expectedNode.NodeName, actualNode.NodeName)
+	assert.False(t, actualNode.UpdatedAt.IsZero())
+}
+
+func requireUpdateSelectorNodesHistoryRecordsByTarget(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, targets ...string) map[string]model.AssetGroupHistory {
+	t.Helper()
+
+	var (
+		historyRecordsByTarget = make(map[string]model.AssetGroupHistory)
+		targetsByName          = make(map[string]struct{}, len(targets))
+		historyRecords, _, err = bloodhoundDatabase.GetAssetGroupHistoryRecords(ctx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+	)
+	require.NoError(t, err)
+
+	for _, target := range targets {
+		targetsByName[target] = struct{}{}
+	}
+
+	for _, historyRecord := range historyRecords {
+		if _, ok := targetsByName[historyRecord.Target]; ok {
+			require.NotContains(t, historyRecordsByTarget, historyRecord.Target)
+			historyRecordsByTarget[historyRecord.Target] = historyRecord
+		}
+	}
+
+	return historyRecordsByTarget
+}
+
+func assertUpdateSelectorNodesHistoryRecord(t *testing.T, expectedAction model.AssetGroupHistoryAction, expectedTarget string, expectedAssetGroupTagId int, actualRecord model.AssetGroupHistory) {
+	t.Helper()
+
+	assert.Equal(t, model.AssetGroupActorBloodHound, actualRecord.Actor)
+	assert.Equal(t, "", actualRecord.Email.ValueOrZero())
+	assert.Equal(t, expectedAction, actualRecord.Action)
+	assert.Equal(t, expectedTarget, actualRecord.Target)
+	assert.Equal(t, expectedAssetGroupTagId, actualRecord.AssetGroupTagId)
+	assert.Equal(t, null.String{}, actualRecord.EnvironmentId)
+	assert.Equal(t, null.String{}, actualRecord.Note)
+	assert.False(t, actualRecord.CreatedAt.IsZero())
+}
+
 func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *testing.T) {
 	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
@@ -1329,23 +2053,25 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 	tierTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
-	labelTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label", testDescription, null.Int32{}, null.Bool{}, null.String{})
-	require.NoError(t, err)
-
 	selector, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId2), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, tierTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
-
-	err = suite.BHDatabase.InsertSelectorNode(testCtx, labelTag.ID, selector.ID, graph.ID(testNodeId1), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "", "", "", "")
-	require.NoError(t, err)
+	insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+		model.AssetGroupSelectorNode{
+			SelectorId:  selector.ID,
+			NodeId:      graph.ID(testNodeId1),
+			Certified:   model.AssetGroupCertificationManual,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+		model.AssetGroupSelectorNode{
+			SelectorId:  selector.ID,
+			NodeId:      graph.ID(testNodeId2),
+			Certified:   model.AssetGroupCertificationManual,
+			CertifiedBy: certifiedBy,
+			Source:      model.AssetGroupSelectorNodeSource(source),
+		},
+	)
 
 	tests := map[string]struct {
 		Input          []int
@@ -1426,17 +2152,42 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
 		testNodeId := uint64(1)
 
-		// a selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
-
-		// a selector for T1 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
-		require.NoError(t, err)
-
-		// a selector for T2 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
-		require.NoError(t, err)
+		// Select the same node through selectors in tiers 0, 1, and 2.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_1",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT1",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_2",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT2",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 1"}, 0, 0)
@@ -1452,22 +2203,56 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 		testNodeId := uint64(30)
 
 		// a selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, null.StringFrom("Sel0_1_NoCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationPending,
+			CertifiedBy:       null.StringFrom("Sel0_1_NoCertifier"),
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0",
+		})
 
 		timeBeforeSel0_1_NodeInserted := time.Now().UTC()
 
-		// another selector for T0 selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, null.StringFrom("Sel0_1_ManualCertifier"), model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0")
-		require.NoError(t, err)
-
-		// a selector for T1 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier1.ID, sel1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_1", "environment", "objid", "NodeSelectedByT1")
-		require.NoError(t, err)
-
-		// a selector for T2 also selects this node
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, tier2.ID, sel2.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_2", "environment", "objid", "NodeSelectedByT2")
-		require.NoError(t, err)
+		// Insert the later T0 selector plus higher-tier selectors after the timestamp marker.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       null.StringFrom("Sel0_1_ManualCertifier"),
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_1",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT1",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_2",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT2",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 30"}, 0, 0)
@@ -1485,21 +2270,54 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 
 	t.Run("Multiple nodes - verify highest certify wins", func(t *testing.T) {
 		testNodeId := uint64(2)
-		// this one has certification revoked
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationRevoked, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertRevoked")
-		require.NoError(t, err)
 
-		// no certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationPending, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertNone")
-		require.NoError(t, err)
-
-		// manual certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationManual, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertManual")
-		require.NoError(t, err)
-
-		// auto certification
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_CertAuto")
-		require.NoError(t, err)
+		// Select the same node with each certification state.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationRevoked,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertRevoked",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_1.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationPending,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertNone",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_2.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationManual,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertManual",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0_3.ID,
+				NodeId:            graph.ID(testNodeId),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_CertAuto",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 2"}, 0, 0)
@@ -1515,20 +2333,56 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	t.Run("Multiple nodes - verify earliest create date wins", func(t *testing.T) {
 		testNodeId := uint64(3)
 		// created first
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_First",
+		})
 
 		// created second
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_1.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_1.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Second",
+		})
 
 		// created third
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_2.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_2.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Third",
+		})
 
 		// created fourth
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0_3.ID, graph.ID(testNodeId), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
-		require.NoError(t, err)
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase, model.AssetGroupSelectorNode{
+			SelectorId:        sel0_3.ID,
+			NodeId:            graph.ID(testNodeId),
+			Certified:         model.AssetGroupCertificationAuto,
+			CertifiedBy:       certifiedBy,
+			Source:            model.AssetGroupSelectorNodeSource(source),
+			NodePrimaryKind:   "kind_0",
+			NodeEnvironmentId: "environment",
+			NodeObjectId:      "objid",
+			NodeName:          "NodeSelectedByT0_Fourth",
+		})
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id = 3"}, 0, 0)
@@ -1541,21 +2395,53 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	})
 
 	t.Run("test pagination", func(t *testing.T) {
-		// create some nodes, all selected by a t0 selector
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(10)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_First")
-		require.NoError(t, err)
-
-		// created second
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(11)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Second")
-		require.NoError(t, err)
-
-		// created third
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(12)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Third")
-		require.NoError(t, err)
-
-		// created fourth
-		err = suite.BHDatabase.InsertSelectorNode(testCtx, 1, sel0.ID, graph.ID(uint64(13)), model.AssetGroupCertificationAuto, certifiedBy, model.AssetGroupSelectorNodeSource(source), "kind_0", "environment", "objid", "NodeSelectedByT0_Fourth")
-		require.NoError(t, err)
+		// Create four nodes, all selected by a T0 selector.
+		insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(10)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_First",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(11)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Second",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(12)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Third",
+			},
+			model.AssetGroupSelectorNode{
+				SelectorId:        sel0.ID,
+				NodeId:            graph.ID(uint64(13)),
+				Certified:         model.AssetGroupCertificationAuto,
+				CertifiedBy:       certifiedBy,
+				Source:            model.AssetGroupSelectorNodeSource(source),
+				NodePrimaryKind:   "kind_0",
+				NodeEnvironmentId: "environment",
+				NodeObjectId:      "objid",
+				NodeName:          "NodeSelectedByT0_Fourth",
+			},
+		)
 
 		// filtering on the nodes from this test only
 		nodeCertifications, count, err := suite.BHDatabase.GetAggregatedSelectorNodesCertification(testCtx, model.SQLFilter{SQLString: "node_id BETWEEN 10 AND 13"}, 0, 0)

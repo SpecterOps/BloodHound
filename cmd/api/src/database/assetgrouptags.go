@@ -25,7 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -59,10 +61,10 @@ type AssetGroupTagSelectorData interface {
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
 type AssetGroupTagSelectorNodeData interface {
-	InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, name string) error
-	UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, name string) error
+	InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
+	UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	UpdateCertificationBySelectorNode(ctx context.Context, input []UpdateCertificationBySelectorNodeInput) error
-	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
+	DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 	GetSelectorNodesBySelectorIdsFilteredAndPaginated(ctx context.Context, sqlFilter model.SQLFilter, sort model.Sort, skip, limit int, selectorIds ...int) ([]model.AssetGroupSelectorNode, int, error)
@@ -729,32 +731,377 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
-func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource, primaryKind, environmentId, objectId, displayName string) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if result := tx.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source, primaryKind, environmentId, objectId, displayName); result.Error != nil {
-			return CheckError(result)
-		} else if certified != model.AssetGroupCertificationPending {
-			bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
-		}
+func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeInsertBatchSize = 5000
+
+	var (
+		err             error
+		transaction     pgx.Tx
+		batchUpperBound int
+	)
+
+	if len(nodes) == 0 {
 		return nil
-	})
+	}
+
+	if transaction, err = s.pool.Begin(ctx); err != nil {
+		return fmt.Errorf("beginning selector node batch insert transaction: %w", err)
+	}
+
+	defer func() {
+		_ = transaction.Rollback(ctx)
+	}()
+
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeInsertBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeInsertBatchSize, len(nodes))
+		if err = insertSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+			return err
+		}
+	}
+
+	if err = transaction.Commit(ctx); err != nil {
+		return fmt.Errorf("committing selector node batch insert transaction: %w", err)
+	}
+
+	return nil
 }
 
-func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, assetGroupTagId, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, primaryKind, environmentId, objectId, displayName string) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var oldSelectorNode model.AssetGroupSelectorNode
-		if err := tx.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, node_primary_kind, node_environment_id, node_object_id, node_name, updated_at, created_at FROM %s WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId).First(&oldSelectorNode); err.Error != nil && !errors.Is(err.Error, gorm.ErrRecordNotFound) {
-			return CheckError(err)
-		} else if result := tx.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, node_primary_kind = ?, node_environment_id = ?, node_object_id = ?, node_name = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, primaryKind, environmentId, objectId, displayName, selectorId, nodeId); result.Error != nil {
-			return CheckError(result)
-		} else if oldSelectorNode.Certified != certified {
-			bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-			return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorBloodHound, "", displayName, model.ToAssetGroupHistoryActionFromAssetGroupCertification(certified), assetGroupTagId, null.String{}, null.String{})
+func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
+	var (
+		err               error
+		newCertifications []selectorNodeCertificationChange
+		rows              pgx.Rows
+		sqlArgs           pgx.StrictNamedArgs
+		sqlQuery          string
+	)
+
+	if sqlArgs, err = newSelectorNodeBatchSQLArgs(nodes); err != nil {
+		return fmt.Errorf("building selector node insert batch: %w", err)
+	}
+	sqlArgs["pending_certification"] = int32(model.AssetGroupCertificationPending)
+
+	sqlQuery = fmt.Sprintf(`
+	WITH batch AS (
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id,
+			unnest(@certifications::int[]) AS certified,
+			unnest(@certified_by_values::text[]) AS certified_by,
+			unnest(@sources::int[]) AS source,
+			unnest(@node_primary_kinds::text[]) AS node_primary_kind,
+			unnest(@node_environment_ids::text[]) AS node_environment_id,
+			unnest(@node_object_ids::text[]) AS node_object_id,
+			unnest(@node_names::text[]) AS node_name
+	),
+	inserted AS (
+		INSERT INTO %s (selector_id, node_id, certified, certified_by, source, node_primary_kind, node_environment_id, node_object_id, node_name, created_at, updated_at)
+		SELECT
+			batch.selector_id,
+			batch.node_id,
+			batch.certified,
+			batch.certified_by,
+			batch.source,
+			batch.node_primary_kind,
+			batch.node_environment_id,
+			batch.node_object_id,
+			batch.node_name,
+			current_timestamp,
+			current_timestamp
+		FROM batch
+		ON CONFLICT DO NOTHING
+		RETURNING selector_id, node_id, certified, node_name
+	)
+	SELECT
+		inserted.node_name AS target,
+		inserted.certified AS asset_group_certification,
+		selector.asset_group_tag_id
+	FROM inserted
+	JOIN %s AS selector
+		ON selector.id = inserted.selector_id
+	WHERE inserted.certified <> @pending_certification::int`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+	)
+
+	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
+		return fmt.Errorf("batch inserting selector nodes: %w", err)
+	}
+
+	if newCertifications, err = pgx.CollectRows(rows, pgx.RowToStructByName[selectorNodeCertificationChange]); err != nil {
+		return fmt.Errorf("scanning inserted selector node history records: %w", err)
+	}
+
+	if err = insertSelectorNodeCertificationHistoryBatch(ctx, transaction, newCertifications); err != nil {
+		return fmt.Errorf("batch inserting selector node history records: %w", err)
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeUpdateBatchSize = 5000
+
+	var (
+		err             error
+		transaction     pgx.Tx
+		batchUpperBound int
+	)
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	if transaction, err = s.pool.Begin(ctx); err != nil {
+		return fmt.Errorf("beginning selector node batch update transaction: %w", err)
+	}
+
+	defer func() {
+		_ = transaction.Rollback(ctx)
+	}()
+
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeUpdateBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeUpdateBatchSize, len(nodes))
+		if err = updateSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+			return err
+		}
+	}
+
+	if err = transaction.Commit(ctx); err != nil {
+		return fmt.Errorf("committing selector node batch update transaction: %w", err)
+	}
+
+	return nil
+}
+
+func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
+	var (
+		err                  error
+		certificationUpdates []selectorNodeCertificationChange
+		rows                 pgx.Rows
+		sqlArgs              pgx.StrictNamedArgs
+		sqlQuery             string
+	)
+
+	if sqlArgs, err = newSelectorNodeBatchSQLArgs(nodes); err != nil {
+		return fmt.Errorf("building selector node update batch: %w", err)
+	}
+
+	sqlQuery = fmt.Sprintf(`
+	WITH batch AS (
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id,
+			unnest(@certifications::int[]) AS certified,
+			unnest(@certified_by_values::text[]) AS certified_by,
+			unnest(@sources::int[]) AS source,
+			unnest(@node_primary_kinds::text[]) AS node_primary_kind,
+			unnest(@node_environment_ids::text[]) AS node_environment_id,
+			unnest(@node_object_ids::text[]) AS node_object_id,
+			unnest(@node_names::text[]) AS node_name
+	),
+	changed_certifications AS (
+		SELECT
+			selector_node.selector_id,
+			selector_node.node_id,
+			selector.asset_group_tag_id,
+			batch.node_name,
+			batch.certified
+		FROM %s AS selector_node
+		JOIN batch
+			ON selector_node.selector_id = batch.selector_id
+			AND selector_node.node_id = batch.node_id
+		JOIN %s AS selector
+			ON selector.id = selector_node.selector_id
+		WHERE selector_node.certified IS DISTINCT FROM batch.certified
+	),
+	updated AS (
+		UPDATE %s AS selector_node
+		SET
+			certified = batch.certified,
+			certified_by = batch.certified_by,
+			source = batch.source,
+			node_primary_kind = batch.node_primary_kind,
+			node_environment_id = batch.node_environment_id,
+			node_object_id = batch.node_object_id,
+			node_name = batch.node_name,
+			updated_at = current_timestamp
+		FROM batch
+		WHERE selector_node.selector_id = batch.selector_id
+			AND selector_node.node_id = batch.node_id
+		RETURNING selector_node.selector_id, selector_node.node_id
+	)
+	SELECT
+		changed_certifications.node_name AS target,
+		changed_certifications.certified AS asset_group_certification,
+		changed_certifications.asset_group_tag_id
+	FROM changed_certifications
+	JOIN updated
+		ON updated.selector_id = changed_certifications.selector_id
+		AND updated.node_id = changed_certifications.node_id`,
+		model.AssetGroupSelectorNode{}.TableName(),
+		model.AssetGroupTagSelector{}.TableName(),
+		model.AssetGroupSelectorNode{}.TableName(),
+	)
+
+	if rows, err = transaction.Query(ctx, sqlQuery, sqlArgs); err != nil {
+		return fmt.Errorf("batch updating selector nodes: %w", err)
+	}
+
+	if certificationUpdates, err = pgx.CollectRows(rows, pgx.RowToStructByName[selectorNodeCertificationChange]); err != nil {
+		return fmt.Errorf("scanning updated selector node history records: %w", err)
+	}
+
+	if err = insertSelectorNodeCertificationHistoryBatch(ctx, transaction, certificationUpdates); err != nil {
+		return fmt.Errorf("batch inserting selector node history records: %w", err)
+	}
+
+	return nil
+}
+
+type selectorNodeCertificationChange struct {
+	Target                  string `db:"target"`
+	AssetGroupCertification int32  `db:"asset_group_certification"`
+	AssetGroupTagId         int32  `db:"asset_group_tag_id"`
+}
+
+func (s selectorNodeCertificationChange) historyAction() model.AssetGroupHistoryAction {
+	return model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(s.AssetGroupCertification))
+}
+
+func newSelectorNodeBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
+	var (
+		selectorIds        = make([]int32, 0, len(nodes))
+		nodeIds            = make([]int64, 0, len(nodes))
+		certifications     = make([]int32, 0, len(nodes))
+		certifiedByValues  = make([]*string, 0, len(nodes))
+		sources            = make([]int32, 0, len(nodes))
+		nodePrimaryKinds   = make([]string, 0, len(nodes))
+		nodeEnvironmentIds = make([]string, 0, len(nodes))
+		nodeObjectIds      = make([]string, 0, len(nodes))
+		nodeNames          = make([]string, 0, len(nodes))
+	)
+
+	for _, node := range nodes {
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
+		certifications = append(certifications, int32(node.Certified))
+		sources = append(sources, int32(node.Source))
+		nodePrimaryKinds = append(nodePrimaryKinds, node.NodePrimaryKind)
+		nodeEnvironmentIds = append(nodeEnvironmentIds, node.NodeEnvironmentId)
+		nodeObjectIds = append(nodeObjectIds, node.NodeObjectId)
+		nodeNames = append(nodeNames, node.NodeName)
+
+		if node.CertifiedBy.Valid {
+			certifiedBy := node.CertifiedBy.String
+			certifiedByValues = append(certifiedByValues, &certifiedBy)
+		} else {
+			certifiedByValues = append(certifiedByValues, nil)
+		}
+	}
+
+	return newStrictNamedArrayArgs(
+		len(nodes),
+		newArrayArgument("selector_ids", selectorIds),
+		newArrayArgument("node_ids", nodeIds),
+		newArrayArgument("certifications", certifications),
+		newArrayArgument("certified_by_values", certifiedByValues),
+		newArrayArgument("sources", sources),
+		newArrayArgument("node_primary_kinds", nodePrimaryKinds),
+		newArrayArgument("node_environment_ids", nodeEnvironmentIds),
+		newArrayArgument("node_object_ids", nodeObjectIds),
+		newArrayArgument("node_names", nodeNames),
+	)
+}
+
+type arrayArgument struct {
+	name       string
+	value      any
+	valueCount int
+}
+
+func newArrayArgument[T any](name string, values []T) arrayArgument {
+	return arrayArgument{
+		name:       name,
+		value:      pgtype.FlatArray[T](values),
+		valueCount: len(values),
+	}
+}
+
+/*
+This function verifies all array arguments used to create the argument map have the same length.
+*/
+func newStrictNamedArrayArgs(expectedValueCount int, arguments ...arrayArgument) (pgx.StrictNamedArgs, error) {
+	var (
+		sqlArguments = make(pgx.StrictNamedArgs, len(arguments))
+	)
+
+	for _, argument := range arguments {
+		if argument.valueCount != expectedValueCount {
+			return nil, fmt.Errorf("strict named array argument %q has %d values; expected %d", argument.name, argument.valueCount, expectedValueCount)
 		}
 
+		sqlArguments[argument.name] = argument.value
+	}
+
+	return sqlArguments, nil
+}
+
+func insertSelectorNodeCertificationHistoryBatch(ctx context.Context, transaction pgx.Tx, certificationChanges []selectorNodeCertificationChange) error {
+	var (
+		assetGroupTagIds = make([]int32, 0, len(certificationChanges))
+		actions          = make([]string, 0, len(certificationChanges))
+		targets          = make([]string, 0, len(certificationChanges))
+		err              error
+		sqlArgs          pgx.StrictNamedArgs
+		sqlQuery         string
+	)
+
+	if len(certificationChanges) == 0 {
 		return nil
-	})
+	}
+
+	for _, certificationChange := range certificationChanges {
+		assetGroupTagIds = append(assetGroupTagIds, certificationChange.AssetGroupTagId)
+		actions = append(actions, string(certificationChange.historyAction()))
+		targets = append(targets, certificationChange.Target)
+	}
+
+	if sqlArgs, err = newStrictNamedArrayArgs(
+		len(certificationChanges),
+		newArrayArgument("actions", actions),
+		newArrayArgument("asset_group_tag_ids", assetGroupTagIds),
+		newArrayArgument("targets", targets),
+	); err != nil {
+		return fmt.Errorf("building selector node history batch: %w", err)
+	}
+	sqlArgs["actor"] = model.AssetGroupActorBloodHound
+
+	sqlQuery = fmt.Sprintf(`
+	WITH history AS (
+		SELECT
+			unnest(@targets::text[]) AS target,
+			unnest(@actions::text[]) AS action,
+			unnest(@asset_group_tag_ids::int[]) AS asset_group_tag_id
+	)
+	INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at)
+	SELECT
+		@actor::text,
+		''::text,
+		history.target,
+		history.action,
+		history.asset_group_tag_id,
+		NULL::text,
+		NULL::text,
+		current_timestamp
+	FROM history`,
+		model.AssetGroupHistory{}.TableName(),
+	)
+
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type UpdateCertificationBySelectorNodeInput struct {
@@ -787,8 +1134,81 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, in
 	})
 }
 
-func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId))
+func (s *BloodhoundDB) DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeDeleteBatchSize = 5000
+
+	var (
+		err             error
+		transaction     pgx.Tx
+		batchUpperBound int
+	)
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	if transaction, err = s.pool.Begin(ctx); err != nil {
+		return fmt.Errorf("beginning selector node batch delete transaction: %w", err)
+	}
+
+	defer func() {
+		_ = transaction.Rollback(ctx)
+	}()
+
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeDeleteBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeDeleteBatchSize, len(nodes))
+		if err = deleteSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+			return err
+		}
+	}
+
+	if err = transaction.Commit(ctx); err != nil {
+		return fmt.Errorf("committing selector node batch delete transaction: %w", err)
+	}
+
+	return nil
+}
+
+func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
+	var (
+		err         error
+		nodeIds     = make([]int64, 0, len(nodes))
+		selectorIds = make([]int32, 0, len(nodes))
+		sqlArgs     pgx.StrictNamedArgs
+		sqlQuery    string
+	)
+
+	for _, node := range nodes {
+		selectorIds = append(selectorIds, int32(node.SelectorId))
+		nodeIds = append(nodeIds, node.NodeId.Int64())
+	}
+
+	if sqlArgs, err = newStrictNamedArrayArgs(
+		len(nodes),
+		newArrayArgument("selector_ids", selectorIds),
+		newArrayArgument("node_ids", nodeIds),
+	); err != nil {
+		return fmt.Errorf("building selector node delete batch: %w", err)
+	}
+
+	sqlQuery = fmt.Sprintf(`
+	WITH batch AS (
+		SELECT
+			unnest(@selector_ids::int[]) AS selector_id,
+			unnest(@node_ids::bigint[]) AS node_id
+	)
+	DELETE FROM %s AS selector_node
+	USING batch
+	WHERE selector_node.selector_id = batch.selector_id
+		AND selector_node.node_id = batch.node_id`,
+		model.AssetGroupSelectorNode{}.TableName(),
+	)
+
+	if _, err = transaction.Exec(ctx, sqlQuery, sqlArgs); err != nil {
+		return fmt.Errorf("batch deleting selector nodes: %w", err)
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) error {
