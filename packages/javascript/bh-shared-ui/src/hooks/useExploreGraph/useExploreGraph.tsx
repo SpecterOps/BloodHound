@@ -13,12 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
-import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
-
 import { useTimeoutLimitConfiguration } from '../useConfiguration';
+import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+import { isRelationshipResponse, useGraphItem } from '../useGraphItem';
 import {
     ExploreGraphQuery,
     ExploreGraphQueryOptions,
@@ -33,7 +34,13 @@ import {
 
 export function exploreGraphQueryFactory(
     paramOptions: Partial<ExploreQueryParams>,
-    userSettings: UserSettings
+    {
+        userSettings,
+        relationshipDetails,
+    }: {
+        userSettings: UserSettings;
+        relationshipDetails?: RelationshipDetailsWithInfo;
+    }
 ): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
@@ -43,7 +50,7 @@ export function exploreGraphQueryFactory(
         case 'relationship':
             return relationshipSearchQuery(paramOptions);
         case 'composition':
-            return compositionSearchQuery(paramOptions);
+            return compositionSearchQuery(paramOptions, relationshipDetails);
         case 'cypher':
             return cypherSearchQuery(paramOptions, userSettings);
         case 'aclinheritance':
@@ -61,7 +68,10 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const { addNotification } = useNotifications();
     const userSettings = useUserSettings();
 
-    const query = exploreGraphQueryFactory(params, userSettings);
+    const { data } = useGraphItem(params.relationshipQueryItemId);
+    const relationshipDetails = data && isRelationshipResponse(data) ? data : undefined;
+
+    const query = exploreGraphQueryFactory(params, { userSettings, relationshipDetails });
 
     const queryConfig = query.getQueryConfig();
 
