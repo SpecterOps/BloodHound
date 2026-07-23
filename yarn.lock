@@ -6975,7 +6975,7 @@ __metadata:
     "@vitest/coverage-v8": "npm:^4.1.0"
     allure-vitest: "npm:^3.4.3"
     clsx: "npm:^2.1.1"
-    dompurify: "npm:^3.3.3"
+    dompurify: "npm:^3.4.12"
     doodle-ui: "workspace:*"
     downshift: "npm:^7.0.0"
     eslint: "npm:^9.26.0"
@@ -8239,15 +8239,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:3.2.4":
-  version: 3.2.4
-  resolution: "dompurify@npm:3.2.4"
+"dompurify@npm:3.4.12":
+  version: 3.4.12
+  resolution: "dompurify@npm:3.4.12"
   dependencies:
     "@types/trusted-types": "npm:^2.0.7"
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: 10/98570c53385518a2f9b617f796926338856acfdd3369c88b5905bddf96bd7d391bf8a5433127155e0046e6faa2bfb767185fcd571b865dfabe624c099e2537f5
+  checksum: 10/f826b68920887eb75115a162facb42380d1c3fac441548217b30068c9fadeed14f63fa1f7a1d2ab6f63613e5a0f897aa245c9224d4abf7939cd8ae58c04646af
   languageName: node
   linkType: hard
 
