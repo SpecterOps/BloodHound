@@ -19,6 +19,12 @@ import { rest } from 'msw';
 import * as tierMocks from '../factories/privilegeZones';
 import { mockKindsHandler } from './graphKinds';
 
+const nodeKindDisplayNames = {
+    AZApp: 'Azure Application',
+    AZServicePrincipal: 'Azure Service Principal',
+    CertTemplate: 'Certificate Template',
+};
+
 const zoneHandlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
@@ -45,7 +51,7 @@ const zoneHandlers = [
         );
     }),
     // GET Kinds
-    mockKindsHandler(),
+    mockKindsHandler(undefined, undefined, nodeKindDisplayNames),
 
     rest.get('/api/v2/available-domains', async (_req, res, ctx) => {
         return res(

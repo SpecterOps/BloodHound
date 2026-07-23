@@ -26,9 +26,13 @@ import AssetGroupEdit from './AssetGroupEdit';
 const assetGroup = createMockAssetGroup();
 const searchResults = createMockSearchResults();
 const memberCounts = createMockMemberCounts();
+const nodeKindDisplayNames = {
+    AZApp: 'Azure Application',
+    CertTemplate: 'Certificate Template',
+};
 
 const server = setupServer(
-    mockKindsHandler(),
+    mockKindsHandler(undefined, undefined, nodeKindDisplayNames),
     mockGetConfigurationHandler(),
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(
@@ -71,6 +75,29 @@ describe('AssetGroupEdit', () => {
         const { screen } = await setup();
         const count = screen.getByText('Total Count').nextSibling?.textContent;
         expect(count).toBe(memberCounts.total_count.toString());
+    });
+
+    it('should display human-readable node kind count labels', async () => {
+        const screen = await act(async () => {
+            return render(
+                <AssetGroupEdit
+                    assetGroup={assetGroup}
+                    filter={{}}
+                    memberCounts={{
+                        total_count: 3,
+                        counts: {
+                            AZApp: 1,
+                            CertTemplate: 2,
+                        },
+                    }}
+                    isEditable={false}
+                />
+            );
+        });
+
+        expect(screen.getByText('Azure Application')).toBeInTheDocument();
+        expect(screen.getByText('Certificate Template')).toBeInTheDocument();
+        expect(screen.queryByText('AZApp')).not.toBeInTheDocument();
     });
 
     it('should display search results when the user enters text', async () => {

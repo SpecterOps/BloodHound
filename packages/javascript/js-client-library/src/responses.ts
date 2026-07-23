@@ -406,7 +406,10 @@ export type FindingSchema = {
 
 export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
 
-export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
+export type GraphKindsResponse = BasicResponse<{
+    kinds: string[];
+    node_kinds?: Pick<NodeKindResponse, 'name' | 'display_name'>[];
+}>;
 
 export type UnifiedFinding = {
     severity: string;

@@ -229,7 +229,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2'>
                     <Button
-                        className='w-6 max-xl:px-2 max-lg:px-6'
+                        className='w-6 text-contrast'
                         variant='text'
                         disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
@@ -250,7 +250,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn({ 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base text-contrast', {
                                     '[&>svg]:hidden': !isOpen || isAccordionDisabled,
                                     'opacity-50': isAccordionDisabled,
                                 }),

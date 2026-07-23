@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 parameters:
-  - $ref: './../parameters/header.prefer.yaml'
+  - $ref: "./../parameters/header.prefer.yaml"
 get:
   operationId: GetKinds
   summary: Get kinds
@@ -30,7 +30,7 @@ get:
       description: Filter by type, valid types are node or edge, e.g. "eq:node"
       required: false
       schema:
-        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+        $ref: "./../schemas/api.params.predicate.filter.string-strict.yaml"
   responses:
     200:
       description: OK
@@ -46,13 +46,23 @@ get:
                     type: array
                     items:
                       type: string
+                  node_kinds:
+                    type: array
+                    description: Canonical node kind metadata for node kinds included in the kinds array.
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        display_name:
+                          type: string
     400:
-      $ref: './../responses/bad-request.yaml'
+      $ref: "./../responses/bad-request.yaml"
     401:
-      $ref: './../responses/unauthorized.yaml'
+      $ref: "./../responses/unauthorized.yaml"
     403:
-      $ref: './../responses/forbidden.yaml'
+      $ref: "./../responses/forbidden.yaml"
     429:
-      $ref: './../responses/too-many-requests.yaml'
+      $ref: "./../responses/too-many-requests.yaml"
     500:
-      $ref: './../responses/internal-server-error.yaml'
+      $ref: "./../responses/internal-server-error.yaml"

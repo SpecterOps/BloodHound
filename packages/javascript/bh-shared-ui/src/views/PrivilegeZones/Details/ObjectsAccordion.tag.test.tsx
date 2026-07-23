@@ -89,6 +89,29 @@ describe('ObjectsAccordion', () => {
         expect(within(userAccordionItem as HTMLElement).getByText('User')).toBeInTheDocument();
     });
 
+    it('renders human-readable node kind labels while preserving raw kind values', async () => {
+        render(
+            <ObjectsAccordion
+                tagId={'42'}
+                onObjectClick={vi.fn()}
+                kindCounts={{ AZApp: 2, AZServicePrincipal: 3, CertTemplate: 4 }}
+                totalCount={9}
+            />
+        );
+
+        expect(await screen.findByText('Azure Application')).toBeInTheDocument();
+        expect(screen.getByText('Azure Service Principal')).toBeInTheDocument();
+        expect(screen.getByText('Certificate Template')).toBeInTheDocument();
+        expect(screen.queryByText('AZApp')).not.toBeInTheDocument();
+
+        const azureApplicationHeader = screen.getByTestId('privilege-zones_details_AZApp-accordion-item');
+        const sortButton = within(azureApplicationHeader).getByTestId('column-header_sort-button');
+
+        await userEvent.click(sortButton);
+
+        expect(useTagMembersInfiniteQuerySpy).toBeCalledWith('42', 'asc', ['env-1'], 'AZApp', false);
+    });
+
     it('toggles sort order when clicking sortable header', async () => {
         render(<ObjectsAccordion tagId={'42'} onObjectClick={vi.fn()} kindCounts={testKindCounts} totalCount={15} />);
 

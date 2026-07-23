@@ -17,19 +17,23 @@
 import { rest } from 'msw';
 import { createGraphKinds } from '../factories/graphKinds';
 
-export const mockKindsHandler = (nodeKinds?: string[], edgeKinds?: string[]) =>
+export const mockKindsHandler = (
+    nodeKinds?: string[],
+    edgeKinds?: string[],
+    nodeKindDisplayNames: Record<string, string> = {}
+) =>
     rest.get('/api/v2/graphs/kinds', async (req, res, ctx) => {
         const filter = req.url.searchParams.get('type')?.split(':')[1];
 
         if (filter === 'node') {
-            return res(ctx.json({ data: createGraphKinds(nodeKinds, []) }));
+            return res(ctx.json({ data: createGraphKinds(nodeKinds, [], nodeKindDisplayNames) }));
         }
 
         if (filter === 'edge' || filter === 'relationship') {
-            return res(ctx.json({ data: createGraphKinds([], edgeKinds) }));
+            return res(ctx.json({ data: createGraphKinds([], edgeKinds, nodeKindDisplayNames) }));
         }
 
-        return res(ctx.json({ data: createGraphKinds(nodeKinds, edgeKinds) }));
+        return res(ctx.json({ data: createGraphKinds(nodeKinds, edgeKinds, nodeKindDisplayNames) }));
     });
 
 export const mockSourceKindsHandler = () =>
