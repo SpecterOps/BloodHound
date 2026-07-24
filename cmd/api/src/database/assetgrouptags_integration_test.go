@@ -1436,6 +1436,16 @@ func TestDatabase_SelectorNodesBatching(t *testing.T) {
 		firstBatchBoundaryIndex   = selectorNodeBatchTestCount - 2
 		nodes                     = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
 		updatedNodes              = make([]model.AssetGroupSelectorNode, 0, selectorNodeBatchTestCount)
+		retainedNode              = model.AssetGroupSelectorNode{
+			SelectorId:        selector.ID,
+			NodeId:            graph.ID(600000 + selectorNodeBatchTestCount),
+			Certified:         model.AssetGroupCertificationPending,
+			Source:            model.AssetGroupSelectorNodeSourceSeed,
+			NodePrimaryKind:   "temporary-retained-kind",
+			NodeEnvironmentId: "temporary-retained-environment",
+			NodeObjectId:      "temporary-retained-object",
+			NodeName:          "temporary-retained-node",
+		}
 	)
 
 	for nodeIndex := 0; nodeIndex < selectorNodeBatchTestCount; nodeIndex++ {
@@ -1488,13 +1498,15 @@ func TestDatabase_SelectorNodesBatching(t *testing.T) {
 		})
 	}
 
+	nodes = append(nodes, retainedNode)
 	require.NoError(t, suite.BHDatabase.InsertSelectorNodes(testCtx, nodes))
 
 	selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
-	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount+1)
 	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchCertifiedIndex].NodeId])
 	assertUpdateSelectorNodesTestNode(t, nodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][nodes[firstBatchBoundaryIndex].NodeId])
 	assertUpdateSelectorNodesTestNode(t, nodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][nodes[secondBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, retainedNode, selectorNodesBySelectorId[selector.ID][retainedNode.NodeId])
 
 	historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, nodes[firstBatchCertifiedIndex].NodeName, nodes[secondBatchCertifiedIndex].NodeName)
 	require.Len(t, historyRecordsByTarget, 2)
@@ -1504,15 +1516,25 @@ func TestDatabase_SelectorNodesBatching(t *testing.T) {
 	require.NoError(t, suite.BHDatabase.UpdateSelectorNodes(testCtx, updatedNodes))
 
 	selectorNodesBySelectorId = requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
-	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], selectorNodeBatchTestCount+1)
 	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchCertifiedIndex].NodeId])
 	assertUpdateSelectorNodesTestNode(t, updatedNodes[firstBatchBoundaryIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[firstBatchBoundaryIndex].NodeId])
 	assertUpdateSelectorNodesTestNode(t, updatedNodes[secondBatchCertifiedIndex], selectorNodesBySelectorId[selector.ID][updatedNodes[secondBatchCertifiedIndex].NodeId])
+	assertUpdateSelectorNodesTestNode(t, retainedNode, selectorNodesBySelectorId[selector.ID][retainedNode.NodeId])
 
 	historyRecordsByTarget = requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedNodes[firstBatchCertifiedIndex].NodeName, updatedNodes[secondBatchCertifiedIndex].NodeName)
 	require.Len(t, historyRecordsByTarget, 2)
 	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeManual, updatedNodes[firstBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[firstBatchCertifiedIndex].NodeName])
 	assertUpdateSelectorNodesHistoryRecord(t, model.AssetGroupHistoryActionCertifyNodeRevoked, updatedNodes[secondBatchCertifiedIndex].NodeName, assetGroupTagId, historyRecordsByTarget[updatedNodes[secondBatchCertifiedIndex].NodeName])
+
+	require.NoError(t, suite.BHDatabase.DeleteSelectorNodes(testCtx, updatedNodes))
+
+	selectorNodesBySelectorId = requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+	require.Len(t, selectorNodesBySelectorId[selector.ID], 1)
+	assert.NotContains(t, selectorNodesBySelectorId[selector.ID], updatedNodes[firstBatchCertifiedIndex].NodeId)
+	assert.NotContains(t, selectorNodesBySelectorId[selector.ID], updatedNodes[firstBatchBoundaryIndex].NodeId)
+	assert.NotContains(t, selectorNodesBySelectorId[selector.ID], updatedNodes[secondBatchCertifiedIndex].NodeId)
+	assertUpdateSelectorNodesTestNode(t, retainedNode, selectorNodesBySelectorId[selector.ID][retainedNode.NodeId])
 }
 
 func TestDatabase_UpdateSelectorNodes(t *testing.T) {
