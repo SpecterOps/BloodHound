@@ -800,10 +800,10 @@ class BHEAPIClient {
         this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
 
     downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
-        this.baseClient.get(
-            `/api/v2/clients/${clientId}/artifacts/${artifactId}`,
-            Object.assign({ responseType: 'blob' }, options)
-        );
+        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, {
+            ...options,
+            responseType: 'blob',
+        });
 
     deleteSupportBundle = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
