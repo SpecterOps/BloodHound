@@ -17,8 +17,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.13.0
-ARG AZUREHOUND_VERSION=v2.12.2
+ARG SHARPHOUND_VERSION=v2.14.0
+ARG AZUREHOUND_VERSION=v3.0.0
 
 ########
 # Package other assets
