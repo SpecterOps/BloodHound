@@ -1772,6 +1772,9 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 			missingNode,
 		}))
 
+		selectorNodesBySelectorId := requireSelectorNodesBySelectorAndNodeId(t, testCtx, suite.BHDatabase, selector.ID)
+		assertUpdateSelectorNodesTestNode(t, updatedUnchangedNode, selectorNodesBySelectorId[selector.ID][unchangedNodeId])
+
 		historyRecordsByTarget := requireUpdateSelectorNodesHistoryRecordsByTarget(t, testCtx, suite.BHDatabase, updatedUnchangedNode.NodeName, missingNode.NodeName)
 		require.Empty(t, historyRecordsByTarget)
 	})
