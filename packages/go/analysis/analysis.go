@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -36,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -295,6 +297,19 @@ func azurePostProcessingOperation(run analysisPipelineRun) (pipelineStepStatus, 
 	return pipelineStepStatusSuccess, collectedErrors
 }
 
+func optimizeGraphStorageAfterPost(run analysisPipelineRun) (pipelineStepStatus, []error) {
+	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(run.ctx, run.db)
+	if optimizationParam.AfterPostProcessing {
+		start := time.Now()
+		if err := run.graphDB.OptimizeStorage(run.ctx); err != nil {
+			slog.ErrorContext(run.ctx, "Error optimizing graph storage after post processing", attr.Error(err))
+		}
+		metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStagePostProcessing, time.Since(start))
+	}
+
+	return pipelineStepStatusSuccess, nil
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
 func taggingOperation(run analysisPipelineRun) (pipelineStepStatus, []error) {
 	var (
@@ -341,6 +356,7 @@ func dataQualityOperation(run analysisPipelineRun) (pipelineStepStatus, []error)
 }
 
 const DataQuality = "data_quality"
+const PostProcOptimize = "post_proc_optimize_storage"
 
 // The definition of our analysis pipeline
 func newPipeline() analysisPipeline {
@@ -352,6 +368,10 @@ func newPipeline() analysisPipeline {
 		{
 			analysisStep: model.AnalysisStepAzurePostProcessing(),
 			operation:    azurePostProcessingOperation,
+		},
+		{
+			name:      PostProcOptimize,
+			operation: optimizeGraphStorageAfterPost,
 		},
 		{
 			analysisStep: model.AnalysisStepTagging(),

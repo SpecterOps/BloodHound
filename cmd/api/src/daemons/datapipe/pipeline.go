@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -37,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
@@ -187,8 +189,13 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 	s.graphifyService.ProcessTasks(updateJobFunc(ctx, s.db))
 
 	// Vacuum dead tuples produced by reconciliation deletes and ingest writes
-	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
-		slog.ErrorContext(ctx, "Error optimizing graph storage after ingest", attr.Error(err))
+	ingestOptimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+	if ingestOptimizationParam.AfterIngest {
+		start := time.Now()
+		if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+			slog.ErrorContext(ctx, "Error optimizing graph storage after ingest", attr.Error(err))
+		}
+		metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageIngest, time.Since(start))
 	}
 
 	// Manage time-out state progression for ingest jobs
@@ -322,8 +329,13 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 		s.jobService.CompleteAnalyzedIngestJobs()
 
 		// Vacuum dead tuples produced by analysis edge writes
-		if err := s.graphdb.OptimizeStorage(ctx); err != nil {
-			slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
+		analysisOptimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+		if analysisOptimizationParam.AfterAnalysis {
+			start := time.Now()
+			if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+				slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
+			}
+			metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageAnalysis, time.Since(start))
 		}
 
 		// This is cacheclearing. The analysis is still successful here
