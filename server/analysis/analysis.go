@@ -24,6 +24,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/routes"
@@ -39,10 +40,10 @@ type AnalysisRequestAdapter interface {
 // NewAnalysisRequestAdapter creates a new AnalysisRequestAdapter by wiring up the
 // analysis store, service, and handlers. It accepts a PostgreSQL connection pool
 // and returns a fully initialized adapter ready to handle analysis requests.
-func NewAnalysisRequestAdapter(pool *pgxpool.Pool) AnalysisRequestAdapter {
+func NewAnalysisRequestAdapter(pool *pgxpool.Pool, eventPublisher alerts.Publisher) AnalysisRequestAdapter {
 	var (
 		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
+		svc        = services.NewService(store, eventPublisher)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
@@ -52,10 +53,10 @@ func NewAnalysisRequestAdapter(pool *pgxpool.Pool) AnalysisRequestAdapter {
 // Register builds the analysis store -> service -> handler chain and attaches
 // the analysis routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, eventPublisher alerts.Publisher) {
 	var (
 		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
+		svc        = services.NewService(store, eventPublisher)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 

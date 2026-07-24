@@ -22,6 +22,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/specterops/bloodhound/server/alerts"
 )
 
 // RequestedAnalysisType identifies the category of work an analysis request represents.
@@ -63,14 +65,18 @@ type Database interface {
 	DeleteAnalysisRequest(ctx context.Context) error
 }
 
-// Service implements the analysis use cases on top of a Database implementation.
+// Service implements the analysis use cases on top of a Database implementation & event publisher.
 type Service struct {
-	db Database
+	db        Database
+	publisher alerts.Publisher
 }
 
-// NewService constructs a Service backed by the supplied Database implementation.
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+// NewService constructs a Service backed by the supplied Database implementation & event publisher.
+func NewService(databaseInterface Database, eventPublisher alerts.Publisher) *Service {
+	if eventPublisher == nil {
+		return &Service{db: databaseInterface, publisher: alerts.NewNoopPubSub()}
+	}
+	return &Service{db: databaseInterface, publisher: eventPublisher}
 }
 
 // GetRequest returns the currently pending analysis request. ErrNoPendingRequest is returned
@@ -83,7 +89,17 @@ func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
 // pending request is returned along with a boolean indicating whether this call created it
 // (true) or a request was already pending (false).
 func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
-	return s.db.CreateAnalysisRequest(ctx, requestedBy)
+	if analysisRequest, success, err := s.db.CreateAnalysisRequest(ctx, requestedBy); err != nil {
+		s.publisher.Publish(ctx, "analysis.request.error", alerts.CreateAlertEventInput{Message: "Error Requesting Analysis", Data: map[string]any{"error": err}})
+		return analysisRequest, success, err
+	} else if !success {
+		s.publisher.Publish(ctx, "analysis.request.failure", alerts.CreateAlertEventInput{Message: "Failed to Request Analysis; Analysis Already Requested", Data: map[string]any{"error": err}})
+		return analysisRequest, success, err
+	} else {
+		s.publisher.Publish(ctx, "analysis.request.success", alerts.CreateAlertEventInput{Message: "Requesting Analysis Successful", Data: map[string]any{"requested_by": requestedBy}})
+		return analysisRequest, success, err
+
+	}
 }
 
 func (s *Service) CancelAnalysisRequest(ctx context.Context) error {
