@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
@@ -98,6 +99,8 @@ export const getZoneNameFromKinds = (
 };
 
 export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+export const getDecoyTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeDecoy);
 
 export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);
 
@@ -345,7 +348,9 @@ export const useRuleInfo = (tagId: string = '', ruleId: string = '') =>
     useQuery({
         queryKey: privilegeZonesKeys.ruleDetail(tagId, ruleId),
         queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, { signal });
+            const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, {
+                signal,
+            });
             return response.data.data[RuleKey];
         },
         enabled: tagId !== '' && ruleId !== '',
@@ -389,7 +394,7 @@ export const useHighestPrivilegeTagId = () => {
 };
 
 export const useLabels = () => {
-    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeDecoy];
     const select = (tags: AssetGroupTag[]) => tags.filter((tag) => labelTypes.includes(tag.type));
 
     return useTagsQuery({ select });

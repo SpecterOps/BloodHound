@@ -20,6 +20,7 @@ package migration_test
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -28,11 +29,18 @@ import (
 )
 
 func TestMigration_AssetGroups(t *testing.T) {
-	// We expect a new DB to have the T0 group and the Owned group
-	expectedNumAssetGroups := 2
 	dbInst := integration.SetupDB(t)
 
 	assetGroups, err := dbInst.GetAllAssetGroups(context.Background(), "", model.SQLFilter{})
 	require.Nil(t, err)
-	require.Equal(t, expectedNumAssetGroups, len(assetGroups))
+	require.Len(t, assetGroups, 3)
+	require.True(t, slices.ContainsFunc(assetGroups, func(assetGroup model.AssetGroup) bool {
+		return assetGroup.Name == "Admin Tier Zero" && assetGroup.Tag == "admin_tier_0"
+	}))
+	require.True(t, slices.ContainsFunc(assetGroups, func(assetGroup model.AssetGroup) bool {
+		return assetGroup.Name == "Owned" && assetGroup.Tag == "owned"
+	}))
+	require.True(t, slices.ContainsFunc(assetGroups, func(assetGroup model.AssetGroup) bool {
+		return assetGroup.Name == "Decoy" && assetGroup.Tag == "decoy"
+	}))
 }

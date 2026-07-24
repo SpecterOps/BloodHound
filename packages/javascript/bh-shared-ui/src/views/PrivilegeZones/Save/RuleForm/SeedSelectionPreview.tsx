@@ -29,17 +29,18 @@ import {
 import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
-import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
+import { getDecoyTag, getOwnedTag, usePZPathParams, useTagsQuery } from '../../../../hooks';
 import { apiClient, cn } from '../../../../utils';
 import { useRuleFormContext } from './RuleFormContext';
 
 const getRuleExpansionMethod = (
     tagId: string,
     tagType: 'labels' | 'zones',
-    ownedId: string | undefined
+    ownedId: string | undefined,
+    decoyId: string | undefined
 ): SeedExpansionMethod => {
-    // Owned is a specific tag type that does not undergo expansion
-    if (tagId === ownedId) return SeedExpansionMethodNone;
+    // Owned and Decoy are specific tag types that do not undergo expansion
+    if (tagId === ownedId || tagId === decoyId) return SeedExpansionMethodNone;
 
     return tagType === 'zones' ? SeedExpansionMethodAll : SeedExpansionMethodChild;
 };
@@ -55,11 +56,14 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
 }) => {
     const { tagType, tagId } = usePZPathParams();
 
-    const ownedId = useOwnedTagId();
+    const tagsQuery = useTagsQuery();
+    const ownedId = getOwnedTag(tagsQuery.data ?? [])?.id;
+    const decoyId = getDecoyTag(tagsQuery.data ?? [])?.id;
+    const tagIdentityResolved = tagType === 'zones' || tagsQuery.isSuccess;
 
     const { dispatch, cypherQueryYieldsNoResults } = useRuleFormContext();
 
-    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString());
+    const expansion = getRuleExpansionMethod(tagId, tagType, ownedId?.toString(), decoyId?.toString());
 
     const { data: sampleResults, isFetched: sampleResultsFetched } = useQuery({
         queryKey: ['privilege-zones', 'preview-selectors', ruleType, seeds, expansion],
@@ -70,7 +74,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         },
         retry: false,
         refetchOnWindowFocus: false,
-        enabled: seeds.length > 0,
+        enabled: seeds.length > 0 && tagIdentityResolved,
         staleTime: 1000 * 20, // Prevents refetching when changing rule type
     });
 

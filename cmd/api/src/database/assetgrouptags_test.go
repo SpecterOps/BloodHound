@@ -723,6 +723,17 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[1].Action)
 	})
 
+	t.Run("cannot delete default decoy tag", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		decoyTags, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeDecoy))})
+		require.NoError(t, err)
+		require.Len(t, decoyTags, 1)
+
+		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, decoyTags[0])
+		require.EqualError(t, err, "you cannot delete the decoy tag")
+	})
+
 	t.Run("Non existent asset group tag errors out", func(t *testing.T) {
 		dbInst := integration.SetupDB(t)
 
@@ -811,6 +822,34 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 			require.Contains(t, ids, itm.ID)
 		}
 	})
+}
+
+func TestDatabase_GetAssetGroupTagForSelection(t *testing.T) {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+
+	tags, err := dbInst.GetAssetGroupTagForSelection(testCtx)
+	require.NoError(t, err)
+	require.Len(t, tags, 3)
+
+	tagsByType := map[model.AssetGroupTagType]model.AssetGroupTag{}
+	for _, tag := range tags {
+		tagsByType[tag.Type] = tag
+	}
+
+	tierZeroTag, hasTierZeroTag := tagsByType[model.AssetGroupTagTypeTier]
+	require.True(t, hasTierZeroTag)
+	require.Equal(t, int32(1), tierZeroTag.Position.Int32)
+
+	ownedTag, hasOwnedTag := tagsByType[model.AssetGroupTagTypeOwned]
+	require.True(t, hasOwnedTag)
+	require.Equal(t, "Owned", ownedTag.Name)
+
+	decoyTag, hasDecoyTag := tagsByType[model.AssetGroupTagTypeDecoy]
+	require.True(t, hasDecoyTag)
+	require.Equal(t, "Decoy", decoyTag.Name)
 }
 
 func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {

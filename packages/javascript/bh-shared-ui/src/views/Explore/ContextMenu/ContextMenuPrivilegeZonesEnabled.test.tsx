@@ -65,6 +65,13 @@ const server = setupServer(
                             description: 'Owned',
                         },
                         {
+                            id: 4,
+                            type: 4,
+                            kind_id: 4,
+                            name: 'Decoy',
+                            description: 'Decoy',
+                        },
+                        {
                             id: 1,
                             type: 1,
                             kind_id: 1,
@@ -87,20 +94,33 @@ afterAll(() => server.close());
 describe('ContextMenu', () => {
     it('renders asset group edit options with graph write permissions', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         expect(startNodeOption).toBeInTheDocument();
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToTierZeroValue = await screen.findByRole('menuitem', { name: /add to tier zero/i });
+        const addToTierZeroValue = await screen.findByRole('menuitem', {
+            name: /add to tier zero/i,
+        });
         expect(addToTierZeroValue).toBeInTheDocument();
 
-        const addToOwned = await screen.findByRole('menuitem', { name: /add to owned/i });
+        const addToOwned = await screen.findByRole('menuitem', {
+            name: /add to owned/i,
+        });
         expect(addToOwned).toBeInTheDocument();
+
+        const addToDecoy = await screen.findByRole('menuitem', {
+            name: /add to decoy/i,
+        });
+        expect(addToDecoy).toBeInTheDocument();
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {
@@ -115,20 +135,33 @@ describe('ContextMenu', () => {
         );
 
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         expect(startNodeOption).toBeInTheDocument();
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         expect(endNodeOption).toBeInTheDocument();
 
-        const addToTierZeroValue = screen.queryByRole('menuitem', { name: /add to tier zero/i });
+        const addToTierZeroValue = screen.queryByRole('menuitem', {
+            name: /add to tier zero/i,
+        });
         expect(addToTierZeroValue).not.toBeInTheDocument();
 
-        const addToOwned = screen.queryByRole('menuitem', { name: /add to owned/i });
+        const addToOwned = screen.queryByRole('menuitem', {
+            name: /add to owned/i,
+        });
         expect(addToOwned).not.toBeInTheDocument();
+
+        const addToDecoy = screen.queryByRole('menuitem', {
+            name: /add to decoy/i,
+        });
+        expect(addToDecoy).not.toBeInTheDocument();
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
@@ -136,7 +169,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=1234',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
 
         const user = userEvent.setup();
         await user.click(startNodeOption);
@@ -151,7 +186,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=1234&secondarySearch=def',
         });
 
-        const startNodeOption = await screen.findByRole('menuitem', { name: /set as starting node/i });
+        const startNodeOption = await screen.findByRole('menuitem', {
+            name: /set as starting node/i,
+        });
         const user = userEvent.setup();
         await user.click(startNodeOption);
 
@@ -165,7 +202,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=1234',
         });
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 
@@ -179,7 +218,9 @@ describe('ContextMenu', () => {
             route: '/test?selectedItem=1234&primarySearch=def',
         });
 
-        const endNodeOption = await screen.findByRole('menuitem', { name: /set as ending node/i });
+        const endNodeOption = await screen.findByRole('menuitem', {
+            name: /set as ending node/i,
+        });
         const user = userEvent.setup();
         await user.click(endNodeOption);
 
@@ -190,7 +231,7 @@ describe('ContextMenu', () => {
 
     it('opens a submenu when user hovers over `Copy`', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
-            route: '/test?selectedItem=abc',
+            route: '/test?selectedItem=1234',
         });
 
         const user = userEvent.setup();

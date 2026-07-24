@@ -88,6 +88,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
             assetGroups: [
                 { tag: 'owned', id: 1 },
                 { tag: 'admin_tier_0', id: 2 },
+                { tag: 'decoy', id: 3 },
             ],
         },
     };
@@ -121,11 +122,13 @@ describe('ContextMenu', async () => {
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         const addToHighValueOption = screen.getByRole('menuitem', { name: /add to high value/i });
         const addToOwnedOption = screen.getByRole('menuitem', { name: /add to owned/i });
+        const addToDecoyOption = screen.getByRole('menuitem', { name: /add to decoy/i });
 
         expect(startNodeOption).toBeInTheDocument();
         expect(endNodeOption).toBeInTheDocument();
         expect(addToHighValueOption).toBeInTheDocument();
         expect(addToOwnedOption).toBeInTheDocument();
+        expect(addToDecoyOption).toBeInTheDocument();
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {

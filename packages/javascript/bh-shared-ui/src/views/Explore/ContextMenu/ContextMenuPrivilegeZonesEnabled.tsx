@@ -24,6 +24,7 @@ import {
 } from 'js-client-library';
 import { FC } from 'react';
 import {
+    getDecoyTag,
     getOwnedTag,
     getTierZeroTag,
     isNodeResponse,
@@ -44,7 +45,7 @@ const ContextMenu: FC<{
 
     const node = selectedItemQuery.data ? (selectedItemQuery.data as NodeDetails) : undefined;
 
-    const ownedPayload: CreateSelectorRequest = {
+    const objectIdSelectorPayload: CreateSelectorRequest = {
         name: node?.properties.name ?? node?.properties.objectid ?? '',
         seeds: [
             {
@@ -55,7 +56,7 @@ const ContextMenu: FC<{
     };
 
     const tierZeroPayload: CreateSelectorRequest = {
-        ...ownedPayload,
+        ...objectIdSelectorPayload,
         auto_certify: AssetGroupTagSelectorAutoCertifySeedsOnly,
     };
 
@@ -86,7 +87,10 @@ const ContextMenu: FC<{
     return (
         <Menu
             open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+            anchorPosition={{
+                left: contextMenu?.mouseX || 0,
+                top: contextMenu?.mouseY || 0,
+            }}
             anchorReference='anchorPosition'
             onClick={onClose}
             keepMounted>
@@ -101,9 +105,15 @@ const ContextMenu: FC<{
             />
 
             <AssetGroupMenuItem
-                addNodePayload={ownedPayload}
+                addNodePayload={objectIdSelectorPayload}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
                 tagIdentifierFn={getOwnedTag}
+            />
+
+            <AssetGroupMenuItem
+                addNodePayload={objectIdSelectorPayload}
+                removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
+                tagIdentifierFn={getDecoyTag}
             />
 
             <CopyMenuItem />
