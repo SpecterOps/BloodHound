@@ -494,6 +494,17 @@ func (s *User) HasAllEnvironments() bool {
 	return s.AllEnvironments
 }
 
+// GetAllowedEnvironments returns the environment IDs assigned to this user via ETAC.
+// Callers should check HasAllEnvironments first; when that is true this list is not
+// consulted for access decisions.
+func (s *User) GetAllowedEnvironments() []string {
+	var environmentIDs = make([]string, 0, len(s.EnvironmentTargetedAccessControl))
+	for _, etacEntry := range s.EnvironmentTargetedAccessControl {
+		environmentIDs = append(environmentIDs, etacEntry.EnvironmentID)
+	}
+	return environmentIDs
+}
+
 type Users []User
 
 func (s Users) IsSortable(column string) bool {
