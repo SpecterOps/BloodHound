@@ -54,7 +54,7 @@ export function exploreGraphQueryFactory(
         case 'cypher':
             return cypherSearchQuery(paramOptions, userSettings);
         case 'aclinheritance':
-            return aclInheritanceSearchQuery(paramOptions);
+            return aclInheritanceSearchQuery(paramOptions, relationshipDetails);
         default:
             return fallbackQuery;
     }
