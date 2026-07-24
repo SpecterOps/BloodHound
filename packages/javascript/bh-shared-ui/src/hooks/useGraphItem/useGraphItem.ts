@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    GraphEdge,
     GraphNode,
     NodeDetails,
     NodeDetailsWithInfo,
@@ -22,8 +23,9 @@ import {
     RelationshipDetailsWithInfo,
 } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, REL_ID_PREFIX } from '../../utils';
+import { apiClient, ParsedQueryItem, parseItemId, REL_ID_PREFIX } from '../../utils';
 import { escapeCypherString } from '../../utils/cypher';
+import { useExploreParams } from '../useExploreParams';
 
 export const isRelationshipResponse = (
     response: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
@@ -68,18 +70,62 @@ export const useGetNodeById = (id?: number) => {
 };
 
 export const useGraphItem = (itemId?: string | null) => {
-    const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
+    const parsed = parseItemId(itemId ?? '');
+    const isCypherBased = parsed.itemType !== 'none';
+    const cypherQuery = useCypherGraphItem(parsed);
 
+    const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
     const relationshipId = isRelationship && itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
     const relQuery = useGetRelationshipById(relationshipId);
 
     const nodeId = itemId ? parseInt(itemId) : undefined;
     const nodeQuery = useGetNodeById(nodeId);
 
-    return isRelationship ? relQuery : nodeQuery;
+    if (isCypherBased) return cypherQuery;
+    if (isRelationship) return relQuery;
+    return nodeQuery;
+};
+
+const useCypherGraphItem = (parsed: ParsedQueryItem) => {
+    const cypherRelationshipQuery = useRelationshipCypher(parsed.cypherQuery);
+    const cypherNodeQuery = useNodeByObjectId(parsed.id);
+
+    return parsed.itemType === 'edge' ? cypherRelationshipQuery : cypherNodeQuery;
+};
+
+const useRelationshipCypher = (query: string) => {
+    const { setExploreParams } = useExploreParams();
+    return useQuery({
+        queryKey: ['relationshipCypher', query],
+        queryFn: async () => {
+            return apiClient.cypherSearch(query, undefined, true).then((res) => {
+                const edges = res.data?.data?.edges;
+                if (!edges || edges.length === 0) {
+                    return undefined;
+                }
+
+                const firstElement: GraphEdge = edges[0];
+                setExploreParams({ selectedItem: `rel_${firstElement.id}` });
+
+                const relationship: RelationshipDetails = {
+                    relationship_id: firstElement.id,
+                    kind: { name: firstElement.kind, relationship_kind_id: null },
+                    properties: { lastSeen: firstElement.properties?.lastseen ?? '' },
+                };
+
+                return relationship;
+            });
+        },
+
+        enabled: !!query,
+        retry: false,
+        refetchOnWindowFocus: false,
+        keepPreviousData: true,
+    });
 };
 
 export const useNodeByObjectId = (objectId?: string) => {
+    const { setExploreParams } = useExploreParams();
     return useQuery({
         queryKey: ['getGraphNodeByObjectId', objectId],
         queryFn: async () => {
@@ -99,6 +145,7 @@ export const useNodeByObjectId = (objectId?: string) => {
                     const firstElement: GraphNode = Object.values(nodes)[0];
                     const id = Object.keys(nodes)[0];
 
+                    setExploreParams({ selectedItem: id });
                     const node: NodeDetails = {
                         node_id: parseInt(id),
                         kinds: firstElement.kinds.map((kind) => {
