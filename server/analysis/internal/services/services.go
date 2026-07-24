@@ -73,9 +73,6 @@ type Service struct {
 
 // NewService constructs a Service backed by the supplied Database implementation & event publisher.
 func NewService(databaseInterface Database, eventPublisher alerts.Publisher) *Service {
-	if eventPublisher == nil {
-		return &Service{db: databaseInterface, publisher: alerts.NewNoopPubSub()}
-	}
 	return &Service{db: databaseInterface, publisher: eventPublisher}
 }
 
@@ -90,13 +87,13 @@ func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
 // (true) or a request was already pending (false).
 func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
 	if analysisRequest, success, err := s.db.CreateAnalysisRequest(ctx, requestedBy); err != nil {
-		s.publisher.Publish(ctx, "analysis.request.error", alerts.CreateAlertEventInput{Message: "Error Requesting Analysis", Data: map[string]any{"error": err}})
+		s.publisher.Publish(ctx, "analysis.request.error", alerts.AlertEventInput{Message: "Error Requesting Analysis", Data: map[string]any{"error": err}})
 		return analysisRequest, success, err
 	} else if !success {
-		s.publisher.Publish(ctx, "analysis.request.failure", alerts.CreateAlertEventInput{Message: "Failed to Request Analysis; Analysis Already Requested", Data: map[string]any{"error": err}})
+		s.publisher.Publish(ctx, "analysis.request.failure", alerts.AlertEventInput{Message: "Failed to Request Analysis; Analysis Already Requested", Data: map[string]any{"error": err}})
 		return analysisRequest, success, err
 	} else {
-		s.publisher.Publish(ctx, "analysis.request.success", alerts.CreateAlertEventInput{Message: "Requesting Analysis Successful", Data: map[string]any{"requested_by": requestedBy}})
+		s.publisher.Publish(ctx, "analysis.request.success", alerts.AlertEventInput{Message: "Requesting Analysis Successful", Data: map[string]any{"requested_by": requestedBy}})
 		return analysisRequest, success, err
 
 	}

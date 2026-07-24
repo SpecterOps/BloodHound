@@ -22,8 +22,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 )
 
-// CreateAlertEventInput carries the values required to create a new alert event.
-type CreateAlertEventInput struct {
+// AlertEventInput carries the values required to create a new alert event.
+type AlertEventInput struct {
 	Message string
 	Data    types.JSONUntypedObject
 }
@@ -31,16 +31,16 @@ type CreateAlertEventInput struct {
 type AlertEventType string
 
 type Publisher interface {
-	Publish(ctx context.Context, eventType AlertEventType, event CreateAlertEventInput) error
+	Publish(ctx context.Context, eventType AlertEventType, event AlertEventInput) error
 }
 
-type NoopPublisher struct{}
+type AlertEventPublisher struct{}
 
-func NewNoopPubSub() *NoopPublisher {
-	return &NoopPublisher{}
+func NewAlertEventPublisher() *AlertEventPublisher {
+	return &AlertEventPublisher{}
 }
 
 // Not implemented in BHCE
-func (s *NoopPublisher) Publish(ctx context.Context, eventType AlertEventType, event CreateAlertEventInput) error {
+func (s *AlertEventPublisher) Publish(ctx context.Context, eventType AlertEventType, event AlertEventInput) error {
 	return nil
 }
