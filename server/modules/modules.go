@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/services/alertevents"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/featureflags"
@@ -41,6 +42,7 @@ type Deps struct {
 	Graph               graph.Database
 	RateLimitMiddleware func() mux.MiddlewareFunc
 	DogTags             dogtags.Service
+	AlertEvents         alertevents.Publisher
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -61,6 +63,12 @@ func Register(deps Deps) {
 	}
 	if deps.DogTags == nil {
 		panic("modules: Register requires a non-nil DogTags")
+	}
+
+	// A missing producer is a valid configuration (BHCE standalone), unlike a
+	// missing Router — degrade to no-op instead of panicking.
+	if deps.AlertEvents == nil {
+		deps.AlertEvents = alertevents.NewNoopPublisher()
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
