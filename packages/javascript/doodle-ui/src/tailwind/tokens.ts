@@ -13,10 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { common, dark, light, palette, text } from './colors';
+import { brand, common, dark, light, palette } from './colors';
 
-const secondaryVariant2 = '#99a3ff';
-const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
 const focusRingOffsetWidth = '1px';
 
@@ -50,24 +48,32 @@ const isToken = (node: Token | TokenGroup): node is Token => typeof (node as Tok
 
 export const tokens = {
     // SHARED (same in light and dark)
+    // TODO stays here
     common: {
-        dark: { light: common.dark },
-        white: { light: common.white },
+        dark: { light: palette.neutral.dark[50], dark: common.white },
+        main: { light: palette.black, dark: palette.white },
+        disabled: { light: common.disabled.light, dark: common.disabled.dark },
+        contrast: { light: common.white, dark: common.dark },
+        white: { light: common.white }, // TODO does this need to exist?
+        divider: { light: palette.neutral.light[500], dark: palette.neutral.dark[500] },
     },
-
     // MAIN
+    // TODO stays here
     primary: {
         /* DEFAULT and `main` are failsafes for classes using the optional '-main' suffix */
-        DEFAULT: { light: light.primary.main, dark: dark.primary.main },
-        main: { light: light.primary.main, dark: dark.primary.main },
-        variant: { light: light.primary.variant, dark: dark.primary.variant },
+        DEFAULT: { light: brand.purple.dark, dark: brand.purple.light },
+        main: { light: brand.purple.dark, dark: brand.purple.light },
+        // TODO can dark variant be the same as purple variant '#99a3ff'?
+        variant: { light: '#0D0A30', dark: '#8D8BF8' },
     },
+    // TODO stays here
     secondary: {
-        DEFAULT: { light: light.secondary.main, dark: dark.secondary.main },
-        main: { light: light.secondary.main, dark: dark.secondary.main },
-        variant: { light: light.secondary.variant, dark: dark.secondary.variant },
-        'variant-2': { light: secondaryVariant2 },
+        DEFAULT: { light: brand.purple.medium, dark: brand.blue.medium },
+        main: { light: brand.purple.medium, dark: brand.blue.medium },
+        variant: { light: '#3729BB', dark: '#4E95FF' },
+        'variant-2': { light: brand.purple.variant },
     },
+    // TODO should tertiary even be here?
     tertiary: {
         // DEFAULT and `variant` hold legacy values; the new tokens are commented until adopted
         DEFAULT: { light: '#02c577' },
@@ -76,7 +82,8 @@ export const tokens = {
         variant: { light: '#5cc791' },
         // variant: { light: light.tertiary.variant, dark: dark.tertiary.variant },
     },
-    disabled: { light: light.disabled, dark: dark.disabled },
+    // TODO doesn't need to exist - can be removed
+    disabled: { light: common.disabled.light, dark: common.disabled.dark }, // -> use common.disabled
 
     // NEUTRALS
     neutral: {
@@ -89,27 +96,30 @@ export const tokens = {
     },
 
     // TEXT
+    // TODO stays here
     text: {
-        main: { light: common.dark, dark: common.white },
-        light: { light: text.light, dark: text.dark },
-        // contrast: { light: common.white, dark: common.dark },
-        disabled: { light: light.text.disabled, dark: common.disabled },
-        // primary: { light: light.primary.main, dark: dark.primary.main },
-        // secondary: { light: light.secondary.main, dark: dark.secondary.main },
+        main: { light: common.dark, dark: common.white }, // -> use common.dark
+        light: { light: '#505050', dark: '#CDCDCD' },
+        // contrast: { light: common.white, dark: common.dark }, // -> use common.contrast
+        disabled: { light: common.disabled.light, dark: common.disabled.dark }, // -> use common.disabled
+        // primary: { light: light.primary.main, dark: dark.primary.main }, // -> use primary.main
+        // secondary: { light: light.secondary.main, dark: dark.secondary.main }, // -> use secondary.main
     },
 
     // LINKS
+    // moved to Link component - can be removed
     link: {
-        DEFAULT: { light: light.secondary.main, dark: dark.secondary.main, varName: 'link-main' },
-        hover: { light: light.secondary.variant, dark: dark.secondary.variant },
+        DEFAULT: { light: brand.purple.medium, dark: brand.blue.medium, varName: 'link-main' },
+        hover: { light: '#3729BB', dark: '#4E95FF' },
         // legacy `--link` variable, superseded by `--link-main`
-        legacy: { light: '#1a30ff', dark: secondaryVariant2, cssVariableOnly: true, varName: 'link' },
+        legacy: { light: '#1a30ff', dark: brand.purple.variant, cssVariableOnly: true, varName: 'link' },
     },
 
     // FOCUS (variables only; consumed by the `.focus-ring` utilities in the plugin)
+    // TODO stays here
     focus: {
         ring: {
-            DEFAULT: { light: light.secondary.main, dark: dark.secondary.main, cssVariableOnly: true },
+            DEFAULT: { light: brand.purple.medium, dark: brand.blue.medium, cssVariableOnly: true },
             width: { light: focusRingWidth, dark: focusRingWidth, cssVariableOnly: true },
             offset: {
                 DEFAULT: { light: common.white, dark: palette.neutral.dark[50], cssVariableOnly: true },
@@ -119,33 +129,36 @@ export const tokens = {
     },
 
     // STATUS
+    // TODO stays here
     status: {
         error: {
-            main: { light: light.status.error.main, dark: dark.status.error.main },
-            text: { light: light.status.error.text, dark: dark.status.error.text },
-            fill: { light: light.status.error.fill, dark: dark.status.error.fill },
+            // same as theme.red.medium
+            main: { light: '#B44641', dark: palette.red[200] },
+            text: { light: '#5F2120', dark: palette.red[100] },
+            fill: { light: palette.red[50], dark: '#5F2120' },
         },
         warning: {
-            main: { light: light.status.warning.main, dark: dark.status.warning.main },
-            text: { light: light.status.warning.text, dark: dark.status.warning.text },
-            fill: { light: light.status.warning.fill, dark: dark.status.warning.fill },
+            main: { light: palette.orange[900], dark: palette.orange[500] },
+            text: { light: '#6D3900', dark: palette.orange[100] },
+            fill: { light: '#FFE1D1', dark: '#452F16' },
         },
         success: {
-            main: { light: light.status.success.main, dark: dark.status.success.main },
-            text: { light: light.status.success.text, dark: dark.status.success.text },
-            fill: { light: light.status.success.fill, dark: dark.status.success.fill },
+            main: { light: palette.green[600], dark: palette.green[200] },
+            text: { light: '#1E4620', dark: palette.green[100] },
+            fill: { light: palette.green[50], dark: '#1E4620' },
         },
         info: {
-            main: { light: light.status.info.main, dark: dark.status.info.main },
-            text: { light: light.status.info.text, dark: dark.status.info.text },
-            fill: { light: light.status.info.fill, dark: dark.status.info.fill },
+            main: { light: palette['light-blue'][700], dark: palette['light-blue'][200] },
+            text: { light: '#004465', dark: palette['light-blue'][100] },
+            fill: { light: palette['light-blue'][50], dark: '#103440' },
         },
         indeterminate: {
-            fill: { light: light.status.indeterminate.fill, dark: dark.status.indeterminate.fill },
+            fill: { light: palette.neutral.dark[400], dark: palette.white },
         },
     },
 
     // Components/Button
+    // moved to Button component - can be removed
     'secondary-btn': {
         fill: { light: palette.neutral.light[300], dark: palette.neutral.dark[700] },
         'active-fill': { light: palette.neutral.light[400], dark: palette.neutral.dark[700] },
@@ -169,6 +182,8 @@ export const tokens = {
     'toggle-group': {
         fill: { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
     },
+
+    // moved to checkbox component - can be removed
     checkbox: {
         border: { light: common.black, dark: common.white },
         'unchecked-fill': { light: common.white, dark: common.dark },
@@ -177,40 +192,54 @@ export const tokens = {
     },
 
     // Components/Input
+    // moved to input component - can be removed
     input: {
-        fill: { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
+        fill: {
+            light: palette.neutral.light[100],
+            dark: palette.neutral.dark[400],
+        },
         border: {
             default: { light: palette.neutral.dark[700], dark: palette.neutral.light[400] },
-            focus: { light: light.secondary.main, dark: secondaryVariant2 },
+            focus: { light: brand.purple.medium, dark: brand.purple.variant },
         },
+        //     label: { light: common.dark, dark: common.white },
+        //     'fill-disabled': { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
+        //     border: {
+        //         hover: { light: light.secondary.main, dark: dark.secondary.main },
+        //         disabled: { light: palette.neutral.light[900], dark: palette.neutral.dark[900] },
+        //     },
+        //     'placeholder-text': { light: text.placeholder, dark: dark.input.placeholder },
     },
 
     // Components/Textarea
+    // moved to textarea component - can be removed
     textarea: {
         fill: { light: common.white, dark: palette.neutral.dark[700] },
         border: {
             default: { light: palette.neutral.light[400], dark: palette.neutral.dark[700] },
-            hover: { light: light.secondary.main, dark: secondaryVariant2 },
+            hover: { light: brand.purple.medium, dark: brand.purple.variant },
         },
     },
 
     // Components/RadioGroup
+    // moved to radioGroup component - can be removed
     radio: {
         'label-focus-fill': { light: palette.neutral.light[200], dark: palette.neutral.dark[600] },
         border: {
             default: { light: palette.neutral.light[400], dark: palette.neutral.light[400] },
-            hover: { light: light.secondary.main, dark: secondaryVariant2 },
+            hover: { light: brand.purple.medium, dark: brand.purple.variant },
         },
         disabled: {
             border: { light: palette.neutral.light[300], dark: palette.neutral.dark[600] },
             fill: { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
         },
         indicator: {
-            fill: { light: light.primary.main, dark: secondaryVariant2 },
+            fill: { light: brand.purple.dark, dark: brand.purple.variant },
         },
     },
 
     // Components/Input/Selectors
+    // moved to select component - can be removed
     select: {
         trigger: {
             fill: { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
@@ -219,17 +248,19 @@ export const tokens = {
         },
         border: {
             default: { light: palette.neutral.dark[700], dark: palette.neutral.light[400] },
-            focus: { light: light.secondary.main, dark: secondaryVariant2 },
+            focus: { light: brand.purple.medium, dark: brand.purple.variant },
         },
         content: {
             border: { light: palette.neutral.light[400], dark: palette.neutral.light[400] },
             fill: { light: common.white, dark: palette.neutral.dark[400] },
         },
-        'item-checked-text': { light: light.primary.main, dark: secondaryVariant2 },
+        'item-checked-text': { light: brand.purple.dark, dark: brand.purple.variant },
         separator: {
             fill: { light: palette.neutral.light[200], dark: palette.neutral.light[200] },
         },
     },
+
+    // TODO move to dropdownSelector component *** located in BH-Shared-UI
     dropdown: {
         trigger: {
             border: { light: palette.neutral.light[400], dark: palette.neutral.light[400] },
@@ -246,9 +277,11 @@ export const tokens = {
             fill: { light: palette.neutral.light[300], dark: palette.neutral.dark[600] },
         },
     },
+
+    // moved to switch component - can be removed
     switch: {
-        fill: { light: palette.neutral.dark[700], dark: common.white },
-        'disabled-fill': { light: palette.neutral.light[300], dark: common.disabled },
+        fill: { light: palette.neutral.dark[700], dark: palette.white },
+        'disabled-fill': { light: palette.neutral.light[300], dark: common.disabled.dark },
         thumb: {
             fill: { light: palette.neutral.light[50], dark: palette.neutral.dark[50] },
             'disabled-fill': { light: palette.neutral.light[400], dark: palette.neutral.light[400] },
@@ -256,6 +289,7 @@ export const tokens = {
     },
 
     // Components/Data Display/DataTable
+    // moved to dataTable component - can be removed
     'data-table': {
         fill: { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
         header: {
@@ -265,45 +299,14 @@ export const tokens = {
             'even-fill': { light: palette.neutral.light[200], dark: palette.neutral.dark[500] },
             'odd-fill': { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
             'hover-fill': { light: palette.neutral.light[300], dark: palette.neutral.dark[600] },
-            'selected-outline': { light: light.primary.main, dark: darkDataTableRowSelectedOutline },
-        },
-    },
-
-    // Components/Data Display/Badge & Chip
-    badge: {
-        primary: {
-            fill: { light: light.badge.primary.fill, dark: dark.badge.primary.fill },
-            outline: { light: light.badge.primary.outline, dark: dark.badge.primary.outline },
-        },
-        secondary: {
-            fill: { light: light.badge.secondary.fill, dark: dark.badge.secondary.fill },
-            outline: { light: light.badge.secondary.outline, dark: dark.badge.secondary.outline },
-        },
-        grey: {
-            fill: { light: light.badge.grey.fill, dark: dark.badge.grey.fill },
-            outline: { light: light.badge.grey.outline, dark: dark.badge.grey.outline },
-        },
-        red: {
-            fill: { light: light.badge.red.fill, dark: dark.badge.red.fill },
-            outline: { light: light.badge.red.outline, dark: dark.badge.red.outline },
-        },
-        orange: {
-            fill: { light: light.badge.orange.fill, dark: dark.badge.orange.fill },
-            outline: { light: light.badge.orange.outline, dark: dark.badge.orange.outline },
-        },
-        green: {
-            fill: { light: light.badge.green.fill, dark: dark.badge.green.fill },
-            outline: { light: light.badge.green.outline, dark: dark.badge.green.outline },
-        },
-        blue: {
-            fill: { light: light.badge.blue.fill, dark: dark.badge.blue.fill },
-            outline: { light: light.badge.blue.outline, dark: dark.badge.blue.outline },
+            'selected-outline': { light: brand.purple.dark, dark: '#4A42B5' },
         },
     },
 
     // Figma variables not yet adopted. Uncommenting a token emits its CSS
     // variable and utility classes.
     //
+    // // moved to riskBadge component - can be removed
     // risk: {
     //     critical: { light: palette.purple.A300 },
     //     high: { light: palette.red.A300 },
@@ -322,36 +325,7 @@ export const tokens = {
     //     4: { light: elevation.light[4], dark: elevation.dark[4] },
     //     5: { light: elevation.light[5], dark: elevation.dark[5] },
     // },
-    // 'bhe-main': { light: light.primary.main, dark: dark.primary.main },
-    // 'sp-main': { light: light.primary.main, dark: dark.primary.main },
-    // 'bhce-main': { light: light['bhce-main'], dark: dark['bhce-main'] },
-    // 'logo-neutral': { light: common.black, dark: common.white },
-    // brand: {
-    //     primary: {
-    //         'dark-purple': { light: light.primary.variant, dark: dark.primary.variant },
-    //         'deep-purple': { light: light.primary.main, dark: dark.primary.main },
-    //         'medium-blue': { light: light.secondary.main, dark: dark.secondary.main },
-    //         'highlight-neon-blue': { light: common['neon-blue'] },
-    //         'highlight-orange': { light: common.orange },
-    //     },
-    //     secondary: {
-    //         'medium-purple': { light: common['medium-purple'] },
-    //         'light-purple': { light: common['light-purple'] },
-    //         'light-blue-gray': { light: common['light-blue-gray'] },
-    //         'highlight-light-blue': { light: light.secondary.main },
-    //         'highlight-green': { light: light.tertiary.main, dark: dark.tertiary.main },
-    //     },
-    // },
-    // input: {
-    //     label: { light: common.dark, dark: common.white },
-    //     'fill-disabled': { light: palette.neutral.light[100], dark: palette.neutral.dark[400] },
-    //     border: {
-    //         hover: { light: light.secondary.main, dark: dark.secondary.main },
-    //         disabled: { light: palette.neutral.light[900], dark: palette.neutral.dark[900] },
-    //     },
-    //     'placeholder-text': { light: text.placeholder, dark: dark.input.placeholder },
-    // },
-    // 'selector-disable-fill': { light: common.white },
+
     // chip: {
     //     indeterminate: {
     //         DEFAULT: { light: palette.neutral.light[300], dark: palette.neutral.dark[500] },
@@ -387,12 +361,12 @@ export const tokens = {
     //     'label-bg': { light: palette.neutral.light[200], dark: palette.neutral.dark[500] },
     //     'label-text': { light: common.dark, dark: common.white },
     // },
+    // TODO - stays here
     // icon: {
     //     DEFAULT: { light: common.dark, dark: common.white },
     //     contrast: { light: common.white, dark: common.dark },
     //     disabled: { light: palette.grey[700], dark: common.disabled },
     // },
-    // divider: { light: palette.neutral.light[500], dark: palette.neutral.dark[500] },
 } satisfies TokenGroup;
 
 /**
@@ -403,6 +377,7 @@ export const legacyTokens = {
     // same as palette.neutral.dark[50] (light) / common.white (dark)
     contrast: { light: '#121212', dark: '#ffffff' },
     error: { light: '#b44641', dark: '#e9827c' },
+    // same as status.error.medium and theme.red.medium
 
     'neutral-1': { light: '#ffffff', dark: '#121212' },
     'neutral-2': { light: '#f4f4f4', dark: '#222222' },
@@ -439,6 +414,8 @@ export const createCssVariables = (
         const segments = key === 'DEFAULT' ? path : [...path, key];
         if (isToken(node)) {
             const value = node[theme];
+            // TODO address light and dark mode first
+            // remove mode from
             if (value !== undefined) {
                 variables[`--${node.varName ?? segments.join('-')}`] = value;
             }
