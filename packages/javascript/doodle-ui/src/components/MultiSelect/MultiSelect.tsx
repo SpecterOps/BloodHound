@@ -17,9 +17,8 @@
 import { cva } from 'class-variance-authority';
 import { Search } from 'lucide-react';
 import * as React from 'react';
-import { Checkbox } from '../Checkbox';
+import { Checkbox, CheckboxWithLabel } from '../Checkbox';
 import { Input } from '../Input';
-import { Label } from '../Label';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { ScrollArea } from '../ScrollArea';
 import { Skeleton } from '../Skeleton';
@@ -50,7 +49,9 @@ const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
 const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-text-contrast';
 
-const multiSelectCheckboxStyles = 'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current';
+// Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
+const multiSelectCheckboxStyles =
+    'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-transparent group-hover:enabled:data-[state=checked]:!text-text-contrast group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-text-contrast';
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
@@ -101,56 +102,42 @@ interface MultiSelectAllOptionsRowProps {
     onSelect: () => void;
 }
 
-const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => {
-    const checkboxId = React.useId();
+const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
+    <div className='p-1'>
+        <CheckboxWithLabel
+            label={option.label}
+            checked={checked}
+            disabled={option.disabled}
+            onCheckedChange={() => onSelect(option.value)}
+            className={multiSelectCheckboxStyles}
+            fieldClassName={cn(
+                multiSelectRowStyles,
+                'text-base font-normal leading-4',
+                option.disabled
+                    ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
+                    : multiSelectInteractiveRowStyles
+            )}
+            labelClassName='min-w-0 flex-1 truncate'
+        />
+    </div>
+);
 
-    return (
-        <div className='p-1'>
-            <Label
-                htmlFor={checkboxId}
-                className={cn(
-                    multiSelectRowStyles,
-                    'text-base font-normal leading-4',
-                    option.disabled
-                        ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
-                        : multiSelectInteractiveRowStyles
-                )}>
-                <Checkbox
-                    id={checkboxId}
-                    checked={checked}
-                    disabled={option.disabled}
-                    onCheckedChange={() => onSelect(option.value)}
-                    className={multiSelectCheckboxStyles}
-                />
-                <span className='min-w-0 flex-1 truncate'>{option.label}</span>
-            </Label>
-        </div>
-    );
-};
-
-const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOptionsRowProps) => {
-    const checkboxId = React.useId();
-
-    return (
-        <div className='p-1'>
-            <Label
-                htmlFor={checkboxId}
-                className={cn(
-                    multiSelectRowStyles,
-                    multiSelectInteractiveRowStyles,
-                    'text-base font-normal leading-4'
-                )}>
-                <Checkbox
-                    id={checkboxId}
-                    checked={checked}
-                    onCheckedChange={onSelect}
-                    className={multiSelectCheckboxStyles}
-                />
-                <span className='min-w-0 flex-1 truncate'>{label}</span>
-            </Label>
-        </div>
-    );
-};
+const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOptionsRowProps) => (
+    <div className='p-1'>
+        <CheckboxWithLabel
+            label={label}
+            checked={checked}
+            onCheckedChange={onSelect}
+            className={multiSelectCheckboxStyles}
+            fieldClassName={cn(
+                multiSelectRowStyles,
+                multiSelectInteractiveRowStyles,
+                'text-base font-normal leading-4'
+            )}
+            labelClassName='min-w-0 flex-1 truncate'
+        />
+    </div>
+);
 
 const MultiSelectLoadingRows = ({ loadingText }: { loadingText: string }) => (
     <div role='status' aria-label={loadingText}>
