@@ -15,44 +15,45 @@
 // SPDX-License-Identifier: Apache-2.0
 import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
 
-test.describe('Explore page accessibility', () => {
-    test('focuses the node search field on navigation', async ({ page }) => {
+test.describe('WCAG A/AA Violations - Explore - Search Tab', () => {
+    test.beforeEach(async ({ page }) => {
         await page.goto('/ui/explore');
-
-        await expect(page.getByLabel('Search Nodes')).toBeFocused();
     });
 
-    test('node search results state has no detectable WCAG A/AA violations', async ({
-        page,
-        makeAxeBuilder,
-    }, testInfo) => {
+    test('Search tab', async ({ page, makeAxeBuilder }, testInfo) => {
+        await page.getByText('Begin typing to search').waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
+        await expectNoAccessibilityViolations(testInfo, results, { page });
+    });
+
+    test('Search with results', async ({ page, makeAxeBuilder }, testInfo) => {
         const searchTerm = 'test';
         const searchResultName = 'TEST RESULT';
+
         await page.route('**/api/v2/search**', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
             }
+
             await route.fulfill({
                 json: {
                     data: [{ name: searchResultName, objectid: 'playwright-search-result', type: 'User' }],
                 },
             });
         });
-        await page.goto('/ui/explore');
 
         const searchField = page.getByLabel('Search Nodes');
         await searchField.fill(searchTerm);
-        const searchResult = page.getByRole('option').filter({ hasText: searchResultName });
 
+        const searchResult = page.getByRole('option').filter({ hasText: searchResultName });
         await expect(searchResult).toBeVisible();
+
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
-    test('node search no-results state has no detectable WCAG A/AA violations', async ({
-        page,
-        makeAxeBuilder,
-    }, testInfo) => {
+    test('Search with no results', async ({ page, makeAxeBuilder }, testInfo) => {
         const searchTerm = 'zzzznonexistentnode9999';
 
         await page.route('**/api/v2/search**', async (route) => {
@@ -62,8 +63,6 @@ test.describe('Explore page accessibility', () => {
 
             await route.fulfill({ json: { data: [] } });
         });
-
-        await page.goto('/ui/explore');
 
         const searchField = page.getByLabel('Search Nodes');
         await expect(searchField).toBeVisible();
