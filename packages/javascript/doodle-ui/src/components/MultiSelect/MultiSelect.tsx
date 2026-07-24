@@ -53,6 +53,10 @@ const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary
 const multiSelectCheckboxStyles =
     'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-transparent group-hover:enabled:data-[state=checked]:!text-text-contrast group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-text-contrast';
 
+// Controls the default, unhovered partial-selection appearance.
+const multiSelectIndeterminateCheckboxStyles =
+    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
+
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
 }
@@ -128,7 +132,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
             label={label}
             checked={checked}
             onCheckedChange={onSelect}
-            className={multiSelectCheckboxStyles}
+            className={cn(multiSelectCheckboxStyles, multiSelectIndeterminateCheckboxStyles)}
             fieldClassName={cn(
                 multiSelectRowStyles,
                 multiSelectInteractiveRowStyles,

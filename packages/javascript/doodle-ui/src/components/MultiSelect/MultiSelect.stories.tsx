@@ -113,6 +113,25 @@ export const WithSelectAll: Story = {
     },
 };
 
+export const PartialSelection: Story = {
+    args: {
+        options: itemOptions,
+        value: ['a', 'd'],
+        onValueChange: () => {},
+        placeholder: 'Select Items',
+        selectAllLabel: 'All Items',
+    },
+    render: (args) => {
+        const [value, setValue] = useState<string[]>(args.value ?? []);
+
+        return (
+            <div className='w-60'>
+                <MultiSelect {...args} value={value} onValueChange={setValue} />
+            </div>
+        );
+    },
+};
+
 export const AllSelected: Story = {
     args: {
         options: itemOptions,
