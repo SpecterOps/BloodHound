@@ -26,6 +26,7 @@ export const lightTheme = {
     tertiary: '#5CC791',
     link: '#1A300F',
     error: '#B44641',
+    // same as status.error.medium and theme.red.medium
     contrast: '#000000',
     neutral: {
         primary: '#FFFFFF',
@@ -43,6 +44,7 @@ export const darkTheme = {
     secondary: '#1A300F',
     tertiary: '#5CC791',
     link: '#99A3FF',
+    // same as theme.purple.variant
     error: '#E9827C',
     contrast: '#FFFFFF',
     neutral: {

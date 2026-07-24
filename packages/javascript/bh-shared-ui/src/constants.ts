@@ -336,6 +336,7 @@ export const lightPalette = createPalette({
         primary: '#1D1B20',
         links: '#1A30FF',
         error: '#B44641',
+        // same as status.error.medium and theme.red.medium
     },
     neutral: {
         primary: '#FFFFFF',
@@ -367,6 +368,7 @@ export const darkPalette = createPalette({
     color: {
         primary: '#FFFFFF',
         links: '#99A3FF',
+        // same as theme.purple.variant
         error: '#E9827C',
     },
     neutral: {

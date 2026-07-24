@@ -237,6 +237,7 @@ export const palette = {
         900: '#F57F17',
         A300: '#FFD64C',
     },
+
     neutral: {
         light: {
             50: '#F2F2F2',
@@ -263,31 +264,96 @@ export const palette = {
             900: '#363636',
         },
     },
+    white: '#FFFFFF',
+    black: '#000000',
+};
+
+export const brand = {
+    bhce: {
+        light: '#E02F35',
+        dark: '#F35857',
+    },
+    medium_purple: '#8E92EB',
+    light_purple: '#D7D6E6',
+    light_blue_gray: '#E3EAF0',
+    // neon_blue = '#5465FF'; // TODO is this being used?
+    // orange: '#F46036'; // TODO is this being used?
+
+    //------------------------ above does not have a current usage but in new designs -------------------//
+
+    purple: {
+        light: '#A1A0FF',
+        medium: '#4A3BD7', // same as light.secondary.main
+        dark: '#2C2677', // same as light.primary.main
+        variant: '#99A3FF', // same as variant2
+    },
+
+    blue: {
+        // TODO below matches palette.['light-blue'][200]
+        light: '#81D4FA',
+        medium: '#66A3FF', // same as dark.secondary.main
+        dark: '#0288D1',
+        // TODO above matches palette.['light-blue'][700]
+    },
+    // is all of the below needed - left over from status?
+    green: {
+        light: palette.green[200],
+        medium: palette.green[600],
+        dark: '#1E4620',
+    },
+
+    orange: {
+        light: palette.orange[200],
+        medium: palette.orange[900],
+        dark: '',
+    },
+
+    red: {
+        light: palette.red[200],
+        medium: '#B44641',
+        dark: '#5F2120',
+    },
 };
 
 export const common = {
-    white: '#FFFFFF',
-    black: '#000000',
-    dark: '#121212',
-    disabled: '#A6A6A6',
-    'neon-blue': '#5465FF',
-    orange: '#F46036',
-    'medium-purple': '#8E92EB',
-    'light-purple': '#D7D6E6',
-    'light-blue-gray': '#E3EAF0',
+    dark: palette.neutral.dark[50],
+    white: palette.white,
+    black: palette.black,
+    placeholder: '#6D6D6D',
+    disabled: {
+        light: palette.grey[700],
+        dark: '#A6A6A6',
+    },
 };
+
+export const neutral = {
+    // replace elevation with this
+};
+
+// --------------- below is for matching colors to class names as they move around, source of truth ------------
+// anything commented out has been accounted for in tokens
+// TODO remove
+// export const common = {
+//     dark: '#121212',
+//     disabled: '#A6A6A6',
+//     'neon-blue': '#5465FF',
+//     orange: '#F46036',
+//     'medium-purple': '#8E92EB',
+//     'light-purple': '#D7D6E6',
+//     'light-blue-gray': '#E3EAF0',
+// };
 
 export const elevation = {
     light: {
-        0: common.white,
-        1: common.white,
+        0: palette.white,
+        1: palette.white,
         2: palette.neutral.light[100],
         3: palette.neutral.light[200],
         4: palette.neutral.light[300],
         5: palette.neutral.light[400],
     },
     dark: {
-        0: common.black,
+        0: palette.black,
         1: palette.neutral.dark[50],
         2: palette.neutral.dark[400],
         3: palette.neutral.dark[500],
@@ -296,16 +362,17 @@ export const elevation = {
     },
 };
 
+// TODO remove
 export const light = {
-    'bhce-main': '#E02F35',
-    primary: {
-        main: '#2C2677',
-        variant: '#0D0A30',
-    },
-    secondary: {
-        main: '#4A3BD7',
-        variant: '#3729BB',
-    },
+    // 'bhce-main': '#E02F35',
+    // primary: {
+    //     // main: '#2C2677',  -> brand.purple.dark
+    //     // variant: '#0D0A30',
+    // },
+    // secondary: {
+    //     main: '#4A3BD7', -> brand.purple.medium
+    //     variant: '#3729BB',
+    // },
     tertiary: {
         main: '#00AA66',
         variant: '#008751',
@@ -313,95 +380,67 @@ export const light = {
     edge: {
         color: '#55595C',
     },
-    status: {
-        error: {
-            main: '#B44641',
-            text: '#5F2120',
-            fill: palette.red[50],
-        },
-        indeterminate: {
-            fill: palette.neutral.dark[400],
-        },
-        info: {
-            main: palette['light-blue'][700],
-            text: '#004465',
-            fill: palette['light-blue'][50],
-        },
-        success: {
-            main: palette.green[600],
-            text: '#1E4620',
-            fill: palette.green[50],
-        },
-        warning: {
-            main: palette.orange[900],
-            text: '#6D3900',
-            fill: '#FFE1D1',
-        },
-    },
-    badge: {
-        primary: {
-            fill: '#A1A0FF',
-            outline: '#2C2677',
-        },
-        secondary: {
-            fill: '#66A3FF',
-            outline: '#4A3BD7',
-        },
-        grey: {
-            fill: palette.neutral.light[200],
-            outline: palette.neutral.light[400],
-        },
-        red: {
-            fill: palette.red[200],
-            outline: '#B44641',
-        },
-        orange: {
-            fill: palette.orange[200],
-            outline: '#E65100',
-        },
-        green: {
-            fill: palette.green[200],
-            outline: '#43A047',
-        },
-        blue: {
-            fill: palette['light-blue'][200],
-            outline: '#0288D1',
-        },
-    },
-    disabled: palette.grey[700],
-    text: {
-        disabled: palette.grey[700],
-    },
+    // status: {
+    //     // error: {
+    //     //     // main: '#B44641',
+    //     //     // text: '#5F2120',
+    //     //     // fill: palette.red[50],
+    //     // },
+    //     // indeterminate: {
+    //     //     fill: palette.neutral.dark[400],
+    //     // },
+    //     // info: {
+    //     //     main: palette['light-blue'][700],
+    //     //     text: '#004465',
+    //     //     fill: palette['light-blue'][50],
+    //     // },
+    //     // success: {
+    //     // main: palette.green[600],
+    //     // text: '#1E4620',
+    //     // fill: palette.green[50],
+    //     // },
+    //     // warning: {
+    //     // main: palette.orange[900],
+    //     // text: '#6D3900',
+    //     // fill: '#FFE1D1',
+    //     // },
+    // },
+    // disabled: palette.grey[700],
+    // text: {
+    //     disabled: palette.grey[700],
+    // },
 };
 
+// TODO remove
 export const text = {
-    main: common.dark,
+    // main: common.dark,
     light: '#505050',
     dark: '#CDCDCD',
-    contrast: common.white,
-    placeholder: '#6D6D6D',
-    primary: light.primary.main,
-    secondary: light.secondary.main,
+    // contrast: brand.white,
+    // placeholder: '#6D6D6D',
+    // primary: light.primary.main, -> brand.purple.dark
+    // secondary: light.secondary.main,  -> brand.purple.medium
 };
 
+// TODO remove
 export const dark = {
-    'bhce-main': '#F35857',
-    primary: {
-        main: '#A1A0FF',
-        variant: '#8D8BF8',
-    },
-    secondary: {
-        main: '#66A3FF',
-        variant: '#4E95FF',
-    },
+    // 'bhce-main': '#F35857',
+    // primary: {
+    //     main: '#A1A0FF', -> brand.purple.light
+    //     variant: '#8D8BF8',
+    // },
+    // secondary: {
+    //     main: '#66A3FF', same as brand.blue.medium
+    //     variant: '#4E95FF',
+    // },
     tertiary: {
         main: '#57E7AD',
         variant: '#7BC9A2',
     },
-    disabled: '#A6A6A6',
-    text: {
-        disabled: '#A6A6A6',
-    },
+    // disabled: '#A6A6A6', same as common.disabled.dark
+    // text: {
+    //     disabled: '#A6A6A6',
+    // },
     input: {
         border: '#515151',
         placeholder: '#868686',
@@ -409,59 +448,29 @@ export const dark = {
     edge: {
         color: '#6C6C6C',
     },
-    status: {
-        error: {
-            main: palette.red[200],
-            text: palette.red[100],
-            fill: '#5F2120',
-        },
-        indeterminate: {
-            fill: common.white,
-        },
-        info: {
-            main: palette['light-blue'][200],
-            text: palette['light-blue'][100],
-            fill: '#103440',
-        },
-        success: {
-            main: palette.green[200],
-            text: palette.green[100],
-            fill: '#1E4620',
-        },
-        warning: {
-            main: palette.orange[500],
-            text: palette.orange[100],
-            fill: '#452F16',
-        },
-    },
-    badge: {
-        primary: {
-            fill: '#605DF7',
-            outline: '#A1A0FF',
-        },
-        secondary: {
-            fill: '#1569E7',
-            outline: '#66A3FF',
-        },
-        grey: {
-            fill: palette.neutral.dark[500],
-            outline: palette.neutral.dark[700],
-        },
-        red: {
-            fill: palette.red[700],
-            outline: palette.red[200],
-        },
-        orange: {
-            fill: '#C15012',
-            outline: palette.orange[200],
-        },
-        green: {
-            fill: palette.green[800],
-            outline: palette.green[200],
-        },
-        blue: {
-            fill: palette['light-blue'][800],
-            outline: palette['light-blue'][200],
-        },
-    },
+    // status: {
+    //     // error: {
+    //     //     // main: palette.red[200],
+    //     //     // text: palette.red[100],
+    //     //     // fill: '#5F2120',
+    //     // },
+    //     // indeterminate: {
+    //     //     fill: palette.white,
+    //     // },
+    //     // info: {
+    //     //     // main: palette['light-blue'][200],
+    //     //     text: palette['light-blue'][100],
+    //     //     fill: '#103440',
+    //     // },
+    //     // success: {
+    //     // main: palette.green[200],
+    //     // text: palette.green[100],
+    //     // fill: '#1E4620',
+    //     // },
+    //     // warning: {
+    //     //     // main: palette.orange[500],
+    //     //     // text: palette.orange[100],
+    //     //     // fill: '#452F16',
+    //     // },
+    // },
 };
