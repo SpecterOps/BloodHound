@@ -69,7 +69,7 @@ func Register(deps Deps) {
 		deps.AlertPublisher = alerts.NewAlertEventPublisher()
 	}
 
-	analysis.Register(deps.Router, deps.Pool, deps.AlertPublisher)
+	analysis.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
