@@ -177,6 +177,15 @@ const ExploreTable = ({
         [onChangePinnedColumns]
     );
 
+    const className = useMemo(
+        () =>
+            cn('overflow-auto', {
+                'h-[calc(50vh-72px)]': !isExpanded,
+                'h-[calc(100vh-72px)]': !isExpanded,
+            }),
+        [isExpanded]
+    );
+
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -222,11 +231,7 @@ const ExploreTable = ({
                     onColumnOrderChange={(newOrder) => {
                         setColumnOrder(newOrder);
                     }}
-                    className={cn('overflow-auto', {
-                        // TODO: why is header disappearing on bottom scroll? One extra overflow element somewhere
-                        'h-[calc(50vh-72px)]': !isExpanded,
-                        'h-[calc(100vh-72px)]': !isExpanded,
-                    })}
+                    className={className}
                     growLastColumn
                     enableResizing
                 />
