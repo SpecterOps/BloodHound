@@ -223,6 +223,7 @@ const ExploreTable = ({
                         onColumnOrderChange={(newOrder) => {
                             setColumnOrder(newOrder);
                         }}
+                        className='overflow-auto h-[calc(50vh-72px)]'
                         growLastColumn
                         enableResizing
                         enableDragAndDrop
