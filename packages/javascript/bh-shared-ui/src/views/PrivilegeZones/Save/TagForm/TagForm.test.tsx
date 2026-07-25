@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { ConfigurationKey } from 'js-client-library';
+import { AssetGroupTagTypeDecoy, ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Location, Route, Routes, useLocation, useParams } from 'react-router-dom';
@@ -61,9 +61,17 @@ const testOwned = {
     analysis_enabled: false,
 };
 
+const testDecoy = {
+    ...testOwned,
+    id: 5,
+    type: AssetGroupTagTypeDecoy,
+    name: 'Decoy',
+    description: 'Decoy Description',
+};
+
 const handlers = [
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
-        return res(ctx.json({ data: { tags: [testTierZero, testOwned] } }));
+        return res(ctx.json({ data: { tags: [testTierZero, testOwned, testDecoy] } }));
     }),
     rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tag: { id: 777 } } }));
@@ -101,6 +109,9 @@ const handlers = [
                 data: { tag: { ...testTierZero, name: 'other zone', id: 4, type: 1, position: 2 } },
             })
         );
+    }),
+    rest.get('/api/v2/asset-group-tags/5', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tag: testDecoy } }));
     }),
     rest.get('/api/v2/config', async (_, res, ctx) => {
         return res(ctx.json(configResponse));
@@ -159,6 +170,7 @@ describe('Tag Form', () => {
     const editHighestPrivilegeZonePath = `/${privilegeZonesPath}/${zonesPath}/1/${savePath}`;
     const editOtherZonePath = `/${privilegeZonesPath}/${zonesPath}/4/${savePath}`;
     const editExistingLabelPath = `/${privilegeZonesPath}/${labelsPath}/2/${savePath}`;
+    const editDecoyLabelPath = `/${privilegeZonesPath}/${labelsPath}/5/${savePath}`;
     const deletionTestsPath = `/${privilegeZonesPath}/${labelsPath}/3/${savePath}`;
 
     it('renders the form for creating a new zone', async () => {
@@ -326,6 +338,45 @@ describe('Tag Form', () => {
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
         expect(screen.queryByTestId('privilege-zones_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
+    });
+
+    it('does not allow renaming or deleting the Decoy label while the tag list is loading', async () => {
+        let releaseTagsResponse: () => void = () => undefined;
+        let markTagsRequestStarted: () => void = () => undefined;
+        const tagsResponseGate = new Promise<void>((resolve) => {
+            releaseTagsResponse = resolve;
+        });
+        const tagsRequestStarted = new Promise<void>((resolve) => {
+            markTagsRequestStarted = resolve;
+        });
+
+        server.use(
+            rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+                markTagsRequestStarted();
+                await tagsResponseGate;
+                return res(ctx.json({ data: { tags: [testTierZero, testOwned, testDecoy] } }));
+            })
+        );
+
+        vi.mocked(useParams).mockReturnValue({ zoneId: '', labelId: '5' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editDecoyLabelPath } as Location);
+
+        const { unmount } = render(
+            <Routes>
+                <Route path={editDecoyLabelPath} element={<TagForm />} />
+            </Routes>,
+            { route: editDecoyLabelPath }
+        );
+
+        await tagsRequestStarted;
+        const nameInput = await screen.findByLabelText('Label Information');
+
+        expect(nameInput).toHaveValue('Decoy');
+        expect(nameInput).toBeDisabled();
+        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+
+        unmount();
+        releaseTagsResponse();
     });
 
     it('renders the glyph form input when the editing a zone that is not the highest privileged', async () => {

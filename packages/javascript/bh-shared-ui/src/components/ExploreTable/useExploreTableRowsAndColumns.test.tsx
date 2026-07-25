@@ -32,6 +32,7 @@ describe('useExploreTableRowsAndColumns', () => {
                         lastSeen: '2026-01-01',
                         isTierZero: false,
                         isOwnedObject: false,
+                        isDecoyObject: false,
                         properties: { id: nodeIdProperty },
                     },
                 },

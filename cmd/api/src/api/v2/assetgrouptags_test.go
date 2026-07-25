@@ -1375,6 +1375,28 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				},
 			},
 			{
+				Name: "Success with selector seed filters",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "type", "eq:1")
+					apitest.AddQueryParam(input, "value", "eq:S-1-5-21-1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(gomock.Any(), 1, model.SQLFilter{}, gomock.Cond(func(filter model.SQLFilter) bool {
+							return assert.Contains(t, filter.SQLString, "type = 1") &&
+								assert.Contains(t, filter.SQLString, "value = 'S-1-5-21-1'")
+						}), model.Sort{}, 0, v2.AssetGroupTagDefaultLimit).
+						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, 1, nil)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
+						Return(model.AssetGroupTag{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "Test1")
+				},
+			},
+			{
 				Name: "Success with counts",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
@@ -1546,6 +1568,24 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, api.ErrorResponseAssetGroupTagInvalidTagName)
+				},
+			},
+			{
+				Name: "change name, decoy forbidden",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.BodyStruct(input, map[string]string{
+						"name": "New Name",
+					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 1).
+						Return(model.AssetGroupTag{Name: "Decoy", Type: model.AssetGroupTagTypeDecoy}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "renaming default tags is forbidden currently")
 				},
 			},
 			{
@@ -3689,6 +3729,84 @@ func TestResources_SearchAssetGroupTags(t *testing.T) {
 					ObjectID:    "ID-2",
 					PrimaryKind: "Unknown",
 					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+
+	t.Run("success - query by name and type label and include decoy type", func(t *testing.T) {
+		myTags := model.AssetGroupTags{
+			{ID: 8, Name: "test decoy label", Type: model.AssetGroupTagTypeLabel},
+			{ID: 9, Name: "Decoy", Type: model.AssetGroupTagTypeDecoy},
+		}
+		myKinds := graph.Kinds{myTags[0].ToKind(), myTags[1].ToKind()}
+		nodeFilter := query.And(
+			query.Or(
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), "decoy"),
+				query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), "decoy"),
+			),
+			query.KindIn(query.Node(), myKinds...),
+		)
+
+		mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).Return(myTags, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), model.SQLFilter{
+			SQLString: "name ILIKE ? AND asset_group_tag_id IN ?",
+			Params:    []any{"%decoy%", []int{8, 9}},
+		}, v2.AssetGroupTagDefaultLimit).
+			Return(model.AssetGroupTagSelectors{}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeProperty("name"), Direction: query.SortDirectionAscending}},
+			nodeFilter,
+			0, v2.AssetGroupTagDefaultLimit).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_decoy_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "test1",
+					})},
+				{
+					ID:    2,
+					Kinds: []graph.Kind{graph.StringKind("Tag_Decoy")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-2",
+						"name":     "test2",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "decoy", "tag_type": 2}`
+
+		req := httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags:      myTags,
+			Selectors: model.AssetGroupTagSelectors{},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:          1,
+					ObjectID:        "ID-1",
+					PrimaryKind:     "Unknown",
+					Name:            "test1",
+					AssetGroupTagId: 8,
+				},
+				{
+					NodeId:          2,
+					ObjectID:        "ID-2",
+					PrimaryKind:     "Unknown",
+					Name:            "test2",
+					AssetGroupTagId: 9,
 				},
 			},
 		},

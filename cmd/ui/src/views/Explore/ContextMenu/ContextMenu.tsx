@@ -26,7 +26,11 @@ import {
     usePermissions,
 } from 'bh-shared-ui';
 import { FC } from 'react';
-import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import {
+    selectDecoyAssetGroupId,
+    selectOwnedAssetGroupId,
+    selectTierZeroAssetGroupId,
+} from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 
@@ -39,6 +43,7 @@ const ContextMenu: FC<{
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
+    const decoyAssetGroupId = useAppSelector(selectDecoyAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const { checkPermission } = usePermissions();
@@ -79,15 +84,12 @@ const ContextMenu: FC<{
             {!tierFlag?.enabled &&
                 checkPermission(Permission.GRAPH_DB_WRITE) && [
                     <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
+                        key='high-value'
                         assetGroupId={tierZeroAssetGroupId}
                         assetGroupName='High Value'
                     />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
+                    <AssetGroupMenuItem key='owned' assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
+                    <AssetGroupMenuItem key='decoy' assetGroupId={decoyAssetGroupId} assetGroupName='Decoy' />,
                 ]}
             <CopyMenuItem />
         </Menu>

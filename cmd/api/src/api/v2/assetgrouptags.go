@@ -473,7 +473,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 					selectorQueryFilter[name][len(selectorQueryFilter[name])-1].IsStringData = assetGroupTagSelector.IsStringColumn(filter.Name)
 				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
 					selectorSeedsQueryFilter.AddFilter(filter)
-					// There are no string columns on asset group selector seeds table
+					selectorSeedsQueryFilter[name][len(selectorSeedsQueryFilter[name])-1].IsStringData = filter.Name == "value"
 				}
 			}
 		}
@@ -630,7 +630,7 @@ func (s *Resources) UpdateAssetGroupTag(response http.ResponseWriter, request *h
 			if *tagUpdates.Name == "" {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "name can not be empty", request), response)
 				return
-			} else if (tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == 1) || tag.Type == model.AssetGroupTagTypeOwned {
+			} else if (tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == 1) || tag.Type == model.AssetGroupTagTypeOwned || tag.Type == model.AssetGroupTagTypeDecoy {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "renaming default tags is forbidden currently", request), response)
 				return
 			} else if !HasValidTagName(*tagUpdates.Name) {
@@ -1236,7 +1236,7 @@ type AssetGroupTagSearchRequest struct {
 
 func validateAssetGroupTagType(maybeType model.AssetGroupTagType) bool {
 	switch maybeType {
-	case model.AssetGroupTagTypeTier, model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned:
+	case model.AssetGroupTagTypeTier, model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned, model.AssetGroupTagTypeDecoy:
 		return true
 	default:
 		return false
@@ -1278,8 +1278,8 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		tagIdByKind := make(map[graph.Kind]int)
 
 		for _, t := range tags {
-			// owned tag is a label despite distinct designation
-			if reqBody.TagType == t.Type || (reqBody.TagType == model.AssetGroupTagTypeLabel && t.Type == model.AssetGroupTagTypeOwned) {
+			// owned and decoy tags are labels despite distinct designations
+			if reqBody.TagType == t.Type || (reqBody.TagType == model.AssetGroupTagTypeLabel && (t.Type == model.AssetGroupTagTypeOwned || t.Type == model.AssetGroupTagTypeDecoy)) {
 
 				// filter the below node and selector query to tag type
 				kinds = kinds.Add(t.ToKind())

@@ -202,3 +202,21 @@ func TestUnifiedGraph_AddPathSet(t *testing.T) {
 		require.Equal(t, len(testGraph.Edges), len(testGraph.Edges))
 	})
 }
+
+func TestFromDAWGSNode_DecoyObject(t *testing.T) {
+	t.Run("detects decoy from kind", func(t *testing.T) {
+		node := graph.NewNode(0, graph.NewProperties(), ad.User, graph.StringKind("Tag_Decoy"))
+
+		unifiedNode := FromDAWGSNode(nil, node, false)
+
+		require.True(t, unifiedNode.IsDecoyObject)
+	})
+
+	t.Run("detects decoy from system tags", func(t *testing.T) {
+		node := graph.NewNode(0, graph.NewProperties().Set(common.SystemTags.String(), ad.Decoy), ad.User)
+
+		unifiedNode := FromDAWGSNode(nil, node, false)
+
+		require.True(t, unifiedNode.IsDecoyObject)
+	})
+}

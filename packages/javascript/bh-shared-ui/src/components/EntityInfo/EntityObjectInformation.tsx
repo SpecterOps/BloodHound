@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
+import { useQueryClient } from 'react-query';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
 import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
 import { EntityField, formatObjectInfoFields } from '../../utils';
@@ -23,6 +24,7 @@ import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectInfoPanelProvider';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import PotentialDecoyBanner from './PotentialDecoyBanner';
 
 const sectionLabel = 'Object Information';
 
@@ -33,6 +35,7 @@ interface EntityObjectInformationProps {
 export default function EntityObjectInformation({ selectedNode }: EntityObjectInformationProps) {
     const { setExploreParams } = useExploreParams();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
+    const queryClient = useQueryClient();
     const previousEntity = usePreviousValue(selectedNode.node_id);
 
     const kindNames = kindObjectsToKindNames(selectedNode.kinds);
@@ -60,6 +63,14 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
     return (
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
+                <PotentialDecoyBanner
+                    kinds={kindNames}
+                    nodeId={selectedNode.node_id}
+                    nodeType={primaryKind ?? ''}
+                    objectId={selectedNode.properties.objectid ?? ''}
+                    onDecoyUpdated={() => queryClient.invalidateQueries(['getNodeById', selectedNode.node_id])}
+                    properties={selectedNode.properties}
+                />
                 <BasicObjectInfoFields
                     nodeType={primaryKind}
                     handleSourceNodeSelected={handleSourceNodeSelected}

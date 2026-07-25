@@ -6082,6 +6082,15 @@
             }
           },
           {
+            "name": "value",
+            "description": "Filter results by selector seed value.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
             "name": "counts",
             "description": "Whether to include counts of members for each selector",
             "in": "query",
@@ -6514,7 +6523,7 @@
           "Community"
         ],
         "requestBody": {
-          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), or 3(owned). And `asset_group_tag_id` is the ID of a tag (zone or label).",
+          "description": "The request body for searching asset group tags. `query` represents being able to query by either name or object id. `tag_type` can be either 1(zone), 2(label), 3(owned), or 4(decoy). And `asset_group_tag_id` is the ID of a tag (zone or label).",
           "required": true,
           "content": {
             "application/json": {
@@ -22775,6 +22784,9 @@
             "type": "boolean"
           },
           "isOwnedObject": {
+            "type": "boolean"
+          },
+          "isDecoyObject": {
             "type": "boolean"
           },
           "lastSeen": {

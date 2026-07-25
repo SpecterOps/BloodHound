@@ -40,6 +40,7 @@ import {
 } from 'doodle-ui';
 import {
     AssetGroupTag,
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
@@ -95,6 +96,9 @@ export const TagForm: FC = () => {
 
     const tagsQuery = useTagsQuery();
     const tagQuery = useAssetGroupTagInfo(tagId);
+    const isDecoyTag = tagQuery.data?.type === AssetGroupTagTypeDecoy;
+    const canDeleteTag = tagQuery.isSuccess && !isDecoyTag && showDeleteButton();
+    const isNameInputDisabled = disableNameInput || isDecoyTag;
 
     const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
@@ -321,7 +325,7 @@ export const TagForm: FC = () => {
                     </Card>
                     {showSalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                        {showDeleteButton() && (
+                        {canDeleteTag && (
                             <Button
                                 data-testid='privilege-zones_save_tag-form_delete-button'
                                 variant={'text'}
@@ -409,7 +413,7 @@ export const TagForm: FC = () => {
                                 <CardHeader>
                                     <CardTitle>{formTitle}</CardTitle>
                                 </CardHeader>
-                                {showDeleteButton() && (
+                                {canDeleteTag && (
                                     <Button
                                         className='pb-0'
                                         data-testid='privilege-zones_save_tag-form_delete-button'
@@ -498,7 +502,7 @@ export const TagForm: FC = () => {
                                                         {...field}
                                                         type='text'
                                                         autoComplete='off'
-                                                        disabled={disableNameInput}
+                                                        disabled={isNameInputDisabled}
                                                         data-testid='privilege-zones_save_tag-form_name-input'
                                                     />
                                                 </FormControl>
