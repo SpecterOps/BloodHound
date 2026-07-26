@@ -188,16 +188,6 @@ func (s *BHCEPipeline) IngestTasks(ctx context.Context) error {
 	// Ingest all available ingest tasks
 	s.graphifyService.ProcessTasks(updateJobFunc(ctx, s.db))
 
-	// Vacuum dead tuples produced by reconciliation deletes and ingest writes
-	ingestOptimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
-	if ingestOptimizationParam.AfterIngest {
-		start := time.Now()
-		if err := s.graphdb.OptimizeStorage(ctx); err != nil {
-			slog.ErrorContext(ctx, "Error optimizing graph storage after ingest", attr.Error(err))
-		}
-		metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageIngest, time.Since(start))
-	}
-
 	// Manage time-out state progression for ingest jobs
 	s.jobService.ProcessStaleIngestJobs()
 
@@ -328,16 +318,6 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 	} else {
 		s.jobService.CompleteAnalyzedIngestJobs()
 
-		// Vacuum dead tuples produced by analysis edge writes
-		analysisOptimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
-		if analysisOptimizationParam.AfterAnalysis {
-			start := time.Now()
-			if err := s.graphdb.OptimizeStorage(ctx); err != nil {
-				slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
-			}
-			metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageAnalysis, time.Since(start))
-		}
-
 		// This is cacheclearing. The analysis is still successful here
 		if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(
@@ -362,4 +342,34 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 
 		return nil
 	}
+}
+
+func (s *BHCEPipeline) Optimize(ctx context.Context) error {
+	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+	if !optimizationParam.AfterAnalysis {
+		return nil
+	}
+
+	start := time.Now()
+	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
+	}
+	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageAnalysis, time.Since(start))
+
+	return nil
+}
+
+func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
+	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+	if !optimizationParam.AfterBoot {
+		return nil
+	}
+
+	start := time.Now()
+	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error optimizing graph storage on boot", attr.Error(err))
+	}
+	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageBoot, time.Since(start))
+
+	return nil
 }

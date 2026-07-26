@@ -30,7 +30,8 @@ const (
 	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
 	DatapipeStatusPurging   DatapipeStatus = "purging"
 	DatapipeStatusPruning   DatapipeStatus = "pruning"
-	DatapipeStatusStarting  DatapipeStatus = "starting"
+	DatapipeStatusStarting   DatapipeStatus = "starting"
+	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
 )
 
 type DatapipeStatusWrapper struct {

@@ -31,10 +31,7 @@ const datapipeSubsystem = "datapipe"
 type OptimizeStoragePipelineStage string
 
 const (
-	OptimizeStoragePipelineStageIngest OptimizeStoragePipelineStage = "ingest"
-
-	OptimizeStoragePipelineStagePostProcessing OptimizeStoragePipelineStage = "post_processing"
-
+	OptimizeStoragePipelineStageBoot     OptimizeStoragePipelineStage = "boot"
 	OptimizeStoragePipelineStageAnalysis OptimizeStoragePipelineStage = "analysis"
 )
 
@@ -47,15 +44,13 @@ var (
 	}, []string{"pipeline_stage"})
 
 	optimizeStoragePipelineStages = []OptimizeStoragePipelineStage{
-		OptimizeStoragePipelineStageIngest,
-		OptimizeStoragePipelineStagePostProcessing,
+		OptimizeStoragePipelineStageBoot,
 		OptimizeStoragePipelineStageAnalysis,
 	}
 )
 
 // RecordOptimizeStorageDuration records the duration of an OptimizeStorage
-// call for the given pipeline stage. The gauge is set to the elapsed seconds
-// so it always reflects the most recent observation.
+// call for the given pipeline stage.
 func RecordOptimizeStorageDuration(stage OptimizeStoragePipelineStage, duration time.Duration) {
 	optimizeStorageDuration.WithLabelValues(string(stage)).Set(duration.Seconds())
 }

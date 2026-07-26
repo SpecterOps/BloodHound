@@ -18,9 +18,9 @@
 INSERT INTO parameters (key, name, description, value, created_at, updated_at)
 VALUES (
     'analysis.graph_storage_optimization',
-    'Graph Storage Optimization',
+    'When to run graph storage optimization',
     'This configuration parameter controls which pipeline stages trigger graph storage optimization (vacuum/analyze) on the graph database. Each stage can be independently enabled or disabled.',
-    '{"after_ingest": false, "after_post_processing": false, "after_analysis": false}',
+    '{"after_boot": false, "after_analysis": false}',
     current_timestamp,
     current_timestamp
 )
