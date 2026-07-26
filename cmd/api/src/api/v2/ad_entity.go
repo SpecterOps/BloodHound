@@ -36,6 +36,13 @@ type DomainPatchRequest struct {
 	Collected *bool `json:"collected"`
 }
 
+const (
+	serverReferenceComputerNameProperty = "serverreferencecomputername"
+	serverReferenceComputerProperty     = "serverreferencecomputer"
+	siteServerNodeNameProperty          = "siteservernodename"
+	siteServerNodeProperty              = "siteservernode"
+)
+
 func (s *Resources) PatchDomain(response http.ResponseWriter, request *http.Request) {
 	var domainPatchReq DomainPatchRequest
 	if err := api.ReadJSONRequestPayloadLimited(&domainPatchReq, request); err != nil {
@@ -95,11 +102,37 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	} else {
 		if tiering.IsTierZero(node) {
-			node.Properties.Map["isTierZero"] = true
+			node.Properties.Set("isTierZero", true)
 		}
+
+		if err := s.addServerIsLinkedProperties(request, node, entityType); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error getting linked node: %v", err), request), response)
+			return
+		}
+
 		results := map[string]any{"props": node.Properties.Map, "kinds": node.Kinds.Strings()}
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	}
+}
+
+func (s *Resources) addServerIsLinkedProperties(request *http.Request, node *graph.Node, entityType graph.Kind) error {
+	if entityType.Is(ad.SiteServer) {
+		if linkedComputer, err := s.GraphQuery.GetEntityByRelationship(request.Context(), node, graph.DirectionOutbound, ad.ServerIs, ad.Computer); err != nil {
+			return err
+		} else if linkedComputer != nil {
+			node.Properties.Set(serverReferenceComputerProperty, linkedComputer.Properties.Get(common.ObjectID.String()).Any())
+			node.Properties.Set(serverReferenceComputerNameProperty, linkedComputer.Properties.Get(common.Name.String()).Any())
+		}
+	} else if entityType.Is(ad.Computer) {
+		if linkedSiteServer, err := s.GraphQuery.GetEntityByRelationship(request.Context(), node, graph.DirectionInbound, ad.ServerIs, ad.SiteServer); err != nil {
+			return err
+		} else if linkedSiteServer != nil {
+			node.Properties.Set(siteServerNodeProperty, linkedSiteServer.Properties.Get(common.ObjectID.String()).Any())
+			node.Properties.Set(siteServerNodeNameProperty, linkedSiteServer.Properties.Get(common.Name.String()).Any())
+		}
+	}
+
+	return nil
 }
 
 func (s *Resources) GetBaseEntityInfo(response http.ResponseWriter, request *http.Request) {
@@ -176,6 +209,7 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 			"ous":         adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter),
 			"computers":   adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter),
 			"users":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter),
+			"sites":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectSitesCandidateFilter),
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 			"tierzero":    adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter),
 		}
@@ -297,4 +331,33 @@ func (s *Resources) GetIssuancePolicyEntityInfo(response http.ResponseWriter, re
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.IssuancePolicy, countQueries)
+}
+
+func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"linkedgpos":  adAnalysis.FetchEntityLinkedGPOList,
+			"siteServers": adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer),
+			"siteSubnets": adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet),
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.Site, countQueries)
+}
+
+func (s *Resources) GetSiteServerEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteServer, countQueries)
+}
+
+func (s *Resources) GetSiteSubnetEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteSubnet, countQueries)
 }

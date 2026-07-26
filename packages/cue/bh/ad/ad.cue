@@ -1023,6 +1023,13 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+Serverreference: types.#StringEnum & {
+	symbol:         "Serverreference"
+	schema:         "ad"
+	name:           "Server Reference"
+	representation: "serverreference"
+}
+
 GPOStatusRaw: types.#StringEnum & {
 	symbol:         "GPOStatusRaw"
 	schema:         "ad"
@@ -1176,6 +1183,7 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	Serverreference,
 	GPOStatusRaw,
 	GPOStatus,
 ]
@@ -1264,6 +1272,21 @@ IssuancePolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
+Site: types.#Kind & {
+	symbol: "Site"
+	schema: "active_directory"
+}
+
+SiteServer: types.#Kind & {
+	symbol: "SiteServer"
+	schema: "active_directory"
+}
+
+SiteSubnet: types.#Kind & {
+	symbol: "SiteSubnet"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -1281,6 +1304,9 @@ NodeKinds: [
 	NTAuthStore,
 	CertTemplate,
 	IssuancePolicy,
+	Site,
+	SiteServer,
+	SiteSubnet
 ]
 
 Owns: types.#Kind & {
@@ -1346,6 +1372,11 @@ HasSession: types.#Kind & {
 
 Contains: types.#Kind & {
 	symbol: "Contains"
+	schema: "active_directory"
+}
+
+ServerIs: types.#Kind & {
+	symbol: "ServerIs"
 	schema: "active_directory"
 }
 
@@ -1743,6 +1774,7 @@ RelationshipKinds: [
 	AddMember,
 	HasSession,
 	Contains,
+	ServerIs,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
@@ -1919,6 +1951,7 @@ SharedRelationshipKinds: [
 	WritePublicInformation,
 	ManageCA,
 	ManageCertificates,
+	ServerIs,
 ]
 
 // Edges that are used during inbound traversal
