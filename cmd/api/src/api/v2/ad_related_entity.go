@@ -84,6 +84,10 @@ func (s *Resources) ListADUserSQLAdminRights(response http.ResponseWriter, reque
 	s.handleAdRelatedEntityQuery(response, request, "ListADUserSQLAdminRights", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound))
 }
 
+func (s *Resources) ListADUserSyncedIdentities(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADUserSyncedIdentities", adAnalysis.FetchSyncedIdentityPaths, adAnalysis.FetchSyncedIdentities)
+}
+
 func (s *Resources) ListADGroupSessions(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADGroupSessions", adAnalysis.FetchGroupSessionPaths, adAnalysis.FetchGroupSessions)
 }
