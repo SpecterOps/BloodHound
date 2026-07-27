@@ -73,8 +73,12 @@ func TestHandlers_GetRelationshipKindByID(t *testing.T) {
 					Data handlers.RelationshipKindView `json:"data"`
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
-				assert.Equal(t, relationshipKindID, envelope.Data.RelationshipKindID)
-				assert.Contains(t, string(body), `"relationship_kind_id":42`)
+				assert.Equal(t, handlers.RelationshipKindView{
+					RelationshipKindID: relationshipKindID,
+					Name:               "MemberOf",
+					Description:        "a membership relationship",
+					IsTraversable:      true,
+				}, envelope.Data)
 			},
 		},
 		{

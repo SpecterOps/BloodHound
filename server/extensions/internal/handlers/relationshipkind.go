@@ -55,7 +55,10 @@ func (s Handlers) GetRelationshipKindByID(response http.ResponseWriter, request 
 }
 
 type RelationshipKindView struct {
-	RelationshipKindID int32 `json:"relationship_kind_id"`
+	RelationshipKindID int32  `json:"relationship_kind_id"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	IsTraversable      bool   `json:"is_traversable"`
 }
 
 func (s RelationshipKindView) JSONView() ([]byte, error) {
@@ -66,6 +69,9 @@ func buildRelationshipKindView(relationshipKind services.RelationshipKind) (Rela
 
 	view := RelationshipKindView{
 		RelationshipKindID: relationshipKind.ID,
+		Name:               relationshipKind.Name,
+		Description:        relationshipKind.Description,
+		IsTraversable:      relationshipKind.IsTraversable,
 	}
 
 	return view, nil
