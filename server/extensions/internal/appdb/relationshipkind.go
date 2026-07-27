@@ -27,6 +27,7 @@ import (
 )
 
 const tableSchemaRelationshipKinds = "schema_relationship_kinds"
+const tableSchemaExtensions = "schema_extensions"
 
 // todo: read and join on schema_extension_id to pull in extension fields?
 type relationshipKindRow struct {
@@ -37,6 +38,13 @@ type relationshipKindRow struct {
 	IsTraversable bool      `db:"is_traversable"`
 	CreatedAt     null.Time `db:"created_at"`
 	UpdatedAt     null.Time `db:"updated_at"`
+
+	// extension fields
+	SchemaExtensionID          int32  `db:"schema_extension_id"`
+	SchemaExtensionName        string `db:"extension_name"`
+	SchemaExtensionDisplayName string `db:"extension_display_name"`
+	SchemaExtensionNamespace   string `db:"extension_namespace"`
+	SchemaExtensionVersion     string `db:"extension_version"`
 }
 
 func toRelationshipKind(row relationshipKindRow) services.RelationshipKind {
@@ -48,6 +56,13 @@ func toRelationshipKind(row relationshipKindRow) services.RelationshipKind {
 		IsTraversable: row.IsTraversable,
 		CreatedAt:     row.CreatedAt.ValueOrZero(),
 		UpdatedAt:     row.UpdatedAt.ValueOrZero(),
+		Extension: services.SchemaExtension{
+			ID:          row.SchemaExtensionID,
+			Name:        row.SchemaExtensionName,
+			DisplayName: row.SchemaExtensionDisplayName,
+			Namespace:   row.SchemaExtensionNamespace,
+			Version:     row.SchemaExtensionVersion,
+		},
 	}
 }
 
@@ -57,14 +72,20 @@ func (s *Store) GetRelationshipKind(ctx context.Context, id int32) (services.Rel
 
 	query, args := selectBuilder.Select(
 		"rk.id",
+		"rk.schema_extension_id",
 		"rk.kind_id",
 		"k.name",
 		"rk.description",
 		"rk.is_traversable",
 		"rk.created_at",
 		"rk.updated_at",
+		selectBuilder.As("se.name", "extension_name"),
+		selectBuilder.As("se.display_name", "extension_display_name"),
+		selectBuilder.As("se.namespace", "extension_namespace"),
+		selectBuilder.As("se.version", "extension_version"),
 	).
 		From(selectBuilder.As(tableSchemaRelationshipKinds, "rk")).
+		Join(selectBuilder.As(tableSchemaExtensions, "se"), "rk.schema_extension_id = se.id").
 		Join(selectBuilder.As(tableKind, "k"), "rk.kind_id = k.id").
 		Where(selectBuilder.Equal("rk.id", id)).
 		Build()

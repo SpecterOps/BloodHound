@@ -29,6 +29,7 @@ import (
 )
 
 type relationshipKindTestData struct {
+	extensionID        int32
 	kindID             int32
 	relationshipKindID int32
 	description        string
@@ -69,6 +70,7 @@ func seedRelationshipKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
 	})
 
 	return relationshipKindTestData{
+		extensionID:        extensionID,
 		kindID:             kindID,
 		relationshipKindID: relationshipKindID,
 		description:        description,
@@ -90,6 +92,11 @@ func TestStore_GetRelationshipKind_Integration(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, data.relationshipKindID, relationshipKind.ID)
+		assert.Equal(t, int(data.extensionID), int(relationshipKind.Extension.ID))
+		assert.Equal(t, "TestRelationshipExtension", relationshipKind.Extension.Name)
+		assert.Equal(t, "Test Relationship Extension", relationshipKind.Extension.DisplayName)
+		assert.Equal(t, "TRK", relationshipKind.Extension.Namespace)
+		assert.Equal(t, "1.0.0", relationshipKind.Extension.Version)
 		assert.Equal(t, data.kindID, relationshipKind.KindID)
 		assert.Equal(t, "TestRelationshipKind", relationshipKind.Name)
 		assert.Equal(t, data.description, relationshipKind.Description)

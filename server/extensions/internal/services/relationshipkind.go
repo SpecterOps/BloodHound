@@ -34,6 +34,15 @@ type RelationshipKind struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Info          []KindInfo
+	Extension     SchemaExtension
+}
+
+type SchemaExtension struct {
+	ID          int32
+	Name        string
+	DisplayName string
+	Namespace   string
+	Version     string
 }
 
 func (s *Service) GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error) {
