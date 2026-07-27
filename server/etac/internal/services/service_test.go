@@ -73,71 +73,89 @@ func TestService_CheckUserAccess(t *testing.T) {
 		dbErr  = errors.New("connection refused")
 	)
 
-	tests := []struct {
-		name         string
+	type args struct {
 		etacEnabled  bool
 		user         users.User
 		db           fakeETACDatabase
 		environments []string
-		want         bool
-		wantErr      error
+	}
+
+	type want struct {
+		result bool
+		err    error
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
 	}{
 		{
-			name:         "allows when ETAC feature is disabled",
-			etacEnabled:  false,
-			user:         &fakeUser{ID: userID},
-			environments: []string{"env-1"},
-			want:         true,
+			name: "allows when ETAC feature is disabled",
+			args: args{
+				etacEnabled:  false,
+				user:         &fakeUser{ID: userID},
+				environments: []string{"env-1"},
+			},
+			want: want{result: true},
 		},
 		{
-			name:         "allows when user has access to all environments",
-			etacEnabled:  true,
-			user:         &fakeUser{ID: userID, AllEnvironments: true},
-			environments: []string{"env-1"},
-			want:         true,
+			name: "allows when user has access to all environments",
+			args: args{
+				etacEnabled:  true,
+				user:         &fakeUser{ID: userID, AllEnvironments: true},
+				environments: []string{"env-1"},
+			},
+			want: want{result: true},
 		},
 		{
-			name:        "allows when user is permitted every requested environment",
-			etacEnabled: true,
-			user:        &fakeUser{ID: userID},
-			db: fakeETACDatabase{rows: []services.EnvironmentTargetedAccessControl{
-				{UserID: userID.String(), EnvironmentID: "env-1"},
-				{UserID: userID.String(), EnvironmentID: "env-2"},
-			}},
-			environments: []string{"env-1", "env-2"},
-			want:         true,
+			name: "allows when user is permitted every requested environment",
+			args: args{
+				etacEnabled: true,
+				user:        &fakeUser{ID: userID},
+				db: fakeETACDatabase{rows: []services.EnvironmentTargetedAccessControl{
+					{UserID: userID.String(), EnvironmentID: "env-1"},
+					{UserID: userID.String(), EnvironmentID: "env-2"},
+				}},
+				environments: []string{"env-1", "env-2"},
+			},
+			want: want{result: true},
 		},
 		{
-			name:        "denies when a requested environment is not permitted",
-			etacEnabled: true,
-			user:        &fakeUser{ID: userID},
-			db: fakeETACDatabase{rows: []services.EnvironmentTargetedAccessControl{
-				{UserID: userID.String(), EnvironmentID: "env-1"},
-			}},
-			environments: []string{"env-1", "env-2"},
-			want:         false,
+			name: "denies when a requested environment is not permitted",
+			args: args{
+				etacEnabled: true,
+				user:        &fakeUser{ID: userID},
+				db: fakeETACDatabase{rows: []services.EnvironmentTargetedAccessControl{
+					{UserID: userID.String(), EnvironmentID: "env-1"},
+				}},
+				environments: []string{"env-1", "env-2"},
+			},
+			want: want{result: false},
 		},
 		{
-			name:         "propagates database errors",
-			etacEnabled:  true,
-			user:         &fakeUser{ID: userID},
-			db:           fakeETACDatabase{err: dbErr},
-			environments: []string{"env-1"},
-			wantErr:      dbErr,
+			name: "propagates database errors",
+			args: args{
+				etacEnabled:  true,
+				user:         &fakeUser{ID: userID},
+				db:           fakeETACDatabase{err: dbErr},
+				environments: []string{"env-1"},
+			},
+			want: want{err: dbErr},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := services.NewService(tt.db, dogtagsWith(tt.etacEnabled))
-			got, err := svc.CheckUserAccess(ctx, tt.user, tt.environments...)
+			svc := services.NewService(tt.args.db, dogtagsWith(tt.args.etacEnabled))
+			got, err := svc.CheckUserAccess(ctx, tt.args.user, tt.args.environments...)
 
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			if tt.want.err != nil {
+				assert.ErrorIs(t, err, tt.want.err)
 				assert.False(t, got)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.want, got)
+				assert.Equal(t, tt.want.result, got)
 			}
 		})
 	}
