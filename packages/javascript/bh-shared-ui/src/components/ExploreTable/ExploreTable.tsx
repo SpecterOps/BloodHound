@@ -177,15 +177,6 @@ const ExploreTable = ({
         [onChangePinnedColumns]
     );
 
-    const className = useMemo(
-        () =>
-            cn('overflow-auto', {
-                'h-[calc(50vh-72px)]': !isExpanded,
-                'h-[calc(100vh-72px)]': !isExpanded,
-            }),
-        [isExpanded]
-    );
-
     return (
         <div
             data-testid='explore-table-container-wrapper'
@@ -231,7 +222,7 @@ const ExploreTable = ({
                     onColumnOrderChange={(newOrder) => {
                         setColumnOrder(newOrder);
                     }}
-                    className={className}
+                    className='overflow-auto h-full'
                     growLastColumn
                     enableResizing
                     enableDragAndDrop
