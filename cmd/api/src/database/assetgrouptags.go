@@ -731,8 +731,10 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
-func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
-	const selectorNodeInsertBatchSize = 5000
+type selectorNodesBatchOperation func(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error
+
+func (s *BloodhoundDB) selectorNodesBatchWrite(ctx context.Context, name string, operation selectorNodesBatchOperation, nodes []model.AssetGroupSelectorNode) error {
+	const selectorNodeBatchSize = 5000
 
 	var (
 		err             error
@@ -745,25 +747,29 @@ func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.As
 	}
 
 	if transaction, err = s.pool.Begin(ctx); err != nil {
-		return fmt.Errorf("beginning selector node batch insert transaction: %w", err)
+		return fmt.Errorf("beginning selector node batch %s operation transaction: %w", name, err)
 	}
 
 	defer func() {
 		_ = transaction.Rollback(ctx)
 	}()
 
-	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeInsertBatchSize {
-		batchUpperBound = min(batchLowerBound+selectorNodeInsertBatchSize, len(nodes))
-		if err = insertSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
+	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeBatchSize {
+		batchUpperBound = min(batchLowerBound+selectorNodeBatchSize, len(nodes))
+		if err = operation(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
 			return err
 		}
 	}
 
 	if err = transaction.Commit(ctx); err != nil {
-		return fmt.Errorf("committing selector node batch insert transaction: %w", err)
+		return fmt.Errorf("committing selector node batch %s operation transaction: %w", name, err)
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) InsertSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
+	return s.selectorNodesBatchWrite(ctx, "insert", insertSelectorNodesBatch, nodes)
 }
 
 func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
@@ -839,38 +845,7 @@ func insertSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []m
 }
 
 func (s *BloodhoundDB) UpdateSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
-	const selectorNodeUpdateBatchSize = 5000
-
-	var (
-		err             error
-		transaction     pgx.Tx
-		batchUpperBound int
-	)
-
-	if len(nodes) == 0 {
-		return nil
-	}
-
-	if transaction, err = s.pool.Begin(ctx); err != nil {
-		return fmt.Errorf("beginning selector node batch update transaction: %w", err)
-	}
-
-	defer func() {
-		_ = transaction.Rollback(ctx)
-	}()
-
-	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeUpdateBatchSize {
-		batchUpperBound = min(batchLowerBound+selectorNodeUpdateBatchSize, len(nodes))
-		if err = updateSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
-			return err
-		}
-	}
-
-	if err = transaction.Commit(ctx); err != nil {
-		return fmt.Errorf("committing selector node batch update transaction: %w", err)
-	}
-
-	return nil
+	return s.selectorNodesBatchWrite(ctx, "update", updateSelectorNodesBatch, nodes)
 }
 
 func updateSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
@@ -962,10 +937,6 @@ type selectorNodeCertificationChange struct {
 	Target                  string `db:"target"`
 	AssetGroupCertification int32  `db:"asset_group_certification"`
 	AssetGroupTagId         int32  `db:"asset_group_tag_id"`
-}
-
-func (s selectorNodeCertificationChange) historyAction() model.AssetGroupHistoryAction {
-	return model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(s.AssetGroupCertification))
 }
 
 func newSelectorNodeBatchSQLArgs(nodes []model.AssetGroupSelectorNode) (pgx.StrictNamedArgs, error) {
@@ -1062,7 +1033,7 @@ func insertSelectorNodeCertificationHistoryBatch(ctx context.Context, transactio
 
 	for _, certificationChange := range certificationChanges {
 		assetGroupTagIds = append(assetGroupTagIds, certificationChange.AssetGroupTagId)
-		actions = append(actions, string(certificationChange.historyAction()))
+		actions = append(actions, string(model.ToAssetGroupHistoryActionFromAssetGroupCertification(model.AssetGroupCertification(certificationChange.AssetGroupCertification))))
 		targets = append(targets, certificationChange.Target)
 	}
 
@@ -1135,38 +1106,7 @@ func (s *BloodhoundDB) UpdateCertificationBySelectorNode(ctx context.Context, in
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodes(ctx context.Context, nodes []model.AssetGroupSelectorNode) error {
-	const selectorNodeDeleteBatchSize = 5000
-
-	var (
-		err             error
-		transaction     pgx.Tx
-		batchUpperBound int
-	)
-
-	if len(nodes) == 0 {
-		return nil
-	}
-
-	if transaction, err = s.pool.Begin(ctx); err != nil {
-		return fmt.Errorf("beginning selector node batch delete transaction: %w", err)
-	}
-
-	defer func() {
-		_ = transaction.Rollback(ctx)
-	}()
-
-	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeDeleteBatchSize {
-		batchUpperBound = min(batchLowerBound+selectorNodeDeleteBatchSize, len(nodes))
-		if err = deleteSelectorNodesBatch(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
-			return err
-		}
-	}
-
-	if err = transaction.Commit(ctx); err != nil {
-		return fmt.Errorf("committing selector node batch delete transaction: %w", err)
-	}
-
-	return nil
+	return s.selectorNodesBatchWrite(ctx, "delete", deleteSelectorNodesBatch, nodes)
 }
 
 func deleteSelectorNodesBatch(ctx context.Context, transaction pgx.Tx, nodes []model.AssetGroupSelectorNode) error {
