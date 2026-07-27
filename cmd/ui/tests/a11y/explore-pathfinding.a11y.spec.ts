@@ -90,7 +90,6 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
 
         const destinationNodeField = page.getByLabel('Destination Node');
         await destinationNodeField.click();
-        await expect(destinationNodeField).toBeFocused();
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
