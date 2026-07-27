@@ -91,6 +91,7 @@ func TestStore_GetRelationshipKind_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, data.relationshipKindID, relationshipKind.ID)
 		assert.Equal(t, data.kindID, relationshipKind.KindID)
+		assert.Equal(t, "TestRelationshipKind", relationshipKind.Name)
 		assert.Equal(t, data.description, relationshipKind.Description)
 		assert.Equal(t, data.isTraversable, relationshipKind.IsTraversable)
 		assert.Equal(t, data.createdAt, relationshipKind.CreatedAt)

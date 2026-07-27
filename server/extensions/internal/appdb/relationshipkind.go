@@ -32,6 +32,7 @@ const tableSchemaRelationshipKinds = "schema_relationship_kinds"
 type relationshipKindRow struct {
 	ID            int32     `db:"id"`
 	KindID        int32     `db:"kind_id"`
+	Name          string    `db:"name"`
 	Description   string    `db:"description"`
 	IsTraversable bool      `db:"is_traversable"`
 	CreatedAt     null.Time `db:"created_at"`
@@ -42,6 +43,7 @@ func toRelationshipKind(row relationshipKindRow) services.RelationshipKind {
 	return services.RelationshipKind{
 		ID:            row.ID,
 		KindID:        row.KindID,
+		Name:          row.Name,
 		Description:   row.Description,
 		IsTraversable: row.IsTraversable,
 		CreatedAt:     row.CreatedAt.ValueOrZero(),
@@ -56,6 +58,7 @@ func (s *Store) GetRelationshipKind(ctx context.Context, id int32) (services.Rel
 	query, args := selectBuilder.Select(
 		"rk.id",
 		"rk.kind_id",
+		"k.name",
 		"rk.description",
 		"rk.is_traversable",
 		"rk.created_at",

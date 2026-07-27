@@ -46,7 +46,7 @@ func TestService_GetNodeKind(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name: "success_-_attaches_infos_to_node_kind",
+			name: "attaches infos to node kind",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
 				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(infos, nil)
@@ -55,7 +55,7 @@ func TestService_GetNodeKind(t *testing.T) {
 			wantResult: services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User", SchemaExtensionID: extID, Info: infos, Extension: extension},
 		},
 		{
-			name: "error_-_propagates_node_kind_not_found",
+			name: "propagates node kind not found",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(services.NodeKind{}, services.ErrNodeKindNotFound)
 			},
@@ -63,7 +63,7 @@ func TestService_GetNodeKind(t *testing.T) {
 			wantErr:    services.ErrNodeKindNotFound,
 		},
 		{
-			name: "error_-_wraps_info_fetch_error",
+			name: "wraps info fetch errors",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
 				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(nil, unexpectedErr)

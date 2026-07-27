@@ -16,7 +16,9 @@
 package services
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -26,8 +28,21 @@ var ErrRelationshipKindNotFound = errors.New("relationship kind not found")
 type RelationshipKind struct {
 	ID            int32
 	KindID        int32
+	Name          string
 	Description   string
 	IsTraversable bool
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	Info          []KindInfo
+}
+
+func (s *Service) GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error) {
+	if relKind, err := s.db.GetRelationshipKind(ctx, id); err != nil {
+		return RelationshipKind{}, err
+	} else if infos, err := s.db.GetKindInfos(ctx, relKind.Name); err != nil {
+		return RelationshipKind{}, fmt.Errorf("fetching kind infos for relationship kind %q: %w", relKind.Name, err)
+	} else {
+		relKind.Info = infos
+		return relKind, nil
+	}
 }
