@@ -25,11 +25,11 @@ import (
 type DatapipeStatus string
 
 const (
-	DatapipeStatusIdle      DatapipeStatus = "idle"
-	DatapipeStatusIngesting DatapipeStatus = "ingesting"
-	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
-	DatapipeStatusPurging   DatapipeStatus = "purging"
-	DatapipeStatusPruning   DatapipeStatus = "pruning"
+	DatapipeStatusIdle       DatapipeStatus = "idle"
+	DatapipeStatusIngesting  DatapipeStatus = "ingesting"
+	DatapipeStatusAnalyzing  DatapipeStatus = "analyzing"
+	DatapipeStatusPurging    DatapipeStatus = "purging"
+	DatapipeStatusPruning    DatapipeStatus = "pruning"
 	DatapipeStatusStarting   DatapipeStatus = "starting"
 	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
 )

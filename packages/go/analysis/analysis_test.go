@@ -305,7 +305,6 @@ func TestAnalysisErrorsCoversPipelineSteps(t *testing.T) {
 		analysisErrorCoverageByStep = map[string]analysisErrorCoverage{
 			"ad_post_processing":    analysisErrorCoverageClassified,
 			"azure_post_processing": analysisErrorCoverageClassified,
-			"optimize_storage":      analysisErrorCoverageIgnored,
 			"tagging":               analysisErrorCoverageClassified,
 			DataQuality:             analysisErrorCoverageClassified,
 		}
