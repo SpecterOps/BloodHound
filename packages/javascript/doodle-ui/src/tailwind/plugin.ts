@@ -19,7 +19,7 @@ import { common, dark, elevation, light, palette, text } from './colors';
 const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
-const focusRingOffsetWidth = '1px';
+const focusRingOffsetWidth = '2px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -514,7 +514,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             'outline-offset': 'var(--focus-ring-offset-width)',
             '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
             '--tw-ring-offset-color': 'var(--focus-ring-offset)',
-            '--tw-ring-color': 'var(--focus-ring)',
+            // TODO causes issues with Text
+            // '--tw-ring-color': 'var(--focus-ring)',
             '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
             '--tw-ring-shadow':
                 '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
