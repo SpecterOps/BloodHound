@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { zoneHandlers } from '../../../../mocks';
+import { mockSourceKindsHandler, zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
 import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
@@ -33,7 +33,8 @@ const server = setupServer(
             })
         );
     }),
-    ...zoneHandlers
+    ...zoneHandlers,
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
@@ -87,16 +88,13 @@ describe('Selected Details Tab Content', () => {
                     })
                 );
             }),
-            rest.post('/api/v2/graphs/cypher', async (_req, res, ctx) => {
+            rest.get('/api/v2/nodes/:id', async (_req, res, ctx) => {
                 return res(
                     ctx.json({
                         data: {
-                            nodes: {
-                                '123': {
-                                    properties: {
-                                        customprop: 'OpenGraph Value',
-                                    },
-                                },
+                            kinds: [{ name: 'Custom' }],
+                            properties: {
+                                customprop: 'OpenGraph Value',
                             },
                         },
                     })

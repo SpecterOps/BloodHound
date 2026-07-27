@@ -17,14 +17,12 @@
 package v2
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
 )
@@ -71,22 +69,12 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 				}
 
 				// Schemaless customnode kinds
-				if customNodeKinds, err := s.DB.GetCustomNodeKinds(ctx, nil); err != nil {
+				if customNodeKinds, err := s.DB.GetCustomNodeKinds(ctx); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
-					var customNames []string
-					for _, kind := range customNodeKinds {
-						customNames = append(customNames, kind.KindName)
-					}
-					// Until work is complete to ensure custom_node_kinds are properly kind backed, this will filter out invalid kinds
-					if kinds, err := s.DB.GetKindsByNames(ctx, customNames...); err != nil && !errors.Is(err, database.ErrNotFound) {
-						api.HandleDatabaseError(request, response, err)
-						return
-					} else {
-						for _, kind := range kinds {
-							validNodeKinds[kind.ToKind()] = true
-						}
+					for _, customNodeKind := range customNodeKinds {
+						validNodeKinds[graph.StringKind(customNodeKind.KindName)] = true
 					}
 				}
 

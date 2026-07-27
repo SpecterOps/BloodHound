@@ -17,9 +17,9 @@
 export * from './BasicObjectInfoFields';
 export * from './ContextMenu/AssetGroupMenuItemPrivilegeZonesEnabled';
 export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
-export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';
-export * from './EdgeInfo';
+export { default as CopyMenuItem, StyledTooltip } from './ContextMenu/CopyMenuItem';
 export * from './ExploreSearch';
 export * from './fragments';
+export { default as GraphItemInformationPanel } from './GraphItemInformationPanel';
 export * from './InfoStyles';
 export * from './providers';

@@ -310,3 +310,7 @@ export interface UpdateWebhookRequest {
     description?: string;
     url?: string;
 }
+
+export interface GetWebhookRequest {
+    id: string;
+}

@@ -36,24 +36,49 @@ import (
 )
 
 func TestNormalizeEinNodeProperties(t *testing.T) {
-	var (
-		nowUTC     = time.Now().UTC()
-		objectID   = "objectid"
-		properties = map[string]any{
-			ReconcileProperty:               false,
-			common.Name.String():            "name",
-			common.OperatingSystem.String(): "temple",
-			ad.DistinguishedName.String():   "distinguished-name",
-		}
-		normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC)
-	)
+	t.Run("flag off: objectid is uppercased", func(t *testing.T) {
+		var (
+			nowUTC     = time.Now().UTC()
+			objectID   = "objectid"
+			properties = map[string]any{
+				ReconcileProperty:               false,
+				common.Name.String():            "name",
+				common.OperatingSystem.String(): "temple",
+				ad.DistinguishedName.String():   "distinguished-name",
+			}
+			normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC, false)
+		)
 
-	assert.Nil(t, normalizedProperties[ReconcileProperty])
-	assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
-	assert.Equal(t, "OBJECTID", normalizedProperties[common.ObjectID.String()])
-	assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
-	assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
-	assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+		assert.Nil(t, normalizedProperties[ReconcileProperty])
+		assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
+		assert.Equal(t, "OBJECTID", normalizedProperties[common.ObjectID.String()])
+		assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
+		assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
+		assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+	})
+
+	t.Run("flag on: objectid preserves original case", func(t *testing.T) {
+		var (
+			nowUTC     = time.Now().UTC()
+			objectID   = "ObjectId"
+			properties = map[string]any{
+				ReconcileProperty:               false,
+				common.Name.String():            "name",
+				common.OperatingSystem.String(): "temple",
+				ad.DistinguishedName.String():   "distinguished-name",
+			}
+			normalizedProperties = normalizeEinNodeProperties(properties, objectID, nowUTC, true)
+		)
+
+		assert.Nil(t, normalizedProperties[ReconcileProperty])
+		assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
+		assert.Equal(t, "ObjectId", normalizedProperties[common.ObjectID.String()])
+		// name is also gated by the flag and preserves original case
+		assert.Equal(t, "name", normalizedProperties[common.Name.String()])
+		// operatingsystem and distinguishedname properties are unaffected by the flag and remain uppercased
+		assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
+		assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+	})
 }
 
 func TestMaybeSubmitNodeUpdate(t *testing.T) {

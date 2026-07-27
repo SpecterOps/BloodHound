@@ -21,8 +21,8 @@ import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useAppName } from '../../components/PageWithTitle';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, useRoleBasedFiltering } from '../../hooks';
+import { useAppName } from '../../providers/AppNameProvider';
 import {
     ROUTE_PZ_CERTIFICATIONS,
     ROUTE_PZ_HISTORY,
@@ -141,7 +141,7 @@ const PrivilegeZones: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes(savePath) })}
                         onValueChange={(value) => {
                             setSelectedDetailsTab(TagTabValue);
-                            const path = isSummaryPage ? summaryPath : detailsPath;
+                            const summaryOrDetailsPath = isSummaryPage ? summaryPath : detailsPath;
                             const id = value === zonesPath ? tagId : ownedId;
                             switch (value) {
                                 case certificationsPath:
@@ -154,7 +154,9 @@ const PrivilegeZones: FC = () => {
                                     });
                                 case zonesPath:
                                 case labelsPath:
-                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${path}`);
+                                    return navigate(`/${privilegeZonesPath}/${value}/${id}/${summaryOrDetailsPath}`, {
+                                        discardQueryParams: summaryOrDetailsPath === summaryPath,
+                                    });
                             }
                         }}>
                         <TabsList className='w-full flex justify-start'>

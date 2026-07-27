@@ -785,7 +785,7 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 	}
 }
 
-func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(t *testing.T) {
+func TestOpenGraphSchemaService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 	t.Parallel()
 
 	type mocks struct {
@@ -797,9 +797,9 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 		onlyBuiltin bool
 	}
 	type expected struct {
-		graphKinds     graph.Kinds
-		displayNameMap map[string]string
-		err            error
+		graphKinds                    graph.Kinds
+		environmentKindsToEnvironment model.EnvironmentKindsToEnvironment
+		err                           error
 	}
 	tests := []struct {
 		name       string
@@ -826,10 +826,12 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					{
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
+						SchemaExtensionId:          1,
 					},
 					{
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
+						SchemaExtensionId:          2,
 					},
 				}, nil)
 			},
@@ -838,9 +840,17 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					graph.StringKind("Domain"),
 					graph.StringKind("Tenant"),
 				},
-				displayNameMap: map[string]string{
-					"Domain": "AD",
-					"Tenant": "Azure",
+				environmentKindsToEnvironment: model.EnvironmentKindsToEnvironment{
+					"Domain": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "AD",
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionId:          1,
+					},
+					"Tenant": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "Azure",
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionId:          2,
+					},
 				},
 			},
 			args: args{
@@ -855,10 +865,12 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					{
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
+						SchemaExtensionId:          1,
 					},
 					{
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
+						SchemaExtensionId:          2,
 					},
 				}, nil)
 			},
@@ -867,9 +879,17 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					graph.StringKind("Domain"),
 					graph.StringKind("Tenant"),
 				},
-				displayNameMap: map[string]string{
-					"Domain": "AD",
-					"Tenant": "Azure",
+				environmentKindsToEnvironment: model.EnvironmentKindsToEnvironment{
+					"Domain": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "AD",
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionId:          1,
+					},
+					"Tenant": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "Azure",
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionId:          2,
+					},
 				},
 			},
 			args: args{
@@ -891,11 +911,11 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 
 			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
 
-			if envKinds, envKindToExtensionDisplayName, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
+			if envKinds, envKindToSchemaEnvironmentData, err := service.GetEnvironmentKindsAndSchemaEnvironmentData(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
 			} else {
-				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
-				assert.Equalf(t, tt.expected.displayNameMap, envKindToExtensionDisplayName, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndSchemaEnvironmentData(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.environmentKindsToEnvironment, envKindToSchemaEnvironmentData, "GetEnvironmentKindsAndSchemaEnvironmentData(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
 			}
 		})
 	}
