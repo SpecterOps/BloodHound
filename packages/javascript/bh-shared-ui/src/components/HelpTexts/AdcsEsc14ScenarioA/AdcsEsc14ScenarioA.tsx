@@ -30,7 +30,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
         <Typography variant='body1'>
             <b>ADCS ESC14 Scenario A</b>
         </Typography>
-        <Typography variant='body2'>
+        <Typography variant='body2' component='div'>
             <p className='my-4'>
                 An attacker can add an explicit certificate mapping in the AltSecurityIdentities of the target referring
                 to a certificate in the attacker's possession, and then use this certificate to authenticate as the
@@ -69,7 +69,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             ).
         </Typography>
 
-        <Typography variant='body2'>
+        <Typography variant='body2' component='div'>
             <p className='my-4'>
                 If the attacker cannot obtain a suitable certificate from the target environment, they may also be able
                 to use a third-party Client Authentication certificate.
@@ -103,7 +103,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
         <Typography component={'pre'}>
             {'certipy req -u computername -p Passw0rd -ca corp-DC-CA -target ca.corp.local -template ESC14'}
         </Typography>
-        <Typography variant='body2'>
+        <Typography variant='body2' component='div'>
             <p className='my-4'>
                 If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
                 cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal does
@@ -161,7 +161,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
             <Typography variant='body1'>
                 <b>ADCS ESC14 Scenario A</b>
             </Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' component='div'>
                 <p className='my-4'>
                     An attacker can add an explicit certificate mapping in the altSecurityIdentities of the target
                     referring to a certificate in the attacker's possession, and then use this certificate to
@@ -201,7 +201,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 ).
             </Typography>
 
-            <Typography variant='body2'>
+            <Typography variant='body2' component='div'>
                 <p className='my-4'>
                     If the attacker cannot obtain a suitable certificate from the target environment, they may also be
                     able to use a third-party Client Authentication certificate.
@@ -237,7 +237,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                     'Certify.exe request --ca ca01.forestroot.com\\Forestroot-CA01-CA --template Machine --machine --output-pem'
                 }
             </Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' component='div'>
                 <p className='my-4'>
                     If the enrollment fails with an error message stating that the Email or DNS name is unavailable and
                     cannot be added to the Subject or Subject Alternate name, then it is because the enrollee principal
@@ -253,7 +253,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 </p>
             </Typography>
             <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' component='div'>
                 <p className='my-4'>
                     The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
                     X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
