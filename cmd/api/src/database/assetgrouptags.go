@@ -737,9 +737,8 @@ func (s *BloodhoundDB) selectorNodesBatchWrite(ctx context.Context, name string,
 	const selectorNodeBatchSize = 5000
 
 	var (
-		err             error
-		transaction     pgx.Tx
-		batchUpperBound int
+		err         error
+		transaction pgx.Tx
 	)
 
 	if len(nodes) == 0 {
@@ -755,7 +754,7 @@ func (s *BloodhoundDB) selectorNodesBatchWrite(ctx context.Context, name string,
 	}()
 
 	for batchLowerBound := 0; batchLowerBound < len(nodes); batchLowerBound += selectorNodeBatchSize {
-		batchUpperBound = min(batchLowerBound+selectorNodeBatchSize, len(nodes))
+		batchUpperBound := min(batchLowerBound+selectorNodeBatchSize, len(nodes))
 		if err = operation(ctx, transaction, nodes[batchLowerBound:batchUpperBound]); err != nil {
 			return err
 		}
