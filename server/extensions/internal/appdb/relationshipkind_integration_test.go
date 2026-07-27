@@ -20,6 +20,7 @@ package appdb_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
@@ -30,6 +31,10 @@ import (
 type relationshipKindTestData struct {
 	kindID             int32
 	relationshipKindID int32
+	description        string
+	isTraversable      bool
+	createdAt          time.Time
+	updatedAt          time.Time
 }
 
 func seedRelationshipKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) relationshipKindTestData {
@@ -46,10 +51,17 @@ func seedRelationshipKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
 		INSERT INTO kind (name) VALUES ('TestRelationshipKind') RETURNING id`).Scan(&kindID))
 
 	var relationshipKindID int32
+	const (
+		description   = "a test relationship kind"
+		isTraversable = true
+	)
+
+	var createdAt, updatedAt time.Time
 	require.NoError(t, pool.QueryRow(ctx, `
 		INSERT INTO schema_relationship_kinds (schema_extension_id, kind_id, description, is_traversable)
-		VALUES ($1, $2, 'a test relationship kind', true)
-		RETURNING id`, extensionID, kindID).Scan(&relationshipKindID))
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at, updated_at`, extensionID, kindID, description, isTraversable).
+		Scan(&relationshipKindID, &createdAt, &updatedAt))
 
 	t.Cleanup(func() {
 		_, _ = pool.Exec(ctx, `DELETE FROM schema_extensions WHERE name = 'TestRelationshipExtension'`)
@@ -59,11 +71,15 @@ func seedRelationshipKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
 	return relationshipKindTestData{
 		kindID:             kindID,
 		relationshipKindID: relationshipKindID,
+		description:        description,
+		isTraversable:      isTraversable,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
 	}
 }
 
 func TestStore_GetRelationshipKind_Integration(t *testing.T) {
-	t.Run("returns the relationship kind ID", func(t *testing.T) {
+	t.Run("returns all relationship kind fields", func(t *testing.T) {
 		var (
 			store, pool = setupStore(t)
 			ctx         = context.Background()
@@ -74,7 +90,11 @@ func TestStore_GetRelationshipKind_Integration(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, data.relationshipKindID, relationshipKind.ID)
-		assert.NotEqual(t, data.kindID, relationshipKind.ID)
+		assert.Equal(t, data.kindID, relationshipKind.KindID)
+		assert.Equal(t, data.description, relationshipKind.Description)
+		assert.Equal(t, data.isTraversable, relationshipKind.IsTraversable)
+		assert.Equal(t, data.createdAt, relationshipKind.CreatedAt)
+		assert.Equal(t, data.updatedAt, relationshipKind.UpdatedAt)
 	})
 
 	t.Run("returns relationship kind not found for an unknown ID", func(t *testing.T) {

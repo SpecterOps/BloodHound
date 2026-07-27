@@ -22,18 +22,30 @@ import (
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 )
 
 const tableSchemaRelationshipKinds = "schema_relationship_kinds"
 
+// todo: read and join on schema_extension_id to pull in extension fields?
 type relationshipKindRow struct {
-	ID int32 `db:"id"`
+	ID            int32     `db:"id"`
+	KindID        int32     `db:"kind_id"`
+	Description   string    `db:"description"`
+	IsTraversable bool      `db:"is_traversable"`
+	CreatedAt     null.Time `db:"created_at"`
+	UpdatedAt     null.Time `db:"updated_at"`
 }
 
 func toRelationshipKind(row relationshipKindRow) services.RelationshipKind {
 	return services.RelationshipKind{
-		ID: row.ID,
+		ID:            row.ID,
+		KindID:        row.KindID,
+		Description:   row.Description,
+		IsTraversable: row.IsTraversable,
+		CreatedAt:     row.CreatedAt.ValueOrZero(),
+		UpdatedAt:     row.UpdatedAt.ValueOrZero(),
 	}
 }
 
@@ -43,6 +55,11 @@ func (s *Store) GetRelationshipKind(ctx context.Context, id int32) (services.Rel
 
 	query, args := selectBuilder.Select(
 		"rk.id",
+		"rk.kind_id",
+		"rk.description",
+		"rk.is_traversable",
+		"rk.created_at",
+		"rk.updated_at",
 	).
 		From(selectBuilder.As(tableSchemaRelationshipKinds, "rk")).
 		Join(selectBuilder.As(tableKind, "k"), "rk.kind_id = k.id").

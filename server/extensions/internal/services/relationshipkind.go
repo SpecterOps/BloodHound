@@ -15,11 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package services
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 // ErrNodeKindNotFound indicates that no relationship kind exists for the requested id.
 var ErrRelationshipKindNotFound = errors.New("relationship kind not found")
 
 type RelationshipKind struct {
-	ID int32
+	ID            int32
+	KindID        int32
+	Description   string
+	IsTraversable bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
