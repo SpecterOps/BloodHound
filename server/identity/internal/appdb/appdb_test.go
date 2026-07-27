@@ -52,6 +52,10 @@ const expectedListRolesSortedSQL = `SELECT * FROM roles ORDER BY name ASC`
 // equality filter on name is supplied.
 const expectedListRolesFilteredSQL = `SELECT * FROM roles WHERE (name = $1)`
 
+// expectedListRolesFilteredByIDSQL is the literal SQL the Store issues when a
+// single greater-than filter on the numeric id column is supplied.
+const expectedListRolesFilteredByIDSQL = `SELECT * FROM roles WHERE (id > $1)`
+
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
 	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
@@ -335,6 +339,15 @@ func TestStore_ListRoles(t *testing.T) {
 				expectPermissionsFor(pool, admin)
 			},
 			wantResult: []services.Role{admin},
+		},
+		{
+			name:    "issues a WHERE clause for a numeric filter on id",
+			filters: params.Filters{"id": {{Field: "id", Operator: params.GreaterThan, Value: "1", SetOperator: params.FilterAnd}}},
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListRolesFilteredByIDSQL).WithArgs("1").WillReturnRows(expectRoleRows(pool, readOnly))
+				expectPermissionsFor(pool, readOnly)
+			},
+			wantResult: []services.Role{readOnly},
 		},
 		{
 			name:    "returns an error for an unknown filter field",

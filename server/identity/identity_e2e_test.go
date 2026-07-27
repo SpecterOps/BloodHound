@@ -292,7 +292,7 @@ func TestListRoles(t *testing.T) {
 
 		var envelope listRolesResponseEnvelope
 		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		assert.Len(t, envelope.Data.Roles, len(roles))
+		require.Len(t, envelope.Data.Roles, len(roles))
 		assert.NotEmpty(t, envelope.Data.Roles[0].Permissions, "expected roles to preload their permissions")
 	})
 
