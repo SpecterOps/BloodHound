@@ -18,34 +18,10 @@ import { faBullseye, faCircle, faGripVertical, faPlus, faTimes } from '@fortawes
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRef, useState } from 'react';
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
+import { PathfindingNode, PathfindingSearchState } from '../../../hooks/useExploreGraph/usePathfindingSearch';
+import { cn } from '../../../utils';
 import { EdgeFilter, PathfindingFilterState } from './EdgeFilter/EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
-import { SearchValue } from './types';
-
-type PathfindingNode = {
-    searchTerm: string;
-    selectedItem: SearchValue | undefined;
-};
-
-type PathfindingSearchState = {
-    sourceSearchTerm: string;
-    destinationSearchTerm: string;
-    sourceSelectedItem: SearchValue | undefined;
-    destinationSelectedItem: SearchValue | undefined;
-    nodes: PathfindingNode[];
-    totalNodeCount: number;
-    maxNodes: number;
-    handleSourceNodeEdited: (edit: string) => void;
-    handleDestinationNodeEdited: (edit: string) => void;
-    handleSourceNodeSelected: (selected: SearchValue) => void;
-    handleDestinationNodeSelected: (selected: SearchValue) => void;
-    handleNodeEdited: (index: number) => (edit: string) => void;
-    handleNodeSelected: (index: number) => (selected: SearchValue) => void;
-    handleSwapPathfindingInputs: () => void;
-    handleReorderNodes: (fromIndex: number, toIndex: number) => void;
-    handleRemoveNode: (index: number) => void;
-    handleAddNode: () => void;
-};
 
 const PathfindingSearch = ({
     pathfindingSearchState,
@@ -116,17 +92,19 @@ const PathfindingSearch = ({
         dragCounter.current = {};
     };
 
+    // The first destination only steals focus once the start node has a term, so tabbing into
+    // an empty form lands on the start node rather than jumping ahead.
+    const shouldAutoFocus = (index: number, node: PathfindingNode): boolean => {
+        if (index === 1) return !!(nodes[0]?.searchTerm && !node.searchTerm);
+        return !node.searchTerm;
+    };
+
     const visibleNodes = nodes.slice(0, totalNodeCount).map((node, index) => ({
         label: index === 0 ? 'Start Node' : 'Destination Node',
         searchTerm: node.searchTerm,
         selectedItem: node.selectedItem,
         removable: index > 0 && totalNodeCount > 2,
-        autoFocus:
-            index === 0
-                ? !node.searchTerm
-                : index === 1
-                  ? !!(nodes[0]?.searchTerm && !node.searchTerm)
-                  : !node.searchTerm,
+        autoFocus: shouldAutoFocus(index, node),
     }));
 
     return (
@@ -144,9 +122,10 @@ const PathfindingSearch = ({
                         onDragOver={handleDragOver}
                         onDrop={handleDrop(index)}
                         onDragEnd={handleDragEnd}
-                        className={`relative flex items-center gap-1 rounded transition-all group ${
-                            dragIndex === index ? 'opacity-40' : ''
-                        } ${dragOverIndex === index ? 'ring-2 ring-primary ring-offset-1' : ''}`}>
+                        className={cn('relative flex items-center gap-1 rounded transition-all group', {
+                            'opacity-40': dragIndex === index,
+                            'ring-2 ring-primary ring-offset-1': dragOverIndex === index,
+                        })}>
                         <div
                             role='button'
                             tabIndex={0}

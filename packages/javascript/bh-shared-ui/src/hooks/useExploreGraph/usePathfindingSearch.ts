@@ -14,18 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
-import { useKeywordAndTypeValues, useSearch } from '../useSearch';
+import { SearchResults, useKeywordAndTypeValues, useSearch } from '../useSearch';
 
 const MAX_NODES = 4;
 
 const SEARCH_PARAM_KEYS = ['primarySearch', 'secondarySearch', 'tertiarySearch', 'quaternarySearch'] as const;
 
-type PathfindingNode = {
+export type PathfindingNode = {
     searchTerm: string;
     selectedItem: SearchValue | undefined;
+};
+
+export type PathfindingSearchState = {
+    sourceSearchTerm: string;
+    destinationSearchTerm: string;
+    sourceSelectedItem: SearchValue | undefined;
+    destinationSelectedItem: SearchValue | undefined;
+    nodes: PathfindingNode[];
+    totalNodeCount: number;
+    maxNodes: number;
+    handleSourceNodeEdited: (edit: string) => void;
+    handleDestinationNodeEdited: (edit: string) => void;
+    handleSourceNodeSelected: (selected: SearchValue) => void;
+    handleDestinationNodeSelected: (selected: SearchValue) => void;
+    handleNodeEdited: (index: number) => (edit: string) => void;
+    handleNodeSelected: (index: number) => (selected: SearchValue) => void;
+    handleSwapPathfindingInputs: () => void;
+    handleReorderNodes: (fromIndex: number, toIndex: number) => void;
+    handleRemoveNode: (index: number) => void;
+    handleAddNode: () => void;
 };
 
 const emptyNode = (): PathfindingNode => ({ searchTerm: '', selectedItem: undefined });
@@ -47,21 +67,21 @@ export const usePathfindingSearch = () => {
     const { data: data2 } = useSearch(kw2, t2);
     const { data: data3 } = useSearch(kw3, t3);
 
-    const updateNode = useCallback((index: number, update: Partial<PathfindingNode>) => {
-        setNodes((prev) => {
-            const next = [...prev];
-            while (next.length <= index) next.push(emptyNode());
-            next[index] = { ...next[index], ...update };
-            return next;
+    const updateNode = useCallback((index: number, updatedNode: Partial<PathfindingNode>) => {
+        setNodes((previousNodes) => {
+            const newNodes = [...previousNodes];
+            // Pad the array with empty nodes so the target index exists
+            while (newNodes.length <= index) newNodes.push(emptyNode());
+            // Merge the update into the node at the target index
+            newNodes[index] = { ...newNodes[index], ...updatedNode };
+            return newNodes;
         });
     }, []);
 
     const syncNodeFromParam = useCallback(
-        (index: number, param: string | null, data: any) => {
+        (index: number, param: string | null, data: SearchResults | undefined) => {
             if (param && data) {
-                const matchedNode = Object.values(data).find((node: any) => node.objectid === param) as
-                    | SearchValue
-                    | undefined;
+                const matchedNode = data.find((node) => node.objectid === param);
                 if (matchedNode) {
                     updateNode(index, { searchTerm: matchedNode.name, selectedItem: matchedNode });
                 }
@@ -72,27 +92,33 @@ export const usePathfindingSearch = () => {
         [updateNode]
     );
 
-    // Sync URL params to node state
-    useEffect(() => {
-        syncNodeFromParam(0, primarySearch, data0);
-    }, [syncNodeFromParam, primarySearch, data0]);
+    const params = useMemo(
+        () => [primarySearch, secondarySearch, tertiarySearch, quaternarySearch],
+        [primarySearch, secondarySearch, tertiarySearch, quaternarySearch]
+    );
+    const searchData = useMemo(() => [data0, data1, data2, data3], [data0, data1, data2, data3]);
+
+    // Sync URL params to node state. Each node is synced only when its own param or search
+    // data changes — re-syncing every node whenever any one of them changes would clear a
+    // sibling's typed-but-not-yet-selected search term.
+    const lastSynced = useRef<{ param: string | null; data: SearchResults | undefined }[]>([]);
 
     useEffect(() => {
-        syncNodeFromParam(1, secondarySearch, data1);
-    }, [syncNodeFromParam, secondarySearch, data1]);
+        params.forEach((param, index) => {
+            const previous = lastSynced.current[index];
+            if (previous && previous.param === param && previous.data === searchData[index]) return;
 
-    useEffect(() => {
-        syncNodeFromParam(2, tertiarySearch, data2);
-    }, [syncNodeFromParam, tertiarySearch, data2]);
+            lastSynced.current[index] = { param, data: searchData[index] };
+            syncNodeFromParam(index, param, searchData[index]);
+        });
+    }, [syncNodeFromParam, params, searchData]);
 
+    // Keep extraNodeCount in sync with URL params: if quaternary then 2, if not and tertiary
+    // then 1, if neither then 0. Counting the set params instead would collapse a node when a
+    // hand-edited URL sets quaternary without tertiary, hiding an input the query still uses.
     useEffect(() => {
-        syncNodeFromParam(3, quaternarySearch, data3);
-    }, [syncNodeFromParam, quaternarySearch, data3]);
-
-    // Keep extraNodeCount in sync with URL params
-    useEffect(() => {
-        const count = quaternarySearch ? 2 : tertiarySearch ? 1 : 0;
-        setExtraNodeCount(count);
+        const extraCount = quaternarySearch ? 2 : tertiarySearch ? 1 : 0;
+        setExtraNodeCount(extraCount);
     }, [tertiarySearch, quaternarySearch]);
 
     const totalNodeCount = 2 + extraNodeCount;
@@ -163,8 +189,8 @@ export const usePathfindingSearch = () => {
 
     const handleReorderNodes = (fromIndex: number, toIndex: number) => {
         const currentNodes = nodes.slice(0, totalNodeCount);
-        const [moved] = currentNodes.splice(fromIndex, 1);
-        currentNodes.splice(toIndex, 0, moved);
+        const [movedNode] = currentNodes.splice(fromIndex, 1);
+        currentNodes.splice(toIndex, 0, movedNode);
 
         setNodes(currentNodes);
 
@@ -174,11 +200,13 @@ export const usePathfindingSearch = () => {
 
     const handleAddNode = () => {
         if (totalNodeCount < MAX_NODES) {
-            setExtraNodeCount((prev) => prev + 1);
-            setNodes((prev) => {
-                const next = [...prev];
-                while (next.length < 2 + extraNodeCount + 1) next.push(emptyNode());
-                return next;
+            setExtraNodeCount((previousCount) => previousCount + 1);
+            setNodes((previousNodes) => {
+                const newNodes = [...previousNodes];
+                const targetNodeCount = totalNodeCount + 1;
+                // Pad the array so the newly added destination has a node to render
+                while (newNodes.length < targetNodeCount) newNodes.push(emptyNode());
+                return newNodes;
             });
         }
     };
