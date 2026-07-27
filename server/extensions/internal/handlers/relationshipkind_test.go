@@ -78,7 +78,64 @@ func TestHandlers_GetRelationshipKindByID(t *testing.T) {
 					Name:               "MemberOf",
 					Description:        "a membership relationship",
 					IsTraversable:      true,
+					Info:               map[string]handlers.KindInfoView{},
 				}, envelope.Data)
+			},
+		},
+		{
+			name:  "returns relationship kind view with info",
+			rawID: "42",
+			setupMock: func(extensionsMock *mocks.MockExtensions) {
+				withInfo := relationshipKind
+				withInfo.Info = []services.KindInfo{
+					{
+						InfoKey:  "overview",
+						Title:    "Overview",
+						Position: 0,
+						Content:  json.RawMessage(`{"markdown":{"content":"relationship overview"}}`),
+					},
+				}
+				extensionsMock.EXPECT().GetRelationshipKind(mock.Anything, relationshipKindID).Return(withInfo, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RelationshipKindView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Equal(t, handlers.KindInfoView{
+					Title:    "Overview",
+					Position: 0,
+					Markdown: handlers.MarkdownView{Content: "relationship overview"},
+				}, envelope.Data.Info["overview"])
+			},
+		},
+		{
+			name:  "returns relationship kind view when info markdown is malformed",
+			rawID: "42",
+			setupMock: func(extensionsMock *mocks.MockExtensions) {
+				withMalformedInfo := relationshipKind
+				withMalformedInfo.Info = []services.KindInfo{
+					{
+						InfoKey:  "overview",
+						Title:    "Overview",
+						Position: 0,
+						Content:  json.RawMessage(`not-json`),
+					},
+				}
+				extensionsMock.EXPECT().GetRelationshipKind(mock.Anything, relationshipKindID).Return(withMalformedInfo, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.RelationshipKindView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Equal(t, handlers.KindInfoView{
+					Title:    "Overview",
+					Position: 0,
+					Markdown: handlers.MarkdownView{},
+				}, envelope.Data.Info["overview"])
 			},
 		},
 		{

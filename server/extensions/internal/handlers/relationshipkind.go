@@ -47,7 +47,7 @@ func (s Handlers) GetRelationshipKindByID(response http.ResponseWriter, request 
 		return
 	} else if view, err := buildRelationshipKindView(relationshipKind); err != nil {
 		slog.WarnContext(ctx, "Failed to parse relationship kind info markdown content", attr.Error(err))
-		responses.WriteInternalServerError(ctx, err, response)
+		responses.WriteBasic(ctx, view, http.StatusOK, response)
 		return
 	} else {
 		responses.WriteBasic(ctx, view, http.StatusOK, response)
@@ -55,10 +55,11 @@ func (s Handlers) GetRelationshipKindByID(response http.ResponseWriter, request 
 }
 
 type RelationshipKindView struct {
-	RelationshipKindID int32  `json:"relationship_kind_id"`
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	IsTraversable      bool   `json:"is_traversable"`
+	RelationshipKindID int32                   `json:"relationship_kind_id"`
+	Name               string                  `json:"name"`
+	Description        string                  `json:"description"`
+	IsTraversable      bool                    `json:"is_traversable"`
+	Info               map[string]KindInfoView `json:"info"`
 }
 
 func (s RelationshipKindView) JSONView() ([]byte, error) {
@@ -72,7 +73,23 @@ func buildRelationshipKindView(relationshipKind services.RelationshipKind) (Rela
 		Name:               relationshipKind.Name,
 		Description:        relationshipKind.Description,
 		IsTraversable:      relationshipKind.IsTraversable,
+		Info:               map[string]KindInfoView{},
 	}
 
-	return view, nil
+	var markdownErr error
+
+	for _, info := range relationshipKind.Info {
+		markdown, err := buildMarkdownView(info.Content)
+		if err != nil {
+			markdownErr = errors.Join(markdownErr, err)
+		}
+
+		view.Info[info.InfoKey] = KindInfoView{
+			Title:    info.Title,
+			Position: info.Position,
+			Markdown: markdown,
+		}
+	}
+
+	return view, markdownErr
 }
