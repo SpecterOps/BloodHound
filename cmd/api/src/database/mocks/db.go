@@ -3165,6 +3165,20 @@ func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
 }
 
+// SetLastGraphOptimizeTime mocks base method.
+func (m *MockDatabase) SetLastGraphOptimizeTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLastGraphOptimizeTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLastGraphOptimizeTime indicates an expected call of SetLastGraphOptimizeTime.
+func (mr *MockDatabaseMockRecorder) SetLastGraphOptimizeTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastGraphOptimizeTime", reflect.TypeOf((*MockDatabase)(nil).SetLastGraphOptimizeTime), ctx)
+}
+
 // SetNextScheduledAnalysisStartTime mocks base method.
 func (m *MockDatabase) SetNextScheduledAnalysisStartTime(ctx context.Context, arg1 null.Time) error {
 	m.ctrl.T.Helper()

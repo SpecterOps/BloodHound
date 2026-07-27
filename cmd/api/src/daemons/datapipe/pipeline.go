@@ -350,11 +350,31 @@ func (s *BHCEPipeline) Optimize(ctx context.Context) error {
 		return nil
 	}
 
+	status, err := s.db.GetDatapipeStatus(ctx)
+	if err != nil {
+		return fmt.Errorf("looking up datapipe status for optimization: %w", err)
+	}
+
+	// only optimize when an analysis has completed since the last optimization run
+	if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
+		return nil
+	}
+
+	// never optimize more often than the configured minimum interval
+	minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
+	if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
+		return nil
+	}
+
 	start := time.Now()
 	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
 		slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
 	}
 	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageAnalysis, time.Since(start))
+
+	if err := s.db.SetLastGraphOptimizeTime(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error setting last graph optimize time", attr.Error(err))
+	}
 
 	return nil
 }
@@ -370,6 +390,10 @@ func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
 		slog.ErrorContext(ctx, "Error optimizing graph storage on boot", attr.Error(err))
 	}
 	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageBoot, time.Since(start))
+
+	if err := s.db.SetLastGraphOptimizeTime(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error setting last graph optimize time", attr.Error(err))
+	}
 
 	return nil
 }

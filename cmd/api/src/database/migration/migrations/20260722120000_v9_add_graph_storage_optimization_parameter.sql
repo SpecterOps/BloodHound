@@ -20,11 +20,17 @@ VALUES (
     'analysis.graph_storage_optimization',
     'When to run graph storage optimization',
     'This configuration parameter controls which pipeline stages trigger graph storage optimization (vacuum/analyze) on the graph database. Each stage can be independently enabled or disabled.',
-    '{"after_boot": false, "after_analysis": false}',
+    '{"after_boot": false, "after_analysis": false, "min_interval_seconds": 86400}',
     current_timestamp,
     current_timestamp
 )
 ON CONFLICT DO NOTHING;
 
+ALTER TABLE datapipe_status
+    ADD COLUMN IF NOT EXISTS last_complete_optimize_at timestamp with time zone;
+
 -- +goose Down
+ALTER TABLE datapipe_status
+    DROP COLUMN IF EXISTS last_complete_optimize_at;
+
 DELETE FROM parameters WHERE key = 'analysis.graph_storage_optimization';

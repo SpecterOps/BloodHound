@@ -679,14 +679,16 @@ func GetAPITokenExpirationParameter(ctx context.Context, service ParameterServic
 
 // GraphStorageOptimization
 type GraphStorageOptimizationParameter struct {
-	AfterBoot     bool `json:"after_boot"`
-	AfterAnalysis bool `json:"after_analysis"`
+	AfterBoot           bool `json:"after_boot"`
+	AfterAnalysis       bool `json:"after_analysis"`
+	MinIntervalSeconds  int  `json:"min_interval_seconds"`
 }
 
 func GetGraphStorageOptimizationParameter(ctx context.Context, service ParameterService) GraphStorageOptimizationParameter {
 	result := GraphStorageOptimizationParameter{
-		AfterBoot:     false,
-		AfterAnalysis: false,
+		AfterBoot:          false,
+		AfterAnalysis:      false,
+		MinIntervalSeconds: 86400,
 	}
 
 	if cfg, err := service.GetConfigurationParameter(ctx, GraphStorageOptimizationKey); err != nil {
