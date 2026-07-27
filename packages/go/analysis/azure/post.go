@@ -991,7 +991,7 @@ func CreateAZRoleApproverEdge(
 	return &operation.Stats, operation.Done()
 }
 
-func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
+func FixManagementGroupNames(ctx context.Context, db graph.Database, useRawObjectIDs bool) error {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -1051,7 +1051,12 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("management_group_id", managementGroup.ID.Int64()))
 					continue
 				} else {
-					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))
+					composedName := fmt.Sprintf("%s@%s", displayName, tenantName)
+					if !useRawObjectIDs {
+						composedName = strings.ToUpper(composedName)
+					}
+
+					managementGroup.Properties.Set(common.Name.String(), composedName)
 					if err := tx.UpdateNode(managementGroup); err != nil {
 						return err
 					}
@@ -1063,7 +1068,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 	}
 }
 
-func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -1075,7 +1080,7 @@ func Post(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingSta
 
 	aggregateStats := post.NewAtomicPostProcessingStats()
 
-	if err := FixManagementGroupNames(ctx, db); err != nil {
+	if err := FixManagementGroupNames(ctx, db, useRawObjectIDs); err != nil {
 		slog.WarnContext(ctx, "Error fixing management group names", attr.Error(err))
 	}
 

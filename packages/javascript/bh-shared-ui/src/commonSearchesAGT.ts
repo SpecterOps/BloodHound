@@ -574,7 +574,7 @@ export const UncommonSearches: CommonSearchType[] = [
             {
                 name: 'Query Parse Error',
                 description: '',
-                query: `match (n) return n limit 8316`,
+                query: `(a:Attackers)-[:Think_in]->(g:Graphs)`,
             },
         ],
     },

@@ -57,6 +57,10 @@ type CreateCustomNodeRequest struct {
 }
 
 func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeRequest) error {
+	if len(customNodeKindRequest.CustomTypes) == 0 {
+		return fmt.Errorf("custom_types must contain at least 1 entry")
+	}
+
 	for key, config := range customNodeKindRequest.CustomTypes {
 		if key == "" {
 			return fmt.Errorf("custom_types contains an entry with an empty string as a key. please remove or replace the empty key")
@@ -123,6 +127,10 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := customNodeKindRequest.Config.Validate(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
+	} else if existing, err := s.DB.GetCustomNodeKind(request.Context(), paramId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if existing.SchemaNodeKindId != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: assignColorDefault(customNodeKindRequest.Config)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
