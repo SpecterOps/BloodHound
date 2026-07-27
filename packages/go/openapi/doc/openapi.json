@@ -23862,8 +23862,11 @@
               },
               "type": {
                 "readOnly": true,
-                "type": "string",
-                "nullable": true
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
+                ]
               },
               "status": {
                 "readOnly": true,
@@ -23875,11 +23878,8 @@
               },
               "requested_by_user_id": {
                 "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
+                "type": "string",
+                "nullable": true
               },
               "created_at": {
                 "type": "string",
