@@ -17,6 +17,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
+    CreateAlertRequest,
     CreateAssetGroupRequest,
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
@@ -70,6 +71,7 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CreateAlertResponse,
     CreateAuthTokenResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
@@ -2817,6 +2819,11 @@ class BHEAPIClient {
 
     testWebhook = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+
+    /* alerts */
+    createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
+        return this.baseClient.post<BasicResponse<CreateAlertResponse>>('/api/v2/alert-webhooks', payload, options);
+    };
 }
 
 export default BHEAPIClient;

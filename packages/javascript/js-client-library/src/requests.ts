@@ -345,6 +345,13 @@ export interface AlertSubscription {
     version: string;
     disabled: boolean;
 }
+
+export interface CreateAlertForm {
+    name: string;
+    description: string;
+    channelId: string;
+}
+
 export interface CreateAlertRequest {
     name: string;
     description: string;
