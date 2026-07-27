@@ -234,6 +234,7 @@ const ExploreTable = ({
                     className={className}
                     growLastColumn
                     enableResizing
+                    enableDragAndDrop
                 />
             </div>
         </div>
