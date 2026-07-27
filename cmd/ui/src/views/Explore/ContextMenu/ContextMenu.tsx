@@ -19,7 +19,7 @@ import { Menu, MenuItem } from '@mui/material';
 import {
     CopyMenuItem,
     Permission,
-    isNode,
+    isNodeResponse,
     useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
@@ -45,12 +45,12 @@ const ContextMenu: FC<{
 
     const handleSetStartingNode = () => {
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             const searchType = secondarySearch ? 'pathfinding' : 'node';
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                primarySearch: selectedItemData?.objectId as string,
+                primarySearch: selectedItemData?.properties.objectid ?? '',
             });
         }
     };
@@ -58,11 +58,11 @@ const ContextMenu: FC<{
     const handleSetEndingNode = () => {
         const searchType = primarySearch ? 'pathfinding' : 'node';
         const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
+        if (selectedItemData && isNodeResponse(selectedItemData)) {
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                secondarySearch: selectedItemData?.objectId as string,
+                secondarySearch: selectedItemData?.properties.objectid ?? '',
             });
         }
     };

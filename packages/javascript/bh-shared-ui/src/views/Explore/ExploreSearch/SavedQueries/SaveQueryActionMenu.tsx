@@ -28,7 +28,7 @@ const SaveQueryActionMenu: FC<SaveQueryActionMenuProps> = ({ saveAs }) => {
     };
 
     const listItemStyles =
-        'px-2 py-3 cursor-pointer hover:bg-neutral-4 focus-visible:bg-neutral-4 focus-visible:shadow-[inset_3px_0_0_var(--focus-ring)]';
+        'px-2 py-3 cursor-pointer hover:bg-dropdown-option-hover-fill focus-visible:bg-dropdown-option-hover-fill focus-visible:shadow-[inset_3px_0_0_var(--focus-ring)]';
 
     return (
         <Popover>

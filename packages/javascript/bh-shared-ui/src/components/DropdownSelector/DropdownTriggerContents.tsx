@@ -58,8 +58,7 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                     buttonPrimary && `w-full text-sm ${dropdownIconStateStyles}`,
                     {
                         [triggerStyles]: !buttonPrimary,
-                        'bg-primary text-white dark:text-neutral-dark-1 border-transparent [&_svg]:text-white dark:[&_svg]:text-neutral-dark-1 [&_svg]:fill-current [&_svg_*]:text-white dark:[&_svg_*]:text-neutral-dark-1 [&_svg_*]:fill-current':
-                            open,
+                        'bg-primary text-common-white dark:text-common-dark border-transparent': open,
                     },
                     className,
                     buttonProps?.className

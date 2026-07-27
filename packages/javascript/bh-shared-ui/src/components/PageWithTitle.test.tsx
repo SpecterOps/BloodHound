@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, waitFor } from '@testing-library/react';
+import { AppNameProvider } from '../providers/AppNameProvider';
 import { render } from '../test-utils';
-import PageWithTitle, { AppNameProvider } from './PageWithTitle';
+import PageWithTitle from './PageWithTitle';
 
 describe('PageWithTitle', () => {
     it('sets the document title using the default app name', async () => {

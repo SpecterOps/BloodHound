@@ -43,9 +43,9 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	expectedRels := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
 	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
-	require.Equal(t, expectedRel.Target.Value, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
+	require.Equal(t, expectedRel.Target.Value, fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId))
 	require.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
-	require.Equal(t, expectedRel.Source.Value, strings.ToUpper(testData.PrincipalId))
+	require.Equal(t, expectedRel.Source.Value, testData.PrincipalId)
 
 	testData = models.RoleEligibilityScheduleInstance{
 		Id:               "lAPpYvVpN0KRkAEhdxReELKn6QMIlSROgkgWZy9fE3c-1-e",
@@ -107,13 +107,13 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 			require.True(t, node.IsValid())
 			require.True(t, rel.IsValid())
 
-			assert.Equal(t, strings.ToUpper(testCase.testData.ID), node.ObjectID)
+			assert.Equal(t, testCase.testData.ID, node.ObjectID)
 			require.Len(t, node.Labels, 2)
 			assert.Equal(t, azure.FederatedIdentityCredential, node.Labels[0])
 			assert.Equal(t, azure.Entity, node.Labels[1])
 
 			assert.Equal(t, testCase.testData.Description, node.PropertyMap[common.Description.String()])
-			assert.Equal(t, strings.ToUpper(fmt.Sprintf("%s@%s", testCase.testData.Name, testCase.tenantName)), node.PropertyMap[common.Name.String()])
+			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.testData.Name, testCase.tenantName), node.PropertyMap[common.Name.String()])
 			assert.Equal(t, testCase.testData.Issuer, node.PropertyMap[azure.Issuer.String()])
 			assert.Equal(t, testCase.testData.Audiences, node.PropertyMap[azure.Audiences.String()])
 			assert.Equal(t, testCase.testData.Subject, node.PropertyMap[azure.Subject.String()])
@@ -121,9 +121,9 @@ func Test_ConvertAppFederatedIdentityCredential(t *testing.T) {
 
 			assert.Equal(t, azure.AZAuthenticatesTo, rel.RelType)
 			assert.Equal(t, azure.FederatedIdentityCredential, rel.Source.Kind)
-			assert.Equal(t, strings.ToUpper(testCase.testData.ID), rel.Source.Value)
+			assert.Equal(t, testCase.testData.ID, rel.Source.Value)
 			assert.Equal(t, azure.App, rel.Target.Kind)
-			assert.Equal(t, strings.ToUpper(testCase.appID), rel.Target.Value)
+			assert.Equal(t, testCase.appID, rel.Target.Value)
 			assert.Empty(t, rel.RelProps)
 		})
 	}
@@ -152,9 +152,9 @@ func TestConvertAzureManagementGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(managementGroupId), rels[0].Target.Value)
+		assert.Equal(t, managementGroupId, rels[0].Target.Value)
 		assert.Equal(t, azure.ManagementGroup, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -178,6 +178,28 @@ func TestConvertAzureManagementGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
 
 		require.Len(t, rels, 0)
+	})
+
+	t.Run("creates contributor relationship when scope differs only by case", func(t *testing.T) {
+		data := models.ManagementGroupContributors{
+			ManagementGroupId: managementGroupId,
+			Contributors: []models.ManagementGroupContributor{
+				{
+					ManagementGroupId: managementGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       strings.ToUpper(managementGroupId),
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureManagementGroupContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, managementGroupId, rels[0].Target.Value)
 	})
 }
 
@@ -204,9 +226,9 @@ func TestConvertAzureResourceGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(resourceGroupId), rels[0].Target.Value)
+		assert.Equal(t, resourceGroupId, rels[0].Target.Value)
 		assert.Equal(t, azure.ResourceGroup, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -230,6 +252,28 @@ func TestConvertAzureResourceGroupContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
 
 		require.Len(t, rels, 0)
+	})
+
+	t.Run("creates contributor relationship when scope differs only by case", func(t *testing.T) {
+		data := models.ResourceGroupContributors{
+			ResourceGroupId: resourceGroupId,
+			Contributors: []models.ResourceGroupContributor{
+				{
+					ResourceGroupId: resourceGroupId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       strings.ToUpper(resourceGroupId),
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureResourceGroupContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, resourceGroupId, rels[0].Target.Value)
 	})
 }
 
@@ -256,9 +300,9 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
 
 		require.Len(t, rels, 1)
-		assert.Equal(t, strings.ToUpper(principalId), rels[0].Source.Value)
+		assert.Equal(t, principalId, rels[0].Source.Value)
 		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
-		assert.Equal(t, strings.ToUpper(subscriptionId), rels[0].Target.Value)
+		assert.Equal(t, subscriptionId, rels[0].Target.Value)
 		assert.Equal(t, azure.Subscription, rels[0].Target.Kind)
 		assert.Equal(t, azure.Contributor, rels[0].RelType)
 	})
@@ -282,6 +326,28 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
 
 		require.Len(t, rels, 0)
+	})
+
+	t.Run("creates contributor relationship when scope differs only by case", func(t *testing.T) {
+		data := models.SubscriptionContributors{
+			SubscriptionId: subscriptionId,
+			Contributors: []models.SubscriptionContributor{
+				{
+					SubscriptionId: subscriptionId,
+					Contributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       strings.ToUpper(subscriptionId),
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureSubscriptionContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, subscriptionId, rels[0].Target.Value)
 	})
 }
 
@@ -311,15 +377,15 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
-		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
+		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
 		assert.Equal(t, false, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
 		require.Len(t, rels, 0)
 	})
@@ -330,41 +396,131 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
-		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
 		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
+		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
 		assert.Equal(t, true, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
 		// Assert created relationships
 		require.Len(t, rels, 4)
 
-		assert.Equal(t, "USER-APPROVER-1", rels[0].Source.Value)
+		assert.Equal(t, "user-approver-1", rels[0].Source.Value)
 		assert.Equal(t, azure.User, rels[0].Source.Kind)
 		assert.Equal(t, azure.Role, rels[0].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 
-		assert.Equal(t, "USER-APPROVER-2", rels[1].Source.Value)
+		assert.Equal(t, "user-approver-2", rels[1].Source.Value)
 		assert.Equal(t, azure.User, rels[1].Source.Kind)
 		assert.Equal(t, azure.Role, rels[1].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[1].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
 
-		assert.Equal(t, "GROUP-APPROVER-1", rels[2].Source.Value)
+		assert.Equal(t, "group-approver-1", rels[2].Source.Value)
 		assert.Equal(t, azure.Group, rels[2].Source.Kind)
 		assert.Equal(t, azure.Role, rels[2].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[2].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
 
-		assert.Equal(t, "GROUP-APPROVER-2", rels[3].Source.Value)
+		assert.Equal(t, "group-approver-2", rels[3].Source.Value)
 		assert.Equal(t, azure.Group, rels[3].Source.Kind)
 		assert.Equal(t, azure.Role, rels[3].Target.Kind)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target.Value)
+		assert.Equal(t, "role-1234@tenant-1234", rels[3].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
+	})
+
+	t.Run("No approvers creates AZRoleApprover edge from raw-case PrivilegedRoleAdministratorRole", func(t *testing.T) {
+		model.EndUserAssignmentRequiresApproval = true
+		model.EndUserAssignmentUserApprovers = nil
+		model.EndUserAssignmentGroupApprovers = nil
+
+		_, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
+
+		require.Len(t, rels, 1)
+		expectedSource := fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, "tenant-1234")
+		assert.Equal(t, expectedSource, rels[0].Source.Value, "AZRole edge source casing is left to graphify ingestion, not baked in here")
+		assert.Equal(t, azure.Role, rels[0].Source.Kind)
+		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
+		assert.Equal(t, azure.Role, rels[0].Target.Kind)
+		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
+	})
+}
+
+func TestConvertAzureVirtualMachineAvereContributorToRels(t *testing.T) {
+	virtualMachineId := "/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/vm-1"
+	principalId := "abcde-12345-fghij-67890"
+
+	t.Run("creates avere contributor relationship when scope matches", func(t *testing.T) {
+		data := models.VirtualMachineAvereContributors{
+			VirtualMachineId: virtualMachineId,
+			AvereContributors: []models.VirtualMachineAvereContributor{
+				{
+					VirtualMachineId: virtualMachineId,
+					AvereContributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       virtualMachineId,
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureVirtualMachineAvereContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, principalId, rels[0].Source.Value)
+		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
+		assert.Equal(t, virtualMachineId, rels[0].Target.Value)
+		assert.Equal(t, azure.VM, rels[0].Target.Kind)
+		assert.Equal(t, azure.AvereContributor, rels[0].RelType)
+	})
+
+	t.Run("creates avere contributor relationship when scope differs only by case", func(t *testing.T) {
+		data := models.VirtualMachineAvereContributors{
+			VirtualMachineId: virtualMachineId,
+			AvereContributors: []models.VirtualMachineAvereContributor{
+				{
+					VirtualMachineId: virtualMachineId,
+					AvereContributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       strings.ToUpper(virtualMachineId),
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureVirtualMachineAvereContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, virtualMachineId, rels[0].Target.Value)
+	})
+
+	t.Run("skips relationship when scope does not match", func(t *testing.T) {
+		data := models.VirtualMachineAvereContributors{
+			VirtualMachineId: virtualMachineId,
+			AvereContributors: []models.VirtualMachineAvereContributor{
+				{
+					VirtualMachineId: virtualMachineId,
+					AvereContributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       "/subscriptions/sub-1/resourceGroups/rg-1/providers/Microsoft.Compute/virtualMachines/different-vm",
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureVirtualMachineAvereContributorToRels(data)
+
+		require.Len(t, rels, 0)
 	})
 }

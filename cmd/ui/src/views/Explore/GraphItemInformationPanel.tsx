@@ -15,159 +15,45 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    EdgeInfoPane,
     EntityInfoDataTableGraphed,
     EntityInfoPanel,
-    EntityKinds,
-    EntityTables,
-    isEdge,
-    isNode,
+    GraphItemInformationPanel as SharedGraphItemInformationPanel,
+    isNodeResponse,
     useExploreSelectedItem,
 } from 'bh-shared-ui';
 import { HTMLProps } from 'react';
-import { RACFClassUsersWithCLAUTH } from 'src/racfhound/RACFClassRelationships';
-import { RACFGroupMembers, RACFGroupSubgroups, RACFUserGroups } from 'src/racfhound/RACFGroupMembers';
-import { RACFGroupOutboundRelationships } from 'src/racfhound/RACFGroupRelationships';
-import { RACFUserInboundRelationships, RACFUserOutboundRelationships } from 'src/racfhound/RACFUserRelationships';
-import {
-    isRACFClassKind,
-    isRACFGroupKind,
-    isRACFUserKind,
-    RACF_CLASS_USERS_WITH_CLAUTH_SECTION,
-    RACF_GROUP_MEMBERS_SECTION,
-    RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION,
-    RACF_GROUP_SUBGROUPS_SECTION,
-    RACF_USER_GROUPS_SECTION,
-    RACF_USER_INBOUND_RELATIONSHIPS_SECTION,
-    RACF_USER_OUTBOUND_RELATIONSHIPS_SECTION,
-} from 'src/racfhound/groupMembers';
+import { getRACFAdditionalTables } from 'src/racfhound/racfAdditionalTables';
 
 const defaultClasses: HTMLProps<HTMLElement>['className'] = 'bottom-0 top-0 py-4 absolute right-4';
 
-const getRACFTables = (nodeType: string, databaseId: string): EntityTables | undefined => {
-    if (isRACFGroupKind(nodeType)) {
-        return [
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_GROUP_MEMBERS_SECTION,
-                },
-                TableComponent: RACFGroupMembers,
-            },
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_GROUP_SUBGROUPS_SECTION,
-                },
-                TableComponent: RACFGroupSubgroups,
-            },
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_GROUP_OUTBOUND_RELATIONSHIPS_SECTION,
-                },
-                TableComponent: RACFGroupOutboundRelationships,
-            },
-        ];
-    }
-
-    if (isRACFUserKind(nodeType)) {
-        return [
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_USER_GROUPS_SECTION,
-                },
-                TableComponent: RACFUserGroups,
-            },
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_USER_OUTBOUND_RELATIONSHIPS_SECTION,
-                },
-                TableComponent: RACFUserOutboundRelationships,
-            },
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_USER_INBOUND_RELATIONSHIPS_SECTION,
-                },
-                TableComponent: RACFUserInboundRelationships,
-            },
-        ];
-    }
-
-    if (isRACFClassKind(nodeType)) {
-        return [
-            {
-                sectionProps: {
-                    id: databaseId,
-                    label: RACF_CLASS_USERS_WITH_CLAUTH_SECTION,
-                },
-                TableComponent: RACFClassUsersWithCLAUTH,
-            },
-        ];
-    }
-
-    return undefined;
-};
-
+// GraphItemInformationPanel is an app-local wrapper around the shared (upstream) panel.
+//
+// Upstream moved GraphItemInformationPanel into bh-shared-ui, which cannot import our
+// app-local RACF table components. So for RACF node kinds we render EntityInfoPanel directly
+// and inject the RACF relationship tables via `additionalTables`. Every other case (edges,
+// errors, loading, and non-RACF nodes) delegates to the shared panel so we inherit its
+// behavior without duplicating it. This keeps all RACF customization in the app layer and
+// touches no shared-library files, minimizing conflicts on future upstream merges.
 const GraphItemInformationPanel = () => {
     const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
+    const data = selectedItemQuery.data;
 
-    if (!selectedItem || selectedItemQuery.isLoading) {
-        return null;
+    if (selectedItem && data && isNodeResponse(data)) {
+        const additionalTables = getRACFAdditionalTables(data, selectedItem);
+
+        if (additionalTables) {
+            return (
+                <EntityInfoPanel
+                    className={defaultClasses}
+                    selectedNode={data}
+                    DataTable={EntityInfoDataTableGraphed}
+                    additionalTables={additionalTables}
+                />
+            );
+        }
     }
 
-    if (selectedItemQuery.isError) {
-        return (
-            <EntityInfoPanel
-                DataTable={EntityInfoDataTableGraphed}
-                className={defaultClasses}
-                selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
-            />
-        );
-    }
-
-    if (selectedItemQuery.data && isEdge(selectedItemQuery.data)) {
-        const selectedEdge = {
-            id: selectedItem as string,
-            name: selectedItemQuery.data.label || '',
-            data: selectedItemQuery.data.properties || {},
-            sourceNode: {
-                id: selectedItemQuery.data.source,
-                objectId: selectedItemQuery.data.sourceNode.objectId,
-                name: selectedItemQuery.data.sourceNode.label,
-                type: selectedItemQuery.data.sourceNode.kind,
-            },
-            targetNode: {
-                id: selectedItemQuery.data.target,
-                objectId: selectedItemQuery.data.targetNode.objectId,
-                name: selectedItemQuery.data.targetNode.label,
-                type: selectedItemQuery.data.targetNode.kind,
-            },
-        };
-        return <EdgeInfoPane className={defaultClasses} selectedEdge={selectedEdge} />;
-    }
-
-    if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
-        const selectedNode = {
-            graphId: selectedItem,
-            id: selectedItemQuery.data.objectId,
-            name: selectedItemQuery.data.label,
-            type: selectedItemQuery.data.kind as EntityKinds,
-        };
-        const additionalTables = getRACFTables(selectedItemQuery.data.kind, selectedItem);
-
-        return (
-            <EntityInfoPanel
-                className={defaultClasses}
-                selectedNode={selectedNode}
-                DataTable={EntityInfoDataTableGraphed}
-                additionalTables={additionalTables}
-            />
-        );
-    }
+    return <SharedGraphItemInformationPanel />;
 };
 
 export default GraphItemInformationPanel;

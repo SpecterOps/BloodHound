@@ -45,11 +45,12 @@ func noopRateLimit() mux.MiddlewareFunc {
 // endpoint to the gorilla/mux router so that matching requests are dispatched correctly.
 func TestRegister(t *testing.T) {
 	var (
-		cfg         = config.Configuration{}
-		authorizer  = auth.NewAuthorizer(nil)
-		routerInst  = router.NewRouter(cfg, authorizer, "")
-		graphDBMock = mocks.NewMockGraphDB(t)
-		handlerSet  = handlers.NewHandlersContainer(graphDBMock)
+		cfg                = config.Configuration{}
+		authorizer         = auth.NewAuthorizer(nil)
+		routerInst         = router.NewRouter(cfg, authorizer, "")
+		graphDBMock        = mocks.NewMockGraphDB(t)
+		nodeAuthorizerMock = mocks.NewMockNodeAuthorizer(t)
+		handlerSet         = handlers.NewHandlersContainer(graphDBMock, nodeAuthorizerMock)
 	)
 
 	routes.Register(&routerInst, handlerSet, noopRateLimit)
@@ -78,13 +79,14 @@ func TestRegister(t *testing.T) {
 // the limit and trigger 429 once the budget is exhausted.
 func TestRegister_RateLimitingReturns429(t *testing.T) {
 	var (
-		mockCtrl    = gomock.NewController(t)
-		mockDB      = databaseMocks.NewMockDatabase(mockCtrl)
-		cfg         = config.Configuration{}
-		authorizer  = auth.NewAuthorizer(nil)
-		routerInst  = router.NewRouter(cfg, authorizer, "")
-		graphDBMock = mocks.NewMockGraphDB(t)
-		handlerSet  = handlers.NewHandlersContainer(graphDBMock)
+		mockCtrl           = gomock.NewController(t)
+		mockDB             = databaseMocks.NewMockDatabase(mockCtrl)
+		cfg                = config.Configuration{}
+		authorizer         = auth.NewAuthorizer(nil)
+		routerInst         = router.NewRouter(cfg, authorizer, "")
+		graphDBMock        = mocks.NewMockGraphDB(t)
+		nodeAuthorizerMock = mocks.NewMockNodeAuthorizer(t)
+		handlerSet         = handlers.NewHandlersContainer(graphDBMock, nodeAuthorizerMock)
 	)
 
 	// Stub the trusted-proxies DB call so the rate limiter can extract the client IP.
@@ -129,11 +131,12 @@ func TestRegister_RateLimitingReturns429(t *testing.T) {
 // loses RequirePermissions(), this test will fail.
 func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	var (
-		cfg         = config.Configuration{}
-		authorizer  = auth.NewAuthorizer(nil)
-		routerInst  = router.NewRouter(cfg, authorizer, "")
-		graphDBMock = mocks.NewMockGraphDB(t)
-		handlerSet  = handlers.NewHandlersContainer(graphDBMock)
+		cfg                = config.Configuration{}
+		authorizer         = auth.NewAuthorizer(nil)
+		routerInst         = router.NewRouter(cfg, authorizer, "")
+		graphDBMock        = mocks.NewMockGraphDB(t)
+		nodeAuthorizerMock = mocks.NewMockNodeAuthorizer(t)
+		handlerSet         = handlers.NewHandlersContainer(graphDBMock, nodeAuthorizerMock)
 	)
 
 	routes.Register(&routerInst, handlerSet, noopRateLimit)

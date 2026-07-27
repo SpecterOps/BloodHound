@@ -18,6 +18,7 @@ package azure
 import (
 	"context"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -203,19 +204,26 @@ func handlePrincipalApprovers(
 	for _, principalID := range principalIDs {
 		var fetchedNode *graph.Node
 
-		// Step 3c.ii.1: Find the AZUser or AZGroup node with matching objectid
+		// Step 3c.ii.1: Find the AZUser or AZGroup node whose objectid matches the approver GUID,
+		// case-insensitively (collector and node casing may differ). Contains narrows
+		// the scan; EqualFold confirms an exact match.
 		err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			node, err := tx.Nodes().Filterf(func() graph.Criteria {
+			nodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.And(
 					query.Kind(query.Node(), azure.Entity), // Matches AZUser, AZGroup, etc.
-					query.Equals(query.NodeProperty(common.ObjectID.String()), principalID),
+					query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), principalID),
 				)
-			}).First()
+			}))
 			if err != nil {
 				return err
 			}
-			fetchedNode = node
-			return nil
+			for _, node := range nodes {
+				if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil && strings.EqualFold(objectID, principalID) {
+					fetchedNode = node
+					return nil
+				}
+			}
+			return graph.ErrNoResultsFound
 		})
 		if err != nil {
 			if graph.IsErrNotFound(err) {

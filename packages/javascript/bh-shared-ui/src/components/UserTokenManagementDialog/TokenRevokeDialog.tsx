@@ -41,7 +41,7 @@ const TokenRevokeDialog: React.FC<{
                     contact the API.
                 </DialogContentText>
                 <DialogActions>
-                    <Button variant='tertiary' onClick={onCancel} data-testid='token-revoke-dialog_button-close'>
+                    <Button variant='secondary' onClick={onCancel} data-testid='token-revoke-dialog_button-close'>
                         Cancel
                     </Button>
                     <Button onClick={onConfirm} data-testid='token-revoke-dialog_button-save'>

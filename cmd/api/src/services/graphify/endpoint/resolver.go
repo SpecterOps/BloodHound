@@ -90,8 +90,9 @@ func (s *Resolver) addWorkerError(err error) {
 // dbLoop returns a transaction function designed to be executed within a database read transaction.
 // It continuously drains the work channel, resolves endpoints using the cache and database,
 // and pushes resolved relationships to the output channel. If the context is cancelled or
-// the input channel closes, it exits gracefully.
-func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error {
+// the input channel closes, it exits gracefully. useRawObjectIDs is forwarded to endpoint
+// resolution to determine the casing behavior of legacy match_by "name" matches.
+func (s *Resolver) dbLoop(ctx context.Context, useRawObjectIDs bool) func(tx graph.Transaction) error {
 	return func(tx graph.Transaction) error {
 		for {
 			ingestEntry, shouldContinue := channels.Receive(ctx, s.workC)
@@ -107,7 +108,7 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 			} else {
 				switch ingestEntry.Source.MatchBy {
 				case ein.MatchByProperty, ein.MatchByName:
-					if resolvedEndpoint, err := resolveIngestibleEndpoint(tx, ingestEntry.Source); err != nil {
+					if resolvedEndpoint, err := resolveIngestibleEndpoint(tx, ingestEntry.Source, useRawObjectIDs); err != nil {
 						s.addWorkerError(err)
 						continue
 					} else {
@@ -127,7 +128,7 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 			} else {
 				switch ingestEntry.Target.MatchBy {
 				case ein.MatchByProperty, ein.MatchByName:
-					if resolvedEndpoint, err := resolveIngestibleEndpoint(tx, ingestEntry.Target); err != nil {
+					if resolvedEndpoint, err := resolveIngestibleEndpoint(tx, ingestEntry.Target, useRawObjectIDs); err != nil {
 						s.addWorkerError(err)
 						continue
 					} else {
@@ -148,7 +149,9 @@ func (s *Resolver) dbLoop(ctx context.Context) func(tx graph.Transaction) error 
 // Start launches the specified number of worker goroutines to process the work queue.
 // Each worker runs a database read transaction loop. This method is idempotent;
 // calling it multiple times will not spawn additional workers if already started.
-func (s *Resolver) Start(ctx context.Context, maxWorkers int) {
+// useRawObjectIDs is forwarded to endpoint resolution to determine the casing behavior of
+// legacy match_by "name" matches.
+func (s *Resolver) Start(ctx context.Context, maxWorkers int, useRawObjectIDs bool) {
 	s.stateLock.Lock()
 	defer s.stateLock.Unlock()
 
@@ -166,7 +169,7 @@ func (s *Resolver) Start(ctx context.Context, maxWorkers int) {
 		go func() {
 			defer s.workWG.Done()
 
-			if err := s.db.ReadTransaction(ctx, s.dbLoop(ctx)); err != nil {
+			if err := s.db.ReadTransaction(ctx, s.dbLoop(ctx, useRawObjectIDs)); err != nil {
 				s.addWorkerError(err)
 			}
 		}()
