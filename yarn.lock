@@ -7175,7 +7175,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"brace-expansion@npm:^5.0.8":
+"brace-expansion@npm:5.0.8":
   version: 5.0.8
   resolution: "brace-expansion@npm:5.0.8"
   dependencies:
