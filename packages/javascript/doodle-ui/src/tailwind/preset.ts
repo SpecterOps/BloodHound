@@ -70,7 +70,7 @@ export default {
                 'text-main': 'var(--text-main)',
                 'text-light': 'var(--text-light)',
                 'text-disabled': 'var(--text-disabled)',
-                // 'text-contrast': 'var(--text-contrast)',
+                'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
@@ -150,7 +150,7 @@ export default {
                 'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
-                // 'input-placeholder-text': 'var(--input-placeholder-text)',
+                'input-placeholder-text': 'var(--input-placeholder-text)',
 
                 'textarea-fill': 'var(--textarea-fill)',
                 'textarea-border-default': 'var(--textarea-border-default)',
