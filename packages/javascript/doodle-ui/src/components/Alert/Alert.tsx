@@ -68,7 +68,7 @@ const Alert = forwardRef<
             {action && (
                 <button
                     aria-label='Alert action'
-                    className='h-6 font-medium uppercase'
+                    className='h-6 rounded-sm px-1 font-medium uppercase focus:outline-none focus-visible:focus-ring'
                     onClick={action.onClick}
                     type='button'>
                     {action.label}
@@ -76,7 +76,11 @@ const Alert = forwardRef<
             )}
 
             {onClose && (
-                <button aria-label='Dismiss alert' className='h-6 ml-2' onClick={onClose} type='button'>
+                <button
+                    aria-label='Dismiss alert'
+                    className='ml-2 inline-flex h-6 items-center justify-center rounded-sm px-1 focus:outline-none focus-visible:focus-ring'
+                    onClick={onClose}
+                    type='button'>
                     <FontAwesomeIcon icon={faClose} className='mt-1 size-4' />
                 </button>
             )}

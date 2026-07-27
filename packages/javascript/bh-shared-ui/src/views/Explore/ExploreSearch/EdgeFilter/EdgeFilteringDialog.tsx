@@ -124,7 +124,7 @@ const EdgeFilteringDialog = ({
 
                 <DialogActions className='flex justify-end gap-2 pt-4'>
                     <Button
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={() => {
                             handleCancel();
                             clearSearch();

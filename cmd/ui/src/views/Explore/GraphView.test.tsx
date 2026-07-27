@@ -20,6 +20,7 @@ import {
     cypherTestResponse,
     mockGetConfigurationHandler,
     mockKindsHandler,
+    mockSourceKindsHandler,
     singleNodeResponse,
 } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
@@ -98,6 +99,7 @@ const server = setupServer(
     }),
     mockKindsHandler(),
     mockGetConfigurationHandler(),
+    mockSourceKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -135,6 +137,21 @@ const server = setupServer(
                 skip: 0,
                 limit: 128,
                 data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/nodes/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 42,
+                    kinds: [{ node_kind_id: 1, name: searchedNode.kind }],
+                    properties: {
+                        objectid: searchedNode.objectId,
+                        name: searchedNode.label,
+                        lastSeen: searchedNode.lastSeen,
+                    },
+                },
             })
         );
     })
@@ -221,13 +238,14 @@ describe('GraphView', () => {
         };
 
         clonedCypherResponse.data.edges.push({
+            id: 1,
             source: '108',
             target: '108',
             label: 'some label',
-            kind: 'some kind',
+            kind: 'kind',
             lastSeen: 'some lastSeen',
             impactPercent: 10,
-            exploreGraphId: 'some exploreGraphId',
+            exploreGraphId: '108_kind_108',
             data: {},
         });
 

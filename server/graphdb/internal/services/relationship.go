@@ -17,8 +17,10 @@
 package services
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"slices"
 )
 
 // Relationship is the domain representation of a graph relationship together with
@@ -29,6 +31,7 @@ type Relationship struct {
 	TargetNodeID int64
 	Kind         Kind
 	Properties   map[string]any
+	KindInfos    []KindInfo
 }
 
 // ErrRelationshipNotFound indicates that no graph relationship exists for the requested id.
@@ -43,7 +46,7 @@ var ErrKindNotFound = errors.New("relationship kind not found")
 // returned when the relationship does not exist. If the kind has no entry in the
 // schema_relationship_kinds table, the relationship is returned with Kind.Name populated
 // and Kind.ID set to nil (best-effort resolution).
-func (s *Service) GetRelationship(ctx context.Context, id int64) (Relationship, error) {
+func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo bool) (Relationship, error) {
 	var (
 		relationship Relationship
 		kind         Kind
@@ -59,6 +62,36 @@ func (s *Service) GetRelationship(ctx context.Context, id int64) (Relationship, 
 		return Relationship{}, err
 	} else {
 		relationship.Kind = kind
-		return relationship, nil
 	}
+
+	if includeKindInfo && relationship.Kind.ID != nil {
+		kindInfos, err := s.db.GetKindInfos(ctx, relationship.Kind.Name)
+		if err != nil {
+			return Relationship{}, err
+		}
+
+		var allKindInfos []KindInfo
+		for _, kindInfo := range kindInfos {
+			if kindInfo.RelationshipKindID == nil {
+				continue
+			}
+
+			allKindInfos = append(allKindInfos, kindInfo)
+		}
+
+		// Sort all kind infos by Position -> Title -> Kind ID
+		slices.SortFunc(allKindInfos, func(left, right KindInfo) int {
+			if result := cmp.Compare(left.Position, right.Position); result != 0 {
+				return result
+			} else if result := cmp.Compare(left.Title, right.Title); result != 0 {
+				return result
+			} else {
+				return cmp.Compare(*left.RelationshipKindID, *right.RelationshipKindID)
+			}
+		})
+
+		relationship.KindInfos = allKindInfos
+	}
+
+	return relationship, nil
 }

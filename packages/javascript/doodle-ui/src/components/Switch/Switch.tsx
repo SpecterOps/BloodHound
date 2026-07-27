@@ -20,15 +20,15 @@ import { forwardRef } from 'react';
 import { cn } from '../utils';
 
 const switchWrapperStyles = cva(
-    'inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:ring-2 focus-within:ring-secondary'
+    'inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:focus-ring'
 );
 
 const switchRootStyles = cva(
-    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-switch-fill data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-disabled disabled:cursor-not-allowed disabled:bg-disabled outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0'
+    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-switch-fill data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-disabled disabled:cursor-not-allowed disabled:bg-disabled focus:outline-none'
 );
 
 const switchThumbStyles = cva(
-    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-neutral-50 data-[state=checked]:translate-x-[13px] disabled:bg-neutral-400 group-data-[disabled]:bg-neutral-400 group-data-[disabled]:data-[state=checked]:bg-neutral-400 focus-visible:outline-none focus-visible:ring-0'
+    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-switch-thumb-fill data-[state=checked]:translate-x-[13px] disabled:bg-switch-thumb-disabled-fill group-data-[disabled]:bg-switch-thumb-disabled-fill group-data-[disabled]:data-[state=checked]:bg-switch-thumb-disabled-fill'
 );
 
 const LabelVariants = cva('text-base text-main transition-all ease-in-out px-0.5', {

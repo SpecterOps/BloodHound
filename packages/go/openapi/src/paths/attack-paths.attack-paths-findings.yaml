@@ -20,7 +20,7 @@ get:
   operationId: ListAttackPathFindings
   summary: List attack path findings
   description: |
-    Returns a unified, paginated list of attack path findings. Both relationship and list findings are returned when no filters are applied.
+    Returns a unified, paginated list of attack path findings. Defaults to active findings of both relationship and list types unless filtered otherwise.
   tags:
     - Attack Paths
     - Enterprise

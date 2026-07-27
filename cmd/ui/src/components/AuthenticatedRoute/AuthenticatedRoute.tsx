@@ -14,15 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Routable } from 'bh-shared-ui';
+import { Badge } from 'doodle-ui';
+import { useMemo } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
 import { useAppSelector } from 'src/store';
 
-const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ children }): React.ReactElement => {
+type AuthenticatedRouteProps = {
+    children: React.ReactElement;
+    disallowedRoles?: Routable['disallowedRoles'];
+};
+
+const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disallowedRoles = [] }) => {
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const location = useLocation();
+
+    const invalidRolesForThisUser = useMemo(
+        () =>
+            disallowedRoles?.filter((disallowedRole) =>
+                authState.user?.roles?.find((role: any) => role.name === disallowedRole.name)
+            ),
+        [authState?.user, disallowedRoles]
+    );
 
     // If user is not authenticated, redirect to login screen
     if (authState.sessionToken === null || authState.user === null) {
@@ -36,6 +52,24 @@ const AuthenticatedRoute: React.FC<{ children: React.ReactElement }> = ({ childr
         } else {
             return children;
         }
+    }
+
+    const hasDisallowedRoles = invalidRolesForThisUser.length > 0;
+
+    if (hasDisallowedRoles) {
+        // We could display all notifications if a user is disallowed from a route for more than one reason
+        // For now, we'll just assume the first 'disallowed reason' is the one we want to convey to the user
+        const label = invalidRolesForThisUser?.[0].notification;
+
+        return (
+            <Badge
+                data-testid='attack-paths_etac-filtering-badge'
+                variant='fill'
+                className='px-2 py-1 ml-auto absolute right-4 top-4'
+                color='red'
+                label={label}
+            />
+        );
     }
 
     return children;

@@ -24,7 +24,7 @@ import { useState } from 'react';
 import { cypherTestResponse } from '../../mocks';
 import { render } from '../../test-utils';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
-const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
+const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]';
 
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
@@ -41,8 +41,7 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200), ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
     }),
-
-    rest.get('/api/v2/features', (req, res, ctx) => {
+    rest.get('/api/v2/nodes/:id', (req, res, ctx) => {
         return res(ctx.status(200));
     }),
     rest.get('/api/v2/config', (_req, res, ctx) => {

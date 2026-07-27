@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
@@ -73,7 +73,7 @@ export const EntityInfoCollapsibleSection: React.FC<
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary
-                expandIcon={<FontAwesomeIcon icon={isExpanded ? faMinus : faPlus} />}
+                expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
                 className={'accordion-summary'}
                 classes={{
                     root: styles.accordionSummary,
