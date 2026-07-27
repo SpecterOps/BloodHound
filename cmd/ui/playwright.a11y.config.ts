@@ -34,8 +34,6 @@ const { hostname, port } = new URL(baseURL);
 // Set to false when testing against http://bloodhound.localhost or https://test.bloodhoundenterprise.io
 const shouldRunWebServer = process.env.A11Y_TEST_SERVE?.toLowerCase() === 'true';
 
-const a11yTestMatch = /.*\.a11y\.spec\.ts/;
-
 // Browser dimension of the project matrix. Pair each with each theme below to produce e.g.
 // `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`.
 const browsers = [
@@ -81,6 +79,10 @@ export default defineConfig<TestOptions>({
     use: {
         ...devices['Desktop Chrome'],
         baseURL,
+        contextOptions: {
+            // Turns off transition animations to reduce false negatives
+            reducedMotion: 'reduce',
+        },
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
         // Block service workers so MSW (registered by the Vite dev build in `main.tsx`) cannot
@@ -106,7 +108,7 @@ export default defineConfig<TestOptions>({
         ...THEMES.flatMap((theme) =>
             browsers.map(({ name, device }) => ({
                 name: `${name}-${theme}`,
-                testMatch: a11yTestMatch,
+                testMatch: '**/*.a11y.spec.ts',
                 use: {
                     ...device,
                     storageState: authStorageStateFor(theme),

@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton } from '@mui/material';
-import { Typography } from 'doodle-ui';
+import { Skeleton, Typography } from 'doodle-ui';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 
@@ -60,34 +59,22 @@ function CustomLayout(props: Props) {
                 </Typography>
             }>
             {!isReady() ? (
-                <Box display='grid' gap={'2rem'}>
-                    <Box>
-                        <Typography variant='h1'>
-                            <Skeleton />
-                        </Typography>
-                    </Box>
-                    <Box>
-                        <Skeleton variant='rectangular' height={160} />
-                    </Box>
-                    <Box>
-                        <Skeleton variant='rectangular' height={80} />
-                    </Box>
-                </Box>
+                <div className='grid gap-8'>
+                    <Typography variant='h1'>
+                        <Skeleton className='h-10' />
+                    </Typography>
+                    <Skeleton className='h-40' />
+                    <Skeleton className='h-20' />
+                </div>
             ) : (
-                <Box className='swagger-ui' display='grid' gap={'0rem'}>
+                <div className='swagger-ui flex gap-0'>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
-                        <Box>
-                            <FilterContainer />
-                        </Box>
-                        <Box>
-                            <Operations />
-                        </Box>
-                        <Box>
-                            <Models />
-                        </Box>
+                        <FilterContainer />
+                        <Operations />
+                        <Models />
                     </VersionPragmaFilter>
-                </Box>
+                </div>
             )}
         </PageWithTitle>
     );

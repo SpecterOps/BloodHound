@@ -616,7 +616,10 @@ func convertAzureRoleAssignment(raw json.RawMessage, converted *ConvertedAzureDa
 	} else {
 		for _, raw := range data.RoleAssignments {
 			var (
-				roleObjectId = fmt.Sprintf("%s@%s", strings.ToUpper(raw.RoleDefinitionId), strings.ToUpper(data.TenantId))
+				// RoleDefinitionId is uppercased only for the AZRole node/edge
+				// identity; the raw value stays lowercase for case-sensitive
+				// role-constant matching downstream.
+				roleObjectId = strings.ToUpper(fmt.Sprintf("%s@%s", raw.RoleDefinitionId, data.TenantId))
 			)
 
 			converted.RelProps = append(converted.RelProps, ein.ConvertAzureRoleAssignmentToRels(raw, data, roleObjectId)...)
@@ -838,7 +841,13 @@ func convertAzureManagedCluster(raw json.RawMessage, converted *ConvertedAzureDa
 			attr.Error(err),
 		)
 	} else {
-		NodeResourceGroupID := fmt.Sprintf("/subscriptions/%s/resourcegroups/%s", data.SubscriptionId, data.Properties.NodeResourceGroup)
+		// data.SubscriptionId from the collector is already "/subscriptions/<guid>";
+		// normalize so we do not emit a doubled "/subscriptions//subscriptions/" prefix.
+		subscriptionBase := strings.TrimSuffix(data.SubscriptionId, "/")
+		if !strings.HasPrefix(strings.ToLower(subscriptionBase), "/subscriptions/") {
+			subscriptionBase = "/subscriptions/" + subscriptionBase
+		}
+		NodeResourceGroupID := fmt.Sprintf("%s/resourcegroups/%s", subscriptionBase, data.Properties.NodeResourceGroup)
 
 		node, rels := ein.ConvertAzureManagedCluster(data, NodeResourceGroupID, ingestTime)
 		converted.NodeProps = append(converted.NodeProps, node)

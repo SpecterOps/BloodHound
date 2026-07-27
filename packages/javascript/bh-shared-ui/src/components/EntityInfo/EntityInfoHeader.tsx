@@ -32,7 +32,7 @@ export interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
+    const { clearSelectedItem, selectedItem, isHidden } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -44,8 +44,6 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
         }
     };
 
-    const hiddenNode = nodeType === 'HIDDEN' && selectedItemType === 'node';
-
     return (
         <div className='flex justify-between items-center text-sm font-bold'>
             <Icon
@@ -55,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
-            {hiddenNode ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
+            {isHidden ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6
                     data-testid='explore_entity-information-panel_header-text'
@@ -63,7 +61,6 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                     {name}
                 </h6>
             </Tooltip>
-            {/* selectedItem only gets set from param so we only offer the clear icon if its from param, hence nothing in PZ entity  panel */}
             {selectedItem && (
                 <Icon
                     className='h-10 box-border p-4 text-contrast'

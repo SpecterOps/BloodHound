@@ -97,7 +97,7 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
             </DialogContent>
             <DialogActions>
                 <Button
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={onCancel}
                     data-testid='early-access-features-warning-dialog_button-close'>
                     {'Take me back'}

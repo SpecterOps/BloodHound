@@ -184,6 +184,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(gomock.Any(), gomock.Any()).Return(model.CustomNodeKinds{
 					{
 						ID:       1,
+						KindId:   1,
 						KindName: "KindA",
 						Config: model.CustomNodeKindConfig{
 							Icon: graphschema.DisplayNodeIcon{
@@ -195,6 +196,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					},
 					{
 						ID:       2,
+						KindId:   2,
 						KindName: "KindB",
 						Config: model.CustomNodeKindConfig{
 							Icon: graphschema.DisplayNodeIcon{
@@ -209,7 +211,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusCreated,
-				responseBody:   `{"data":[{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
+				responseBody:   `{"data":[{"id":1,"kindId":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindId":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -255,6 +257,37 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				responseCode:   http.StatusConflict,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				// responseBody intentionally omitted — status code is the contract under test
+			},
+		},
+		{
+			name: "Error: request body is empty",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/custom-nodes",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				payload := &v2.CreateCustomNodeRequest{
+					CustomTypes: map[string]model.CustomNodeKindConfig{},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"BadRequest: custom_types must contain at least 1 entry"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -470,8 +503,15 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
+				mocks.mockDatabase.EXPECT().GetCustomNodeKind(gomock.Any(), "kind").Return(model.CustomNodeKind{
+					ID:       1,
+					KindId:   1,
+					KindName: "kind",
+					// SchemaNodeKindId is nil: this is a user-managed kind, update is allowed
+				}, nil)
 				mocks.mockDatabase.EXPECT().UpdateCustomNodeKind(gomock.Any(), gomock.Any()).Return(model.CustomNodeKind{
 					ID:       1,
+					KindId:   1,
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
 						Icon: graphschema.DisplayNodeIcon{
@@ -484,7 +524,58 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
+				responseBody:   `{"data":{"id":1,"kindId":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: schema-protected kind name",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/custom-nodes/User",
+					},
+					Method: http.MethodPut,
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+				}
+
+				payload := &v2.UpdateCustomNodeKindRequest{
+					Config: model.CustomNodeKindConfig{
+						Icon: graphschema.DisplayNodeIcon{
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
+							Name:  "user",
+							Color: "#FFFFFF",
+						},
+					},
+				}
+
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				schemaNodeKindId := int32(1)
+				mocks.mockDatabase.EXPECT().GetCustomNodeKind(gomock.Any(), "User").Return(model.CustomNodeKind{
+					ID:               1,
+					KindId:           1,
+					KindName:         "User",
+					SchemaNodeKindId: &schemaNodeKindId,
+				}, nil)
+				// UpdateCustomNodeKind should not be called since we returned a cnk with a non-nil SchemaNodeKindId, indicating it is schema-protected.
+			},
+			expected: expected{
+				responseCode:   http.StatusConflict,
+				responseBody:   `{"errors":[{"context":"","message":"Conflict: kind name is owned by a schema extension"}],"http_status":409,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

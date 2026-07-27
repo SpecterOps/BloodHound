@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, TextField } from '@mui/material';
 import {
@@ -30,6 +31,7 @@ import {
 } from 'doodle-ui';
 import { Environment } from 'js-client-library';
 import React, { ReactNode, useMemo, useState } from 'react';
+import { useFeatureFlag } from '../../hooks';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments';
 import { usePZPathParams } from '../../hooks/usePZParams/usePZPathParams';
 import {
@@ -40,7 +42,7 @@ import {
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
 import { DropdownTrigger, optionIconStyles, optionStyles, popoverContentStyles } from '../DropdownSelector';
-import { SelectedEnvironment, SelectorValueTypes } from './types';
+import { SelectedEnvironment } from './types';
 
 const selectedText = (
     selected: SelectedEnvironment,
@@ -48,9 +50,13 @@ const selectedText = (
     environmentInfo: ReturnType<typeof getOpenGraphEnvironmentInfoMap>,
     isPrivilegeZonesPage: boolean
 ): string => {
+    const isNonOpenGraphPlatform = selected.type === 'active-directory-platform' || selected.type === 'azure-platform'; // AD and AZ don't support the new OG architecture
+    const isOpenGraphPlatform = !!selected.environment_kind_id; // Only OG environments have this property
+    const isPlatformAggregation = isNonOpenGraphPlatform || isOpenGraphPlatform;
+
     // Check if this is an aggregate platform selection (e.g., "active-directory-platform", "azure-platform", "aws-platform")
-    if (selected.type?.endsWith('-platform')) {
-        // Extract the base environment type by removing the "-platform" suffix
+    // Aggregations dont have ids they have environment_kind_id if they are OG ones
+    if (selected.type && !selected.id && isPlatformAggregation) {
         const baseType = selected.type.replace('-platform', '') as Environment['type'];
         // Return the aggregation display name from the environment info map
         return environmentInfo[baseType]?.aggregationDisplayName || `All ${baseType} Environments`;
@@ -68,20 +74,53 @@ const selectedText = (
     }
 };
 
+const SelectorListItemContent: React.FC<{
+    displayName: string;
+    displayIcon: IconProp;
+    onClick: VoidFunction;
+    isUpperCase?: boolean;
+}> = ({ displayName, displayIcon, isUpperCase = false, onClick }) => {
+    return (
+        <Button
+            className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+            onClick={onClick}
+            variant={'text'}>
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <span className={cn('max-w-96 truncate', { uppercase: isUpperCase })}>{displayName}</span>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent
+                            side='left'
+                            className={cn('dark:bg-neutral-dark-5 border-0', { uppercase: isUpperCase })}>
+                            <span>{displayName}</span>
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
+            <FontAwesomeIcon className={optionIconStyles} icon={displayIcon} size='sm' />
+        </Button>
+    );
+};
+
 const SimpleEnvironmentSelector: React.FC<{
     align?: 'center' | 'start' | 'end';
     errorMessage?: ReactNode;
-    includeOpenGraph?: boolean;
-    onSelect?: (newValue: { type: SelectorValueTypes | null; id: string | null }) => void;
+    onSelect?: (newValue: SelectedEnvironment) => void;
     selected: SelectedEnvironment;
     variant?: ButtonProps['variant'];
-}> = ({ align = 'start', errorMessage = '', includeOpenGraph = false, onSelect = () => {}, selected, variant }) => {
+}> = ({ align = 'start', errorMessage = '', onSelect = () => {}, selected, variant }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [searchInput, setSearchInput] = useState<string>('');
     const { data: availableEnvironments, isLoading, isError } = useAvailableEnvironments();
     const { isPrivilegeZonesPage } = usePZPathParams();
+    const { data: openGraphManagementFlag } = useFeatureFlag('opengraph_extension_management');
+    const { data: openGraphFindingsFlag } = useFeatureFlag('opengraph_findings');
 
     const environmentInfo = getOpenGraphEnvironmentInfoMap(availableEnvironments);
+    const hasOpenGraphManagement = openGraphManagementFlag?.enabled;
+    const hasOpenGraphFindings = openGraphFindingsFlag?.enabled;
 
     const filteredEnvironments = useMemo(
         () =>
@@ -89,15 +128,17 @@ const SimpleEnvironmentSelector: React.FC<{
                 search: searchInput,
                 filters: {
                     // All environments are included when there are no specific environemt filters
-                    ...(includeOpenGraph ? {} : { 'active-directory': true, azure: true }),
+                    ...(hasOpenGraphManagement && hasOpenGraphFindings
+                        ? {}
+                        : { 'active-directory': true, azure: true }),
                     yes: true,
                 },
             }).sort(sortEnvironmentsByName),
-        [availableEnvironments, includeOpenGraph, searchInput]
+        [availableEnvironments, hasOpenGraphManagement, hasOpenGraphFindings, searchInput]
     );
 
     const environmentTypes = useMemo(
-        () => [...new Set(filteredEnvironments?.map((environment) => environment.type))],
+        () => [...new Set(filteredEnvironments?.map((environment) => environment.type)), 're'],
         [filteredEnvironments]
     );
 
@@ -108,8 +149,11 @@ const SimpleEnvironmentSelector: React.FC<{
     const handleChange: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement> = (e) =>
         setSearchInput(e.target.value);
 
-    const handlePlatformClick = (type?: Environment['type']) => {
-        onSelect({ type: type ? `${type}-platform` : null, id: null });
+    const handlePlatformClick = (
+        type?: Environment['type'],
+        environment_kind_id?: Environment['environment_kind_id']
+    ) => {
+        onSelect({ type: type ? `${type}-platform` : null, id: null, environment_kind_id });
         handleClose();
     };
 
@@ -163,48 +207,31 @@ const SimpleEnvironmentSelector: React.FC<{
                             </Button>
                         </li>
                     )}
-                    {environmentTypes?.map((type) => (
-                        <li key={`${type}-platform`}>
-                            <Button
-                                className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-                                onClick={() => handlePlatformClick(type)}
-                                variant={'text'}>
-                                {environmentInfo[type]?.aggregationDisplayName}
-                                <FontAwesomeIcon
-                                    className={optionIconStyles}
-                                    icon={environmentInfo[type]?.icon}
-                                    size='sm'
-                                />
-                            </Button>
-                        </li>
-                    ))}
+                    {environmentTypes?.map(
+                        (type) =>
+                            environmentInfo[type] && (
+                                <li key={`${type}-platform`}>
+                                    <SelectorListItemContent
+                                        displayName={environmentInfo[type].aggregationDisplayName}
+                                        displayIcon={environmentInfo[type].icon}
+                                        onClick={() =>
+                                            handlePlatformClick(type, environmentInfo[type].environment_kind_id)
+                                        }
+                                    />
+                                </li>
+                            )
+                    )}
                 </ul>
                 <ul className='max-h-80 overflow-y-auto'>
                     {filteredEnvironments?.map((environment: Environment) => {
                         return (
                             <li key={environment.id}>
-                                <Button
-                                    className={cn(optionStyles, 'flex justify-between items-center gap-2')}
+                                <SelectorListItemContent
+                                    displayName={environment.name}
+                                    displayIcon={environmentInfo[environment.type]?.icon}
+                                    isUpperCase
                                     onClick={() => handleEnvironmentClick(environment)}
-                                    variant='text'>
-                                    <TooltipProvider>
-                                        <TooltipRoot>
-                                            <TooltipTrigger>
-                                                <span className='uppercase max-w-96 truncate'>{environment.name}</span>
-                                            </TooltipTrigger>
-                                            <TooltipPortal>
-                                                <TooltipContent side='left' className='dark:bg-neutral-dark-5 border-0'>
-                                                    <span className='uppercase'>{environment.name}</span>
-                                                </TooltipContent>
-                                            </TooltipPortal>
-                                        </TooltipRoot>
-                                    </TooltipProvider>
-                                    <FontAwesomeIcon
-                                        className={optionIconStyles}
-                                        icon={environmentInfo[environment.type]?.icon}
-                                        size='sm'
-                                    />
-                                </Button>
+                                />
                             </li>
                         );
                     })}

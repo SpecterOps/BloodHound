@@ -115,7 +115,7 @@ const FileUploadDialog: React.FC<{
                 )}
             </DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
+                <Button variant='secondary' onClick={onClose} data-testid='confirmation-dialog_button-no'>
                     {uploadDialogDisabled ? 'Uploading Files' : 'Close'}
                 </Button>
                 <Button

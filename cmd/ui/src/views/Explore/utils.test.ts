@@ -44,6 +44,7 @@ const testNodes = {
 
 const testEdgesWithDuplicate = [
     {
+        id: 1,
         source: '1',
         target: '2',
         label: 'MemberOf',
@@ -51,6 +52,7 @@ const testEdgesWithDuplicate = [
         lastSeen: '',
     },
     {
+        id: 1,
         source: '1',
         target: '2',
         label: 'MemberOf',
@@ -58,6 +60,7 @@ const testEdgesWithDuplicate = [
         lastSeen: '',
     },
     {
+        id: 2,
         source: '2',
         target: '1',
         label: 'MemberOf',
@@ -65,6 +68,7 @@ const testEdgesWithDuplicate = [
         lastSeen: '',
     },
     {
+        id: 3,
         source: '1',
         target: '2',
         label: 'GetChangesAll',
@@ -106,9 +110,9 @@ describe('Explore utils', () => {
             );
 
             expect(graph.edges().length).toEqual(3);
-            expect(graph.hasEdge('1_MemberOf_2')).toBeTruthy();
-            expect(graph.hasEdge('2_MemberOf_1')).toBeTruthy();
-            expect(graph.hasEdge('1_GetChangesAll_2')).toBeTruthy();
+            expect(graph.hasEdge('rel_1')).toBeTruthy();
+            expect(graph.hasEdge('rel_2')).toBeTruthy();
+            expect(graph.hasEdge('rel_3')).toBeTruthy();
         });
     });
 });

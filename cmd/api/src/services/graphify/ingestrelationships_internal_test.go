@@ -18,11 +18,16 @@ package graphify
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/mocks"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -177,5 +182,121 @@ func TestMaybeSubmitRelationshipUpdate(t *testing.T) {
 		_, relsProcessed, _, relsWritten = ingestCtx.Stats.GetCounts()
 		require.Equal(t, int64(1), relsProcessed, "RelationshipsProcessed should be incremented even when deduplicated")
 		require.Equal(t, int64(0), relsWritten, "RelationshipsWritten should NOT be incremented when deduplicated")
+	})
+}
+
+func TestIngestDNRelationship(t *testing.T) {
+	t.Run("flag off: source/target values are uppercased", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			ingestCtx        = NewIngestContext(context.Background(), WithUseRawObjectIDs(false))
+
+			rel = ein.NewIngestibleRelationship(
+				ein.IngestibleEndpoint{Value: "cn=foo,dc=bar,dc=com", Kind: graph.StringKind("Computer")},
+				ein.IngestibleEndpoint{Value: "abcd1234", Kind: graph.StringKind("Domain")},
+				ein.IngestibleRel{RelType: graph.StringKind("Contains")},
+			)
+
+			captured graph.RelationshipUpdate
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateRelationshipBy(gomock.Any()).DoAndReturn(func(update graph.RelationshipUpdate) error {
+			captured = update
+			return nil
+		})
+
+		err := ingestDNRelationship(ingestCtx, rel)
+		require.NoError(t, err)
+
+		startEndpoint, ok := captured.Start.Properties.Map[ad.DistinguishedName.String()].(ein.IngestibleEndpoint)
+		require.True(t, ok)
+		assert.Equal(t, "CN=FOO,DC=BAR,DC=COM", startEndpoint.Value)
+
+		endEndpoint, ok := captured.End.Properties.Map[common.ObjectID.String()].(ein.IngestibleEndpoint)
+		require.True(t, ok)
+		assert.Equal(t, "ABCD1234", endEndpoint.Value)
+	})
+
+	t.Run("flag on: source dn is uppercased, target objectid preserves original case", func(t *testing.T) {
+		var (
+			ctrl             = gomock.NewController(t)
+			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
+			ingestCtx        = NewIngestContext(context.Background(), WithUseRawObjectIDs(true))
+
+			rel = ein.NewIngestibleRelationship(
+				ein.IngestibleEndpoint{Value: "cn=Foo,dc=Bar,dc=Com", Kind: graph.StringKind("Computer")},
+				ein.IngestibleEndpoint{Value: "AbCd1234", Kind: graph.StringKind("Domain")},
+				ein.IngestibleRel{RelType: graph.StringKind("Contains")},
+			)
+
+			captured graph.RelationshipUpdate
+		)
+
+		ingestCtx.BindBatchUpdater(mockBatchUpdater)
+		mockBatchUpdater.EXPECT().UpdateRelationshipBy(gomock.Any()).DoAndReturn(func(update graph.RelationshipUpdate) error {
+			captured = update
+			return nil
+		})
+
+		err := ingestDNRelationship(ingestCtx, rel)
+		require.NoError(t, err)
+
+		startEndpoint, ok := captured.Start.Properties.Map[ad.DistinguishedName.String()].(ein.IngestibleEndpoint)
+		require.True(t, ok)
+		assert.Equal(t, "CN=FOO,DC=BAR,DC=COM", startEndpoint.Value)
+
+		endEndpoint, ok := captured.End.Properties.Map[common.ObjectID.String()].(ein.IngestibleEndpoint)
+		require.True(t, ok)
+		assert.Equal(t, "AbCd1234", endEndpoint.Value)
+	})
+}
+
+func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
+	t.Run("flag off: start/end objectids are uppercased", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background(), WithUseRawObjectIDs(false))
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "source-id"},
+					ein.IngestibleEndpoint{Value: "target-id"},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.EmptyKind))
+		)
+
+		require.Len(t, updates, 1)
+
+		startObjectID, _ := updates[0].Start.Properties.Get(common.ObjectID.String()).String()
+		assert.Equal(t, "SOURCE-ID", startObjectID)
+
+		endObjectID, _ := updates[0].End.Properties.Get(common.ObjectID.String()).String()
+		assert.Equal(t, "TARGET-ID", endObjectID)
+	})
+
+	t.Run("flag on: start/end objectids preserve original case", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background(), WithUseRawObjectIDs(true))
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "Source-Id"},
+					ein.IngestibleEndpoint{Value: "Target-Id"},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.EmptyKind))
+		)
+
+		require.Len(t, updates, 1)
+
+		startObjectID, _ := updates[0].Start.Properties.Get(common.ObjectID.String()).String()
+		assert.Equal(t, "Source-Id", startObjectID)
+
+		endObjectID, _ := updates[0].End.Properties.Get(common.ObjectID.String()).String()
+		assert.Equal(t, "Target-Id", endObjectID)
 	})
 }
