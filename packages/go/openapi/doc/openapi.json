@@ -23857,19 +23857,13 @@
               },
               "artifact_id": {
                 "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
+                "type": "string",
+                "nullable": true
               },
               "type": {
                 "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/enum.client-management-operation-type"
-                  }
-                ]
+                "type": "string",
+                "nullable": true
               },
               "status": {
                 "readOnly": true,
