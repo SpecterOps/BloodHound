@@ -42,7 +42,7 @@ type NodeKindView struct {
 	IsDisplayKind bool                    `json:"is_display_kind"`
 	Icon          string                  `json:"icon"`
 	Color         string                  `json:"color"`
-	Extension     *ExtensionDetailsView   `json:"extension"`
+	Extension     *ExtensionView          `json:"extension"`
 	Info          map[string]KindInfoView `json:"info"`
 }
 
@@ -65,7 +65,7 @@ func BuildNodeKindView(nodeKind services.NodeKind) (NodeKindView, error) {
 	}
 
 	if nodeKind.Extension.ID != 0 {
-		nodeKindView.Extension = &ExtensionDetailsView{
+		nodeKindView.Extension = &ExtensionView{
 			ExtensionID: nodeKind.Extension.ID,
 			Name:        nodeKind.Extension.Name,
 			DisplayName: nodeKind.Extension.DisplayName,

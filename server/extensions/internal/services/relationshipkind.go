@@ -37,14 +37,6 @@ type RelationshipKind struct {
 	Extension     SchemaExtension
 }
 
-type SchemaExtension struct {
-	ID          int32
-	Name        string
-	DisplayName string
-	Namespace   string
-	Version     string
-}
-
 func (s *Service) GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error) {
 	if relKind, err := s.db.GetRelationshipKind(ctx, id); err != nil {
 		return RelationshipKind{}, err

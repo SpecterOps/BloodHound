@@ -60,6 +60,7 @@ type RelationshipKindView struct {
 	Description        string                  `json:"description"`
 	IsTraversable      bool                    `json:"is_traversable"`
 	Info               map[string]KindInfoView `json:"info"`
+	Extension          ExtensionView           `json:"extension"`
 }
 
 func (s RelationshipKindView) JSONView() ([]byte, error) {
@@ -73,7 +74,14 @@ func buildRelationshipKindView(relationshipKind services.RelationshipKind) (Rela
 		Name:               relationshipKind.Name,
 		Description:        relationshipKind.Description,
 		IsTraversable:      relationshipKind.IsTraversable,
-		Info:               map[string]KindInfoView{},
+		Extension: ExtensionView{
+			ExtensionID: relationshipKind.Extension.ID,
+			Name:        relationshipKind.Extension.Name,
+			DisplayName: relationshipKind.Extension.DisplayName,
+			Namespace:   relationshipKind.Extension.Namespace,
+			Version:     relationshipKind.Extension.Version,
+		},
+		Info: map[string]KindInfoView{},
 	}
 
 	var markdownErr error

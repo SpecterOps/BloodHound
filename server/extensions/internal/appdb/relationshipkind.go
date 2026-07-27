@@ -27,7 +27,6 @@ import (
 )
 
 const tableSchemaRelationshipKinds = "schema_relationship_kinds"
-const tableSchemaExtensions = "schema_extensions"
 
 // todo: read and join on schema_extension_id to pull in extension fields?
 type relationshipKindRow struct {

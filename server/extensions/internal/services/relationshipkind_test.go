@@ -28,9 +28,16 @@ import (
 
 func TestService_GetRelationshipKind(t *testing.T) {
 	var (
-		ctx                  = context.Background()
-		relationshipKindID   = int32(42)
-		baseRelationshipKind = services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf"}
+		ctx                = context.Background()
+		relationshipKindID = int32(42)
+		extension          = services.SchemaExtension{
+			ID:          7,
+			Name:        "TestExtension",
+			DisplayName: "Test Extension",
+			Namespace:   "TST",
+			Version:     "1.0.0",
+		}
+		baseRelationshipKind = services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Extension: extension}
 		infos                = []services.KindInfo{{InfoKey: "panel1", Title: "Alpha", Position: 0, RelationshipKindID: &relationshipKindID, Name: "MemberOf"}}
 		unexpectedErr        = errors.New("connection refused")
 	)
@@ -47,7 +54,7 @@ func TestService_GetRelationshipKind(t *testing.T) {
 				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
 				databaseMock.EXPECT().GetKindInfosByKindName(ctx, baseRelationshipKind.Name).Return(infos, nil)
 			},
-			wantResult: services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Info: infos},
+			wantResult: services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Info: infos, Extension: extension},
 		},
 		{
 			name: "propagates relationship kind not found",
