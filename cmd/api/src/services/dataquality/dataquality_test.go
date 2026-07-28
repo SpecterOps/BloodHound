@@ -34,8 +34,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-const batchSize = 10000
-
 func TestSaveDataQuality(t *testing.T) {
 	var (
 		ctx                    = context.Background()
@@ -87,8 +85,8 @@ func TestSaveDataQuality(t *testing.T) {
 						}, nil
 					})
 				mockDB.EXPECT().
-					CreateDataQualityStats(gomock.Any(), gomock.Any(), batchSize).
-					DoAndReturn(func(_ context.Context, stats model.DataQualityStats, _ int) (model.DataQualityStats, error) {
+					CreateDataQualityStats(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 						require.Len(t, stats, 5)
 						require.NotEmpty(t, stats[0].RunID)
 
@@ -104,8 +102,8 @@ func TestSaveDataQuality(t *testing.T) {
 						return stats, nil
 					})
 				mockDB.EXPECT().
-					CreateDataQualityAggregations(gomock.Any(), gomock.Any(), batchSize).
-					DoAndReturn(func(_ context.Context, aggregations model.DataQualityAggregations, _ int) (model.DataQualityAggregations, error) {
+					CreateDataQualityAggregations(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
 						require.Len(t, aggregations, 3)
 						require.NotEmpty(t, aggregations[0].RunID)
 
@@ -288,7 +286,7 @@ func TestSaveDataQuality(t *testing.T) {
 					GetKindsByNames(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]model.Kind{{ID: 101, Name: dogKind.String()}, {ID: 102, Name: patronKind.String()}, {ID: 103, Name: relationshipKind.String()}}, nil)
 				mockDB.EXPECT().
-					CreateDataQualityStats(gomock.Any(), gomock.Any(), batchSize).
+					CreateDataQualityStats(gomock.Any(), gomock.Any()).
 					Return(model.DataQualityStats{}, expectedError)
 			},
 			expectedError: "could not save open graph stats",
@@ -314,12 +312,12 @@ func TestSaveDataQuality(t *testing.T) {
 					GetKindsByNames(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return([]model.Kind{{ID: 101, Name: dogKind.String()}, {ID: 102, Name: patronKind.String()}, {ID: 103, Name: relationshipKind.String()}}, nil)
 				mockDB.EXPECT().
-					CreateDataQualityStats(gomock.Any(), gomock.Any(), batchSize).
-					DoAndReturn(func(_ context.Context, stats model.DataQualityStats, _ int) (model.DataQualityStats, error) {
+					CreateDataQualityStats(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
 						return stats, nil
 					})
 				mockDB.EXPECT().
-					CreateDataQualityAggregations(gomock.Any(), gomock.Any(), batchSize).
+					CreateDataQualityAggregations(gomock.Any(), gomock.Any()).
 					Return(model.DataQualityAggregations{}, expectedError)
 			},
 			expectedError: "could not save open graph aggregations",
