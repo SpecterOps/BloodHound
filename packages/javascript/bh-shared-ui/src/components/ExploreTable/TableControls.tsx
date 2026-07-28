@@ -17,7 +17,7 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
+import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger, Typography } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
@@ -74,7 +74,7 @@ const TableControls = <TData, TValue>({
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
-                <div className='font-bold text-lg'>{tableName}</div>
+                <Typography variant='h5'>{tableName}</Typography>
                 {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>

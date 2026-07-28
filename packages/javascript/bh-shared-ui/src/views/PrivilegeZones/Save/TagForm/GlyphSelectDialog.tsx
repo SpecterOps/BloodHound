@@ -137,7 +137,7 @@ const GlyphSelectDialog: React.FC<{
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
                 <DialogContent maxWidth='lg'>
-                    <DialogTitle className='text-lg'>Select a Glyph</DialogTitle>
+                    <DialogTitle>Select a Glyph</DialogTitle>
                     <DialogDescription className='text-lg'>
                         The selected glyph will apply to all nodes tagged in this Zone for displaying in the Explore
                         graph.

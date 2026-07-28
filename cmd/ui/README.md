@@ -6,6 +6,28 @@ Welcome to the BloodHound UI! If this is your first time contributing, please ch
 guide](./CONTRIBUTING.md) for instructions on setting up your environment. If you find something isn't well documented,
 feel free to submit a PR. Cheers!
 
+## Typography adoption
+
+BHCE consumes the local `doodle-ui` workspace (`workspace:*`) as the source of truth for typography. Standard headings use
+Nunito Sans through DoodleUI heading variants, while body, subtitle, caption, and other UI text use Figtree. The legacy MUI
+theme is a compatibility bridge and mirrors the same DoodleUI families and metrics. Its Body1, Body2, and Caption variants
+use the DoodleUI `--text-muted` semantic token in light mode and retain their existing color behavior in dark mode. New UI
+should prefer semantic DoodleUI `Typography` variants.
+
+The remaining font exceptions are intentional:
+
+-   Roboto Mono and the explicit monospace stacks are retained for code and Cypher editor content, where character alignment is
+    functional. A future editor-specific token can replace these declarations.
+-   Graph, icon, Swagger, and print styles retain context-specific sizes where they describe canvas labels, icon glyphs, generated
+    API documentation, compact graph chrome, or print-only output rather than standard product typography. These should be
+    revisited when those specialized surfaces receive dedicated semantic tokens.
+-   Sigma canvas labels explicitly select Figtree because canvas-rendered text cannot inherit CSS or Tailwind utilities.
+
+Responsive validation identified an existing Privilege Zones fixed-width content region that clips at a 640 CSS-pixel
+viewport (the 200%-zoom equivalent used by this audit), even after navigation is collapsed. Correcting that behavior
+requires structural page-layout work and is tracked separately from typography adoption. The typography browser harness
+retains an expected-failure regression scenario so this limitation cannot be reported as passing.
+
 ## Quickstart
 
 The following command will spin up the Web UI, API, a PostgreSQL database, a Neo4J database, and continuously rebuild/sync while

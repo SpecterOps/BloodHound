@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import { Typography } from 'doodle-ui';
 
 export interface CheckboxGroupProps {
     groupTitle: string;
@@ -28,7 +29,7 @@ export interface CheckboxGroupProps {
 const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ groupTitle, handleCheckboxFilter, options }) => {
     return (
         <section>
-            <h3>{groupTitle}</h3>
+            <Typography variant='h3'>{groupTitle}</Typography>
             <FormGroup>
                 {options.map((option: any, index: number) => {
                     return (
