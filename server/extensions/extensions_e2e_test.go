@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package extensions_test
@@ -83,11 +84,12 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-// extensionsHarness bundles the wired HTTP handler and the seeded node kind id so
-// E2E test cases can assert the full response contract.
+// extensionsHarness bundles the wired HTTP handler and the seeded node kind and
+// extension ids so E2E test cases can assert the full response contract.
 type extensionsHarness struct {
-	handler    *mux.Router
-	nodeKindID int32
+	handler     *mux.Router
+	nodeKindID  int32
+	extensionID int32
 }
 
 // newExtensionsHarness spins up an isolated postgres database via pgtestdb, applies
@@ -138,6 +140,7 @@ func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool, harness
 		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
 		VALUES ('TestExtension', 'Test Extension', '1.0.0', false, 'TST')
 		RETURNING id`).Scan(&extensionID))
+	harness.extensionID = extensionID
 
 	var kindID int32
 	require.NoError(t, pool.QueryRow(ctx, `
@@ -223,8 +226,8 @@ func TestGetNodeKindByID(t *testing.T) {
 }
 
 // expectedEnvelope returns the exact {"data":{...}} JSON the handler is expected to
-// produce for the seeded node kind, including the info map keyed by info_key with
-// flattened markdown content.
+// produce for the seeded node kind, including the owning extension details and the info
+// map keyed by info_key with flattened markdown content.
 func expectedEnvelope(harness extensionsHarness) string {
 	return fmt.Sprintf(`{"data":{
 		"node_kind_id":%d,
@@ -234,9 +237,16 @@ func expectedEnvelope(harness extensionsHarness) string {
 		"is_display_kind":true,
 		"icon":"user",
 		"color":"#fff",
+		"extension":{
+			"extension_id":%d,
+			"name":"TestExtension",
+			"display_name":"Test Extension",
+			"namespace":"TST",
+			"version":"1.0.0"
+		},
 		"info":{
 			"overview":{"title":"Overview","position":0,"markdown":{"content":"overview md"}},
 			"details":{"title":"Details","position":1,"markdown":{"content":"details md"}}
 		}
-	}}`, harness.nodeKindID)
+	}}`, harness.nodeKindID, harness.extensionID)
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package services
 
 //go:generate go tool mockery
@@ -28,7 +29,8 @@ import (
 // sentinels defined in this package.
 type Database interface {
 	GetNodeKind(ctx context.Context, id int32) (NodeKind, error)
-	GetKindInfosByNodeKindID(ctx context.Context, nodeKindID int32) ([]KindInfo, error)
+	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
+	GetExtension(ctx context.Context, id int32) (Extension, error)
 }
 
 // KindInfo holds the data associated with a single entity panel.

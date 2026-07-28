@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package services
 
 import (
@@ -41,17 +42,25 @@ type NodeKind struct {
 	UpdatedAt         time.Time
 	DeletedAt         *time.Time
 	Info              []KindInfo
+	Extension         Extension
 }
 
-// GetNodeKind returns the node kind identified by id with its entity-panel infos attached.
-// ErrNodeKindNotFound bubbles up from the store when no node kind matches.
+// GetNodeKind returns the node kind identified by id with its entity-panel infos and
+// owning extension attached. The extension is optional: when no matching extension exists
+// the node kind is returned with a zero-value Extension. ErrNodeKindNotFound bubbles up
+// from the store when no node kind matches.
 func (s *Service) GetNodeKind(ctx context.Context, id int32) (NodeKind, error) {
+
 	if nodeKind, err := s.db.GetNodeKind(ctx, id); err != nil {
 		return NodeKind{}, err
-	} else if infos, err := s.db.GetKindInfosByNodeKindID(ctx, id); err != nil {
-		return NodeKind{}, fmt.Errorf("fetching kind infos for node kind %d: %w", id, err)
+	} else if nodeKind.Info, err = s.db.GetKindInfos(ctx, nodeKind.Name); err != nil {
+		return NodeKind{}, fmt.Errorf("fetching kind infos for node kind %s: %w", nodeKind.Name, err)
 	} else {
-		nodeKind.Info = infos
+		if nodeKind.SchemaExtensionID != 0 {
+			if nodeKind.Extension, err = s.db.GetExtension(ctx, nodeKind.SchemaExtensionID); err != nil && !errors.Is(err, ErrExtensionNotFound) {
+				return NodeKind{}, fmt.Errorf("fetching extension %d for node kind %d: %w", nodeKind.SchemaExtensionID, id, err)
+			}
+		}
 		return nodeKind, nil
 	}
 }

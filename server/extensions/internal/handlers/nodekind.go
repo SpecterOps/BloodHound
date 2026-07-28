@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package handlers
 
 import (
@@ -33,9 +34,7 @@ import (
 // schema_node_kinds row id.
 const URIPathVariableNodeKindID = "node_kind_id"
 
-// NodeKindView is the JSON shape returned by the node kind handlers. It is
-// decoupled from services.NodeKind so the wire format can evolve independently of
-// the domain model.
+// NodeKindView is the JSON shape returned by the node kind handlers.
 type NodeKindView struct {
 	NodeKindID    int32                   `json:"node_kind_id"`
 	Name          string                  `json:"name"`
@@ -44,6 +43,7 @@ type NodeKindView struct {
 	IsDisplayKind bool                    `json:"is_display_kind"`
 	Icon          string                  `json:"icon"`
 	Color         string                  `json:"color"`
+	Extension     ExtensionDetailsView    `json:"extension"`
 	Info          map[string]KindInfoView `json:"info"`
 }
 
@@ -65,7 +65,7 @@ type kindInfoContentView struct {
 	Markdown MarkdownView `json:"markdown"`
 }
 
-// BuildNodeKindView maps a services.NodeKind onto its wire representation, keying the
+// BuildNodeKindView maps a services.NodeKind onto its view layer model, keying the
 // info entries by their info_key and flattening each stored markdown content object.
 // Entries whose content fails to parse are retained with an empty markdown view, and
 // the joined parse errors are returned so the caller can log them.
@@ -80,7 +80,14 @@ func BuildNodeKindView(nodeKind services.NodeKind) (NodeKindView, error) {
 		IsDisplayKind: nodeKind.IsDisplayKind,
 		Icon:          nodeKind.Icon,
 		Color:         nodeKind.Color,
-		Info:          map[string]KindInfoView{},
+		Extension: ExtensionDetailsView{
+			ExtensionID: nodeKind.Extension.ID,
+			Name:        nodeKind.Extension.Name,
+			DisplayName: nodeKind.Extension.DisplayName,
+			Namespace:   nodeKind.Extension.Namespace,
+			Version:     nodeKind.Extension.Version,
+		},
+		Info: map[string]KindInfoView{},
 	}
 
 	for _, info := range nodeKind.Info {
@@ -128,14 +135,18 @@ func (s Handlers) GetNodeKindByID(response http.ResponseWriter, request *http.Re
 
 	if id, err := strconv.ParseInt(raw, 10, 32); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node kind id is malformed", response)
+		return
 	} else if nodeKind, err := s.extensions.GetNodeKind(ctx, int32(id)); errors.Is(err, services.ErrNodeKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node kind not found", response)
+		return
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 	} else if nodeKindView, markdownErr := BuildNodeKindView(nodeKind); markdownErr != nil {
 		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
 		responses.WriteBasic(ctx, nodeKindView, http.StatusOK, response)
+		return
 	} else {
 		responses.WriteBasic(ctx, nodeKindView, http.StatusOK, response)
+		return
 	}
 }

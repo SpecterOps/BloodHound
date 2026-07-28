@@ -61,9 +61,9 @@ func toKindInfo(row kindInfoRow) services.KindInfo {
 	}
 }
 
-// GetKindInfosByNodeKindID returns all KindInfo's associated with the given node kind id,
+// GetKindInfos returns all KindInfo's associated with the given kind name,
 // ordered by position then title. An empty slice is returned when no rows match.
-func (s *Store) GetKindInfosByNodeKindID(ctx context.Context, nodeKindID int32) ([]services.KindInfo, error) {
+func (s *Store) GetKindInfos(ctx context.Context, kindName string) ([]services.KindInfo, error) {
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
 	selectBuilder.Select(
@@ -81,7 +81,7 @@ func (s *Store) GetKindInfosByNodeKindID(ctx context.Context, nodeKindID int32) 
 	)
 	selectBuilder.From(selectBuilder.As(tableSchemaKindInfo, "ki"))
 	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "ki.kind_id = k.id")
-	selectBuilder.Where(selectBuilder.Equal("ki.node_kind_id", nodeKindID))
+	selectBuilder.Where(selectBuilder.Equal("k.name", kindName))
 	selectBuilder.OrderBy("ki.position", "ki.title")
 
 	sqlQuery, args := selectBuilder.Build()

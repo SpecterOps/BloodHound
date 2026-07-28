@@ -23019,6 +23019,32 @@
           }
         }
       },
+      "model.extension-details": {
+        "type": "object",
+        "properties": {
+          "extension_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          },
+          "name": {
+            "type": "string",
+            "example": "AD"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "Active Directory"
+          },
+          "namespace": {
+            "type": "string",
+            "example": "AD"
+          },
+          "version": {
+            "type": "string",
+            "example": "v1"
+          }
+        }
+      },
       "model.node-kind-response": {
         "type": "object",
         "properties": {
@@ -23050,6 +23076,9 @@
           "color": {
             "type": "string",
             "example": "#FFFFFF"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
           },
           "info": {
             "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"

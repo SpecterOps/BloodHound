@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package services_test
 
 import (
@@ -30,8 +31,10 @@ func TestService_GetNodeKind(t *testing.T) {
 	var (
 		ctx           = context.Background()
 		nodeKindID    = int32(42)
+		extID         = int32(7)
 		unexpectedErr = errors.New("connection refused")
-		baseNodeKind  = services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User"}
+		extension     = services.Extension{ID: extID, Name: "TestExtension", DisplayName: "Test Extension", Namespace: "TST", IsBuiltin: true, Version: "1.0.0"}
+		baseNodeKind  = services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User", SchemaExtensionID: extID}
 		infos         = []services.KindInfo{{InfoKey: "panel1", Title: "Alpha", Position: 0, NodeKindID: &nodeKindID, Name: "User"}}
 	)
 
@@ -46,9 +49,10 @@ func TestService_GetNodeKind(t *testing.T) {
 			name: "success_-_attaches_infos_to_node_kind",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
-				databaseMock.EXPECT().GetKindInfosByNodeKindID(ctx, nodeKindID).Return(infos, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extID).Return(extension, nil)
 			},
-			wantResult: services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User", Info: infos},
+			wantResult: services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User", SchemaExtensionID: extID, Info: infos, Extension: extension},
 		},
 		{
 			name: "error_-_propagates_node_kind_not_found",
@@ -62,11 +66,31 @@ func TestService_GetNodeKind(t *testing.T) {
 			name: "error_-_wraps_info_fetch_error",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
-				databaseMock.EXPECT().GetKindInfosByNodeKindID(ctx, nodeKindID).Return(nil, unexpectedErr)
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(nil, unexpectedErr)
 			},
 			wantResult:      services.NodeKind{},
 			wantErr:         unexpectedErr,
-			wantErrContains: "fetching kind infos for node kind 42",
+			wantErrContains: "fetching kind infos for node kind User",
+		},
+		{
+			name: "error_-_wraps_extension_fetch_error",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extID).Return(services.Extension{}, unexpectedErr)
+			},
+			wantResult:      services.NodeKind{},
+			wantErr:         unexpectedErr,
+			wantErrContains: "fetching extension 7 for node kind 42",
+		},
+		{
+			name: "success_-_attaches_empty_extension_when_extension_not_found",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetNodeKind(ctx, nodeKindID).Return(baseNodeKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, "User").Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extID).Return(services.Extension{}, services.ErrExtensionNotFound)
+			},
+			wantResult: services.NodeKind{ID: nodeKindID, Name: "User", DisplayName: "User", SchemaExtensionID: extID, Info: infos, Extension: services.Extension{}},
 		},
 	}
 

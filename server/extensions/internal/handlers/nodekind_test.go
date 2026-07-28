@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package handlers_test
 
 import (
@@ -62,6 +63,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 		nodeKindID = int32(42)
 		nodeKind   = services.NodeKind{
 			ID: nodeKindID, Name: "User", DisplayName: "User", IsDisplayKind: true, Icon: "user", Color: "#fff",
+			Extension: services.Extension{ID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", IsBuiltin: true, Version: "v1"},
 			Info: []services.KindInfo{
 				{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`{"markdown":{"content":"one"}}`)},
 			},
@@ -96,6 +98,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 					IsDisplayKind: true,
 					Icon:          "user",
 					Color:         "#fff",
+					Extension:     handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",
@@ -113,7 +116,8 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 			setupMock: func(extensionsMock *mocks.MockExtensions) {
 				degraded := services.NodeKind{
 					ID: nodeKindID, Name: "User",
-					Info: []services.KindInfo{{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`not-json`)}},
+					Extension: services.Extension{ID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", IsBuiltin: true, Version: "v1"},
+					Info:      []services.KindInfo{{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`not-json`)}},
 				}
 				extensionsMock.EXPECT().GetNodeKind(mock.Anything, nodeKindID).Return(degraded, nil)
 			},
@@ -127,6 +131,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 				assert.Equal(t, handlers.NodeKindView{
 					NodeKindID: nodeKindID,
 					Name:       "User",
+					Extension:  handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",

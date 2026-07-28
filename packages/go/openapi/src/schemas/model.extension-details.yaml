@@ -16,29 +16,19 @@
 
 type: object
 properties:
-  node_kind_id:
+  extension_id:
     type: integer
     format: int32
-    example: 42
+    example: 7
   name:
     type: string
-    example: "User"
+    example: "AD"
   display_name:
     type: string
-    example: "User"
-  description:
+    example: "Active Directory"
+  namespace:
     type: string
-    example: "a user node kind"
-  is_display_kind:
-    type: boolean
-    example: true
-  icon:
+    example: "AD"
+  version:
     type: string
-    example: "user"
-  color:
-    type: string
-    example: "#FFFFFF"
-  extension:
-    $ref: './model.extension-details.yaml'
-  info:
-    $ref: './model.graph-extension.kind-info-definition.yaml'
+    example: "v1"

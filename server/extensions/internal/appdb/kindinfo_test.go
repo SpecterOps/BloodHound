@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package appdb_test
 
 import (
@@ -29,8 +30,8 @@ import (
 )
 
 // Literal SQL expected by the Store, compared via pgxmock.QueryMatcherEqual (whitespace
-// normalised). Column order, aliases, JOIN, WHERE and ORDER BY shape are load-bearing.
-const expectedGetKindInfosSQL = `SELECT ki.id, ki.kind_id, ki.node_kind_id, ki.relationship_kind_id, k.name, ki.info_key, ki.title, ki.position, ki.content, ki.created_at, ki.updated_at FROM schema_kind_info AS ki JOIN kind AS k ON ki.kind_id = k.id WHERE ki.node_kind_id = $1 ORDER BY ki.position, ki.title`
+// normalised).
+const expectedGetKindInfosSQL = `SELECT ki.id, ki.kind_id, ki.node_kind_id, ki.relationship_kind_id, k.name, ki.info_key, ki.title, ki.position, ki.content, ki.created_at, ki.updated_at FROM schema_kind_info AS ki JOIN kind AS k ON ki.kind_id = k.id WHERE k.name = $1 ORDER BY ki.position, ki.title`
 
 func kindInfoColumns() []string {
 	return []string{
@@ -39,10 +40,11 @@ func kindInfoColumns() []string {
 	}
 }
 
-func TestStore_GetKindInfosByNodeKindID(t *testing.T) {
+func TestStore_GetKindInfos(t *testing.T) {
 	var (
 		ctx        = context.Background()
 		nodeKindID = int32(42)
+		kindName   = "User"
 		createdAt  = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 		updatedAt  = time.Date(2026, 2, 3, 4, 5, 6, 0, time.UTC)
 		content    = json.RawMessage(`{"markdown":"hi"}`)
@@ -58,7 +60,7 @@ func TestStore_GetKindInfosByNodeKindID(t *testing.T) {
 		{
 			name: "success_-_returns_ordered_infos_with_name",
 			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(nodeKindID).WillReturnRows(
+				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnRows(
 					pool.NewRows(kindInfoColumns()).
 						AddRow(int32(1), int32(99), &nodeKindID, (*int32)(nil), "User",
 							"overview", "Overview", int32(0), content, createdAt, updatedAt).
@@ -76,7 +78,7 @@ func TestStore_GetKindInfosByNodeKindID(t *testing.T) {
 		{
 			name: "success_-_returns_empty_slice_when_no_infos",
 			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(nodeKindID).WillReturnRows(
+				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnRows(
 					pool.NewRows(kindInfoColumns()),
 				)
 			},
@@ -85,7 +87,7 @@ func TestStore_GetKindInfosByNodeKindID(t *testing.T) {
 		{
 			name: "error_-_propagates_database_error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(nodeKindID).WillReturnError(dbErr)
+				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnError(dbErr)
 			},
 			wantKindInfos: nil,
 			wantErr:       dbErr,
@@ -97,9 +99,8 @@ func TestStore_GetKindInfosByNodeKindID(t *testing.T) {
 			store, pool := newTestStore(t)
 			tt.expectations(pool)
 
-			kindInfos, err := store.GetKindInfosByNodeKindID(ctx, nodeKindID)
-			assert.Equal(t, tt.wantKindInfos, kindInfos)
-			if tt.wantErr != nil {
+			kindInfos, err := store.GetKindInfos(ctx, kindName)
+			if assert.Equal(t, tt.wantKindInfos, kindInfos); tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {
 				require.NoError(t, err)
