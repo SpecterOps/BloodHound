@@ -449,6 +449,14 @@ const IndeterminateListItem = ({
     const isExpanded = forceExpanded || showCollapsibleContent;
     const toggleCollapsibleContent = () => setShowCollapsibleContent((v) => !v);
 
+    const handleRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const clickedCheckboxOrLabel = (event.target as HTMLElement).closest('[role="checkbox"], label');
+
+        if (!clickedCheckboxOrLabel) {
+            toggleCollapsibleContent();
+        }
+    };
+
     return (
         <li className='list-none'>
             <div className='flex items-center py-1 group'>
@@ -456,7 +464,7 @@ const IndeterminateListItem = ({
                     role='button'
                     tabIndex={0}
                     className='flex items-center gap-2 flex-1 cursor-pointer p-1 text-left rounded-l peer hover:bg-neutral-3'
-                    onClick={toggleCollapsibleContent}
+                    onClick={handleRowClick}
                     onKeyDown={(e) => {
                         if (e.target !== e.currentTarget) return;
 
