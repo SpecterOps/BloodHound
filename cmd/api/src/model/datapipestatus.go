@@ -34,6 +34,18 @@ const (
 	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
 )
 
+func AllDatapipeStatuses() []DatapipeStatus {
+	return []DatapipeStatus{
+		DatapipeStatusIdle,
+		DatapipeStatusIngesting,
+		DatapipeStatusAnalyzing,
+		DatapipeStatusPurging,
+		DatapipeStatusPruning,
+		DatapipeStatusStarting,
+		DatapipeStatusOptimizing,
+	}
+}
+
 type DatapipeStatusWrapper struct {
 	Status                  DatapipeStatus `json:"status"`
 	UpdatedAt               time.Time      `json:"updated_at"`
