@@ -19,8 +19,8 @@ import type { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
 import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
-import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
+import SimpleDataTable from '../SimpleDataTable';
 import { StatusIndicator } from '../StatusIndicator';
 import { FileIngestDetailsPanel } from './FileIngestDetailsPanel';
 import { FileIngestFilterDialog } from './FileIngestFilterDialog';
@@ -92,7 +92,7 @@ export const FileIngestTable: FC = () => {
 
             <div className='col-[1] row-[2] min-h-0'>
                 <Card>
-                    <DataTable
+                    <SimpleDataTable
                         data={fileUploadJobs.map(getRowWithSelect)}
                         headers={getHeaders(HEADERS)}
                         isLoading={isLoading}

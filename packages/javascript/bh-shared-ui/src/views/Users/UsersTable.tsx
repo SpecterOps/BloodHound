@@ -20,7 +20,7 @@ import { Tooltip } from '@mui/material';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
-import { DataTable, Header } from '../../components';
+import { Header, SimpleDataTable } from '../../components';
 import { usePermissions, useTheme } from '../../hooks';
 import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { LuxonFormat, Permission, apiClient } from '../../utils';
@@ -153,7 +153,7 @@ const UsersTable: FC<UsersTableProps> = ({
     });
 
     return (
-        <DataTable
+        <SimpleDataTable
             headers={usersTableHeaders}
             data={usersTableRows}
             isLoading={listUsersQuery.isLoading}

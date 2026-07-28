@@ -48,7 +48,7 @@ export interface DataTableProps {
     };
 }
 
-const DataTable: React.FC<DataTableProps> = ({
+export const DataTable: React.FC<DataTableProps> = ({
     headers,
     data,
     isLoading = false,
@@ -106,5 +106,3 @@ const DataTable: React.FC<DataTableProps> = ({
         </>
     );
 };
-
-export default DataTable;

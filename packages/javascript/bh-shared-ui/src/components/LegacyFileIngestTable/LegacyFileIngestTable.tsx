@@ -20,8 +20,8 @@ import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
 import { useGetFileUploadsQuery } from '../../hooks';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
-import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
+import SimpleDataTable from '../SimpleDataTable';
 import { FileUploadJob, FileUploadJobStatusToString } from './types';
 
 const ingestTableHeaders = [
@@ -75,7 +75,7 @@ const LegacyFileIngestTable: React.FC = () => {
             </div>
 
             <Paper>
-                <DataTable
+                <SimpleDataTable
                     headers={ingestTableHeaders}
                     data={ingestRows}
                     showPaginationControls={true}
