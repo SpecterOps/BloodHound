@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable, ScrollArea } from 'doodle-ui';
+import { DataTable } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
@@ -203,31 +203,30 @@ const ExploreTable = ({
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <ScrollArea>
-                    <MemoDataTable
-                        TableHeaderProps={tableHeaderProps}
-                        TableHeadProps={tableHeadProps}
-                        TableProps={tableProps}
-                        TableCellProps={tableCellProps}
-                        columnPinning={columnPinning}
-                        setColumnPinning={handleSetColumnPinning}
-                        onRowClick={handleRowClick}
-                        selectedRow={selectedItem || undefined}
-                        data={sortedFilteredRows}
-                        columns={tableColumns as DataTableProps['columns']}
-                        tableOptions={tableOptions}
-                        virtualizationOptions={virtualizationOptions}
-                        columnSizing={columnSizing}
-                        onColumnSizingChange={setColumnSizing}
-                        columnOrder={columnOrder}
-                        onColumnOrderChange={(newOrder) => {
-                            setColumnOrder(newOrder);
-                        }}
-                        growLastColumn
-                        enableResizing
-                        enableDragAndDrop
-                    />
-                </ScrollArea>
+                <MemoDataTable
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columnPinning={columnPinning}
+                    setColumnPinning={handleSetColumnPinning}
+                    onRowClick={handleRowClick}
+                    selectedRow={selectedItem || undefined}
+                    data={sortedFilteredRows}
+                    columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={tableOptions}
+                    virtualizationOptions={virtualizationOptions}
+                    columnSizing={columnSizing}
+                    onColumnSizingChange={setColumnSizing}
+                    columnOrder={columnOrder}
+                    onColumnOrderChange={(newOrder) => {
+                        setColumnOrder(newOrder);
+                    }}
+                    className='overflow-auto h-full'
+                    growLastColumn
+                    enableResizing
+                    enableDragAndDrop
+                />
             </div>
         </div>
     );

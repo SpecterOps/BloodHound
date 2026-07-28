@@ -18516,7 +18516,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -18585,20 +18585,7 @@
           },
           {
             "name": "asset_group_tag_id",
-            "description": "Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.\nCannot be combined with the `zone_id` filter.\n",
-            "in": "query",
-            "style": "form",
-            "explode": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer"
-              }
-            }
-          },
-          {
-            "name": "zone_id",
-            "description": "Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.",
+            "description": "Filter by asset group tag identifier.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -18702,7 +18689,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
                   }
                 }
               },
@@ -18758,9 +18745,9 @@
                                 "type": "string",
                                 "description": "Human-readable environment display name resolved from the graph. Falls back to environment_id when unavailable."
                               },
-                              "zone_id": {
+                              "asset_group_tag_id": {
                                 "type": "integer",
-                                "description": "Zone identifier (asset group tag id)."
+                                "description": "Asset group tag identifier."
                               },
                               "zone_name": {
                                 "type": "string",
@@ -18833,7 +18820,7 @@
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
-                          "zone_id": 1,
+                          "asset_group_tag_id": 1,
                           "zone_name": "Tier Zero",
                           "source_principal_id": "RPATTON@CORP1.LAB.HOME-LABS.LOL",
                           "source_principal_kind": "User",
@@ -18853,7 +18840,7 @@
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
-                          "zone_id": 1,
+                          "asset_group_tag_id": 1,
                           "zone_name": "Tier Zero",
                           "source_principal_id": "",
                           "source_principal_kind": "",
