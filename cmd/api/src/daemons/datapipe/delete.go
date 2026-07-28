@@ -22,7 +22,9 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -30,15 +32,33 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+// graphWiper is implemented by graph database drivers (currently PostgreSQL) that support a fast, bulk truncate-based
+// wipe of all graph data. The retain delegate runs within the same transaction as the wipe so survivor nodes can be
+// recreated atomically.
+type graphWiper interface {
+	WipeGraph(ctx context.Context, retain graph.TransactionDelegate) error
+}
+
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
-	slog.InfoContext(
+	defer measure.ContextLogAndMeasure(
 		ctx,
+		slog.LevelInfo,
 		"DeleteCollectedGraphData",
 		slog.Bool("delete_all_data", deleteRequest.DeleteAllGraph),
 		slog.Bool("delete_sourceless_data", deleteRequest.DeleteSourcelessGraph),
 		slog.String("delete_source_kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")),
 		slog.String("delete_relationships", strings.Join(deleteRequest.DeleteRelationships, ",")),
-	)
+	)()
+
+	// On backends that support a bulk wipe (PostgreSQL), a full graph deletion truncates every node and edge partition
+	// in a single transaction rather than streaming and deleting each node row-by-row. This also clears all edges, so
+	// any requested relationship deletions are subsumed by the wipe. Backends without this capability (Neo4j) fall
+	// through to the row-by-row path below.
+	if deleteRequest.DeleteAllGraph {
+		if wiper, isWiper := graph.AsDriver[graphWiper](graphDB); isWiper {
+			return wipeAllGraphData(ctx, graphDB, wiper)
+		}
+	}
 
 	if deleteRequest.DeleteAllGraph || deleteRequest.DeleteSourcelessGraph || len(deleteRequest.DeleteSourceKinds) > 0 {
 		nodeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
@@ -154,4 +174,27 @@ func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, delet
 	}
 
 	return nil
+}
+
+// wipeAllGraphData performs a full graph wipe via the backend's bulk truncate path. The MigrationData node records the
+// graph schema version and must survive the wipe, otherwise the migration system would re-initialize the database on the
+// next startup. Its version is read before the wipe and the node is recreated within the same transaction as the
+// truncate, so the wipe and recreate are atomic.
+func wipeAllGraphData(ctx context.Context, graphDB graph.Database, wiper graphWiper) error {
+	migrationData, err := migrations.GetMigrationData(ctx, graphDB)
+	if err != nil {
+		return fmt.Errorf("reading migration data prior to graph wipe: %w", err)
+	}
+
+	return wiper.WipeGraph(ctx, func(tx graph.Transaction) error {
+		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
+			"Major": migrationData.Major,
+			"Minor": migrationData.Minor,
+			"Patch": migrationData.Patch,
+		}), common.MigrationData); err != nil {
+			return fmt.Errorf("recreating migration data after graph wipe: %w", err)
+		}
+
+		return nil
+	})
 }
