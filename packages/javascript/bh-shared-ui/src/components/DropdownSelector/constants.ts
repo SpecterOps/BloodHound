@@ -30,7 +30,7 @@ export const triggerStyles = `max-w-56 text-sm text-main rounded-md bg-transpare
 export const popoverContentStyles =
     'flex flex-col p-0 rounded-md border border-dropdown-popover-border bg-dropdown-popover-fill';
 
-export const optionStyles = `px-4 py-1 rounded-none w-full justify-normal text-main hover:text-main hover:no-underline hover:bg-dropdown-option-hover-fill ${focusVisibleControlStateStyles} ${focusVisibleDropdownIconStateStyles} disabled:bg-dropdown-option-disabled-fill group`;
+export const optionStyles = `px-4 py-2 rounded-none w-full justify-normal text-main hover:no-underline hover:bg-dropdown-option-hover-fill ${focusVisibleControlStateStyles} ${focusVisibleDropdownIconStateStyles} disabled:bg-dropdown-option-disabled-fill group`;
 
 export const focusedOptionIconStyles =
     'group-focus-visible:text-common-white dark:group-focus-visible:text-common-dark';

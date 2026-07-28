@@ -13,10 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faGear, faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
+import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { Button, IconButton as IconButtonComponent, TextButton as TextButtonComponent } from './Button';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -32,10 +33,13 @@ const meta = {
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
         variant: {
+            // TODO - remove transparent option
             options: ['primary', 'secondary', 'transparent', 'icon', 'text'],
+            // options: ['primary', 'secondary'],
             control: 'select',
         },
-        fontColor: { options: ['primary'], control: 'select' },
+        // TODO - remove fontColor
+        fontColor: { options: ['primary', 'default'], control: 'select' },
         size: { options: ['small', 'medium', 'large'], control: 'select' },
         disabled: {
             control: 'boolean',
@@ -53,10 +57,12 @@ const meta = {
 } satisfies Meta<typeof Button>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type ButtonStory = StoryObj<typeof meta>;
+type TextButtonStory = StoryObj<typeof TextButtonComponent>;
+type IconButtonStory = StoryObj<typeof IconButtonComponent>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Primary: Story = {
+export const Primary: ButtonStory = {
     args: {
         variant: 'primary',
         children: 'Next',
@@ -66,34 +72,28 @@ export const Primary: Story = {
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <Button variant='primary'>{children}</Button>
+                <Button {...buttonProps}>{children}</Button>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button {...buttonProps}>
-                        {children}
-                        <FontAwesomeIcon icon={faStar} />
-                    </Button>
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button variant='primary' disabled>
-                        Disabled
-                    </Button>
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button variant='primary' disabled>
-                        <FontAwesomeIcon icon={faStar} />
-                        Disabled
-                    </Button>
-                </div>
+                <Button>
+                    {children}
+                    <FontAwesomeIcon icon={faStar} />
+                </Button>
+                <Button variant='primary' disabled>
+                    Disabled
+                </Button>
+                <Button variant='primary' disabled>
+                    <FontAwesomeIcon icon={faStar} />
+                    Disabled
+                </Button>
             </div>
         </>
     ),
 };
 
-export const Secondary: Story = {
+export const Secondary: ButtonStory = {
     args: {
         variant: 'secondary',
         children: 'Secondary',
@@ -103,99 +103,128 @@ export const Secondary: Story = {
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <Button variant={variant}>{children}</Button>
+                <Button variant={variant} {...buttonProps}>
+                    {children}
+                </Button>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button {...buttonProps} variant={variant}>
-                        {children}
-                        <FontAwesomeIcon icon={faStar} />
-                    </Button>
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button variant={variant} disabled>
-                        Disabled
-                    </Button>
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <Button variant={variant} disabled>
-                        <FontAwesomeIcon icon={faStar} />
-                        Disabled
-                    </Button>
-                </div>
+                <Button variant='secondary'>
+                    {children}
+                    <FontAwesomeIcon icon={faStar} />
+                </Button>
+                <Button variant='secondary' disabled>
+                    Disabled
+                </Button>
+                <Button variant='secondary' disabled>
+                    <FontAwesomeIcon icon={faStar} />
+                    Disabled
+                </Button>
             </div>
         </>
     ),
 };
 
-export const TextButton: Story = {
+export const TextButton: TextButtonStory = {
     args: {
         children: 'Help Text',
         disabled: false,
+        fontColor: 'default',
     },
-    render: ({ children, ...buttonProps }) => (
+    argTypes: {
+        // variant: {
+        //     control: false,
+        //     table: {
+        //         disable: true,
+        //     },
+        // },
+        fontColor: {
+            control: 'select',
+            options: ['primary', 'default'],
+        },
+    },
+    render: ({ children, ...textButtonProps }) => (
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <TextButtonComponent>{children}</TextButtonComponent>
+                <TextButtonComponent {...textButtonProps}>{children}</TextButtonComponent>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
+                <TextButtonComponent>
+                    {children}
+                    <FontAwesomeIcon icon={faListUl} />
+                </TextButtonComponent>
+                <TextButtonComponent disabled>Disabled</TextButtonComponent>
+                <TextButtonComponent disabled>
+                    <FontAwesomeIcon icon={faListUl} />
+                    Disabled
+                </TextButtonComponent>
+            </div>
+        </>
+    ),
+};
+
+export const IconButton: IconButtonStory = {
+    args: {
+        variant: 'default',
+        disabled: false,
+    },
+    argTypes: {
+        variant: {
+            options: ['default', 'primary', 'secondary'],
+            control: 'select',
+        },
+        children: {
+            control: false,
+            table: {
+                disable: true,
+            },
+        },
+    },
+    parameters: {
+        controls: {
+            exclude: ['size', 'fontColor'],
+        },
+    },
+    render: ({ ...buttonProps }) => (
+        <>
+            {/* Storybook controls affect only this button */}
+            <div className='flex justify-center mb-10'>
+                {/* <IconButtonComponent aria-label='Gear Icon' disabled={disabled}> */}
+                <IconButtonComponent {...buttonProps} aria-label='Filter'>
+                    <AppIcon.FilterOutline size={24} />
+                </IconButtonComponent>
+            </div>
+            <hr className='mb-10' />
+            {/* These buttons remain static */}
+            <div className='flex items-center gap-6'>
                 <div className='flex flex-col items-center gap-4'>
-                    <TextButtonComponent {...buttonProps}>
-                        {children}
-                        <FontAwesomeIcon icon={faListUl} />
-                    </TextButtonComponent>
+                    <IconButtonComponent aria-label='Star Icon' variant='primary'>
+                        <FontAwesomeIcon icon={faStar} />
+                    </IconButtonComponent>
+                    Primary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <TextButtonComponent disabled>Disabled</TextButtonComponent>
+                    <IconButtonComponent aria-label='Gear Icon' variant='secondary'>
+                        <FontAwesomeIcon icon={faStar} />
+                    </IconButtonComponent>
+                    Secondary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <TextButtonComponent disabled>
-                        <FontAwesomeIcon icon={faListUl} />
-                        Disabled
-                    </TextButtonComponent>
+                    <IconButtonComponent aria-label='Gear Icon' variant='primary' disabled>
+                        <AppIcon.FilterOutline />
+                    </IconButtonComponent>
+                    Disabled
                 </div>
             </div>
         </>
     ),
 };
 
-export const IconButton: Story = {
-    render: () => {
-        return (
-            <IconButtonComponent aria-label='Gear Icon'>
-                <FontAwesomeIcon icon={faGear} style={{ fontSize: '24px' }} />
-            </IconButtonComponent>
-        );
-    },
-};
-
-// export const TextButton: Story = {
-//     render: () => {
-//         return (
-//             <Button variant='text'>
-//                 <FontAwesomeIcon icon={faListUl} />
-//                 <span className='ml-2'>Text Button</span>
-//             </Button>
-//         );
-//     },
-// };
-
-// export const TextButtonAlt: Story = {
-//     render: () => {
-//         return (
-//             <Button variant='text' fontColor='primary'>
-//                 <span className='ml-2'>Text Button Alt</span>
-//             </Button>
-//         );
-//     },
-// };
-
-export const DefaultType: Story = {
+export const DefaultType: ButtonStory = {
     render: () => {
         return <Button>Type is Button</Button>;
     },

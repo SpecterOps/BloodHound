@@ -126,6 +126,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Button
             '--secondary-btn-fill': palette.neutral.light[300],
             '--secondary-btn-active-fill': palette.neutral.light[400],
+            // TODO remove
             '--tertiary-btn-border': palette.neutral.light[400],
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
