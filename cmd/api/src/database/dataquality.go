@@ -46,7 +46,7 @@ type DataQualityData interface {
 	DeleteAllDataQuality(ctx context.Context) error
 }
 
-const batchSize = 10000
+const batchSize = 1000
 
 //Data Quality Stats
 
