@@ -98,7 +98,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 					IsDisplayKind: true,
 					Icon:          "user",
 					Color:         "#fff",
-					Extension:     handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
+					Extension:     &handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",
@@ -131,7 +131,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 				assert.Equal(t, handlers.NodeKindView{
 					NodeKindID: nodeKindID,
 					Name:       "User",
-					Extension:  handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
+					Extension:  &handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",
@@ -140,6 +140,27 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 						},
 					},
 				}, envelope.Data)
+			},
+		},
+		{
+			name:  "success_-_returns_null_extension_when_none",
+			rawID: "42",
+			setupMock: func(extensionsMock *mocks.MockExtensions) {
+				schemaless := services.NodeKind{
+					ID: nodeKindID, Name: "User", DisplayName: "User",
+					Info: []services.KindInfo{{InfoKey: "overview", Title: "Overview", Position: 0, Content: json.RawMessage(`{"markdown":{"content":"one"}}`)}},
+				}
+				extensionsMock.EXPECT().GetNodeKind(mock.Anything, nodeKindID).Return(schemaless, nil)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.NodeKindView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+
+				assert.Nil(t, envelope.Data.Extension)
+				assert.Contains(t, string(body), `"extension":null`)
 			},
 		},
 		{

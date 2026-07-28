@@ -15,6 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
+nullable: true
 properties:
   extension_id:
     type: integer

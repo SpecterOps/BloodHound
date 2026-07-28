@@ -43,7 +43,7 @@ type NodeKindView struct {
 	IsDisplayKind bool                    `json:"is_display_kind"`
 	Icon          string                  `json:"icon"`
 	Color         string                  `json:"color"`
-	Extension     ExtensionDetailsView    `json:"extension"`
+	Extension     *ExtensionDetailsView   `json:"extension"`
 	Info          map[string]KindInfoView `json:"info"`
 }
 
@@ -80,14 +80,17 @@ func BuildNodeKindView(nodeKind services.NodeKind) (NodeKindView, error) {
 		IsDisplayKind: nodeKind.IsDisplayKind,
 		Icon:          nodeKind.Icon,
 		Color:         nodeKind.Color,
-		Extension: ExtensionDetailsView{
+		Info:          map[string]KindInfoView{},
+	}
+
+	if nodeKind.Extension.ID != 0 {
+		nodeKindView.Extension = &ExtensionDetailsView{
 			ExtensionID: nodeKind.Extension.ID,
 			Name:        nodeKind.Extension.Name,
 			DisplayName: nodeKind.Extension.DisplayName,
 			Namespace:   nodeKind.Extension.Namespace,
 			Version:     nodeKind.Extension.Version,
-		},
-		Info: map[string]KindInfoView{},
+		}
 	}
 
 	for _, info := range nodeKind.Info {
@@ -141,6 +144,7 @@ func (s Handlers) GetNodeKindByID(response http.ResponseWriter, request *http.Re
 		return
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
+		return
 	} else if nodeKindView, markdownErr := BuildNodeKindView(nodeKind); markdownErr != nil {
 		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
 		responses.WriteBasic(ctx, nodeKindView, http.StatusOK, response)

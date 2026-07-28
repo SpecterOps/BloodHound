@@ -23021,6 +23021,7 @@
       },
       "model.extension-details": {
         "type": "object",
+        "nullable": true,
         "properties": {
           "extension_id": {
             "type": "integer",
