@@ -40,7 +40,7 @@ var (
 		Namespace: model.Namespace,
 		Subsystem: datapipeSubsystem,
 		Name:      "optimize_duration",
-		Help:      "Duration in seconds of the most recent OptimizeStorage call, labeled by pipeline stage (ingest, post_processing, analysis).",
+		Help:      "Duration in seconds of the most recent OptimizeStorage call, labeled by pipeline stage (boot, analysis).",
 	}, []string{"pipeline_stage"})
 
 	optimizeStoragePipelineStages = []OptimizeStoragePipelineStage{
