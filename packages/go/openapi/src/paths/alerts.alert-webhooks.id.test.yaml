@@ -48,10 +48,10 @@ post:
                 a representative payload for the given type using the webhook's current
                 HMAC secret.
             version:
-              type: string
+              type: integer
               description: |
-                Payload schema version for the supplied `event_type`. Must be one of
-                the versions advertised for that type by
+                Payload data version for the supplied `event_type`. Must be one of
+                the data versions advertised for that type by
                 `GET /api/v2/alert-event-types`.
 
   responses:

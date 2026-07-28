@@ -33,14 +33,16 @@ properties:
     type: string
     format: date-time
   succeeded_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
   last_status_code:
-    $ref: './null.int32.yaml'
+    type: integer
+    format: int32
+    nullable: true
   last_error:
-    $ref: './null.string.yaml'
+    $ref: './null.string.response.yaml'
   attempts:
     type: integer
     format: int32
     description: Total dispatch attempts fired.
   next_attempt_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
