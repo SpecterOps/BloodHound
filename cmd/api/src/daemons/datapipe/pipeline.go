@@ -390,6 +390,7 @@ func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
 	start := time.Now()
 	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
 		slog.ErrorContext(ctx, "Error optimizing graph storage on boot", attr.Error(err))
+		return nil
 	}
 	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageBoot, time.Since(start))
 

@@ -697,6 +697,11 @@ func GetGraphStorageOptimizationParameter(ctx context.Context, service Parameter
 		slog.WarnContext(ctx, "Invalid graph storage optimization configuration supplied; returning default values",
 			attr.Error(err),
 			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+	} else if result.MinIntervalSeconds < 0 {
+		slog.WarnContext(ctx, "Invalid negative min interval seconds supplied, returning default value.",
+			slog.Int("invalid_min_interval_seconds", result.MinIntervalSeconds),
+			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+		result.MinIntervalSeconds = 86400
 	}
 
 	return result
