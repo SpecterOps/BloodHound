@@ -68,7 +68,9 @@ describe('CheckboxWithLabel Tests', () => {
         render(<CheckboxWithLabel label='Required option' error />);
 
         expect(screen.getByRole('checkbox', { name: 'Required option' })).toHaveAttribute('aria-invalid', 'true');
-        expect(screen.getByText('Required option')).toHaveClass('text-error');
+        expect(screen.getByText('Required option')).toHaveClass(
+            'peer-data-[state=unchecked]:text-status-error-main'
+        );
     });
 
     it('does not toggle when disabled label is clicked', async () => {

@@ -26,12 +26,12 @@ export const ButtonVariants = cva(
                 primary:
                     'bg-primary text-common-white dark:text-common-dark shadow-outer-1 hover:bg-secondary focus-visible:bg-secondary',
                 secondary:
-                    'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white hover:bg-secondary hover:text-common-white dark:hover:text-common-dark active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark disabled:bg-btn-disabled-fill disabled:text-text-disabled disabled:shadow-none disabled:!opacity-100',
+                    'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white hover:bg-secondary hover:text-common-white dark:hover:text-common-dark active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark disabled:bg-btn-disabled-fill disabled:text-text-disabled disabled:shadow-none',
                 tertiary:
                     'bg-transparent border-2 border-tertiary-btn-border shadow-outer-1 hover:bg-tertiary-main dark:hover:text-main hover:border-tertiary focus-visible:bg-tertiary-main dark:focus-visible:text-common-dark dark:focus-visible:bg-secondary focus-visible:border-tertiary',
                 transparent:
                     'bg-transparent border border-transparent-btn-border text-main hover:bg-primary hover:text-common-white dark:hover:text-common-dark hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark focus-visible:border-primary',
-                text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled disabled:!opacity-100',
+                text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled',
                 icon: 'rounded-full text-common-dark bg-icon-btn-fill p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary focus-visible:border-2 focus-visible:border-secondary active:border-none',
             },
             fontColor: {
