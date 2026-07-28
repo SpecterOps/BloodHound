@@ -60,19 +60,58 @@ $ yarn add @bloodhoundenterprise/DoodleUI
 
 -   [Node.js 22.x](https://nodejs.org/)
 
-These components are built for usage with the Roboto font though there are fallback fonts in place if Roboto is not found. The Roboto font will need to be included in your project's assets or it will need to be pulled in via CDN for the font to display as expected.
+### Typography
+
+DoodleUI uses:
+
+-   **Nunito Sans** for `h1` through `h6`.
+-   **Figtree** for body, subtitle, caption, and other UI text.
+
+Both fonts are distributed under the SIL Open Font License 1.1. DoodleUI's Storybook self-hosts the font files with
+[Fontsource](https://fontsource.org/). Applications consuming DoodleUI must load the fonts in their own entrypoint,
+following the existing self-hosted Fontsource approach.
 
 Via Fontsource:
 
 ```
-yarn add @fontsource/roboto
+yarn add @fontsource/figtree @fontsource/nunito-sans
 ```
 
-Then import the font in your entrypoint:
+Then import the required weights in your entrypoint:
 
 ```
-import '@fontsource/roboto/400.css';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/500.css';
+import '@fontsource/nunito-sans/600.css';
+import '@fontsource/nunito-sans/700.css';
 ```
+
+The preset falls back to `Segoe UI`, Helvetica, Arial, and a generic sans-serif for Figtree. Nunito Sans additionally
+falls back through `Avenir Next` before the shared system sans-serif stack.
+
+| Variant   | Family      | Size / line height | Weight | Tracking | Light color |
+| --------- | ----------- | ------------------ | ------ | -------- | ----------- |
+| h1        | Nunito Sans | 24 / 28px          | 700    | 0        | Text/Main   |
+| h2        | Nunito Sans | 22 / 24px          | 700    | 0        | Text/Main   |
+| h3        | Nunito Sans | 20 / 22px          | 700    | 0        | Text/Main   |
+| h4        | Nunito Sans | 20 / 22px          | 600    | 0        | Text/Main   |
+| h5        | Nunito Sans | 18 / 20px          | 700    | 0.25px   | Text/Main   |
+| h6        | Nunito Sans | 16 / 18px          | 600    | 0.25px   | Text/Main   |
+| body1     | Figtree     | 16 / 24px          | 400    | 0        | Text/Muted  |
+| body2     | Figtree     | 14 / 22px          | 400    | 0        | Text/Muted  |
+| subtitle1 | Figtree     | 15 / 24px          | 500    | 0.25px   | Text/Main   |
+| subtitle2 | Figtree     | 13 / 22px          | 500    | 0.25px   | Text/Main   |
+| caption   | Figtree     | 12 / 20px          | 400    | 0.25px   | Text/Muted  |
+
+The `text-muted` utility is a compatibility alias backed by the existing `--text-light` semantic value. The legacy
+`text-light` utility remains available. Body and caption variants retain their existing main-text behavior in dark
+mode.
+
+#### Visual Language Refresh migration note
+
+The public `Typography` props and variant names are unchanged. Consumers should expect intentionally shorter heading
+line boxes and different heading/body font metrics. Load both font families before first render to minimize fallback
+movement, and review layouts that previously depended on the old heading heights.
 
 ### Getting Started
 

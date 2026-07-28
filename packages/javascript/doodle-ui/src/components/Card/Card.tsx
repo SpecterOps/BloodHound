@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import * as React from 'react';
+import { TypographyVariants } from '../Typography';
 import { cn } from '../utils';
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
@@ -34,9 +35,9 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
     ({ className, ...props }, ref) => (
-        <h3 ref={ref} className={cn('text-xl font-bold leading-6', className)} {...props}>
+        <h3 ref={ref} className={cn(TypographyVariants({ variant: 'h3' }), className)} {...props}>
             {props.children}
         </h3>
     )
@@ -45,7 +46,7 @@ CardTitle.displayName = 'CardTitle';
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
     ({ className, ...props }, ref) => (
-        <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+        <p ref={ref} className={cn(TypographyVariants({ variant: 'body2' }), className)} {...props} />
     )
 );
 CardDescription.displayName = 'CardDescription';
