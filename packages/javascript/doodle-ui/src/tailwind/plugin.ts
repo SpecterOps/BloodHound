@@ -147,6 +147,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
             '--input-placeholder-text': text.placeholder,
+            '--input-outlined-border-default': palette.grey[700],
+            '--input-outlined-border-hover': light.secondary.main,
+            '--input-outlined-border-focus': light.secondary.main,
 
             // // Components/Textarea
             '--textarea-fill': common.white,
@@ -392,6 +395,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-border-disabled': palette.neutral.dark[900],
 
             '--input-placeholder-text': dark.input.placeholder,
+            '--input-outlined-border-default': dark.input.border,
+            '--input-outlined-border-hover': dark.secondary.main,
+            '--input-outlined-border-focus': secondaryVariant2,
 
             // // Components/Textarea
             '--textarea-fill': palette.neutral.dark[700],

@@ -23,9 +23,9 @@ export const InputVariants = cva(
         variants: {
             variant: {
                 outlined:
-                    'rounded-md ring-1 ring-input-border-default bg-input-fill px-3 py-2 text-sm hover:ring-2 focus:outline-none focus-visible:focus-ring',
+                    'rounded-md border border-input-outlined-border-default bg-input-fill px-3 py-2 text-sm hover:border-input-outlined-border-hover focus:outline-none focus:focus-ring dark:focus:border-[var(--input-outlined-border-focus)] dark:focus:border-2',
                 underlined:
-                    'rounded-sm bg-transparent border-b-input-border-default border-b hover:border-b-2 focus:outline-none focus-visible:focus-ring focus-visible:border-input-border-focus focus-visible:border-b-2',
+                    'rounded-sm bg-transparent border-b-input-border-default border-b hover:border-b-2 focus:outline-none focus:focus-ring focus:border-input-border-focus focus:border-b-2',
             },
             intent: {
                 time: 'appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
