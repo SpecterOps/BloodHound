@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Label } from 'doodle-ui';
+import { Button, Label, Typography } from 'doodle-ui';
 import { OIDCProviderInfo, Role, SAMLProviderInfo, SSOProvider } from 'js-client-library';
 import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
@@ -126,11 +126,12 @@ const SSOProviderInfoPanel: FC<{
                 <div>
                     <div className='flex items-center bg-neutral-5'>
                         <div className='bg-primary w-2 h-14 mr-2'></div>
-                        <h5
+                        <Typography
+                            variant='h5'
                             data-testid='sso_provider-info-panel_header-text'
-                            className='whitespace-nowrap grow text-lg font-bold'>
+                            className='whitespace-nowrap grow'>
                             {ssoProvider?.name}
-                        </h5>
+                        </Typography>
                     </div>
                     <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto px-4 py-2 shadow-outer-1 rounded'>
                         <div className='font-bold ml-2 text-sm'>Provider Information:</div>

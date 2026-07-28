@@ -13,17 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Card } from 'doodle-ui';
+import { Card, Typography } from 'doodle-ui';
 import { SchemaUploadDialog } from '../../components/SchemaUploadDialog/SchemaUploadDialog';
 
 export const SchemaUploadCard = () => {
     return (
         <Card className='flex flex-col p-6 gap-4'>
-            <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
-            <p>
+            <Typography variant='h2'>Custom Schema Upload</Typography>
+            <Typography variant='body1'>
                 Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
                 updates to tailor the attack graph model to specific environments, workflows, or needs.
-            </p>
+            </Typography>
             <SchemaUploadDialog />
         </Card>
     );

@@ -13,8 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { graphSchema } from './constants';
+import { darkPalette, graphSchema, lightPalette, themedComponents, typography } from './constants';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from './graphSchema';
 
 describe('graphSchema', () => {
@@ -73,5 +72,50 @@ describe('graphSchema', () => {
 
         expect(result.labels).toEqual([]);
         expect(result.relationshipTypes).toEqual([]);
+    });
+});
+
+describe('legacy MUI typography bridge', () => {
+    it('uses the DoodleUI font families', () => {
+        expect(typography.fontFamily).toContain('Figtree');
+        expect(typography.h1).toMatchObject({ fontFamily: expect.stringContaining('Nunito Sans') });
+        expect(typography.h6).toMatchObject({ fontFamily: expect.stringContaining('Nunito Sans') });
+    });
+
+    it('mirrors the approved DoodleUI heading metrics', () => {
+        expect(typography).toMatchObject({
+            h1: { fontSize: '1.5rem', lineHeight: '1.75rem', fontWeight: 700, letterSpacing: 0 },
+            h2: { fontSize: '1.375rem', lineHeight: '1.5rem', fontWeight: 700, letterSpacing: 0 },
+            h3: { fontSize: '1.25rem', lineHeight: '1.375rem', fontWeight: 700, letterSpacing: 0 },
+            h4: { fontSize: '1.25rem', lineHeight: '1.375rem', fontWeight: 600, letterSpacing: 0 },
+            h5: { fontSize: '1.125rem', lineHeight: '1.25rem', fontWeight: 700, letterSpacing: '.25px' },
+            h6: { fontSize: '1rem', lineHeight: '1.125rem', fontWeight: 600, letterSpacing: '.25px' },
+        });
+    });
+
+    it('mirrors the approved DoodleUI body, subtitle, and caption metrics', () => {
+        expect(typography).toMatchObject({
+            body1: { fontSize: '1rem', lineHeight: '1.5rem', fontWeight: 400, letterSpacing: 0 },
+            body2: { fontSize: '.875rem', lineHeight: '1.375rem', fontWeight: 400, letterSpacing: 0 },
+            subtitle1: { fontSize: '.9375rem', lineHeight: '1.5rem', fontWeight: 500, letterSpacing: '.25px' },
+            subtitle2: { fontSize: '.8125rem', lineHeight: '1.375rem', fontWeight: 500, letterSpacing: '.25px' },
+            caption: { fontSize: '.75rem', lineHeight: '1.25rem', fontWeight: 400, letterSpacing: '.25px' },
+        });
+    });
+
+    it('uses the semantic muted-text token for light-mode body and caption variants', () => {
+        const typographyOverrides = themedComponents(lightPalette)?.MuiTypography?.styleOverrides;
+
+        expect(typographyOverrides).toMatchObject({
+            body1: { color: 'var(--text-muted)' },
+            body2: { color: 'var(--text-muted)' },
+            caption: { color: 'var(--text-muted)' },
+        });
+    });
+
+    it('does not change legacy MUI typography colors in dark mode', () => {
+        const typographyOverrides = themedComponents(darkPalette)?.MuiTypography?.styleOverrides;
+
+        expect(typographyOverrides).toEqual({});
     });
 });

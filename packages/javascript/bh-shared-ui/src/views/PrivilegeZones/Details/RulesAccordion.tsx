@@ -16,7 +16,7 @@
 
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from 'doodle-ui';
+import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip, Typography } from 'doodle-ui';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useEffect, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
@@ -81,7 +81,7 @@ export const RulesAccordion: React.FC = () => {
     return (
         <div>
             <div className='flex justify-between pl-4 pr-12 border-b border-neutral-3'>
-                <span className='text-lg font-bold'>Rules</span>
+                <Typography variant='h5'>Rules</Typography>
                 <span>
                     <span className='font-bold'>Total Rules:</span> {selectedTag.counts[RulesKey].toLocaleString()}
                 </span>
