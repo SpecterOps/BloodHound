@@ -49,7 +49,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogPortal>
                 <DialogContent className='text-sm'>
-                    <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
                     <VisuallyHidden>
                         <DialogDescription>Confirm Citrix Configuration Changes</DialogDescription>
                     </VisuallyHidden>

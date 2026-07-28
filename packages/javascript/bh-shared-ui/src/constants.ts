@@ -17,6 +17,7 @@
 import { Theme, ThemeOptions } from '@mui/material/styles';
 import createPalette, { Palette } from '@mui/material/styles/createPalette';
 import { makeStyles } from '@mui/styles';
+import { DoodleUIPreset } from 'doodle-ui';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from './graphSchema';
 import { BaseExploreLayoutOptions, MappedStringLiteral } from './types';
 import { addOpacityToHex } from './utils/colors';
@@ -73,6 +74,21 @@ const inheritFocusedIconStyles = {
 };
 
 export const themedComponents = (palette: Palette): ThemeOptions['components'] => ({
+    MuiTypography: {
+        styleOverrides: {
+            ...(palette.mode === 'light' && {
+                body1: {
+                    color: 'var(--text-muted)',
+                },
+                body2: {
+                    color: 'var(--text-muted)',
+                },
+                caption: {
+                    color: 'var(--text-muted)',
+                },
+            }),
+        },
+    },
     MuiButtonBase: {
         styleOverrides: {
             root: {
@@ -387,41 +403,78 @@ export const darkPalette = createPalette({
 });
 
 export const typography: Partial<Theme['typography']> = {
+    fontFamily: DoodleUIPreset.theme.fontFamily.sans.join(', '),
     h1: {
-        fontWeight: 400,
-        fontSize: '1.8rem',
-        lineHeight: 2,
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
+        fontWeight: 700,
+        fontSize: '1.5rem',
+        lineHeight: '1.75rem',
         letterSpacing: 0,
     },
     h2: {
-        fontWeight: 500,
-        fontSize: '1.5rem',
-        lineHeight: 1.5,
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
+        fontWeight: 700,
+        fontSize: '1.375rem',
+        lineHeight: '1.5rem',
         letterSpacing: 0,
     },
     h3: {
-        fontWeight: 500,
-        fontSize: '1.2rem',
-        lineHeight: 1.25,
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
+        fontWeight: 700,
+        fontSize: '1.25rem',
+        lineHeight: '1.375rem',
         letterSpacing: 0,
     },
     h4: {
-        fontWeight: 500,
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
+        fontWeight: 600,
         fontSize: '1.25rem',
-        lineHeight: 1.5,
+        lineHeight: '1.375rem',
         letterSpacing: 0,
     },
     h5: {
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
         fontWeight: 700,
         fontSize: '1.125rem',
-        lineHeight: 1.5,
-        letterSpacing: 0.25,
+        lineHeight: '1.25rem',
+        letterSpacing: '.25px',
     },
     h6: {
-        fontWeight: 700,
-        fontSize: '1.0rem',
-        lineHeight: 1.5,
-        letterSpacing: 0.25,
+        fontFamily: DoodleUIPreset.theme.fontFamily.heading.join(', '),
+        fontWeight: 600,
+        fontSize: '1rem',
+        lineHeight: '1.125rem',
+        letterSpacing: '.25px',
+    },
+    body1: {
+        fontWeight: 400,
+        fontSize: '1rem',
+        lineHeight: '1.5rem',
+        letterSpacing: 0,
+    },
+    body2: {
+        fontWeight: 400,
+        fontSize: '.875rem',
+        lineHeight: '1.375rem',
+        letterSpacing: 0,
+    },
+    subtitle1: {
+        fontWeight: 500,
+        fontSize: '.9375rem',
+        lineHeight: '1.5rem',
+        letterSpacing: '.25px',
+    },
+    subtitle2: {
+        fontWeight: 500,
+        fontSize: '.8125rem',
+        lineHeight: '1.375rem',
+        letterSpacing: '.25px',
+    },
+    caption: {
+        fontWeight: 400,
+        fontSize: '.75rem',
+        lineHeight: '1.25rem',
+        letterSpacing: '.25px',
     },
 };
 

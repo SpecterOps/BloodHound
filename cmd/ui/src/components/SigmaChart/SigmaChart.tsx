@@ -91,7 +91,8 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     edgeLabelRenderer: drawEdgeLabel,
                     edgeLabelSize: 12,
                     labelSize: 12,
-                    labelFont: 'Roboto',
+                    // Sigma draws labels on canvas, so it cannot inherit the DoodleUI font-sans utility.
+                    labelFont: 'Figtree',
                     labelColor: { color: theme.contrast },
                     labelRenderer: drawLabel,
                     maxCameraRatio: MAX_CAMERA_RATIO,

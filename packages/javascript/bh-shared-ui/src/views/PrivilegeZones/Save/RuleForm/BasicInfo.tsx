@@ -18,6 +18,7 @@ import {
     Card,
     CardContent,
     CardHeader,
+    CardTitle,
     FormControl,
     FormDescription,
     FormField,
@@ -70,7 +71,9 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
     return (
         <div className={'max-lg:w-full w-96 h-[36rem]'}>
             <Card className='p-3'>
-                <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
+                <CardHeader>
+                    <CardTitle>Defining Rule</CardTitle>
+                </CardHeader>
                 <CardContent>
                     {ruleId !== '' && (
                         <div className='mb-4'>

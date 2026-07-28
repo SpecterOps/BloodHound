@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, Skeleton } from 'doodle-ui';
+import { Card, Skeleton, Typography } from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -81,7 +81,9 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
             <Card className='p-6'>
                 <div className='flex items-center' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} />}
-                    <span className='text-xl font-bold text-wrap'>{name}</span>
+                    <Typography variant='h3' className='text-wrap'>
+                        {name}
+                    </Typography>
                 </div>
                 {Certification && (
                     <div className='mt-4'>
@@ -130,9 +132,9 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
     return (
         <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
             <Card className='p-6'>
-                <div className='text-xl font-bold break-all line-clamp-2' title={name}>
+                <Typography variant='h3' className='break-all line-clamp-2' title={name}>
                     {name}
-                </div>
+                </Typography>
                 <div className='mt-4'>
                     <DescriptionField description={description} />
                 </div>
