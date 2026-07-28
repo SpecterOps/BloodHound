@@ -1699,6 +1699,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/figtree@npm:^5.2.10":
+  version: 5.3.0
+  resolution: "@fontsource/figtree@npm:5.3.0"
+  checksum: 10/d1899a45cb221f81ecad2b9467802dc29402d1189b1c04b27b8caf8547e84abff0bc16220cbeb45955307572056a0c5c17a43c07a0b24729c82e86468cf54d72
+  languageName: node
+  linkType: hard
+
+"@fontsource/nunito-sans@npm:^5.2.10":
+  version: 5.3.0
+  resolution: "@fontsource/nunito-sans@npm:5.3.0"
+  checksum: 10/4ffde59fb0204d11788e4c24553e0971d79e500180827736b0fea49eb9a8ef52f9f56c3f3a3984633ffec8334c1e465472792e0d44cf6a213745ce552488c946
+  languageName: node
+  linkType: hard
+
 "@fontsource/roboto-mono@npm:^4.5.0":
   version: 4.5.10
   resolution: "@fontsource/roboto-mono@npm:4.5.10"
@@ -1710,13 +1724,6 @@ __metadata:
   version: 4.5.8
   resolution: "@fontsource/roboto@npm:4.5.8"
   checksum: 10/490c189f4c04d1aedb5de46799256f73f01a0a38db42943d9c9424c6613f2915413da3df4f26bb15939bf5143419682537717cb0a7cd5b665b50f39c6d5d2a39
-  languageName: node
-  linkType: hard
-
-"@fontsource/roboto@npm:^5.0.13":
-  version: 5.2.10
-  resolution: "@fontsource/roboto@npm:5.2.10"
-  checksum: 10/2fc9e9db66cfab68ff45b573cc2bf20fe8d7e962f09b6edd32d53681fdcd7bdedd65440012683491785583383a585bdbfb67903171159bf4c3520f2f0d26d92a
   languageName: node
   linkType: hard
 
@@ -8352,7 +8359,8 @@ __metadata:
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
     "@faker-js/faker": "npm:^9.0.3"
-    "@fontsource/roboto": "npm:^5.0.13"
+    "@fontsource/figtree": "npm:^5.2.10"
+    "@fontsource/nunito-sans": "npm:^5.2.10"
     "@fortawesome/fontawesome-svg-core": "npm:^6.5.2"
     "@fortawesome/free-brands-svg-icons": "npm:^6.5.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.5.2"

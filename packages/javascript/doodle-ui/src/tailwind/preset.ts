@@ -19,7 +19,8 @@ import animate from 'tailwindcss-animate';
 export default {
     theme: {
         fontFamily: {
-            sans: ['Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+            sans: ['Figtree', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
+            heading: ['"Nunito Sans"', '"Avenir Next"', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
         },
         container: {
             center: true,
@@ -69,6 +70,7 @@ export default {
 
                 'text-main': 'var(--text-main)',
                 'text-light': 'var(--text-light)',
+                'text-muted': 'var(--text-muted)',
                 'text-disabled': 'var(--text-disabled)',
                 'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
