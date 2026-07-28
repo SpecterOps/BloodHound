@@ -72,6 +72,7 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     tableOptions?: Omit<TableOptions<TData>, 'columns' | 'data' | 'getCoreRowModel'>;
     enableResizing?: boolean;
     enableDragAndDrop?: boolean; //table level prop to enable drag and drop
+    enableVirtualization?: boolean;
     columnOrder?: string[];
     columnPinning?: ColumnPinningState;
     columnSizing?: ColumnSizingState;
@@ -125,6 +126,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         virtualizationOptions: virtualizationOptionsProp = {},
         enableResizing = false,
         enableDragAndDrop = false,
+        enableVirtualization = false,
         ...wrapperRest
     } = props;
 
@@ -442,7 +444,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             sensors={sensors}
             disabled={!enableDragAndDrop}
             accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
-            <div className={cn('w-full bg-data-table-fill', className)} {...wrapperRest} ref={parentRef}>
+            <div
+                className={cn('w-full bg-data-table-fill', className, { 'overflow-auto h-full': enableVirtualization })}
+                {...wrapperRest}
+                ref={parentRef}>
                 <div
                     style={{
                         height: `${virtualizer.getTotalSize()}px`,

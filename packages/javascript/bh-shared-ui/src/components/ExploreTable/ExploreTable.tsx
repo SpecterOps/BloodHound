@@ -226,6 +226,7 @@ const ExploreTable = ({
                     growLastColumn
                     enableResizing
                     enableDragAndDrop
+                    enableVirtualization
                 />
             </div>
         </div>
