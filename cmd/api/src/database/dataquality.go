@@ -32,7 +32,7 @@ type DataQualityData interface {
 	GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start time.Time, end time.Time) (model.ADDataQualityStats, error)
 	CreateAzureDataQualityStats(ctx context.Context, stats model.AzureDataQualityStats) (model.AzureDataQualityStats, error)
 	GetAzureDataQualityStats(ctx context.Context, tenantId string, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityStats, int, error)
-	CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error)
+	CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats, batchSize int) (model.DataQualityStats, error)
 	GetDataQualityStats(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityStats, int, error)
 
 	// Data Quality Aggregations
@@ -41,7 +41,7 @@ type DataQualityData interface {
 	CreateAzureDataQualityAggregation(ctx context.Context, aggregation model.AzureDataQualityAggregation) (model.AzureDataQualityAggregation, error)
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	GetDataQualityAggregations(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.DataQualityAggregations, int, error)
-	CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error)
+	CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations, batchSize int) (model.DataQualityAggregations, error)
 
 	DeleteAllDataQuality(ctx context.Context) error
 }
@@ -182,8 +182,8 @@ func (s *BloodhoundDB) GetAzureDataQualityStats(ctx context.Context, tenantId st
 	return azureDataQualityStats, int(count), nil
 }
 
-func (s *BloodhoundDB) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
-	result := s.db.WithContext(ctx).Create(&stats)
+func (s *BloodhoundDB) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats, batchSize int) (model.DataQualityStats, error) {
+	result := s.db.WithContext(ctx).CreateInBatches(&stats, batchSize)
 	return stats, CheckError(result)
 }
 
@@ -311,12 +311,12 @@ func (s *BloodhoundDB) GetAzureDataQualityAggregations(ctx context.Context, star
 }
 
 // CreateDataQualityAggregations batch-inserts the given slice of model.DataQualityAggregation.
-func (s *BloodhoundDB) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+func (s *BloodhoundDB) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations, batchSize int) (model.DataQualityAggregations, error) {
 	if len(aggregations) == 0 {
 		return aggregations, nil
 	}
 
-	result := s.db.WithContext(ctx).Create(&aggregations)
+	result := s.db.WithContext(ctx).CreateInBatches(&aggregations, batchSize)
 	return aggregations, CheckError(result)
 }
 

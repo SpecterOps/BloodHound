@@ -29,6 +29,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const batchSize = 2
+
 func TestDatabase_CreateDataQualityStats(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -47,7 +49,7 @@ func TestDatabase_CreateDataQualityStats(t *testing.T) {
 					MetricValue:             42,
 				}
 
-				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, model.DataQualityStats{stat})
+				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, model.DataQualityStats{stat}, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 1)
 				assert.NotZero(t, created[0].ID)
@@ -63,7 +65,7 @@ func TestDatabase_CreateDataQualityStats(t *testing.T) {
 					{RunID: "run-2", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeRelationship, MetricName: "edges", MetricValue: 20},
 				}
 
-				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 2)
 				assert.NotZero(t, created[0].ID)
@@ -103,7 +105,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-3", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 5},
 					{RunID: "run-3", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 15},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -126,7 +128,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-4", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 5},
 					{RunID: "run-4", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 15},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -149,7 +151,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-date", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "a", MetricValue: 1, Serial: model.Serial{Basic: model.Basic{CreatedAt: yesterday}}},
 					{RunID: "run-date", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "b", MetricValue: 2, Serial: model.Serial{Basic: model.Basic{CreatedAt: now}}},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				rangeStart := now.Add(-1 * time.Hour).Format(time.RFC3339)
@@ -184,7 +186,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-env", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-other", MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 20},
 					{RunID: "run-env", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-target", MetricType: model.DataQualityMetricTypeRelationship, MetricName: "edges", MetricValue: 30},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -208,7 +210,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-5", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "a", MetricValue: 100},
 					{RunID: "run-5", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "b", MetricValue: 1},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				results, _, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -231,7 +233,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-6", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "b", MetricValue: 20},
 					{RunID: "run-6", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "c", MetricValue: 30},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityStats(testSuite.Context, args.filters, args.sort, args.skip, args.limit)
@@ -249,7 +251,7 @@ func TestDatabase_GetDataQualityStats(t *testing.T) {
 					{RunID: "run-7", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "visible", MetricValue: 1},
 					{RunID: "run-7", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "hidden", MetricValue: 2},
 				}
-				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats)
+				created, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, stats, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 2)
 
@@ -305,7 +307,7 @@ func TestDatabase_CreateDataQualityAggregations(t *testing.T) {
 		{
 			name: "Success: create empty aggregations with empty input",
 			test: func(t *testing.T, testSuite IntegrationTestSuite) {
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{})
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{}, batchSize)
 				require.NoError(t, err)
 				assert.Empty(t, created)
 			},
@@ -321,7 +323,7 @@ func TestDatabase_CreateDataQualityAggregations(t *testing.T) {
 					{RunID: "run-abc", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "sessions", MetricValue: 15},
 				}
 
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 2)
 
@@ -361,7 +363,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-abc", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 5},
 					{RunID: "run-abc", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "sessions", MetricValue: 15},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 
 				results, total, err := testSuite.BHDatabase.GetDataQualityAggregations(testSuite.Context, nil, nil, 0, 0)
@@ -386,7 +388,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					KindID:                  null.Int32From(metricKind.ID),
 				}
 
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{aggregation})
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{aggregation}, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 1)
 				require.NotZero(t, created[0].ID, "create should populate the generated ID")
@@ -420,7 +422,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					// approximately equal case
 					{RunID: "run-123", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeRelationship, MetricName: "members", MetricValue: 25},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 
 				filters := model.Filters{
@@ -452,7 +454,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-jkl", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeRelationship, MetricName: "session_completeness", MetricValue: 87.5},
 					{RunID: "run-jkl", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeRelationship, MetricName: "local_group_completeness", MetricValue: 9.0},
 				}
-				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 
 				sort := model.Sort{
@@ -478,7 +480,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-xyz", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
 					{RunID: "run-xyz", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "sessions", MetricValue: 4},
 				}
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 4)
 
@@ -511,7 +513,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-ts", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
 					{RunID: "run-ts", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
 				}
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 3)
 
@@ -543,7 +545,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
 					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
 				}
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 3)
 
@@ -574,7 +576,7 @@ func TestDatabase_GetDataQualityAggregations(t *testing.T) {
 					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 2},
 					{RunID: "run-tie", SchemaExtensionID: 42, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "groups", MetricValue: 3},
 				}
-				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations)
+				created, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, aggregations, batchSize)
 				require.NoError(t, err)
 				require.Len(t, created, 3)
 
@@ -625,7 +627,7 @@ func TestDatabase_DeleteAllDataQuality(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				_, err := testSuite.BHDatabase.CreateDataQualityStats(testSuite.Context, model.DataQualityStats{
 					{RunID: "run-del", SchemaExtensionID: 1, SchemaEnvironmentKindID: 1, EnvironmentID: "env-1", MetricType: model.DataQualityMetricTypeNode, MetricName: "users", MetricValue: 10},
-				})
+				}, batchSize)
 				require.NoError(t, err)
 
 				err = testSuite.BHDatabase.DeleteAllDataQuality(testSuite.Context)
@@ -644,7 +646,7 @@ func TestDatabase_DeleteAllDataQuality(t *testing.T) {
 
 				_, err := testSuite.BHDatabase.CreateDataQualityAggregations(testSuite.Context, model.DataQualityAggregations{
 					{RunID: "run-abc", SchemaExtensionID: 15, SchemaEnvironmentKindID: envKind.ID, MetricType: model.DataQualityMetricTypeNode, MetricName: "computers", MetricValue: 5},
-				})
+				}, batchSize)
 				require.NoError(t, err)
 
 				err = testSuite.BHDatabase.DeleteAllDataQuality(testSuite.Context)

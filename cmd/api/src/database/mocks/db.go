@@ -343,33 +343,33 @@ func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind an
 }
 
 // CreateDataQualityAggregations mocks base method.
-func (m *MockDatabase) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations) (model.DataQualityAggregations, error) {
+func (m *MockDatabase) CreateDataQualityAggregations(ctx context.Context, aggregations model.DataQualityAggregations, batchSize int) (model.DataQualityAggregations, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateDataQualityAggregations", ctx, aggregations)
+	ret := m.ctrl.Call(m, "CreateDataQualityAggregations", ctx, aggregations, batchSize)
 	ret0, _ := ret[0].(model.DataQualityAggregations)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateDataQualityAggregations indicates an expected call of CreateDataQualityAggregations.
-func (mr *MockDatabaseMockRecorder) CreateDataQualityAggregations(ctx, aggregations any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateDataQualityAggregations(ctx, aggregations, batchSize any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityAggregations), ctx, aggregations)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityAggregations", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityAggregations), ctx, aggregations, batchSize)
 }
 
 // CreateDataQualityStats mocks base method.
-func (m *MockDatabase) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
+func (m *MockDatabase) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats, batchSize int) (model.DataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateDataQualityStats", ctx, stats)
+	ret := m.ctrl.Call(m, "CreateDataQualityStats", ctx, stats, batchSize)
 	ret0, _ := ret[0].(model.DataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateDataQualityStats indicates an expected call of CreateDataQualityStats.
-func (mr *MockDatabaseMockRecorder) CreateDataQualityStats(ctx, stats any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateDataQualityStats(ctx, stats, batchSize any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityStats), ctx, stats)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateDataQualityStats), ctx, stats, batchSize)
 }
 
 // CreateEnvironment mocks base method.

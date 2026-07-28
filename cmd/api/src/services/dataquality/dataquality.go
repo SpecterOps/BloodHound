@@ -39,6 +39,8 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
+const batchSize = 10000
+
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
 		aggregation model.ADDataQualityAggregation
@@ -495,9 +497,9 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 	}
 
 	// OpenGraph node and relationship counts
-	if openGraphExtensionManagementFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
-		return fmt.Errorf("could not get open graph extension management feature flag: %w", err)
-	} else if openGraphExtensionManagementFlag.Enabled {
+	if openGraphDataQualityFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphDataQuality); err != nil {
+		return fmt.Errorf("could not get open graph data quality feature flag: %w", err)
+	} else if openGraphDataQualityFlag.Enabled {
 		if stats, aggregations, err := openGraphStats(ctx, db, graphDB); err != nil {
 			return fmt.Errorf("could not get open graph stats: %w", err)
 		} else {
@@ -505,9 +507,9 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 				return nil
 			}
 
-			if _, err := db.CreateDataQualityStats(ctx, stats); err != nil {
+			if _, err := db.CreateDataQualityStats(ctx, stats, batchSize); err != nil {
 				return fmt.Errorf("could not save open graph stats: %w", err)
-			} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations); err != nil {
+			} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations, batchSize); err != nil {
 				return fmt.Errorf("could not save open graph aggregations: %w", err)
 			}
 		}
