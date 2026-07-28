@@ -22,8 +22,17 @@ VALUES (current_timestamp,
     'opengraph_data_quality',
     'OpenGraph Data Quality',
     'Enables the collection and storage of data quality statistics for OpenGraph extensions.',
-    false,
-    false)
+    EXISTS (
+        SELECT 1
+        FROM feature_flags
+        WHERE key IN (
+            'opengraph_extension_management',
+            'opengraph_findings'
+        )
+        AND enabled
+        HAVING COUNT(DISTINCT key) = 2
+    ),
+    true)
 ON CONFLICT DO NOTHING;
 
 -- +goose Down

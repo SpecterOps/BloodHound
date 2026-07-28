@@ -39,8 +39,6 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-const batchSize = 10000
-
 func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
 		aggregation model.ADDataQualityAggregation
@@ -507,9 +505,9 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 				return nil
 			}
 
-			if _, err := db.CreateDataQualityStats(ctx, stats, batchSize); err != nil {
+			if _, err := db.CreateDataQualityStats(ctx, stats); err != nil {
 				return fmt.Errorf("could not save open graph stats: %w", err)
-			} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations, batchSize); err != nil {
+			} else if _, err := db.CreateDataQualityAggregations(ctx, aggregations); err != nil {
 				return fmt.Errorf("could not save open graph aggregations: %w", err)
 			}
 		}
