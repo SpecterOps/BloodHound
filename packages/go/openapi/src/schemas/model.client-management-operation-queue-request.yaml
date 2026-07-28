@@ -15,21 +15,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
-description: |
-  Subscription element accepted in an Alert create or update request. The
-  parent `alert_id` is supplied by the URL path on update or generated on
-  create, and is not accepted in this payload.
 required:
-  - channel_id
-  - event_type
-  - version
+  - operation_type
+  - execution_time
 properties:
-  channel_id:
+  operation_type:
+    allOf:
+      - $ref: './enum.client-management-operation-type.yaml'
+  execution_time:
     type: string
-    format: uuid
-  event_type:
-    type: string
-  version:
-    type: integer
-  disabled:
-    type: boolean
+    format: date-time
