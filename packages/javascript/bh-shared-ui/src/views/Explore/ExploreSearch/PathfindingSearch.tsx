@@ -109,8 +109,6 @@ const PathfindingSearch = ({
 
     return (
         <div className='flex items-center gap-2' data-testid='pathfinding-search'>
-            <SourceToBullseyeIcon destinationCount={totalNodeCount - 1} />
-
             <div className='flex flex-col flex-grow gap-2'>
                 {visibleNodes.map((node, index) => (
                     <div
@@ -126,6 +124,7 @@ const PathfindingSearch = ({
                             'opacity-40': dragIndex === index,
                             'ring-2 ring-primary ring-offset-1': dragOverIndex === index,
                         })}>
+                        <PathfindingNodeIcon isStartNode={index === 0} showConnector={index > 0} />
                         <div
                             role='button'
                             tabIndex={0}
@@ -140,7 +139,7 @@ const PathfindingSearch = ({
                                     handleReorderNodes(index, index + 1);
                                 }
                             }}
-                            className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity'>
+                            className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity'>
                             <FontAwesomeIcon icon={faGripVertical} size='sm' />
                         </div>
                         <div className='flex-grow'>
@@ -156,7 +155,7 @@ const PathfindingSearch = ({
                         {node.removable && (
                             <button
                                 onClick={() => handleRemoveNode(index)}
-                                className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 z-10'
+                                className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 z-10'
                                 aria-label='Remove destination'
                                 title='Remove destination'>
                                 <FontAwesomeIcon icon={faTimes} size='sm' />
@@ -167,7 +166,7 @@ const PathfindingSearch = ({
                 {totalNodeCount < maxNodes && (
                     <button
                         onClick={handleAddNode}
-                        className='flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 py-0.5 cursor-pointer'
+                        className='flex items-center gap-1.5 ml-4 text-xs text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 py-0.5 cursor-pointer'
                         aria-label='Add destination'>
                         <FontAwesomeIcon icon={faPlus} size='xs' />
                         <span>Add Destination</span>
@@ -186,16 +185,17 @@ const PathfindingSearch = ({
     );
 };
 
-const SourceToBullseyeIcon = ({ destinationCount }: { destinationCount: number }) => {
+// The icon sits inside its own input row and stretches to the row's full height, so `items-center`
+// on the row keeps it centered on the input no matter how tall that input renders. The connector
+// is absolutely positioned so it spans the gap up to the previous row's icon, stopping 0.5rem short
+// at each end to leave the same breathing room around both icons.
+const PathfindingNodeIcon = ({ isStartNode, showConnector }: { isStartNode: boolean; showConnector: boolean }) => {
     return (
-        <div className='flex flex-col items-center'>
-            <FontAwesomeIcon icon={faCircle} size='xs' />
-            {Array.from({ length: destinationCount }).map((_, i) => (
-                <span key={i} className='flex flex-col items-center'>
-                    <div className='border-l border-dotted border-primary dark:border-white my-2 h-4'></div>
-                    <FontAwesomeIcon icon={faBullseye} size='xs' />
-                </span>
-            ))}
+        <div className='relative flex w-3 shrink-0 items-center justify-center self-stretch'>
+            {showConnector && (
+                <div className='absolute bottom-[calc(50%+0.5rem)] left-1/2 h-[calc(100%-0.5rem)] -translate-x-1/2 border-l border-dotted border-primary dark:border-white'></div>
+            )}
+            <FontAwesomeIcon icon={isStartNode ? faCircle : faBullseye} size='xs' />
         </div>
     );
 };
