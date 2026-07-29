@@ -61,24 +61,26 @@ describe('EntityObjectInformation', () => {
     it('does not throw a React useRef error when a property is named "ref"', async () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-        const selectedNode: NodeDetails = {
-            node_id: 2,
-            kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
-            properties: { objectid: 'ref-object-id', ref: 'a-property-named-ref' },
-        };
+        try {
+            const selectedNode: NodeDetails = {
+                node_id: 2,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { objectid: 'ref-object-id', ref: 'a-property-named-ref' },
+            };
 
-        expect(() => render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />)).not.toThrow();
+            expect(() => render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />)).not.toThrow();
 
-        // The value of the "ref" property should render as a normal field value.
-        expect(await screen.findByText('a-property-named-ref')).toBeInTheDocument();
+            // The value of the "ref" property should render as a normal field value.
+            expect(await screen.findByText('a-property-named-ref')).toBeInTheDocument();
 
-        // React logs ref-related warnings/errors (e.g. useRef, forwardRef, "Function
-        // components cannot be given refs") through console.error. Ensure none occurred.
-        const refRelatedErrors = consoleErrorSpy.mock.calls.filter((args) =>
-            args.some((arg) => typeof arg === 'string' && /useRef|forwardRef|given refs/i.test(arg))
-        );
-        expect(refRelatedErrors).toHaveLength(0);
-
-        consoleErrorSpy.mockRestore();
+            // React logs ref-related warnings/errors (e.g. useRef, forwardRef, "Function
+            // components cannot be given refs") through console.error. Ensure none occurred.
+            const refRelatedErrors = consoleErrorSpy.mock.calls.filter((args) =>
+                args.some((arg) => typeof arg === 'string' && /useRef|forwardRef|given refs/i.test(arg))
+            );
+            expect(refRelatedErrors).toHaveLength(0);
+        } finally {
+            consoleErrorSpy.mockRestore();
+        }
     });
 });
