@@ -37,9 +37,9 @@ properties:
   updated_by:
     type: string
   disabled_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
   disabled_by:
-    $ref: './null.string.yaml'
+    $ref: './null.string.response.yaml'
   subscriptions:
     type: array
     items:
@@ -56,13 +56,13 @@ properties:
         event_type:
           type: string
         version:
-          type: string
-          description: Payload schema version this subscription targets.
+          type: integer
+          description: Payload data version this subscription targets.
         created_at:
           type: string
           format: date-time
         disabled_at:
-          $ref: './null.time.yaml'
+          $ref: './null.time.response.yaml'
         disabled_by:
-          $ref: './null.string.yaml'
+          $ref: './null.string.response.yaml'
 
