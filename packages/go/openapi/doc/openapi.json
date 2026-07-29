@@ -16859,6 +16859,108 @@
         }
       }
     },
+    "/api/v2/clients/{client_id}/artifacts/{artifact_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "client_id",
+          "description": "Client ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "DownloadClientArtifact",
+        "summary": "Download a management operation artifact for the client",
+        "description": "Downloads an operation artifact associated with the client.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain the artifact file.\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact not finished uploading, must upload missing parts"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/clients/management/available": {
       "parameters": [
         {
@@ -23843,8 +23945,8 @@
                 "readOnly": true
               },
               "artifact_id": {
-                "readOnly": true,
                 "type": "string",
+                "format": "uuid",
                 "nullable": true
               },
               "type": {
@@ -23864,11 +23966,16 @@
                 ]
               },
               "requested_by_user_id": {
-                "readOnly": true,
                 "type": "string",
+                "format": "uuid",
                 "nullable": true
               },
               "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "updated_at": {
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
