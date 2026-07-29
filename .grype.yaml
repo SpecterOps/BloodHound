@@ -14,22 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: object
-description: |
-  Subscription element accepted in an Alert create or update request. The
-  parent `alert_id` is supplied by the URL path on update or generated on
-  create, and is not accepted in this payload.
-required:
-  - channel_id
-  - event_type
-  - version
-properties:
-  channel_id:
-    type: string
-    format: uuid
-  event_type:
-    type: string
-  version:
-    type: integer
-  disabled:
-    type: boolean
+# https://oss.anchore.com/docs/guides/vulnerability/filter-results/#ignore-specific-vulnerabilities-or-packages
+ignore:
+  # - vulnerability:

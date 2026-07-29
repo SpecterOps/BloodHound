@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { Button, Checkbox, Label } from 'doodle-ui';
+import { Button, CheckboxWithLabel } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -318,14 +318,12 @@ const CypherSearchInner = ({
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
-                            <Checkbox
+                            <CheckboxWithLabel
+                                label='Auto-run selected query'
                                 id='auto-run-selected-query'
                                 checked={autoRun}
                                 onCheckedChange={handleAutoRunQueryChange}
                             />
-                            <Label htmlFor='auto-run-selected-query' className='font-normal cursor-pointer'>
-                                Auto-run selected query
-                            </Label>
                         </div>
                     </div>
 
@@ -374,14 +372,12 @@ const CypherSearchInner = ({
                             {timeoutLimitEnabled === false && (
                                 <div className='flex items-center justify-between'>
                                     <div className='flex items-center gap-2 whitespace-nowrap pr-2'>
-                                        <Checkbox
+                                        <CheckboxWithLabel
+                                            label='Disable query timeout'
                                             id='disable-query-timeout'
                                             checked={disableQueryLimit}
                                             onCheckedChange={handleDisableQueryTimeoutChange}
                                         />
-                                        <Label htmlFor='disable-query-timeout' className='font-normal cursor-pointer'>
-                                            Disable query timeout
-                                        </Label>
                                     </div>
                                 </div>
                             )}
