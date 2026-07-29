@@ -28,6 +28,7 @@ type DatapipeStatusData interface {
 	SetLastAnalysisStartTime(ctx context.Context) error
 	UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	SetLastGraphOptimizeTime(ctx context.Context) error
+	ResetLastGraphOptimizeTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 	SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error
@@ -49,6 +50,11 @@ func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error
 func (s *BloodhoundDB) SetLastGraphOptimizeTime(ctx context.Context) error {
 	var datapipeStatus model.DatapipeStatus
 	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_optimize_at = current_timestamp", datapipeStatus.TableName())).Error
+}
+
+func (s *BloodhoundDB) ResetLastGraphOptimizeTime(ctx context.Context) error {
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_optimize_at = NULL", datapipeStatus.TableName())).Error
 }
 
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {

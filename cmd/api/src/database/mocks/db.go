@@ -3082,6 +3082,20 @@ func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, reque
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
+// ResetLastGraphOptimizeTime mocks base method.
+func (m *MockDatabase) ResetLastGraphOptimizeTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetLastGraphOptimizeTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetLastGraphOptimizeTime indicates an expected call of ResetLastGraphOptimizeTime.
+func (mr *MockDatabaseMockRecorder) ResetLastGraphOptimizeTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetLastGraphOptimizeTime", reflect.TypeOf((*MockDatabase)(nil).ResetLastGraphOptimizeTime), ctx)
+}
+
 // SanitizeUpdateAssetGroupTagRequireCertify mocks base method.
 func (m *MockDatabase) SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag) {
 	m.ctrl.T.Helper()
