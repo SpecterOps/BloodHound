@@ -18,7 +18,7 @@ import { Alert, CircularProgress } from '@mui/material';
 import {
     Button,
     Card,
-    Checkbox,
+    CheckboxWithLabel,
     DialogActions,
     DialogClose,
     DialogTitle,
@@ -448,17 +448,13 @@ const CreateUserFormInner: React.FC<{
                                                     <div className='flex flex-row items-center'>
                                                         <FormItem className='flex flex-row my-3'>
                                                             <FormControl>
-                                                                <Checkbox
+                                                                <CheckboxWithLabel
+                                                                    label='Force Password Reset?'
                                                                     id='needsPasswordReset'
                                                                     checked={field.value}
                                                                     onCheckedChange={field.onChange}
                                                                 />
                                                             </FormControl>
-                                                            <FormLabel
-                                                                htmlFor='needsPasswordReset'
-                                                                className='pl-2 font-medium !text-sm'>
-                                                                Force Password Reset?
-                                                            </FormLabel>
                                                         </FormItem>
                                                     </div>
                                                 )}
