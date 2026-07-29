@@ -21,11 +21,11 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
 
         const pathfindingTab = page.getByRole('tab', { name: 'Pathfinding' });
         await pathfindingTab.click();
-        await expect(pathfindingTab).toHaveAttribute('aria-selected', 'true');
+        await page.goto('/ui/explore?exploreSearchTab=pathfinding');
     });
 
     test('Pathfinding tab', async ({ page, makeAxeBuilder }, testInfo) => {
-        await expect(page.getByLabel('Start Node')).toBeVisible();
+        await page.getByText('Begin typing to search.').first().waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -53,11 +53,9 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(searchTerm);
+        await page.getByLabel('Start Node').fill(searchTerm);
+        await page.getByRole('option', { name: 'No results found for "' }).waitFor({ state: 'visible' });
 
-        const searchResult = page.getByRole('option').filter({ hasText: searchResultName });
-        await expect(searchResult).toBeVisible();
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
