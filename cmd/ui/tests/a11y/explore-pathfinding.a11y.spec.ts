@@ -17,11 +17,8 @@ import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
 
 test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/ui/explore');
-
-        const pathfindingTab = page.getByRole('tab', { name: 'Pathfinding' });
-        await pathfindingTab.click();
         await page.goto('/ui/explore?exploreSearchTab=pathfinding');
+        await page.getByRole('textbox', { name: 'Start Node' }).waitFor({ state: 'visible' });
     });
 
     test('Pathfinding tab', async ({ page, makeAxeBuilder }, testInfo) => {
