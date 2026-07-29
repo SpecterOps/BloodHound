@@ -174,10 +174,16 @@ func applyRoleFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters)
 			return fmt.Errorf("role filter references unknown field %q", field)
 		}
 
-		expressions := make([]string, 0, len(fieldFilters))
+		// A field's filters share a single set operator, so it is derived once
+		// from the first filter rather than reassigned per iteration; otherwise
+		// only the last filter would decide whether the group uses AND or OR.
 		setOperator := params.FilterAnd
+		if len(fieldFilters) > 0 {
+			setOperator = fieldFilters[0].SetOperator
+		}
+
+		expressions := make([]string, 0, len(fieldFilters))
 		for _, filter := range fieldFilters {
-			setOperator = filter.SetOperator
 			switch filter.Operator {
 			case params.Equals:
 				expressions = append(expressions, sb.Equal(column, filter.Value))

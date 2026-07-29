@@ -265,4 +265,50 @@ func TestStore_ListRoles_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, roles)
 	})
+
+	t.Run("returns roles filtered by created_at date comparison", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			epoch       = "2000-01-01T00:00:00Z"
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		afterEpoch, err := store.ListRoles(ctx, params.Filters{
+			"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, afterEpoch, expectedCount, "every seeded role was created after the epoch")
+
+		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
+			"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, beforeEpoch, "no seeded role was created before the epoch")
+	})
+
+	t.Run("returns roles filtered by updated_at date comparison", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			epoch       = "2000-01-01T00:00:00Z"
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		afterEpoch, err := store.ListRoles(ctx, params.Filters{
+			"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, afterEpoch, expectedCount, "every seeded role was updated after the epoch")
+
+		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
+			"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, beforeEpoch, "no seeded role was updated before the epoch")
+	})
 }
