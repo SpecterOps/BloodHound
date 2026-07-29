@@ -79,6 +79,11 @@ describe('useMultiValueFilterParams', () => {
         expect(result.current.selection).toEqual({ kind: 'some', values: ['active-directory', 'azure'] });
     });
 
+    it('reads an explicitly empty value parameter as none', () => {
+        const { result } = setup({ route: '/?platform=' });
+        expect(result.current.selection).toEqual({ kind: 'none' });
+    });
+
     it('gives an explicit selection parameter precedence over value parameters', () => {
         const { result } = setup({ route: '/?platform=azure&platformSelection=none' });
         expect(result.current.selection).toEqual({ kind: 'none' });
@@ -142,11 +147,16 @@ describe('useMultiValueFilterParams', () => {
             route: '/?platform=windows&platformSelection=none',
             config: {
                 ...TEST_CONFIG,
-                defaultSelection: { kind: 'all' },
+                defaultSelection: { kind: 'some', values: ['active-directory', 'azure'] },
             },
         });
 
-        act(() => result.current.setSelection({ kind: 'all' }));
+        act(() =>
+            result.current.setSelection({
+                kind: 'some',
+                values: ['azure', 'active-directory', 'azure'],
+            })
+        );
 
         const searchParams = new URLSearchParams(window.location.search);
 
