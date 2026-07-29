@@ -36,9 +36,16 @@ const expectedGetPermissionSQL = `SELECT * FROM permissions WHERE id = $1 LIMIT 
 // expectedGetRoleSQL is the literal SQL the Store issues for the roles query in GetRole.
 const expectedGetRoleSQL = `SELECT * FROM roles WHERE id = $1 LIMIT $2`
 
-// expectedGetRolePermissionsSQL is the literal SQL the Store issues for the permissions
-// query in GetRole. ListRoles issues the same per-role permissions query.
+// expectedGetRolePermissionsSQL is the literal SQL the Store issues for the
+// per-role permissions query in GetRole.
 const expectedGetRolePermissionsSQL = `SELECT p.id, p.authority, p.name, p.created_at, p.updated_at FROM permissions p JOIN roles_permissions rp ON rp.permission_id = p.id WHERE rp.role_id = $1`
+
+// expectedListRolePermissionsSQL is the literal SQL the Store issues to batch-load
+// permissions for every listed role in a single query.
+const expectedListRolePermissionsSQL = `SELECT rp.role_id, p.id, p.authority, p.name, p.created_at, p.updated_at FROM permissions p JOIN roles_permissions rp ON rp.permission_id = p.id WHERE rp.role_id IN ($1)`
+
+// expectedListRolePermissionsTwoSQL is the batched permissions query for two listed roles.
+const expectedListRolePermissionsTwoSQL = `SELECT rp.role_id, p.id, p.authority, p.name, p.created_at, p.updated_at FROM permissions p JOIN roles_permissions rp ON rp.permission_id = p.id WHERE rp.role_id IN ($1, $2)`
 
 // expectedListRolesSQL is the literal SQL the Store issues for the roles query in
 // ListRoles when no filters or sorts are supplied.
@@ -160,6 +167,10 @@ func roleRowColumns() []string {
 
 func rolePermissionRowColumns() []string {
 	return []string{"id", "authority", "name", "created_at", "updated_at"}
+}
+
+func listRolePermissionRowColumns() []string {
+	return []string{"role_id", "id", "authority", "name", "created_at", "updated_at"}
 }
 
 func TestStore_GetRole(t *testing.T) {
@@ -296,12 +307,16 @@ func TestStore_ListRoles(t *testing.T) {
 		return rows
 	}
 
-	expectPermissionsFor := func(pool pgxmock.PgxPoolIface, r services.Role) {
-		rows := pool.NewRows(rolePermissionRowColumns())
-		for _, p := range r.Permissions {
-			rows.AddRow(p.ID, p.Authority, p.Name, p.CreatedAt, p.UpdatedAt)
+	expectPermissionsFor := func(pool pgxmock.PgxPoolIface, expectedSQL string, roles ...services.Role) {
+		rows := pool.NewRows(listRolePermissionRowColumns())
+		args := make([]any, 0, len(roles))
+		for _, r := range roles {
+			args = append(args, r.ID)
+			for _, p := range r.Permissions {
+				rows.AddRow(r.ID, p.ID, p.Authority, p.Name, p.CreatedAt, p.UpdatedAt)
+			}
 		}
-		pool.ExpectQuery(expectedGetRolePermissionsSQL).WithArgs(r.ID).WillReturnRows(rows)
+		pool.ExpectQuery(expectedSQL).WithArgs(args...).WillReturnRows(rows)
 	}
 
 	tests := []struct {
@@ -317,8 +332,7 @@ func TestStore_ListRoles(t *testing.T) {
 			name: "returns every role with permissions on success",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin, readOnly))
-				expectPermissionsFor(pool, admin)
-				expectPermissionsFor(pool, readOnly)
+				expectPermissionsFor(pool, expectedListRolePermissionsTwoSQL, admin, readOnly)
 			},
 			wantResult: []services.Role{admin, readOnly},
 		},
@@ -327,7 +341,7 @@ func TestStore_ListRoles(t *testing.T) {
 			sortItems: params.SortItems{{Field: "name", Direction: params.Ascending}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSortedSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin))
-				expectPermissionsFor(pool, admin)
+				expectPermissionsFor(pool, expectedListRolePermissionsSQL, admin)
 			},
 			wantResult: []services.Role{admin},
 		},
@@ -336,7 +350,7 @@ func TestStore_ListRoles(t *testing.T) {
 			filters: params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "Administrator", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesFilteredSQL).WithArgs("Administrator").WillReturnRows(expectRoleRows(pool, admin))
-				expectPermissionsFor(pool, admin)
+				expectPermissionsFor(pool, expectedListRolePermissionsSQL, admin)
 			},
 			wantResult: []services.Role{admin},
 		},
@@ -345,7 +359,7 @@ func TestStore_ListRoles(t *testing.T) {
 			filters: params.Filters{"id": {{Field: "id", Operator: params.GreaterThan, Value: "1", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesFilteredByIDSQL).WithArgs("1").WillReturnRows(expectRoleRows(pool, readOnly))
-				expectPermissionsFor(pool, readOnly)
+				expectPermissionsFor(pool, expectedListRolePermissionsSQL, readOnly)
 			},
 			wantResult: []services.Role{readOnly},
 		},
@@ -374,9 +388,10 @@ func TestStore_ListRoles(t *testing.T) {
 			name: "wraps the permissions query error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin))
-				pool.ExpectQuery(expectedGetRolePermissionsSQL).WithArgs(admin.ID).WillReturnError(dbErr)
+				pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(admin.ID).WillReturnError(dbErr)
 			},
-			wantErrContains: "querying permissions for role:",
+			wantErr:         dbErr,
+			wantErrContains: "querying permissions for roles:",
 		},
 	}
 
@@ -387,10 +402,13 @@ func TestStore_ListRoles(t *testing.T) {
 
 			result, err := store.ListRoles(ctx, tt.filters, tt.sortItems)
 			switch {
-			case tt.wantErr != nil:
-				assert.ErrorIs(t, err, tt.wantErr)
-			case tt.wantErrContains != "":
-				assert.ErrorContains(t, err, tt.wantErrContains)
+			case tt.wantErr != nil || tt.wantErrContains != "":
+				if tt.wantErr != nil {
+					assert.ErrorIs(t, err, tt.wantErr)
+				}
+				if tt.wantErrContains != "" {
+					assert.ErrorContains(t, err, tt.wantErrContains)
+				}
 			default:
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantResult, result)

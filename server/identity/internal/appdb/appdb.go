@@ -141,7 +141,7 @@ func (s *Store) getRolePermissions(ctx context.Context, roleID int32) ([]permiss
 
 	rows, err = s.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("querying permissions for role: %s", err)
+		return nil, fmt.Errorf("querying permissions for role: %w", err)
 	}
 	permissionRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[permission])
 	if err != nil {
@@ -149,6 +149,48 @@ func (s *Store) getRolePermissions(ctx context.Context, roleID int32) ([]permiss
 	}
 
 	return permissionRows, nil
+}
+
+// rolePermission carries the owning role id alongside a permission so that a
+// single batched query can be grouped back to individual roles in memory.
+type rolePermission struct {
+	permission
+	RoleID int32 `db:"role_id"`
+}
+
+// getPermissionsForRoles retrieves the permissions for every supplied role id in
+// a single query and groups them by role id, avoiding the N+1 round trips that a
+// per-role query would incur when listing many roles. Roles with no permissions
+// are simply absent from the returned map.
+func (s *Store) getPermissionsForRoles(ctx context.Context, roleIDs []int32) (map[int32][]permission, error) {
+	var (
+		sb            = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		rows          pgx.Rows
+		permissionsBy = make(map[int32][]permission, len(roleIDs))
+		err           error
+	)
+
+	sb.Select("rp.role_id", "p.id", "p.authority", "p.name", "p.created_at", "p.updated_at")
+	sb.From(tablePermissions + " p")
+	sb.Join(tableRolesPermissions+" rp", "rp.permission_id = p.id")
+	sb.Where(sb.In("rp.role_id", sqlbuilder.List(roleIDs)))
+
+	query, args := sb.Build()
+
+	rows, err = s.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("querying permissions for roles: %w", err)
+	}
+	joinedRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[rolePermission])
+	if err != nil {
+		return nil, fmt.Errorf("collecting permissions for roles: %s", err)
+	}
+
+	for _, joinedRow := range joinedRows {
+		permissionsBy[joinedRow.RoleID] = append(permissionsBy[joinedRow.RoleID], joinedRow.permission)
+	}
+
+	return permissionsBy, nil
 }
 
 // roleColumns maps the API-facing role field names to their underlying database
@@ -240,12 +282,14 @@ func buildRoleOrderBy(sortItems params.SortItems) ([]string, error) {
 // pagination.
 func (s *Store) ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error) {
 	var (
-		roleSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
-		roleRows    pgx.Rows
-		listedRoles []role
-		result      []services.Role
-		orderBy     []string
-		err         error
+		roleSB            = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		roleRows          pgx.Rows
+		listedRoles       []role
+		result            []services.Role
+		orderBy           []string
+		roleIDs           []int32
+		permissionsByRole map[int32][]permission
+		err               error
 	)
 
 	roleSB.Select("*").From(tableRoles)
@@ -273,14 +317,23 @@ func (s *Store) ListRoles(ctx context.Context, queryFilters params.Filters, sort
 		return nil, fmt.Errorf("collecting roles: %s", err)
 	}
 
+	if len(listedRoles) == 0 {
+		return []services.Role{}, nil
+	}
+
+	roleIDs = make([]int32, 0, len(listedRoles))
+	for _, roleRow := range listedRoles {
+		roleIDs = append(roleIDs, roleRow.ID)
+	}
+
+	permissionsByRole, err = s.getPermissionsForRoles(ctx, roleIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result = make([]services.Role, 0, len(listedRoles))
 	for _, roleRow := range listedRoles {
-		permissionRows, err := s.getRolePermissions(ctx, roleRow.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, toRole(roleRow, permissionRows))
+		result = append(result, toRole(roleRow, permissionsByRole[roleRow.ID]))
 	}
 
 	return result, nil
