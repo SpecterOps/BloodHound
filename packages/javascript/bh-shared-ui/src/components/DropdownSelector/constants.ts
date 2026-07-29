@@ -39,4 +39,4 @@ export const selectorIconStyles = `group-hover:text-common-white dark:group-hove
 
 export const optionIconStyles = `group-hover:text-main ${focusedOptionIconStyles}`;
 
-export const tooltipStyles = 'max-w-80 border-0 dark:bg-dropdown-tooltip-fill text-main';
+export const tooltipStyles = 'max-w-80 border-0 dark:bg-dropdown-tooltip-fill text-main dark:text-contrast';

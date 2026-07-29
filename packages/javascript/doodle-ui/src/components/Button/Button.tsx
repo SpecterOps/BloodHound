@@ -49,6 +49,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
                 'disabled:bg-btn-disabled-fill disabled:shadow-none',
             ],
             // TODO - remove in BED-7635
+            // used in DropdownTriggerContents
             transparent: [
                 'border border-transparent-btn-border bg-transparent text-main',
                 'hover:border-primary hover:bg-primary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
@@ -67,7 +68,6 @@ export const ButtonVariants = cva(buttonBaseClasses, {
                 'hover:border-2 hover:border-primary',
                 // 'focus-visible:border-2 focus-visible:border-secondary',
                 'active:border-none',
-                // 'p-0 size-10',
             ],
 
             default: null,
@@ -128,7 +128,6 @@ export const TextButtonVariants = cva(TextButtonBaseClasses, {
     variants: {
         fontColor: {
             default: 'text-main',
-            // default: 'text-main hover:no-underline',
             primary: 'text-primary',
         },
     },
@@ -161,9 +160,9 @@ TextButton.displayName = 'TextButton';
 
 // TODO remove/refactor in BED-6062
 export const IconButtonClasses = cn(
-    'hover:text-primary',
-    'active:bg-transparent active:text-secondary',
-    'focus-visible:ring-transparent'
+    'hover:text-primary dark:hover:text-primary',
+    'active:bg-transparent active:text-secondary dark:active:text-secondary',
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary'
 );
 
 export interface IconButtonProps
@@ -172,7 +171,7 @@ export interface IconButtonProps
     color?: string;
     className?: string;
     'aria-label': string;
-    children: React.ReactElement;
+    children: React.ReactNode;
 }
 
 export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, IconButtonProps>(

@@ -13,4 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export { Button, ButtonVariants, IconButton, TextButton, type ButtonProps } from './Button';
+export { Button, ButtonVariants, IconButton, TextButton, TextButtonVariants, type ButtonProps } from './Button';
