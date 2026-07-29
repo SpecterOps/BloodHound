@@ -22,18 +22,20 @@ import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
-    zone?: string;
-    displayname?: string;
-    grouplinkid?: string;
+    properties: Record<string, any> & {
+        displayname?: string;
+        grouplinkid?: string;
+        isOwnedObject?: boolean;
+        isTierZero?: boolean;
+        name?: string;
+        noderesourcegroupid?: string;
+        objectid?: string;
+        service_principal_id?: string;
+        federatedidentitycredentialappid?: string;
+    };
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
-    isOwnedObject?: boolean;
-    isTierZero?: boolean;
-    name?: string;
-    noderesourcegroupid?: string;
     nodeType?: string;
-    objectid?: string;
-    service_principal_id?: string;
-    federatedidentitycredentialappid?: string;
+    zone?: string;
 }
 
 const RelatedKindField = (
@@ -73,20 +75,26 @@ const basicObjectFields = [
     CommonKindProperties.ObjectID,
 ] satisfies (KnownNodeProperties | CommonKindProperties | 'zone')[];
 
-export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
+export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
+    properties: props,
+    handleSourceNodeSelected,
+    nodeType,
+    zone,
+}): JSX.Element => {
+    const fieldValues = { ...props, nodeType, zone };
     return (
         <>
             {basicObjectFields.map((field) => {
-                const value = props[field];
+                const value = fieldValues[field];
                 if (value === undefined) return null; // <Field /> doesn't support undefined values
 
                 return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
             })}
-            {props.handleSourceNodeSelected && (
+            {handleSourceNodeSelected && (
                 <>
                     {props.service_principal_id &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Service Principal ID:',
                             AzureNodeKind.ServicePrincipal,
                             props.service_principal_id,
@@ -94,7 +102,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                         )}
                     {props.federatedidentitycredentialappid &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Federated Identity Credential Application ID:',
                             AzureNodeKind.App,
                             props.federatedidentitycredentialappid,
@@ -102,7 +110,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                         )}
                     {props.noderesourcegroupid &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Node Resource Group ID:',
                             AzureNodeKind.ResourceGroup,
                             props.noderesourcegroupid,
@@ -110,7 +118,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                         )}
                     {props.grouplinkid &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Linked Group ID:',
                             ActiveDirectoryNodeKind.Group,
                             props.grouplinkid,
