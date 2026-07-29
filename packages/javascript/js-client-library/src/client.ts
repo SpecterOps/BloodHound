@@ -809,12 +809,6 @@ class BHEAPIClient {
             responseType: 'blob',
         });
 
-    downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, {
-            ...options,
-            responseType: 'blob',
-        });
-
     deleteSupportBundle = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
