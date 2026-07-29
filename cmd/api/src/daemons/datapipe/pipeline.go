@@ -352,18 +352,18 @@ func (s *BHCEPipeline) Optimize(ctx context.Context) error {
 
 	status, err := s.db.GetDatapipeStatus(ctx)
 	if err != nil {
-		return fmt.Errorf("looking up datapipe status for optimization: %w", err)
-	}
+		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
+	} else {
+		// only optimize when an analysis has completed since the last optimization run
+		if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
+			return nil
+		}
 
-	// only optimize when an analysis has completed since the last optimization run
-	if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
-		return nil
-	}
-
-	// never optimize more often than the configured minimum interval
-	minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
-	if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
-		return nil
+		// never optimize more often than the configured minimum interval
+		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
+		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
+			return nil
+		}
 	}
 
 	start := time.Now()
@@ -385,6 +385,17 @@ func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
 	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
 	if !optimizationParam.AfterBoot {
 		return nil
+	}
+
+	status, err := s.db.GetDatapipeStatus(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
+	} else {
+		// never optimize more often than the configured minimum interval
+		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
+		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
+			return nil
+		}
 	}
 
 	start := time.Now()
