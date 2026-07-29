@@ -907,15 +907,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 name: 'Query Description',
                 exact: true,
             });
-            const namedCypherQueryEditor = editSavedQueryDialog.getByRole('textbox', {
+            const cypherQueryEditor = editSavedQueryDialog.getByRole('textbox', {
                 name: 'Cypher Query',
                 exact: true,
             });
-            const unnamedCypherQueryEditor = editSavedQueryDialog.getByRole('textbox', {
-                name: '',
-                exact: true,
-            });
-            const cypherQueryEditor = namedCypherQueryEditor.or(unnamedCypherQueryEditor);
             const cancelButton = editSavedQueryDialog.getByRole('button', {
                 name: 'Cancel',
                 exact: true,
