@@ -698,15 +698,6 @@ export type SourceKind = {
 //  Alert - Events
 // ---------------------------------------------------------------------------
 
-export interface AlertParams {
-    skip?: number;
-    limit?: number;
-    sort_by?: string;
-    type?: WebhookType;
-    created_at?: string;
-    delivered?: string | boolean;
-}
-
 export interface AlertEvent {
     id: string;
     type: string;
