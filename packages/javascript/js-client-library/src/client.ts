@@ -809,7 +809,7 @@ class BHEAPIClient {
             responseType: 'blob',
         });
 
-    deleteSupportBundle = (clientId: string, artifactId: string, options?: RequestOptions) =>
+    deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
     createClient = (
