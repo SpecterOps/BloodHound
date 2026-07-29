@@ -21,7 +21,7 @@ export const normalizeSelection = (selection: MultiValueSelection): MultiValueSe
         return selection;
     }
 
-    const normalizedValues = [...new Set(selection.values)].filter(Boolean).sort();
+    const normalizedValues = [...new Set(selection.values)].filter((value) => value.length > 0).sort();
 
     if (normalizedValues.length > 0) {
         return { kind: 'some', values: normalizedValues };
