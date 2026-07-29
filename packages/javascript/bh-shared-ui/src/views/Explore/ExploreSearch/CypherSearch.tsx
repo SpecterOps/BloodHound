@@ -38,7 +38,7 @@ import {
 import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
-import { Permission, cn } from '../../../utils';
+import { Permission, adaptClickHandlerToKeyDown, cn } from '../../../utils';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
@@ -301,7 +301,10 @@ const CypherSearchInner = ({
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
                 {/* PRE BUILT SEARCHES SECTION */}
-                <div className={cn('grow min-h-0 bg-elevation-2 shadow-outer-1 p-2 py-0 rounded-lg mb-4')}>
+                <div
+                    className={cn(
+                        'grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] shadow-outer-1 p-2 py-0 rounded-lg mb-4'
+                    )}>
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
@@ -310,7 +313,7 @@ const CypherSearchInner = ({
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
-                <div className='bg-elevation-2 p-4 rounded-lg shadow-outer-1'>
+                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
@@ -326,7 +329,12 @@ const CypherSearchInner = ({
                     </div>
 
                     <div className='flex gap-2 shrink-0'>
-                        <div className='flex-1'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='cursor-default flex-1'>
                             <CypherEditor
                                 ref={cypherEditorRef}
                                 className={cn(
@@ -340,6 +348,7 @@ const CypherSearchInner = ({
                                 theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                                 onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
                                     if (event.key === 'Enter' && event.shiftKey) {
+                                        // if enter and shift key is pressed, execute cypher search
                                         event.preventDefault();
                                         handleCypherSearch();
                                     }

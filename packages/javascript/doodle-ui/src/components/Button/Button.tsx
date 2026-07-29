@@ -56,13 +56,20 @@ export const ButtonVariants = cva(buttonBaseClasses, {
             ],
             // TODO - legacy, remove in BED-7635
             text: [
-                'px-2 py-0 text-primary',
-                'hover:text-secondary',
+                'px-2 py-0 text-main',
+                'hover:text-secondary hover:no-underline',
                 'focus-visible:text-secondary',
-                'active:text-[#0D0A30]',
+                // 'active:text-[#0D0A30] dark:active:text-primary',
             ],
             // TODO - legacy, remove in BED-7635
-            icon: 'text-common-dark bg-icon-btn-fill shadow-outer-1 hover:bg-primary hover:border-2 hover:border-primary focus-visible:border-2 focus-visible:border-secondary active:border-none',
+            icon: [
+                'rounded-full text-common-dark bg-icon-btn-fill shadow-outer-1 has-[svg]:p-2',
+                'hover:border-2 hover:border-primary',
+                // 'focus-visible:border-2 focus-visible:border-secondary',
+                'active:border-none',
+                // 'p-0 size-10',
+            ],
+
             default: null,
         },
         // TODO - remove as the only usage of this is with variant="text"
@@ -120,7 +127,8 @@ export const TextButtonBaseClasses = cn(
 export const TextButtonVariants = cva(TextButtonBaseClasses, {
     variants: {
         fontColor: {
-            default: 'text-main hover:no-underline',
+            default: 'text-main',
+            // default: 'text-main hover:no-underline',
             primary: 'text-primary',
         },
     },
@@ -161,13 +169,14 @@ export const IconButtonClasses = cn(
 export interface IconButtonProps
     extends Omit<ButtonProps, 'size' | 'children' | 'className' | 'variant' | 'fontColor'> {
     variant?: 'default' | 'primary' | 'secondary';
+    color?: string;
     className?: string;
     'aria-label': string;
     children: React.ReactElement;
 }
 
 export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, IconButtonProps>(
-    function IconButton({ variant = 'default', children, className, disabled = false, ...props }, ref) {
+    function IconButton({ variant = 'default', children, className, color, disabled = false, ...props }, ref) {
         // TODO remove BED-6062
         return (
             <Button
@@ -176,8 +185,9 @@ export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 disabled={disabled}
                 variant={variant}
                 size={null}
+                style={{ color }}
                 className={cn(
-                    'size-fit box-border shrink-0 rounded-full border-0 p-2 has-[svg]:p-2 aspect-square',
+                    'size-fit box-border shrink-0 rounded-full border-0 has-[svg]:p-2 aspect-square',
                     variant === 'default' && IconButtonClasses,
                     className
                 )}>

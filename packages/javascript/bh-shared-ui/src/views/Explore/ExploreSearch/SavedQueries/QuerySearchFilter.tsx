@@ -95,22 +95,16 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         />
                         <AppIcon.MagnifyingGlass size={16} className='absolute right-2 top-[50%] -mt-[8px]' />
                     </div>
-                    <div className='flex items-center ml-4'>
-                        <Button variant='secondary' size='medium' onClick={importHandler}>
+                    <div className='flex items-center ml-4 gap-2'>
+                        <Button variant='secondary' onClick={importHandler}>
                             Import
                         </Button>
-                        <Button
-                            disabled={!exportEnabled}
-                            className='ml-2'
-                            variant='secondary'
-                            size='medium'
-                            onClick={exportHandler}>
+                        <Button disabled={!exportEnabled} variant='secondary' onClick={exportHandler}>
                             Export
                         </Button>
                         <IconButton
                             aria-label='delete'
                             disabled={!deleteEnabled}
-                            className='ml-2'
                             onClick={() => deleteHandler(selectedQuery?.id as number)}>
                             <FontAwesomeIcon icon={faTrash} />
                         </IconButton>
