@@ -353,18 +353,13 @@ export enum ManagementOperationStatus {
     CANCELED = 'canceled',
 }
 
-export type NullUuid = {
-    uuid: string | null;
-    valid: boolean;
-};
-
 export type ManagementOperation = {
     id: string;
     client_id: string;
-    artifact_id: NullUuid;
+    artifact_id: string | null;
     type: 'support_bundle';
     status: ManagementOperationStatus;
-    requested_by_user_id: NullUuid;
+    requested_by_user_id: string | null;
     created_at: string;
     started_at: string | null;
     completed_at: string | null;
@@ -447,7 +442,7 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     environment_name: string;
-    zone_id: number;
+    asset_group_tag_id: number;
     zone_name: string;
     source_principal_id: string;
     source_principal_name: string;
