@@ -90,8 +90,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         await expect(continueButton).toBeVisible();
         await expect(continueButton).toBeDisabled();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-
+        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -134,8 +133,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         await expect(continueButton).toBeVisible();
         await expect(continueButton).toBeDisabled();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-
+        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -164,8 +162,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
 
         await expect(dialog).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-
+        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -210,7 +207,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
 
         await expect(dialog).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
+        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -242,7 +239,6 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         await expect(noResultsHeading).toBeVisible();
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -269,7 +265,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
 
         await expect(dialog).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
+        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -367,7 +363,6 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
             await expectNoAccessibilityViolations(testInfo, results, { page });
-
             const exportButtons = page.getByRole('button', {
                 name: 'Export',
                 exact: true,
@@ -500,6 +495,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         });
 
         await expect(selectedPlatformsFilter).toBeVisible();
+        await expect(selectedPlatformsFilter).toContainText('Active Directory');
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -530,7 +526,13 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         });
 
         await expect(domainInformationOption).toBeVisible();
-        await domainInformationOption.click();
+        const selectedCategoriesFilter = page.getByRole('combobox', {
+            name: /Domain Information/,
+        });
+
+        await expect(selectedCategoriesFilter).toBeVisible();
+        await expect(selectedCategoriesFilter).toContainText('Domain Information');
+
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -561,7 +563,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         });
 
         await expect(prebuiltOption).toBeVisible();
-        await prebuiltOption.click();
+        const selectedSourceFilter = page.getByRole('combobox', {
+            name: /Prebuilt/,
+        });
+
+        await expect(selectedSourceFilter).toBeVisible();
+        await expect(selectedSourceFilter).toContainText('Prebuilt');
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
