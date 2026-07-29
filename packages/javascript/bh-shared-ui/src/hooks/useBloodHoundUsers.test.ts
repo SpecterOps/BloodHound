@@ -17,7 +17,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../test-utils';
 import { apiClient } from '../utils';
-import { useGetUser, useUserNamesById } from './useBloodHoundUsers';
+import { useGetUser, useGetUserNameById, useUserNamesById } from './useBloodHoundUsers';
 
 const MOCK_USER_ID = '718c9b04-9394-42c0-9d53-c87b689e2d92';
 
@@ -103,5 +103,42 @@ describe('useUserNamesById', () => {
 
         await waitFor(() => expect(result.current.size).toBe(0));
         expect(listUsersSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('useGetUserNameById', () => {
+    it('returns a function that looks up a user display name by id', async () => {
+        server.use(
+            rest.get(`/api/v2/self`, (req, res, ctx) => {
+                return res(ctx.json({ data: { roles: [{ permissions: [readUsersPermission] }] } }));
+            }),
+            rest.get(`/api/v2/bloodhound-users`, (req, res, ctx) => {
+                return res(ctx.json({ data: { users: MOCK_USERS } }));
+            })
+        );
+
+        const { result } = renderHook(() => useGetUserNameById());
+
+        await waitFor(() => expect(result.current(MOCK_USERS[0].id)).toBe(MOCK_USERS[0].principal_name));
+
+        expect(result.current(MOCK_USERS[1].id)).toBe(MOCK_USERS[1].principal_name);
+    });
+
+    it('returns undefined for an unknown id or when no id is provided', async () => {
+        server.use(
+            rest.get(`/api/v2/self`, (req, res, ctx) => {
+                return res(ctx.json({ data: { roles: [{ permissions: [readUsersPermission] }] } }));
+            }),
+            rest.get(`/api/v2/bloodhound-users`, (req, res, ctx) => {
+                return res(ctx.json({ data: { users: MOCK_USERS } }));
+            })
+        );
+
+        const { result } = renderHook(() => useGetUserNameById());
+
+        await waitFor(() => expect(result.current(MOCK_USERS[0].id)).toBe(MOCK_USERS[0].principal_name));
+
+        expect(result.current('unknown-id')).toBeUndefined();
+        expect(result.current(undefined)).toBeUndefined();
     });
 });
