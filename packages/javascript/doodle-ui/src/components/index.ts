@@ -32,6 +32,7 @@ export * from './Input';
 export * from './Label';
 export * from './Link';
 export * from './Menu';
+export * from './MultiSelect';
 export * from './Pagination';
 export * from './Popover';
 export * from './RadialGauge';
