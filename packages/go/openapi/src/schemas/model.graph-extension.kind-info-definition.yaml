@@ -22,19 +22,6 @@ propertyNames:
   pattern: '^[a-z0-9_-]{1,128}$'
   description: "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
 additionalProperties:
-  type: object
-  required: [title, position]
-  properties:
-    title:
-      type: string
-      example: "Entity Panel Section"
-    position:
-      type: integer
-      minimum: 1
-    markdown:
-      type: object
-      required: [content]
-      properties:
-        content:
-          type: string
-          example: "This is markdown content for the info panel"
+  allOf:
+    - $ref: "./model.kind-info-base.yaml"
+    - $ref: "./model.kind-info-markdown.yaml"

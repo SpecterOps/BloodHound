@@ -393,6 +393,8 @@ paths:
     $ref: './paths/opengraph.extension-delete.yaml'
   /api/v2/extensions-edges:
     $ref: './paths/graph-schema.edge-kinds.yaml'
+  /api/v2/node-kinds/{node_kind_id}:
+    $ref: './paths/opengraph.node-kind.yaml'
 
   # cypher
   /api/v2/saved-queries:
