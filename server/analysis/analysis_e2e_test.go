@@ -39,9 +39,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
-	"github.com/specterops/bloodhound/server/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -183,10 +183,7 @@ func TestGetAnalysisStatus(t *testing.T) {
 
 	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
 
-	modules.Register(modules.Deps{
-		Router: &routerInst,
-		Pool:   db.Pool(),
-	})
+	analysis.Register(&routerInst, db.Pool())
 
 	var (
 		handler = routerInst.Handler()
@@ -304,10 +301,7 @@ func TestCreateAnalysisRequest(t *testing.T) {
 
 	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
 
-	modules.Register(modules.Deps{
-		Router: &routerInst,
-		Pool:   db.Pool(),
-	})
+	analysis.Register(&routerInst, db.Pool())
 
 	var (
 		handler = routerInst.Handler()
@@ -442,10 +436,7 @@ func TestCancelAnalysisRequest(t *testing.T) {
 
 	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
 
-	modules.Register(modules.Deps{
-		Router: &routerInst,
-		Pool:   db.Pool(),
-	})
+	analysis.Register(&routerInst, db.Pool())
 
 	var (
 		handler = routerInst.Handler()
