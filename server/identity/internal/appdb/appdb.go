@@ -239,8 +239,6 @@ func applyRoleFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters)
 				expressions = append(expressions, sb.LessThan(column, filter.Value))
 			case params.LessThanOrEquals:
 				expressions = append(expressions, sb.LessEqualThan(column, filter.Value))
-			case params.ApproximatelyEquals:
-				expressions = append(expressions, sb.ILike(column, "%"+filter.Value+"%"))
 			default:
 				return fmt.Errorf("role filter uses unsupported operator %q", filter.Operator)
 			}
