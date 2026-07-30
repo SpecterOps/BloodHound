@@ -19,7 +19,9 @@
 package identity_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -28,12 +30,19 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2auth "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
@@ -129,6 +138,205 @@ type permissionResponseEnvelope struct {
 // GET /api/v2/roles/{role_id} handler.
 type roleResponseEnvelope struct {
 	Data model.Role `json:"data"`
+}
+
+// authTokenResponseEnvelope is the JSON envelope documented for
+// POST /api/v2/tokens.
+type authTokenResponseEnvelope struct {
+	Data model.AuthToken `json:"data"`
+}
+
+type errorResponseEnvelope struct {
+	HTTPStatus int `json:"http_status"`
+	Errors     []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}
+
+func assertErrorResponse(t *testing.T, response *http.Response, expectedStatus int, expectedMessage string) {
+	t.Helper()
+
+	assert.Equal(t, expectedStatus, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+
+	var envelope errorResponseEnvelope
+	require.NoError(t, json.NewDecoder(response.Body).Decode(&envelope))
+	assert.Equal(t, expectedStatus, envelope.HTTPStatus)
+	require.Len(t, envelope.Errors, 1)
+	assert.Equal(t, expectedMessage, envelope.Errors[0].Message)
+}
+
+// newCreateAuthTokenHandler wires the existing CreateAuthToken handler to the
+// integration database. The injected auth context stands in for the production
+// authentication middleware.
+func newCreateAuthTokenHandler(db *database.BloodhoundDB, user model.User, permissionOverrides auth.PermissionOverrides) http.HandlerFunc {
+	var (
+		authorizer    = auth.NewAuthorizer(db)
+		authenticator = api.NewAuthenticator(config.Configuration{}, db, nil)
+		resource      = v2auth.NewManagementResource(config.Configuration{}, db, authorizer, authenticator, nil, nil)
+	)
+
+	return func(response http.ResponseWriter, request *http.Request) {
+		authContext := &bhctx.Context{
+			AuthCtx: auth.Context{
+				Owner:               user,
+				PermissionOverrides: permissionOverrides,
+			},
+		}
+		resource.CreateAuthToken(response, bhctx.SetRequestContext(request, authContext))
+	}
+}
+
+func createIdentityTestUser(t *testing.T, db *database.BloodhoundDB, principalName string) model.User {
+	t.Helper()
+
+	user, err := db.CreateUser(context.Background(), model.User{
+		FirstName:     null.StringFrom("Identity"),
+		LastName:      null.StringFrom("Test"),
+		EmailAddress:  null.StringFrom(principalName),
+		PrincipalName: principalName,
+	})
+	require.NoError(t, err)
+
+	return user
+}
+
+func setAPITokensEnabled(t *testing.T, db *database.BloodhoundDB, enabled bool) {
+	t.Helper()
+
+	value, err := types.NewJSONBObject(appcfg.APITokensParameter{Enabled: enabled})
+	require.NoError(t, err)
+	require.NoError(t, db.SetConfigurationParameter(context.Background(), appcfg.Parameter{
+		Key:   appcfg.APITokens,
+		Value: value,
+	}))
+}
+
+func TestCreateAuthToken(t *testing.T) {
+	var (
+		db                = setupIdentityDB(t)
+		ctx               = context.Background()
+		authenticatedUser = createIdentityTestUser(t, db, "create-token-user@example.com")
+		targetUser        = createIdentityTestUser(t, db, "create-token-target@example.com")
+		muxRouter         = mux.NewRouter()
+		server            = httptest.NewServer(muxRouter)
+	)
+	muxRouter.HandleFunc(
+		"/api/v2/tokens",
+		newCreateAuthTokenHandler(db, authenticatedUser, auth.PermissionOverrides{}),
+	).Methods(http.MethodPost)
+	t.Cleanup(server.Close)
+
+	newRequest := func(t *testing.T, body string) *http.Request {
+		t.Helper()
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodPost,
+			server.URL+"/api/v2/tokens",
+			bytes.NewBufferString(body),
+		)
+		require.NoError(t, err)
+		request.Header.Set("Content-Type", "application/json")
+
+		return request
+	}
+
+	t.Run("returns 200 OK and persists a token for the authenticated user", func(t *testing.T) {
+		response, err := http.DefaultClient.Do(newRequest(t, `{"token_name":"automation token"}`))
+		require.NoError(t, err)
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+
+		var envelope authTokenResponseEnvelope
+		require.NoError(t, json.NewDecoder(response.Body).Decode(&envelope))
+
+		assert.NotEqual(t, uuid.Nil, envelope.Data.ID)
+		assert.True(t, envelope.Data.UserID.Valid)
+		assert.Equal(t, authenticatedUser.ID, envelope.Data.UserID.UUID)
+		assert.True(t, envelope.Data.Name.Valid)
+		assert.Equal(t, "automation token", envelope.Data.Name.String)
+		assert.Equal(t, auth.HMAC_SHA2_256, envelope.Data.HmacMethod)
+		assert.NotZero(t, envelope.Data.LastAccess)
+		assert.True(t, envelope.Data.CreatedBy.Valid)
+		assert.Equal(t, authenticatedUser.ID, envelope.Data.CreatedBy.UUID)
+		assert.NotZero(t, envelope.Data.CreatedAt)
+		assert.NotZero(t, envelope.Data.UpdatedAt)
+		assert.False(t, envelope.Data.DeletedAt.Valid)
+
+		decodedKey, err := base64.StdEncoding.DecodeString(envelope.Data.Key)
+		require.NoError(t, err)
+		assert.Len(t, decodedKey, 40)
+
+		persistedToken, err := db.GetUserToken(ctx, authenticatedUser.ID, envelope.Data.ID)
+		require.NoError(t, err)
+		assert.Equal(t, envelope.Data.ID, persistedToken.ID)
+		assert.Equal(t, envelope.Data.Key, persistedToken.Key)
+		assert.Equal(t, envelope.Data.Name, persistedToken.Name)
+	})
+
+	t.Run("returns 400 Bad Request for malformed JSON", func(t *testing.T) {
+		response, err := http.DefaultClient.Do(newRequest(t, `{"token_name":`))
+		require.NoError(t, err)
+		defer response.Body.Close()
+
+		assertErrorResponse(t, response, http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError)
+	})
+
+	t.Run("returns 403 Forbidden when creating a token for another user", func(t *testing.T) {
+		body := fmt.Sprintf(`{"token_name":"forbidden token","user_id":%q}`, targetUser.ID)
+		response, err := http.DefaultClient.Do(newRequest(t, body))
+		require.NoError(t, err)
+		defer response.Body.Close()
+
+		assertErrorResponse(t, response, http.StatusForbidden, "missing permission to create tokens for other users")
+	})
+
+	t.Run("returns 500 Internal Server Error for an invalid target user ID", func(t *testing.T) {
+		var (
+			adminRouter = mux.NewRouter()
+			adminServer = httptest.NewServer(adminRouter)
+			overrides   = auth.PermissionOverrides{
+				Enabled:     true,
+				Permissions: model.Permissions{auth.Permissions().AuthManageUsers},
+			}
+		)
+		adminRouter.HandleFunc(
+			"/api/v2/tokens",
+			newCreateAuthTokenHandler(db, authenticatedUser, overrides),
+		).Methods(http.MethodPost)
+		t.Cleanup(adminServer.Close)
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodPost,
+			adminServer.URL+"/api/v2/tokens",
+			bytes.NewBufferString(`{"token_name":"invalid owner","user_id":"not-a-uuid"}`),
+		)
+		require.NoError(t, err)
+		request.Header.Set("Content-Type", "application/json")
+
+		response, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer response.Body.Close()
+
+		assertErrorResponse(t, response, http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError)
+	})
+
+	t.Run("returns 403 Forbidden when API token creation is disabled", func(t *testing.T) {
+		setAPITokensEnabled(t, db, false)
+		t.Cleanup(func() {
+			setAPITokensEnabled(t, db, true)
+		})
+
+		response, err := http.DefaultClient.Do(newRequest(t, `{"token_name":"disabled token"}`))
+		require.NoError(t, err)
+		defer response.Body.Close()
+
+		assertErrorResponse(t, response, http.StatusForbidden, "API key creation is disabled")
+	})
 }
 
 func TestGetPermission(t *testing.T) {
