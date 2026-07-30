@@ -809,6 +809,9 @@ class BHEAPIClient {
             responseType: 'blob',
         });
 
+    deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
+
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
         options?: RequestOptions

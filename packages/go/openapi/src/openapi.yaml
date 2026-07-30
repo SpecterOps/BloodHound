@@ -751,6 +751,8 @@ paths:
     $ref: './paths/attack-paths.attack-paths.finding-trends.yaml'
   /api/v2/attack-path-types:
     $ref: './paths/attack-paths.attack-path-types.yaml'
+  /api/v2/attack-paths/finding-types:
+    $ref: './paths/attack-paths.attack-paths-finding-types.yaml'
   /api/v2/attack-paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:
