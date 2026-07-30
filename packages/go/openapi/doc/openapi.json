@@ -18636,6 +18636,110 @@
         }
       }
     },
+    "/api/v2/attack-paths/finding-types": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAttackPathFindingTypes",
+        "summary": "List attack path finding types",
+        "description": "Returns distinct attack path finding types available to the caller.\nResults are always returned in ascending order by `title`.\n",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_id",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments.\nResults are scoped to the caller's Environment access.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "finding": {
+                            "type": "string",
+                            "description": "Finding name."
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Finding title."
+                          }
+                        },
+                        "required": [
+                          "finding",
+                          "title"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                },
+                "examples": {
+                  "Finding types": {
+                    "value": {
+                      "data": [
+                        {
+                          "finding": "Kerberoasting",
+                          "title": "Kerberoastable User Accounts"
+                        },
+                        {
+                          "finding": "T0WriteOwner",
+                          "title": "Write Owner"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/attack-paths": {
       "parameters": [
         {

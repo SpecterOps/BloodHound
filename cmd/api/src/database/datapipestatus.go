@@ -27,6 +27,8 @@ import (
 type DatapipeStatusData interface {
 	SetLastAnalysisStartTime(ctx context.Context) error
 	UpdateLastAnalysisCompleteTime(ctx context.Context) error
+	SetLastGraphOptimizeTime(ctx context.Context) error
+	ResetLastGraphOptimizeTime(ctx context.Context) error
 	SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error
 	GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error)
 	SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error
@@ -44,6 +46,17 @@ func (s *BloodhoundDB) UpdateLastAnalysisCompleteTime(ctx context.Context) error
 	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_analysis_at = current_timestamp", datapipeStatus.TableName())).Error
 }
 
+// This should be called after a successful graph storage optimization run
+func (s *BloodhoundDB) SetLastGraphOptimizeTime(ctx context.Context) error {
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_optimize_at = current_timestamp", datapipeStatus.TableName())).Error
+}
+
+func (s *BloodhoundDB) ResetLastGraphOptimizeTime(ctx context.Context) error {
+	var datapipeStatus model.DatapipeStatus
+	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET updated_at = current_timestamp, last_complete_optimize_at = NULL", datapipeStatus.TableName())).Error
+}
+
 func (s *BloodhoundDB) SetDatapipeStatus(ctx context.Context, status model.DatapipeStatus) error {
 	var datapipeStatus model.DatapipeStatus
 	return s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET status = ?, updated_at = current_timestamp", datapipeStatus.TableName()), status).Error
@@ -55,7 +68,7 @@ func (s *BloodhoundDB) GetDatapipeStatus(ctx context.Context) (model.DatapipeSta
 		datapipeStatus        model.DatapipeStatus
 	)
 
-	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at, next_scheduled_analysis_at").Table(datapipeStatus.TableName()).First(&datapipeStatusWrapper)
+	tx := s.db.WithContext(ctx).Select("status, updated_at, last_complete_analysis_at, last_analysis_run_at, last_complete_optimize_at, next_scheduled_analysis_at").Table(datapipeStatus.TableName()).First(&datapipeStatusWrapper)
 
 	return datapipeStatusWrapper, CheckError(tx)
 }
