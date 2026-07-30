@@ -95,11 +95,6 @@ func ValidateToken(token *oauth2.Token) error {
 	return nil
 }
 
-// GetGitHubTokenPath returns the path to the GitHub token file
-func GetGitHubTokenPath(workspaceRoot string) string {
-	return filepath.Join(workspaceRoot, DoraDataDir, TokensDir, GitHubTokenFileName)
-}
-
 // GetTokenFromEnv retrieves a GitHub token from the GITHUB_TOKEN environment variable
 func GetTokenFromEnv() *oauth2.Token {
 	tokenStr := os.Getenv("GITHUB_TOKEN")

@@ -29,7 +29,6 @@ const (
 	ConfigFileName      = ".dora.yaml"
 	LocalConfigFileName = ".dora.local.yaml"
 	DoraDataDir         = ".dora"
-	TokensDir           = "tokens"
 	DefaultDBName       = "dora.db"
 )
 
@@ -42,7 +41,6 @@ var (
 // Config represents the complete DORA metrics configuration
 type Config struct {
 	GitHub  GitHubConfig  `yaml:"github"`
-	JIRA    JIRAConfig    `yaml:"jira,omitempty"`
 	Storage StorageConfig `yaml:"storage"`
 	Metrics MetricsConfig `yaml:"metrics"`
 }
@@ -55,15 +53,9 @@ type GitHubConfig struct {
 }
 
 // ProductionConfig defines how to identify production deployments
-type ProductionConfig struct {
+type ProductionConfig struct{
 	Workflow    string `yaml:"workflow"`
 	Environment string `yaml:"environment"`
-}
-
-// JIRAConfig holds JIRA-specific settings
-type JIRAConfig struct {
-	Domain      string   `yaml:"domain"`
-	ProjectKeys []string `yaml:"project_keys"`
 }
 
 // StorageConfig defines data storage settings
@@ -187,14 +179,6 @@ func mergeConfigs(base, override Config) Config {
 		result.GitHub.Production.Environment = override.GitHub.Production.Environment
 	}
 
-	// Merge JIRA config
-	if override.JIRA.Domain != "" {
-		result.JIRA.Domain = override.JIRA.Domain
-	}
-	if len(override.JIRA.ProjectKeys) > 0 {
-		result.JIRA.ProjectKeys = override.JIRA.ProjectKeys
-	}
-
 	// Merge Storage config
 	if override.Storage.Type != "" {
 		result.Storage.Type = override.Storage.Type
@@ -222,9 +206,6 @@ func (s *Config) ApplyEnvironmentOverrides() {
 	if workflow := os.Getenv("DORA_GITHUB_WORKFLOW"); workflow != "" {
 		s.GitHub.Production.Workflow = workflow
 	}
-	if domain := os.Getenv("DORA_JIRA_DOMAIN"); domain != "" {
-		s.JIRA.Domain = domain
-	}
 	if dbPath := os.Getenv("DORA_STORAGE_PATH"); dbPath != "" {
 		s.Storage.Path = dbPath
 	}
@@ -236,9 +217,4 @@ func (s Config) GetStoragePath(workspaceRoot string) string {
 		return s.Storage.Path
 	}
 	return filepath.Join(workspaceRoot, s.Storage.Path)
-}
-
-// GetTokensDir returns the absolute path to the tokens directory
-func (s Config) GetTokensDir(workspaceRoot string) string {
-	return filepath.Join(workspaceRoot, DoraDataDir, TokensDir)
 }

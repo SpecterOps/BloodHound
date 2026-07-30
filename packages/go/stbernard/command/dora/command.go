@@ -206,13 +206,6 @@ func (s *command) runStatus() error {
 	fmt.Printf("  Production Environment: %s\n", config.GitHub.Production.Environment)
 	fmt.Println()
 
-	if config.JIRA.Domain != "" {
-		fmt.Println("JIRA Configuration:")
-		fmt.Printf("  Domain: %s\n", config.JIRA.Domain)
-		fmt.Printf("  Projects: %v\n", config.JIRA.ProjectKeys)
-		fmt.Println()
-	}
-
 	fmt.Println("Storage Configuration:")
 	fmt.Printf("  Type: %s\n", config.Storage.Type)
 	fmt.Printf("  Path: %s\n", config.GetStoragePath(paths.Root))
@@ -255,11 +248,7 @@ func (s *command) initCommand(force, local bool) error {
 
 	if local {
 		// For local config, create a minimal override template
-		config = dora.Config{
-			JIRA: dora.JIRAConfig{
-				Domain: "",
-			},
-		}
+		config = dora.Config{}
 		slog.Info("Creating local configuration override", slog.String("path", configPath))
 	} else {
 		slog.Info("Creating DORA configuration", slog.String("path", configPath))
@@ -274,11 +263,6 @@ func (s *command) initCommand(force, local bool) error {
 	// Create data directory
 	if err := os.MkdirAll(doraDir, 0755); err != nil {
 		return fmt.Errorf("creating data directory: %w", err)
-	}
-
-	tokensDir := config.GetTokensDir(paths.Root)
-	if err := os.MkdirAll(tokensDir, 0700); err != nil {
-		return fmt.Errorf("creating tokens directory: %w", err)
 	}
 
 	fmt.Printf("✅ Created data directory: %s\n", doraDir)
