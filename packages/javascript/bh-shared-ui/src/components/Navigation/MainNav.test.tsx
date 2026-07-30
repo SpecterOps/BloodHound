@@ -113,6 +113,8 @@ describe('MainNav', () => {
 
         expect(linkItem).toBeInTheDocument();
         expect(linkItem).toHaveAttribute('href', testLinkItem.route);
+        expect(linkItem.closest('li')).toHaveClass('text-xl');
+        expect(linkItem.closest('li')).not.toHaveClass('font-heading', 'text-lg', 'leading-5');
         expect(linkItemIcon).toBeInTheDocument();
         expect(linkItemText).toBeInTheDocument();
     });
@@ -125,6 +127,8 @@ describe('MainNav', () => {
         const actionItemText = await within(secondaryList).findByText(testLinkItem.label as string);
 
         expect(actionItem).toBeInTheDocument();
+        expect(actionItem.closest('li')).toHaveClass('text-xl');
+        expect(actionItem.closest('li')).not.toHaveClass('font-sans', 'text-base', 'leading-6');
         expect(actionItemIcon).toBeInTheDocument();
         expect(actionItemText).toBeInTheDocument();
 
@@ -156,6 +160,7 @@ describe('Main Nav Route Highlighting', () => {
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
         expect(elem).toHaveClass('bg-neutral-4');
+        expect(screen.getByTestId('global_nav-test-link')).not.toHaveAttribute('aria-current');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -164,7 +169,49 @@ describe('Main Nav Route Highlighting', () => {
         const selected = screen.getByTestId('global_nav-test-link-2').closest('li');
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
         expect(selected).toHaveClass('bg-neutral-4');
-        expect(unselected).not.toHaveClass('bg-neutral-light-4');
+        expect(unselected).not.toHaveClass('bg-neutral-4');
+    });
+});
+
+describe('BHE visual refresh', () => {
+    it('applies the refreshed hierarchy only when explicitly enabled', () => {
+        render(<MainNav mainNavData={mainNavData} visualRefresh />, { route: '/test' });
+
+        expect(screen.getByRole('navigation')).toHaveClass(
+            'bg-side-nav-bg',
+            'dark:bg-[#1F1F1F]',
+            'basis-nav-width-expanded'
+        );
+        expect(screen.getByTestId('global_nav-test-link').closest('li')).toHaveClass(
+            'bg-side-nav-item-active',
+            'font-heading',
+            'text-lg',
+            'leading-5'
+        );
+        expect(screen.getByTestId('global_nav-test-link')).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('removes text, controls, and footer content from the collapsed rail', async () => {
+        const user = userEvent.setup();
+        render(<MainNav mainNavData={mainNavData} visualRefresh />);
+        const logoClassName = screen.getByTestId('global_nav-home').className;
+
+        await user.click(screen.getByRole('button', { name: 'Toggle Navigation' }));
+
+        expect(screen.getByTestId('global_nav-home')).toHaveClass(
+            'px-2',
+            'pt-4',
+            '[&_a]:w-full',
+            '[&_a]:overflow-hidden',
+            '[&_svg]:!h-[30px]',
+            '[&_svg]:!w-[166px]'
+        );
+        expect(screen.getByTestId('global_nav-home').className).toBe(logoClassName);
+        for (const label of screen.getAllByTestId('global_nav-item-label-text')) {
+            expect(label).toHaveClass('hidden');
+        }
+        expect(screen.queryByTestId('global_nav-version-number')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('global_nav-powered-by')).not.toBeInTheDocument();
     });
 });
 

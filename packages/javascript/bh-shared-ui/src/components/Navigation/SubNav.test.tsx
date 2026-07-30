@@ -41,6 +41,8 @@ describe('SubNav', () => {
         expect(
             screen.getByRole('link', { name: `Navigate to ${testNavItem.path.replace(/\//g, ' ').trim()}` })
         ).toHaveAttribute('href', testNavItem.path);
+        expect(screen.getByRole('navigation')).toHaveClass('py-2', 'bg-[#F2F2F2]');
+        expect(screen.getByRole('navigation')).not.toHaveClass('w-[264px]', 'bg-side-nav-bg');
     });
 
     it('should render many sections with many navigation items', () => {
@@ -87,5 +89,48 @@ describe('SubNav', () => {
                 ).toHaveAttribute('href', item.path);
             }
         }
+    });
+
+    it('marks the current route and applies the semantic selected treatment', () => {
+        const currentItem = {
+            label: 'Current item',
+            path: '/administration/current',
+        };
+
+        render(
+            <SubNav
+                close={() => {}}
+                isExpanded={false}
+                sections={[{ title: 'Section', items: [currentItem] }]}
+                visualRefresh
+            />,
+            {
+                route: currentItem.path,
+            }
+        );
+
+        const currentLink = screen.getByRole('link', { name: 'Navigate to administration current' });
+        expect(currentLink).toHaveAttribute('aria-current', 'page');
+        expect(currentLink.closest('li')).toHaveClass('bg-side-nav-item-active');
+    });
+
+    it('applies refreshed secondary-menu styling only when explicitly enabled', () => {
+        render(
+            <SubNav
+                close={() => {}}
+                isExpanded
+                sections={[{ title: 'Section', items: [{ label: 'Item', path: '/item' }] }]}
+                visualRefresh
+            />
+        );
+
+        expect(screen.getByRole('navigation')).toHaveClass(
+            'w-[264px]',
+            'bg-side-nav-bg',
+            'dark:bg-[#1F1F1F]',
+            'text-side-nav-icon-text',
+            'left-subnav-expanded'
+        );
+        expect(screen.getByText('Section')).toHaveClass('font-heading', 'font-semibold');
     });
 });
