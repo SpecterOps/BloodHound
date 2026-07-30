@@ -461,7 +461,7 @@ export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEvent
 // ---------------------------------------------------------------------------
 export type GetAlertsResponse = PaginatedResponse<{ alerts: Alert[] }>;
 export type GetAlertResponse = BasicResponse<{ alert: Alert }>;
-export type CreateAlertResponse = BasicResponse<{ alert: Alert }>;
+export type CreateAlertResponse = Alert;
 export type UpdateAlertResponse = BasicResponse<{ alert: Alert }>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;

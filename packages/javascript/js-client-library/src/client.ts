@@ -79,6 +79,7 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    GetAlertsResponse,
     GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -2822,8 +2823,27 @@ class BHEAPIClient {
 
     /* alerts */
     createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
-        return this.baseClient.post<BasicResponse<CreateAlertResponse>>('/api/v2/alert-webhooks', payload, options);
+        return this.baseClient.post<BasicResponse<CreateAlertResponse>>('/api/v2/alerts', payload, options);
     };
+
+    getAlerts = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.WebhookSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertsResponse>('/api/v2/alerts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                name: name ? `~eq:${name}` : undefined,
+            },
+            paramsSerializer: { indexes: null },
+        });
 }
 
 export default BHEAPIClient;
