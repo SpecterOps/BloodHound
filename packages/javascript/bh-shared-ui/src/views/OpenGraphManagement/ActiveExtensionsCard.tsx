@@ -22,6 +22,7 @@ import {
     CardTitle,
     createColumnHelper,
     DataTable,
+    IconButton,
     TableCell,
     TableRow,
     TooltipContent,
@@ -102,12 +103,11 @@ export const ActiveExtensionsCard = () => {
                     <span>Namespace</span>
                     <TooltipRoot>
                         <TooltipTrigger asChild>
-                            <button
-                                type='button'
-                                className='bg-transparent border-none p-0 cursor-default'
+                            <IconButton
+                                className='bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
                                 aria-label='Namespace information'>
                                 <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                            </button>
+                            </IconButton>
                         </TooltipTrigger>
                         <TooltipPortal>
                             <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
