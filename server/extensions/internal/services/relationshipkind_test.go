@@ -52,7 +52,7 @@ func TestService_GetRelationshipKind(t *testing.T) {
 			name: "attaches infos to relationship kind",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
-				databaseMock.EXPECT().GetKindInfosByKindName(ctx, baseRelationshipKind.Name).Return(infos, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, baseRelationshipKind.Name).Return(infos, nil)
 			},
 			wantResult: services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Info: infos, Extension: extension},
 		},
@@ -68,7 +68,7 @@ func TestService_GetRelationshipKind(t *testing.T) {
 			name: "wraps info fetch errors",
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
-				databaseMock.EXPECT().GetKindInfosByKindName(ctx, baseRelationshipKind.Name).Return(nil, unexpectedErr)
+				databaseMock.EXPECT().GetKindInfos(ctx, baseRelationshipKind.Name).Return(nil, unexpectedErr)
 			},
 			wantResult: services.RelationshipKind{},
 			wantErr:    unexpectedErr,
