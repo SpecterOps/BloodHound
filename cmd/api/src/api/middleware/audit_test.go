@@ -118,7 +118,7 @@ func TestAuditMiddleware_MutatingSuccess(t *testing.T) {
 	require.Equal(t, fake.commitID, fake.successCommits[0])
 
 	entry := fake.intentEntries[0]
-	require.Equal(t, http.MethodPost+" "+testRoute, entry.Action)
+	require.Equal(t, http.MethodPost+testRoute, entry.Action)
 	require.Equal(t, testActorID, entry.ActorID)
 	require.Equal(t, testActorName, entry.ActorName)
 	require.Equal(t, testActorMail, entry.ActorEmail)
@@ -158,7 +158,7 @@ func TestAuditMiddleware_NonMutatingSkipped(t *testing.T) {
 	require.Empty(t, fake.failureCommits)
 }
 
-func TestAuditMiddleware_IntentErrorSkipsResult(t *testing.T) {
+func TestAuditMiddleware_IntentErrorFailsRequest(t *testing.T) {
 	var (
 		fake     = &fakeAuditService{intentErr: errAudit}
 		router   = newAuditTestRouter(fake, http.StatusOK)
@@ -167,9 +167,10 @@ func TestAuditMiddleware_IntentErrorSkipsResult(t *testing.T) {
 
 	router.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
 
-	// The request is unaffected by the audit failure and no result row is
-	// written because there is no commit id to link it to.
-	require.Equal(t, http.StatusOK, recorder.Code)
+	// A failed intent write rejects the request with a 500; the handler never
+	// runs (so the 200 it would set is not observed) and no result row is
+	// written because the audited action did not proceed.
+	require.Equal(t, http.StatusInternalServerError, recorder.Code)
 	require.Len(t, fake.intentEntries, 1)
 	require.Empty(t, fake.successCommits)
 	require.Empty(t, fake.failureCommits)

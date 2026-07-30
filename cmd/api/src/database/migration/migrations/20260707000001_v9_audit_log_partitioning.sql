@@ -14,12 +14,33 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- +goose NO TRANSACTION
 -- +goose Up
--- Build the new partitioned table under a staging name, backfill it from the
--- existing audit_logs, drop the original, then rename the staging table back to
--- audit_logs. This leaves a single table under the original name so existing
--- audit logging continues to work without maintaining two tables.
-CREATE TABLE audit_logs_partitioned (
+-- Convert audit_logs to a range-partitioned table without wrapping the whole
+-- conversion in a single transaction. Running with NO TRANSACTION lets a large
+-- tenant's backfill make forward progress that survives a pod restart mid-run
+-- rather than rolling back the entire copy. Because goose only records a
+-- NO TRANSACTION migration as applied after every statement succeeds, a failure
+-- re-runs this file top-to-bottom; every statement below is therefore written to
+-- be idempotent so a re-run converges instead of erroring.
+--
+-- The work is: build the partitioned table under a staging name, backfill it in
+-- bounded id batches, verify the row counts, then swap it into place under the
+-- original audit_logs name so existing audit logging keeps working against a
+-- single table.
+--
+-- Note on batching: this deployment drives migrations through pgx v5 stdlib in
+-- the default (extended) query protocol, which rejects COMMIT inside a DO block.
+-- The backfill loop below therefore cannot commit per batch; it runs as one
+-- implicit transaction. Batching still bounds per-iteration memory and plan cost,
+-- and cross-restart resumability comes from the staging table persisting plus the
+-- resume-from-MAX(id) / ON CONFLICT guards. For a tenant so large that even a
+-- single-pass copy exceeds the startup window, run this out-of-band with
+-- DisableMigrations set rather than at pod startup.
+
+-- Phase 1: staging table. IF NOT EXISTS so a re-run after a partial backfill
+-- reuses the already-populated staging table.
+CREATE TABLE IF NOT EXISTS audit_logs_partitioned (
     id                  BIGINT NOT NULL DEFAULT nextval('audit_logs_id_seq'),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     action              TEXT NOT NULL,
@@ -35,16 +56,21 @@ CREATE TABLE audit_logs_partitioned (
     PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
--- Child partition names are chosen to match the final audit_logs parent name so
--- the GC daemon's partition maintenance (audit_logs_YYYY_MM) stays aligned after
--- the rename below.
+-- Phase 2: monthly partitions + default. Child partition names match the final
+-- audit_logs parent name so the GC daemon's partition maintenance
+-- (audit_logs_YYYY_MM) stays aligned after the rename below. Skipped entirely if
+-- a prior run already completed the swap (the staging table is then gone).
 -- +goose StatementBegin
 DO $$
 DECLARE
-    start_date DATE := '2024-01-01';
-    end_date DATE := '2026-08-01';
+    start_date    DATE := '2024-01-01';
+    end_date      DATE := '2026-08-01';
     current_month DATE;
 BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
+
     current_month := start_date;
     WHILE current_month < end_date LOOP
         EXECUTE format(
@@ -56,59 +82,112 @@ BEGIN
         );
         current_month := current_month + interval '1 month';
     END LOOP;
+
+    EXECUTE 'CREATE TABLE IF NOT EXISTS audit_logs_default PARTITION OF audit_logs_partitioned DEFAULT';
 END $$;
 -- +goose StatementEnd
 
-CREATE TABLE audit_logs_default PARTITION OF audit_logs_partitioned DEFAULT;
+-- Phase 3: batched backfill. Copy rows in bounded id windows, resuming just past
+-- the highest id already copied into staging. ON CONFLICT DO NOTHING makes an
+-- overlapping window on a re-run a no-op. Skipped once the swap has happened.
+-- +goose StatementBegin
+DO $$
+DECLARE
+    batch_size CONSTANT BIGINT := 50000;
+    window_lo  BIGINT;
+    window_hi  BIGINT;
+    source_max BIGINT;
+BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
 
-INSERT INTO audit_logs_partitioned (
-    id, created_at, action, actor_id, actor_name, actor_email,
-    request_id, source_ip_address, status, commit_id, fields, source
-)
-SELECT
-    id,
-    COALESCE(created_at, '2020-01-01'::timestamptz) AS created_at,
-    action,
-    actor_id,
-    actor_name,
-    actor_email,
-    request_id,
-    source_ip_address,
-    status,
-    commit_id,
-    fields,
-    'legacy' AS source
-FROM audit_logs;
+    SELECT COALESCE(MAX(id), 0) INTO source_max FROM audit_logs;
+    SELECT COALESCE(MAX(id), 0) INTO window_lo FROM audit_logs_partitioned;
 
--- Detach the sequence from the original audit_logs.id before dropping the table.
--- The sequence is OWNED BY audit_logs.id (see the init migration), which would
--- otherwise block the DROP with a dependency error. Ownership is re-attached to
--- the renamed table's column below.
-ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE;
+    WHILE window_lo < source_max LOOP
+        window_hi := window_lo + batch_size;
 
-DROP TABLE audit_logs;
+        INSERT INTO audit_logs_partitioned (
+            id, created_at, action, actor_id, actor_name, actor_email,
+            request_id, source_ip_address, status, commit_id, fields, source
+        )
+        SELECT
+            id,
+            COALESCE(created_at, '2020-01-01'::timestamptz),
+            action,
+            actor_id,
+            actor_name,
+            actor_email,
+            request_id,
+            source_ip_address,
+            status,
+            commit_id,
+            fields,
+            'legacy'
+        FROM audit_logs
+        WHERE id > window_lo AND id <= window_hi
+        ON CONFLICT (id, created_at) DO NOTHING;
 
-ALTER TABLE audit_logs_partitioned RENAME TO audit_logs;
+        window_lo := window_hi;
+    END LOOP;
+END $$;
+-- +goose StatementEnd
 
-ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
+-- Phase 4: verify counts, then swap staging into place. Guarded so a re-run after
+-- a completed swap is a no-op. The count-equality check assumes writes to
+-- audit_logs are quiesced during the migration (startup, HA-leader gated); a
+-- mismatch aborts and leaves the committed staging rows for the next run to
+-- finish rather than swapping in an incomplete copy.
+-- +goose StatementBegin
+DO $$
+DECLARE
+    source_count BIGINT;
+    staging_count BIGINT;
+BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
 
--- Advance the sequence past the largest copied id so the next insert does not
--- collide with a backfilled row.
-SELECT setval('audit_logs_id_seq', COALESCE((SELECT MAX(id) FROM audit_logs), 1));
+    SELECT count(*) INTO source_count FROM audit_logs;
+    SELECT count(*) INTO staging_count FROM audit_logs_partitioned;
+    IF staging_count <> source_count THEN
+        RAISE EXCEPTION 'audit_logs backfill incomplete: source=% staging=%', source_count, staging_count;
+    END IF;
 
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_audit_logs_actor_id ON audit_logs(actor_id);
-CREATE INDEX idx_audit_logs_actor_email ON audit_logs(actor_email);
-CREATE INDEX idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
-CREATE INDEX idx_audit_logs_status ON audit_logs(status);
-CREATE INDEX idx_audit_logs_source ON audit_logs(source);
+    -- Detach the sequence from the original audit_logs.id before dropping the
+    -- table. The sequence is OWNED BY audit_logs.id (see the init migration),
+    -- which would otherwise block the DROP with a dependency error. Ownership is
+    -- re-attached to the renamed table's column below.
+    EXECUTE 'ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE';
+    EXECUTE 'DROP TABLE audit_logs';
+    EXECUTE 'ALTER TABLE audit_logs_partitioned RENAME TO audit_logs';
+    EXECUTE 'ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id';
+
+    -- Advance the sequence past the largest copied id so the next insert does not
+    -- collide with a backfilled row.
+    PERFORM setval('audit_logs_id_seq', COALESCE((SELECT MAX(id) FROM audit_logs), 1));
+END $$;
+-- +goose StatementEnd
+
+-- Phase 5: indexes on the (now partitioned) audit_logs. IF NOT EXISTS so a crash
+-- between the swap and index creation still converges on a re-run.
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs(actor_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
 
 -- +goose Down
 -- The Up block re-attaches audit_logs_id_seq to the partitioned audit_logs.id,
--- so dropping the table with CASCADE also drops the owned sequence. Recreate the
--- sequence before the table that references it, then re-own it to the new column.
+-- so dropping the table with CASCADE also drops the owned sequence. Also drop the
+-- staging table in case Down runs against a half-completed Up (before the swap).
+-- Recreate the sequence before the table that references it, then re-own it to
+-- the new column. Guards are idempotent because Down also runs NO TRANSACTION.
 DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS audit_logs_partitioned CASCADE;
 
 CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
     START WITH 1
@@ -117,7 +196,7 @@ CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
     NO MAXVALUE
     CACHE 1;
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
     id                  BIGINT PRIMARY KEY DEFAULT nextval('audit_logs_id_seq'),
     created_at          TIMESTAMPTZ,
     action              TEXT NOT NULL,
@@ -133,9 +212,9 @@ CREATE TABLE audit_logs (
 
 ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
 
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX idx_audit_logs_actor_id ON audit_logs(actor_id);
-CREATE INDEX idx_audit_logs_actor_email ON audit_logs(actor_email);
-CREATE INDEX idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
-CREATE INDEX idx_audit_logs_status ON audit_logs(status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs(actor_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);

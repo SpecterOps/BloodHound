@@ -24,6 +24,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -31,9 +32,9 @@ import (
 )
 
 // AuditService is the narrow port the audit middleware depends on. It is
-// satisfied by *audit.Service. Writes are synchronous and best-effort: the
-// middleware logs errors and never fails the underlying request because of an
-// audit failure.
+// satisfied by *audit.Service. Writes are synchronous: a failed intent write
+// causes the middleware to reject the underlying request, while result
+// (success/failure) writes are best-effort and only logged on error.
 type AuditService interface {
 	Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
 	Success(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
@@ -42,9 +43,10 @@ type AuditService interface {
 
 // AuditMiddleware records the intent/success/failure lifecycle of mutating API
 // requests. It writes an intent row before the handler runs and a success or
-// failure row afterward based on the response status. muxRouter is used to
-// resolve the bounded route template for the audited action. Non-mutating
-// requests (GET/HEAD/OPTIONS) are passed through unaudited.
+// failure row afterward based on the response status. If the intent write fails
+// the request is rejected with a 500 and the handler never runs. muxRouter is
+// used to resolve the bounded route template for the audited action.
+// Non-mutating requests (GET/HEAD/OPTIONS) are passed through unaudited.
 func AuditMiddleware(auditService AuditService, muxRouter *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -68,17 +70,15 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Ha
 		entry         = buildAuditEntry(request, muxRouter)
 		commitID, err = auditService.Intent(ctx, entry)
 	)
+	// A failed intent write rejects the request: without a durable intent row
+	// the action would run unaudited, so the handler is never invoked.
 	if err != nil {
 		slog.ErrorContext(ctx, "audit: failed to write intent row", attr.Error(err))
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "audit log intent could not be recorded", request), response)
+		return
 	}
 
 	next.ServeHTTP(recorder, request)
-
-	// Only record a result if the intent succeeded; without a commit id there is
-	// nothing to link the result to.
-	if err != nil {
-		return
-	}
 
 	if recorder.statusCode >= http.StatusBadRequest {
 		if failureErr := auditService.Failure(ctx, commitID, entry); failureErr != nil {
