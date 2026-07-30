@@ -56,14 +56,16 @@ export const useMultiValueFilterParams = ({
         setSearchParams((currentParams) => {
             const nextParams = new URLSearchParams(currentParams);
 
+            // Clear both URL parameters before serializing the next selection
             nextParams.delete(valueParam);
             nextParams.delete(selectionParam);
 
-            // Updating to the default value should not recreate either param
+            // If updating to the default value, we should not recreate either param
             if (areSelectionsEqual(normalizedNextSelection, normalizedDefaultSelection)) {
                 return nextParams;
             }
 
+            // 'some' creates one param for each value, 'all' or 'none' just create the selection param
             if (normalizedNextSelection.kind === 'some') {
                 normalizedNextSelection.values.forEach((value) => {
                     nextParams.append(valueParam, value);

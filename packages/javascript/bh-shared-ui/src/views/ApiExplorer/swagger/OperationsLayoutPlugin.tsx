@@ -67,7 +67,7 @@ function CustomLayout(props: Props) {
                     <Skeleton className='h-20' />
                 </div>
             ) : (
-                <div className='swagger-ui flex gap-0'>
+                <div className='swagger-ui'>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
                         <FilterContainer />
