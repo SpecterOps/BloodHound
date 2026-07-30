@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package routes
 
 import (
-	"net/http"
-
-	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 )
 
-func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	if datapipeStatus, err := s.DB.GetDatapipeStatus(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), datapipeStatus, http.StatusOK, response)
-	}
+// Register attaches the appcfg endpoints to the given router instance.
+func Register(routerInst *router.Router, handlers *handlers.Handlers) {
+	routerInst.GET("/api/v2/datapipe/status", handlers.GetDatapipeStatus).RequireAuth()
 }
