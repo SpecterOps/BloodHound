@@ -23,7 +23,7 @@ export const InputVariants = cva(
         variants: {
             variant: {
                 outlined:
-                    'rounded-md border border-input-outlined-border-default bg-input-fill px-3 py-2 text-sm enabled:hover:border-input-outlined-border-hover focus:outline-none focus:focus-ring dark:focus:border-[var(--input-outlined-border-focus)] dark:focus:border-2 disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled disabled:opacity-100 aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
+                    'rounded-md border border-input-outlined-border-default bg-input-fill px-3 py-2 text-sm enabled:hover:border-input-outlined-border-hover focus:outline-none focus:focus-ring dark:focus:border-secondary-variant-2 dark:focus:border-2 disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled disabled:opacity-100 aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
                 underlined:
                     'rounded-sm bg-transparent border-b-input-border-default border-b hover:border-b-2 focus:outline-none focus:focus-ring focus:border-input-border-focus focus:border-b-2',
             },
