@@ -345,6 +345,32 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    requested_by_user_id: string | null;
+    created_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    execution_time: string;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -416,7 +442,7 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     environment_name: string;
-    zone_id: number;
+    asset_group_tag_id: number;
     zone_name: string;
     source_principal_id: string;
     source_principal_name: string;
