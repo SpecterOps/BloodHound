@@ -16,6 +16,33 @@
 
 -- +goose Up
 
+-- Preserve customer-owned zones by failing before shifting positions or inserting defaults.
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM asset_group_tags tag
+        WHERE tag.name = 'Management Plane'
+          AND tag.deleted_at IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'cannot create the default Management Plane zone because an active zone already uses that name; rename the existing zone before retrying the migration';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM asset_group_tags tag
+        JOIN kind ON kind.id = tag.kind_id
+        WHERE kind.name = 'Tag_Management_Plane'
+    ) THEN
+        RAISE EXCEPTION
+            'cannot create the default Management Plane zone because Tag_Management_Plane is already assigned to a zone';
+    END IF;
+END
+$$;
+-- +goose StatementEnd
+
 INSERT INTO kind (name)
 VALUES ('Tag_Management_Plane')
 ON CONFLICT (name) DO NOTHING;
@@ -26,9 +53,10 @@ WHERE type = 1
   AND position >= 2
   AND NOT EXISTS (
     SELECT 1
-    FROM asset_group_tags
-    WHERE name = 'Management Plane'
-      AND deleted_at IS NULL
+    FROM asset_group_tags tag
+    JOIN kind ON kind.id = tag.kind_id
+    WHERE kind.name = 'Tag_Management_Plane'
+      AND tag.deleted_at IS NULL
   );
 
 INSERT INTO asset_group_tags (
@@ -60,9 +88,9 @@ FROM kind
 WHERE kind.name = 'Tag_Management_Plane'
   AND NOT EXISTS (
     SELECT 1
-    FROM asset_group_tags
-    WHERE name = 'Management Plane'
-      AND deleted_at IS NULL
+    FROM asset_group_tags tag
+    WHERE tag.kind_id = kind.id
+      AND tag.deleted_at IS NULL
   );
 
 -- Role names, descriptions, and template IDs are sourced from:
@@ -134,10 +162,11 @@ inserted_selectors AS (
         0
     FROM source_data role
     CROSS JOIN (
-        SELECT id
-        FROM asset_group_tags
-        WHERE name = 'Management Plane'
-          AND deleted_at IS NULL
+        SELECT tag.id
+        FROM asset_group_tags tag
+        JOIN kind ON kind.id = tag.kind_id
+        WHERE kind.name = 'Tag_Management_Plane'
+          AND tag.deleted_at IS NULL
     ) tag
     WHERE NOT EXISTS (
         SELECT 1
@@ -161,63 +190,26 @@ JOIN source_data role ON role.name = selector.name;
 
 -- +goose Down
 
-DELETE FROM asset_group_tag_selectors
-WHERE asset_group_tag_id = (
-    SELECT id
-    FROM asset_group_tags
-    WHERE name = 'Management Plane'
-      AND deleted_at IS NULL
-)
-  AND is_default = true
-  AND name IN (
-    'AI Administrator',
-    'Attribute Assignment Administrator',
-    'Attribute Provisioning Administrator',
-    'Authentication Administrator',
-    'Authentication Extensibility Administrator',
-    'Authentication Policy Administrator',
-    'B2C IEF Keyset Administrator',
-    'Cloud App Security Administrator',
-    'Compliance Administrator',
-    'Directory Synchronization Accounts',
-    'Directory Writers',
-    'Domain Name Administrator',
-    'Dynamics 365 Administrator',
-    'Exchange Administrator',
-    'External ID User Flow Administrator',
-    'External Identity Provider Administrator',
-    'Global Secure Access Administrator',
-    'Groups Administrator',
-    'Helpdesk Administrator',
-    'Identity Governance Administrator',
-    'Intune Administrator',
-    'Knowledge Administrator',
-    'Lifecycle Workflows Administrator',
-    'Microsoft 365 Backup Administrator',
-    'Microsoft 365 Migration Administrator',
-    'Partner Tier1 Support',
-    'Password Administrator',
-    'Power Platform Administrator',
-    'Security Operator',
-    'SharePoint Administrator',
-    'Skype for Business Administrator',
-    'Teams Administrator',
-    'Teams Telephony Administrator',
-    'User Administrator',
-    'Windows 365 Administrator',
-    'Yammer Administrator'
-  );
+-- Asset-group history does not cascade, so remove canonical history before deleting the zone.
+DELETE FROM asset_group_history history
+USING asset_group_tags tag, kind
+WHERE history.asset_group_tag_id = tag.id
+  AND tag.kind_id = kind.id
+  AND kind.name = 'Tag_Management_Plane'
+  AND tag.created_by = 'SYSTEM';
 
 WITH deleted_zone AS (
-    DELETE FROM asset_group_tags
-    WHERE name = 'Management Plane'
-      AND created_by = 'SYSTEM'
-    RETURNING position
+    DELETE FROM asset_group_tags tag
+    USING kind
+    WHERE tag.kind_id = kind.id
+      AND kind.name = 'Tag_Management_Plane'
+      AND tag.created_by = 'SYSTEM'
+    RETURNING tag.position
 )
 UPDATE asset_group_tags
 SET position = position - 1
 WHERE type = 1
-  AND position > 2
+  AND position > (SELECT position FROM deleted_zone)
   AND EXISTS (SELECT 1 FROM deleted_zone);
 
 DELETE FROM kind

@@ -567,11 +567,17 @@ func TestMigration_AddManagementPlaneZone(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, testContext.gormDB.Exec(`
-		WITH inserted_kind AS (
-			INSERT INTO kind (name)
-			VALUES ('Tag_Existing_Zone')
-			RETURNING id
-		)
+		INSERT INTO kind (name)
+		VALUES ('Tag_Management_Plane')
+		ON CONFLICT (name) DO NOTHING;
+
+		INSERT INTO kind (name)
+		VALUES
+			('Tag_Existing_Zone_A'),
+			('Tag_Existing_Zone_B'),
+			('Tag_Existing_Zone_C'),
+			('Tag_Deleted_Management_Plane');
+
 		INSERT INTO asset_group_tags (
 			type,
 			kind_id,
@@ -583,27 +589,39 @@ func TestMigration_AddManagementPlaneZone(t *testing.T) {
 			updated_by,
 			position,
 			require_certify,
-			analysis_enabled
+			analysis_enabled,
+			deleted_at,
+			deleted_by
 		)
 		SELECT
 			1,
-			id,
-			'Existing Zone',
-			'Existing zone used to verify position migration.',
+			kind.id,
+			fixture.name,
+			'Existing zone used to verify migration behavior.',
 			current_timestamp,
-			'test',
+			fixture.created_by,
 			current_timestamp,
-			'test',
-			2,
+			fixture.created_by,
+			fixture.position,
 			false,
-			true
-		FROM inserted_kind
+			true,
+			fixture.deleted_at,
+			CASE WHEN fixture.deleted_at IS NULL THEN NULL ELSE fixture.created_by END
+		FROM (
+			VALUES
+				('Tag_Existing_Zone_A', 'Existing Zone A', 'test', 2, NULL::timestamp with time zone),
+				('Tag_Existing_Zone_B', 'Existing Zone B', 'test', 3, NULL::timestamp with time zone),
+				('Tag_Deleted_Management_Plane', 'Management Plane', 'customer', 4, current_timestamp),
+				('Tag_Existing_Zone_C', 'Existing Zone C', 'test', 7, NULL::timestamp with time zone)
+		) AS fixture(kind_name, name, created_by, position, deleted_at)
+		JOIN kind ON kind.name = fixture.kind_name
 	`).Error)
 
 	_, err = provider.UpTo(testContext.ctx, targetMigrationVersion)
 	require.NoError(t, err)
 
 	var zone struct {
+		ID              int
 		Name            string
 		Description     string
 		Position        int
@@ -613,6 +631,7 @@ func TestMigration_AddManagementPlaneZone(t *testing.T) {
 	}
 	require.NoError(t, testContext.gormDB.Raw(`
 		SELECT
+			tag.id,
 			tag.name,
 			tag.description,
 			tag.position,
@@ -632,13 +651,35 @@ func TestMigration_AddManagementPlaneZone(t *testing.T) {
 	assert.False(t, zone.AnalysisEnabled)
 	assert.Equal(t, "Tag_Management_Plane", zone.KindName)
 
-	var existingZonePosition int
+	var existingZonePositions []struct {
+		Name     string
+		Position int
+	}
 	require.NoError(t, testContext.gormDB.Raw(`
-		SELECT position
+		SELECT name, position
 		FROM asset_group_tags
-		WHERE name = 'Existing Zone'
-	`).Scan(&existingZonePosition).Error)
-	assert.Equal(t, 3, existingZonePosition)
+		WHERE name LIKE 'Existing Zone %'
+		ORDER BY name
+	`).Scan(&existingZonePositions).Error)
+	assert.Equal(t, []struct {
+		Name     string
+		Position int
+	}{
+		{Name: "Existing Zone A", Position: 3},
+		{Name: "Existing Zone B", Position: 4},
+		{Name: "Existing Zone C", Position: 8},
+	}, existingZonePositions)
+
+	var deletedNameCollisionCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tags tag
+		JOIN kind ON kind.id = tag.kind_id
+		WHERE tag.name = 'Management Plane'
+		  AND tag.deleted_at IS NOT NULL
+		  AND kind.name = 'Tag_Deleted_Management_Plane'
+	`).Scan(&deletedNameCollisionCount).Error)
+	assert.Equal(t, 1, deletedNameCollisionCount)
 
 	var selectorCount int
 	require.NoError(t, testContext.gormDB.Raw(`
@@ -739,21 +780,208 @@ func TestMigration_AddManagementPlaneZone(t *testing.T) {
 	`).Scan(&unsupportedSelectorCount).Error)
 	assert.Zero(t, unsupportedSelectorCount)
 
+	require.NoError(t, testContext.gormDB.Exec(`
+		UPDATE asset_group_tags
+		SET position = position - 1
+		WHERE type = 1
+		  AND deleted_at IS NULL
+		  AND position > 2
+		  AND position <= 5
+	`).Error)
+	require.NoError(t, testContext.gormDB.Exec(`
+		UPDATE asset_group_tags
+		SET name = 'Renamed Management Plane',
+		    position = 5,
+		    updated_by = 'customer',
+		    updated_at = current_timestamp
+		WHERE id = ?
+	`, zone.ID).Error)
+	require.NoError(t, testContext.gormDB.Exec(`
+		INSERT INTO asset_group_history (
+			actor,
+			action,
+			target,
+			asset_group_tag_id,
+			created_at
+		)
+		VALUES (
+			'customer',
+			'UpdateTag',
+			'Renamed Management Plane',
+			?,
+			current_timestamp
+		)
+	`, zone.ID).Error)
+
 	_, err = provider.DownTo(testContext.ctx, previousMigrationVersion)
 	require.NoError(t, err)
 
 	var managementPlaneCount int
 	require.NoError(t, testContext.gormDB.Raw(`
 		SELECT COUNT(*)
-		FROM asset_group_tags
-		WHERE name = 'Management Plane'
+		FROM asset_group_tags tag
+		JOIN kind ON kind.id = tag.kind_id
+		WHERE kind.name = 'Tag_Management_Plane'
 	`).Scan(&managementPlaneCount).Error)
 	assert.Zero(t, managementPlaneCount)
 
+	var managementPlaneHistoryCount int
 	require.NoError(t, testContext.gormDB.Raw(`
-		SELECT position
+		SELECT COUNT(*)
+		FROM asset_group_history
+		WHERE asset_group_tag_id = ?
+	`, zone.ID).Scan(&managementPlaneHistoryCount).Error)
+	assert.Zero(t, managementPlaneHistoryCount)
+
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT name, position
 		FROM asset_group_tags
-		WHERE name = 'Existing Zone'
-	`).Scan(&existingZonePosition).Error)
-	assert.Equal(t, 2, existingZonePosition)
+		WHERE name LIKE 'Existing Zone %'
+		ORDER BY name
+	`).Scan(&existingZonePositions).Error)
+	assert.Equal(t, []struct {
+		Name     string
+		Position int
+	}{
+		{Name: "Existing Zone A", Position: 2},
+		{Name: "Existing Zone B", Position: 3},
+		{Name: "Existing Zone C", Position: 7},
+	}, existingZonePositions)
+
+	var duplicateActivePositionCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*) - COUNT(DISTINCT position)
+		FROM asset_group_tags
+		WHERE type = 1
+		  AND deleted_at IS NULL
+	`).Scan(&duplicateActivePositionCount).Error)
+	assert.Zero(t, duplicateActivePositionCount)
+
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tags tag
+		JOIN kind ON kind.id = tag.kind_id
+		WHERE tag.name = 'Management Plane'
+		  AND tag.deleted_at IS NOT NULL
+		  AND kind.name = 'Tag_Deleted_Management_Plane'
+	`).Scan(&deletedNameCollisionCount).Error)
+	assert.Equal(t, 1, deletedNameCollisionCount)
+}
+
+func TestMigration_AddManagementPlaneZoneRejectsActiveNameCollision(t *testing.T) {
+	const (
+		previousMigrationVersion int64 = 20260710120000
+		targetMigrationVersion   int64 = 20260729165433
+	)
+
+	testContext := setupGooseTestContext(t)
+
+	provider, err := goose.NewProvider(
+		goose.DialectPostgres,
+		testContext.migrator.SqlDB,
+		testContext.migrator.GooseFS,
+		goose.WithAllowOutofOrder(true),
+	)
+	require.NoError(t, err)
+
+	_, err = provider.UpTo(testContext.ctx, previousMigrationVersion)
+	require.NoError(t, err)
+
+	require.NoError(t, testContext.gormDB.Exec(`
+		WITH customer_kind AS (
+			INSERT INTO kind (name)
+			VALUES ('Tag_Customer_Management_Plane')
+			RETURNING id
+		),
+		customer_zone AS (
+			INSERT INTO asset_group_tags (
+				type,
+				kind_id,
+				name,
+				description,
+				created_at,
+				created_by,
+				updated_at,
+				updated_by,
+				position,
+				require_certify,
+				analysis_enabled
+			)
+			SELECT
+				1,
+				id,
+				'Management Plane',
+				'Customer-owned zone that must not be modified.',
+				current_timestamp,
+				'customer',
+				current_timestamp,
+				'customer',
+				2,
+				false,
+				true
+			FROM customer_kind
+			RETURNING id
+		)
+		INSERT INTO asset_group_tag_selectors (
+			asset_group_tag_id,
+			created_at,
+			created_by,
+			updated_at,
+			updated_by,
+			name,
+			description,
+			is_default,
+			allow_disable,
+			auto_certify
+		)
+		SELECT
+			id,
+			current_timestamp,
+			'customer',
+			current_timestamp,
+			'customer',
+			'Customer Rule',
+			'Customer-owned rule that must not be modified.',
+			false,
+			true,
+			0
+		FROM customer_zone
+	`).Error)
+
+	_, err = provider.UpTo(testContext.ctx, targetMigrationVersion)
+	require.ErrorContains(t, err, "an active zone already uses that name")
+
+	var customerZone struct {
+		Description string
+		Position    int
+		CreatedBy   string
+	}
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT description, position, created_by
+		FROM asset_group_tags
+		WHERE name = 'Management Plane'
+		  AND deleted_at IS NULL
+	`).Scan(&customerZone).Error)
+	assert.Equal(t, "Customer-owned zone that must not be modified.", customerZone.Description)
+	assert.Equal(t, 2, customerZone.Position)
+	assert.Equal(t, "customer", customerZone.CreatedBy)
+
+	var customerRuleCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tag_selectors selector
+		JOIN asset_group_tags tag ON tag.id = selector.asset_group_tag_id
+		WHERE tag.name = 'Management Plane'
+		  AND selector.name = 'Customer Rule'
+		  AND selector.is_default = false
+	`).Scan(&customerRuleCount).Error)
+	assert.Equal(t, 1, customerRuleCount)
+
+	var canonicalKindCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM kind
+		WHERE name = 'Tag_Management_Plane'
+	`).Scan(&canonicalKindCount).Error)
+	assert.Zero(t, canonicalKindCount)
 }
