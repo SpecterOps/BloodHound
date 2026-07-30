@@ -135,6 +135,7 @@ type BloodHoundGraphLinkFlow struct {
 
 type BloodHoundGraphLink struct {
 	*BloodHoundGraphItem
+	ID        graph.ID                  `json:"id"`
 	End1      *BloodHoundGraphLinkEnd   `json:"end1,omitempty"`
 	End2      *BloodHoundGraphLinkEnd   `json:"end2,omitempty"`
 	Flow      *BloodHoundGraphLinkFlow  `json:"flow,omitempty"`

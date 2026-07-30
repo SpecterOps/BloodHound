@@ -24,6 +24,7 @@ export enum Permission {
     AUTH_MANAGE_PROVIDERS,
     AUTH_MANAGE_SELF,
     AUTH_MANAGE_USERS,
+    AUTH_READ_PROVIDERS,
     AUTH_READ_USERS,
     CLIENTS_MANAGE,
     CLIENTS_READ,
@@ -31,7 +32,8 @@ export enum Permission {
     COLLECTION_MANAGE_JOBS,
     GRAPH_DB_READ,
     GRAPH_DB_WRITE,
-    GRAPH_DB_INGEST,
+    GRAPH_DB_INGEST_MANAGE,
+    GRAPH_DB_INGEST_READ,
     SAVED_QUERIES_READ,
     SAVED_QUERIES_WRITE,
     WIPE_DB,
@@ -86,6 +88,10 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'auth',
         name: 'ManageUsers',
     },
+    [Permission.AUTH_READ_PROVIDERS]: {
+        authority: 'auth',
+        name: 'ReadProviders',
+    },
     [Permission.AUTH_READ_USERS]: {
         authority: 'auth',
         name: 'ReadUsers',
@@ -114,9 +120,13 @@ export const PERMISSIONS: PermissionDefinitions = {
         authority: 'graphdb',
         name: 'Write',
     },
-    [Permission.GRAPH_DB_INGEST]: {
+    [Permission.GRAPH_DB_INGEST_MANAGE]: {
         authority: 'graphdb',
-        name: 'Ingest',
+        name: 'IngestManage',
+    },
+    [Permission.GRAPH_DB_INGEST_READ]: {
+        authority: 'graphdb',
+        name: 'IngestRead',
     },
     [Permission.SAVED_QUERIES_READ]: {
         authority: 'saved_queries',

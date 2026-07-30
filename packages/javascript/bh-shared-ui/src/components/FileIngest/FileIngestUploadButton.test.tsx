@@ -19,6 +19,7 @@ import { setupServer } from 'msw/node';
 import { useState } from 'react';
 import { FileUploadDialogContext } from '../../hooks';
 import { fireEvent, render, screen, waitFor } from '../../test-utils';
+import { Permission } from '../../utils';
 import FileUploadDialog from '../FileUploadDialog';
 import { FileIngestUploadButton } from './FileIngestUploadButton';
 
@@ -187,5 +188,21 @@ describe('File Upload', () => {
         expect(screen.queryByText('1 min')).toBeNull();
 
         expect(screen.getByTestId('file-ingest_button-upload-files')).toBeDisabled();
+    });
+
+    it('enables the upload button when the user has manage ingest permission', async () => {
+        checkPermissionMock.mockImplementation((perm) => perm === Permission.GRAPH_DB_INGEST_MANAGE);
+        render(<Wrapper />);
+
+        const uploadButton = screen.getByTestId('file-ingest_button-upload-files');
+        await waitFor(() => expect(uploadButton).toBeEnabled());
+    });
+
+    it('disables the upload button when the user does not have manage ingest permission', async () => {
+        checkPermissionMock.mockImplementation(() => false);
+        render(<Wrapper />);
+
+        const uploadButton = screen.getByTestId('file-ingest_button-upload-files');
+        expect(uploadButton).toBeDisabled();
     });
 });

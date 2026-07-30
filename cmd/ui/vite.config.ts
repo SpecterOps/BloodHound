@@ -20,6 +20,7 @@ import fs from 'fs';
 import path from 'path';
 import { defineConfig, loadEnv, Plugin, searchForWorkspaceRoot } from 'vite';
 import glsl from 'vite-plugin-glsl';
+import { configDefaults } from 'vitest/config';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -80,7 +81,22 @@ export default defineConfig(({ mode }) => {
             },
             port: 3000,
             host: true,
-            hmr: true,
+            // When running behind the Traefik reverse proxy (docker compose dev), the browser reaches
+            // Vite on the proxy port, not the container's internal 3000. VITE_HMR_CLIENT_PORT points the
+            // HMR websocket back through the proxy. Left as `true` (default) for local `yarn dev`.
+            hmr: env.VITE_HMR_CLIENT_PORT ? { clientPort: Number(env.VITE_HMR_CLIENT_PORT) } : true,
+            // macOS Docker bind mounts don't reliably deliver fs events into the container, so enable
+            // polling there (VITE_USE_POLLING=true) to detect source changes. Off locally to save CPU.
+            // A larger interval and ignored heavy paths keep polling from starving Vite on slower Docker setups.
+            watch:
+                env.VITE_USE_POLLING === 'true'
+                    ? {
+                          usePolling: true,
+                          interval: 300,
+                          binaryInterval: 1000,
+                          ignored: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.git/**'],
+                      }
+                    : undefined,
             fs: {
                 allow: [searchForWorkspaceRoot(process.cwd())],
             },
@@ -91,6 +107,11 @@ export default defineConfig(({ mode }) => {
         test: {
             globals: true,
             environment: 'jsdom',
+            exclude: [
+                ...configDefaults.exclude,
+                // Playwright accessibility regression suite — run manually via `yarn test:a11y`.
+                'tests/**',
+            ],
             setupFiles: ['./src/setupTests.tsx'],
             testTimeout: 60000, // 1 minute,
             coverage: {

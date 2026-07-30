@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
 import { useExploreParams } from '../../hooks';
-import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints, getEntityQueryCount } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
 
@@ -35,13 +35,13 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
 
     const countQuery = useQuery(
-        ['relatedCount', label, id],
+        ['relatedCount', label, id, sections],
         () => {
             if (endpoint) {
                 return endpoint({ id, skip: 0, limit: 128 });
             }
             if (sections)
-                return Promise.all(
+                return Promise.allSettled(
                     sections.map((section: EntityInfoDataTableProps) => {
                         const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
                         return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
@@ -92,33 +92,21 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const setNodeSearchParams = (item: SelectedNode) => {
-        setExploreParams({
-            primarySearch: item.id,
-            searchType: 'node',
-            exploreSearchTab: 'node',
-        });
+    const setNodeSearchParams = (item: NodeDetails | NodeDetailsWithInfo) => {
+        const nameOrObjectId = item.properties.name || item.properties.objectid;
+        if (nameOrObjectId)
+            setExploreParams({
+                primarySearch: nameOrObjectId,
+                searchType: 'node',
+                exploreSearchTab: 'node',
+            });
     };
 
-    const handleOnClick = (item: SelectedNode) => {
+    const handleOnClick = (item: NodeDetails | NodeDetailsWithInfo) => {
         setNodeSearchParams(item);
     };
 
-    let count: number | undefined;
-    if (Array.isArray(countQuery.data)) {
-        if (countLabel !== undefined) {
-            countQuery.data.forEach((sectionData: any) => {
-                if (sectionData.countLabel === countLabel) count = sectionData.count;
-            });
-        } else {
-            count = countQuery.data.reduce((acc, val) => {
-                const count = val?.count ?? 0;
-                return acc + count;
-            }, 0);
-        }
-    } else if (countQuery.data) {
-        count = countQuery.data?.count ?? 0;
-    }
+    const count = getEntityQueryCount(countQuery.data, countLabel);
 
     return (
         <EntityInfoCollapsibleSection

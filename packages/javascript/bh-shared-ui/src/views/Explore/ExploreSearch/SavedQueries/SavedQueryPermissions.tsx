@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { CheckedState } from '@radix-ui/react-checkbox';
-import { Button, Checkbox, ColumnDef, DataTable, Input } from 'doodle-ui';
+import { Button, Checkbox, CheckboxWithLabel, ColumnDef, DataTable, Input } from 'doodle-ui';
 import { UserMinimal } from 'js-client-library';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components';
 import { useQueryPermissions } from '../../../../hooks';
@@ -33,7 +33,7 @@ type SavedQueryPermissionsProps = {
 type ListUser = {
     name: string;
     id: string;
-    email: string;
+    email: string | null;
 };
 
 const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: SavedQueryPermissionsProps) => {
@@ -68,6 +68,11 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
 
     const usersList = useMemo(() => idMap(), [idMap]);
     const allUserIds = useMemo(() => usersList?.map((x) => x.id) ?? [], [usersList]);
+    const isPublicRef = useRef(isPublic);
+    const sharedIdsRef = useRef(sharedIds);
+
+    isPublicRef.current = isPublic;
+    sharedIdsRef.current = sharedIds;
 
     useEffect(() => {
         if (!data) return;
@@ -76,38 +81,40 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         setIsPublic(Boolean(data.public));
     }, [data, allUserIds, setSharedIds, setIsPublic]);
 
-    const handleCheckAllChange = (checkedState: CheckedState) => {
-        const isTrue = checkedState === true;
-        setIsPublic(isTrue);
-        setSharedIds(isTrue ? allUserIds : []);
-    };
+    const handleCheckAllChange = useCallback(
+        (checkedState: CheckedState) => {
+            const isTrue = checkedState === true;
+            setIsPublic(isTrue);
+            setSharedIds(isTrue ? allUserIds : []);
+        },
+        [allUserIds, setIsPublic, setSharedIds]
+    );
 
-    const handleCheckChange = (sharedUserId: string) => {
-        //New query - no queryId present
-        if (sharedIds.includes(sharedUserId)) {
-            //delete
-            setSharedIds(sharedIds.filter((item) => item !== sharedUserId));
-        } else {
-            // add
-            setSharedIds([...sharedIds, sharedUserId]);
-        }
-        setIsPublic(false);
-    };
+    const handleCheckChange = useCallback(
+        (sharedUserId: string) => {
+            const currentSharedIds = sharedIdsRef.current;
 
-    const isCheckboxChecked = (id: string) => {
-        return sharedIds?.includes(id);
-    };
+            if (currentSharedIds.includes(sharedUserId)) {
+                setSharedIds(currentSharedIds.filter((item) => item !== sharedUserId));
+            } else {
+                setSharedIds([...currentSharedIds, sharedUserId]);
+            }
+            setIsPublic(false);
+        },
+        [setIsPublic, setSharedIds]
+    );
 
-    const getColumns = () => {
-        const columns: ColumnDef<ListUser>[] = [
+    const columns = useMemo<ColumnDef<ListUser>[]>(
+        () => [
             {
                 accessorKey: 'id',
                 header: () => {
                     return (
                         <div>
-                            <span className='sr-only'>Select All</span>
-                            <Checkbox
-                                checked={isPublic}
+                            <CheckboxWithLabel
+                                label='Select All'
+                                labelClassName='sr-only'
+                                checked={isPublicRef.current}
                                 onCheckedChange={handleCheckAllChange}
                                 data-testid='public-query'
                             />
@@ -117,7 +124,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                 cell: ({ row }) => (
                     <div>
                         <Checkbox
-                            checked={isCheckboxChecked(row.getValue('id'))}
+                            checked={sharedIdsRef.current.includes(row.getValue('id'))}
                             onCheckedChange={() => handleCheckChange(row.getValue('id'))}
                         />
                     </div>
@@ -139,9 +146,9 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     );
                 },
             },
-        ];
-        return columns;
-    };
+        ],
+        [handleCheckAllChange, handleCheckChange]
+    );
 
     const handleInput = (searchTerm: string) => {
         setSearchTerm(searchTerm);
@@ -182,7 +189,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                                 }}
                                 TableBodyProps={{ className: 'text-s font-roboto' }}
                                 TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
-                                columns={getColumns() as ListUser[]}
+                                columns={columns}
                                 data={filteredUsers}
                             />
                         ) : (

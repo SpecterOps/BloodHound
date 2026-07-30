@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createAuthStateWithPermissions, Flag, Permission } from 'bh-shared-ui';
+import { createAuthStateWithPermissions, Flag, mockGetConfigurationHandler, Permission } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen } from 'src/test-utils';
+import { act, render, screen, waitForElementToBeRemoved } from 'src/test-utils';
 import EarlyAccessFeatures from '.';
 
 const testFeatureFlags: Flag[] = [
@@ -52,7 +52,7 @@ const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]).user,
+                data: createAuthStateWithPermissions([Permission.APP_WRITE_APPLICATION_CONFIGURATION]).user,
             })
         );
     }),
@@ -62,7 +62,8 @@ const server = setupServer(
                 data: testFeatureFlags,
             })
         );
-    })
+    }),
+    mockGetConfigurationHandler()
 );
 
 const mockNavigate = vi.fn();
@@ -111,9 +112,7 @@ describe('EarlyAccessFeatures', () => {
         // Close (accept) warning dialog
         await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
 
-        expect(screen.getByRole('dialog')).not.toBeVisible();
-
-        expect(screen.getByText('Early Access Features')).toBeInTheDocument();
+        await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
 
         for (const featureFlag of testFeatureFlags) {
             expect(await screen.findByText(featureFlag.name)).toBeInTheDocument();
@@ -138,9 +137,7 @@ describe('EarlyAccessFeatures', () => {
         // Close (accept) warning dialog
         await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
 
-        expect(screen.getByRole('dialog')).not.toBeVisible();
-
-        expect(screen.getByText('Early Access Features')).toBeInTheDocument();
+        await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
 
         expect(await screen.findByText('No Early Access Features Available')).toBeInTheDocument();
 
@@ -164,24 +161,29 @@ describe('EarlyAccessFeatures', () => {
         // Close (accept) warning dialog
         await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
 
-        expect(screen.getByRole('dialog')).not.toBeVisible();
-
-        expect(screen.getByText('Early Access Features')).toBeInTheDocument();
+        await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
 
         expect(await screen.findByText('Could Not Display Early Access Features')).toBeInTheDocument();
     });
 
     it('disables any available button toggles if the user lacks the permission', async () => {
+        server.use(
+            rest.get('/api/v2/self', (req, res, ctx) => {
+                return res(ctx.json({ data: createAuthStateWithPermissions([]).user }));
+            })
+        );
         render(<EarlyAccessFeatures />);
         const user = userEvent.setup();
 
         // Close (accept) warning dialog
         await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
 
+        await waitForElementToBeRemoved(() => screen.queryByRole('dialog'));
+
         const buttons = screen.getAllByRole('button');
 
         buttons.forEach((button) => {
-            expect(button).toBeDisabled;
+            expect(button).toBeDisabled();
         });
     });
 });

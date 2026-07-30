@@ -26,6 +26,11 @@ import { SortOrder } from '../../types';
 import { apiClient } from '../../utils';
 import * as agtHook from './useAssetGroupTags';
 
+const emptyMembersResponse = {
+    data: { members: [] },
+    count: 0,
+};
+
 const handlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
@@ -55,11 +60,11 @@ const handlers = [
         );
     }),
     rest.get('/api/v2/asset-group-tags/:tagId/members', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json(emptyMembersResponse));
     }),
 
     rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json(emptyMembersResponse));
     }),
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(

@@ -34,59 +34,12 @@ import {
 import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
-import { useExtensionsQuery } from '../../hooks';
-import { DeleteExtensionButton } from './DeleteExtensionButton';
+import { useDeleteExtension, useExtensionsQuery, usePermissions } from '../../hooks';
+import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { Permission } from '../../utils';
+import { ConfirmDeleteExtensionDialog, DeleteExtensionButton } from './DeleteExtensionButton';
 
 const columnHelper = createColumnHelper<Extension>();
-
-const columns: ColumnDef<Extension, string>[] = [
-    columnHelper.accessor('name', {
-        id: 'name',
-        header: () => <span className='pl-6'>Name</span>,
-        cell: ({ row }) => <span className='pl-6'>{row.original.name}</span>,
-    }),
-    columnHelper.accessor('namespace', {
-        id: 'namespace',
-        header: () => (
-            <span className='flex items-center'>
-                Namespace
-                <TooltipProvider>
-                    <TooltipRoot>
-                        <TooltipTrigger>
-                            <div className='ml-2'>
-                                <FontAwesomeIcon size='sm' icon={faInfoCircle} />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipPortal>
-                            <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
-                                <Typography variant='caption' component={'p'}>
-                                    Namespace Key is a set prefix for all node and edge kinds defined by an OpenGraph
-                                    extension (e.g. GH_User, AWS_User).
-                                </Typography>
-                                <Typography variant='caption' component={'p'} className='mt-2'>
-                                    This helps quickly inform which extension defines a node or edge kind and
-                                    differentiate common types across platforms.
-                                </Typography>
-                            </TooltipContent>
-                        </TooltipPortal>
-                    </TooltipRoot>
-                </TooltipProvider>
-            </span>
-        ),
-        cell: ({ row }) => <span>{row.original.namespace}</span>,
-    }),
-    columnHelper.accessor('version', {
-        id: 'version',
-        header: () => <span>Version</span>,
-        cell: ({ row }) => <span>{row.original.version}</span>,
-    }),
-    columnHelper.display({
-        id: 'delete-item',
-        header: () => <span className='opacity-0'>Delete</span>,
-        cell: ({ row }) => <DeleteExtensionButton extension={row.original} />,
-        size: 0,
-    }),
-];
 
 export const ERROR_MESSAGE = 'There was an error fetching extensions';
 export const LOADING_MESSAGE = 'Loading extensions...';
@@ -99,7 +52,98 @@ const EMPTY_STATE_HEIGHT = `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * 2}px`;
 
 export const ActiveExtensionsCard = () => {
     const [search, setSearch] = useState('');
+    const [extensionToDelete, setExtensionToDelete] = useState<Extension | null>(null);
     const { data = [], isError, isLoading, isSuccess } = useExtensionsQuery();
+    const deleteExtensionMutation = useDeleteExtension();
+    const { addNotification } = useNotifications();
+    const { checkPermission } = usePermissions();
+    const hasDeletePermission = checkPermission(Permission.OPENGRAPH_WRITE);
+
+    const handleDeleteClick = (extension: Extension) => {
+        setExtensionToDelete(extension);
+    };
+
+    const handleDialogClose = () => {
+        setExtensionToDelete(null);
+    };
+
+    const handleDelete = () => {
+        if (!extensionToDelete) return;
+
+        deleteExtensionMutation.mutate(extensionToDelete.id, {
+            onSuccess: () => {
+                addNotification(
+                    `Extension "${extensionToDelete.name}" was deleted successfully!`,
+                    'deleteExtensionSuccess',
+                    DEFAULT_NOTIFICATION
+                );
+            },
+            onError: () => {
+                addNotification(
+                    `Failed to delete extension "${extensionToDelete.name}". Please try again.`,
+                    'deleteExtensionError',
+                    ERROR_NOTIFICATION
+                );
+            },
+            onSettled: handleDialogClose,
+        });
+    };
+
+    const columns: ColumnDef<Extension, string>[] = [
+        columnHelper.accessor('name', {
+            id: 'name',
+            header: () => <span className='pl-6'>Name</span>,
+            cell: ({ row }) => <span className='pl-6'>{row.original.name}</span>,
+        }),
+        columnHelper.accessor('namespace', {
+            id: 'namespace',
+            header: () => (
+                <div className='flex items-center gap-1'>
+                    <span>Namespace</span>
+                    <TooltipRoot>
+                        <TooltipTrigger asChild>
+                            <button
+                                type='button'
+                                className='bg-transparent border-none p-0 cursor-default'
+                                aria-label='Namespace information'>
+                                <FontAwesomeIcon icon={faInfoCircle} size='sm' />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipPortal>
+                            <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
+                                <Typography variant='caption' component='p'>
+                                    Namespace Key is a set prefix for all node and edge kinds defined by an OpenGraph
+                                    extension (e.g. GH_User, AWS_User).
+                                </Typography>
+                                <Typography variant='caption' component='p' className='mt-2'>
+                                    This helps quickly inform which extension defines a node or edge kind and
+                                    differentiate common types across platforms.
+                                </Typography>
+                            </TooltipContent>
+                        </TooltipPortal>
+                    </TooltipRoot>
+                </div>
+            ),
+            cell: ({ row }) => <span>{row.original.namespace}</span>,
+        }),
+        columnHelper.accessor('version', {
+            id: 'version',
+            header: () => <span>Version</span>,
+            cell: ({ row }) => <span>{row.original.version}</span>,
+        }),
+        columnHelper.display({
+            id: 'delete-item',
+            header: () => <span className='opacity-0'>Delete</span>,
+            cell: ({ row }) => (
+                <DeleteExtensionButton
+                    extension={row.original}
+                    onDeleteClick={handleDeleteClick}
+                    hasDeletePermission={hasDeletePermission}
+                />
+            ),
+            size: 0,
+        }),
+    ];
 
     const hasData = !isLoading && isSuccess && data.length > 0;
     const filteredData = data.filter((extension) => extension.name.toLowerCase().includes(search.toLowerCase()));
@@ -136,18 +180,28 @@ export const ActiveExtensionsCard = () => {
                             ? EMPTY_STATE_HEIGHT
                             : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
                 }}>
-                <DataTable
-                    data={filteredData}
-                    noResultsFallback={
-                        <TableRow>
-                            <TableCell colSpan={3} className='h-28 text-center'>
-                                {fallbackMessage}
-                            </TableCell>
-                        </TableRow>
-                    }
-                    columns={columns}
-                />
+                <TooltipProvider>
+                    <DataTable
+                        data={filteredData}
+                        noResultsFallback={
+                            <TableRow>
+                                <TableCell colSpan={4} className='h-28 text-center'>
+                                    {fallbackMessage}
+                                </TableCell>
+                            </TableRow>
+                        }
+                        columns={columns}
+                    />
+                </TooltipProvider>
             </div>
+
+            <ConfirmDeleteExtensionDialog
+                open={extensionToDelete !== null}
+                extensionName={extensionToDelete?.name || ''}
+                isDeleting={deleteExtensionMutation.isLoading}
+                onAccept={handleDelete}
+                onCancel={handleDialogClose}
+            />
         </Card>
     );
 };

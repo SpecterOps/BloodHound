@@ -33,16 +33,16 @@ import {
     getExploreTableData,
     isSmallColumn,
     type ExploreTableProps,
-    type MungedTableRowWithId,
+    type MungedTableRowWithGraphId,
 } from './explore-table-utils';
 import ExploreTableDataCell from './ExploreTableDataCell';
 import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
-const columnHelper = createColumnHelper<MungedTableRowWithId>();
+const columnHelper = createColumnHelper<MungedTableRowWithGraphId>();
 
 type DataTableProps = React.ComponentProps<typeof DataTable>;
 
-const filterKeys: (keyof MungedTableRowWithId)[] = ['label', 'objectid'];
+const filterKeys: (keyof MungedTableRowWithGraphId)[] = ['label', 'objectid'];
 
 type UseExploreTableRowsAndColumnsProps = Pick<ExploreTableProps, 'onKebabMenuClick' | 'selectedColumns'> & {
     searchInput: string;
@@ -55,17 +55,17 @@ const useExploreTableRowsAndColumns = ({
     selectedColumns,
     exploreTableData,
 }: UseExploreTableRowsAndColumnsProps) => {
-    const [sortBy, setSortBy] = useState<keyof MungedTableRowWithId>();
+    const [sortBy, setSortBy] = useState<keyof MungedTableRowWithGraphId>();
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>();
     const announce = useAnnounce();
 
-    const rows: MungedTableRowWithId[] = useMemo(
+    const rows: MungedTableRowWithGraphId[] = useMemo(
         () =>
             exploreTableData?.nodes
                 ? Object.entries(exploreTableData?.nodes).map(([key, node]) => {
                       // To avoid extra enumerations for spread operators, the known properties are manually set
                       const flattenedNode = {
-                          id: key,
+                          bhGraphId: key,
                           label: node.label,
                           kind: node.kind,
                           objectId: node.objectId,
@@ -73,7 +73,7 @@ const useExploreTableRowsAndColumns = ({
                           isTierZero: node.isTierZero,
                           isOwnedObject: node.isOwnedObject,
                           ...node.properties,
-                      } satisfies MungedTableRowWithId;
+                      } satisfies MungedTableRowWithGraphId;
 
                       return flattenedNode;
                   })
@@ -82,7 +82,7 @@ const useExploreTableRowsAndColumns = ({
     );
 
     const handleSort = useCallback(
-        (sortByColumn: keyof MungedTableRowWithId) => {
+        (sortByColumn: keyof MungedTableRowWithGraphId) => {
             if (!sortByColumn || sortByColumn !== sortBy) {
                 // first sort of a new column
                 setSortBy(sortByColumn);
@@ -118,7 +118,7 @@ const useExploreTableRowsAndColumns = ({
 
     const firstTenRows = useMemo(() => rows?.slice(0, 10), [rows]);
     const makeColumnDef = useCallback(
-        (rawKey: keyof MungedTableRowWithId) => {
+        (rawKey: keyof MungedTableRowWithGraphId) => {
             const key = rawKey?.toString();
             const firstTruthyValueInFirst10Rows = firstTenRows.find((row) => !!row?.[key])?.[key];
             const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
@@ -173,8 +173,8 @@ const useExploreTableRowsAndColumns = ({
                         role='button'
                         data-testid='kebab-menu'
                         aria-label='Row details'
-                        onClick={(e) => handleKebabMenuClick(e, row?.original?.id)}
-                        onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.id))}
+                        onClick={(e) => handleKebabMenuClick(e, row?.original?.bhGraphId)}
+                        onKeyDown={adaptClickHandlerToKeyDown((e) => handleKebabMenuClick(e, row?.original?.bhGraphId))}
                         className='explore-table-cell-icon h-full flex justify-center items-center -outline-offset-4'>
                         <FontAwesomeIcon
                             icon={faEllipsis}
@@ -190,7 +190,7 @@ const useExploreTableRowsAndColumns = ({
         [handleKebabMenuClick]
     );
 
-    const filteredRows: MungedTableRowWithId[] = useMemo(() => {
+    const filteredRows: MungedTableRowWithGraphId[] = useMemo(() => {
         const lowercaseSearchInput = searchInput?.toLowerCase();
 
         return rows.filter((item) => {

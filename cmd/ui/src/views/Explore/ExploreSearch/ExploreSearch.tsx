@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faCode, faDirections, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
@@ -186,7 +186,7 @@ const ExploreSearch: React.FC = () => {
                     onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
-                    <FontAwesomeIcon icon={showSearchWidget ? faMinus : faPlus} />
+                    <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} />
                 </Icon>
                 <Tabs
                     variant='fullWidth'

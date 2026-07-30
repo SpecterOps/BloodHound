@@ -36,6 +36,13 @@ beforeAll(() => {
         value: 800,
     });
 
+    // Keep MUI popovers from treating the global 800px offsetHeight mock as viewport overflow
+    Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        writable: true,
+        value: 1024,
+    });
+
     // Radix Select relies on pointer events + scroll positioning under the hood
     // (Popper + focus management). In JSDOM, those methods (scrollIntoView,
     // hasPointerCapture, releasePointerCapture) don’t exist by default, so Radix

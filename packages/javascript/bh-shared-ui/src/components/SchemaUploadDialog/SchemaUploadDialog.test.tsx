@@ -26,6 +26,7 @@ const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { ty
 
 const addNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn().mockReturnValue(true);
+const showFileIngestDialogMock = { value: false };
 
 vi.mock('../../providers', async () => {
     const actual = await vi.importActual('../../providers');
@@ -44,6 +45,16 @@ vi.mock('../../hooks/usePermissions', async () => {
         usePermissions: () => ({
             checkPermission: checkPermissionMock,
             isSuccess: true,
+        }),
+    };
+});
+
+vi.mock('../../hooks/useFileUploadDialogContext', async () => {
+    const actual = await vi.importActual('../../hooks');
+    return {
+        ...actual,
+        useFileUploadDialogContext: () => ({
+            showFileIngestDialog: showFileIngestDialogMock.value,
         }),
     };
 });
@@ -87,6 +98,7 @@ afterEach(() => {
     server.resetHandlers();
     addNotificationMock.mockClear();
     checkPermissionMock.mockReturnValue(true);
+    showFileIngestDialogMock.value = false;
 });
 afterAll(() => {
     server.close();
@@ -117,6 +129,21 @@ describe('SchemaUploadDialog', () => {
         expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
 
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
+    });
+
+    it('does not open the Schema Upload dialog via drag when the Quick Upload dialog is already open', async () => {
+        showFileIngestDialogMock.value = true;
+
+        const screen = render(<SchemaUploadDialog />);
+
+        const dragEvent = new Event('dragenter', { bubbles: true }) as any;
+        dragEvent.dataTransfer = {
+            types: ['Files'],
+            items: [{ kind: 'file', type: 'application/json' }],
+        };
+        document.dispatchEvent(dragEvent);
+
         expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
     });
 
@@ -185,10 +212,13 @@ describe('SchemaUploadDialog', () => {
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
         const fileInput = screen.getByTestId('ingest-file-upload');
         await user.upload(fileInput, testFile);
-        await user.click(screen.getByRole('button', { name: 'Upload' }));
 
-        expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
-        expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+        await withoutErrorLogging(async () => {
+            await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+            expect(await screen.findByText('Failed to Upload')).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: 'Close' })).toBeInTheDocument();
+        });
     });
 
     it('invalidates the extensions query after a successful upload', async () => {

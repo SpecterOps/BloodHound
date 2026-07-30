@@ -131,7 +131,7 @@ describe('EntityInfoDataTableGraphed', () => {
             expect(sum).not.toBeNull();
         });
 
-        it('displays ! icon when one of the Affected Object calls fail', async () => {
+        it('sums the remaining sections when one of the Affected Object calls fails', async () => {
             console.error = vi.fn();
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
@@ -141,9 +141,10 @@ describe('EntityInfoDataTableGraphed', () => {
 
             render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
 
-            const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
+            const sum = await screen.findByText('5,056');
+            expect(sum).not.toBeNull();
 
-            expect(errorIcon).not.toBeNull();
+            expect(screen.queryByTestId('ErrorOutlineIcon')).toBeNull();
         });
 
         it('displays 0 when a given sections returns empty, and sums the rest of the sections correctly', async () => {

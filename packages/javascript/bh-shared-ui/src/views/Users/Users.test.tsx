@@ -19,9 +19,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import Users from '.';
 import { bloodHoundUsersHandlers, testAuthenticatedUser, testBloodHoundUsers, testSSOProviders } from '../../mocks';
+import { mockGetConfigurationHandler } from '../../mocks/handlers';
 import { render, screen, waitFor, within } from '../../test-utils';
 
-const server = setupServer(...bloodHoundUsersHandlers);
+const server = setupServer(...bloodHoundUsersHandlers, mockGetConfigurationHandler());
 
 const selfHandler = (roles: { name: string; permissions: { authority: string; name: string }[] }[]) =>
     rest.get('/api/v2/self', async (_req, res, ctx) => {

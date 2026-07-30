@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
@@ -44,15 +45,18 @@ func TestDeleteData_Sourceless(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -67,7 +71,7 @@ func TestDeleteData_Sourceless(t *testing.T) {
 	}
 
 	// simulate requesting deletion
-	err := testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
+	err = testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
 	require.Nil(t, err)
 	testSuite.BHDatabase.RequestCollectedGraphDataDeletion(ctx, model.AnalysisRequest{DeleteSourcelessGraph: true, RequestType: model.AnalysisRequestDeletion})
 	require.Nil(t, err)
@@ -93,15 +97,18 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -116,7 +123,7 @@ func TestDeleteData_SourceKinds(t *testing.T) {
 	}
 
 	// simulate requesting deletion
-	err := testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
+	err = testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
 	require.Nil(t, err)
 	testSuite.BHDatabase.RequestCollectedGraphDataDeletion(ctx, model.AnalysisRequest{DeleteSourceKinds: []string{"GithubBase", "AZBase"}, RequestType: model.AnalysisRequestDeletion})
 	require.Nil(t, err)
@@ -142,15 +149,18 @@ func TestDeleteData_All(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
 	for _, file := range files {
-		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
 
 		failed := 0
@@ -165,7 +175,7 @@ func TestDeleteData_All(t *testing.T) {
 	}
 
 	// simulate requesting deletion
-	err := testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
+	err = testSuite.BHDatabase.RegisterSourceKind(ctx)(graph.StringKind("GithubBase"))
 	require.Nil(t, err)
 	testSuite.BHDatabase.RequestCollectedGraphDataDeletion(ctx, model.AnalysisRequest{DeleteSourceKinds: []string{"GithubBase", "AZBase", "Base"}, RequestType: model.AnalysisRequestDeletion})
 	require.Nil(t, err)
@@ -193,12 +203,15 @@ func TestPartialIngest(t *testing.T) {
 
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 	ingestCtx := graphify.NewIngestContext(ctx, graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
 
-	fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, model.IngestTask{
-		StoredFileName: path.Join(testSuite.WorkDir, "oneGoodOneInvalidRel.json"),
+	fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestCtx, ingestFileService, model.IngestTask{
+		StoredFileName: "oneGoodOneInvalidRel.json",
 		FileType:       model.FileTypeJson,
 	})
 	require.NoError(t, err)
@@ -237,7 +250,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.True(t, datapipeStatus.LastAnalysisRunAt.IsZero())
 
 	// request analysis so that Analyze will run
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)
@@ -250,7 +263,7 @@ func TestAnalyze_LastAnalysisTimestampUpdated(t *testing.T) {
 	require.Greater(t, updatedDatapipeStatus.LastAnalysisRunAt, datapipeStatus.LastAnalysisRunAt)
 
 	// request analysis again
-	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test")
+	err = testSuite.BHDatabase.RequestAnalysis(ctx, "test", model.AnalysisModeFull)
 	require.NoError(t, err)
 
 	err = testSuite.Daemon.Analyze(ctx)

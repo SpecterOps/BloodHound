@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { mockKindsHandler } from '../../mocks/handlers/graphKinds';
+import { mockGetConfigurationHandler, mockKindsHandler } from '../../mocks/handlers';
 import { act, renderHook, waitFor } from '../../test-utils';
 import { usePathfindingSearch } from './usePathfindingSearch';
 
@@ -30,7 +30,8 @@ const server = setupServer(
 
         return res(ctx.json({ data: [{ name: searchTerm, objectid: searchTerm }] }));
     }),
-    mockKindsHandler()
+    mockKindsHandler(),
+    mockGetConfigurationHandler()
 );
 
 beforeAll(() => server.listen());

@@ -26,15 +26,34 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/modules"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 )
+
+// noopRateLimit is a pass-through middleware factory for use in tests where
+// rate-limiting behaviour is not under test.
+func noopRateLimit() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler { return next }
+}
+
+func dogTagsService(etacEnabled bool) dogtags.Service {
+	return dogtags.NewTestService(dogtags.TestOverrides{
+		Bools: map[dogtags.BoolDogTag]bool{
+			dogtags.ETAC_ENABLED: etacEnabled,
+		},
+	})
+}
 
 func TestRegister_PanicsOnNilRouter(t *testing.T) {
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router: nil,
-			Pool:   new(pgxpool.Pool),
+			Router:              nil,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		})
 	})
 }
@@ -48,34 +67,108 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   nil,
+			Router:              &routerInst,
+			Pool:                nil,
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		})
 	})
 }
 
-// TestRegister_WiresAnalysisRoutes verifies that the composition root correctly
-// attaches the analysis module routes to the shared router. Matching a
-// representative route proves that Register successfully delegated to the
-// feature module.
-func TestRegister_WiresAnalysisRoutes(t *testing.T) {
+func TestRegister_PanicsOnNilGraph(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               nil,
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
+		})
+	})
+}
+
+func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: nil,
+			DogTags:             dogTagsService(false),
+		})
+	})
+}
+
+func TestRegister_PanicsOnNilDogTags(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             nil,
+		})
+	})
+}
+
+// TestRegister_WiresFeatureRoutes verifies that the composition root correctly
+// attaches the feature module routes to the shared router. Matching a
+// representative route from each module proves that Register successfully
+// delegated to the feature modules.
+func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
 		routerInst = router.NewRouter(cfg, authorizer, "")
 		deps       = modules.Deps{
-			Router: &routerInst,
-			Pool:   new(pgxpool.Pool),
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		}
 	)
 
 	modules.Register(deps)
 
-	var (
-		muxRouter = routerInst.MuxRouter()
-		request   = httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil)
-		match     mux.RouteMatch
-	)
+	for _, tc := range []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{"analysis status", http.MethodGet, "/api/v2/analysis/status"},
+		{"feature flags list", http.MethodGet, "/api/v2/features"},
+		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},
+		{"relationship request", http.MethodGet, "/api/v2/relationships/1"},
+		{"node kind request", http.MethodGet, "/api/v2/node-kinds/1"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				muxRouter = routerInst.MuxRouter()
+				request   = httptest.NewRequest(tc.method, tc.path, nil)
+				match     mux.RouteMatch
+			)
 
-	assert.True(t, muxRouter.Match(request, &match), "analysis route should be registered by Register")
+			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)
+		})
+	}
 }

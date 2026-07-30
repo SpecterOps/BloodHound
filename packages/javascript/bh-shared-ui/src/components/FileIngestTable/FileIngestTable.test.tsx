@@ -121,6 +121,9 @@ const server = setupServer(
                 ],
             })
         );
+    }),
+    rest.get('/api/v2/bloodhound-users-minimal', (_req, res, ctx) => {
+        return res(ctx.json({ data: { users: [] } }));
     })
 );
 

@@ -42,8 +42,9 @@ func (s CustomNodeKinds) AuditData() AuditData {
 
 type CustomNodeKind struct {
 	ID               int32                `json:"id"`
-	KindName         string               `json:"kindName"`
-	SchemaNodeKindId *int32               `json:"-"` // SchemaNodeKindId is nullable
+	KindId           int16                `json:"kindId"`   // FK to kind.id; stored column
+	KindName         string               `json:"kindName"` // joined from kind.name; not a stored column
+	SchemaNodeKindId *int32               `json:"-"`        // SchemaNodeKindId is nullable
 	Config           CustomNodeKindConfig `json:"config"`
 }
 
@@ -67,7 +68,7 @@ type CustomNodeKindType string
 
 type CustomNodeKindMap map[string]CustomNodeKindConfig
 
-func (s *CustomNodeKindConfig) Scan(value interface{}) error {
+func (s *CustomNodeKindConfig) Scan(value any) error {
 	if value == nil {
 		*s = CustomNodeKindConfig{}
 		return nil

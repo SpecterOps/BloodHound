@@ -15,12 +15,37 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { cypherTestResponse, mockKindsHandler, singleNodeResponse } from 'bh-shared-ui';
+import {
+    createAuthStateWithPermissions,
+    cypherTestResponse,
+    mockGetConfigurationHandler,
+    mockKindsHandler,
+    mockSourceKindsHandler,
+    singleNodeResponse,
+} from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
+
+// Mock sigma here to avoid rendering conflicts in jsdom
+vi.mock('src/components/SigmaChart', async () => {
+    const { forwardRef, useImperativeHandle } = await import('react');
+
+    return {
+        default: forwardRef((_props, ref) => {
+            useImperativeHandle(ref, () => ({
+                runStandardLayout: vi.fn(),
+                runSequentialLayout: vi.fn(),
+                resetCamera: vi.fn(),
+                zoomTo: vi.fn(),
+            }));
+
+            return <div data-testid='sigma-container-wrapper' />;
+        }),
+    };
+});
 
 const baseGlobalView = {
     notifications: [],
@@ -52,10 +77,10 @@ const server = setupServer(
         return res(ctx.json(cypherTestResponse));
     }),
     rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/self', (req, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: createAuthStateWithPermissions([]).user }));
     }),
     rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
@@ -64,20 +89,68 @@ const server = setupServer(
         return res(ctx.json({ data: { tags: [] } }));
     }),
     rest.get('/api/v2/file-upload/accepted-types', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/saved-queries', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ queries: [] }));
     }),
     rest.get('/api/v2/graph-search', (_req, res, ctx) => {
         return res(ctx.json(graphSearchResponse));
     }),
     mockKindsHandler(),
+    mockGetConfigurationHandler(),
+    mockSourceKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
                 data: {
                     roles: [],
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/search', (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
+    rest.get('/api/v2/graphs/shortest-path', (_req, res, ctx) => {
+        return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+    }),
+    rest.get('/api/v2/users/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    data: {
+                        kinds: ['Base', 'User'],
+                        props: {
+                            objectid: searchedNode.objectId,
+                            name: searchedNode.label,
+                        },
+                    },
+                },
+            })
+        );
+    }),
+    rest.get('/api/v2/users/:id/:relationship', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                count: 0,
+                skip: 0,
+                limit: 128,
+                data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/nodes/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 42,
+                    kinds: [{ node_kind_id: 1, name: searchedNode.kind }],
+                    properties: {
+                        objectid: searchedNode.objectId,
+                        name: searchedNode.label,
+                        lastSeen: searchedNode.lastSeen,
+                    },
                 },
             })
         );
@@ -165,13 +238,14 @@ describe('GraphView', () => {
         };
 
         clonedCypherResponse.data.edges.push({
+            id: 1,
             source: '108',
             target: '108',
             label: 'some label',
-            kind: 'some kind',
+            kind: 'kind',
             lastSeen: 'some lastSeen',
             impactPercent: 10,
-            exploreGraphId: 'some exploreGraphId',
+            exploreGraphId: '108_kind_108',
             data: {},
         });
 

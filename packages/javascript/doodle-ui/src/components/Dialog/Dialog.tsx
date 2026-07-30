@@ -26,7 +26,17 @@ const Dialog = DialogPrimitive.Root;
 /**
  * See documentation: [DialogTrigger](https://www.radix-ui.com/primitives/docs/components/dialog#trigger)
  */
-const DialogTrigger = DialogPrimitive.Trigger;
+const DialogTrigger = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Trigger>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Trigger
+        ref={ref}
+        className={cn('focus:outline-none focus-visible:focus-ring', className)}
+        {...props}
+    />
+));
+DialogTrigger.displayName = DialogPrimitive.Trigger.displayName;
 
 /**
  * See documentation: [DialogPortal](https://www.radix-ui.com/primitives/docs/components/dialog#overlay)
@@ -36,7 +46,17 @@ const DialogPortal = DialogPrimitive.Portal;
 /**
  * See documentation: [DialogClose](https://www.radix-ui.com/primitives/docs/components/dialog#close)
  */
-const DialogClose = DialogPrimitive.Close;
+const DialogClose = React.forwardRef<
+    React.ElementRef<typeof DialogPrimitive.Close>,
+    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
+>(({ className, ...props }, ref) => (
+    <DialogPrimitive.Close
+        ref={ref}
+        className={cn('focus:outline-none focus-visible:focus-ring', className)}
+        {...props}
+    />
+));
+DialogClose.displayName = DialogPrimitive.Close.displayName;
 
 const DialogOverlayVariants = cva(
     'fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
@@ -123,6 +143,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                         'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]',
                         'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
                         'rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
+                        'focus:outline-none focus-visible:focus-ring',
                         maxWidthClass,
                         { 'overflow-y-auto': disableStickyLayout },
                         className

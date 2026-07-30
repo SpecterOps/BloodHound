@@ -102,9 +102,21 @@ describe('AnnouncementProvider', () => {
 describe('useAnnounce', () => {
     it('throws when used outside of AnnouncementProvider', () => {
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-        expect(() => renderHook(() => useAnnounce())).toThrow(
-            'useAnnounce must be used within an AnnouncementProvider'
-        );
-        consoleError.mockRestore();
+        const expectedMessage = 'useAnnounce must be used within an AnnouncementProvider';
+
+        const suppressExpectedError = (event: ErrorEvent) => {
+            if (event.message.includes(expectedMessage)) {
+                event.preventDefault();
+            }
+        };
+
+        window.addEventListener('error', suppressExpectedError);
+
+        try {
+            expect(() => renderHook(() => useAnnounce())).toThrow(expectedMessage);
+        } finally {
+            window.removeEventListener('error', suppressExpectedError);
+            consoleError.mockRestore();
+        }
     });
 });

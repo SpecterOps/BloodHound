@@ -30,10 +30,20 @@ import {
     FileIngestCompletedTask,
     FileIngestJob,
     GraphData,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    NodeKindResponse,
     NodeSourceTypes,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+    RelationshipKindResponse,
     Role,
     ScheduledJobDisplay,
+    SourceKind,
     TimestampFields,
+    Webhook,
+    WebhookSecret,
+    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -73,6 +83,8 @@ export type Environment = {
     collected: boolean;
     hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
     exposures: EnvironmentExposure[];
+    environment_kind_display_name?: string; // OG Environments
+    environment_kind_id?: number; // OG Environments
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -125,6 +137,20 @@ export type AzureDataQualityStat = TimestampFields & {
 };
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
+
+export type OpenGraphDataQualityStat = TimestampFields & {
+    run_id: string;
+    environment_kind_id: number;
+    environment_id: string;
+    extension_id: number;
+    id: number;
+    kind_id: number;
+    metric_name: string;
+    metric_type: string;
+    metric_value: number;
+};
+
+export type OpenGraphDataQualityResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
 
 type PostureStat = TimestampFields & {
     domain_sid: string;
@@ -319,6 +345,32 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    requested_by_user_id: string | null;
+    created_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    execution_time: string;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -390,7 +442,7 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     environment_name: string;
-    zone_id: number;
+    asset_group_tag_id: number;
     zone_name: string;
     source_principal_id: string;
     source_principal_name: string;
@@ -404,3 +456,27 @@ export type UnifiedFinding = {
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
+
+export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
+
+export type CreateWebhookResponse = {
+    webhook: Webhook;
+    hmac_secret: string;
+};
+
+export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
+export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
+export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
+
+export type GetRelationshipResponse = BasicResponse<RelationshipDetails | RelationshipDetailsWithInfo>;
+
+export type ListNodeKindsResponse = BasicResponse<NodeKindResponse[]>;
+
+export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
+
+export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
+
+export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;

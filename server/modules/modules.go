@@ -20,10 +20,18 @@
 package modules
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/extensions"
+	"github.com/specterops/bloodhound/server/featureflags"
+	"github.com/specterops/bloodhound/server/graphdb"
+	"github.com/specterops/bloodhound/server/identity"
+	"github.com/specterops/dawgs/graph"
 )
 
 // Deps carries the shared infrastructure that feature modules need in order to
@@ -31,8 +39,12 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router *router.Router
-	Pool   *pgxpool.Pool
+	Router              *router.Router
+	Pool                *pgxpool.Pool
+	Graph               graph.Database
+	RateLimitMiddleware func() mux.MiddlewareFunc
+	DogTags             dogtags.Service
+	AlertPublisher      alerts.Publisher
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -45,7 +57,24 @@ func Register(deps Deps) {
 	if deps.Pool == nil {
 		panic("modules: Register requires a non-nil Pool")
 	}
+	if deps.Graph == nil {
+		panic("modules: Register requires a non-nil Graph")
+	}
+	if deps.RateLimitMiddleware == nil {
+		panic("modules: Register requires a non-nil RateLimitMiddleware")
+	}
+	if deps.DogTags == nil {
+		panic("modules: Register requires a non-nil DogTags")
+	}
+
+	if deps.AlertPublisher == nil {
+		deps.AlertPublisher = alerts.NewAlertEventPublisher()
+	}
 
 	analysis.Register(deps.Router, deps.Pool)
 	appcfg.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool)
+	featureflags.Register(deps.Router, deps.Pool)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
+	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
 }

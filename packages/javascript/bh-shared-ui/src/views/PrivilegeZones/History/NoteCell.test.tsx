@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import userEvent from '@testing-library/user-event';
 import { BloodHoundString } from 'js-client-library';
 import { fireEvent, render, screen } from '../../../test-utils';
 import { useHistoryTableContext } from './HistoryTableContext';
@@ -47,17 +48,34 @@ describe('NoteCell component', () => {
         tagName: 'foo',
     };
 
-    it('renders a dash when actor is BloodHoundString', () => {
+    beforeEach(() => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             selected: null,
             setSelected: mockSetSelected,
             clearSelected: mockClearSelected,
         });
+    });
 
-        render(<NoteCell row={{ original: { ...defaultItem, actor: BloodHoundString } }} />);
+    it('displays the default "No notes" tooltip when the note is missing and actor is not BloodHound', async () => {
+        const user = userEvent.setup();
 
-        expect(screen.getByText('-')).toBeInTheDocument();
-        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        render(<NoteCell row={{ original: { ...defaultItem, note: null } }} />);
+
+        await user.hover(screen.getByText('-'));
+
+        expect(await screen.findByRole('tooltip', { name: 'No notes' })).toBeInTheDocument();
+    });
+
+    it('displays the BloodHound-specific tooltip when the note is missing and actor is BloodHoundString', async () => {
+        const user = userEvent.setup();
+
+        render(<NoteCell row={{ original: { ...defaultItem, note: null, actor: BloodHoundString } }} />);
+
+        await user.hover(screen.getByText('-'));
+
+        expect(
+            await screen.findByRole('tooltip', { name: `No notes for ${BloodHoundString} history` })
+        ).toBeInTheDocument();
     });
 
     it('renders a button when actor is not BloodHoundString and note exists', () => {
@@ -71,21 +89,6 @@ describe('NoteCell component', () => {
 
         expect(screen.getByRole('button')).toBeInTheDocument();
         expect(screen.getByTestId('lined-paper-icon')).toBeInTheDocument();
-    });
-
-    it('button is disabled when note is falsy', () => {
-        (useHistoryTableContext as jest.Mock).mockReturnValue({
-            currentNote: null,
-            setSelected: mockSetSelected,
-            clearSelected: mockClearSelected,
-        });
-
-        const rowData = { ...defaultItem, note: null };
-
-        render(<NoteCell row={{ original: rowData }} />);
-
-        const button = screen.getByRole('button');
-        expect(button).toBeDisabled();
     });
 
     it('calls setSelected with correct data on click', () => {

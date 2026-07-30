@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { apiClient } from 'bh-shared-ui';
+import { apiClient, mockGetConfigurationHandler } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -48,6 +48,21 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
 describe('AssetGroupMenuItem', async () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
@@ -84,7 +99,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());
@@ -172,6 +188,21 @@ describe('AssetGroupMenuItem', async () => {
 
     describe('removing from an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
@@ -207,7 +238,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());

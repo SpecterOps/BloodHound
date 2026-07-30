@@ -266,7 +266,7 @@ func TestGetAnalysisStatus(t *testing.T) {
 
 	t.Run("returns 200 OK with all contract fields when a request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
-		require.NoError(t, db.RequestAnalysis(ctx, "test-user"))
+		require.NoError(t, db.RequestAnalysis(ctx, "test-user", model.AnalysisModeFull))
 		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
 
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
@@ -391,7 +391,7 @@ func TestCreateAnalysisRequest(t *testing.T) {
 	t.Run("returns 202 Accepted when a request is already pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
 		// Seed a known pending request attributed to a different requester
-		require.NoError(t, db.RequestAnalysis(ctx, "prior-user"))
+		require.NoError(t, db.RequestAnalysis(ctx, "prior-user", model.AnalysisModeFull))
 		t.Cleanup(func() { _ = db.DeleteAnalysisRequest(ctx) })
 
 		resp, err := http.DefaultClient.Do(newPutRequest(t))
@@ -508,7 +508,7 @@ func TestCancelAnalysisRequest(t *testing.T) {
 
 	t.Run("returns 202 Accepted when an analysis request is pending", func(t *testing.T) {
 		require.NoError(t, db.DeleteAnalysisRequest(ctx))
-		require.NoError(t, db.RequestAnalysis(ctx, "test-user"))
+		require.NoError(t, db.RequestAnalysis(ctx, "test-user", model.AnalysisModeFull))
 
 		resp, err := http.DefaultClient.Do(newDeleteRequest(t))
 		require.NoError(t, err)

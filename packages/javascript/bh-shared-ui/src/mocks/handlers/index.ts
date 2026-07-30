@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './bloodHoundUsers';
+export * from './configuration';
 export * from './environments';
 export * from './graphKinds';
 export { default as zoneHandlers } from './zoneHandlers';

@@ -43,7 +43,7 @@ func SubscriptionEntityDetails(ctx context.Context, db graph.Database, primaryDi
 func PopulateSubscriptionEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details SubscriptionDetails) (SubscriptionDetails, error) {
 	var descendentKinds = GetDescendentKinds(azure.Subscription)
 
-	if descendents, err := FetchEntityDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
+	if descendents, err := FetchEntityDescendentCounts(tx, node, descendentKinds...); err != nil {
 		return details, err
 	} else {
 		details.Descendents = descendents

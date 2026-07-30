@@ -32,14 +32,14 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             An attacker can add an explicit certificate mapping in the AltSecurityIdentities of the target referring to
             a certificate in the attacker's possession, and then use this certificate to authenticate as the target.
         </Typography>
-        <Typography variant='body2'>
+        <Typography variant='body2' component='div'>
             The certificate must meet the following requirements:
             <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
                 <li>Chain up to trusted root CA on the DC</li>
                 <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
                 <li>Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry (UPN)</li>
             </ol>
-            <p className='my-4'>
+            <div className='my-4'>
                 The EKUs that enable domain authentication over Kerberos:
                 <ul style={{ paddingLeft: '1.5em' }}>
                     <li>Client Authentication (1.3.6.1.5.5.7.3.2)</li>
@@ -48,7 +48,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
                     <li>Any Purpose (2.5.29.37.0)</li>
                     <li>SubCA (no EKUs)</li>
                 </ul>
-            </p>
+            </div>
             <p className='my-4'>
                 The last certificate requirement means that user certificates will not work, so the certificate
                 typically must be of a computer. By default, the ADCS certificate template <i>Computer (Machine)</i>{' '}
@@ -129,14 +129,14 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 to a certificate in the attacker's possession, and then use this certificate to authenticate as the
                 target.
             </Typography>
-            <Typography variant='body2'>
+            <Typography variant='body2' component='div'>
                 The certificate must meet the following requirements:
                 <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
                     <li>Chain up to trusted root CA on the DC</li>
                     <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
                     <li>Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry (UPN)</li>
                 </ol>
-                <p className='my-4'>
+                <div className='my-4'>
                     The EKUs that enable domain authentication over Kerberos:
                     <ul style={{ paddingLeft: '1.5em' }}>
                         <li>Client Authentication (1.3.6.1.5.5.7.3.2)</li>
@@ -145,7 +145,7 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                         <li>Any Purpose (2.5.29.37.0)</li>
                         <li>SubCA (no EKUs)</li>
                     </ul>
-                </p>
+                </div>
                 <p className='my-4'>
                     The last certificate requirement means that user certificates will not work, so the certificate
                     typically must be of a computer. By default, the ADCS certificate template <i>Computer (Machine)</i>{' '}

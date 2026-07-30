@@ -161,6 +161,13 @@ services:
       context: .
       dockerfile: tools/docker-compose/ui.Dockerfile
     command: sh -c "yarn dev"
+    environment:
+      VITE_USE_POLLING: "${VITE_USE_POLLING:-true}"
+      # Must match the host-side port published by the proxy service (WEB_PORT, default 80). Compose
+      # interpolation can't extract the port from WEB_PORT's host:port binding, so if WEB_PORT uses a
+      # non-default port (e.g. 127.0.0.1:8080), set VITE_HMR_CLIENT_PORT to match; otherwise Vite
+      # advertises the stale default and the HMR websocket fails to connect through the proxy.
+      VITE_HMR_CLIENT_PORT: "${VITE_HMR_CLIENT_PORT:-80}"
     labels:
       - traefik.enable=true
       - traefik.http.routers.bhui.rule=Host(`${BH_HOSTNAME:-bloodhound.localhost}`)

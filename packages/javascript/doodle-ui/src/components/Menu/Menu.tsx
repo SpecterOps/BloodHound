@@ -27,7 +27,17 @@ const Menu = DropdownMenuPrimitive.Root;
 /**
  * Trigger
  */
-const MenuTrigger = DropdownMenuPrimitive.Trigger;
+const MenuTrigger = React.forwardRef<
+    React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+    <DropdownMenuPrimitive.Trigger
+        ref={ref}
+        className={cn('focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring', className)}
+        {...props}
+    />
+));
+MenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 
 /**
  * Portal
@@ -78,6 +88,7 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
             className={cn(
                 'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
                 'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
+                'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
                 'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
                 'data-[highlighted]:active:bg-[#2C2677] dark:data-[highlighted]:active:bg-[#a1a0ff] dark:data-[highlighted]:active:text-black',
                 'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-neutral-light-3 data-[disabled]:text-[#616161]',
@@ -121,6 +132,7 @@ const MenuSubTrigger = React.forwardRef<
         className={cn(
             'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
             'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
+            'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] data-[state=open]:shadow-[inset_3px_0_0_var(--focus-ring)]',
             'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
             'data-[state=open]:bg-[#4A3BD7] data-[state=open]:text-white',
             'dark:data-[state=open]:bg-[#66a3ff] dark:data-[state=open]:text-black',

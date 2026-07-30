@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockGetConfigurationHandler, withoutErrorLogging } from '../../mocks';
 import { renderHook, waitFor } from '../../test-utils';
 import { useExploreTableAutoDisplay } from './useExploreTableAutoDisplay';
 const emptyResponse = { edges: [], nodes: {} };
@@ -33,7 +34,7 @@ const getCypherAPIMock = (results: Record<string, any>) => {
         );
     });
 };
-const server = setupServer(getCypherAPIMock(tableShapedResponse));
+const server = setupServer(getCypherAPIMock(tableShapedResponse), mockGetConfigurationHandler());
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -61,12 +62,14 @@ describe('useExploreTableAutoDisplay', () => {
     });
 
     it('sets autoDisplayTable to false if query returns no results', async () => {
-        server.use(getCypherAPIMock(emptyResponse));
+        await withoutErrorLogging(async () => {
+            server.use(getCypherAPIMock(emptyResponse));
 
-        const initialRoute = '?searchType=cypher&cypherSearch=YQ%3D%3D';
-        const { result } = setup({ initialRoute });
+            const initialRoute = '?searchType=cypher&cypherSearch=YQ%3D%3D';
+            const { result } = setup({ initialRoute });
 
-        await waitFor(() => expect(result.current[0]).toBe(false));
+            await waitFor(() => expect(result.current[0]).toBe(false));
+        });
     });
 
     it('sets autoDisplayTable to false if query returns nodes only but the enabled prop is false', async () => {

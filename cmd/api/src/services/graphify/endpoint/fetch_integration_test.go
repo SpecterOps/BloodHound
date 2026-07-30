@@ -174,7 +174,7 @@ func Test_FetchAllNodesByMatchers(t *testing.T) {
 
 	var (
 		endpointResolver             = endpoint.NewResolver(suite.GraphDB)
-		resolvedBatch, resolutionErr = endpoint.ResolveAll(suite.Context, endpointResolver, ingestBatch)
+		resolvedBatch, resolutionErr = endpoint.ResolveAll(suite.Context, endpointResolver, ingestBatch, false)
 	)
 
 	assert.NoError(t, resolutionErr)

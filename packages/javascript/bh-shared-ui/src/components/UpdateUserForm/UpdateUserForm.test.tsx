@@ -313,7 +313,7 @@ const MOCK_USER = [
                         },
                         {
                             authority: 'graphdb',
-                            name: 'Ingest',
+                            name: 'IngestManage',
                             id: 20,
                             created_at: '2025-05-19T22:14:58.311151Z',
                             updated_at: '2025-05-19T22:14:58.311151Z',

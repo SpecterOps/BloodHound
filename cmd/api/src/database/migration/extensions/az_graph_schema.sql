@@ -63,6 +63,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION genscript_upsert_custom_node_kind(v_kind_name VARCHAR(256), v_config JSONB) RETURNS void AS $$
+DECLARE
+	retrieved_kind_id SMALLINT;
+	retrieved_schema_node_kind_id INTEGER;
+BEGIN
+	SELECT id INTO retrieved_kind_id FROM kind WHERE name = v_kind_name;
+	IF retrieved_kind_id IS NULL THEN
+		SELECT genscript_upsert_kind(v_kind_name) INTO retrieved_kind_id;
+	END IF;
+
+	SELECT id INTO retrieved_schema_node_kind_id FROM schema_node_kinds WHERE kind_id = retrieved_kind_id;
+
+	IF NOT EXISTS (SELECT id FROM custom_node_kinds cnk WHERE cnk.kind_id = retrieved_kind_id) THEN
+		INSERT INTO custom_node_kinds (kind_id, config, schema_node_kind_id, created_at, updated_at) VALUES (retrieved_kind_id, v_config, retrieved_schema_node_kind_id, NOW(), NOW());
+	ELSE
+		UPDATE custom_node_kinds SET config = v_config, schema_node_kind_id = retrieved_schema_node_kind_id, updated_at = NOW() WHERE kind_id = retrieved_kind_id;
+	END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_relationship_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_description TEXT, v_is_traversable BOOLEAN) RETURNS void AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
@@ -231,6 +251,28 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZAutomationAccount', 'AZAutomationAccount', '', true, 'cog', '#F4BA44');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFederatedIdentityCredential', 'AZFederatedIdentityCredential', '', true, 'key', '#FFEE8C');
 
+	-- Keep custom_node_kinds in sync with node kinds
+	PERFORM genscript_upsert_custom_node_kind('AZVMScaleSet', '{"icon": {"name": "server", "type": "font-awesome", "color": "#007CD0"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZApp', '{"icon": {"name": "window-restore", "type": "font-awesome", "color": "#03FC84"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZRole', '{"icon": {"name": "clipboard-list", "type": "font-awesome", "color": "#ED8537"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZDevice', '{"icon": {"name": "desktop", "type": "font-awesome", "color": "#B18FCF"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZFunctionApp', '{"icon": {"name": "bolt", "type": "font-awesome", "color": "#F4BA44"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZGroup', '{"icon": {"name": "users", "type": "font-awesome", "color": "#F57C9B"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZKeyVault', '{"icon": {"name": "lock", "type": "font-awesome", "color": "#ED658C"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZManagementGroup', '{"icon": {"name": "sitemap", "type": "font-awesome", "color": "#BD93D8"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZResourceGroup', '{"icon": {"name": "cube", "type": "font-awesome", "color": "#89BD9E"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZServicePrincipal', '{"icon": {"name": "robot", "type": "font-awesome", "color": "#C1D6D6"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZSubscription', '{"icon": {"name": "key", "type": "font-awesome", "color": "#D2CCA1"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZTenant', '{"icon": {"name": "cloud", "type": "font-awesome", "color": "#54F2F2"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZUser', '{"icon": {"name": "user", "type": "font-awesome", "color": "#34D2EB"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZVM', '{"icon": {"name": "desktop", "type": "font-awesome", "color": "#F9ADA0"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZManagedCluster', '{"icon": {"name": "cubes", "type": "font-awesome", "color": "#326CE5"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZContainerRegistry', '{"icon": {"name": "box-open", "type": "font-awesome", "color": "#0885D7"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZWebApp', '{"icon": {"name": "object-group", "type": "font-awesome", "color": "#4696E9"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZLogicApp', '{"icon": {"name": "sitemap", "type": "font-awesome", "color": "#9EE047"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZAutomationAccount', '{"icon": {"name": "cog", "type": "font-awesome", "color": "#F4BA44"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZFederatedIdentityCredential', '{"icon": {"name": "key", "type": "font-awesome", "color": "#FFEE8C"}}');
+
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContributor', '', true);
@@ -293,6 +335,7 @@ END $$;
 DROP FUNCTION IF EXISTS genscript_upsert_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_source_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_node_kind;
+DROP FUNCTION IF EXISTS genscript_upsert_custom_node_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_relationship_kind;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments;
 DROP FUNCTION IF EXISTS genscript_upsert_schema_environments_principal_kinds;

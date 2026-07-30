@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { screen } from '@storybook/test';
+import { screen } from '@testing-library/react';
 import { render } from '../../utils';
 import { Typography } from './Typography';
 import { DEFAULT_VARIANT, variantMapping } from './utils';

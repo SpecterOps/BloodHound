@@ -147,24 +147,21 @@ func TestCreateCustomNodeKinds(t *testing.T) {
 
 func TestGetCustomNodeKinds(t *testing.T) {
 	tests := []struct {
-		name    string
-		setup   func() IntegrationTestSuite
-		wantLen int
-		wantErr error
+		name        string
+		setup       func() (IntegrationTestSuite, int)
+		baselineLen int
+		wantLen     int
+		wantErr     error
 	}{
 		{
-			name: "success - returns empty list when none exist",
-			setup: func() IntegrationTestSuite {
-				return setupIntegrationTestSuite(t)
-			},
-			wantLen: 0,
-			wantErr: nil,
-		},
-		{
 			name: "success - returns all created kinds",
-			setup: func() IntegrationTestSuite {
+			setup: func() (IntegrationTestSuite, int) {
 				testSuite := setupIntegrationTestSuite(t)
-				_, err := testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
+
+				baselineKinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
+				require.NoError(t, err)
+
+				_, err = testSuite.BHDatabase.CreateCustomNodeKinds(testSuite.Context, model.CustomNodeKinds{
 					{
 						KindName: "KindOne",
 						Config: model.CustomNodeKindConfig{
@@ -179,7 +176,7 @@ func TestGetCustomNodeKinds(t *testing.T) {
 					},
 				})
 				require.NoError(t, err)
-				return testSuite
+				return testSuite, len(baselineKinds)
 			},
 			wantLen: 2,
 			wantErr: nil,
@@ -188,15 +185,15 @@ func TestGetCustomNodeKinds(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			testSuite := testCase.setup()
+			testSuite, baselineLen := testCase.setup()
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
-			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context, nil)
+			kinds, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 			if testCase.wantErr != nil {
 				assert.EqualError(t, err, testCase.wantErr.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Len(t, kinds, testCase.wantLen)
+				assert.Len(t, kinds, testCase.wantLen+baselineLen)
 			}
 		})
 	}
@@ -376,6 +373,7 @@ func TestUpdateCustomNodeKind(t *testing.T) {
 					require.NotNil(t, updated.SchemaNodeKindId)
 					gotSchemaNodeKind, err := testSuite.BHDatabase.GetGraphSchemaNodeKindById(testSuite.Context, *updated.SchemaNodeKindId)
 					require.NoError(t, err)
+					assert.NotZero(t, gotSchemaNodeKind.KindId, "KindId should be populated from database")
 					assert.Equal(t, testCase.want.SchemaNodeKind.Icon, gotSchemaNodeKind.Icon)
 					assert.Equal(t, testCase.want.SchemaNodeKind.IconColor, gotSchemaNodeKind.IconColor)
 				}
@@ -616,7 +614,7 @@ func countCustomNodeKindRows(t *testing.T, testSuite IntegrationTestSuite, kindN
 	t.Helper()
 
 	var count int64
-	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE kind_name = ?", model.CustomNodeKind{}.TableName()), kindName).Scan(&count)
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(fmt.Sprintf("SELECT COUNT(*) FROM %s cnk JOIN %s k ON k.id = cnk.kind_id WHERE k.name = ?", model.CustomNodeKind{}.TableName(), model.Kind{}.TableName()), kindName).Scan(&count)
 	require.NoError(t, result.Error)
 	return count
 }
