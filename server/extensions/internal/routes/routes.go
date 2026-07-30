@@ -36,7 +36,7 @@ func Register(routerInst *router.Router, handlerSet *handlers.Handlers, rateLimi
 		relationshipKindRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationship-kinds/{%s}", handlers.URIPathVariableRelationshipKindID), handlerSet.GetRelationshipKindByID)
 	)
 
-	router.With(rateLimit, nodeKindRoute)
+	router.With(rateLimit, nodeKindRoute, relationshipKindRoute)
 	nodeKindRoute.RequirePermissions(permissions.GraphDBRead)
 	relationshipKindRoute.RequirePermissions(permissions.GraphDBRead)
 }

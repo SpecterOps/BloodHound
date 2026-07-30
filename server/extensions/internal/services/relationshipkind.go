@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-// ErrNodeKindNotFound indicates that no relationship kind exists for the requested id.
+// ErrRelationshipKindNotFound indicates that no relationship kind exists for the requested id.
 var ErrRelationshipKindNotFound = errors.New("relationship kind not found")
 
 type RelationshipKind struct {
