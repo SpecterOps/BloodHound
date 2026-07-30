@@ -14,7 +14,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-allOf:
-  - $ref: "./model.kind-info-markdown.yaml"
-  - type: object
-    required: [markdown]
+type: object
+nullable: true
+properties:
+  extension_id:
+    type: integer
+    format: int32
+    example: 7
+  name:
+    type: string
+    example: "AD"
+  display_name:
+    type: string
+    example: "Active Directory"
+  namespace:
+    type: string
+    example: "AD"
+  version:
+    type: string
+    example: "v1"
