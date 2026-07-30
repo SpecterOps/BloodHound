@@ -148,3 +148,155 @@ func TestLoadConfigWithOverride(t *testing.T) {
 		t.Errorf("Expected base repo 'base-repo', got '%s'", merged.GitHub.Repo)
 	}
 }
+
+
+
+// TestGetStoragePath tests storage path resolution
+func TestGetStoragePath(t *testing.T) {
+	tests := []struct {
+		name          string
+		configPath    string
+		workspaceRoot string
+		expectedPath  string
+	}{
+		{
+			name:          "absolute_path",
+			configPath:    "/absolute/path/dora.db",
+			workspaceRoot: "/workspace",
+			expectedPath:  "/absolute/path/dora.db",
+		},
+		{
+			name:          "relative_path",
+			configPath:    ".dora/metrics.db",
+			workspaceRoot: "/workspace",
+			expectedPath:  "/workspace/.dora/metrics.db",
+		},
+		{
+			name:          "relative_with_parent_ref",
+			configPath:    "../data/dora.db",
+			workspaceRoot: "/workspace/project",
+			expectedPath:  "/workspace/data/dora.db", // filepath.Join normalizes the path
+		},
+		{
+			name:          "simple_filename",
+			configPath:    "dora.db",
+			workspaceRoot: "/workspace",
+			expectedPath:  "/workspace/dora.db",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := Config{
+				Storage: StorageConfig{
+					Path: tt.configPath,
+				},
+			}
+			result := config.GetStoragePath(tt.workspaceRoot)
+			if result != tt.expectedPath {
+				t.Errorf("GetStoragePath(%s, %s) = %s, expected %s",
+					tt.configPath, tt.workspaceRoot, result, tt.expectedPath)
+			}
+		})
+	}
+}
+
+// TestApplyEnvironmentOverrides tests environment variable overrides
+func TestApplyEnvironmentOverrides(t *testing.T) {
+	// Save original env vars and restore them after test
+	originalEnvVars := map[string]string{
+		"DORA_GITHUB_OWNER":    os.Getenv("DORA_GITHUB_OWNER"),
+		"DORA_GITHUB_REPO":     os.Getenv("DORA_GITHUB_REPO"),
+		"DORA_GITHUB_WORKFLOW": os.Getenv("DORA_GITHUB_WORKFLOW"),
+		"DORA_STORAGE_PATH":    os.Getenv("DORA_STORAGE_PATH"),
+	}
+	defer func() {
+		for key, value := range originalEnvVars {
+			if value == "" {
+				os.Unsetenv(key)
+			} else {
+				os.Setenv(key, value)
+			}
+		}
+	}()
+
+	tests := []struct {
+		name         string
+		envVars      map[string]string
+		initialOwner string
+		initialRepo  string
+		expectOwner  string
+		expectRepo   string
+		expectPath   string
+	}{
+		{
+			name: "override_owner_and_repo",
+			envVars: map[string]string{
+				"DORA_GITHUB_OWNER": "env-owner",
+				"DORA_GITHUB_REPO":  "env-repo",
+			},
+			initialOwner: "config-owner",
+			initialRepo:  "config-repo",
+			expectOwner:  "env-owner",
+			expectRepo:   "env-repo",
+			expectPath:   ".dora/metrics.db",
+		},
+		{
+			name: "override_storage_path",
+			envVars: map[string]string{
+				"DORA_STORAGE_PATH": "/custom/path/db",
+			},
+			initialOwner: "owner",
+			initialRepo:  "repo",
+			expectOwner:  "owner",
+			expectRepo:   "repo",
+			expectPath:   "/custom/path/db",
+		},
+		{
+			name:         "no_env_vars_set",
+			envVars:      map[string]string{},
+			initialOwner: "owner",
+			initialRepo:  "repo",
+			expectOwner:  "owner",
+			expectRepo:   "repo",
+			expectPath:   ".dora/metrics.db",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Clear all env vars first
+			os.Unsetenv("DORA_GITHUB_OWNER")
+			os.Unsetenv("DORA_GITHUB_REPO")
+			os.Unsetenv("DORA_GITHUB_WORKFLOW")
+			os.Unsetenv("DORA_STORAGE_PATH")
+
+			// Set test env vars
+			for key, value := range tt.envVars {
+				os.Setenv(key, value)
+			}
+
+			config := Config{
+				GitHub: GitHubConfig{
+					Owner: tt.initialOwner,
+					Repo:  tt.initialRepo,
+				},
+				Storage: StorageConfig{
+					Path: ".dora/metrics.db",
+				},
+			}
+
+			config.ApplyEnvironmentOverrides()
+
+			if config.GitHub.Owner != tt.expectOwner {
+				t.Errorf("Expected owner %s, got %s", tt.expectOwner, config.GitHub.Owner)
+			}
+			if config.GitHub.Repo != tt.expectRepo {
+				t.Errorf("Expected repo %s, got %s", tt.expectRepo, config.GitHub.Repo)
+			}
+			if config.Storage.Path != tt.expectPath {
+				t.Errorf("Expected path %s, got %s", tt.expectPath, config.Storage.Path)
+			}
+		})
+	}
+}
