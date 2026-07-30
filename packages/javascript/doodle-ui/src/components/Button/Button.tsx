@@ -185,9 +185,9 @@ export const IconButtonVariants = cva(
 export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className'> {
     variant?: 'default' | 'primary' | 'secondary';
     color?: string;
-    className?: string;
+    className?: BaseUIButton.Props['className'];
     'aria-label': string;
-    children: React.ReactNode;
+    children?: React.ReactNode;
     size?: number;
 }
 
@@ -199,11 +199,9 @@ export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 {...props}
                 ref={ref}
                 disabled={disabled}
-                className={cn(
-                    IconButtonVariants({ variant }),
-                    'size-fit box-border shrink-0 rounded-full border-0 has-[svg]:p-2 aspect-square',
-                    className
-                )}
+                className={(state) =>
+                    cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
+                }
                 style={{ ...props.style, fontSize: size, color }}>
                 {children}
             </BaseUIButton>

@@ -19,7 +19,7 @@ import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-reac
 import * as React from 'react';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, TextButton } from '../Button';
+import { Button, IconButton } from '../Button';
 import { cn } from '../utils';
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -204,12 +204,12 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 );
 CarouselItem.displayName = 'CarouselItem';
 
-const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof TextButton>>(
+const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof IconButton>>(
     ({ ...props }, ref) => {
         const { scrollPrev, canScrollPrev } = useCarousel();
 
         return (
-            <TextButton
+            <IconButton
                 name='prev'
                 ref={ref}
                 className='px-2'
@@ -217,7 +217,7 @@ const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                 onClick={scrollPrev}
                 {...props}>
                 <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
-            </TextButton>
+            </IconButton>
         );
     }
 );
@@ -251,12 +251,12 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 });
 CarouselDots.displayName = 'CarouselDots';
 
-const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof TextButton>>(
+const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof IconButton>>(
     ({ ...props }, ref) => {
         const { scrollNext, canScrollNext } = useCarousel();
 
         return (
-            <TextButton
+            <IconButton
                 name='next'
                 ref={ref}
                 className='px-2'
@@ -264,7 +264,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                 onClick={scrollNext}
                 {...props}>
                 <ChevronRight className='h-3 w-3 text-black dark:text-white' />
-            </TextButton>
+            </IconButton>
         );
     }
 );

@@ -58,7 +58,7 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                     {
                         [triggerStyles]: !buttonPrimary,
                         // TODO remove when new color tokens are merged in - color token experiment
-                        'bg-primary text-contrast text-white dark:text-black border-0': open,
+                        'bg-primary dark:bg-primary-variant text-contrast text-white dark:text-black border-0': open,
                     },
                     className,
                     buttonProps?.className

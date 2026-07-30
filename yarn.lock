@@ -7156,7 +7156,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ce@workspace:."
   dependencies:
-    "@base-ui/react": "npm:^1.6.0"
     all-contributors-cli: "npm:^6.26.1"
     prettier: "npm:^3.2.5"
     typescript: "npm:^5.9.3"
@@ -8346,6 +8345,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "doodle-ui@workspace:packages/javascript/doodle-ui"
   dependencies:
+    "@base-ui/react": "npm:^1.6.0"
     "@chromatic-com/storybook": "npm:^1.3.3"
     "@dnd-kit/core": "npm:^6.3.1"
     "@dnd-kit/modifiers": "npm:^9.0.0"
