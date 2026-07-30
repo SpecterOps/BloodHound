@@ -49,7 +49,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
                 'disabled:bg-btn-disabled-fill disabled:shadow-none',
             ],
             // TODO - remove in BED-7635
-            // used in DropdownTriggerContents
+            // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             transparent: [
                 'border border-transparent-btn-border bg-transparent text-main',
                 'hover:border-primary hover:bg-primary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
