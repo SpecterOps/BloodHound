@@ -97,7 +97,7 @@ export const useMultiValueFilterParams = ({
 export const getValuesFromSelection = (selection: MultiValueSelection, options: MultiSelectOption[]) => {
     if (selection.kind === 'some') return selection.values;
 
-    if (selection.kind === 'all') return options;
+    if (selection.kind === 'all') return options.map((option) => option.value);
 
     if (selection.kind === 'none') return [];
 
