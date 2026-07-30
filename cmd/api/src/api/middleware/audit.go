@@ -73,7 +73,7 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Ha
 	// A failed intent write rejects the request: without a durable intent row
 	// the action would run unaudited, so the handler is never invoked.
 	if err != nil {
-		slog.ErrorContext(ctx, "audit: failed to write intent row", attr.Error(err))
+		slog.ErrorContext(ctx, "Failed to write audit intent row", attr.Error(err))
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "audit log intent could not be recorded", request), response)
 		return
 	}
@@ -82,10 +82,10 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Ha
 
 	if recorder.statusCode >= http.StatusBadRequest {
 		if failureErr := auditService.Failure(ctx, commitID, entry); failureErr != nil {
-			slog.ErrorContext(ctx, "audit: failed to write failure row", attr.Error(failureErr))
+			slog.ErrorContext(ctx, "Failed to write audit failure row", attr.Error(failureErr))
 		}
 	} else if successErr := auditService.Success(ctx, commitID, entry); successErr != nil {
-		slog.ErrorContext(ctx, "audit: failed to write success row", attr.Error(successErr))
+		slog.ErrorContext(ctx, "Failed to write audit success row", attr.Error(successErr))
 	}
 }
 

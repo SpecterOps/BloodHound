@@ -85,10 +85,10 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 
 func TestStore_InsertAuditLog_PersistsRow(t *testing.T) {
 	var (
-		ctx          = context.Background()
-		store, pool  = setupStore(t)
-		commitID     = uuid.Must(uuid.NewV4())
-		record       = services.AuditRecord{
+		ctx         = context.Background()
+		store, pool = setupStore(t)
+		commitID    = uuid.Must(uuid.NewV4())
+		record      = services.AuditRecord{
 			Action:          "POST /api/v2/roles/{role_id}",
 			ActorID:         "actor-id",
 			ActorName:       "actor-name",
