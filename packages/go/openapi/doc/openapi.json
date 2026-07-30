@@ -8237,6 +8237,85 @@
         }
       }
     },
+    "/api/v2/node-kinds/{node_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "node_kind_id",
+          "description": "Node Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetNodeKind",
+        "summary": "Get Node Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph node kind by its id, including its entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.node-kind-response"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "node_kind_id": 42,
+                    "name": "User",
+                    "display_name": "User",
+                    "description": "a user node kind",
+                    "is_display_kind": true,
+                    "icon": "user",
+                    "color": "#FFFFFF",
+                    "info": {
+                      "overview": {
+                        "title": "Overview",
+                        "position": 1,
+                        "markdown": {
+                          "content": "This is an overview panel for the node kind"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -16859,6 +16938,140 @@
         }
       }
     },
+    "/api/v2/clients/{client_id}/artifacts/{artifact_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "client_id",
+          "description": "Client ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "DownloadClientArtifact",
+        "summary": "Download a management operation artifact for the client",
+        "description": "Downloads an operation artifact associated with the client.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain the artifact file.\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            },
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact not finished uploading, must upload missing parts"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteClientArtifact",
+        "summary": "Delete a management operation artifact for the client",
+        "description": "Deletes an operation artifact associated with the client.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/clients/management/available": {
       "parameters": [
         {
@@ -22597,15 +22810,12 @@
           },
           "position": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           }
         }
       },
-      "model.kind-info-type-markdown": {
+      "model.kind-info-markdown": {
         "type": "object",
-        "required": [
-          "markdown"
-        ],
         "properties": {
           "markdown": {
             "type": "object",
@@ -22619,6 +22829,19 @@
             }
           }
         }
+      },
+      "model.kind-info-type-markdown": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.kind-info-markdown"
+          },
+          {
+            "type": "object",
+            "required": [
+              "markdown"
+            ]
+          }
+        ]
       },
       "model.kind-info-content": {
         "type": "object",
@@ -22888,33 +23111,14 @@
           "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
         },
         "additionalProperties": {
-          "type": "object",
-          "required": [
-            "title",
-            "position"
-          ],
-          "properties": {
-            "title": {
-              "type": "string",
-              "example": "Entity Panel Section"
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/model.kind-info-base"
             },
-            "position": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "markdown": {
-              "type": "object",
-              "required": [
-                "content"
-              ],
-              "properties": {
-                "content": {
-                  "type": "string",
-                  "example": "This is markdown content for the info panel"
-                }
-              }
+            {
+              "$ref": "#/components/schemas/model.kind-info-markdown"
             }
-          }
+          ]
         }
       },
       "model.graph-extension.payload": {
@@ -23087,6 +23291,73 @@
           },
           "is_builtin": {
             "type": "boolean"
+          }
+        }
+      },
+      "model.extension-details": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "extension_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          },
+          "name": {
+            "type": "string",
+            "example": "AD"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "Active Directory"
+          },
+          "namespace": {
+            "type": "string",
+            "example": "AD"
+          },
+          "version": {
+            "type": "string",
+            "example": "v1"
+          }
+        }
+      },
+      "model.node-kind-response": {
+        "type": "object",
+        "properties": {
+          "node_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "User"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "User"
+          },
+          "description": {
+            "type": "string",
+            "example": "a user node kind"
+          },
+          "is_display_kind": {
+            "type": "boolean",
+            "example": true
+          },
+          "icon": {
+            "type": "string",
+            "example": "user"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FFFFFF"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
           }
         }
       },
@@ -23843,12 +24114,9 @@
                 "readOnly": true
               },
               "artifact_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
               },
               "type": {
                 "readOnly": true,
@@ -23867,14 +24135,16 @@
                 ]
               },
               "requested_by_user_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
               },
               "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "updated_at": {
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
