@@ -47,7 +47,7 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
         ref
     ) => {
         const buttonPrimary = variant === 'primary';
-
+        console.log(open);
         return (
             <Button
                 ref={ref}
@@ -57,8 +57,8 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                     'uppercase group',
                     {
                         [triggerStyles]: !buttonPrimary,
-                        // TODO remove when new color tokens are merged in
-                        'bg-secondary text-contrast text-white dark:text-black border-0': open,
+                        // TODO remove when new color tokens are merged in - color token experiment
+                        'bg-primary text-contrast text-white dark:text-black border-0': open,
                     },
                     className,
                     buttonProps?.className
