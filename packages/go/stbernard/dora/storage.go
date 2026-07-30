@@ -183,8 +183,8 @@ func (s *Storage) SaveCommits(ctx context.Context, commits []Commit) error {
 	for _, c := range commits {
 		ib := sqlbuilder.NewInsertBuilder()
 		ib.InsertInto("commits")
-		ib.Cols("sha", "message", "committed_at", "pr_number", "html_url")
-		ib.Values(c.SHA, c.Message, c.CommittedAt, c.PRNumber, c.HTMLURL)
+		ib.Cols("sha", "message", "committed_at", "html_url")
+		ib.Values(c.SHA, c.Message, c.CommittedAt, c.HTMLURL)
 
 		query, args := ib.Build()
 		query = "INSERT OR REPLACE INTO commits " + query[len("INSERT INTO commits "):]
@@ -200,7 +200,7 @@ func (s *Storage) SaveCommits(ctx context.Context, commits []Commit) error {
 // GetCommits retrieves commits within a time range
 func (s *Storage) GetCommits(ctx context.Context, start, end time.Time) ([]Commit, error) {
 	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select("sha", "message", "committed_at", "pr_number", "html_url")
+	sb.Select("sha", "message", "committed_at", "html_url")
 	sb.From("commits")
 	sb.Where(sb.Between("committed_at", start, end))
 	sb.OrderBy("committed_at").Desc()
@@ -215,7 +215,7 @@ func (s *Storage) GetCommits(ctx context.Context, start, end time.Time) ([]Commi
 	var commits []Commit
 	for rows.Next() {
 		var c Commit
-		err := rows.Scan(&c.SHA, &c.Message, &c.CommittedAt, &c.PRNumber, &c.HTMLURL)
+		err := rows.Scan(&c.SHA, &c.Message, &c.CommittedAt, &c.HTMLURL)
 		if err != nil {
 			return nil, fmt.Errorf("scanning commit: %w", err)
 		}
@@ -229,75 +229,4 @@ func (s *Storage) GetCommits(ctx context.Context, start, end time.Time) ([]Commi
 	return commits, nil
 }
 
-// SavePullRequests saves multiple PRs to the database
-func (s *Storage) SavePullRequests(ctx context.Context, prs []PullRequest) error {
-	if len(prs) == 0 {
-		return nil
-	}
 
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("beginning transaction: %w", err)
-	}
-	defer tx.Rollback()
-
-	for _, pr := range prs {
-		ib := sqlbuilder.NewInsertBuilder()
-		ib.InsertInto("pull_requests")
-		ib.Cols(
-			"number", "title", "state", "created_at", "merged_at", "closed_at",
-			"merge_commit_sha", "base_ref", "head_ref", "html_url",
-		)
-		ib.Values(
-			pr.Number, pr.Title, pr.State, pr.CreatedAt, pr.MergedAt,
-			pr.ClosedAt, pr.MergeCommitSHA, pr.BaseRef, pr.HeadRef, pr.HTMLURL,
-		)
-
-		query, args := ib.Build()
-		query = "INSERT OR REPLACE INTO pull_requests " + query[len("INSERT INTO pull_requests "):]
-
-		if _, err := tx.ExecContext(ctx, query, args...); err != nil {
-			return fmt.Errorf("inserting PR %d: %w", pr.Number, err)
-		}
-	}
-
-	return tx.Commit()
-}
-
-// GetPullRequests retrieves PRs within a time range (by merge time)
-func (s *Storage) GetPullRequests(ctx context.Context, start, end time.Time) ([]PullRequest, error) {
-	sb := sqlbuilder.NewSelectBuilder()
-	sb.Select(
-		"number", "title", "state", "created_at", "merged_at", "closed_at",
-		"merge_commit_sha", "base_ref", "head_ref", "html_url",
-	)
-	sb.From("pull_requests")
-	sb.Where(sb.Between("merged_at", start, end))
-	sb.OrderBy("merged_at").Desc()
-
-	query, args := sb.Build()
-	rows, err := s.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("querying pull requests: %w", err)
-	}
-	defer rows.Close()
-
-	var prs []PullRequest
-	for rows.Next() {
-		var pr PullRequest
-		err := rows.Scan(
-			&pr.Number, &pr.Title, &pr.State, &pr.CreatedAt, &pr.MergedAt,
-			&pr.ClosedAt, &pr.MergeCommitSHA, &pr.BaseRef, &pr.HeadRef, &pr.HTMLURL,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scanning pull request: %w", err)
-		}
-		prs = append(prs, pr)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating pull requests: %w", err)
-	}
-
-	return prs, nil
-}
