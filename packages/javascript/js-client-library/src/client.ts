@@ -102,6 +102,7 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    ManagementOperation,
     OpenGraphDataQualityResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
@@ -119,7 +120,6 @@ import {
     WebhookTestResponse,
 } from './responses';
 import * as types from './types';
-import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -507,7 +507,7 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
     getFindings = (key: string, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+        this.baseClient.get<BasicResponse<types.FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
@@ -800,8 +800,21 @@ class BHEAPIClient {
             )
         );
 
-    requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
-        this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
+    requestSupportBundle = (clientId: string, operation_type: string, options?: RequestOptions) =>
+        this.baseClient.post<ManagementOperation>(
+            `/api/v2/clients/${clientId}/management`,
+            { operation_type },
+            options
+        );
+
+    downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, {
+            ...options,
+            responseType: 'blob',
+        });
+
+    deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
@@ -809,7 +822,7 @@ class BHEAPIClient {
     ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/clients/${clientId}`, options);
+        this.baseClient.get<types.Client>(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
