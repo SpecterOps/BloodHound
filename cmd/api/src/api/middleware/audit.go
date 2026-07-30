@@ -41,12 +41,11 @@ type AuditService interface {
 	Failure(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
 }
 
-// AuditMiddleware records the intent/success/failure lifecycle of mutating API
-// requests. It writes an intent row before the handler runs and a success or
+// AuditMiddleware records the intent/success/failure lifecycle of every API
+// request. It writes an intent row before the handler runs and a success or
 // failure row afterward based on the response status. If the intent write fails
 // the request is rejected with a 500 and the handler never runs. muxRouter is
 // used to resolve the bounded route template for the audited action.
-// Non-mutating requests (GET/HEAD/OPTIONS) are passed through unaudited.
 func AuditMiddleware(auditService AuditService, muxRouter *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -57,16 +56,8 @@ func AuditMiddleware(auditService AuditService, muxRouter *mux.Router) mux.Middl
 
 func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Handler, response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx      = request.Context()
-		recorder = &responseRecorder{delegate: response}
-	)
-
-	if !isMutatingMethod(request.Method) {
-		next.ServeHTTP(response, request)
-		return
-	}
-
-	var (
+		ctx           = request.Context()
+		recorder      = &responseRecorder{delegate: response}
 		entry         = buildAuditEntry(request, muxRouter)
 		commitID, err = auditService.Intent(ctx, entry)
 	)
@@ -118,15 +109,4 @@ func buildAuditEntry(request *http.Request, muxRouter *mux.Router) audit.Entry {
 	}
 
 	return entry
-}
-
-// isMutatingMethod reports whether the HTTP method represents a state-changing
-// request that should be audited.
-func isMutatingMethod(method string) bool {
-	switch method {
-	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
-		return true
-	default:
-		return false
-	}
 }

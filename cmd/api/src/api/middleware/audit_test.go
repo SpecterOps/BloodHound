@@ -143,19 +143,25 @@ func TestAuditMiddleware_MutatingFailure(t *testing.T) {
 
 var errAudit = errors.New("audit write failed")
 
-func TestAuditMiddleware_NonMutatingSkipped(t *testing.T) {
+func TestAuditMiddleware_NonMutatingAudited(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{}
+		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
 		router   = newAuditTestRouter(fake, http.StatusOK)
 		recorder = httptest.NewRecorder()
 	)
 
 	router.ServeHTTP(recorder, newAuditRequest(http.MethodGet))
 
+	// Reads are audited like any other request: a GET produces an intent row
+	// before the handler runs and a success row afterward.
 	require.Equal(t, http.StatusOK, recorder.Code)
-	require.Empty(t, fake.intentEntries)
-	require.Empty(t, fake.successCommits)
+	require.Len(t, fake.intentEntries, 1)
+	require.Len(t, fake.successCommits, 1)
 	require.Empty(t, fake.failureCommits)
+	require.Equal(t, fake.commitID, fake.successCommits[0])
+
+	entry := fake.intentEntries[0]
+	require.Equal(t, http.MethodGet+testRoute, entry.Action)
 }
 
 func TestAuditMiddleware_IntentErrorFailsRequest(t *testing.T) {
@@ -170,6 +176,23 @@ func TestAuditMiddleware_IntentErrorFailsRequest(t *testing.T) {
 	// A failed intent write rejects the request with a 500; the handler never
 	// runs (so the 200 it would set is not observed) and no result row is
 	// written because the audited action did not proceed.
+	require.Equal(t, http.StatusInternalServerError, recorder.Code)
+	require.Len(t, fake.intentEntries, 1)
+	require.Empty(t, fake.successCommits)
+	require.Empty(t, fake.failureCommits)
+}
+
+func TestAuditMiddleware_IntentErrorFailsReadRequest(t *testing.T) {
+	var (
+		fake     = &fakeAuditService{intentErr: errAudit}
+		router   = newAuditTestRouter(fake, http.StatusOK)
+		recorder = httptest.NewRecorder()
+	)
+
+	router.ServeHTTP(recorder, newAuditRequest(http.MethodGet))
+
+	// Fail-closed applies to reads too: a failed intent write on a GET rejects
+	// the request with a 500 and the handler never runs.
 	require.Equal(t, http.StatusInternalServerError, recorder.Code)
 	require.Len(t, fake.intentEntries, 1)
 	require.Empty(t, fake.successCommits)
