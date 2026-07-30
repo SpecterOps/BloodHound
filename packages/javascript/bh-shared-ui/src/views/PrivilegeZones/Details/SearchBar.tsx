@@ -113,7 +113,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverAnchor>
                     <div className='relative'>
-                        <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px]' />
+                        <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
                         <Input
                             variant='outlined'
                             placeholder='Search'

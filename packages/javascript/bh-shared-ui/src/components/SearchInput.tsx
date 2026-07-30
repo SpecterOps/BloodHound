@@ -37,7 +37,7 @@ export function SearchInput({
 }: Props) {
     return (
         <div className={cn('flex-grow relative', className)}>
-            <AppIcon.MagnifyingGlass className='absolute right-2 top-[50%] -mt-[8px]' />
+            <AppIcon.MagnifyingGlass className='absolute right-2 top-[50%] -mt-[8px] pointer-events-none' />
             <Input
                 disabled={disabled}
                 id={id}

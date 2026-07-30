@@ -171,7 +171,10 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
             ) : usersList?.length ? (
                 <div>
                     <div className='flex-grow relative mb-2'>
-                        <AppIcon.MagnifyingGlass size={16} className='absolute left-2 top-[50%] -mt-[8px]' />
+                        <AppIcon.MagnifyingGlass
+                            size={16}
+                            className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none'
+                        />
                         <Input
                             type='text'
                             id='query-search'
