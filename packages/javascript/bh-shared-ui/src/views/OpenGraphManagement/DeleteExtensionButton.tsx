@@ -67,6 +67,7 @@ export const ConfirmDeleteExtensionDialog: FC<{
                             <div className='mt-3 text-xs'>Input "{extensionName}" in order to proceed.</div>
                             <Input
                                 aria-label={`Type ${extensionName} to confirm deletion`}
+                                variant='outlined'
                                 disabled={isDeleting}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 placeholder={extensionName}

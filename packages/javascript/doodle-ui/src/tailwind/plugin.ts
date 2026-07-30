@@ -141,7 +141,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.dark,
-            // '--input-fill': elevation.light[1],
+            '--input-fill': common.white,
             '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,

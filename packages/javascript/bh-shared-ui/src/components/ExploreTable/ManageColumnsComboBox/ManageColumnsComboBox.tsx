@@ -151,7 +151,7 @@ export const ManageColumnsComboBox = ({
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
-                                className='border-0 focus:outline-none rounded-none border-black bg-inherit'
+                                variant='outlined'
                                 aria-label='Filter columns'
                                 {...getInputProps(getDropdownProps())}
                             />
