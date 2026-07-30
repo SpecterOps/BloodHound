@@ -181,42 +181,48 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 
 // assessRCs provides short assessment of RC counts for table display
 // RC1 is expected (proposed release), RC2+ indicates stabilization/rework needed
+// assessMetric provides tiered assessment with thresholds and labels
+func (s *TerminalReporter) assessMetric(value float64, thresholds [3]float64, labels [4]string) string {
+	var (
+		colorFn func(string) string
+		icon    string
+	)
+
+	switch {
+	case value <= thresholds[0]:
+		colorFn, icon = s.green, "✓"
+	case value <= thresholds[1]:
+		colorFn, icon = s.cyan, "○"
+	case value <= thresholds[2]:
+		colorFn, icon = s.yellow, "△"
+	default:
+		colorFn, icon = s.red, "✗"
+	}
+
+	labelIdx := 0
+	if value > thresholds[0] {
+		labelIdx = 1
+	}
+	if value > thresholds[1] {
+		labelIdx = 2
+	}
+	if value > thresholds[2] {
+		labelIdx = 3
+	}
+
+	return colorFn(fmt.Sprintf("%s %s", icon, labels[labelIdx]))
+}
+
 func (s *TerminalReporter) assessRCs(median float64) string {
-	if median <= 1 {
-		return s.green("✓ Elite (minimal rework)")
-	} else if median <= 2 {
-		return s.cyan("○ Excellent")
-	} else if median <= 4 {
-		return s.yellow("△ Good (some rework)")
-	} else {
-		return s.red("✗ High rework needed")
-	}
+	return s.assessMetric(median, [3]float64{1, 2, 4}, [4]string{"Elite (minimal rework)", "Excellent", "Good (some rework)", "High rework needed"})
 }
 
-// assessStabilizationCommits provides short assessment of RC stabilization effort
 func (s *TerminalReporter) assessStabilizationCommits(median float64) string {
-	if median <= 2 {
-		return s.green("✓ Minimal fixes")
-	} else if median <= 5 {
-		return s.cyan("○ Some fixes")
-	} else if median <= 10 {
-		return s.yellow("△ Many fixes")
-	} else {
-		return s.red("✗ Extensive rework")
-	}
+	return s.assessMetric(median, [3]float64{2, 5, 10}, [4]string{"Minimal fixes", "Some fixes", "Many fixes", "Extensive rework"})
 }
 
-// assessBatchSize provides short assessment of batch sizes for table display
 func (s *TerminalReporter) assessBatchSize(avg float64) string {
-	if avg <= 5 {
-		return s.green("✓ Excellent")
-	} else if avg <= 10 {
-		return s.cyan("○ Good")
-	} else if avg <= 20 {
-		return s.yellow("△ Large")
-	} else {
-		return s.red("✗ Very large")
-	}
+	return s.assessMetric(avg, [3]float64{5, 10, 20}, [4]string{"Excellent", "Good", "Large", "Very large"})
 }
 
 // colorTier returns tier with color formatting
@@ -263,48 +269,21 @@ func (s *TerminalReporter) interpretBatchSize(avg float64) string {
 	}
 }
 
-// ANSI color codes
-func (s *TerminalReporter) green(text string) string {
+// ANSI color helper - consolidates all color formatting
+func (s *TerminalReporter) color(code string, text string) string {
 	if !s.UseColor {
 		return text
 	}
-	return fmt.Sprintf("\033[32m%s\033[0m", text)
+	return fmt.Sprintf("\033[%sm%s\033[0m", code, text)
 }
 
-func (s *TerminalReporter) cyan(text string) string {
-	if !s.UseColor {
-		return text
-	}
-	return fmt.Sprintf("\033[36m%s\033[0m", text)
-}
-
-func (s *TerminalReporter) yellow(text string) string {
-	if !s.UseColor {
-		return text
-	}
-	return fmt.Sprintf("\033[33m%s\033[0m", text)
-}
-
-func (s *TerminalReporter) red(text string) string {
-	if !s.UseColor {
-		return text
-	}
-	return fmt.Sprintf("\033[31m%s\033[0m", text)
-}
-
-func (s *TerminalReporter) bold(text string) string {
-	if !s.UseColor {
-		return text
-	}
-	return fmt.Sprintf("\033[1m%s\033[0m", text)
-}
-
-func (s *TerminalReporter) dim(text string) string {
-	if !s.UseColor {
-		return text
-	}
-	return fmt.Sprintf("\033[2m%s\033[0m", text)
-}
+// Color shortcuts
+func (s *TerminalReporter) green(text string) string  { return s.color("32", text) }
+func (s *TerminalReporter) cyan(text string) string   { return s.color("36", text) }
+func (s *TerminalReporter) yellow(text string) string { return s.color("33", text) }
+func (s *TerminalReporter) red(text string) string    { return s.color("31", text) }
+func (s *TerminalReporter) bold(text string) string   { return s.color("1", text) }
+func (s *TerminalReporter) dim(text string) string    { return s.color("2", text) }
 
 // JSONReporter outputs metrics in JSON format
 type JSONReporter struct {

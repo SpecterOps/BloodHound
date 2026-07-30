@@ -20,55 +20,9 @@ import (
 	"os"
 	"os/exec"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"golang.org/x/oauth2"
 )
-
-func TestTokenValidation(t *testing.T) {
-	tests := []struct {
-		name    string
-		token   *oauth2.Token
-		wantErr bool
-	}{
-		{
-			name: "valid token",
-			token: &oauth2.Token{
-				AccessToken: "gho_validtoken",
-				Expiry:      time.Now().Add(24 * time.Hour),
-			},
-			wantErr: false,
-		},
-		{
-			name: "expired token",
-			token: &oauth2.Token{
-				AccessToken: "gho_expiredtoken",
-				Expiry:      time.Now().Add(-24 * time.Hour),
-			},
-			wantErr: true,
-		},
-		{
-			name: "empty token",
-			token: &oauth2.Token{
-				AccessToken: "",
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateToken(tc.token)
-			if tc.wantErr && err == nil {
-				t.Error("Expected validation error, got nil")
-			}
-			if !tc.wantErr && err != nil {
-				t.Errorf("Expected no validation error, got: %v", err)
-			}
-		})
-	}
-}
 
 func TestTokenFromEnv(t *testing.T) {
 	// Set environment variable

@@ -18,82 +18,20 @@ package dora
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"golang.org/x/oauth2"
 )
 
-const (
-	GitHubTokenFileName = "github-token.json"
-)
-
 var (
-	ErrTokenNotFound = errors.New("token not found")
-	ErrTokenExpired  = errors.New("token is expired")
-	ErrTokenInvalid  = errors.New("token is invalid")
 	ErrGHCLINotFound = errors.New("GitHub CLI (gh) not found - install from https://cli.github.com/")
 )
-
-// SaveToken saves an OAuth token to a file
-func SaveToken(path string, token *oauth2.Token) error {
-	data, err := json.MarshalIndent(token, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshaling token: %w", err)
-	}
-
-	// Create directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return fmt.Errorf("creating token directory: %w", err)
-	}
-
-	// Write token file with restricted permissions
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return fmt.Errorf("writing token file: %w", err)
-	}
-
-	return nil
-}
-
-// LoadToken loads an OAuth token from a file
-func LoadToken(path string) (*oauth2.Token, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("%w: %s", ErrTokenNotFound, path)
-		}
-		return nil, fmt.Errorf("reading token file: %w", err)
-	}
-
-	var token oauth2.Token
-	if err := json.Unmarshal(data, &token); err != nil {
-		return nil, fmt.Errorf("parsing token file: %w", err)
-	}
-
-	return &token, nil
-}
-
-// ValidateToken checks if a token is valid and not expired
-func ValidateToken(token *oauth2.Token) error {
-	if token == nil {
-		return ErrTokenInvalid
-	}
-	if token.AccessToken == "" {
-		return ErrTokenInvalid
-	}
-	if !token.Expiry.IsZero() && token.Expiry.Before(time.Now()) {
-		return ErrTokenExpired
-	}
-	return nil
-}
 
 // GetTokenFromEnv retrieves a GitHub token from the GITHUB_TOKEN environment variable
 func GetTokenFromEnv() *oauth2.Token {

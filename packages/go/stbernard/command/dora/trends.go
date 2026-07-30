@@ -18,7 +18,6 @@ package dora
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -30,23 +29,11 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
-// periodResult holds the results for a single period
+// periodResult wraps a MetricsSnapshot with a display name for trends reporting
 type periodResult struct {
-	Name               string
-	StartTime          time.Time
-	EndTime            time.Time
-	DeploymentCount    int
-	FrequencyPerDay    float64
-	LeadTimeP50        float64
-	FailureRate        float64
-	MTTR               float64
-	IncidentCount      int
-	DeploymentTier     string
-	LeadTimeTier       string
-	FailureRateTier    string
-	RestoreTimeTier    string
-	OverallTier        string
-	HasData            bool
+	Name     string
+	Snapshot dora.MetricsSnapshot
+	HasData  bool
 }
 
 // runTrends handles the trends subcommand
@@ -425,9 +412,7 @@ func (s *command) generateMonthlyReportsMultiYear(ctx context.Context, calc *dor
 // generatePeriodReport generates a single report for a time period
 func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculator, periodName string, startTime, endTime time.Time, outputDir string) (periodResult, error) {
 	result := periodResult{
-		Name:      periodName,
-		StartTime: startTime,
-		EndTime:   endTime,
+		Name: periodName,
 	}
 
 	// Calculate metrics
@@ -443,78 +428,21 @@ func (s *command) generatePeriodReport(ctx context.Context, calc *dora.Calculato
 	}
 
 	result.HasData = true
-	result.DeploymentCount = snapshot.DeploymentCount
-	result.FrequencyPerDay = snapshot.DeploymentFrequencyPerDay
-	result.LeadTimeP50 = snapshot.LeadTimeP50Hours
-	result.FailureRate = snapshot.ChangeFailureRate
-	result.MTTR = snapshot.MedianTTRHours
-	result.IncidentCount = snapshot.IncidentCount
-	result.DeploymentTier = snapshot.DeploymentTier
-	result.LeadTimeTier = snapshot.LeadTimeTier
-	result.FailureRateTier = snapshot.FailureRateTier
-	result.RestoreTimeTier = snapshot.RestoreTimeTier
-	result.OverallTier = snapshot.OverallTier
+	result.Snapshot = snapshot
 
 	outputFile := filepath.Join(outputDir, periodName+".json")
 	fmt.Printf("📊 %s: %s to %s\n", periodName, startTime.Format("2006-01-02"), endTime.Format("2006-01-02"))
 
-	// Create JSON output structure
-	output := map[string]any{
-		"report_metadata": map[string]any{
-			"period":       periodName,
-			"generated_at": time.Now().Format(time.RFC3339),
-			"period_start": snapshot.PeriodStart.Format(time.RFC3339),
-			"period_end":   snapshot.PeriodEnd.Format(time.RFC3339),
-			"version":      "1.0.0",
-		},
-		"dora_metrics": map[string]any{
-			"deployment_frequency": map[string]any{
-				"per_day":     snapshot.DeploymentFrequencyPerDay,
-				"total_count": snapshot.DeploymentCount,
-				"tier":        snapshot.DeploymentTier,
-			},
-			"lead_time_for_changes": map[string]any{
-				"p50_hours": snapshot.LeadTimeP50Hours,
-				"p90_hours": snapshot.LeadTimeP90Hours,
-				"p95_hours": snapshot.LeadTimeP95Hours,
-				"tier":      snapshot.LeadTimeTier,
-			},
-			"change_failure_rate": map[string]any{
-				"percentage":   snapshot.ChangeFailureRate,
-				"failed_count": snapshot.FailedDeploymentCount,
-				"total_count":  snapshot.DeploymentCount,
-				"tier":         snapshot.FailureRateTier,
-			},
-			"time_to_restore": map[string]any{
-				"median_hours":   snapshot.MedianTTRHours,
-				"mean_hours":     snapshot.MTTRHours,
-				"p95_hours":      snapshot.P95TTRHours,
-				"incident_count": snapshot.IncidentCount,
-				"tier":           snapshot.RestoreTimeTier,
-			},
-		},
-		"quality_metrics": map[string]any{
-			"average_rcs_per_release": snapshot.AverageRCsPerRelease,
-			"median_rcs_per_release":  snapshot.MedianRCsPerRelease,
-			"average_stabilization":   snapshot.AverageStabilizationCommits,
-			"median_stabilization":    snapshot.MedianStabilizationCommits,
-			"average_commits":         snapshot.AverageCommitsPerRelease,
-			"total_commits":           snapshot.TotalCommitsInPeriod,
-		},
-		"overall_tier": snapshot.OverallTier,
-	}
-
-	// Write JSON file
+	// Use JSONReporter to write the report (reuses existing JSON generation logic)
 	file, err := os.Create(outputFile)
 	if err != nil {
 		return result, fmt.Errorf("creating output file %s: %w", outputFile, err)
 	}
 	defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(output); err != nil {
-		return result, fmt.Errorf("encoding JSON for %s: %w", periodName, err)
+	jsonReporter := dora.NewJSONReporter(true) // pretty print
+	if err := jsonReporter.Report(snapshot, file); err != nil {
+		return result, fmt.Errorf("writing JSON report for %s: %w", periodName, err)
 	}
 
 	// Print summary
@@ -548,14 +476,15 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 
 	// Table rows
 	for _, r := range results {
+		s := r.Snapshot
 		fmt.Printf("%-10s │ %8d │ %9.2f │ %10.1fh │ %11.1f%% │ %10.1fh │ %8s\n",
 			r.Name,
-			r.DeploymentCount,
-			r.FrequencyPerDay,
-			r.LeadTimeP50,
-			r.FailureRate,
-			r.MTTR,
-			r.OverallTier,
+			s.DeploymentCount,
+			s.DeploymentFrequencyPerDay,
+			s.LeadTimeP50Hours,
+			s.ChangeFailureRate,
+			s.MedianTTRHours,
+			s.OverallTier,
 		)
 	}
 
@@ -571,12 +500,13 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 	)
 
 	for _, r := range results {
-		totalDeploys += r.DeploymentCount
-		avgFreq += r.FrequencyPerDay
-		avgLeadTime += r.LeadTimeP50
-		avgFailureRate += r.FailureRate
-		if r.IncidentCount > 0 {
-			avgMTTR += r.MTTR
+		s := r.Snapshot
+		totalDeploys += s.DeploymentCount
+		avgFreq += s.DeploymentFrequencyPerDay
+		avgLeadTime += s.LeadTimeP50Hours
+		avgFailureRate += s.ChangeFailureRate
+		if s.IncidentCount > 0 {
+			avgMTTR += s.MedianTTRHours
 		}
 	}
 
