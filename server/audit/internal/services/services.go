@@ -83,8 +83,22 @@ type Maintainer interface {
 
 var ErrInvalidAuditRecord = errors.New("invalid audit record")
 
+// sensitivePatternsLower holds the lowercase, separator-free substrings that
+// mark a field key as sensitive. Keys are normalized with normalizeKey before
+// matching so that separator variants (api_key, api-key, apikey) all match a
+// single pattern.
 var sensitivePatternsLower = []string{
-	"password", "secret", "token", "api_key", "apikey", "private_key", "privatekey",
+	"password", "secret", "token", "apikey", "privatekey",
+}
+
+// normalizeKey lowercases a field key and strips the "_" and "-" separators so
+// that header- and snake-case-style keys (e.g. "X-API-KEY", "api_key") match
+// the same separator-free patterns.
+func normalizeKey(key string) string {
+	keyLower := strings.ToLower(key)
+	keyLower = strings.ReplaceAll(keyLower, "_", "")
+	keyLower = strings.ReplaceAll(keyLower, "-", "")
+	return keyLower
 }
 
 func redactSensitiveFields(fields map[string]any) map[string]any {
@@ -93,10 +107,10 @@ func redactSensitiveFields(fields map[string]any) map[string]any {
 	}
 	redacted := make(map[string]any, len(fields))
 	for key, value := range fields {
-		keyLower := strings.ToLower(key)
+		normalized := normalizeKey(key)
 		isSensitive := false
 		for _, pattern := range sensitivePatternsLower {
-			if strings.Contains(keyLower, pattern) {
+			if strings.Contains(normalized, pattern) {
 				isSensitive = true
 				break
 			}
