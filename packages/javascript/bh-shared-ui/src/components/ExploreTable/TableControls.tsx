@@ -88,12 +88,9 @@ const TableControls = <TData, TValue>({
                         </Label>
                         <Input
                             id='explore-table-search'
+                            variant='outlined'
                             data-testid='explore-table-search'
                             disabled={noResults}
-                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
-                                [DISABLED_CLASSNAME]: noResults,
-                                'border-neutral-400': noResults,
-                            })}
                             {...SearchInputProps}
                         />
                         <FontAwesomeIcon
