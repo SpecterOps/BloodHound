@@ -30,7 +30,7 @@ func TestService_GetRelationshipKind(t *testing.T) {
 	var (
 		ctx                = context.Background()
 		relationshipKindID = int32(42)
-		extension          = services.SchemaExtension{
+		extension          = services.Extension{
 			ID:          7,
 			Name:        "TestExtension",
 			DisplayName: "Test Extension",
@@ -53,8 +53,28 @@ func TestService_GetRelationshipKind(t *testing.T) {
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
 				databaseMock.EXPECT().GetKindInfos(ctx, baseRelationshipKind.Name).Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extension.ID).Return(extension, nil)
 			},
 			wantResult: services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Info: infos, Extension: extension},
+		},
+		{
+			name: "wraps extension fetch errors",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, baseRelationshipKind.Name).Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extension.ID).Return(services.Extension{}, unexpectedErr)
+			},
+			wantResult: services.RelationshipKind{},
+			wantErr:    unexpectedErr,
+		},
+		{
+			name: "returns an empty extension when extension is not found",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetRelationshipKind(ctx, relationshipKindID).Return(baseRelationshipKind, nil)
+				databaseMock.EXPECT().GetKindInfos(ctx, baseRelationshipKind.Name).Return(infos, nil)
+				databaseMock.EXPECT().GetExtension(ctx, extension.ID).Return(services.Extension{}, services.ErrExtensionNotFound)
+			},
+			wantResult: services.RelationshipKind{ID: relationshipKindID, Name: "MemberOf", Info: infos},
 		},
 		{
 			name: "propagates relationship kind not found",

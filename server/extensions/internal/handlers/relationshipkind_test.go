@@ -51,7 +51,7 @@ func TestHandlers_GetRelationshipKindByID(t *testing.T) {
 			Name:          "MemberOf",
 			Description:   "a membership relationship",
 			IsTraversable: true,
-			Extension: services.SchemaExtension{
+			Extension: services.Extension{
 				ID:          7,
 				Name:        "TestExtension",
 				DisplayName: "Test Extension",

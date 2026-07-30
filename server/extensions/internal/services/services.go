@@ -56,15 +56,6 @@ type KindInfo struct {
 	UpdatedAt time.Time
 }
 
-// SchemaExtension is a single row of `schema_extensions`
-type SchemaExtension struct {
-	ID          int32
-	Name        string
-	DisplayName string
-	Namespace   string
-	Version     string
-}
-
 // Service implements the extensions use cases on top of a Database implementation.
 type Service struct {
 	db Database

@@ -34,16 +34,23 @@ type RelationshipKind struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Info          []KindInfo
-	Extension     SchemaExtension
+	Extension     Extension
 }
 
 func (s *Service) GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error) {
 	if relKind, err := s.db.GetRelationshipKind(ctx, id); err != nil {
 		return RelationshipKind{}, err
-	} else if infos, err := s.db.GetKindInfos(ctx, relKind.Name); err != nil {
-		return RelationshipKind{}, fmt.Errorf("fetching kind infos for relationship kind %q: %w", relKind.Name, err)
 	} else {
-		relKind.Info = infos
+		if relKind.Info, err = s.db.GetKindInfos(ctx, relKind.Name); err != nil {
+			return RelationshipKind{}, fmt.Errorf("fetching kind infos for relationship kind %s: %w", relKind.Name, err)
+		}
+
+		if relKind.Extension.ID != 0 {
+			if relKind.Extension, err = s.db.GetExtension(ctx, relKind.Extension.ID); err != nil && !errors.Is(err, ErrExtensionNotFound) {
+				return RelationshipKind{}, fmt.Errorf("fetching extension %d for relationship kind %d: %w", relKind.Extension.ID, id, err)
+			}
+		}
+
 		return relKind, nil
 	}
 }
