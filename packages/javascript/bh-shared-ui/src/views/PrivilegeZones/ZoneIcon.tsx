@@ -52,7 +52,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
         'aria-label': ariaLabel,
         role: 'img',
         className: cn(
-            !privilegeZoneAnalysisEnabled && 'mb-0.5 -ml-1 text-link',
+            !privilegeZoneAnalysisEnabled && 'mb-0.5 -ml-1 text-status-warning-main',
             privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
             iconClasses
         ),

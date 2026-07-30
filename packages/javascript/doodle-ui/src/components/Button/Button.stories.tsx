@@ -193,7 +193,6 @@ export const IconButton: IconButtonStory = {
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                {/* <IconButtonComponent aria-label='Gear Icon' disabled={disabled}> */}
                 <IconButtonComponent {...buttonProps} aria-label='Filter'>
                     <AppIcon.FilterOutline size={24} />
                 </IconButtonComponent>

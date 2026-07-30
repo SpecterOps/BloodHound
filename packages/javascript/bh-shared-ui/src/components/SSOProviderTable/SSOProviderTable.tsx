@@ -28,7 +28,7 @@ import {
     TableRow,
     TableSortLabel,
 } from '@mui/material';
-import { Button, IconButton } from 'doodle-ui';
+import { IconButton, TextButton } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
 import { usePermissions } from '../../hooks';
@@ -166,8 +166,7 @@ const SSOProviderTable: FC<{
                                     />
                                 </TableCell>
                                 <TableCell size='small'>
-                                    <Button
-                                        variant='text'
+                                    <TextButton
                                         fontColor='primary'
                                         className='p-0'
                                         onClick={(e) => {
@@ -175,7 +174,7 @@ const SSOProviderTable: FC<{
                                             onClickSSOProvider(ssoProvider.id);
                                         }}>
                                         {ssoProvider.name}
-                                    </Button>
+                                    </TextButton>
                                 </TableCell>
                                 <TableCell>{ssoProvider.type.toUpperCase()}</TableCell>
                             </TableRow>

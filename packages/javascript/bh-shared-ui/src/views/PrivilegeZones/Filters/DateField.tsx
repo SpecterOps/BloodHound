@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button, DatePicker, FormField, FormItem, FormLabel, FormMessage } from 'doodle-ui';
+import { DatePicker, FormField, FormItem, FormLabel, FormMessage, TextButton } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
@@ -57,8 +57,7 @@ const DateField: FC<{
                                 },
                             }}
                         />
-                        <Button
-                            variant={'text'}
+                        <TextButton
                             disabled={!field.value}
                             className={cn('w-1/12 p-0', { invisible: !field.value })}
                             onClick={() => {
@@ -66,7 +65,7 @@ const DateField: FC<{
                                 form.clearErrors();
                             }}>
                             <FontAwesomeIcon icon={faClose} />
-                        </Button>
+                        </TextButton>
                     </div>
                     <FormMessage />
                 </FormItem>

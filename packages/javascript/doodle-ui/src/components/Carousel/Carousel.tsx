@@ -19,7 +19,7 @@ import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-reac
 import * as React from 'react';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '../Button';
+import { Button, TextButton } from '../Button';
 import { cn } from '../utils';
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -208,17 +208,16 @@ const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
     const { scrollPrev, canScrollPrev } = useCarousel();
 
     return (
-        <Button
+        <TextButton
             name='prev'
             ref={ref}
             className='px-2'
-            variant='text'
             size='small'
             disabled={!canScrollPrev}
             onClick={scrollPrev}
             {...props}>
             <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
-        </Button>
+        </TextButton>
     );
 });
 CarouselPrev.displayName = 'CarouselPrev';
@@ -255,17 +254,16 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
     const { scrollNext, canScrollNext } = useCarousel();
 
     return (
-        <Button
+        <TextButton
             name='next'
             ref={ref}
             className='px-2'
-            variant='text'
             size='small'
             disabled={!canScrollNext}
             onClick={scrollNext}
             {...props}>
             <ChevronRight className='h-3 w-3 text-black dark:text-white' />
-        </Button>
+        </TextButton>
     );
 });
 CarouselNext.displayName = 'CarouselNext';

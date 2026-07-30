@@ -27,50 +27,44 @@ const buttonBaseClasses = [
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
+const primaryClasses = [
+    'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
+    'hover:bg-secondary',
+    'focus-visible:bg-secondary',
+    'active:bg-[#0D0A30]',
+    'dark:active:bg-[#8D8BF8]',
+    // Implement text-common when token experiment is ready - #0D0A30 matches light.primary.variant, #8D8BF8 matches dark.primary.variant.
+    'disabled:shadow-none disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
+    // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)
+];
+
+const secondaryClasses = [
+    'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white',
+    'hover:bg-secondary hover:text-common-white dark:hover:text-common-dark',
+    'focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
+    'active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white',
+    'disabled:bg-btn-disabled-fill disabled:shadow-none',
+];
+
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
-            primary: [
-                'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
-                'hover:bg-secondary',
-                'focus-visible:bg-secondary',
-                'active:bg-[#0D0A30]',
-                'dark:active:bg-[#8D8BF8]',
-                // Implement text-common when token experiment is ready - #0D0A30 matches light.primary.variant, #8D8BF8 matches dark.primary.variant.
-                'disabled:shadow-none disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
-                // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)
-            ],
+            primary: primaryClasses,
 
-            secondary: [
-                'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white',
-                'hover:bg-secondary hover:text-common-white dark:hover:text-common-dark',
-                'focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
-                'active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white',
-                'disabled:bg-btn-disabled-fill disabled:shadow-none',
-            ],
+            secondary: secondaryClasses,
             // TODO - remove in BED-7635
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             transparent: [
                 'border border-transparent-btn-border bg-transparent text-main',
-                'hover:border-primary hover:bg-primary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
-                'focus-visible:border-primary focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark',
-            ],
-            // TODO - legacy, remove in BED-7635
-            text: [
-                'px-2 py-0 text-main',
-                'hover:text-secondary hover:no-underline',
-                'focus-visible:text-secondary',
-                // 'active:text-[#0D0A30] dark:active:text-primary',
+                'hover:border-secondary hover:bg-secondary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
+                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
             ],
             // TODO - legacy, remove in BED-7635
             icon: [
                 'rounded-full text-common-dark bg-icon-btn-fill shadow-outer-1 has-[svg]:p-2',
                 'hover:border-2 hover:border-primary',
-                // 'focus-visible:border-2 focus-visible:border-secondary',
                 'active:border-none',
             ],
-
-            default: null,
         },
         // TODO - remove as the only usage of this is with variant="text"
         fontColor: {
@@ -116,7 +110,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
 
 Button.displayName = 'Button';
 
-export const TextButtonBaseClasses = cn(
+const TextButtonBaseClasses = cn(
     ...buttonBaseClasses,
     'px-1 py-2 has-[svg]:px-1',
     'active:text-[#0D0A30] dark:active:text-primary',
@@ -136,10 +130,9 @@ export const TextButtonVariants = cva(TextButtonBaseClasses, {
     },
 });
 
-export type TextButtonProps = Omit<BaseUIButton.Props, 'children' | 'className'> & {
+export type TextButtonProps = Omit<BaseUIButton.Props, 'children'> & {
     children: React.ReactNode;
-    className?: string;
-    fontColor?: 'primary' | 'default';
+    fontColor?: 'primary' | 'default' | null;
 };
 
 export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, TextButtonProps>(
@@ -149,7 +142,12 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 {...props}
                 ref={ref}
                 disabled={disabled}
-                className={cn(TextButtonVariants({ fontColor }), className)}>
+                className={(state) =>
+                    cn(
+                        TextButtonVariants({ fontColor }),
+                        typeof className === 'function' ? className(state) : className
+                    )
+                }>
                 {children}
             </BaseUIButton>
         );
@@ -159,39 +157,56 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
 TextButton.displayName = 'TextButton';
 
 // TODO remove/refactor in BED-6062
-export const IconButtonClasses = cn(
+const defaultIconButtonClasses = cn(
     'hover:text-primary dark:hover:text-primary',
     'active:bg-transparent active:text-secondary dark:active:text-secondary',
     'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary'
 );
 
-export interface IconButtonProps
-    extends Omit<ButtonProps, 'size' | 'children' | 'className' | 'variant' | 'fontColor'> {
+export const IconButtonVariants = cva(
+    [
+        ...buttonBaseClasses,
+        'inline-grid size-fit min-h-8 min-w-8 shrink-0 place-items-center',
+        'rounded-full border-0 p-2',
+    ],
+    {
+        variants: {
+            variant: {
+                default: defaultIconButtonClasses,
+                primary: primaryClasses,
+                secondary: secondaryClasses,
+            },
+        },
+        defaultVariants: {
+            variant: 'default',
+        },
+    }
+);
+export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className'> {
     variant?: 'default' | 'primary' | 'secondary';
     color?: string;
     className?: string;
     'aria-label': string;
     children: React.ReactNode;
+    size?: number;
 }
 
 export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, IconButtonProps>(
-    function IconButton({ variant = 'default', children, className, color, disabled = false, ...props }, ref) {
+    function IconButton({ variant = 'default', children, className, color, disabled = false, size, ...props }, ref) {
         // TODO remove BED-6062
         return (
-            <Button
+            <BaseUIButton
                 {...props}
                 ref={ref}
                 disabled={disabled}
-                variant={variant}
-                size={null}
-                style={{ color }}
                 className={cn(
+                    IconButtonVariants({ variant }),
                     'size-fit box-border shrink-0 rounded-full border-0 has-[svg]:p-2 aspect-square',
-                    variant === 'default' && IconButtonClasses,
                     className
-                )}>
+                )}
+                style={{ ...props.style, fontSize: size, color }}>
                 {children}
-            </Button>
+            </BaseUIButton>
         );
     }
 );

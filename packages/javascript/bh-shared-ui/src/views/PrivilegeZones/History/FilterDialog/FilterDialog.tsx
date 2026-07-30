@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -78,9 +77,8 @@ const FilterDialog: FC<{
                 setOpen(open);
             }}>
             <DialogTrigger asChild>
-                <Button
+                <TextButton
                     data-testid='privilege-zones_history_filter-button'
-                    variant='text'
                     aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
@@ -90,7 +88,7 @@ const FilterDialog: FC<{
                             <AppIcon.FilterOutline size={22} />
                         </span>
                     </Tooltip>
-                </Button>
+                </TextButton>
             </DialogTrigger>
 
             <DialogContent>
