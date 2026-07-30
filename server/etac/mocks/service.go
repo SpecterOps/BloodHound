@@ -149,15 +149,16 @@ func (_mock *MockService) FilterEnvironmentsByAccess(ctx context.Context, user u
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User, []string) []string); ok {
 		r0 = returnFunc(ctx, user, requestedIDs)
-	} else if ret.Get(0) != nil {
-		r0 = ret.Get(0).([]string)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, users.User, []string) error); ok {
 		r1 = returnFunc(ctx, user, requestedIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
-
 	return r0, r1
 }
 
@@ -188,13 +189,17 @@ func (_c *MockService_FilterEnvironmentsByAccess_Call) Run(run func(ctx context.
 		if args[2] != nil {
 			arg2 = args[2].([]string)
 		}
-		run(arg0, arg1, arg2)
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
 
-func (_c *MockService_FilterEnvironmentsByAccess_Call) Return(environmentIDs []string, err error) *MockService_FilterEnvironmentsByAccess_Call {
-	_c.Call.Return(environmentIDs, err)
+func (_c *MockService_FilterEnvironmentsByAccess_Call) Return(strings []string, err error) *MockService_FilterEnvironmentsByAccess_Call {
+	_c.Call.Return(strings, err)
 	return _c
 }
 
