@@ -81,12 +81,10 @@ func (s *command) runAuth() error {
 // showAuthStatus displays the current authentication status
 func (s *command) showAuthStatus(authenticator *dora.GitHubAuthenticator) error {
 	ctx := context.Background()
-
-	fmt.Println("GitHub Authentication Status")
-	fmt.Println("============================")
+	fmt.Println("GitHub Authentication Status\n============================")
 	fmt.Println()
 
-	// Check environment variable
+	// Check environment variable first
 	if envToken := dora.GetTokenFromEnv(); envToken != nil {
 		fmt.Println("✅ Using token from GITHUB_TOKEN environment variable")
 		return nil
@@ -95,35 +93,22 @@ func (s *command) showAuthStatus(authenticator *dora.GitHubAuthenticator) error 
 	// Check gh CLI
 	if err := dora.CheckGHCLIAuth(s.env); err == nil {
 		fmt.Println("✅ Authenticated via GitHub CLI (gh)")
-		token, _ := dora.GetTokenFromGHCLI(s.env)
-		if token != nil && token.AccessToken != "" {
+		if token, _ := dora.GetTokenFromGHCLI(s.env); token != nil && len(token.AccessToken) > 11 {
 			fmt.Printf("Token: %s...%s\n", token.AccessToken[:7], token.AccessToken[len(token.AccessToken)-4:])
 		}
 		return nil
 	} else if errors.Is(err, dora.ErrGHCLINotFound) {
-		fmt.Println("❌ GitHub CLI (gh) not installed")
-		fmt.Println()
-		fmt.Println("Install from: https://cli.github.com/")
-		fmt.Println("Or set GITHUB_TOKEN environment variable")
+		fmt.Println("❌ GitHub CLI (gh) not installed\n\nInstall from: https://cli.github.com/\nOr set GITHUB_TOKEN environment variable")
 		return nil
 	}
 
 	// Not authenticated
-	token, err := authenticator.GetToken(ctx)
-	if err != nil {
-		fmt.Println("❌ Not authenticated")
-		fmt.Println()
-		fmt.Println("Options:")
-		fmt.Println("  1. Run: gh auth login")
-		fmt.Println("  2. Set GITHUB_TOKEN environment variable")
+	if _, err := authenticator.GetToken(ctx); err != nil {
+		fmt.Println("❌ Not authenticated\n\nOptions:\n  1. Run: gh auth login\n  2. Set GITHUB_TOKEN environment variable")
 		return nil
 	}
 
 	fmt.Println("✅ Authenticated")
-	if !token.Expiry.IsZero() {
-		fmt.Printf("Token expires: %s\n", token.Expiry.Format("2006-01-02 15:04:05"))
-	}
-
 	return nil
 }
 
@@ -133,13 +118,11 @@ func (s *command) authenticateGitHub(authenticator *dora.GitHubAuthenticator) er
 
 	// Check if already authenticated
 	if _, err := authenticator.GetToken(ctx); err == nil {
-		fmt.Println("✅ Already authenticated with GitHub")
-		fmt.Println()
+		source := "GitHub CLI (gh)"
 		if dora.GetTokenFromEnv() != nil {
-			fmt.Println("Using GITHUB_TOKEN environment variable")
-		} else {
-			fmt.Println("Using GitHub CLI (gh)")
+			source = "GITHUB_TOKEN environment variable"
 		}
+		fmt.Printf("✅ Already authenticated with GitHub\nUsing %s\n", source)
 		return nil
 	}
 

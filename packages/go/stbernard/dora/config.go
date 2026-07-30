@@ -161,54 +161,48 @@ func LoadConfig(workspaceRoot string) (Config, error) {
 }
 
 // mergeConfigs merges override config into base config
-// Non-zero values in override take precedence
+// Non-empty values in override take precedence
 func mergeConfigs(base, override Config) Config {
-	result := base
-
-	// Merge GitHub config
-	if override.GitHub.Owner != "" {
-		result.GitHub.Owner = override.GitHub.Owner
-	}
-	if override.GitHub.Repo != "" {
-		result.GitHub.Repo = override.GitHub.Repo
-	}
-	if override.GitHub.Production.Workflow != "" {
-		result.GitHub.Production.Workflow = override.GitHub.Production.Workflow
-	}
-	if override.GitHub.Production.Environment != "" {
-		result.GitHub.Production.Environment = override.GitHub.Production.Environment
+	// Use helper function to conditionally override string fields
+	merge := func(baseVal, overrideVal string) string {
+		if overrideVal != "" {
+			return overrideVal
+		}
+		return baseVal
 	}
 
-	// Merge Storage config
-	if override.Storage.Type != "" {
-		result.Storage.Type = override.Storage.Type
+	return Config{
+		GitHub: GitHubConfig{
+			Owner: merge(base.GitHub.Owner, override.GitHub.Owner),
+			Repo:  merge(base.GitHub.Repo, override.GitHub.Repo),
+			Production: ProductionConfig{
+				Workflow:    merge(base.GitHub.Production.Workflow, override.GitHub.Production.Workflow),
+				Environment: merge(base.GitHub.Production.Environment, override.GitHub.Production.Environment),
+			},
+		},
+		Storage: StorageConfig{
+			Type: merge(base.Storage.Type, override.Storage.Type),
+			Path: merge(base.Storage.Path, override.Storage.Path),
+		},
+		Metrics: MetricsConfig{
+			DefaultPeriod: merge(base.Metrics.DefaultPeriod, override.Metrics.DefaultPeriod),
+		},
 	}
-	if override.Storage.Path != "" {
-		result.Storage.Path = override.Storage.Path
-	}
-
-	// Merge Metrics config
-	if override.Metrics.DefaultPeriod != "" {
-		result.Metrics.DefaultPeriod = override.Metrics.DefaultPeriod
-	}
-
-	return result
 }
 
 // ApplyEnvironmentOverrides applies environment variable overrides to the config
 func (s *Config) ApplyEnvironmentOverrides() {
-	if owner := os.Getenv("DORA_GITHUB_OWNER"); owner != "" {
-		s.GitHub.Owner = owner
+	// Helper to conditionally override from environment
+	applyEnv := func(envVar string, target *string) {
+		if val := os.Getenv(envVar); val != "" {
+			*target = val
+		}
 	}
-	if repo := os.Getenv("DORA_GITHUB_REPO"); repo != "" {
-		s.GitHub.Repo = repo
-	}
-	if workflow := os.Getenv("DORA_GITHUB_WORKFLOW"); workflow != "" {
-		s.GitHub.Production.Workflow = workflow
-	}
-	if dbPath := os.Getenv("DORA_STORAGE_PATH"); dbPath != "" {
-		s.Storage.Path = dbPath
-	}
+
+	applyEnv("DORA_GITHUB_OWNER", &s.GitHub.Owner)
+	applyEnv("DORA_GITHUB_REPO", &s.GitHub.Repo)
+	applyEnv("DORA_GITHUB_WORKFLOW", &s.GitHub.Production.Workflow)
+	applyEnv("DORA_STORAGE_PATH", &s.Storage.Path)
 }
 
 // GetStoragePath returns the absolute path to the storage file
