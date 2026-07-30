@@ -41,7 +41,7 @@ get:
         Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.
       in: query
       schema:
-        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+        $ref: "./../schemas/api.params.predicate.filter.integer-strict.yaml"
   responses:
     200:
       description: OK

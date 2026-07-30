@@ -18669,7 +18669,7 @@
             "description": "Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.\n",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
             }
           }
         ],
