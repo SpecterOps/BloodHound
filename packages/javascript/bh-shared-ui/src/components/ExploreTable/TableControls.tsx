@@ -94,7 +94,7 @@ const TableControls = <TData, TValue>({
                             {...SearchInputProps}
                         />
                         <FontAwesomeIcon
-                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            className={cn('absolute right-2 pointer-events-none', { [DISABLED_CLASSNAME]: noResults })}
                             icon={faSearch}
                         />
                     </div>

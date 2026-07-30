@@ -93,7 +93,10 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             value={searchTerm}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
-                        <AppIcon.MagnifyingGlass size={16} className='absolute right-2 top-[50%] -mt-[8px]' />
+                        <AppIcon.MagnifyingGlass
+                            size={16}
+                            className='absolute right-2 top-[50%] -mt-[8px] pointer-events-none'
+                        />
                     </div>
                     <div className='flex items-center ml-4'>
                         <Button variant='secondary' size='medium' onClick={importHandler}>
