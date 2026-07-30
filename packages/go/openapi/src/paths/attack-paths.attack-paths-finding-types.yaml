@@ -1,0 +1,69 @@
+parameters:
+  - $ref: "./../parameters/header.prefer.yaml"
+get:
+  operationId: ListAttackPathFindingTypes
+  summary: List attack path finding types
+  description: |
+    Returns distinct attack path finding types available to the caller.
+    Results are always returned in ascending order by `title`.
+  tags:
+    - Attack Paths
+    - Enterprise
+  parameters:
+    - name: environment_id
+      description: |
+        Filter by one or more environment identifiers. Repeat the parameter to include multiple environments.
+        Results are scoped to the caller's Environment access.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+    - name: asset_group_tag_id
+      description: |
+        Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    finding:
+                      type: string
+                      description: Finding name.
+                    title:
+                      type: string
+                      description: Finding title.
+                  required:
+                    - finding
+                    - title
+            required:
+              - data
+          examples:
+            Finding types:
+              value:
+                data:
+                  - finding: "Kerberoasting"
+                    title: "Kerberoastable User Accounts"
+                  - finding: "T0WriteOwner"
+                    title: "Write Owner"
+    400:
+      $ref: "./../responses/bad-request.yaml"
+    401:
+      $ref: "./../responses/unauthorized.yaml"
+    429:
+      $ref: "./../responses/too-many-requests.yaml"
+    500:
+      $ref: "./../responses/internal-server-error.yaml"
