@@ -174,6 +174,7 @@ const MultiSelect = ({
     selectAllLabel,
     isSearchable = false,
     isLoading = false,
+    inputProps = {},
     searchPlaceholder = 'Search',
     loadingText = 'Loading options',
     emptyText = 'No options available',

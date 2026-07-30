@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { type MultiSelectOption } from 'doodle-ui';
+
 export type MultiValueSelection = { kind: 'all' } | { kind: 'some'; values: string[] } | { kind: 'none' };
 
 export type MultiValueFilterConfig = {
@@ -24,4 +26,5 @@ export type MultiValueFilterConfig = {
 export type UseMultiValueFilterParams = {
     selection: MultiValueSelection;
     setSelection: (selection: MultiValueSelection) => void;
+    handleValuesChange: (options: MultiSelectOption[], newVal: string[]) => void;
 };

@@ -140,7 +140,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
         onPageChange(page + incrementor);
     };
 
-    const handleValueChange = (value: string) => {
+    const handleValuesChange = (value: string) => {
         if (isNaN(Number(value))) return;
         onPageChange(1);
         onRowsPerPageChange(Number(value));
@@ -159,7 +159,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
                     <PaginationSelect
                         options={selectItems}
                         defaultValue={defaultPaginationValue ?? selectItems[0]}
-                        onValueChange={handleValueChange}
+                        onValueChange={handleValuesChange}
                     />
                 </PaginationItem>
                 <PaginationItem className='px-1 py-2 mx-2'>

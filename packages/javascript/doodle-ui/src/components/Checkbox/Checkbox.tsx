@@ -109,7 +109,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
         const checkboxId = id ?? generatedId;
 
         return (
-            <div
+            <Label
+                htmlFor={checkboxId}
                 className={cn(
                     'inline-flex items-center gap-2 rounded-sm',
                     '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
@@ -127,9 +128,7 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     focusRing={false}
                     className={className}
                 />
-
-                <Label
-                    htmlFor={checkboxId}
+                <span
                     className={cn(
                         'cursor-pointer font-normal leading-[18px]',
                         error && 'peer-data-[state=unchecked]:text-status-error-main',
@@ -137,8 +136,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                         labelClassName
                     )}>
                     {label}
-                </Label>
-            </div>
+                </span>
+            </Label>
         );
     }
 );

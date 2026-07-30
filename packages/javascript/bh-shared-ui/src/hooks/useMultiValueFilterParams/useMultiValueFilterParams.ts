@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { type MultiSelectOption } from 'doodle-ui';
 import { useSearchParams } from 'react-router-dom';
 import { MultiValueFilterConfig, MultiValueSelection, UseMultiValueFilterParams } from './types';
 import { areSelectionsEqual, normalizeSelection } from './utils';
@@ -75,5 +76,28 @@ export const useMultiValueFilterParams = ({
         });
     };
 
-    return { selection, setSelection };
+    const handleValuesChange = (options: MultiSelectOption[], newVal: any) => {
+        if (newVal.length === options.length) {
+            setSelection({ kind: 'all' });
+        } else if (newVal.length === 0) {
+            setSelection({ kind: 'none' });
+        } else {
+            setSelection({
+                kind: 'some',
+                values: newVal,
+            });
+        }
+    };
+
+    return { selection, setSelection, handleValuesChange };
+};
+
+export const getValuesFromSelection = (selection: MultiValueSelection, options: MultiSelectOption[]) => {
+    if (selection.kind === 'some') return selection.values;
+
+    if (selection.kind === 'all') return options;
+
+    if (selection.kind === 'none') return [];
+
+    return [];
 };
