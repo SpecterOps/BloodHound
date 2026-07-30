@@ -28,7 +28,7 @@ import {
     TableRow,
     TableSortLabel,
 } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Button, IconButton } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
 import { usePermissions } from '../../hooks';
@@ -63,9 +63,9 @@ const SSOProviderTableActionsMenu: FC<{
 
     return (
         <>
-            <Button variant={'text'} onClick={handleOnOpen} size='small' aria-label='Open provider actions menu'>
+            <IconButton onClick={handleOnOpen} aria-label='Open provider actions menu'>
                 <FontAwesomeIcon icon={faEllipsisVertical} />
-            </Button>
+            </IconButton>
             <Menu
                 anchorEl={anchorEl}
                 elevation={0}
@@ -168,7 +168,7 @@ const SSOProviderTable: FC<{
                                 <TableCell size='small'>
                                     <Button
                                         variant='text'
-                                        fontColor={'primary'}
+                                        fontColor='primary'
                                         className='p-0'
                                         onClick={(e) => {
                                             e.stopPropagation();

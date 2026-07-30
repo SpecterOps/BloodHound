@@ -25,6 +25,7 @@ import {
     DialogDescription,
     DialogTitle,
     Label,
+    TextButton,
 } from 'doodle-ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SearchInput } from '../../../../components/SearchInput';
@@ -82,23 +83,23 @@ const EdgeFilteringDialog = ({
                         <DialogTitle>{title}</DialogTitle>
                         <DialogDescription className='ml-1 mt-1'>{description}</DialogDescription>
                     </div>
-                    <div className='flex gap-1'>
-                        <Button
-                            variant='text'
-                            size='small'
+                    <div className='flex gap-5'>
+                        <TextButton
+                            className='text-sm'
+                            fontColor='primary'
                             disabled={isSearching}
                             onClick={() => setExpandSignal((s) => s + 1)}>
-                            <FontAwesomeIcon icon={faAnglesDown} className='mr-1' />
+                            <FontAwesomeIcon icon={faAnglesDown} />
                             Expand All
-                        </Button>
-                        <Button
-                            variant='text'
-                            size='small'
+                        </TextButton>
+                        <TextButton
+                            className='text-sm'
+                            fontColor='primary'
                             disabled={isSearching}
                             onClick={() => setCollapseSignal((s) => s + 1)}>
-                            <FontAwesomeIcon icon={faAnglesUp} className='mr-1' />
+                            <FontAwesomeIcon icon={faAnglesUp} />
                             Collapse All
-                        </Button>
+                        </TextButton>
                     </div>
                 </div>
 

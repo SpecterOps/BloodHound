@@ -95,7 +95,7 @@ describe('FileIngest', () => {
     });
     it('displays a Filters button', async () => {
         await act(async () => render(<FileIngest />));
-        const filterButton = screen.getByRole('button', { name: /app-icon-filter-outline/i });
+        const filterButton = screen.getByTestId('file_ingest_log-open_filter_dialog');
         expect(filterButton).toBeInTheDocument();
     });
     it('displays a table of completed ingest logs', async () => {

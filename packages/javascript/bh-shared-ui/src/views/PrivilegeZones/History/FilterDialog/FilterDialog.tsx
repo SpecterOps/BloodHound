@@ -22,6 +22,7 @@ import {
     DialogTitle,
     DialogTrigger,
     Form,
+    TextButton,
     Tooltip,
     VisuallyHidden,
 } from 'doodle-ui';
@@ -97,12 +98,12 @@ const FilterDialog: FC<{
                     <form className='flex flex-col gap-4 m-1'>
                         <DialogTitle className='flex justify-between items-center'>
                             <span className='text-xl'>Filter</span>
-                            <Button
-                                variant={'text'}
+                            <TextButton
+                                fontColor='primary'
                                 onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
-                                className='font-normal p-2'>
+                                className='font-bold p-2'>
                                 Clear All
-                            </Button>
+                            </TextButton>
                         </DialogTitle>
                         <VisuallyHidden asChild>
                             <DialogDescription>Filter Privilege Zone History</DialogDescription>
@@ -120,15 +121,16 @@ const FilterDialog: FC<{
                         </div>
 
                         <DialogActions>
-                            <Button variant={'text'} className='p-2' onClick={closeDialog}>
+                            <TextButton fontColor='primary' className='pr-2' onClick={closeDialog}>
                                 Cancel
-                            </Button>
-                            <Button
-                                variant={'text'}
-                                className='text-primary dark:text-secondary-variant-2 p-2'
-                                onClick={handleConfirm}>
+                            </TextButton>
+
+                            <TextButton
+                                data-testid='file_ingest_log-filter_dialog_confirm'
+                                onClick={handleConfirm}
+                                type='submit'>
                                 Confirm
-                            </Button>
+                            </TextButton>
                         </DialogActions>
                     </form>
                 </Form>

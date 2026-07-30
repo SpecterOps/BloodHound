@@ -16,7 +16,7 @@
 
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from 'doodle-ui';
+import { TextButton } from 'doodle-ui';
 import { AssetGroupTagSelector } from 'js-client-library';
 import { FC } from 'react';
 
@@ -32,11 +32,9 @@ const DeleteRuleButton: FC<{
     if (ruleData.is_default) return null;
 
     return (
-        <Button data-testid='privilege-zones_save_selector-form_delete-button' variant={'text'} onClick={onClick}>
-            <span>
-                <FontAwesomeIcon icon={faTrashCan} /> Delete Rule
-            </span>
-        </Button>
+        <TextButton data-testid='privilege-zones_save_selector-form_delete-button' onClick={onClick}>
+            <FontAwesomeIcon icon={faTrashCan} /> Delete Rule
+        </TextButton>
     );
 };
 

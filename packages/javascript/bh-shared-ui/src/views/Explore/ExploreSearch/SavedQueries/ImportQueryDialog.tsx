@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogClose,
@@ -22,6 +21,7 @@ import {
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    TextButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import { ErrorResponse } from 'js-client-library';
@@ -236,18 +236,16 @@ const ImportQueryDialog: React.FC<{
                         {fileUploadStep === FileUploadStep.ADD_FILES && (
                             <>
                                 <DialogClose asChild>
-                                    <Button variant='text'>Cancel</Button>
+                                    <TextButton fontColor='primary'>Cancel</TextButton>
                                 </DialogClose>
-                                <Button variant='text' onClick={handleSubmit} disabled={submitDialogDisabled}>
+                                <TextButton onClick={handleSubmit} disabled={submitDialogDisabled}>
                                     Upload
-                                </Button>
+                                </TextButton>
                             </>
                         )}
                         {fileUploadStep === FileUploadStep.UPLOAD && (
                             <DialogClose asChild>
-                                <Button variant='text' disabled={uploadDialogDisabled}>
-                                    Complete
-                                </Button>
+                                <TextButton disabled={uploadDialogDisabled}>Complete</TextButton>
                             </DialogClose>
                         )}
                     </DialogActions>

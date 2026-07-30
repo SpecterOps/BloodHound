@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogClose,
@@ -25,6 +24,7 @@ import {
     DialogTitle,
     DialogTrigger,
     IconButton,
+    TextButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import isEqual from 'lodash/isEqual';
@@ -109,9 +109,9 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     }}>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
-                        <Button variant='text' className='font-normal p-0 h-fit' onClick={clearFilters}>
+                        <TextButton fontColor='primary' className='font-bold p-0 h-fit' onClick={clearFilters}>
                             Clear All
-                        </Button>
+                        </TextButton>
                     </DialogTitle>
 
                     <VisuallyHidden asChild>
@@ -138,24 +138,22 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
                     <DialogActions>
                         <DialogClose asChild>
-                            <Button
-                                className='pr-0'
+                            <TextButton
+                                className='pr-2'
+                                fontColor='primary'
                                 data-testid='file_ingest_log-filter_dialog_close'
-                                type='button'
-                                variant='text'>
+                                type='button'>
                                 Cancel
-                            </Button>
+                            </TextButton>
                         </DialogClose>
                         <DialogClose asChild>
-                            <Button
-                                className='text-primary'
+                            <TextButton
                                 data-testid='file_ingest_log-filter_dialog_confirm'
                                 disabled={isConfirmDisabled}
                                 onClick={updateAndConfirm}
-                                type='submit'
-                                variant='text'>
+                                type='submit'>
                                 Confirm
-                            </Button>
+                            </TextButton>
                         </DialogClose>
                     </DialogActions>
                 </DialogContent>
