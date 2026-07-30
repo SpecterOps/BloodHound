@@ -1,6 +1,6 @@
 github:
     owner: SpecterOps
-    repo: bloodhound-enterprise
+    repo: BloodHound
     production:
         workflow: cicd-distroless.yml
         environment: production
