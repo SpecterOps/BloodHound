@@ -49,13 +49,11 @@ func (s *command) runCollect() error {
 		daysFlag   int
 		deployFlag bool
 		commitFlag bool
-		prFlag     bool
 	)
 
 	cmd.IntVar(&daysFlag, "days", defaultDays, fmt.Sprintf("Number of days to collect data for (default: %s from config)", config.Metrics.DefaultPeriod))
 	cmd.BoolVar(&deployFlag, "deployments", false, "Collect deployment data only")
 	cmd.BoolVar(&commitFlag, "commits", false, "Collect commit data only")
-	cmd.BoolVar(&prFlag, "prs", false, "Collect pull request data only")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -66,7 +64,6 @@ func (s *command) runCollect() error {
 		fmt.Fprintf(w, "\nData Types:\n")
 		fmt.Fprintf(w, "  - Deployments: Git tags (semver format: v1.2.3, v1.2.3-rc1)\n")
 		fmt.Fprintf(w, "  - Commits: All commits in the main branch\n")
-		fmt.Fprintf(w, "  - Pull Requests: Merged PRs with timestamps\n")
 		fmt.Fprintf(w, "\nExamples:\n")
 		fmt.Fprintf(w, "  # Collect all data for last 90 days (default)\n")
 		fmt.Fprintf(w, "  %s dora collect\n\n", filepath.Base(os.Args[0]))
@@ -74,8 +71,8 @@ func (s *command) runCollect() error {
 		fmt.Fprintf(w, "  %s dora collect -days 365\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Collect only deployments\n")
 		fmt.Fprintf(w, "  %s dora collect -deployments\n\n", filepath.Base(os.Args[0]))
-		fmt.Fprintf(w, "  # Collect commits and PRs only\n")
-		fmt.Fprintf(w, "  %s dora collect -commits -prs\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect commits only\n")
+		fmt.Fprintf(w, "  %s dora collect -commits\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "\nNote: Data is stored in SQLite database at .dora/dora.db\n")
 	}
 
@@ -112,7 +109,7 @@ func (s *command) runCollect() error {
 	ctx := context.Background()
 
 	// If no specific flags, collect everything
-	collectAll := !deployFlag && !commitFlag && !prFlag
+	collectAll := !deployFlag && !commitFlag
 
 	// Collect deployments
 	if collectAll || deployFlag {
@@ -151,26 +148,6 @@ func (s *command) runCollect() error {
 				return fmt.Errorf("saving commits: %w", err)
 			}
 			fmt.Printf("💾 Saved %d commits to database\n", len(commits))
-		}
-	}
-
-	// Collect pull requests
-	if collectAll || prFlag {
-		fmt.Printf("Collecting pull requests from %s to %s...\n",
-			startTime.Format("2006-01-02"),
-			endTime.Format("2006-01-02"))
-
-		prs, err := collector.CollectPullRequests(ctx, startTime, endTime)
-		if err != nil {
-			return fmt.Errorf("collecting pull requests: %w", err)
-		}
-		fmt.Printf("✅ Collected %d pull requests\n", len(prs))
-
-		if len(prs) > 0 {
-			if err := storage.SavePullRequests(ctx, prs); err != nil {
-				return fmt.Errorf("saving pull requests: %w", err)
-			}
-			fmt.Printf("💾 Saved %d pull requests to database\n", len(prs))
 		}
 	}
 

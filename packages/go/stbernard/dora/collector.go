@@ -154,12 +154,6 @@ func (s *GitHubCollector) CollectCommits(ctx context.Context, startTime, endTime
 				HTMLURL:     gc.GetHTMLURL(),
 			}
 
-			// Try to extract PR number from commit message
-			// GitHub adds "Merge pull request #123" or "(#123)" to merge commits
-			if prNum := extractPRNumber(commit.Message); prNum != nil {
-				commit.PRNumber = prNum
-			}
-
 			commits = append(commits, commit)
 		}
 
@@ -172,102 +166,7 @@ func (s *GitHubCollector) CollectCommits(ctx context.Context, startTime, endTime
 	return commits, nil
 }
 
-// CollectPullRequests collects PR data from GitHub
-func (s *GitHubCollector) CollectPullRequests(ctx context.Context, startTime, endTime time.Time) ([]PullRequest, error) {
-	if startTime.After(endTime) {
-		return nil, ErrInvalidTimeRange
-	}
 
-	client, err := s.getClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("getting GitHub client: %w", err)
-	}
-
-	var (
-		prs  []PullRequest
-		page = 1
-	)
-
-	for {
-		opts := &github.PullRequestListOptions{
-			State:     "all", // Get both open and closed
-			Sort:      "updated",
-			Direction: "desc",
-			ListOptions: github.ListOptions{
-				Page:    page,
-				PerPage: 100,
-			},
-		}
-
-		githubPRs, resp, err := client.PullRequests.List(
-			ctx,
-			s.config.GitHub.Owner,
-			s.config.GitHub.Repo,
-			opts,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("listing pull requests: %w", err)
-		}
-
-		for _, gpr := range githubPRs {
-			// Filter by merge time (if merged)
-			if gpr.MergedAt != nil {
-				mergedTime := gpr.MergedAt.Time
-				if mergedTime.Before(startTime) || mergedTime.After(endTime) {
-					continue
-				}
-			}
-
-			pr := PullRequest{
-				Number:    gpr.GetNumber(),
-				Title:     gpr.GetTitle(),
-				State:     gpr.GetState(),
-				CreatedAt: gpr.GetCreatedAt().Time,
-				BaseRef:   gpr.GetBase().GetRef(),
-				HeadRef:   gpr.GetHead().GetRef(),
-				HTMLURL:   gpr.GetHTMLURL(),
-			}
-
-			if gpr.MergedAt != nil {
-				mergedAt := gpr.MergedAt.Time
-				pr.MergedAt = &mergedAt
-			}
-
-			if gpr.ClosedAt != nil {
-				closedAt := gpr.ClosedAt.Time
-				pr.ClosedAt = &closedAt
-			}
-
-			if gpr.MergeCommitSHA != nil {
-				pr.MergeCommitSHA = gpr.MergeCommitSHA
-			}
-
-			prs = append(prs, pr)
-		}
-
-		// Stop if we've gone past our start time (since we're sorting by updated desc)
-		if len(githubPRs) > 0 {
-			lastPR := githubPRs[len(githubPRs)-1]
-			if lastPR.UpdatedAt != nil && lastPR.UpdatedAt.Time.Before(startTime) {
-				break
-			}
-		}
-
-		if resp.NextPage == 0 {
-			break
-		}
-		page = resp.NextPage
-	}
-
-	return prs, nil
-}
-
-// extractPRNumber extracts PR number from commit message
-// Looks for patterns like "Merge pull request #123" or "(#123)"
-func extractPRNumber(message string) *int {
-	// TODO: Implement regex-based PR number extraction
-	return nil
-}
 
 // semverTag represents a parsed semantic version tag with commit metadata
 type semverTag struct {
