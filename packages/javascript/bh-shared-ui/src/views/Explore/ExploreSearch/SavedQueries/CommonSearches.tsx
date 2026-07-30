@@ -180,6 +180,7 @@ const CommonSearches = ({
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
                 <TextButton
+                    aria-expanded={showCommonQueries}
                     onClick={onToggleCommonQueries}
                     className='flex justify-start items-center w-full pl-0'
                     data-testid='common-queries-toggle'>

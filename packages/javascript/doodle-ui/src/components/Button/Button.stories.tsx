@@ -34,8 +34,7 @@ const meta = {
     argTypes: {
         variant: {
             // TODO - remove transparent option
-            options: ['primary', 'secondary', 'transparent', 'icon', 'text'],
-            // options: ['primary', 'secondary'],
+            options: ['primary', 'secondary'],
             control: 'select',
         },
         // TODO - remove fontColor
@@ -133,12 +132,6 @@ export const TextButton: TextButtonStory = {
         fontColor: 'default',
     },
     argTypes: {
-        // variant: {
-        //     control: false,
-        //     table: {
-        //         disable: true,
-        //     },
-        // },
         fontColor: {
             control: 'select',
             options: ['primary', 'default'],

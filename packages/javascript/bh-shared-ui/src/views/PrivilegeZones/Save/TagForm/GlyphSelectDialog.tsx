@@ -51,7 +51,7 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
             aria-label={`${iconName}-glyph`}
             className={clsx(
                 ['relative', !iconName && 'invisible'],
-                'justify-center focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
+                'justify-center focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
             )}
             onClick={() => {
                 iconName && onClick(iconName);
@@ -151,12 +151,12 @@ const GlyphSelectDialog: React.FC<{
                                 {selectedIcon && (
                                     // TODO BED-6062
                                     <Tooltip
-                                        tooltip={'Clear selection'}
+                                        tooltip='Clear selection'
                                         contentProps={{
                                             className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
                                         }}>
                                         <IconButton
-                                            aria-label={`selected: ${selectedIcon}-glyph`}
+                                            aria-label='Clear selection'
                                             onClick={handleClear}
                                             className='focus-visible:rounded-sm'
                                             aria-describedby='Clear selection'>

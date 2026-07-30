@@ -125,7 +125,7 @@ function CodeController(props: PropsWithChildren<Props>) {
                 onScroll={handleScroll}>
                 {(!hideCopy || !hideWrap) && (
                     <>
-                        <div className='codeController gap-4 mb-1'>
+                        <span className='codeController gap-4 mb-1'>
                             {!hideCopy && (
                                 <TextButton onClick={handleCopy} className='has-[svg]:gap-1'>
                                     <FontAwesomeIcon icon={faCopy} size='lg' />
@@ -138,7 +138,7 @@ function CodeController(props: PropsWithChildren<Props>) {
                                     {wrapped ? 'Unwrap' : 'Wrap'}
                                 </TextButton>
                             )}
-                        </div>
+                        </span>
                         <br />
                         <br />
                     </>

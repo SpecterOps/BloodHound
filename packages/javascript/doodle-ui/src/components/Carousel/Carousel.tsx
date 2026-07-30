@@ -204,22 +204,23 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 );
 CarouselItem.displayName = 'CarouselItem';
 
-const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(({ ...props }, ref) => {
-    const { scrollPrev, canScrollPrev } = useCarousel();
+const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof TextButton>>(
+    ({ ...props }, ref) => {
+        const { scrollPrev, canScrollPrev } = useCarousel();
 
-    return (
-        <TextButton
-            name='prev'
-            ref={ref}
-            className='px-2'
-            size='small'
-            disabled={!canScrollPrev}
-            onClick={scrollPrev}
-            {...props}>
-            <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
-        </TextButton>
-    );
-});
+        return (
+            <TextButton
+                name='prev'
+                ref={ref}
+                className='px-2'
+                disabled={!canScrollPrev}
+                onClick={scrollPrev}
+                {...props}>
+                <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
+            </TextButton>
+        );
+    }
+);
 CarouselPrev.displayName = 'CarouselPrev';
 
 const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(() => {
@@ -250,22 +251,23 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 });
 CarouselDots.displayName = 'CarouselDots';
 
-const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(({ ...props }, ref) => {
-    const { scrollNext, canScrollNext } = useCarousel();
+const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof TextButton>>(
+    ({ ...props }, ref) => {
+        const { scrollNext, canScrollNext } = useCarousel();
 
-    return (
-        <TextButton
-            name='next'
-            ref={ref}
-            className='px-2'
-            size='small'
-            disabled={!canScrollNext}
-            onClick={scrollNext}
-            {...props}>
-            <ChevronRight className='h-3 w-3 text-black dark:text-white' />
-        </TextButton>
-    );
-});
+        return (
+            <TextButton
+                name='next'
+                ref={ref}
+                className='px-2'
+                disabled={!canScrollNext}
+                onClick={scrollNext}
+                {...props}>
+                <ChevronRight className='h-3 w-3 text-black dark:text-white' />
+            </TextButton>
+        );
+    }
+);
 CarouselNext.displayName = 'CarouselNext';
 
 export { Carousel, CarouselContent, CarouselDots, CarouselItem, CarouselNext, CarouselPrev, type CarouselApi };

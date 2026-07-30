@@ -47,7 +47,7 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
         ref
     ) => {
         const buttonPrimary = variant === 'primary';
-        console.log(open);
+
         return (
             <Button
                 ref={ref}
