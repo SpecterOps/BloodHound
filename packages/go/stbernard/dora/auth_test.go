@@ -19,7 +19,6 @@ package dora
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -68,16 +67,6 @@ func TestTokenValidation(t *testing.T) {
 				t.Errorf("Expected no validation error, got: %v", err)
 			}
 		})
-	}
-}
-
-func TestGetTokenPath(t *testing.T) {
-	workspaceRoot := "/tmp/test-workspace"
-	expectedPath := filepath.Join(workspaceRoot, DoraDataDir, TokensDir, "github-token.json")
-
-	path := GetGitHubTokenPath(workspaceRoot)
-	if path != expectedPath {
-		t.Errorf("Expected token path %s, got %s", expectedPath, path)
 	}
 }
 

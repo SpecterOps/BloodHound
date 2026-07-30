@@ -99,28 +99,4 @@ func TestCollectCommitsValidation(t *testing.T) {
 	}
 }
 
-func TestCollectPullRequestsValidation(t *testing.T) {
-	env, err := environment.NewEnvironment()
-	if err != nil {
-		t.Fatalf("Failed to create environment: %v", err)
-	}
 
-	config := &Config{
-		GitHub: GitHubConfig{
-			Owner: "SpecterOps",
-			Repo:  "bloodhound-enterprise",
-		},
-	}
-
-	collector := NewGitHubCollector(config, env)
-
-	// Test with invalid time range
-	ctx := context.Background()
-	endTime := time.Now()
-	startTime := endTime.Add(24 * time.Hour) // Start after end
-
-	_, err = collector.CollectPullRequests(ctx, startTime, endTime)
-	if err == nil {
-		t.Error("Expected error for invalid time range, got nil")
-	}
-}

@@ -100,43 +100,18 @@ func TestDeployment(t *testing.T) {
 
 func TestCommit(t *testing.T) {
 	now := time.Now()
-	prNumber := 42
 	commit := Commit{
 		SHA:         "abc123",
 		Message:     "Fix bug",
 		CommittedAt: now,
-		PRNumber:    &prNumber,
 		HTMLURL:     "https://github.com/org/repo/commit/abc123",
 	}
 
 	if commit.SHA != "abc123" {
 		t.Errorf("Expected SHA to be 'abc123', got '%s'", commit.SHA)
 	}
-	if commit.PRNumber == nil || *commit.PRNumber != 42 {
-		t.Errorf("Expected PR number to be 42, got %v", commit.PRNumber)
-	}
-}
-
-func TestPullRequest(t *testing.T) {
-	now := time.Now()
-	mergeCommit := "abc123"
-	pr := PullRequest{
-		Number:         42,
-		Title:          "Fix bug",
-		State:          "merged",
-		CreatedAt:      now,
-		MergedAt:       &now,
-		MergeCommitSHA: &mergeCommit,
-		BaseRef:        "main",
-		HeadRef:        "feature-branch",
-		HTMLURL:        "https://github.com/org/repo/pull/42",
-	}
-
-	if pr.Number != 42 {
-		t.Errorf("Expected PR number to be 42, got %d", pr.Number)
-	}
-	if pr.MergeCommitSHA == nil || *pr.MergeCommitSHA != "abc123" {
-		t.Errorf("Expected merge commit SHA to be 'abc123', got %v", pr.MergeCommitSHA)
+	if commit.Message != "Fix bug" {
+		t.Errorf("Expected message to be 'Fix bug', got '%s'", commit.Message)
 	}
 }
 

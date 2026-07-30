@@ -138,50 +138,6 @@ func TestStorageCommits(t *testing.T) {
 	}
 }
 
-func TestStoragePullRequests(t *testing.T) {
-	tempDir := t.TempDir()
-	dbPath := filepath.Join(tempDir, "test.db")
-
-	storage, err := NewStorage(dbPath)
-	if err != nil {
-		t.Fatalf("Failed to create storage: %v", err)
-	}
-	defer storage.Close()
-
-	ctx := context.Background()
-
-	// Test saving a PR
-	now := time.Now()
-	pr := PullRequest{
-		Number:    42,
-		Title:     "Fix bug",
-		State:     "merged",
-		CreatedAt: now,
-		MergedAt:  &now,
-	}
-
-	if err := storage.SavePullRequests(ctx, []PullRequest{pr}); err != nil {
-		t.Fatalf("Failed to save PR: %v", err)
-	}
-
-	// Test retrieving PRs
-	start := time.Now().AddDate(0, 0, -1)
-	end := time.Now().AddDate(0, 0, 1)
-
-	prs, err := storage.GetPullRequests(ctx, start, end)
-	if err != nil {
-		t.Fatalf("Failed to get PRs: %v", err)
-	}
-
-	if len(prs) != 1 {
-		t.Errorf("Expected 1 PR, got %d", len(prs))
-	}
-
-	if prs[0].Number != pr.Number {
-		t.Errorf("Expected PR number %d, got %d", pr.Number, prs[0].Number)
-	}
-}
-
 func TestGooseMigration(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "test.db")

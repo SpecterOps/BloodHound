@@ -96,19 +96,30 @@ func TestCalculateLeadTime(t *testing.T) {
 
 	now := time.Now()
 
-	// Create commits (2 hours before deployment)
+	// Create commits and deployments to test lead time calculation
+	// Release 1 (v9.0.0): baseline at -12h
+	// Release 2 (v9.1.0): commit at -10h, deployed at -6h, lead time = 4h
+	// Release 3 (v9.2.0): commit at -2h, deployed at now, lead time = 2h
+	// Median of [4h, 2h] = 3h
 	commits := []Commit{
-		{SHA: "sha1", CommittedAt: now.Add(-2 * time.Hour), Message: "Fix bug"},
-		{SHA: "sha2", CommittedAt: now.Add(-4 * time.Hour), Message: "Add feature"},
+		{SHA: "sha0", CommittedAt: now.Add(-12 * time.Hour), Message: "Baseline"},
+		{SHA: "sha1", CommittedAt: now.Add(-10 * time.Hour), Message: "First feature"},
+		{SHA: "sha2", CommittedAt: now.Add(-2 * time.Hour), Message: "Second feature"},
 	}
 
-	// Create deployments
 	deployments := []Deployment{
+		{
+			Tag:          "v9.0.0",
+			SHA:          "sha0",
+			Version:      "9.0.0",
+			DeployedAt:   now.Add(-12 * time.Hour),
+			IsProduction: true,
+		},
 		{
 			Tag:          "v9.1.0",
 			SHA:          "sha1",
 			Version:      "9.1.0",
-			DeployedAt:   now,
+			DeployedAt:   now.Add(-6 * time.Hour),
 			IsProduction: true,
 		},
 		{
