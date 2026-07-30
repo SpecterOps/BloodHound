@@ -546,3 +546,214 @@ func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
 	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM custom_node_kinds WHERE kind_id IS NULL`).Scan(&rowCount).Error)
 	assert.Equal(t, 0, rowCount, "every custom_node_kinds row should have a kind_id after the migration")
 }
+
+func TestMigration_AddManagementPlaneZone(t *testing.T) {
+	const (
+		previousMigrationVersion int64 = 20260710120000
+		targetMigrationVersion   int64 = 20260729165433
+	)
+
+	testContext := setupGooseTestContext(t)
+
+	provider, err := goose.NewProvider(
+		goose.DialectPostgres,
+		testContext.migrator.SqlDB,
+		testContext.migrator.GooseFS,
+		goose.WithAllowOutofOrder(true),
+	)
+	require.NoError(t, err)
+
+	_, err = provider.UpTo(testContext.ctx, previousMigrationVersion)
+	require.NoError(t, err)
+
+	require.NoError(t, testContext.gormDB.Exec(`
+		WITH inserted_kind AS (
+			INSERT INTO kind (name)
+			VALUES ('Tag_Existing_Zone')
+			RETURNING id
+		)
+		INSERT INTO asset_group_tags (
+			type,
+			kind_id,
+			name,
+			description,
+			created_at,
+			created_by,
+			updated_at,
+			updated_by,
+			position,
+			require_certify,
+			analysis_enabled
+		)
+		SELECT
+			1,
+			id,
+			'Existing Zone',
+			'Existing zone used to verify position migration.',
+			current_timestamp,
+			'test',
+			current_timestamp,
+			'test',
+			2,
+			false,
+			true
+		FROM inserted_kind
+	`).Error)
+
+	_, err = provider.UpTo(testContext.ctx, targetMigrationVersion)
+	require.NoError(t, err)
+
+	var zone struct {
+		Name            string
+		Description     string
+		Position        int
+		RequireCertify  bool
+		AnalysisEnabled bool
+		KindName        string
+	}
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT
+			tag.name,
+			tag.description,
+			tag.position,
+			tag.require_certify,
+			tag.analysis_enabled,
+			kind.name AS kind_name
+		FROM asset_group_tags tag
+		JOIN kind ON kind.id = tag.kind_id
+		WHERE tag.name = 'Management Plane'
+		  AND tag.deleted_at IS NULL
+	`).Scan(&zone).Error)
+
+	assert.Equal(t, "Management Plane", zone.Name)
+	assert.Equal(t, "The management plane is the layer designated for enterprise-wide IT management functions, managing workloads and infrastructure, and controlling configuration and operational tasks across systems.", zone.Description)
+	assert.Equal(t, 2, zone.Position)
+	assert.False(t, zone.RequireCertify)
+	assert.False(t, zone.AnalysisEnabled)
+	assert.Equal(t, "Tag_Management_Plane", zone.KindName)
+
+	var existingZonePosition int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT position
+		FROM asset_group_tags
+		WHERE name = 'Existing Zone'
+	`).Scan(&existingZonePosition).Error)
+	assert.Equal(t, 3, existingZonePosition)
+
+	var selectorCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tag_selectors selector
+		JOIN asset_group_tags tag ON tag.id = selector.asset_group_tag_id
+		WHERE tag.name = 'Management Plane'
+		  AND selector.is_default = true
+		  AND selector.disabled_at IS NULL
+		  AND selector.allow_disable = true
+		  AND selector.auto_certify = 0
+	`).Scan(&selectorCount).Error)
+	assert.Equal(t, 36, selectorCount)
+
+	var cypherSeedCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tag_selector_seeds seed
+		JOIN asset_group_tag_selectors selector ON selector.id = seed.selector_id
+		JOIN asset_group_tags tag ON tag.id = selector.asset_group_tag_id
+		WHERE tag.name = 'Management Plane'
+		  AND seed.type = 2
+		  AND seed.value LIKE 'MATCH (n:AZRole) %'
+	`).Scan(&cypherSeedCount).Error)
+	assert.Equal(t, 36, cypherSeedCount)
+
+	expectedTemplateIDs := map[string]string{
+		"AI Administrator":                           "D2562EDE-74DB-457E-A7B6-544E236EBB61",
+		"Attribute Assignment Administrator":         "58A13EA3-C632-46AE-9EE0-9C0D43CD7F3D",
+		"Attribute Provisioning Administrator":       "ECB2C6BF-0AB6-418E-BD87-7986F8D63BBE",
+		"Authentication Administrator":               "C4E39BD9-1100-46D3-8C65-FB160DA0071F",
+		"Authentication Extensibility Administrator": "25A516ED-2FA0-40EA-A2D0-12923A21473A",
+		"Authentication Policy Administrator":        "0526716B-113D-4C15-B2C8-68E3C22B9F80",
+		"B2C IEF Keyset Administrator":               "AAF43236-0C0D-4D5F-883A-6955382AC081",
+		"Cloud App Security Administrator":           "892C5842-A9A6-463A-8041-72AA08CA3CF6",
+		"Compliance Administrator":                   "17315797-102D-40B4-93E0-432062CACA18",
+		"Directory Synchronization Accounts":         "D29B2B05-8046-44BA-8758-1E26182FCF32",
+		"Directory Writers":                          "9360FEB5-F418-4BAA-8175-E2A00BAC4301",
+		"Domain Name Administrator":                  "8329153B-31D0-4727-B945-745EB3BC5F31",
+		"Dynamics 365 Administrator":                 "44367163-EBA1-44C3-98AF-F5787879F96A",
+		"Exchange Administrator":                     "29232CDF-9323-42FD-ADE2-1D097AF3E4DE",
+		"External ID User Flow Administrator":        "6E591065-9BAD-43ED-90F3-E9424366D2F0",
+		"External Identity Provider Administrator":   "BE2F45A1-457D-42AF-A067-6EC1FA63BC45",
+		"Global Secure Access Administrator":         "AC434307-12B9-4FA1-A708-88BF58CAABC1",
+		"Groups Administrator":                       "FDD7A751-B60B-444A-984C-02652FE8FA1C",
+		"Helpdesk Administrator":                     "729827E3-9C14-49F7-BB1B-9608F156BBB8",
+		"Identity Governance Administrator":          "45D8D3C5-C802-45C6-B32A-1D70B5E1E86E",
+		"Intune Administrator":                       "3A2C62DB-5318-420D-8D74-23AFFEE5D9D5",
+		"Knowledge Administrator":                    "B5A8DCF3-09D5-43A9-A639-8E29EF291470",
+		"Lifecycle Workflows Administrator":          "59D46F88-662B-457B-BCEB-5C3809E5908F",
+		"Microsoft 365 Backup Administrator":         "1707125E-0AA2-4D4D-8655-A7C786C76A25",
+		"Microsoft 365 Migration Administrator":      "8C8B803F-96E1-4129-9349-20738D9F9652",
+		"Partner Tier1 Support":                      "4BA39CA4-527C-499A-B93D-D9B492C50246",
+		"Password Administrator":                     "966707D0-3269-4727-9BE2-8C3A10F19B9D",
+		"Power Platform Administrator":               "11648597-926C-4CF3-9C36-BCEBB0BA8DCC",
+		"Security Operator":                          "5F2222B1-57C3-48BA-8AD5-D4759F1FDE6F",
+		"SharePoint Administrator":                   "F28A1F50-F6E7-4571-818B-6A12F2AF6B6C",
+		"Skype for Business Administrator":           "75941009-915A-4869-ABE7-691BFF18279E",
+		"Teams Administrator":                        "69091246-20E8-4A56-AA4D-066075B2A7A8",
+		"Teams Telephony Administrator":              "AA38014F-0993-46E9-9B45-30501A20909D",
+		"User Administrator":                         "FE930BE7-5E62-47DB-91AF-98C3A49A38B1",
+		"Windows 365 Administrator":                  "11451D60-ACB2-45EB-A7D6-43D0F0125C13",
+		"Yammer Administrator":                       "810A2642-A034-447F-A5E8-41BEAA378541",
+	}
+
+	var selectorSeeds []struct {
+		Name   string
+		Cypher string
+	}
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT selector.name, seed.value AS cypher
+		FROM asset_group_tag_selector_seeds seed
+		JOIN asset_group_tag_selectors selector ON selector.id = seed.selector_id
+		JOIN asset_group_tags tag ON tag.id = selector.asset_group_tag_id
+		WHERE tag.name = 'Management Plane'
+	`).Scan(&selectorSeeds).Error)
+	require.Len(t, selectorSeeds, len(expectedTemplateIDs))
+
+	for _, selectorSeed := range selectorSeeds {
+		templateID, found := expectedTemplateIDs[selectorSeed.Name]
+		require.Truef(t, found, "unexpected Management Plane selector %q", selectorSeed.Name)
+		assert.Equalf(
+			t,
+			fmt.Sprintf("MATCH (n:AZRole) \nWHERE n.objectid STARTS WITH '%s@'\nRETURN n;", templateID),
+			selectorSeed.Cypher,
+			"unexpected Cypher for Management Plane selector %q",
+			selectorSeed.Name,
+		)
+	}
+
+	var unsupportedSelectorCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tag_selectors selector
+		JOIN asset_group_tags tag ON tag.id = selector.asset_group_tag_id
+		WHERE tag.name = 'Management Plane'
+		  AND selector.name = 'On Premises Directory Sync Account'
+	`).Scan(&unsupportedSelectorCount).Error)
+	assert.Zero(t, unsupportedSelectorCount)
+
+	_, err = provider.DownTo(testContext.ctx, previousMigrationVersion)
+	require.NoError(t, err)
+
+	var managementPlaneCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*)
+		FROM asset_group_tags
+		WHERE name = 'Management Plane'
+	`).Scan(&managementPlaneCount).Error)
+	assert.Zero(t, managementPlaneCount)
+
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT position
+		FROM asset_group_tags
+		WHERE name = 'Existing Zone'
+	`).Scan(&existingZonePosition).Error)
+	assert.Equal(t, 2, existingZonePosition)
+}
