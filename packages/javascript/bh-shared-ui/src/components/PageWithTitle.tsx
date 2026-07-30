@@ -30,10 +30,18 @@ type PageWithTitleProps = ContainerProps<
     }
 >;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, fullWidth, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({
+    title,
+    pageDescription,
+    children,
+    fullWidth,
+    className,
+    ...rest
+}) => {
     const appName = useAppName();
+    const mergedClassName = ('pt-4 ' + (className ?? '')).trim();
     return (
-        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className='pt-4'>
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={mergedClassName}>
             {title && (
                 <Helmet>
                     <title>
