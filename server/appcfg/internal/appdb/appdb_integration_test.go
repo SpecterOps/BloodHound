@@ -157,10 +157,8 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 
 		assert.Equal(t, expectedStatus, status.Status)
 		assert.WithinDuration(t, expectedUpdatedAt, status.UpdatedAt, 1*time.Second)
-		assert.True(t, status.LastCompleteAnalysisAt.Valid)
-		assert.WithinDuration(t, expectedLastCompleteAnalysisAt.Time, status.LastCompleteAnalysisAt.Time, 1*time.Second)
-		assert.True(t, status.LastAnalysisRunAt.Valid)
-		assert.WithinDuration(t, expectedLastAnalysisRunAt.Time, status.LastAnalysisRunAt.Time, 1*time.Second)
+		assert.WithinDuration(t, expectedLastCompleteAnalysisAt.Time, status.LastCompleteAnalysisAt, 1*time.Second)
+		assert.WithinDuration(t, expectedLastAnalysisRunAt.Time, status.LastAnalysisRunAt, 1*time.Second)
 		assert.True(t, status.NextScheduledAnalysisAt.Valid)
 		assert.WithinDuration(t, expectedNextScheduledAnalysisAt.Time, status.NextScheduledAnalysisAt.Time, 1*time.Second)
 	})
@@ -237,32 +235,4 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("validates the LIMIT 1 clause returns a result", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
-
-		// The migration inserts a default row with NULL timestamps, so update it first
-		_, err := pool.Exec(ctx, `
-			UPDATE datapipe_status
-			SET status = $1,
-			    updated_at = $2,
-			    last_complete_analysis_at = $3,
-			    last_analysis_run_at = $4
-		`,
-			services.DatapipeStatusIdle,
-			time.Now().UTC(),
-			time.Now().UTC(),
-			time.Now().UTC(),
-		)
-		require.NoError(t, err)
-
-		// The singleton constraint prevents multiple rows. This test validates
-		// that LIMIT 1 works as expected.
-		status, err := store.GetDatapipeStatus(ctx)
-		require.NoError(t, err)
-		assert.Equal(t, services.DatapipeStatusIdle, status.Status)
-		assert.NotZero(t, status.UpdatedAt)
-	})
 }

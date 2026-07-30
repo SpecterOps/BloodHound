@@ -53,8 +53,8 @@ func toDatapipeStatus(row datapipeStatusRow) services.DatapipeStatus {
 	return services.DatapipeStatus{
 		Status:                  services.DatapipeStatusType(row.Status),
 		UpdatedAt:               row.UpdatedAt,
-		LastCompleteAnalysisAt:  row.LastCompleteAnalysisAt,
-		LastAnalysisRunAt:       row.LastAnalysisRunAt,
+		LastCompleteAnalysisAt:  row.LastCompleteAnalysisAt.ValueOrZero(),
+		LastAnalysisRunAt:       row.LastAnalysisRunAt.ValueOrZero(),
 		NextScheduledAnalysisAt: row.NextScheduledAnalysisAt,
 	}
 }
@@ -65,8 +65,8 @@ type Store struct {
 }
 
 // NewStore returns a new Store backed by the given pgx connection pool.
-func NewStore(db pgxQuerier) *Store {
-	return &Store{db: db}
+func NewStore(databaseInterface pgxQuerier) *Store {
+	return &Store{db: databaseInterface}
 }
 
 // GetDatapipeStatus returns the current datapipe status.

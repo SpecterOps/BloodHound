@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -29,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
@@ -38,8 +40,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/modules"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,6 +52,42 @@ import (
 // the GET /api/v2/datapipe/status handler. All five documented fields are included.
 type datapipeStatusResponseEnvelope struct {
 	Data model.DatapipeStatusWrapper `json:"data"`
+}
+
+func noopRateLimit() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler { return next }
+}
+
+func testDogTags() dogtags.Service {
+	return dogtags.NewTestService(dogtags.TestOverrides{})
+}
+
+func assertDatapipeStatusWireContract(t *testing.T, body []byte, expectedStatus model.DatapipeStatus) {
+	t.Helper()
+
+	var envelope struct {
+		Data map[string]json.RawMessage `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(body, &envelope))
+	require.Len(t, envelope.Data, 5)
+
+	statusJSON, found := envelope.Data["status"]
+	require.True(t, found)
+	var status model.DatapipeStatus
+	require.NoError(t, json.Unmarshal(statusJSON, &status))
+	assert.Equal(t, expectedStatus, status)
+
+	for _, field := range []string{"updated_at", "last_complete_analysis_at", "last_analysis_run_at"} {
+		timestampJSON, found := envelope.Data[field]
+		require.True(t, found, "%s must be present", field)
+		require.NotEqual(t, "null", string(timestampJSON), "%s must remain a date-time string", field)
+
+		var timestamp time.Time
+		require.NoError(t, json.Unmarshal(timestampJSON, &timestamp), "%s must be a valid date-time", field)
+	}
+
+	_, found = envelope.Data["next_scheduled_analysis_at"]
+	require.True(t, found, "next_scheduled_analysis_at must be present")
 }
 
 // setupAppcfgDB creates an isolated test database with all migrations applied.
@@ -162,8 +202,11 @@ func TestGetDatapipeStatus(t *testing.T) {
 
 	// Register the appcfg module using the new architecture
 	modules.Register(modules.Deps{
-		Router: &routerInst,
-		Pool:   db.Pool(),
+		Router:              &routerInst,
+		Pool:                db.Pool(),
+		Graph:               &graph.DatabaseSwitch{},
+		RateLimitMiddleware: noopRateLimit,
+		DogTags:             testDogTags(),
 	})
 
 	var (
@@ -240,16 +283,9 @@ func TestGetDatapipeStatus(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
-		var envelope datapipeStatusResponseEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-
-		// Verify all contract fields are present and valid
-		assert.Equal(t, model.DatapipeStatusIdle, envelope.Data.Status)
-		assert.IsType(t, time.Time{}, envelope.Data.UpdatedAt)
-		assert.IsType(t, time.Time{}, envelope.Data.LastCompleteAnalysisAt)
-		assert.IsType(t, time.Time{}, envelope.Data.LastAnalysisRunAt)
-		// next_scheduled_analysis_at is nullable (Enterprise-only field)
-		assert.IsType(t, time.Time{}, envelope.Data.NextScheduledAnalysisAt.Time)
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		assertDatapipeStatusWireContract(t, body, model.DatapipeStatusIdle)
 	})
 
 	t.Run("returns 200 OK with datapipe status in ingesting state", func(t *testing.T) {

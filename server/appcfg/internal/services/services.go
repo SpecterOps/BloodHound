@@ -41,8 +41,8 @@ const (
 type DatapipeStatus struct {
 	Status                  DatapipeStatusType
 	UpdatedAt               time.Time
-	LastCompleteAnalysisAt  null.Time
-	LastAnalysisRunAt       null.Time
+	LastCompleteAnalysisAt  time.Time
+	LastAnalysisRunAt       time.Time
 	NextScheduledAnalysisAt null.Time
 }
 
@@ -58,8 +58,8 @@ type Service struct {
 	db Database
 }
 
-func NewService(db Database) *Service {
-	return &Service{db: db}
+func NewService(databaseInterface Database) *Service {
+	return &Service{db: databaseInterface}
 }
 
 func (s *Service) GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error) {

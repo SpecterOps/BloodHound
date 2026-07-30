@@ -62,8 +62,8 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 		expected    = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               updatedAt,
-			LastCompleteAnalysisAt:  null.TimeFrom(completedAt),
-			LastAnalysisRunAt:       null.TimeFrom(startedAt),
+			LastCompleteAnalysisAt:  completedAt,
+			LastAnalysisRunAt:       startedAt,
 			NextScheduledAnalysisAt: nextRun,
 		}
 	)
@@ -89,6 +89,24 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 				)
 			},
 			wantResult: expected,
+		},
+		{
+			name: "converts nullable legacy timestamps to zero values",
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedGetDatapipeStatusSQL).WithArgs(1).WillReturnRows(
+					pool.NewRows(datapipeStatusRowColumns()).AddRow(
+						string(expected.Status),
+						expected.UpdatedAt,
+						null.Time{},
+						null.Time{},
+						null.Time{},
+					),
+				)
+			},
+			wantResult: services.DatapipeStatus{
+				Status:    expected.Status,
+				UpdatedAt: expected.UpdatedAt,
+			},
 		},
 		{
 			name: "returns ErrNotFound when no row exists",
