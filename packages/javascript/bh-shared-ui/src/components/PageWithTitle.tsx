@@ -19,6 +19,7 @@ import { Typography } from 'doodle-ui';
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAppName } from '../providers/AppNameProvider';
+import { cn } from '../utils';
 
 type PageWithTitleProps = ContainerProps<
     'div',
@@ -39,9 +40,8 @@ const PageWithTitle: React.FC<PageWithTitleProps> = ({
     ...rest
 }) => {
     const appName = useAppName();
-    const mergedClassName = ('pt-4 ' + (className ?? '')).trim();
     return (
-        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={mergedClassName}>
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={cn('pt-4', className)}>
             {title && (
                 <Helmet>
                     <title>
