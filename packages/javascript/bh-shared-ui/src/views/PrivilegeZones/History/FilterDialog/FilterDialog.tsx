@@ -21,6 +21,7 @@ import {
     DialogTitle,
     DialogTrigger,
     Form,
+    IconButton,
     TextButton,
     Tooltip,
     VisuallyHidden,
@@ -77,18 +78,16 @@ const FilterDialog: FC<{
                 setOpen(open);
             }}>
             <DialogTrigger asChild>
-                <TextButton
+                <IconButton
                     data-testid='privilege-zones_history_filter-button'
                     aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>
                     <Tooltip tooltip='Filters'>
-                        <span>
-                            <AppIcon.FilterOutline size={22} />
-                        </span>
+                        <AppIcon.FilterOutline size={22} />
                     </Tooltip>
-                </TextButton>
+                </IconButton>
             </DialogTrigger>
 
             <DialogContent>
