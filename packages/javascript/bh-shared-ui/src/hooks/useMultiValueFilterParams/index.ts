@@ -14,4 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export type { MultiValueFilterConfig, MultiValueSelection } from './types';
-export { getNextSelection, getValuesFromSelection, useMultiValueFilterParams } from './useMultiValueFilterParams';
+export { useMultiValueFilterParams } from './useMultiValueFilterParams';
+export { getNextSelection, getValuesFromSelection } from './utils';
