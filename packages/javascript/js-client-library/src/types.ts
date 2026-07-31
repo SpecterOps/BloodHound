@@ -613,9 +613,13 @@ export type FindingAssetsResponse = {
     type: string;
 };
 
-//  Alerts
-//  Webhooks
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+//  Alerts - Webhooks
+// ---------------------------------------------------------------------------
 export type WebhookType = 'generic' | 'slack' | 'ms-teams';
 
 export type Webhook = {
@@ -627,33 +631,36 @@ export type Webhook = {
     health: number;
     attempts: number;
     failures: number;
-    last_error: {
-        string: string;
-        valid: boolean;
-    };
-    last_errored_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    last_succeeded_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
+    last_error: string | null;
+    last_errored_at: ISO_DATE_STRING | null;
+    last_succeeded_at: ISO_DATE_STRING | null;
     created_at: ISO_DATE_STRING;
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
 };
 
-export type WebhookSortBy = 'name' | 'created_at' | 'updated_at' | 'health';
+export type WebhookSortBy =
+    | 'name'
+    | 'created_at'
+    | 'updated_at'
+    | 'health'
+    | 'type'
+    | 'url'
+    | 'last_triggered_at'
+    | 'last_error'
+    | 'attempts'
+    | '-name'
+    | '-created_at'
+    | '-updated_at'
+    | '-health'
+    | '-type'
+    | '-url'
+    | '-last_triggered_at'
+    | '-last_error'
+    | '-attempts';
 
 export interface WebhookParams {
     skip?: number;
@@ -687,6 +694,105 @@ export type SourceKind = {
     id: number;
     name: string;
 };
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+
+export interface AlertEvent {
+    id: string;
+    type: string;
+    message: string;
+    data: object;
+    created_at: ISO_DATE_STRING;
+    attempts_queued_at: ISO_DATE_STRING;
+}
+
+export interface AlertEventType {
+    type: string;
+    versions: string[];
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+
+export interface AlertsParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: 'name' | 'created_at' | 'updated_at';
+    type?: WebhookType;
+    created_at?: string;
+    delivered?: string | boolean;
+}
+
+export interface Subscription {
+    channel_id: string;
+    event_type: string;
+    version: string;
+    created_at: ISO_DATE_STRING;
+    disabled_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    disabled_by: {
+        string: string;
+        valid: boolean;
+    };
+}
+export interface Alert {
+    id: string;
+    name: string;
+    description: string;
+    created_at: ISO_DATE_STRING;
+    created_by: string;
+    updated_at: ISO_DATE_STRING;
+    updated_by: string;
+    disabled_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    disabled_by: {
+        string: string;
+        valid: boolean;
+    };
+    subscriptions: Subscription[];
+}
+
+export interface AlertAttamptsParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
+    alert_id: string;
+    channel_id: string;
+    event_id: string;
+    succeeded: boolean;
+    created_at?: ISO_DATE_STRING;
+}
+
+export interface AlertAttempt {
+    alert_id: string;
+    channel_id: string;
+    event_id: string;
+    created_at: ISO_DATE_STRING;
+    succeeded_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+    last_status_code: {
+        int32: number;
+        valid: boolean;
+    };
+    last_error: {
+        string: string;
+        valid: boolean;
+    };
+    attempts: number;
+    next_attempt_at: {
+        time: ISO_DATE_STRING;
+        valid: boolean;
+    };
+}
 
 // ---------------------------------------------------------------------------
 // Base schemas
