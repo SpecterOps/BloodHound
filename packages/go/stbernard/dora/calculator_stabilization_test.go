@@ -24,12 +24,12 @@ import (
 
 func TestCalculateStabilizationMetrics(t *testing.T) {
 	var (
-		tempDir    = t.TempDir()
-		dbPath     = "file:" + tempDir + "/test.db?cache=shared&mode=memory"
-		now        = time.Now()
-		startTime  = now.Add(-30 * 24 * time.Hour)
-		endTime    = now
-		ctx        = context.Background()
+		tempDir   = t.TempDir()
+		dbPath    = "file:" + tempDir + "/test.db?cache=shared&mode=memory"
+		now       = time.Now()
+		startTime = now.Add(-30 * 24 * time.Hour)
+		endTime   = now
+		ctx       = context.Background()
 	)
 
 	storage, err := NewStorage(dbPath)
@@ -69,7 +69,7 @@ func TestCalculateStabilizationMetrics(t *testing.T) {
 	// RC2+ commits: 3, 2, 1, 5 = total 11, count 4
 	// Average: 11 / 4 = 2.75
 	// Sorted: 1, 2, 3, 5 -> Median: (2+3)/2 = 2.5
-	
+
 	if snapshot.AverageStabilizationCommits < 2.7 || snapshot.AverageStabilizationCommits > 2.8 {
 		t.Errorf("Expected average stabilization commits ~2.75, got %.2f", snapshot.AverageStabilizationCommits)
 	}
@@ -78,7 +78,7 @@ func TestCalculateStabilizationMetrics(t *testing.T) {
 		t.Errorf("Expected median stabilization commits 2.5, got %.1f", snapshot.MedianStabilizationCommits)
 	}
 
-	t.Logf("Stabilization metrics: Avg=%.1f, Median=%.1f", 
+	t.Logf("Stabilization metrics: Avg=%.1f, Median=%.1f",
 		snapshot.AverageStabilizationCommits, snapshot.MedianStabilizationCommits)
 }
 

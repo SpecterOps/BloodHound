@@ -87,10 +87,11 @@ func (s *Calculator) CalculateMetrics(ctx context.Context, startTime, endTime ti
 // Only counts feature releases (minor/major versions), not hotfixes/patches.
 // Hotfixes are counted separately in Change Failure Rate and MTTR metrics.
 // Examples:
-//   v9.2.0 (patch=0) → Counts as deployment ✓
-//   v9.3.0 (patch=0) → Counts as deployment ✓
-//   v9.2.1 (patch=1) → Does NOT count (hotfix) ✗
-//   v9.2.2 (patch=2) → Does NOT count (hotfix) ✗
+//
+//	v9.2.0 (patch=0) → Counts as deployment ✓
+//	v9.3.0 (patch=0) → Counts as deployment ✓
+//	v9.2.1 (patch=1) → Does NOT count (hotfix) ✗
+//	v9.2.2 (patch=2) → Does NOT count (hotfix) ✗
 func (s *Calculator) calculateDeploymentFrequency(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
@@ -227,9 +228,10 @@ func (s *Calculator) findEarliestCommitBetween(start, end time.Time, commits []C
 // Only counts feature releases (patch=0) as deployments. Patches are fixes, not deployments.
 // A deployment "fails" if it required any hotfixes/patches.
 // Examples:
-//   v9.2.0 with patches v9.2.1, v9.2.2 → Failed deployment (TotalPatches=2)
-//   v9.3.0 with no patches → Successful deployment (TotalPatches=0)
-//   v9.2.1 (patch itself) → Not counted as a deployment
+//
+//	v9.2.0 with patches v9.2.1, v9.2.2 → Failed deployment (TotalPatches=2)
+//	v9.3.0 with no patches → Successful deployment (TotalPatches=0)
+//	v9.2.1 (patch itself) → Not counted as a deployment
 func (s *Calculator) calculateChangeFailureRate(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
@@ -265,9 +267,10 @@ func (s *Calculator) calculateChangeFailureRate(
 // This correctly handles sequential patches like v9.0.1 → v9.0.2 → v9.0.3
 // But EXCLUDES cross-version jumps like v9.3.0 → v9.4.0 (different release cycles)
 // Examples:
-//   v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore ✓
-//   v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore ✓
-//   v9.3.0 (Jun 15) → v9.4.0 (Jul 2)  = NOT tracked (different minor versions)
+//
+//	v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore ✓
+//	v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore ✓
+//	v9.3.0 (Jun 15) → v9.4.0 (Jul 2)  = NOT tracked (different minor versions)
 func (s *Calculator) calculateTimeToRestore(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
@@ -345,8 +348,8 @@ func (s *Calculator) calculateQualityMetrics(
 	commits []Commit,
 ) {
 	var (
-		rcCounts              []int
-		stabilizationCommits  []int
+		rcCounts             []int
+		stabilizationCommits []int
 	)
 
 	// Collect RC counts and stabilization commits from production releases

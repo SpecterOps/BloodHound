@@ -53,7 +53,7 @@ type GitHubConfig struct {
 }
 
 // ProductionConfig defines how to identify production deployments
-type ProductionConfig struct{
+type ProductionConfig struct {
 	Workflow    string `yaml:"workflow"`
 	Environment string `yaml:"environment"`
 }

@@ -148,8 +148,6 @@ func TestParseTagsToDeployments(t *testing.T) {
 	}
 }
 
-
-
 // TestParseTagsEdgeCases tests tag parsing with various edge cases
 func TestParseTagsEdgeCases(t *testing.T) {
 	env, err := environment.NewEnvironment()
@@ -168,11 +166,11 @@ func TestParseTagsEdgeCases(t *testing.T) {
 	now := time.Now()
 
 	tests := []struct {
-		name           string
-		tags           []tagWithCommit
-		expectedCount  int
-		expectedRCs    map[string]int // version -> expected RC count
-		expectedPatch  map[string]int // version -> expected patch count
+		name          string
+		tags          []tagWithCommit
+		expectedCount int
+		expectedRCs   map[string]int // version -> expected RC count
+		expectedPatch map[string]int // version -> expected patch count
 	}{
 		{
 			name: "multiple_rc_iterations",

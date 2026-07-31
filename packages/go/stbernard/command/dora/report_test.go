@@ -33,20 +33,20 @@ func TestParseDefaultPeriod(t *testing.T) {
 		{"days long form", "30days", 30},
 		{"days long form uppercase", "30DAYS", 30},
 		{"just number", "45", 45},
-		
+
 		// Months (30 days/month)
 		{"3 months", "3mo", 90},
 		{"6 months", "6mo", 180},
 		{"months short", "3m", 90},
 		{"months long", "6months", 180},
 		{"months uppercase", "3MO", 90},
-		
+
 		// Years (365 days/year)
 		{"1 year", "1y", 365},
 		{"3 years", "3yr", 1095},
 		{"years long", "2years", 730},
 		{"years uppercase", "3YR", 1095},
-		
+
 		// Edge cases
 		{"empty string", "", 90},
 		{"whitespace", "  90d  ", 90},

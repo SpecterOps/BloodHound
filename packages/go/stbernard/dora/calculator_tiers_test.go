@@ -171,8 +171,6 @@ func TestClassifyRestoreTime(t *testing.T) {
 	}
 }
 
-
-
 // TestDetermineOverallTier tests overall tier determination logic
 func TestDetermineOverallTier(t *testing.T) {
 	tempDir := t.TempDir()

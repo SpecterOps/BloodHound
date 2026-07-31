@@ -228,5 +228,3 @@ func (s *Storage) GetCommits(ctx context.Context, start, end time.Time) ([]Commi
 
 	return commits, nil
 }
-
-

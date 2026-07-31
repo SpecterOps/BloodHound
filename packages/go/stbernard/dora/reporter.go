@@ -83,29 +83,29 @@ func (s *TerminalReporter) renderDORATable(snapshot MetricsSnapshot) string {
 
 	// Table header
 	sb.WriteString("  ┌────────────────────────────────┬──────────────────────────────────┬──────────┐\n")
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %-8s │\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %-8s │\n",
 		s.bold("Metric"),
 		s.bold("Value"),
-		s.bold("Tier")))
+		s.bold("Tier"))
 	sb.WriteString("  ├────────────────────────────────┼──────────────────────────────────┼──────────┘\n")
 
 	// Row 1: Deployment Frequency
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Deployment Frequency",
 		fmt.Sprintf("%.2f per day (%d total)", snapshot.DeploymentFrequencyPerDay, snapshot.DeploymentCount),
-		s.colorTier(snapshot.DeploymentTier)))
+		s.colorTier(snapshot.DeploymentTier))
 
 	// Row 2: Lead Time
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Lead Time for Changes",
 		fmt.Sprintf("P50: %.1fh  P90: %.1fh  P95: %.1fh", snapshot.LeadTimeP50Hours, snapshot.LeadTimeP90Hours, snapshot.LeadTimeP95Hours),
-		s.colorTier(snapshot.LeadTimeTier)))
+		s.colorTier(snapshot.LeadTimeTier))
 
 	// Row 3: Change Failure Rate
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Change Failure Rate",
 		fmt.Sprintf("%.1f%% (%d/%d deployments)", snapshot.ChangeFailureRate, snapshot.FailedDeploymentCount, snapshot.DeploymentCount),
-		s.colorTier(snapshot.FailureRateTier)))
+		s.colorTier(snapshot.FailureRateTier))
 
 	// Row 4: Time to Restore
 	var mttrValue string
@@ -117,10 +117,10 @@ func (s *TerminalReporter) renderDORATable(snapshot MetricsSnapshot) string {
 		mttrValue = "No incidents 🎉"
 		mttrTier = s.dim("N/A")
 	}
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Time to Restore Service",
 		mttrValue,
-		mttrTier))
+		mttrTier)
 
 	// Table footer
 	sb.WriteString("  └────────────────────────────────┴──────────────────────────────────┴──────────┘\n")
@@ -134,44 +134,44 @@ func (s *TerminalReporter) renderQualityTable(snapshot MetricsSnapshot) string {
 
 	// Table header
 	sb.WriteString("  ┌────────────────────────────────┬──────────────────────────────────┬──────────────────────┐\n")
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %-20s │\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %-20s │\n",
 		s.bold("Indicator"),
 		s.bold("Value"),
-		s.bold("Assessment")))
+		s.bold("Assessment"))
 	sb.WriteString("  ├────────────────────────────────┼──────────────────────────────────┼──────────────────────┘\n")
 
 	// Row 1: Release Iterations (RCs)
 	rcValue := fmt.Sprintf("Avg: %.1f  Median: %.1f", snapshot.AverageRCsPerRelease, snapshot.MedianRCsPerRelease)
 	rcAssessment := s.assessRCs(snapshot.MedianRCsPerRelease)
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Release Iterations (RCs)",
 		rcValue,
-		rcAssessment))
+		rcAssessment)
 
 	// Row 2: RC Stabilization (commits in RC2+)
 	if snapshot.AverageStabilizationCommits > 0 {
 		stabValue := fmt.Sprintf("Avg: %.1f  Median: %.1f per RC",
 			snapshot.AverageStabilizationCommits, snapshot.MedianStabilizationCommits)
 		stabAssessment := s.assessStabilizationCommits(snapshot.MedianStabilizationCommits)
-		sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+		fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 			"RC Stabilization (RC2+)",
 			stabValue,
-			stabAssessment))
+			stabAssessment)
 	}
 
 	// Row 3: Batch Size (total commits per release)
 	batchValue := fmt.Sprintf("%.1f commits/release", snapshot.AverageCommitsPerRelease)
 	batchAssessment := s.assessBatchSize(snapshot.AverageCommitsPerRelease)
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Batch Size (total)",
 		batchValue,
-		batchAssessment))
+		batchAssessment)
 
 	// Row 4: Total Activity
-	sb.WriteString(fmt.Sprintf("  │ %-30s │ %-32s │ %s\n",
+	fmt.Fprintf(&sb, "  │ %-30s │ %-32s │ %s\n",
 		"Total Commits",
 		fmt.Sprintf("%d in period", snapshot.TotalCommitsInPeriod),
-		s.dim("—")))
+		s.dim("—"))
 
 	// Table footer
 	sb.WriteString("  └────────────────────────────────┴──────────────────────────────────┴──────────────────────┘\n")

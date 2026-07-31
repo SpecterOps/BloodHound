@@ -166,20 +166,18 @@ func (s *GitHubCollector) CollectCommits(ctx context.Context, startTime, endTime
 	return commits, nil
 }
 
-
-
 // semverTag represents a parsed semantic version tag with commit metadata
 type semverTag struct {
-	Tag          string
-	SHA          string
-	Version      string // e.g., "9.4.0"
-	Major        int
-	Minor        int
-	Patch        int
-	IsRC         bool
-	RCNumber     int
-	Timestamp    time.Time
-	HTMLURL      string
+	Tag       string
+	SHA       string
+	Version   string // e.g., "9.4.0"
+	Major     int
+	Minor     int
+	Patch     int
+	IsRC      bool
+	RCNumber  int
+	Timestamp time.Time
+	HTMLURL   string
 }
 
 // tagWithCommit represents a Git tag with commit information from GraphQL
@@ -246,7 +244,7 @@ func (s *GitHubCollector) fetchTagsWithTimestamps(ctx context.Context, client *g
 	for sha := range shaToTags {
 		sha := sha // capture loop variable
 		go func() {
-			semaphore <- struct{}{} // acquire
+			semaphore <- struct{}{}        // acquire
 			defer func() { <-semaphore }() // release
 
 			commit, _, err := client.Repositories.GetCommit(
@@ -313,12 +311,12 @@ func (s *GitHubCollector) parseTagsToDeployments(
 		}
 
 		var (
-			major, _    = strconv.Atoi(matches[1])
-			minor, _    = strconv.Atoi(matches[2])
-			patch, _    = strconv.Atoi(matches[3])
-			isRC        = matches[4] != ""
-			rcNumber    = 0
-			version     = fmt.Sprintf("%d.%d.%d", major, minor, patch)
+			major, _ = strconv.Atoi(matches[1])
+			minor, _ = strconv.Atoi(matches[2])
+			patch, _ = strconv.Atoi(matches[3])
+			isRC     = matches[4] != ""
+			rcNumber = 0
+			version  = fmt.Sprintf("%d.%d.%d", major, minor, patch)
 		)
 
 		if isRC {
