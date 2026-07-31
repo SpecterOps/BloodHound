@@ -475,16 +475,16 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 	fmt.Println(strings.Repeat("─", 130))
 
 	// Table rows
-	for _, r := range results {
-		s := r.Snapshot
+	for _, periodResult := range results {
+		snapshot := periodResult.Snapshot
 		fmt.Printf("%-10s │ %8d │ %9.2f │ %10.1fh │ %11.1f%% │ %10.1fh │ %8s\n",
-			r.Name,
-			s.DeploymentCount,
-			s.DeploymentFrequencyPerDay,
-			s.LeadTimeP50Hours,
-			s.ChangeFailureRate,
-			s.MedianTTRHours,
-			s.OverallTier,
+			periodResult.Name,
+			snapshot.DeploymentCount,
+			snapshot.DeploymentFrequencyPerDay,
+			snapshot.LeadTimeP50Hours,
+			snapshot.ChangeFailureRate,
+			snapshot.MedianTTRHours,
+			snapshot.OverallTier,
 		)
 	}
 
@@ -499,14 +499,14 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 		avgMTTR        float64
 	)
 
-	for _, r := range results {
-		s := r.Snapshot
-		totalDeploys += s.DeploymentCount
-		avgFreq += s.DeploymentFrequencyPerDay
-		avgLeadTime += s.LeadTimeP50Hours
-		avgFailureRate += s.ChangeFailureRate
-		if s.IncidentCount > 0 {
-			avgMTTR += s.MedianTTRHours
+	for _, periodResult := range results {
+		snapshot := periodResult.Snapshot
+		totalDeploys += snapshot.DeploymentCount
+		avgFreq += snapshot.DeploymentFrequencyPerDay
+		avgLeadTime += snapshot.LeadTimeP50Hours
+		avgFailureRate += snapshot.ChangeFailureRate
+		if snapshot.IncidentCount > 0 {
+			avgMTTR += snapshot.MedianTTRHours
 		}
 	}
 

@@ -80,8 +80,8 @@ func (s *GitHubCollector) getClient(ctx context.Context) (*github.Client, error)
 // Release candidates have -rcN suffix (e.g., v9.4.0-rc1)
 // Patch releases have PATCH > 0 (e.g., v9.4.1 is a hotfix)
 //
-// Optimization: Uses GraphQL to fetch tags with timestamps in a single query,
-// avoiding O(N) REST API calls for commit timestamps.
+// Implementation: Uses Repositories.ListTags followed by Repositories.GetCommit
+// for each unique SHA, with concurrent goroutines to improve performance.
 func (s *GitHubCollector) CollectDeployments(ctx context.Context, startTime, endTime time.Time) ([]Deployment, error) {
 	if startTime.After(endTime) {
 		return nil, ErrInvalidTimeRange
