@@ -98,5 +98,3 @@ func TestCollectCommitsValidation(t *testing.T) {
 		t.Error("Expected error for invalid time range, got nil")
 	}
 }
-
-

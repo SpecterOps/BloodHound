@@ -149,8 +149,6 @@ func TestLoadConfigWithOverride(t *testing.T) {
 	}
 }
 
-
-
 // TestGetStoragePath tests storage path resolution
 func TestGetStoragePath(t *testing.T) {
 	tests := []struct {

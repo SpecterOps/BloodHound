@@ -36,9 +36,9 @@ type Deployment struct {
 	PatchNumber  int  `db:"patch_number"`  // Patch version number
 
 	// Quality metrics (calculated during collection)
-	TotalRCs             int `db:"total_rcs"`              // Total RCs before this production release
-	TotalPatches         int `db:"total_patches"`          // Total patches for this minor version
-	StabilizationCommits int `db:"stabilization_commits"`  // Commits in this RC (0 for RC1, count for RC2+)
+	TotalRCs             int `db:"total_rcs"`             // Total RCs before this production release
+	TotalPatches         int `db:"total_patches"`         // Total patches for this minor version
+	StabilizationCommits int `db:"stabilization_commits"` // Commits in this RC (0 for RC1, count for RC2+)
 
 	// GitHub metadata
 	HTMLURL string `db:"html_url"` // GitHub tag URL
@@ -78,12 +78,12 @@ type MetricsSnapshot struct {
 	CalculatedAt              time.Time `db:"calculated_at"`
 
 	// Quality metrics (non-DORA but useful for understanding practices)
-	AverageRCsPerRelease         float64 `db:"average_rcs_per_release"`          // Mean RCs before production
-	MedianRCsPerRelease          float64 `db:"median_rcs_per_release"`           // Median RCs (more robust)
-	TotalCommitsInPeriod         int     `db:"total_commits_in_period"`          // All commits in time range
-	AverageCommitsPerRelease     float64 `db:"average_commits_per_release"`      // Total batch size (all commits/releases)
-	AverageStabilizationCommits  float64 `db:"average_stabilization_commits"`    // Commits in RC2+ (stabilization effort)
-	MedianStabilizationCommits   float64 `db:"median_stabilization_commits"`     // Median stabilization commits
+	AverageRCsPerRelease        float64 `db:"average_rcs_per_release"`       // Mean RCs before production
+	MedianRCsPerRelease         float64 `db:"median_rcs_per_release"`        // Median RCs (more robust)
+	TotalCommitsInPeriod        int     `db:"total_commits_in_period"`       // All commits in time range
+	AverageCommitsPerRelease    float64 `db:"average_commits_per_release"`   // Total batch size (all commits/releases)
+	AverageStabilizationCommits float64 `db:"average_stabilization_commits"` // Commits in RC2+ (stabilization effort)
+	MedianStabilizationCommits  float64 `db:"median_stabilization_commits"`  // Median stabilization commits
 }
 
 // PerformanceTier represents the DORA performance classification

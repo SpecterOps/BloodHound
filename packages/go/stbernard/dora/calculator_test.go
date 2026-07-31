@@ -244,7 +244,7 @@ func TestCalculateTimeToRestore(t *testing.T) {
 		{
 			Tag:          "v9.1.1",
 			SHA:          "sha2",
-			Version:      "9.1.0", // Same base version
+			Version:      "9.1.0",                 // Same base version
 			DeployedAt:   now.Add(-8 * time.Hour), // 2 hours after v9.1.0
 			IsProduction: true,
 			IsPatch:      true,
@@ -262,7 +262,7 @@ func TestCalculateTimeToRestore(t *testing.T) {
 		{
 			Tag:          "v9.2.1",
 			SHA:          "sha4",
-			Version:      "9.2.0", // Same base version
+			Version:      "9.2.0",                 // Same base version
 			DeployedAt:   now.Add(-1 * time.Hour), // 6 hours after v9.2.0
 			IsProduction: true,
 			IsPatch:      true,

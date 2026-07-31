@@ -104,6 +104,7 @@ func calculateLastFiscalQuarter(fiscalStartMonth int) (time.Time, time.Time) {
 //   - Days: "30d", "90d", "30", "90days"
 //   - Months: "3m", "6mo", "6months" (assumes 30 days/month)
 //   - Years: "1y", "3yr", "3years" (assumes 365 days/year)
+//
 // Falls back to 90 days if parsing fails.
 func parseDefaultPeriod(period string) int {
 	period = strings.TrimSpace(period)
