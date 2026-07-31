@@ -33,14 +33,15 @@ import (
 // calculateLastFiscalQuarter returns the start and end dates of the most recent complete fiscal quarter
 // based on the fiscal year start month (1=Jan, 2=Feb, etc.)
 func calculateLastFiscalQuarter(fiscalStartMonth int) (time.Time, time.Time) {
-	var (
-		now         = time.Now()
-		currentYear = now.Year()
-	)
+	return calculateLastFiscalQuarterAt(fiscalStartMonth, time.Now())
+}
+
+func calculateLastFiscalQuarterAt(fiscalStartMonth int, referenceTime time.Time) (time.Time, time.Time) {
+	currentYear := referenceTime.Year()
 
 	// Use absolute month arithmetic (months since year 0)
 	// This eliminates wraparound branches and simplifies year calculations
-	currentMonthAbs := currentYear*12 + int(now.Month())
+	currentMonthAbs := currentYear*12 + int(referenceTime.Month())
 	fiscalStartMonthAbs := currentYear*12 + fiscalStartMonth
 
 	// If we haven't reached this year's fiscal start, use last year's
