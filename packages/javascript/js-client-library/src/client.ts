@@ -79,6 +79,8 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    GetAlertEventTypesResponse,
+    GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
     GetCollectorsResponse,
@@ -2856,6 +2858,16 @@ class BHEAPIClient {
                 name: name ? `~eq:${name}` : undefined,
             },
             paramsSerializer: { indexes: null },
+        });
+
+    getAlertEventTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetAlertEventTypesResponse>('/api/v2/alert-event-types', {
+            ...options,
+        });
+
+    getAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, {
+            ...options,
         });
 }
 
