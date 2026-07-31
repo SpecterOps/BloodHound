@@ -50,7 +50,7 @@ on:
 jobs:
   sign-image:
     name: Sign Image
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
       DOCKER_CONTENT_TRUST_SERVER: ${{ inputs.docker_content_trust_server }}
     steps:
@@ -104,7 +104,7 @@ jobs:
   validate-image:
     name: Validate Signed Image
     needs: sign-image
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     # continue-on-error until validate signed image can be fully validated post-merge
     continue-on-error: true
     env:

@@ -28,7 +28,7 @@ on:
 jobs:
   build-application:
     name: Build BloodHound Application
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
     timeout-minutes: 30

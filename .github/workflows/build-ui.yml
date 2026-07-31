@@ -27,7 +27,7 @@ on:
 
 jobs:
   build-ui:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout source code for this repository

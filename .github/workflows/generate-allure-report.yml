@@ -29,7 +29,7 @@ jobs:
     needs:
       - call-run-go-unit-tests
       - call-run-ui-unit-tests
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Get Allure history

@@ -182,7 +182,7 @@ on:
 jobs:
   build-container-image:
     name: Build and Package ${{ inputs.image_repository }} Container
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       image_reference: ${{ steps.container-image-metadata.outputs.image_reference }}
       image_name: ${{ steps.container-image-metadata.outputs.image_name }}
