@@ -208,11 +208,11 @@ func (s analysisPipeline) String() string {
 	return strings.Join(steps, ",")
 }
 
-// IntentString returns a comma-separated list of each step and its intent
+// AnalysisStepsIntentString returns a comma-separated list of each step and its intent
 // (execute or skipped) for the given analysisSteps bitmask. This mirrors the
 // shape of the pipeline result String() used for the "Finished" log line, but
 // communicates intent before dispatch rather than completion.
-func (s analysisPipeline) IntentString(analysisSteps model.AnalysisSteps) string {
+func (s analysisPipeline) AnalysisStepsIntentString(analysisSteps model.AnalysisSteps) string {
 	steps := make([]string, 0, len(s))
 
 	for _, pipelineStep := range s {
@@ -406,7 +406,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
 		slog.Int("analysis_steps_bits", analysisSteps.Bits()),
-		slog.String("pipeline_steps", pipeline.IntentString(analysisSteps)),
+		slog.String("pipeline_steps", pipeline.AnalysisStepsIntentString(analysisSteps)),
 	)
 
 	pipelineResult := pipeline.dispatchAnalysisSteps(analysisPipelineRun{

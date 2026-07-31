@@ -194,8 +194,8 @@ func TestAnalysisPipelineIntentString(t *testing.T) {
 		{name: DataQuality},
 	}
 
-	assert.Equal(t, "ad_post_processing:execute,azure_post_processing:execute,tagging:execute,data_quality:execute", pipeline.IntentString(model.AnalysisStepsFull()))
-	assert.Equal(t, "ad_post_processing:skip,azure_post_processing:skip,tagging:execute,data_quality:execute", pipeline.IntentString(model.AnalysisStepsNoPostProcessing()))
+	assert.Equal(t, "ad_post_processing:execute,azure_post_processing:execute,tagging:execute,data_quality:execute", pipeline.AnalysisStepsIntentString(model.AnalysisStepsFull()))
+	assert.Equal(t, "ad_post_processing:skip,azure_post_processing:skip,tagging:execute,data_quality:execute", pipeline.AnalysisStepsIntentString(model.AnalysisStepsNoPostProcessing()))
 }
 
 func TestAnalysisPipelineStepResultString(t *testing.T) {
