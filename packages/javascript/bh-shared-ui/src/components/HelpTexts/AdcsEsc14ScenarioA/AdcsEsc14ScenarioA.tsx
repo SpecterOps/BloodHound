@@ -40,9 +40,10 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
         <Typography variant='body2' component='div'>
             The certificate must meet the following requirements:
             <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
-                <li>Chain up to trusted root CA on the DC</li>
-                <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
-                <li>Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry (UPN)</li>
+                <li>Chain to a root CA trusted by the domain controller</li>
+                <li>Be issued by a CA whose certificate is in the domain controller's NTAuth store</li>
+                <li>Include an Enhanced Key Usage (EKU) extension that enables domain authentication</li>
+                <li>Not include an Other Name / Principal Name entry (UPN) in the Subject Alternative Name (SAN)</li>
             </ol>
             <div className='my-4'>
                 The EKUs that enable domain authentication over Kerberos:
@@ -71,26 +72,8 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
 
         <Typography variant='body2' component='div'>
             <p className='my-4'>
-                If the attacker cannot obtain a suitable certificate from the target environment, they may also be able
-                to use a third-party Client Authentication certificate.
-            </p>
-            <p className='my-4'>
-                This works because explicit certificate mapping differs from implicit certificate mapping. Implicit
-                mapping requires the certificate to chain to a CA certificate in the domain controller's NTAuth store.
-                Explicit mapping does not. For explicit mapping, the certificate only needs to chain to a trusted root
-                CA on the domain controller.
-            </p>
-            <p className='my-4'>
-                Windows trusts many third-party root CAs by default, so an attacker may be able to buy or steal a
-                third-party certificate with the Client Authentication EKU and use it for ESC14 Scenario A. For example,
-                providers such as{' '}
-                <Link
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    href='https://www.ssl.com/products/device-machine-trust/client-authentication/'>
-                    SSL.com
-                </Link>{' '}
-                are trusted by Windows and offer client authentication certificates.
+                If the attacker cannot obtain a suitable certificate from ADCS, they may be able to obtain one from
+                another PKI provider used in the target environment.
             </p>
         </Typography>
 
@@ -113,7 +96,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
                 default, but neither users nor computers can write to their own mail attribute by default.
             </p>
             <p className='my-4'>
-                The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
+                The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber, X509SKI, or
                 X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
             </p>
             <p className='my-4'>Get the SHA1 hash of the certificate using openssl:</p>
@@ -171,9 +154,12 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
             <Typography variant='body2' component='div'>
                 The certificate must meet the following requirements:
                 <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
-                    <li>Chain up to trusted root CA on the DC</li>
-                    <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
-                    <li>Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry (UPN)</li>
+                    <li>Chain to a root CA trusted by the domain controller</li>
+                    <li>Be issued by a CA whose certificate is in the domain controller's NTAuth store</li>
+                    <li>Include an Enhanced Key Usage (EKU) extension that enables domain authentication</li>
+                    <li>
+                        Not include an Other Name / Principal Name entry (UPN) in the Subject Alternative Name (SAN)
+                    </li>
                 </ol>
                 <div className='my-4'>
                     The EKUs that enable domain authentication over Kerberos:
@@ -203,26 +189,8 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
 
             <Typography variant='body2' component='div'>
                 <p className='my-4'>
-                    If the attacker cannot obtain a suitable certificate from the target environment, they may also be
-                    able to use a third-party Client Authentication certificate.
-                </p>
-                <p className='my-4'>
-                    This works because explicit certificate mapping differs from implicit certificate mapping. Implicit
-                    mapping requires the certificate to chain to a CA certificate in the domain controller's NTAuth
-                    store. Explicit mapping does not. For explicit mapping, the certificate only needs to chain to a
-                    trusted root CA on the domain controller.
-                </p>
-                <p className='my-4'>
-                    Windows trusts many third-party root CAs by default, so an attacker may be able to buy or steal a
-                    third-party certificate with the Client Authentication EKU and use it for ESC14 Scenario A. For
-                    example, providers such as{' '}
-                    <Link
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        href='https://www.ssl.com/products/device-machine-trust/client-authentication/'>
-                        SSL.com
-                    </Link>{' '}
-                    are trusted by Windows and offer client authentication certificates.
+                    If the attacker cannot obtain a suitable certificate from ADCS, they may be able to obtain one from
+                    another PKI provider used in the target environment.
                 </p>
             </Typography>
 
@@ -255,8 +223,8 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
             <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
             <Typography variant='body2' component='div'>
                 <p className='my-4'>
-                    The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
-                    X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                    The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber, X509SKI,
+                    or X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
                 </p>
                 <p className='my-4'>Get the SHA1 hash of the certificate public key using certutil:</p>
             </Typography>
