@@ -236,16 +236,18 @@ const ImportQueryDialog: React.FC<{
                         {fileUploadStep === FileUploadStep.ADD_FILES && (
                             <>
                                 <DialogClose asChild>
-                                    <TextButton fontColor='primary'>Cancel</TextButton>
+                                    <TextButton>Cancel</TextButton>
                                 </DialogClose>
-                                <TextButton onClick={handleSubmit} disabled={submitDialogDisabled}>
+                                <TextButton fontColor='primary' onClick={handleSubmit} disabled={submitDialogDisabled}>
                                     Upload
                                 </TextButton>
                             </>
                         )}
                         {fileUploadStep === FileUploadStep.UPLOAD && (
                             <DialogClose asChild>
-                                <TextButton disabled={uploadDialogDisabled}>Complete</TextButton>
+                                <TextButton fontColor='primary' disabled={uploadDialogDisabled}>
+                                    Complete
+                                </TextButton>
                             </DialogClose>
                         )}
                     </DialogActions>

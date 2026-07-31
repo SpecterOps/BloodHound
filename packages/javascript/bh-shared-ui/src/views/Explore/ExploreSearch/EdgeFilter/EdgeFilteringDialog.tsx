@@ -85,7 +85,6 @@ const EdgeFilteringDialog = ({
                     <div className='flex gap-5'>
                         <TextButton
                             className='text-sm'
-                            fontColor='primary'
                             disabled={isSearching}
                             onClick={() => setExpandSignal((s) => s + 1)}>
                             <FontAwesomeIcon icon={faAnglesDown} />
@@ -93,7 +92,6 @@ const EdgeFilteringDialog = ({
                         </TextButton>
                         <TextButton
                             className='text-sm'
-                            fontColor='primary'
                             disabled={isSearching}
                             onClick={() => setCollapseSignal((s) => s + 1)}>
                             <FontAwesomeIcon icon={faAnglesUp} />

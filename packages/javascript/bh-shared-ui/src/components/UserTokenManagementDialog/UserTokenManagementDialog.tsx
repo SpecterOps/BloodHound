@@ -155,9 +155,7 @@ const UserTokenManagementDialog: React.FC<{
                                 </TableCell>
                             )}
                             <TableCell>
-                                <TextButton fontColor='primary' onClick={() => openRevokeTokenDialog(row)}>
-                                    Revoke
-                                </TextButton>
+                                <TextButton onClick={() => openRevokeTokenDialog(row)}>Revoke</TextButton>
                             </TableCell>
                         </TableRow>
                     );

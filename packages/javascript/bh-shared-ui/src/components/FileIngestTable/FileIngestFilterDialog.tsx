@@ -140,7 +140,6 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <DialogClose asChild>
                             <TextButton
                                 className='pr-2'
-                                fontColor='primary'
                                 data-testid='file_ingest_log-filter_dialog_close'
                                 type='button'>
                                 Cancel
@@ -149,6 +148,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <DialogClose asChild>
                             <TextButton
                                 data-testid='file_ingest_log-filter_dialog_confirm'
+                                fontColor='primary'
                                 disabled={isConfirmDisabled}
                                 onClick={updateAndConfirm}
                                 type='submit'>

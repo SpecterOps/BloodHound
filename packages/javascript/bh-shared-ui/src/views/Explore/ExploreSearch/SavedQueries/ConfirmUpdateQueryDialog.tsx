@@ -41,10 +41,10 @@ const ConfirmUpdateQueryDialog: FC<{
                         {dialogContent}
                     </DialogDescription>
                     <DialogActions className='px-0 flex-row justify-end'>
-                        <TextButton fontColor='primary' onClick={handleCancel}>
-                            Cancel
+                        <TextButton onClick={handleCancel}>Cancel</TextButton>
+                        <TextButton fontColor='primary' onClick={handleApply}>
+                            Ok
                         </TextButton>
-                        <TextButton onClick={handleApply}>Ok</TextButton>
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>
