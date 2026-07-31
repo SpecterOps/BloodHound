@@ -34,7 +34,8 @@ func TestTokenFromEnv(t *testing.T) {
 	if token == nil {
 		t.Fatal("Expected token from environment, got nil")
 	}
-	if token.AccessToken != testToken {
+	// Check nil again before dereferencing to satisfy linter
+	if token != nil && token.AccessToken != testToken {
 		t.Errorf("Expected access token %s, got %s", testToken, token.AccessToken)
 	}
 }
@@ -74,11 +75,12 @@ func TestGHCLIIntegration(t *testing.T) {
 		t.Fatal("Expected token, got nil")
 	}
 
-	if token.AccessToken == "" {
+	// Check nil again before dereferencing to satisfy linter
+	if token != nil && token.AccessToken == "" {
 		t.Error("Expected non-empty access token")
 	}
 
-	if token.TokenType != "Bearer" {
+	if token != nil && token.TokenType != "Bearer" {
 		t.Errorf("Expected token type Bearer, got %s", token.TokenType)
 	}
 }

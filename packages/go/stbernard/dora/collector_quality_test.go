@@ -82,12 +82,12 @@ func TestParseTagsToDeployments(t *testing.T) {
 	}
 
 	// v9.1.0 should have 2 RCs before it
-	if v910.TotalRCs != 2 {
+	if v910 != nil && v910.TotalRCs != 2 {
 		t.Errorf("Expected v9.1.0 to have 2 RCs, got %d", v910.TotalRCs)
 	}
 
 	// v9.1.0 should have 2 patches after it (v9.1.1, v9.1.2)
-	if v910.TotalPatches != 2 {
+	if v910 != nil && v910.TotalPatches != 2 {
 		t.Errorf("Expected v9.1.0 to have 2 patches, got %d", v910.TotalPatches)
 	}
 
@@ -104,11 +104,11 @@ func TestParseTagsToDeployments(t *testing.T) {
 		t.Fatal("v9.1.1 deployment not found")
 	}
 
-	if !v911.IsPatch {
+	if v911 != nil && !v911.IsPatch {
 		t.Error("Expected v9.1.1 to be marked as patch")
 	}
 
-	if v911.PatchNumber != 1 {
+	if v911 != nil && v911.PatchNumber != 1 {
 		t.Errorf("Expected v9.1.1 to have patch number 1, got %d", v911.PatchNumber)
 	}
 
@@ -125,11 +125,11 @@ func TestParseTagsToDeployments(t *testing.T) {
 		t.Fatal("v9.1.0-rc1 deployment not found")
 	}
 
-	if !v910rc1.IsRC {
+	if v910rc1 != nil && !v910rc1.IsRC {
 		t.Error("Expected v9.1.0-rc1 to be marked as RC")
 	}
 
-	if *v910rc1.RCNumber != 1 {
+	if v910rc1 != nil && v910rc1.RCNumber != nil && *v910rc1.RCNumber != 1 {
 		t.Errorf("Expected v9.1.0-rc1 to have RC number 1, got %d", *v910rc1.RCNumber)
 	}
 
