@@ -24,11 +24,13 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v67/github"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"golang.org/x/oauth2"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -228,49 +230,47 @@ func (s *GitHubCollector) fetchTagsWithTimestamps(ctx context.Context, client *g
 		shaToTags[sha] = append(shaToTags[sha], tag.GetName())
 	}
 
-	// Step 3: Fetch commit timestamps (using compare API for efficiency)
-	// For now, we'll use individual GetCommit calls but batch into concurrent goroutines
-	shaToTimestamp := make(map[string]time.Time)
-	semaphore := make(chan struct{}, 10) // Limit concurrency to avoid rate limits
+	// Step 3: Fetch commit timestamps concurrently with errgroup
+	var (
+		shaToTimestamp   = make(map[string]time.Time)
+		shaToTimestampMu sync.Mutex
+	)
 
-	type commitResult struct {
-		sha       string
-		timestamp time.Time
-		err       error
-	}
-
-	results := make(chan commitResult, len(shaToTags))
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10) // Limit concurrency to avoid rate limits
 
 	// Fetch commits concurrently (max 10 at a time)
 	for sha := range shaToTags {
-		sha := sha // capture loop variable
-		go func() {
-			semaphore <- struct{}{}        // acquire
-			defer func() { <-semaphore }() // release
-
+		sha := sha // capture loop variable (required for Go < 1.22)
+		g.Go(func() error {
 			commit, _, err := client.Repositories.GetCommit(
-				ctx,
+				gctx,
 				s.config.GitHub.Owner,
 				s.config.GitHub.Repo,
 				sha,
 				nil,
 			)
-
-			var timestamp time.Time
-			if err == nil && commit.GetCommit() != nil {
-				timestamp = commit.GetCommit().GetCommitter().GetDate().Time
+			if err != nil {
+				return fmt.Errorf("getting commit %s: %w", sha, err)
 			}
 
-			results <- commitResult{sha: sha, timestamp: timestamp, err: err}
-		}()
+			if commit.GetCommit() == nil {
+				return fmt.Errorf("commit %s has no commit metadata", sha)
+			}
+
+			timestamp := commit.GetCommit().GetCommitter().GetDate().Time
+
+			shaToTimestampMu.Lock()
+			shaToTimestamp[sha] = timestamp
+			shaToTimestampMu.Unlock()
+
+			return nil
+		})
 	}
 
-	// Collect results
-	for i := 0; i < len(shaToTags); i++ {
-		result := <-results
-		if result.err == nil {
-			shaToTimestamp[result.sha] = result.timestamp
-		}
+	// Wait for all fetches to complete and propagate any errors
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("fetching commit metadata: %w", err)
 	}
 
 	// Step 4: Build final result
