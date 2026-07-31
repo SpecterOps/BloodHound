@@ -114,7 +114,7 @@ func parseDefaultPeriod(period string) int {
 
 	// Detect suffix and multiplier
 	var (
-		multiplier = 1 // Default: days
+		multiplier int
 		value      string
 	)
 
