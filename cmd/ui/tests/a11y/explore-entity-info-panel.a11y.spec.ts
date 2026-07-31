@@ -20,6 +20,7 @@ import { expectNoAccessibilityViolations, test } from '../fixtures';
 const SEARCH_TERM = 'test';
 const OBJECT_ID = 'playwright-gpo-1';
 const GRAPH_ID = '42';
+const OU_GRAPH_ID = '43';
 const GPO_NAME = 'TEST_GPO@PLAYWRIGHT.LOCAL';
 const RELATIONSHIP_COUNT = 1000;
 const SELECTABLE_OU_NAME = 'DOMAIN CONTROLLERS@PLAYWRIGHT.LOCAL';
@@ -223,8 +224,9 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
                 if (url.searchParams.get('type') === 'graph') {
                     return route.fulfill({
                         json: {
-                            [GRAPH_ID]: {
+                            [OU_GRAPH_ID]: {
                                 color: '#000000',
+
                                 data: {
                                     nodetype: 'OU',
                                     kinds: ['Base', 'OU', 'Tag_Tier_Zero'],
