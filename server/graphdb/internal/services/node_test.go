@@ -204,3 +204,66 @@ func TestService_GetNode_RendersKindInfoMarkdown(t *testing.T) {
 	require.Len(t, result.KindInfos, 1)
 	assert.Equal(t, "Node 123: ALICE", result.KindInfos[0].RenderedMarkdown)
 }
+
+func TestService_GetNode_ReturnsPartialResultsForKindInfoRenderErrors(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		nodeID     = int64(123)
+		nodeKindID = int32(7)
+		node       = services.Node{
+			ID:         nodeID,
+			Kinds:      []services.Kind{{Name: "User"}},
+			Properties: map[string]any{"name": "alice"},
+		}
+	)
+
+	databaseMock := mocks.NewMockDatabase(t)
+	databaseMock.EXPECT().GetNode(ctx, nodeID).Return(node, nil)
+	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string{"User"}).Return([]services.Kind{
+		{ID: &nodeKindID, Name: "User"},
+	}, nil)
+	databaseMock.EXPECT().GetKindInfos(ctx, "User").Return([]services.KindInfo{
+		{
+			InfoKey:    "bad",
+			NodeKindID: &nodeKindID,
+			Content:    json.RawMessage(`{"markdown":{"content":"{{"}}`),
+		},
+		{
+			InfoKey:    "good",
+			NodeKindID: &nodeKindID,
+			Content:    json.RawMessage(`{"markdown":{"content":"{{ .Properties.name | upper }}"}}`),
+		},
+	}, nil)
+
+	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+
+	var renderErrors services.KindInfoRenderErrors
+	require.ErrorAs(t, err, &renderErrors)
+	require.Len(t, result.KindInfos, 2)
+	assert.Empty(t, result.KindInfos[0].RenderedMarkdown)
+	assert.Equal(t, "ALICE", result.KindInfos[1].RenderedMarkdown)
+}
+
+func TestService_GetNode_IgnoresEmptyKindInfoContent(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		nodeID     = int64(123)
+		nodeKindID = int32(7)
+		node       = services.Node{ID: nodeID, Kinds: []services.Kind{{Name: "User"}}}
+	)
+
+	databaseMock := mocks.NewMockDatabase(t)
+	databaseMock.EXPECT().GetNode(ctx, nodeID).Return(node, nil)
+	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string{"User"}).Return([]services.Kind{
+		{ID: &nodeKindID, Name: "User"},
+	}, nil)
+	databaseMock.EXPECT().GetKindInfos(ctx, "User").Return([]services.KindInfo{
+		{InfoKey: "empty", NodeKindID: &nodeKindID},
+	}, nil)
+
+	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+
+	require.NoError(t, err)
+	require.Len(t, result.KindInfos, 1)
+	assert.Empty(t, result.KindInfos[0].RenderedMarkdown)
+}

@@ -18,6 +18,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -105,6 +106,46 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				require.Len(t, envelope.Data.KindInfos, 1)
 				assert.Equal(t, "one", envelope.Data.KindInfos[0].Markdown.Content)
 				assert.NotContains(t, string(body), `\"markdown\"`)
+			},
+		},
+		{
+			name:     "returns 200 with valid node info when a template fails to render",
+			rawID:    "9876543210",
+			rawQuery: "include-info=true",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				renderedNode := node
+				renderedNode.KindInfos = []services.KindInfo{
+					{
+						InfoKey:          "bad",
+						Title:            "Bad",
+						Position:         0,
+						NodeKindID:       int32Ptr(1),
+						RenderedMarkdown: "",
+					},
+					{
+						InfoKey:          "good",
+						Title:            "Good",
+						Position:         1,
+						NodeKindID:       int32Ptr(1),
+						RenderedMarkdown: "ALICE",
+					},
+				}
+
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(
+					renderedNode,
+					services.KindInfoRenderErrors{Err: errors.New("template failed")},
+				)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, renderedNode).Return(true)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.NodeView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				require.Len(t, envelope.Data.KindInfos, 2)
+				assert.Empty(t, envelope.Data.KindInfos[0].Markdown.Content)
+				assert.Equal(t, "ALICE", envelope.Data.KindInfos[1].Markdown.Content)
 			},
 		},
 		{

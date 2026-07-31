@@ -59,6 +59,11 @@ func TestRenderNodeKindInfoMarkdown(t *testing.T) {
 			content: `{"markdown":{"content":"{{ .Properties.missing | default \"Unknown\" }}"}}`,
 			want:    "Unknown",
 		},
+		{
+			name:    "renders empty output for empty content",
+			content: `{"markdown":{"content":""}}`,
+			want:    "",
+		},
 	}
 
 	for _, tt := range tests {
@@ -68,6 +73,15 @@ func TestRenderNodeKindInfoMarkdown(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestRenderNodeKindInfoMarkdown_ReturnsErrorForUnknownField(t *testing.T) {
+	content := json.RawMessage(`{"markdown":{"content":"{{ .UnknownField }}"}}`)
+
+	_, err := renderNodeKindInfoMarkdown(content, NodeContext{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "can't evaluate field UnknownField")
 }
 
 func TestRenderMarkdownRejectsRemovedFunction(t *testing.T) {
