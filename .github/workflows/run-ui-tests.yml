@@ -31,7 +31,7 @@ on:
 
 jobs:
   provide:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       run_id: ${{ steps.set_run_id.outputs.run_id }}
     steps:
@@ -39,7 +39,7 @@ jobs:
         run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
   run-tests:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout source code for this repository
