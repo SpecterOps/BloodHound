@@ -61,7 +61,7 @@ export const ConfirmDeleteExtensionDialog: FC<{
                 <DialogContent>
                     <DialogTitle>Delete selected extension</DialogTitle>
                     <DialogDescription asChild>
-                        <div>
+                        <div className='pb-1'>
                             <div>This will permanently delete the selected extension.</div>
                             <div className='font-bold'>Warning: This change is irreversible.</div>
                             <div className='mt-3 text-xs'>Input "{extensionName}" in order to proceed.</div>

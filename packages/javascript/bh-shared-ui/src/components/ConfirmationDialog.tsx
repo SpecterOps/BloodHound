@@ -60,7 +60,7 @@ const ConfirmationDialog: React.FC<{
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
                         <DialogDescription asChild className='text-sm'>
-                            <div>
+                            <div className='pb-1'>
                                 Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
                                     placeholder={challengeTxt}
