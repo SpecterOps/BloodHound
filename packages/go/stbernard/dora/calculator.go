@@ -70,7 +70,13 @@ func (s *Calculator) CalculateMetrics(ctx context.Context, startTime, endTime ti
 	}
 
 	// Calculate Time to Restore Service (MTTR)
-	if err := s.calculateTimeToRestore(&snapshot, deployments); err != nil {
+	// Need to fetch deployments before the window to seed the version map
+	preWindowStart := startTime.AddDate(-1, 0, 0) // 1 year before
+	preWindowDeps, err := s.storage.GetDeployments(ctx, preWindowStart, startTime)
+	if err != nil {
+		return snapshot, fmt.Errorf("getting pre-window deployments: %w", err)
+	}
+	if err := s.calculateTimeToRestore(&snapshot, deployments, preWindowDeps, startTime, endTime); err != nil {
 		return snapshot, fmt.Errorf("calculating time to restore: %w", err)
 	}
 
@@ -266,14 +272,23 @@ func (s *Calculator) calculateChangeFailureRate(
 // Time to restore = time from previous release IN THE SAME MINOR VERSION to the hotfix.
 // This correctly handles sequential patches like v9.0.1 → v9.0.2 → v9.0.3
 // But EXCLUDES cross-version jumps like v9.3.0 → v9.4.0 (different release cycles)
+//
+// Parameters:
+//   - deployments: deployments within the measurement window
+//   - preWindowDeployments: deployments before the window (for seeding version map)
+//   - startTime, endTime: measurement window boundaries
+//
 // Examples:
 //
 //	v9.2.0 (May 26) → v9.2.2 (May 29) = 3 days to restore ✓
 //	v9.0.1 (Apr 14) → v9.0.2 (Apr 20) = 6 days to restore ✓
 //	v9.3.0 (Jun 15) → v9.4.0 (Jul 2)  = NOT tracked (different minor versions)
+//	v9.2.0 before window, v9.2.1 in window → correctly calculates restore time
 func (s *Calculator) calculateTimeToRestore(
 	snapshot *MetricsSnapshot,
 	deployments []Deployment,
+	preWindowDeployments []Deployment,
+	startTime, endTime time.Time,
 ) error {
 	var (
 		restoreTimes []float64
@@ -281,16 +296,18 @@ func (s *Calculator) calculateTimeToRestore(
 		minorVersionToRelease = make(map[string]*Deployment)
 	)
 
-	// Sort deployments by time (oldest first) to process chronologically
-	sortedDeps := make([]Deployment, len(deployments))
-	copy(sortedDeps, deployments)
-	sort.Slice(sortedDeps, func(i, j int) bool {
-		return sortedDeps[i].DeployedAt.Before(sortedDeps[j].DeployedAt)
+	// Combine and sort all deployments by time (oldest first)
+	// Pre-window deployments seed the version map for accurate MTTR calculation
+	allDeps := make([]Deployment, 0, len(preWindowDeployments)+len(deployments))
+	allDeps = append(allDeps, preWindowDeployments...)
+	allDeps = append(allDeps, deployments...)
+	sort.Slice(allDeps, func(i, j int) bool {
+		return allDeps[i].DeployedAt.Before(allDeps[j].DeployedAt)
 	})
 
 	// Process deployments chronologically
-	for i := range sortedDeps {
-		d := &sortedDeps[i]
+	for i := range allDeps {
+		d := &allDeps[i]
 		if !d.IsProduction {
 			continue // Skip RCs
 		}
@@ -307,7 +324,10 @@ func (s *Calculator) calculateTimeToRestore(
 				// Previous could be the .0 release or another patch
 				restoreHours := d.DeployedAt.Sub(previousRelease.DeployedAt).Hours()
 				if restoreHours > 0 {
-					restoreTimes = append(restoreTimes, restoreHours)
+					// Only count this restore time if the patch is within our measurement window
+					if !d.DeployedAt.Before(startTime) && !d.DeployedAt.After(endTime) {
+						restoreTimes = append(restoreTimes, restoreHours)
+					}
 				}
 			}
 		}
