@@ -205,7 +205,7 @@ func TestService_GetNode_RendersKindInfoMarkdown(t *testing.T) {
 	assert.Equal(t, "Node 123: ALICE", result.KindInfos[0].RenderedMarkdown)
 }
 
-func TestService_GetNode_ReturnsPartialResultsForKindInfoRenderErrors(t *testing.T) {
+func TestService_GetNode_PreservesTemplateErrorsPerKindInfo(t *testing.T) {
 	var (
 		ctx        = context.Background()
 		nodeID     = int64(123)
@@ -237,11 +237,12 @@ func TestService_GetNode_ReturnsPartialResultsForKindInfoRenderErrors(t *testing
 
 	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
 
-	var renderErrors services.KindInfoRenderErrors
-	require.ErrorAs(t, err, &renderErrors)
+	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 2)
-	assert.Empty(t, result.KindInfos[0].RenderedMarkdown)
+	assert.Equal(t, "{{", result.KindInfos[0].RenderedMarkdown)
+	assert.NotEmpty(t, result.KindInfos[0].TemplateError)
 	assert.Equal(t, "ALICE", result.KindInfos[1].RenderedMarkdown)
+	assert.Empty(t, result.KindInfos[1].TemplateError)
 }
 
 func TestService_GetNode_IgnoresEmptyKindInfoContent(t *testing.T) {

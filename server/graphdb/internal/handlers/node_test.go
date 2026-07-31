@@ -18,7 +18,6 @@ package handlers_test
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -120,7 +119,8 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 						Title:            "Bad",
 						Position:         0,
 						NodeKindID:       int32Ptr(1),
-						RenderedMarkdown: "",
+						RenderedMarkdown: "{{ .UnknownField }}",
+						TemplateError:    "template failed",
 					},
 					{
 						InfoKey:          "good",
@@ -133,7 +133,7 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 
 				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(
 					renderedNode,
-					services.KindInfoRenderErrors{Err: errors.New("template failed")},
+					nil,
 				)
 				authorizerMock.EXPECT().CanAccessNode(mock.Anything, renderedNode).Return(true)
 			},
@@ -144,7 +144,8 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
 				require.Len(t, envelope.Data.KindInfos, 2)
-				assert.Empty(t, envelope.Data.KindInfos[0].Markdown.Content)
+				assert.Equal(t, "{{ .UnknownField }}", envelope.Data.KindInfos[0].Markdown.Content)
+				assert.Equal(t, "template failed", envelope.Data.KindInfos[0].Markdown.TemplateError)
 				assert.Equal(t, "ALICE", envelope.Data.KindInfos[1].Markdown.Content)
 			},
 		},

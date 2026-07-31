@@ -104,9 +104,7 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 				return Relationship{}, fmt.Errorf("fetching relationship target node: %w", targetErr)
 			}
 
-			if renderErr := renderRelationshipKindInfos(relationship, source, target); renderErr != nil {
-				return relationship, renderErr
-			}
+			renderRelationshipKindInfos(ctx, relationship, source, target)
 		}
 	}
 

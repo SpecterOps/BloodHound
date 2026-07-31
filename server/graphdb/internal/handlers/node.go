@@ -19,12 +19,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -49,7 +47,8 @@ type KindInfoView struct {
 }
 
 type MarkdownView struct {
-	Content string `json:"content"`
+	Content       string `json:"content"`
+	TemplateError string `json:"template_error,omitempty"`
 }
 
 // NodeView is the JSON shape returned by the node handlers. It is
@@ -90,7 +89,8 @@ func BuildNodeView(node services.Node, includeInfo bool) NodeView {
 				Position:   kindInfo.Position,
 				NodeKindID: int(*kindInfo.NodeKindID),
 				Markdown: MarkdownView{
-					Content: kindInfo.RenderedMarkdown,
+					Content:       kindInfo.RenderedMarkdown,
+					TemplateError: kindInfo.TemplateError,
 				},
 			})
 		}
@@ -134,13 +134,8 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 		}
 
 		if err != nil {
-			var renderErrors services.KindInfoRenderErrors
-			if !errors.As(err, &renderErrors) {
-				responses.WriteInternalServerError(ctx, err, response)
-				return
-			}
-
-			slog.WarnContext(ctx, "Failed to render node kind info markdown", attr.Error(renderErrors))
+			responses.WriteInternalServerError(ctx, err, response)
+			return
 		}
 
 		if !s.nodeAuthorizer.CanAccessNode(ctx, node) {

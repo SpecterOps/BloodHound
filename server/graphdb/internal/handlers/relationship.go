@@ -19,12 +19,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -83,7 +81,8 @@ func BuildRelationshipView(relationship services.Relationship, includeKindInfo b
 				Position:           kindInfo.Position,
 				RelationshipKindID: int(*relationship.Kind.ID),
 				Markdown: MarkdownView{
-					Content: kindInfo.RenderedMarkdown,
+					Content:       kindInfo.RenderedMarkdown,
+					TemplateError: kindInfo.TemplateError,
 				},
 			})
 		}
@@ -131,13 +130,8 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		return
 	}
 	if err != nil {
-		var renderErrors services.KindInfoRenderErrors
-		if !errors.As(err, &renderErrors) {
-			responses.WriteInternalServerError(ctx, err, response)
-			return
-		}
-
-		slog.WarnContext(ctx, "Failed to render relationship kind info markdown", attr.Error(renderErrors))
+		responses.WriteInternalServerError(ctx, err, response)
+		return
 	}
 
 	responses.WriteBasic(ctx, BuildRelationshipView(relationship, includeKindInfo), http.StatusOK, response)

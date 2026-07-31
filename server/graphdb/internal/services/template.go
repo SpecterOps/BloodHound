@@ -18,9 +18,10 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log/slog"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -49,20 +50,6 @@ type RelationshipContext struct {
 type KindContext struct {
 	KindID *int32
 	Name   string
-}
-
-// KindInfoRenderErrors reports non-fatal errors encountered while rendering
-// kind info.
-type KindInfoRenderErrors struct {
-	Err error
-}
-
-func (s KindInfoRenderErrors) Error() string {
-	return s.Err.Error()
-}
-
-func (s KindInfoRenderErrors) Unwrap() error {
-	return s.Err
 }
 
 // String lets template helpers such as join render kinds by name rather than
@@ -125,12 +112,12 @@ func renderKindInfoMarkdown(content json.RawMessage, context any) (string, error
 		Funcs(functions).
 		Parse(contentView.Markdown.Content)
 	if err != nil {
-		return "", fmt.Errorf("parsing markdown template: %w", err)
+		return contentView.Markdown.Content, fmt.Errorf("parsing markdown template: %w", err)
 	}
 
 	var rendered bytes.Buffer
 	if err := parsedTemplate.Execute(&rendered, context); err != nil {
-		return "", fmt.Errorf("executing markdown template: %w", err)
+		return contentView.Markdown.Content, fmt.Errorf("executing markdown template: %w", err)
 	}
 
 	return rendered.String(), nil
@@ -166,9 +153,8 @@ func newRelationshipContext(relationship Relationship, source Node, target Node)
 	}
 }
 
-func renderRelationshipKindInfos(relationship Relationship, source Node, target Node) error {
+func renderRelationshipKindInfos(ctx context.Context, relationship Relationship, source Node, target Node) {
 	relationshipContext := newRelationshipContext(relationship, source, target)
-	var renderErrors []error
 
 	for index := range relationship.KindInfos {
 		if len(relationship.KindInfos[index].Content) == 0 {
@@ -180,27 +166,21 @@ func renderRelationshipKindInfos(relationship Relationship, source Node, target 
 			relationshipContext,
 		)
 		if err != nil {
-			renderErrors = append(renderErrors, fmt.Errorf(
-				"rendering relationship kind info %s: %w",
-				relationship.KindInfos[index].InfoKey,
-				err,
-			))
+			relationship.KindInfos[index].RenderedMarkdown = renderedMarkdown
+			relationship.KindInfos[index].TemplateError = err.Error()
+			slog.WarnContext(ctx, "Failed to render relationship kind info markdown",
+				"info_key", relationship.KindInfos[index].InfoKey,
+				"error", err,
+			)
 			continue
 		}
 
 		relationship.KindInfos[index].RenderedMarkdown = renderedMarkdown
 	}
-
-	if len(renderErrors) > 0 {
-		return KindInfoRenderErrors{Err: errors.Join(renderErrors...)}
-	}
-
-	return nil
 }
 
-func renderNodeKindInfos(node *Node) error {
+func renderNodeKindInfos(ctx context.Context, node *Node) {
 	nodeContext := newNodeContext(*node)
-	var renderErrors []error
 
 	for index := range node.KindInfos {
 		if len(node.KindInfos[index].Content) == 0 {
@@ -212,20 +192,15 @@ func renderNodeKindInfos(node *Node) error {
 			nodeContext,
 		)
 		if err != nil {
-			renderErrors = append(renderErrors, fmt.Errorf(
-				"rendering kind info %s: %w",
-				node.KindInfos[index].InfoKey,
-				err,
-			))
+			node.KindInfos[index].RenderedMarkdown = renderedMarkdown
+			node.KindInfos[index].TemplateError = err.Error()
+			slog.WarnContext(ctx, "Failed to render node kind info markdown",
+				"info_key", node.KindInfos[index].InfoKey,
+				"error", err,
+			)
 			continue
 		}
 
 		node.KindInfos[index].RenderedMarkdown = renderedMarkdown
 	}
-
-	if len(renderErrors) > 0 {
-		return KindInfoRenderErrors{Err: errors.Join(renderErrors...)}
-	}
-
-	return nil
 }

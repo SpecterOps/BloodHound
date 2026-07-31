@@ -62,6 +62,7 @@ type KindInfo struct {
 	// RenderedMarkdown is populated when kind info is requested as part of an
 	// entity detail response. Content remains the persisted JSON document.
 	RenderedMarkdown string
+	TemplateError    string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
