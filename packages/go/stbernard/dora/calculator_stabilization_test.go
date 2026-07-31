@@ -43,14 +43,14 @@ func TestCalculateStabilizationMetrics(t *testing.T) {
 	// Create test deployments with RC stabilization data
 	deployments := []Deployment{
 		// v9.3.0 release: RC1 -> RC2 (3 commits) -> RC3 (2 commits) -> RC4 (1 commit) -> prod
-		{Tag: "v9.3.0-rc1", Version: "9.3.0", DeployedAt: now.Add(-20 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(1), StabilizationCommits: 0},
-		{Tag: "v9.3.0-rc2", Version: "9.3.0", DeployedAt: now.Add(-19 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(2), StabilizationCommits: 3},
-		{Tag: "v9.3.0-rc3", Version: "9.3.0", DeployedAt: now.Add(-18 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(3), StabilizationCommits: 2},
-		{Tag: "v9.3.0-rc4", Version: "9.3.0", DeployedAt: now.Add(-17 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(4), StabilizationCommits: 1},
+		{Tag: "v9.3.0-rc1", Version: "9.3.0", DeployedAt: now.Add(-20 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(1), StabilizationCommits: intPtr(0)}, // RC1 has 0 commits (known)
+		{Tag: "v9.3.0-rc2", Version: "9.3.0", DeployedAt: now.Add(-19 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(2), StabilizationCommits: intPtr(3)},
+		{Tag: "v9.3.0-rc3", Version: "9.3.0", DeployedAt: now.Add(-18 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(3), StabilizationCommits: intPtr(2)},
+		{Tag: "v9.3.0-rc4", Version: "9.3.0", DeployedAt: now.Add(-17 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(4), StabilizationCommits: intPtr(1)},
 		{Tag: "v9.3.0", Version: "9.3.0", DeployedAt: now.Add(-16 * 24 * time.Hour), IsProduction: true, TotalRCs: 4},
 		// v9.4.0 release: RC1 -> RC2 (5 commits) -> prod
-		{Tag: "v9.4.0-rc1", Version: "9.4.0", DeployedAt: now.Add(-10 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(1), StabilizationCommits: 0},
-		{Tag: "v9.4.0-rc2", Version: "9.4.0", DeployedAt: now.Add(-9 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(2), StabilizationCommits: 5},
+		{Tag: "v9.4.0-rc1", Version: "9.4.0", DeployedAt: now.Add(-10 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(1), StabilizationCommits: intPtr(0)}, // RC1 has 0 commits (known)
+		{Tag: "v9.4.0-rc2", Version: "9.4.0", DeployedAt: now.Add(-9 * 24 * time.Hour), IsRC: true, RCNumber: intPtr(2), StabilizationCommits: intPtr(5)},
 		{Tag: "v9.4.0", Version: "9.4.0", DeployedAt: now.Add(-8 * 24 * time.Hour), IsProduction: true, TotalRCs: 2},
 	}
 
@@ -66,16 +66,16 @@ func TestCalculateStabilizationMetrics(t *testing.T) {
 	}
 
 	// Verify stabilization metrics
-	// RC2+ commits: 3, 2, 1, 5 = total 11, count 4
-	// Average: 11 / 4 = 2.75
-	// Sorted: 1, 2, 3, 5 -> Median: (2+3)/2 = 2.5
+	// All RC commits (including RC1s with 0): 0, 0, 3, 2, 1, 5 = total 11, count 6
+	// Average: 11 / 6 = 1.833...
+	// Sorted: 0, 0, 1, 2, 3, 5 -> Median: (1+2)/2 = 1.5
 
-	if snapshot.AverageStabilizationCommits < 2.7 || snapshot.AverageStabilizationCommits > 2.8 {
-		t.Errorf("Expected average stabilization commits ~2.75, got %.2f", snapshot.AverageStabilizationCommits)
+	if snapshot.AverageStabilizationCommits < 1.8 || snapshot.AverageStabilizationCommits > 1.9 {
+		t.Errorf("Expected average stabilization commits ~1.83, got %.2f", snapshot.AverageStabilizationCommits)
 	}
 
-	if snapshot.MedianStabilizationCommits != 2.5 {
-		t.Errorf("Expected median stabilization commits 2.5, got %.1f", snapshot.MedianStabilizationCommits)
+	if snapshot.MedianStabilizationCommits != 1.5 {
+		t.Errorf("Expected median stabilization commits 1.5, got %.1f", snapshot.MedianStabilizationCommits)
 	}
 
 	t.Logf("Stabilization metrics: Avg=%.1f, Median=%.1f",

@@ -357,9 +357,10 @@ func (s *Calculator) calculateQualityMetrics(
 		if d.IsProduction && !d.IsRC {
 			rcCounts = append(rcCounts, d.TotalRCs)
 		}
-		// Collect stabilization commits from RC2+ (RC1 always has 0)
-		if d.IsRC && d.StabilizationCommits > 0 {
-			stabilizationCommits = append(stabilizationCommits, d.StabilizationCommits)
+		// Collect stabilization commits from all RCs (only if successfully fetched)
+		// nil means fetch failed (excluded), 0 means RC1 or RC2+ with zero commits
+		if d.IsRC && d.StabilizationCommits != nil {
+			stabilizationCommits = append(stabilizationCommits, *d.StabilizationCommits)
 		}
 	}
 

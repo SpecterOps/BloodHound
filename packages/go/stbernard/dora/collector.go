@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -409,8 +410,13 @@ func (s *GitHubCollector) calculateQualityMetrics(
 }
 
 // calculateStabilizationCommits calculates commits between consecutive RCs
-// This measures the rework/stabilization effort: RC1 has 0, RC2+ has commits from previous RC
-// Example: v9.3.0-rc1 → v9.3.0-rc2 had 3 commits → RC2 has 3 stabilization commits
+// This measures the rework/stabilization effort: RC2+ has commits from previous RC
+// Example: v9.3.0-rc1 → v9.3.0-rc2 had 3 commits → RC2 has StabilizationCommits = 3
+//
+// StabilizationCommits semantics:
+// - 0: RC1 (no previous RC to compare against) - this is a known zero
+// - N: RC2+ with N commits between this and previous RC (may be 0 for stable releases)
+// - nil: API comparison failed - unknown value
 func (s *GitHubCollector) calculateStabilizationCommits(
 	ctx context.Context,
 	client *github.Client,
@@ -440,7 +446,13 @@ func (s *GitHubCollector) calculateStabilizationCommits(
 			return rcI < rcJ
 		})
 
-		// Calculate commits between each pair of RCs
+		// Set RC1 stabilization commits to 0 (known value)
+		if len(rcs) > 0 && rcs[0].RCNumber != nil && *rcs[0].RCNumber == 1 {
+			zero := 0
+			rcs[0].StabilizationCommits = &zero
+		}
+
+		// Calculate commits between each pair of RCs (RC2+)
 		for i := 1; i < len(rcs); i++ {
 			prevRC := rcs[i-1]
 			currentRC := rcs[i]
@@ -456,14 +468,16 @@ func (s *GitHubCollector) calculateStabilizationCommits(
 			)
 
 			if err != nil {
-				// Log warning but don't fail the whole operation
-				fmt.Printf("Warning: failed to compare %s and %s for version %s: %v\n",
+				// Log warning to stderr but don't fail the whole operation
+				// StabilizationCommits will remain nil (unknown/failed)
+				fmt.Fprintf(os.Stderr, "Warning: failed to compare %s and %s for version %s: %v\n",
 					prevRC.Tag, currentRC.Tag, version, err)
 				continue
 			}
 
-			// Store the commit count
-			currentRC.StabilizationCommits = comparison.GetTotalCommits()
+			// Store the commit count (may be 0 for stable releases)
+			commitCount := comparison.GetTotalCommits()
+			currentRC.StabilizationCommits = &commitCount
 		}
 	}
 

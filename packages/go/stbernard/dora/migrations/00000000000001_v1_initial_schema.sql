@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS deployments (
     patch_number INTEGER NOT NULL,
     total_rcs INTEGER NOT NULL DEFAULT 0,
     total_patches INTEGER NOT NULL DEFAULT 0,
-    stabilization_commits INTEGER NOT NULL DEFAULT 0,
+    stabilization_commits INTEGER,  -- 0 for RC1 (no previous RC), NULL if comparison failed
     html_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
