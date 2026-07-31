@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
@@ -37,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 )
@@ -340,4 +342,72 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 
 		return nil
 	}
+}
+
+func (s *BHCEPipeline) Optimize(ctx context.Context) error {
+	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+	if !optimizationParam.AfterAnalysis {
+		return nil
+	}
+
+	status, err := s.db.GetDatapipeStatus(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
+	} else {
+		// only optimize when an analysis has completed since the last optimization run
+		if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
+			return nil
+		}
+
+		// never optimize more often than the configured minimum interval
+		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
+		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
+			return nil
+		}
+	}
+
+	start := time.Now()
+	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
+		return nil
+	}
+
+	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageAnalysis, time.Since(start))
+
+	if err := s.db.SetLastGraphOptimizeTime(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error setting last graph optimize time", attr.Error(err))
+	}
+
+	return nil
+}
+
+func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
+	optimizationParam := appcfg.GetGraphStorageOptimizationParameter(ctx, s.db)
+	if !optimizationParam.AfterBoot {
+		return nil
+	}
+
+	status, err := s.db.GetDatapipeStatus(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
+	} else {
+		// never optimize more often than the configured minimum interval
+		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
+		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {
+			return nil
+		}
+	}
+
+	start := time.Now()
+	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error optimizing graph storage on boot", attr.Error(err))
+		return nil
+	}
+	metrics.RecordOptimizeStorageDuration(metrics.OptimizeStoragePipelineStageBoot, time.Since(start))
+
+	if err := s.db.SetLastGraphOptimizeTime(ctx); err != nil {
+		slog.ErrorContext(ctx, "Error setting last graph optimize time", attr.Error(err))
+	}
+
+	return nil
 }

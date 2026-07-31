@@ -46,7 +46,7 @@ type Daemon struct {
 
 func NewDaemon[DBType database.Database](ctx context.Context, connections bootstrap.DatabaseConnections[DBType, *graph.DatabaseSwitch], cfg config.Configuration, graphSchema graph.Schema, retainedFileService storage.FileService, extensions ...func(router *chi.Mux)) Daemon {
 	var (
-		pgMigrator    = tools.NewPGMigrator(ctx, cfg, graphSchema, connections.Graph)
+		pgMigrator    = tools.NewPGMigrator(ctx, cfg, connections.RDMS, graphSchema, connections.Graph)
 		router        = chi.NewRouter()
 		toolContainer = tools.NewToolContainer(connections.RDMS)
 		ingestControl = tools.NewIngestControlTool(connections.RDMS, retainedFileService)
