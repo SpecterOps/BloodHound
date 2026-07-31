@@ -49,7 +49,7 @@ import (
 )
 
 // datapipeStatusResponseEnvelope is the full JSON envelope shape returned by
-// the GET /api/v2/datapipe/status handler. All five documented fields are included.
+// the GET /api/v2/datapipe/status handler. All six documented fields are included.
 type datapipeStatusResponseEnvelope struct {
 	Data model.DatapipeStatusWrapper `json:"data"`
 }
@@ -69,7 +69,7 @@ func assertDatapipeStatusWireContract(t *testing.T, body []byte, expectedStatus 
 		Data map[string]json.RawMessage `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(body, &envelope))
-	require.Len(t, envelope.Data, 5)
+	require.Len(t, envelope.Data, 6)
 
 	statusJSON, found := envelope.Data["status"]
 	require.True(t, found)
@@ -77,7 +77,7 @@ func assertDatapipeStatusWireContract(t *testing.T, body []byte, expectedStatus 
 	require.NoError(t, json.Unmarshal(statusJSON, &status))
 	assert.Equal(t, expectedStatus, status)
 
-	for _, field := range []string{"updated_at", "last_complete_analysis_at", "last_analysis_run_at"} {
+	for _, field := range []string{"updated_at", "last_complete_analysis_at", "last_analysis_run_at", "last_complete_optimize_at"} {
 		timestampJSON, found := envelope.Data[field]
 		require.True(t, found, "%s must be present", field)
 		require.NotEqual(t, "null", string(timestampJSON), "%s must remain a date-time string", field)
@@ -322,13 +322,33 @@ func TestGetDatapipeStatus(t *testing.T) {
 		assert.Equal(t, model.DatapipeStatusAnalyzing, envelope.Data.Status)
 	})
 
-	t.Run("returns 200 OK with updated timestamps after analysis", func(t *testing.T) {
+	t.Run("returns 200 OK with datapipe status in optimizing state", func(t *testing.T) {
+		err := db.SetDatapipeStatus(ctx, model.DatapipeStatusOptimizing)
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(newGetRequest(t))
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope datapipeStatusResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		assert.Equal(t, model.DatapipeStatusOptimizing, envelope.Data.Status)
+	})
+
+	t.Run("returns 200 OK with updated timestamps after analysis and optimization", func(t *testing.T) {
 		// Set analysis start time
 		err := db.SetLastAnalysisStartTime(ctx)
 		require.NoError(t, err)
 
 		// Complete the analysis
 		err = db.UpdateLastAnalysisCompleteTime(ctx)
+		require.NoError(t, err)
+
+		// Complete graph storage optimization
+		err = db.SetLastGraphOptimizeTime(ctx)
 		require.NoError(t, err)
 
 		resp, err := http.DefaultClient.Do(newGetRequest(t))
@@ -343,5 +363,6 @@ func TestGetDatapipeStatus(t *testing.T) {
 		// Timestamps should be non-zero after setting them
 		assert.False(t, envelope.Data.LastAnalysisRunAt.IsZero(), "last_analysis_run_at should be set")
 		assert.False(t, envelope.Data.LastCompleteAnalysisAt.IsZero(), "last_complete_analysis_at should be set")
+		assert.False(t, envelope.Data.LastCompleteOptimizeAt.IsZero(), "last_complete_optimize_at should be set")
 	})
 }

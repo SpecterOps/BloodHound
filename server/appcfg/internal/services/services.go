@@ -29,12 +29,13 @@ import (
 type DatapipeStatusType string
 
 const (
-	DatapipeStatusIdle      DatapipeStatusType = "idle"
-	DatapipeStatusIngesting DatapipeStatusType = "ingesting"
-	DatapipeStatusAnalyzing DatapipeStatusType = "analyzing"
-	DatapipeStatusPurging   DatapipeStatusType = "purging"
-	DatapipeStatusPruning   DatapipeStatusType = "pruning"
-	DatapipeStatusStarting  DatapipeStatusType = "starting"
+	DatapipeStatusIdle       DatapipeStatusType = "idle"
+	DatapipeStatusIngesting  DatapipeStatusType = "ingesting"
+	DatapipeStatusAnalyzing  DatapipeStatusType = "analyzing"
+	DatapipeStatusPurging    DatapipeStatusType = "purging"
+	DatapipeStatusPruning    DatapipeStatusType = "pruning"
+	DatapipeStatusStarting   DatapipeStatusType = "starting"
+	DatapipeStatusOptimizing DatapipeStatusType = "optimizing"
 )
 
 // DatapipeStatus represents the current state of the datapipe.
@@ -43,6 +44,7 @@ type DatapipeStatus struct {
 	UpdatedAt               time.Time
 	LastCompleteAnalysisAt  time.Time
 	LastAnalysisRunAt       time.Time
+	LastCompleteOptimizeAt  time.Time
 	NextScheduledAnalysisAt null.Time
 }
 

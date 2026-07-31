@@ -43,12 +43,14 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 
 	var (
 		unexpectedErr     = errors.New("unexpected database failure")
+		completedOptimize = time.Date(2026, 6, 18, 9, 15, 0, 0, time.UTC)
 		nextScheduledTime = time.Date(2026, 6, 20, 12, 0, 0, 0, time.UTC)
 		expected          = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC),
 			LastCompleteAnalysisAt:  time.Date(2026, 6, 18, 9, 30, 0, 0, time.UTC),
 			LastAnalysisRunAt:       time.Date(2026, 6, 18, 9, 0, 0, 0, time.UTC),
+			LastCompleteOptimizeAt:  completedOptimize,
 			NextScheduledAnalysisAt: null.TimeFrom(nextScheduledTime),
 		}
 	)
@@ -73,6 +75,7 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 				assert.Equal(t, expected.UpdatedAt, envelope.Data.UpdatedAt)
 				assert.Equal(t, expected.LastCompleteAnalysisAt, envelope.Data.LastCompleteAnalysisAt)
 				assert.Equal(t, expected.LastAnalysisRunAt, envelope.Data.LastAnalysisRunAt)
+				assert.Equal(t, expected.LastCompleteOptimizeAt, envelope.Data.LastCompleteOptimizeAt)
 				assert.True(t, envelope.Data.NextScheduledAnalysisAt.Valid)
 				assert.Equal(t, nextScheduledTime, envelope.Data.NextScheduledAnalysisAt.Time)
 			},

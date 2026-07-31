@@ -33,7 +33,7 @@ import (
 // Literal SQL strings expected by the Store. These are compared via
 // pgxmock.QueryMatcherEqual, which whitespace-normalises both sides.
 const (
-	expectedGetDatapipeStatusSQL = `SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at, next_scheduled_analysis_at FROM datapipe_status LIMIT $1`
+	expectedGetDatapipeStatusSQL = `SELECT status, updated_at, last_complete_analysis_at, last_analysis_run_at, last_complete_optimize_at, next_scheduled_analysis_at FROM datapipe_status LIMIT $1`
 )
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
@@ -47,7 +47,7 @@ func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 func datapipeStatusRowColumns() []string {
 	return []string{
 		"status", "updated_at", "last_complete_analysis_at",
-		"last_analysis_run_at", "next_scheduled_analysis_at",
+		"last_analysis_run_at", "last_complete_optimize_at", "next_scheduled_analysis_at",
 	}
 }
 
@@ -58,12 +58,14 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 		updatedAt   = time.Date(2026, 6, 18, 12, 0, 0, 0, time.UTC)
 		completedAt = time.Date(2026, 6, 18, 11, 0, 0, 0, time.UTC)
 		startedAt   = time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC)
+		optimizedAt = time.Date(2026, 6, 18, 9, 30, 0, 0, time.UTC)
 		nextRun     = null.TimeFrom(time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC))
 		expected    = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               updatedAt,
 			LastCompleteAnalysisAt:  completedAt,
 			LastAnalysisRunAt:       startedAt,
+			LastCompleteOptimizeAt:  optimizedAt,
 			NextScheduledAnalysisAt: nextRun,
 		}
 	)
@@ -84,6 +86,7 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 						expected.UpdatedAt,
 						expected.LastCompleteAnalysisAt,
 						expected.LastAnalysisRunAt,
+						expected.LastCompleteOptimizeAt,
 						expected.NextScheduledAnalysisAt,
 					),
 				)
@@ -97,6 +100,7 @@ func TestStore_GetDatapipeStatus(t *testing.T) {
 					pool.NewRows(datapipeStatusRowColumns()).AddRow(
 						string(expected.Status),
 						expected.UpdatedAt,
+						null.Time{},
 						null.Time{},
 						null.Time{},
 						null.Time{},

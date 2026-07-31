@@ -28,6 +28,7 @@ type DatapipeStatusView struct {
 	UpdatedAt               time.Time                   `json:"updated_at"`
 	LastCompleteAnalysisAt  time.Time                   `json:"last_complete_analysis_at"`
 	LastAnalysisRunAt       time.Time                   `json:"last_analysis_run_at"`
+	LastCompleteOptimizeAt  time.Time                   `json:"last_complete_optimize_at"`
 	NextScheduledAnalysisAt null.Time                   `json:"next_scheduled_analysis_at"`
 }
 
@@ -37,6 +38,7 @@ func BuildDatapipeStatusView(status services.DatapipeStatus) DatapipeStatusView 
 		UpdatedAt:               status.UpdatedAt,
 		LastCompleteAnalysisAt:  status.LastCompleteAnalysisAt,
 		LastAnalysisRunAt:       status.LastAnalysisRunAt,
+		LastCompleteOptimizeAt:  status.LastCompleteOptimizeAt,
 		NextScheduledAnalysisAt: status.NextScheduledAnalysisAt,
 	}
 }

@@ -133,6 +133,7 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			expectedUpdatedAt               = time.Now().UTC().Truncate(time.Microsecond)
 			expectedLastCompleteAnalysisAt  = null.TimeFrom(time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Microsecond))
 			expectedLastAnalysisRunAt       = null.TimeFrom(time.Now().UTC().Add(-30 * time.Minute).Truncate(time.Microsecond))
+			expectedLastCompleteOptimizeAt  = null.TimeFrom(time.Now().UTC().Add(-45 * time.Minute).Truncate(time.Microsecond))
 			expectedNextScheduledAnalysisAt = null.TimeFrom(time.Now().UTC().Add(2 * time.Hour).Truncate(time.Microsecond))
 		)
 
@@ -142,12 +143,14 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			    updated_at = $2,
 			    last_complete_analysis_at = $3,
 			    last_analysis_run_at = $4,
-			    next_scheduled_analysis_at = $5
+			    last_complete_optimize_at = $5,
+			    next_scheduled_analysis_at = $6
 		`,
 			expectedStatus,
 			expectedUpdatedAt,
 			expectedLastCompleteAnalysisAt,
 			expectedLastAnalysisRunAt,
+			expectedLastCompleteOptimizeAt,
 			expectedNextScheduledAnalysisAt,
 		)
 		require.NoError(t, err)
@@ -159,6 +162,7 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 		assert.WithinDuration(t, expectedUpdatedAt, status.UpdatedAt, 1*time.Second)
 		assert.WithinDuration(t, expectedLastCompleteAnalysisAt.Time, status.LastCompleteAnalysisAt, 1*time.Second)
 		assert.WithinDuration(t, expectedLastAnalysisRunAt.Time, status.LastAnalysisRunAt, 1*time.Second)
+		assert.WithinDuration(t, expectedLastCompleteOptimizeAt.Time, status.LastCompleteOptimizeAt, 1*time.Second)
 		assert.True(t, status.NextScheduledAnalysisAt.Valid)
 		assert.WithinDuration(t, expectedNextScheduledAnalysisAt.Time, status.NextScheduledAnalysisAt.Time, 1*time.Second)
 	})
@@ -203,6 +207,7 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			{"purging", services.DatapipeStatusPurging},
 			{"pruning", services.DatapipeStatusPruning},
 			{"starting", services.DatapipeStatusStarting},
+			{"optimizing", services.DatapipeStatusOptimizing},
 		}
 
 		for _, tc := range testCases {

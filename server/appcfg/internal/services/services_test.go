@@ -36,12 +36,14 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 		updatedAt   = time.Date(2026, 6, 18, 12, 0, 0, 0, time.UTC)
 		completedAt = time.Date(2026, 6, 18, 11, 0, 0, 0, time.UTC)
 		startedAt   = time.Date(2026, 6, 18, 10, 0, 0, 0, time.UTC)
+		optimizedAt = time.Date(2026, 6, 18, 9, 30, 0, 0, time.UTC)
 		nextRun     = null.TimeFrom(time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC))
 		expected    = services.DatapipeStatus{
 			Status:                  services.DatapipeStatusIdle,
 			UpdatedAt:               updatedAt,
 			LastCompleteAnalysisAt:  completedAt,
 			LastAnalysisRunAt:       startedAt,
+			LastCompleteOptimizeAt:  optimizedAt,
 			NextScheduledAnalysisAt: nextRun,
 		}
 	)

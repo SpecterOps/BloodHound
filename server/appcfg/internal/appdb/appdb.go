@@ -45,6 +45,7 @@ type datapipeStatusRow struct {
 	UpdatedAt               time.Time `db:"updated_at"`
 	LastCompleteAnalysisAt  null.Time `db:"last_complete_analysis_at"`
 	LastAnalysisRunAt       null.Time `db:"last_analysis_run_at"`
+	LastCompleteOptimizeAt  null.Time `db:"last_complete_optimize_at"`
 	NextScheduledAnalysisAt null.Time `db:"next_scheduled_analysis_at"`
 }
 
@@ -55,6 +56,7 @@ func toDatapipeStatus(row datapipeStatusRow) services.DatapipeStatus {
 		UpdatedAt:               row.UpdatedAt,
 		LastCompleteAnalysisAt:  row.LastCompleteAnalysisAt.ValueOrZero(),
 		LastAnalysisRunAt:       row.LastAnalysisRunAt.ValueOrZero(),
+		LastCompleteOptimizeAt:  row.LastCompleteOptimizeAt.ValueOrZero(),
 		NextScheduledAnalysisAt: row.NextScheduledAnalysisAt,
 	}
 }
@@ -85,6 +87,7 @@ func (s *Store) GetDatapipeStatus(ctx context.Context) (services.DatapipeStatus,
 		"updated_at",
 		"last_complete_analysis_at",
 		"last_analysis_run_at",
+		"last_complete_optimize_at",
 		"next_scheduled_analysis_at",
 	)
 	selectBuilder.From(tableDatapipeStatus)
