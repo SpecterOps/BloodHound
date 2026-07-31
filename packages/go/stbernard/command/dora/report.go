@@ -217,6 +217,14 @@ func (s *command) runReport() error {
 		}
 	}
 
+	// Validate format flag early
+	switch formatFlag {
+	case "terminal", "json":
+		// Valid formats
+	default:
+		return fmt.Errorf("unsupported format: %s (supported: terminal, json)", formatFlag)
+	}
+
 	// Calculate time range based on flags
 	var startTime, endTime time.Time
 
@@ -286,15 +294,12 @@ func (s *command) runReport() error {
 		writer = file
 	}
 
-	// Generate report based on format
+	// Generate report based on format (validated earlier)
 	var reporter dora.Reporter
-	switch formatFlag {
-	case "terminal":
-		reporter = dora.NewTerminalReporter(!noColorFlag)
-	case "json":
+	if formatFlag == "json" {
 		reporter = dora.NewJSONReporter(true) // Pretty print by default
-	default:
-		return fmt.Errorf("unsupported format: %s (supported: terminal, json)", formatFlag)
+	} else {
+		reporter = dora.NewTerminalReporter(!noColorFlag)
 	}
 
 	if err := reporter.Report(snapshot, writer); err != nil {
