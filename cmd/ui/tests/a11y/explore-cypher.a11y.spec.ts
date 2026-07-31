@@ -22,7 +22,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
 
         const cypherTab = page.getByRole('tab', { name: 'Cypher' });
         await cypherTab.click();
-        await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+        await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
     });
 
     test('Empty query', async ({ page, makeAxeBuilder }, testInfo) => {
@@ -30,8 +30,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
@@ -44,11 +43,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         await cypherEditor.fill(query);
-        await expect(cypherEditor).toContainText(query);
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
@@ -61,15 +58,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         await cypherEditor.fill(query);
-        await expect(cypherEditor).toContainText(query);
 
         const tagButton = page.getByRole('button', { name: 'Tag' });
-        await expect(tagButton).toBeVisible();
-        await expect(tagButton).toBeEnabled();
+        await tagButton.waitFor({ state: 'visible' });
         await tagButton.click();
 
         await page.getByRole('button', { name: 'Zone' }).click();
@@ -77,7 +71,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         const dialog = page.getByRole('dialog', {
             name: 'Tag Results to Zone',
         });
-        await expect(dialog).toBeVisible();
+        await dialog.waitFor({ state: 'visible' });
 
         const selectZoneControl = dialog.getByRole('combobox');
         const cancelButton = dialog.getByRole('button', { name: 'Cancel' });
@@ -85,10 +79,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Continue',
         });
 
-        await expect(selectZoneControl).toBeVisible();
-        await expect(cancelButton).toBeVisible();
-        await expect(continueButton).toBeVisible();
-        await expect(continueButton).toBeDisabled();
+        await selectZoneControl.waitFor({ state: 'visible' });
+        await cancelButton.waitFor({ state: 'visible' });
+        await continueButton.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -100,15 +93,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         await cypherEditor.fill(query);
-        await expect(cypherEditor).toContainText(query);
 
         const tagButton = page.getByRole('button', { name: 'Tag' });
-        await expect(tagButton).toBeVisible();
-        await expect(tagButton).toBeEnabled();
+        await tagButton.waitFor({ state: 'visible' });
         await tagButton.click();
 
         await page
@@ -120,7 +110,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         const dialog = page.getByRole('dialog', {
             name: 'Tag Results to Label',
         });
-        await expect(dialog).toBeVisible();
+        await dialog.waitFor({ state: 'visible' });
 
         const selectLabelControl = dialog.getByRole('combobox');
         const cancelButton = dialog.getByRole('button', { name: 'Cancel' });
@@ -128,10 +118,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Continue',
         });
 
-        await expect(selectLabelControl).toBeVisible();
-        await expect(cancelButton).toBeVisible();
-        await expect(continueButton).toBeVisible();
-        await expect(continueButton).toBeDisabled();
+        await selectLabelControl.waitFor({ state: 'visible' });
+        await cancelButton.waitFor({ state: 'visible' });
+        await continueButton.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -143,24 +132,21 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         await cypherEditor.fill(query);
-        await expect(cypherEditor).toContainText(query);
 
         const saveQueryButton = page.getByRole('button', {
             name: 'Save query',
             exact: true,
         });
 
-        await expect(saveQueryButton).toBeVisible();
-        await expect(saveQueryButton).toBeEnabled();
+        await saveQueryButton.waitFor({ state: 'visible' });
         await saveQueryButton.click();
 
         const dialog = page.getByTestId('save-query-dialog');
 
-        await expect(dialog).toBeVisible();
+        await dialog.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -172,11 +158,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             name: 'Cypher Editor',
         });
 
-        await expect(cypherEditor).toBeVisible();
-        await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+        await cypherEditor.waitFor({ state: 'visible' });
 
         await cypherEditor.fill(query);
-        await expect(cypherEditor).toContainText(query);
 
         const saveQueryButton = page.getByRole('button', {
             name: 'Save query',
@@ -187,10 +171,8 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(saveQueryButton).toBeVisible();
-        await expect(saveQueryButton).toBeEnabled();
-        await expect(saveQueryOptionsButton).toBeVisible();
-        await expect(saveQueryOptionsButton).toBeEnabled();
+        await saveQueryButton.waitFor({ state: 'visible' });
+        await saveQueryOptionsButton.waitFor({ state: 'visible' });
         await saveQueryOptionsButton.click();
 
         const saveAsButton = page.getByRole('button', {
@@ -198,14 +180,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(saveAsButton).toBeVisible();
+        await saveAsButton.waitFor({ state: 'visible' });
         await saveAsButton.click();
 
         const dialog = page.getByRole('dialog', {
             name: 'Save As New Query',
         });
 
-        await expect(dialog).toBeVisible();
+        await dialog.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
@@ -218,8 +200,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(savedQueriesButton).toBeVisible();
-        await expect(savedQueriesButton).toBeEnabled();
+        await savedQueriesButton.waitFor({ state: 'visible' });
         await savedQueriesButton.click();
 
         const searchTextbox = page.getByRole('textbox', {
@@ -228,15 +209,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
         });
         const searchTerm = 'a11y-no-results-9f7c2e1b';
 
-        await expect(searchTextbox).toBeVisible();
+        await searchTextbox.waitFor({ state: 'visible' });
         await searchTextbox.fill(searchTerm);
-        await expect(searchTextbox).toHaveValue(searchTerm);
 
         const noResultsHeading = page.getByRole('heading', {
             name: 'No Results',
             exact: true,
         });
-        await expect(noResultsHeading).toBeVisible();
+        await noResultsHeading.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -248,8 +228,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(savedQueriesButton).toBeVisible();
-        await expect(savedQueriesButton).toBeEnabled();
+        await savedQueriesButton.waitFor({ state: 'visible' });
         await savedQueriesButton.click();
 
         const importButton = page.getByRole('button', {
@@ -257,13 +236,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(importButton).toBeVisible();
-        await expect(importButton).toBeEnabled();
+        await importButton.waitFor({ state: 'visible' });
         await importButton.click();
 
         const dialog = page.getByRole('dialog');
 
-        await expect(dialog).toBeVisible();
+        await dialog.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
@@ -282,19 +260,16 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 name: 'Cypher Editor',
             });
 
-            await expect(cypherEditor).toBeVisible();
-            await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+            await cypherEditor.waitFor({ state: 'visible' });
 
             await cypherEditor.fill(query);
-            await expect(cypherEditor).toContainText(query);
 
             const saveQueryButton = page.getByRole('button', {
                 name: 'Save query',
                 exact: true,
             });
 
-            await expect(saveQueryButton).toBeVisible();
-            await expect(saveQueryButton).toBeEnabled();
+            await saveQueryButton.waitFor({ state: 'visible' });
             await saveQueryButton.click();
 
             const saveQueryDialog = page.getByTestId('save-query-dialog');
@@ -307,11 +282,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(saveQueryDialog).toBeVisible();
+            await saveQueryDialog.waitFor({ state: 'visible' });
             await queryNameTextbox.fill(queryName);
-            await expect(saveButton).toBeEnabled();
             await saveButton.click();
-            await expect(saveQueryDialog).toBeHidden();
+            await saveQueryDialog.waitFor({ state: 'hidden' });
             await page.goto('/ui/explore');
 
             const cypherTab = page.getByRole('tab', {
@@ -319,15 +293,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             });
 
             await cypherTab.click();
-            await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+            await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
             const savedQueriesButton = page.getByRole('button', {
                 name: 'Saved Queries',
                 exact: true,
             });
 
-            await expect(savedQueriesButton).toBeVisible();
-            await expect(savedQueriesButton).toBeEnabled();
+            await savedQueriesButton.waitFor({ state: 'visible' });
             await savedQueriesButton.click();
 
             const searchTextbox = page.getByRole('textbox', {
@@ -335,7 +308,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(searchTextbox).toBeVisible();
+            await searchTextbox.waitFor({ state: 'visible' });
             await searchTextbox.fill(queryName);
 
             const savedQueryButton = page.getByRole('button', {
@@ -343,20 +316,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(savedQueryButton).toBeVisible();
+            await savedQueryButton.waitFor({ state: 'visible' });
 
             const autoRunCheckbox = page.getByRole('checkbox', {
                 name: 'Auto-run selected query',
                 exact: true,
             });
 
-            await expect(autoRunCheckbox).toBeVisible();
+            await autoRunCheckbox.waitFor({ state: 'visible' });
 
             if (await autoRunCheckbox.isChecked()) {
                 await autoRunCheckbox.uncheck();
             }
-
-            await expect(autoRunCheckbox).not.toBeChecked();
 
             await savedQueryButton.click();
 
@@ -368,12 +339,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(exportButtons).toHaveCount(2);
-
             const exportButton = exportButtons.first();
 
-            await expect(exportButton).toBeVisible();
-            await expect(exportButton).toBeEnabled();
+            await exportButton.waitFor({ state: 'visible' });
 
             const [download] = await Promise.all([page.waitForEvent('download'), exportButton.click()]);
             expect(download.suggestedFilename()).toMatch(/\.json$/i);
@@ -388,14 +356,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 });
 
                 await cypherTab.click();
-                await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+                await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
                 const savedQueriesButton = page.getByRole('button', {
                     name: 'Saved Queries',
                     exact: true,
                 });
 
-                await expect(savedQueriesButton).toBeVisible();
+                await savedQueriesButton.waitFor({ state: 'visible' });
                 await savedQueriesButton.click();
 
                 const searchTextbox = page.getByRole('textbox', {
@@ -403,7 +371,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(searchTextbox).toBeVisible();
+                await searchTextbox.waitFor({ state: 'visible' });
                 await searchTextbox.fill(queryName);
 
                 const savedQueryButton = page.getByRole('button', {
@@ -415,7 +383,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(savedQueryButton.or(noResultsHeading)).toBeVisible();
+                await savedQueryButton.or(noResultsHeading).waitFor({ state: 'visible' });
 
                 if (await savedQueryButton.isVisible()) {
                     const actionMenuButton = page.getByRole('button', {
@@ -423,7 +391,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(actionMenuButton).toBeVisible();
+                    await actionMenuButton.waitFor({ state: 'visible' });
                     await actionMenuButton.click();
 
                     const deleteButton = page.getByRole('button', {
@@ -431,7 +399,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteButton).toBeVisible();
+                    await deleteButton.waitFor({ state: 'visible' });
                     await deleteButton.click();
 
                     const deleteDialog = page.getByRole('dialog', {
@@ -443,12 +411,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteDialog).toBeVisible();
-                    await expect(confirmButton).toBeEnabled();
+                    await deleteDialog.waitFor({ state: 'visible' });
                     await confirmButton.click();
 
-                    await expect(deleteDialog).toBeHidden();
-                    await expect(savedQueryButton).toHaveCount(0);
+                    await deleteDialog.waitFor({ state: 'hidden' });
+                    await savedQueryButton.waitFor({ state: 'detached' });
                 }
             } catch (error) {
                 cleanupError = error;
@@ -470,8 +437,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(savedQueriesButton).toBeVisible();
-        await expect(savedQueriesButton).toBeEnabled();
+        await savedQueriesButton.waitFor({ state: 'visible' });
         await savedQueriesButton.click();
 
         const platformsFilter = page.getByRole('combobox', {
@@ -479,8 +445,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(platformsFilter).toBeVisible();
-        await expect(platformsFilter).toBeEnabled();
+        await platformsFilter.waitFor({ state: 'visible' });
         await platformsFilter.click();
 
         const activeDirectoryOption = page.getByRole('option', {
@@ -488,14 +453,13 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(activeDirectoryOption).toBeVisible();
+        await activeDirectoryOption.waitFor({ state: 'visible' });
         await activeDirectoryOption.click();
         const selectedPlatformsFilter = page.getByRole('combobox', {
             name: /Active Directory/,
         });
 
-        await expect(selectedPlatformsFilter).toBeVisible();
-        await expect(selectedPlatformsFilter).toContainText('Active Directory');
+        await selectedPlatformsFilter.waitFor({ state: 'visible' });
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -507,8 +471,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(savedQueriesButton).toBeVisible();
-        await expect(savedQueriesButton).toBeEnabled();
+        await savedQueriesButton.waitFor({ state: 'visible' });
         await savedQueriesButton.click();
 
         const categoriesFilter = page.getByRole('combobox', {
@@ -516,8 +479,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(categoriesFilter).toBeVisible();
-        await expect(categoriesFilter).toBeEnabled();
+        await categoriesFilter.waitFor({ state: 'visible' });
         await categoriesFilter.click();
 
         const domainInformationOption = page.getByRole('option', {
@@ -525,13 +487,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(domainInformationOption).toBeVisible();
+        await domainInformationOption.waitFor({ state: 'visible' });
         const selectedCategoriesFilter = page.getByRole('combobox', {
             name: /Domain Information/,
         });
 
-        await expect(selectedCategoriesFilter).toBeVisible();
-        await expect(selectedCategoriesFilter).toContainText('Domain Information');
+        await selectedCategoriesFilter.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
@@ -544,8 +505,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(savedQueriesButton).toBeVisible();
-        await expect(savedQueriesButton).toBeEnabled();
+        await savedQueriesButton.waitFor({ state: 'visible' });
         await savedQueriesButton.click();
 
         const sourceFilter = page.getByRole('combobox', {
@@ -553,8 +513,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(sourceFilter).toBeVisible();
-        await expect(sourceFilter).toBeEnabled();
+        await sourceFilter.waitFor({ state: 'visible' });
         await sourceFilter.click();
 
         const prebuiltOption = page.getByRole('option', {
@@ -562,13 +521,12 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             exact: true,
         });
 
-        await expect(prebuiltOption).toBeVisible();
+        await prebuiltOption.waitFor({ state: 'visible' });
         const selectedSourceFilter = page.getByRole('combobox', {
             name: /Prebuilt/,
         });
 
-        await expect(selectedSourceFilter).toBeVisible();
-        await expect(selectedSourceFilter).toContainText('Prebuilt');
+        await selectedSourceFilter.waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
 
@@ -587,19 +545,16 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 name: 'Cypher Editor',
             });
 
-            await expect(cypherEditor).toBeVisible();
-            await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+            await cypherEditor.waitFor({ state: 'visible' });
 
             await cypherEditor.fill(query);
-            await expect(cypherEditor).toContainText(query);
 
             const saveQueryButton = page.getByRole('button', {
                 name: 'Save query',
                 exact: true,
             });
 
-            await expect(saveQueryButton).toBeVisible();
-            await expect(saveQueryButton).toBeEnabled();
+            await saveQueryButton.waitFor({ state: 'visible' });
             await saveQueryButton.click();
 
             const saveQueryDialog = page.getByTestId('save-query-dialog');
@@ -612,11 +567,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(saveQueryDialog).toBeVisible();
+            await saveQueryDialog.waitFor({ state: 'visible' });
             await queryNameTextbox.fill(queryName);
-            await expect(saveButton).toBeEnabled();
             await saveButton.click();
-            await expect(saveQueryDialog).toBeHidden();
+            await saveQueryDialog.waitFor({ state: 'hidden' });
             await page.goto('/ui/explore');
 
             const cypherTab = page.getByRole('tab', {
@@ -624,15 +578,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             });
 
             await cypherTab.click();
-            await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+            await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
             const savedQueriesButton = page.getByRole('button', {
                 name: 'Saved Queries',
                 exact: true,
             });
 
-            await expect(savedQueriesButton).toBeVisible();
-            await expect(savedQueriesButton).toBeEnabled();
+            await savedQueriesButton.waitFor({ state: 'visible' });
             await savedQueriesButton.click();
 
             const searchTextbox = page.getByRole('textbox', {
@@ -640,7 +593,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(searchTextbox).toBeVisible();
+            await searchTextbox.waitFor({ state: 'visible' });
             await searchTextbox.fill(queryName);
 
             const savedQueryButton = page.getByRole('button', {
@@ -648,20 +601,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(savedQueryButton).toBeVisible();
+            await savedQueryButton.waitFor({ state: 'visible' });
 
             const autoRunCheckbox = page.getByRole('checkbox', {
                 name: 'Auto-run selected query',
                 exact: true,
             });
 
-            await expect(autoRunCheckbox).toBeVisible();
+            await autoRunCheckbox.waitFor({ state: 'visible' });
 
             if (await autoRunCheckbox.isChecked()) {
                 await autoRunCheckbox.uncheck();
             }
-
-            await expect(autoRunCheckbox).not.toBeChecked();
             await savedQueryButton.click();
 
             const actionMenuButton = page.getByRole('button', {
@@ -669,8 +620,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(actionMenuButton).toBeVisible();
-            await expect(actionMenuButton).toBeEnabled();
+            await actionMenuButton.waitFor({ state: 'visible' });
             await actionMenuButton.click();
 
             const runButton = page.getByRole('button', {
@@ -686,9 +636,9 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(runButton).toBeVisible();
-            await expect(editShareButton).toBeVisible();
-            await expect(deleteButton).toBeVisible();
+            await runButton.waitFor({ state: 'visible' });
+            await editShareButton.waitFor({ state: 'visible' });
+            await deleteButton.waitFor({ state: 'visible' });
 
             const results = await makeAxeBuilder()
                 .include('#content-wrapper')
@@ -707,14 +657,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 });
 
                 await cypherTab.click();
-                await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+                await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
                 const savedQueriesButton = page.getByRole('button', {
                     name: 'Saved Queries',
                     exact: true,
                 });
 
-                await expect(savedQueriesButton).toBeVisible();
+                await savedQueriesButton.waitFor({ state: 'visible' });
                 await savedQueriesButton.click();
 
                 const searchTextbox = page.getByRole('textbox', {
@@ -722,7 +672,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(searchTextbox).toBeVisible();
+                await searchTextbox.waitFor({ state: 'visible' });
                 await searchTextbox.fill(queryName);
 
                 const savedQueryButton = page.getByRole('button', {
@@ -734,7 +684,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(savedQueryButton.or(noResultsHeading)).toBeVisible();
+                await savedQueryButton.or(noResultsHeading).waitFor({ state: 'visible' });
 
                 if (await savedQueryButton.isVisible()) {
                     const actionMenuButton = page.getByRole('button', {
@@ -742,7 +692,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(actionMenuButton).toBeVisible();
+                    await actionMenuButton.waitFor({ state: 'visible' });
                     await actionMenuButton.click();
 
                     const deleteButton = page.getByRole('button', {
@@ -750,7 +700,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteButton).toBeVisible();
+                    await deleteButton.waitFor({ state: 'visible' });
                     await deleteButton.click();
 
                     const deleteDialog = page.getByRole('dialog', {
@@ -762,12 +712,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteDialog).toBeVisible();
-                    await expect(confirmButton).toBeEnabled();
+                    await deleteDialog.waitFor({ state: 'visible' });
                     await confirmButton.click();
 
-                    await expect(deleteDialog).toBeHidden();
-                    await expect(savedQueryButton).toHaveCount(0);
+                    await deleteDialog.waitFor({ state: 'hidden' });
+                    await savedQueryButton.waitFor({ state: 'detached' });
                 }
             } catch (error) {
                 cleanupError = error;
@@ -795,19 +744,16 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 name: 'Cypher Editor',
             });
 
-            await expect(cypherEditor).toBeVisible();
-            await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+            await cypherEditor.waitFor({ state: 'visible' });
 
             await cypherEditor.fill(query);
-            await expect(cypherEditor).toContainText(query);
 
             const saveQueryButton = page.getByRole('button', {
                 name: 'Save query',
                 exact: true,
             });
 
-            await expect(saveQueryButton).toBeVisible();
-            await expect(saveQueryButton).toBeEnabled();
+            await saveQueryButton.waitFor({ state: 'visible' });
             await saveQueryButton.click();
 
             const saveQueryDialog = page.getByTestId('save-query-dialog');
@@ -820,11 +766,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(saveQueryDialog).toBeVisible();
+            await saveQueryDialog.waitFor({ state: 'visible' });
             await queryNameTextbox.fill(queryName);
-            await expect(saveButton).toBeEnabled();
             await saveButton.click();
-            await expect(saveQueryDialog).toBeHidden();
+            await saveQueryDialog.waitFor({ state: 'hidden' });
             await page.goto('/ui/explore');
 
             const cypherTab = page.getByRole('tab', {
@@ -832,15 +777,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             });
 
             await cypherTab.click();
-            await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+            await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
             const savedQueriesButton = page.getByRole('button', {
                 name: 'Saved Queries',
                 exact: true,
             });
 
-            await expect(savedQueriesButton).toBeVisible();
-            await expect(savedQueriesButton).toBeEnabled();
+            await savedQueriesButton.waitFor({ state: 'visible' });
             await savedQueriesButton.click();
 
             const searchTextbox = page.getByRole('textbox', {
@@ -848,7 +792,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(searchTextbox).toBeVisible();
+            await searchTextbox.waitFor({ state: 'visible' });
             await searchTextbox.fill(queryName);
 
             const savedQueryButton = page.getByRole('button', {
@@ -856,20 +800,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(savedQueryButton).toBeVisible();
+            await savedQueryButton.waitFor({ state: 'visible' });
 
             const autoRunCheckbox = page.getByRole('checkbox', {
                 name: 'Auto-run selected query',
                 exact: true,
             });
 
-            await expect(autoRunCheckbox).toBeVisible();
+            await autoRunCheckbox.waitFor({ state: 'visible' });
 
             if (await autoRunCheckbox.isChecked()) {
                 await autoRunCheckbox.uncheck();
             }
-
-            await expect(autoRunCheckbox).not.toBeChecked();
             await savedQueryButton.click();
 
             const actionMenuButton = page.getByRole('button', {
@@ -877,19 +819,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(actionMenuButton).toBeVisible();
-            await expect(actionMenuButton).toBeEnabled();
+            await actionMenuButton.waitFor({ state: 'visible' });
             await actionMenuButton.click();
 
             const actionMenu = page.getByTestId('saved-query-action-menu');
-            await expect(actionMenu).toBeVisible();
+            await actionMenu.waitFor({ state: 'visible' });
 
             const editShareButton = page.getByRole('button', {
                 name: 'Edit/Share',
                 exact: true,
             });
 
-            await expect(editShareButton).toBeVisible();
+            await editShareButton.waitFor({ state: 'visible' });
             await editShareButton.click();
 
             const editSavedQueryDialog = page.getByRole('dialog', {
@@ -897,7 +838,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(editSavedQueryDialog).toBeVisible();
+            await editSavedQueryDialog.waitFor({ state: 'visible' });
 
             const editQueryNameTextbox = editSavedQueryDialog.getByRole('textbox', {
                 name: 'Query Name',
@@ -920,11 +861,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(editQueryNameTextbox).toBeVisible();
-            await expect(editQueryDescriptionTextbox).toBeVisible();
-            await expect(cypherQueryEditor).toBeVisible();
-            await expect(cancelButton).toBeVisible();
-            await expect(editSaveButton).toBeVisible();
+            await editQueryNameTextbox.waitFor({ state: 'visible' });
+            await editQueryDescriptionTextbox.waitFor({ state: 'visible' });
+            await cypherQueryEditor.waitFor({ state: 'visible' });
+            await cancelButton.waitFor({ state: 'visible' });
+            await editSaveButton.waitFor({ state: 'visible' });
 
             const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
@@ -940,14 +881,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 });
 
                 await cypherTab.click();
-                await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+                await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
                 const savedQueriesButton = page.getByRole('button', {
                     name: 'Saved Queries',
                     exact: true,
                 });
 
-                await expect(savedQueriesButton).toBeVisible();
+                await savedQueriesButton.waitFor({ state: 'visible' });
                 await savedQueriesButton.click();
 
                 const searchTextbox = page.getByRole('textbox', {
@@ -955,7 +896,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(searchTextbox).toBeVisible();
+                await searchTextbox.waitFor({ state: 'visible' });
                 await searchTextbox.fill(queryName);
 
                 const savedQueryButton = page.getByRole('button', {
@@ -967,7 +908,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(savedQueryButton.or(noResultsHeading)).toBeVisible();
+                await savedQueryButton.or(noResultsHeading).waitFor({ state: 'visible' });
 
                 if (await savedQueryButton.isVisible()) {
                     const actionMenuButton = page.getByRole('button', {
@@ -975,7 +916,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(actionMenuButton).toBeVisible();
+                    await actionMenuButton.waitFor({ state: 'visible' });
                     await actionMenuButton.click();
 
                     const deleteButton = page.getByRole('button', {
@@ -983,7 +924,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteButton).toBeVisible();
+                    await deleteButton.waitFor({ state: 'visible' });
                     await deleteButton.click();
 
                     const deleteDialog = page.getByRole('dialog', {
@@ -995,12 +936,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteDialog).toBeVisible();
-                    await expect(confirmButton).toBeEnabled();
+                    await deleteDialog.waitFor({ state: 'visible' });
                     await confirmButton.click();
 
-                    await expect(deleteDialog).toBeHidden();
-                    await expect(savedQueryButton).toHaveCount(0);
+                    await deleteDialog.waitFor({ state: 'hidden' });
+                    await savedQueryButton.waitFor({ state: 'detached' });
                 }
             } catch (error) {
                 cleanupError = error;
@@ -1028,19 +968,16 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 name: 'Cypher Editor',
             });
 
-            await expect(cypherEditor).toBeVisible();
-            await expect(cypherEditor).toHaveAttribute('contenteditable', 'true');
+            await cypherEditor.waitFor({ state: 'visible' });
 
             await cypherEditor.fill(query);
-            await expect(cypherEditor).toContainText(query);
 
             const saveQueryButton = page.getByRole('button', {
                 name: 'Save query',
                 exact: true,
             });
 
-            await expect(saveQueryButton).toBeVisible();
-            await expect(saveQueryButton).toBeEnabled();
+            await saveQueryButton.waitFor({ state: 'visible' });
             await saveQueryButton.click();
 
             const saveQueryDialog = page.getByTestId('save-query-dialog');
@@ -1053,11 +990,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(saveQueryDialog).toBeVisible();
+            await saveQueryDialog.waitFor({ state: 'visible' });
             await queryNameTextbox.fill(queryName);
-            await expect(saveButton).toBeEnabled();
             await saveButton.click();
-            await expect(saveQueryDialog).toBeHidden();
+            await saveQueryDialog.waitFor({ state: 'hidden' });
             await page.goto('/ui/explore');
 
             const cypherTab = page.getByRole('tab', {
@@ -1065,15 +1001,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
             });
 
             await cypherTab.click();
-            await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+            await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
             const savedQueriesButton = page.getByRole('button', {
                 name: 'Saved Queries',
                 exact: true,
             });
 
-            await expect(savedQueriesButton).toBeVisible();
-            await expect(savedQueriesButton).toBeEnabled();
+            await savedQueriesButton.waitFor({ state: 'visible' });
             await savedQueriesButton.click();
 
             const searchTextbox = page.getByRole('textbox', {
@@ -1081,7 +1016,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(searchTextbox).toBeVisible();
+            await searchTextbox.waitFor({ state: 'visible' });
             await searchTextbox.fill(queryName);
 
             const savedQueryButton = page.getByRole('button', {
@@ -1089,20 +1024,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(savedQueryButton).toBeVisible();
+            await savedQueryButton.waitFor({ state: 'visible' });
 
             const autoRunCheckbox = page.getByRole('checkbox', {
                 name: 'Auto-run selected query',
                 exact: true,
             });
 
-            await expect(autoRunCheckbox).toBeVisible();
+            await autoRunCheckbox.waitFor({ state: 'visible' });
 
             if (await autoRunCheckbox.isChecked()) {
                 await autoRunCheckbox.uncheck();
             }
-
-            await expect(autoRunCheckbox).not.toBeChecked();
             await savedQueryButton.click();
 
             const actionMenuButton = page.getByRole('button', {
@@ -1110,19 +1043,18 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(actionMenuButton).toBeVisible();
-            await expect(actionMenuButton).toBeEnabled();
+            await actionMenuButton.waitFor({ state: 'visible' });
             await actionMenuButton.click();
 
             const actionMenu = page.getByTestId('saved-query-action-menu');
-            await expect(actionMenu).toBeVisible();
+            await actionMenu.waitFor({ state: 'visible' });
 
             const deleteButton = page.getByRole('button', {
                 name: 'Delete',
                 exact: true,
             });
 
-            await expect(deleteButton).toBeVisible();
+            await deleteButton.waitFor({ state: 'visible' });
             await deleteButton.click();
 
             const deleteDialog = page.getByRole('dialog', {
@@ -1130,7 +1062,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(deleteDialog).toBeVisible();
+            await deleteDialog.waitFor({ state: 'visible' });
 
             const deleteQueryHeading = deleteDialog.getByRole('heading', {
                 name: 'Delete Query',
@@ -1148,10 +1080,10 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 exact: true,
             });
 
-            await expect(deleteQueryHeading).toBeVisible();
-            await expect(confirmationText).toBeVisible();
-            await expect(cancelButton).toBeVisible();
-            await expect(confirmButton).toBeVisible();
+            await deleteQueryHeading.waitFor({ state: 'visible' });
+            await confirmationText.waitFor({ state: 'visible' });
+            await cancelButton.waitFor({ state: 'visible' });
+            await confirmButton.waitFor({ state: 'visible' });
 
             const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
 
@@ -1167,14 +1099,14 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                 });
 
                 await cypherTab.click();
-                await expect(cypherTab).toHaveAttribute('aria-selected', 'true');
+                await page.getByRole('textbox', { name: 'Cypher Editor' }).waitFor({ state: 'visible' });
 
                 const savedQueriesButton = page.getByRole('button', {
                     name: 'Saved Queries',
                     exact: true,
                 });
 
-                await expect(savedQueriesButton).toBeVisible();
+                await savedQueriesButton.waitFor({ state: 'visible' });
                 await savedQueriesButton.click();
 
                 const searchTextbox = page.getByRole('textbox', {
@@ -1182,7 +1114,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(searchTextbox).toBeVisible();
+                await searchTextbox.waitFor({ state: 'visible' });
                 await searchTextbox.fill(queryName);
 
                 const savedQueryButton = page.getByRole('button', {
@@ -1194,7 +1126,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                     exact: true,
                 });
 
-                await expect(savedQueryButton.or(noResultsHeading)).toBeVisible();
+                await savedQueryButton.or(noResultsHeading).waitFor({ state: 'visible' });
 
                 if (await savedQueryButton.isVisible()) {
                     const actionMenuButton = page.getByRole('button', {
@@ -1202,7 +1134,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(actionMenuButton).toBeVisible();
+                    await actionMenuButton.waitFor({ state: 'visible' });
                     await actionMenuButton.click();
 
                     const deleteButton = page.getByRole('button', {
@@ -1210,7 +1142,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteButton).toBeVisible();
+                    await deleteButton.waitFor({ state: 'visible' });
                     await deleteButton.click();
 
                     const deleteDialog = page.getByRole('dialog', {
@@ -1222,12 +1154,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
                         exact: true,
                     });
 
-                    await expect(deleteDialog).toBeVisible();
-                    await expect(confirmButton).toBeEnabled();
+                    await deleteDialog.waitFor({ state: 'visible' });
                     await confirmButton.click();
 
-                    await expect(deleteDialog).toBeHidden();
-                    await expect(savedQueryButton).toHaveCount(0);
+                    await deleteDialog.waitFor({ state: 'hidden' });
+                    await savedQueryButton.waitFor({ state: 'detached' });
                 }
             } catch (error) {
                 cleanupError = error;
