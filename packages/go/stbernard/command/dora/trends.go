@@ -499,6 +499,7 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 		avgMTTR        float64
 	)
 
+	var periodsWithIncidents int
 	for _, periodResult := range results {
 		snapshot := periodResult.Snapshot
 		totalDeploys += snapshot.DeploymentCount
@@ -507,6 +508,7 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 		avgFailureRate += snapshot.ChangeFailureRate
 		if snapshot.IncidentCount > 0 {
 			avgMTTR += snapshot.MedianTTRHours
+			periodsWithIncidents++
 		}
 	}
 
@@ -514,7 +516,9 @@ func (s *command) printResultsTable(results []periodResult, periodType string) {
 	avgFreq /= n
 	avgLeadTime /= n
 	avgFailureRate /= n
-	avgMTTR /= n
+	if periodsWithIncidents > 0 {
+		avgMTTR /= float64(periodsWithIncidents)
+	}
 
 	fmt.Println("Summary:")
 	fmt.Printf("  Total Deployments: %d across %d periods\n", totalDeploys, len(results))

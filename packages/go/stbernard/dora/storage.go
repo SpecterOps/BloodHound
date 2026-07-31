@@ -105,7 +105,7 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 
 	for _, d := range deployments {
 		ib := sqlbuilder.NewInsertBuilder()
-		ib.InsertInto("deployments")
+		ib.ReplaceInto("deployments")
 		ib.Cols(
 			"tag", "sha", "version", "deployed_at", "is_production", "is_rc",
 			"rc_number", "is_patch", "patch_number", "total_rcs", "total_patches", "stabilization_commits", "html_url",
@@ -115,10 +115,7 @@ func (s *Storage) SaveDeployments(ctx context.Context, deployments []Deployment)
 			d.RCNumber, d.IsPatch, d.PatchNumber, d.TotalRCs, d.TotalPatches, d.StabilizationCommits, d.HTMLURL,
 		)
 
-		// SQLite uses INSERT OR REPLACE for upsert
 		query, args := ib.Build()
-		query = "INSERT OR REPLACE INTO deployments " + query[len("INSERT INTO deployments "):]
-
 		if _, err := tx.ExecContext(ctx, query, args...); err != nil {
 			return fmt.Errorf("inserting deployment %s: %w", d.Tag, err)
 		}
@@ -182,13 +179,11 @@ func (s *Storage) SaveCommits(ctx context.Context, commits []Commit) error {
 
 	for _, c := range commits {
 		ib := sqlbuilder.NewInsertBuilder()
-		ib.InsertInto("commits")
+		ib.ReplaceInto("commits")
 		ib.Cols("sha", "message", "committed_at", "html_url")
 		ib.Values(c.SHA, c.Message, c.CommittedAt, c.HTMLURL)
 
 		query, args := ib.Build()
-		query = "INSERT OR REPLACE INTO commits " + query[len("INSERT INTO commits "):]
-
 		if _, err := tx.ExecContext(ctx, query, args...); err != nil {
 			return fmt.Errorf("inserting commit %s: %w", c.SHA, err)
 		}

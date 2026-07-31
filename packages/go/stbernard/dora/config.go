@@ -118,7 +118,8 @@ func (s Config) SaveToFile(path string) error {
 
 // LoadConfigFromFile reads a configuration from a YAML file
 func LoadConfigFromFile(path string) (Config, error) {
-	var config Config
+	// Start with defaults so omitted fields retain their default values
+	config := DefaultConfig()
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -156,6 +157,9 @@ func LoadConfig(workspaceRoot string) (Config, error) {
 		// Only error if it's not a "file not found" error
 		return config, fmt.Errorf("loading local config: %w", err)
 	}
+
+	// Apply environment variable overrides (highest precedence)
+	config.ApplyEnvironmentOverrides()
 
 	return config, config.Validate()
 }
