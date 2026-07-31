@@ -191,22 +191,23 @@ export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | '
     size?: number;
 }
 
-export const IconButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, IconButtonProps>(
-    function IconButton({ variant = 'default', children, className, color, disabled = false, size, ...props }, ref) {
-        // TODO remove BED-6062
-        return (
-            <BaseUIButton
-                {...props}
-                ref={ref}
-                disabled={disabled}
-                className={(state) =>
-                    cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
-                }
-                style={{ ...props.style, fontSize: size, color }}>
-                {children}
-            </BaseUIButton>
-        );
-    }
-);
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+    { variant = 'default', children, className, color, disabled = false, size, ...props },
+    ref
+) {
+    // TODO remove BED-6062
+    return (
+        <BaseUIButton
+            {...props}
+            ref={ref}
+            disabled={disabled}
+            className={(state) =>
+                cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
+            }
+            style={{ ...props.style, fontSize: size, color }}>
+            {children}
+        </BaseUIButton>
+    );
+});
 
 IconButton.displayName = 'IconButton';

@@ -204,23 +204,23 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 );
 CarouselItem.displayName = 'CarouselItem';
 
-const CarouselPrev = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof IconButton>>(
-    ({ ...props }, ref) => {
-        const { scrollPrev, canScrollPrev } = useCarousel();
+type CarouselPrevProps = Omit<React.ComponentPropsWithoutRef<typeof IconButton>, 'children'>;
 
-        return (
-            <IconButton
-                name='prev'
-                ref={ref}
-                className='px-2'
-                disabled={!canScrollPrev}
-                onClick={scrollPrev}
-                {...props}>
-                <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
-            </IconButton>
-        );
-    }
-);
+const CarouselPrev = React.forwardRef<HTMLButtonElement, CarouselPrevProps>(({ ...props }, ref) => {
+    const { scrollPrev, canScrollPrev } = useCarousel();
+
+    return (
+        <IconButton
+            name='Previous slide'
+            ref={ref}
+            className='px-2'
+            disabled={!canScrollPrev}
+            onClick={scrollPrev}
+            {...props}>
+            <ChevronLeft className='h-3 w-3 text-black dark:text-white' />
+        </IconButton>
+    );
+});
 CarouselPrev.displayName = 'CarouselPrev';
 
 const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(() => {
@@ -257,7 +257,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 
         return (
             <IconButton
-                name='next'
+                name='Next slide'
                 ref={ref}
                 className='px-2'
                 disabled={!canScrollNext}
