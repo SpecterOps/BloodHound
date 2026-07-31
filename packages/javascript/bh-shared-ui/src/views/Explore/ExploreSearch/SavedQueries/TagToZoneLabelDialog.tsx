@@ -64,7 +64,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const [zoneId, setZoneId] = useState('');
     const [labelId, setLabelId] = useState('');
     const continueDisabled = (isLabel && !labelId) || (!isLabel && !zoneId);
-    const handleValuesChange = (val: string) => {
+    const handleValueChange = (val: string) => {
         if (isLabel) {
             setLabelId(val);
             setZoneId('');
@@ -108,7 +108,7 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
 
                     <DialogDescription>{description}</DialogDescription>
 
-                    <Select onValueChange={handleValuesChange}>
+                    <Select onValueChange={handleValueChange}>
                         <SelectTrigger className='w-60'>
                             <SelectValue placeholder={`Select ${title}`} />
                         </SelectTrigger>
