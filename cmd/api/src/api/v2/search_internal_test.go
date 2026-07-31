@@ -19,22 +19,23 @@ package v2
 import (
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_SetNodeProperties(t *testing.T) {
 	tests := []struct {
-		name     string
-		nodes    []*graph.Node
-		expected model.EnvironmentSelectors
+		name                    string
+		nodes                   []*graph.Node
+		kindToSchemaEnvironment model.EnvironmentKindsToEnvironment
+		expected                model.EnvironmentSelectors
 	}{
 		{
 			name: "basic case",
@@ -100,11 +101,48 @@ func Test_SetNodeProperties(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "opengraph environment kind name and display name",
+			nodes: []*graph.Node{
+				{
+					ID: 3,
+					Properties: &graph.Properties{
+						Map: map[string]any{
+							common.ObjectID.String():  "3",
+							common.Name.String():      "Node3",
+							common.Collected.String(): true,
+						},
+					},
+					Kinds: graph.Kinds{graph.StringKind("dogpark_LargeDogArea")},
+				},
+			},
+			kindToSchemaEnvironment: model.EnvironmentKindsToEnvironment{
+				"dogpark_LargeDogArea": model.SchemaEnvironment{
+					SchemaExtensionDisplayName: "Dog Park Management System",
+					EnvironmentKindId:          101,
+					EnvironmentKindName:        "dogpark_LargeDogArea",
+					EnvironmentKindDisplayName: "Large Dog Area",
+				},
+			},
+			expected: model.EnvironmentSelectors{
+				{
+					EnvironmentProperties: model.EnvironmentProperties{
+						Type:            "Dog Park Management System",
+						KindId:          null.Int32From(101),
+						KindName:        null.StringFrom("dogpark_LargeDogArea"),
+						KindDisplayName: null.StringFrom("Large Dog Area"),
+					},
+					Name:      "Node3",
+					ObjectID:  "3",
+					Collected: true,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BuildEnvironmentSelectors(tt.nodes, model.EnvironmentKindsToEnvironment{})
+			got := BuildEnvironmentSelectors(tt.nodes, tt.kindToSchemaEnvironment)
 			assert.Equal(t, tt.expected, got, tt.name)
 		})
 	}

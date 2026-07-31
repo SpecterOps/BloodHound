@@ -419,6 +419,7 @@ export type GraphEdge = {
     lastSeen: string;
     impactPercent?: number;
     exploreGraphId?: string;
+    properties?: Record<string, any>;
     data?: Record<string, any>;
 };
 
@@ -869,7 +870,7 @@ export interface RelationshipKindRef {
 }
 
 export interface RelationshipProperties {
-    is_traversable: boolean;
+    is_traversable?: boolean;
     /** date-time */
     lastSeen: string;
     [key: string]: unknown;
