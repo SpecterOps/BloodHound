@@ -59,6 +59,10 @@ type KindInfo struct {
 	Position int32
 	Content  json.RawMessage
 
+	// RenderedMarkdown is populated when kind info is requested as part of an
+	// entity detail response. Content remains the persisted JSON document.
+	RenderedMarkdown string
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
