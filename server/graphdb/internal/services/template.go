@@ -35,6 +35,16 @@ type NodeContext struct {
 	Properties map[string]any
 }
 
+// RelationshipContext is the template representation of a relationship and
+// its endpoint nodes.
+type RelationshipContext struct {
+	RelationshipID int64
+	Source         NodeContext
+	Target         NodeContext
+	Kind           KindContext
+	Properties     map[string]any
+}
+
 // KindContext is the template representation of a kind.
 type KindContext struct {
 	KindID *int32
@@ -99,7 +109,7 @@ var unsupportedFns = []string{
 	"ago",
 }
 
-func renderNodeKindInfoMarkdown(content json.RawMessage, context NodeContext) (string, error) {
+func renderKindInfoMarkdown(content json.RawMessage, context any) (string, error) {
 	var contentView kindInfoContent
 
 	if err := json.Unmarshal(content, &contentView); err != nil {
@@ -143,6 +153,51 @@ func newNodeContext(node Node) NodeContext {
 	}
 }
 
+func newRelationshipContext(relationship Relationship, source Node, target Node) RelationshipContext {
+	return RelationshipContext{
+		RelationshipID: relationship.ID,
+		Source:         newNodeContext(source),
+		Target:         newNodeContext(target),
+		Kind: KindContext{
+			KindID: relationship.Kind.ID,
+			Name:   relationship.Kind.Name,
+		},
+		Properties: relationship.Properties,
+	}
+}
+
+func renderRelationshipKindInfos(relationship Relationship, source Node, target Node) error {
+	relationshipContext := newRelationshipContext(relationship, source, target)
+	var renderErrors []error
+
+	for index := range relationship.KindInfos {
+		if len(relationship.KindInfos[index].Content) == 0 {
+			continue
+		}
+
+		renderedMarkdown, err := renderKindInfoMarkdown(
+			relationship.KindInfos[index].Content,
+			relationshipContext,
+		)
+		if err != nil {
+			renderErrors = append(renderErrors, fmt.Errorf(
+				"rendering relationship kind info %s: %w",
+				relationship.KindInfos[index].InfoKey,
+				err,
+			))
+			continue
+		}
+
+		relationship.KindInfos[index].RenderedMarkdown = renderedMarkdown
+	}
+
+	if len(renderErrors) > 0 {
+		return KindInfoRenderErrors{Err: errors.Join(renderErrors...)}
+	}
+
+	return nil
+}
+
 func renderNodeKindInfos(node *Node) error {
 	nodeContext := newNodeContext(*node)
 	var renderErrors []error
@@ -152,7 +207,7 @@ func renderNodeKindInfos(node *Node) error {
 			continue
 		}
 
-		renderedMarkdown, err := renderNodeKindInfoMarkdown(
+		renderedMarkdown, err := renderKindInfoMarkdown(
 			node.KindInfos[index].Content,
 			nodeContext,
 		)

@@ -68,7 +68,7 @@ func TestRenderNodeKindInfoMarkdown(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := renderNodeKindInfoMarkdown(json.RawMessage(tt.content), context)
+			got, err := renderKindInfoMarkdown(json.RawMessage(tt.content), context)
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
@@ -78,7 +78,7 @@ func TestRenderNodeKindInfoMarkdown(t *testing.T) {
 func TestRenderNodeKindInfoMarkdown_ReturnsErrorForUnknownField(t *testing.T) {
 	content := json.RawMessage(`{"markdown":{"content":"{{ .UnknownField }}"}}`)
 
-	_, err := renderNodeKindInfoMarkdown(content, NodeContext{})
+	_, err := renderKindInfoMarkdown(content, NodeContext{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "can't evaluate field UnknownField")
@@ -87,7 +87,7 @@ func TestRenderNodeKindInfoMarkdown_ReturnsErrorForUnknownField(t *testing.T) {
 func TestRenderMarkdownRejectsRemovedFunction(t *testing.T) {
 	content := json.RawMessage(`{"markdown":{"content":"{{ regexMatch \"a\" \"a\" }}"}}`)
 
-	_, err := renderNodeKindInfoMarkdown(content, NodeContext{})
+	_, err := renderKindInfoMarkdown(content, NodeContext{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "function")
