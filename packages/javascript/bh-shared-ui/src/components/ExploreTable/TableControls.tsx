@@ -82,7 +82,7 @@ const TableControls = <TData, TValue>({
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
-                    <div className='flex justify-center items-center relative'>
+                    <div className='flex justify-center items-center relative w-full'>
                         <Label htmlFor='explore-table-search' className='sr-only'>
                             Explore Table Search
                         </Label>
