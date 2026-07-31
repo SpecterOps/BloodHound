@@ -18,6 +18,7 @@ package dora
 
 import (
 	"testing"
+	"time"
 )
 
 func TestParseDefaultPeriod(t *testing.T) {
@@ -102,6 +103,60 @@ func TestParseDefaultPeriodRealWorldExamples(t *testing.T) {
 					ex.desc, ex.input, result, ex.expected)
 			}
 			t.Logf("✓ %s: %q → %d days", ex.desc, ex.input, result)
+		})
+	}
+}
+
+func TestCalculateLastFiscalQuarter(t *testing.T) {
+	// Test that the function produces valid quarter boundaries
+	// Note: Since we use time.Now(), we can't test exact dates without mocking,
+	// but we can verify the structural properties of the output
+
+	fiscalStarts := []int{1, 2, 10} // Jan, Feb, Oct fiscal years
+
+	for _, fiscalStart := range fiscalStarts {
+		t.Run(time.Month(fiscalStart).String()+"_fiscal_start", func(t *testing.T) {
+			start, end := calculateLastFiscalQuarter(fiscalStart)
+
+			// Verify UTC timezone
+			if start.Location() != time.UTC {
+				t.Errorf("Start time not in UTC: %v", start.Location())
+			}
+			if end.Location() != time.UTC {
+				t.Errorf("End time not in UTC: %v", end.Location())
+			}
+
+			// Verify start is first of month at midnight
+			if start.Day() != 1 || start.Hour() != 0 || start.Minute() != 0 || start.Second() != 0 {
+				t.Errorf("Start should be first of month at midnight, got: %v", start)
+			}
+
+			// Verify end is last second of a month
+			if end.Hour() != 23 || end.Minute() != 59 || end.Second() != 59 {
+				t.Errorf("End should be 23:59:59, got: %v", end)
+			}
+
+			// Verify start < end
+			if !start.Before(end) {
+				t.Errorf("Start (%v) should be before end (%v)", start, end)
+			}
+
+			// Verify quarter is approximately 3 months (89-92 days)
+			duration := end.Sub(start)
+			days := duration.Hours() / 24
+			if days < 89 || days > 92 {
+				t.Errorf("Quarter duration should be ~90 days, got: %.1f days", days)
+			}
+
+			// Verify end date is last day of its month
+			// (next day should be first of next month)
+			nextDay := end.Add(time.Second)
+			if nextDay.Day() != 1 {
+				t.Errorf("End+1s should be first of next month, got day %d", nextDay.Day())
+			}
+
+			t.Logf("✓ Fiscal start=%s: Q covers %v to %v (%.0f days)",
+				time.Month(fiscalStart), start.Format("2006-01-02"), end.Format("2006-01-02"), days)
 		})
 	}
 }

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package dora
+package dora_test
 
 import (
 	"bytes"
@@ -22,30 +22,32 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/dora"
 )
 
 func TestTerminalReporter(t *testing.T) {
 	now := time.Now()
-	snapshot := MetricsSnapshot{
+	snapshot := dora.MetricsSnapshot{
 		PeriodStart:               now.AddDate(0, 0, -30),
 		PeriodEnd:                 now,
 		CalculatedAt:              now,
 		DeploymentCount:           15,
 		DeploymentFrequencyPerDay: 0.5,
-		DeploymentTier:            string(TierHigh),
+		DeploymentTier:            string(dora.TierHigh),
 		LeadTimeP50Hours:          6.0,
 		LeadTimeP90Hours:          12.0,
 		LeadTimeP95Hours:          18.0,
-		LeadTimeTier:              string(TierElite),
+		LeadTimeTier:              string(dora.TierElite),
 		FailedDeploymentCount:     1,
 		ChangeFailureRate:         6.67,
-		FailureRateTier:           string(TierHigh),
+		FailureRateTier:           string(dora.TierHigh),
 		IncidentCount:             1,
 		MTTRHours:                 4.0,
 		MedianTTRHours:            4.0,
 		P95TTRHours:               4.0,
-		RestoreTimeTier:           string(TierHigh),
-		OverallTier:               string(TierHigh),
+		RestoreTimeTier:           string(dora.TierHigh),
+		OverallTier:               string(dora.TierHigh),
 		AverageRCsPerRelease:      2.0,
 		MedianRCsPerRelease:       2.0,
 		TotalCommitsInPeriod:      75,
@@ -53,7 +55,7 @@ func TestTerminalReporter(t *testing.T) {
 	}
 
 	t.Run("terminal output with colors", func(t *testing.T) {
-		reporter := NewTerminalReporter(true)
+		reporter := dora.NewTerminalReporter(true)
 		var buf bytes.Buffer
 
 		err := reporter.Report(snapshot, &buf)
@@ -101,7 +103,7 @@ func TestTerminalReporter(t *testing.T) {
 	})
 
 	t.Run("terminal output without colors", func(t *testing.T) {
-		reporter := NewTerminalReporter(false)
+		reporter := dora.NewTerminalReporter(false)
 		var buf bytes.Buffer
 
 		err := reporter.Report(snapshot, &buf)
@@ -132,7 +134,7 @@ func TestTerminalReporter(t *testing.T) {
 		noIncidentSnapshot.MedianTTRHours = 0
 		noIncidentSnapshot.P95TTRHours = 0
 
-		reporter := NewTerminalReporter(false)
+		reporter := dora.NewTerminalReporter(false)
 		var buf bytes.Buffer
 
 		err := reporter.Report(noIncidentSnapshot, &buf)
@@ -150,26 +152,26 @@ func TestTerminalReporter(t *testing.T) {
 
 func TestJSONReporter(t *testing.T) {
 	now := time.Now()
-	snapshot := MetricsSnapshot{
+	snapshot := dora.MetricsSnapshot{
 		PeriodStart:               now.AddDate(0, 0, -30),
 		PeriodEnd:                 now,
 		CalculatedAt:              now,
 		DeploymentCount:           15,
 		DeploymentFrequencyPerDay: 0.5,
-		DeploymentTier:            string(TierHigh),
+		DeploymentTier:            string(dora.TierHigh),
 		LeadTimeP50Hours:          6.0,
 		LeadTimeP90Hours:          12.0,
 		LeadTimeP95Hours:          18.0,
-		LeadTimeTier:              string(TierElite),
+		LeadTimeTier:              string(dora.TierElite),
 		FailedDeploymentCount:     1,
 		ChangeFailureRate:         6.67,
-		FailureRateTier:           string(TierHigh),
+		FailureRateTier:           string(dora.TierHigh),
 		IncidentCount:             1,
 		MTTRHours:                 4.0,
 		MedianTTRHours:            4.0,
 		P95TTRHours:               4.0,
-		RestoreTimeTier:           string(TierHigh),
-		OverallTier:               string(TierHigh),
+		RestoreTimeTier:           string(dora.TierHigh),
+		OverallTier:               string(dora.TierHigh),
 		AverageRCsPerRelease:      2.0,
 		MedianRCsPerRelease:       2.0,
 		TotalCommitsInPeriod:      75,
@@ -177,7 +179,7 @@ func TestJSONReporter(t *testing.T) {
 	}
 
 	t.Run("pretty JSON output", func(t *testing.T) {
-		reporter := NewJSONReporter(true)
+		reporter := dora.NewJSONReporter(true)
 		var buf bytes.Buffer
 
 		err := reporter.Report(snapshot, &buf)
@@ -209,7 +211,7 @@ func TestJSONReporter(t *testing.T) {
 	})
 
 	t.Run("compact JSON output", func(t *testing.T) {
-		reporter := NewJSONReporter(false)
+		reporter := dora.NewJSONReporter(false)
 		var buf bytes.Buffer
 
 		err := reporter.Report(snapshot, &buf)
