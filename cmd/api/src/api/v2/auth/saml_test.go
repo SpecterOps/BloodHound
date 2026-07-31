@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/crewjam/saml"
 	"github.com/gorilla/mux"
@@ -38,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	samlservice "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -57,6 +59,62 @@ var validMetadataXML = `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:met
 			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://okta.com/sso"/>
 		</IDPSSODescriptor>
 	</EntityDescriptor>`
+
+func testValidatedSAMLResponse(assertion *saml.Assertion) *samlservice.ValidatedResponse {
+	var (
+		now       = time.Now().UTC()
+		expiresAt = now.Add(time.Minute)
+	)
+
+	assertion.ID = "assertion-id"
+	assertion.IssueInstant = now
+	assertion.Issuer.Value = "https://post-provider.com/saml"
+	assertion.Conditions = &saml.Conditions{
+		NotBefore:    now.Add(-time.Minute),
+		NotOnOrAfter: expiresAt,
+	}
+
+	return &samlservice.ValidatedResponse{
+		Assertion:            assertion,
+		ResponseID:           "response-id",
+		ResponseIssueInstant: now,
+	}
+}
+
+func testSAMLCallbackProvider() model.SSOProvider {
+	return model.SSOProvider{
+		Name: "POST Provider",
+		Slug: "post-provider",
+		Type: model.SessionAuthProviderSAML,
+		SAMLProvider: &model.SAMLProvider{
+			Name:            "POST SAML Provider",
+			DisplayName:     "POST SAML SSO",
+			IssuerURI:       "https://post-provider.com/saml",
+			SingleSignOnURI: "https://post-provider.com/sso",
+			MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+				<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+					<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+				</IDPSSODescriptor>
+			</EntityDescriptor>`),
+		},
+		Serial: model.Serial{ID: 1},
+	}
+}
+
+func testSAMLAssertionWithPrincipal() *samlservice.ValidatedResponse {
+	return testValidatedSAMLResponse(&saml.Assertion{
+		AttributeStatements: []saml.AttributeStatement{{
+			Attributes: []saml.Attribute{{
+				Name:       model.XMLSOAPClaimsEmailAddress,
+				NameFormat: model.ObjectIDAttributeNameFormat,
+				Values: []saml.AttributeValue{{
+					Type:  model.XMLTypeString,
+					Value: "username",
+				}},
+			}},
+		}},
+	})
+}
 
 func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 	t.Parallel()
@@ -2499,6 +2557,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 		name             string
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
+		setupReplayMock  func(mock *mock)
 		expected         expected
 		dogTagsOverrides dogtags.TestOverrides
 	}
@@ -2594,7 +2653,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, &saml.InvalidResponseError{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(nil, &saml.InvalidResponseError{
 					PrivateErr: errors.New("error"),
 				})
 			},
@@ -2635,7 +2694,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, errors.New("error"))
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2674,7 +2733,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{}), nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2713,7 +2772,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -2725,13 +2784,73 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							}},
 						}},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Your+user+is+not+allowed%2C+please+contact+your+Administrator"}},
+			},
+		},
+		{
+			name: "Error: replayed SAML response is rejected before session creation",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL:    &url.URL{Path: "/api/v2/sso/slug/callback"},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{Host: request.URL}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(testSAMLCallbackProvider(), nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testSAMLAssertionWithPrincipal(), nil)
+			},
+			setupReplayMock: func(mock *mock) {
+				mock.mockDatabase.EXPECT().ConsumeSAMLIdentifiers(
+					gomock.Any(),
+					int32(1),
+					"https://post-provider.com/saml",
+					"response-id",
+					"assertion-id",
+					gomock.Any(),
+				).Return(false, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+SSO+response"}},
+			},
+		},
+		{
+			name: "Error: replay store failure fails closed before session creation",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL:    &url.URL{Path: "/api/v2/sso/slug/callback"},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{Host: request.URL}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(testSAMLCallbackProvider(), nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testSAMLAssertionWithPrincipal(), nil)
+			},
+			setupReplayMock: func(mock *mock) {
+				mock.mockDatabase.EXPECT().ConsumeSAMLIdentifiers(
+					gomock.Any(),
+					int32(1),
+					"https://post-provider.com/saml",
+					"response-id",
+					"assertion-id",
+					gomock.Any(),
+				).Return(false, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Your+SSO+connection+failed%2C+please+try+again"}},
 			},
 		},
 		{
@@ -2770,7 +2889,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -2782,7 +2901,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							}},
 						}},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -2851,7 +2970,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -2863,7 +2982,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							}},
 						}},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -2939,7 +3058,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -2951,7 +3070,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							}},
 						}},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -3020,7 +3139,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -3032,7 +3151,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							}},
 						}},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -3129,7 +3248,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleAdministrator}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -3151,7 +3270,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							},
 						},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
@@ -3231,7 +3350,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleUser}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(testValidatedSAMLResponse(&saml.Assertion{
 					AttributeStatements: []saml.AttributeStatement{{
 						Attributes: []saml.Attribute{{
 							FriendlyName: "uid",
@@ -3253,7 +3372,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 							},
 						},
 					}},
-				}, nil)
+				}), nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
@@ -3274,6 +3393,18 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
+			if testCase.setupReplayMock == nil {
+				mocks.mockDatabase.EXPECT().ConsumeSAMLIdentifiers(
+					gomock.Any(),
+					gomock.Any(),
+					gomock.Any(),
+					gomock.Any(),
+					gomock.Any(),
+					gomock.Any(),
+				).Return(true, nil).AnyTimes()
+			} else {
+				testCase.setupReplayMock(mocks)
+			}
 			testCase.setupMocks(t, mocks)
 
 			resources := v2auth.NewManagementResource(config.Configuration{

@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -33,10 +34,50 @@ const (
 // SAMLProviderData defines the interface required to interact with the oidc_providers table
 type SAMLProviderData interface {
 	CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error)
+	ConsumeSAMLIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) (bool, error)
 	GetAllSAMLProviders(ctx context.Context) (model.SAMLProviders, error)
 	GetSAMLProvider(ctx context.Context, id int32) (model.SAMLProvider, error)
 	GetSAMLProviderUsers(ctx context.Context, id int32) (model.Users, error)
 	UpdateSAMLIdentityProvider(ctx context.Context, ssoProvider model.SSOProvider) (model.SAMLProvider, error)
+}
+
+var errSAMLIdentifierAlreadyConsumed = errors.New("SAML response or assertion identifier has already been consumed")
+
+// ConsumeSAMLIdentifiers atomically records a SAML response ID and assertion ID.
+// It returns true only when neither identifier has previously been consumed.
+func (s *BloodhoundDB) ConsumeSAMLIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) (bool, error) {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Exec(`
+			INSERT INTO saml_consumed_identifiers (
+				sso_provider_id,
+				idp_issuer,
+				identifier_type,
+				identifier,
+				expires_at
+			)
+			VALUES
+				(?, ?, 'response', ?, ?),
+				(?, ?, 'assertion', ?, ?)
+			ON CONFLICT DO NOTHING
+		`,
+			ssoProviderID, idpIssuer, responseID, expiresAt,
+			ssoProviderID, idpIssuer, assertionID, expiresAt,
+		)
+
+		if err := CheckError(result); err != nil {
+			return err
+		} else if result.RowsAffected != 2 {
+			return errSAMLIdentifierAlreadyConsumed
+		}
+
+		return nil
+	})
+
+	if errors.Is(err, errSAMLIdentifierAlreadyConsumed) {
+		return false, nil
+	}
+
+	return err == nil, err
 }
 
 // CreateSAMLIdentityProvider creates a new saml_providers row using the data in the input struct

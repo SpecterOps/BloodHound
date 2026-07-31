@@ -104,6 +104,21 @@ func (mr *MockDatabaseMockRecorder) Close(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), ctx)
 }
 
+// ConsumeSAMLIdentifiers mocks base method.
+func (m *MockDatabase) ConsumeSAMLIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConsumeSAMLIdentifiers", ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConsumeSAMLIdentifiers indicates an expected call of ConsumeSAMLIdentifiers.
+func (mr *MockDatabaseMockRecorder) ConsumeSAMLIdentifiers(ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsumeSAMLIdentifiers", reflect.TypeOf((*MockDatabase)(nil).ConsumeSAMLIdentifiers), ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt)
+}
+
 // CountAllIngestTasks mocks base method.
 func (m *MockDatabase) CountAllIngestTasks(ctx context.Context) (int64, error) {
 	m.ctrl.T.Helper()

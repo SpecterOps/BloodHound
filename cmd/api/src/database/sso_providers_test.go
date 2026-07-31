@@ -21,6 +21,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -29,6 +30,51 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestBloodhoundDB_ConsumeSAMLIdentifiers(t *testing.T) {
+	var (
+		testCtx   = context.Background()
+		dbInst    = integration.SetupDB(t)
+		expiresAt = time.Now().UTC().Add(time.Minute)
+	)
+	defer dbInst.Close(testCtx)
+
+	ssoProvider, err := dbInst.CreateSSOProvider(testCtx, "SAML Replay Provider", model.SessionAuthProviderSAML, model.SSOProviderConfig{})
+	require.NoError(t, err)
+
+	isFirstUse, err := dbInst.ConsumeSAMLIdentifiers(
+		testCtx,
+		ssoProvider.ID,
+		"https://idp.example.com",
+		"response-id",
+		"assertion-id",
+		expiresAt,
+	)
+	require.NoError(t, err)
+	require.True(t, isFirstUse)
+
+	isFirstUse, err = dbInst.ConsumeSAMLIdentifiers(
+		testCtx,
+		ssoProvider.ID,
+		"https://idp.example.com",
+		"response-id",
+		"different-assertion-id",
+		expiresAt,
+	)
+	require.NoError(t, err)
+	require.False(t, isFirstUse)
+
+	isFirstUse, err = dbInst.ConsumeSAMLIdentifiers(
+		testCtx,
+		ssoProvider.ID,
+		"https://idp.example.com",
+		"different-response-id",
+		"assertion-id",
+		expiresAt,
+	)
+	require.NoError(t, err)
+	require.False(t, isFirstUse)
+}
 
 func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 	var (

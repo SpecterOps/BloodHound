@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
@@ -39,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	samlservice "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/headers"
@@ -488,7 +490,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		)
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
-	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
+	} else if validatedResponse, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):
@@ -509,7 +511,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		}
 		// SAML credentials issue scenario (authentication failed)
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response: Failed to parse ACS response %s", err.Error()))
-	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
+	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(validatedResponse.Assertion); err != nil {
 		slog.WarnContext(
 			request.Context(),
 			"[SAML] Failed to lookup user for SAML provider",
@@ -518,9 +520,32 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		)
 		// SAML credentials issue scenario again
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
+	} else if isFirstUse, err := s.db.ConsumeSAMLIdentifiers(
+		request.Context(),
+		ssoProvider.ID,
+		validatedResponse.Assertion.Issuer.Value,
+		validatedResponse.ResponseID,
+		validatedResponse.Assertion.ID,
+		getSAMLIdentifierExpiration(validatedResponse),
+	); err != nil {
+		slog.ErrorContext(
+			request.Context(),
+			"[SAML] Failed to record consumed SAML response identifiers",
+			slog.Int("sso_provider_id", int(ssoProvider.ID)),
+			attr.Error(err),
+		)
+		// Replay protection must fail closed when the shared store is unavailable.
+		api.RedirectToLoginURL(response, request, "Your SSO connection failed, please try again")
+	} else if !isFirstUse {
+		slog.WarnContext(
+			request.Context(),
+			"[SAML] Replayed SAML response rejected",
+			slog.Int("sso_provider_id", int(ssoProvider.ID)),
+		)
+		api.RedirectToLoginURL(response, request, "Invalid SSO response")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db, s.DogTags); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, validatedResponse.Assertion, s.db, s.DogTags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(
 					request.Context(),
@@ -532,6 +557,52 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 
 		s.authenticator.CreateSSOSession(request, response, principalName, ssoProvider)
 	}
+}
+
+func getSAMLIdentifierExpiration(validatedResponse *samlservice.ValidatedResponse) time.Time {
+	var (
+		now                  = time.Now().UTC()
+		identifierExpiration time.Time
+		expirationCandidates []time.Time
+	)
+
+	if !validatedResponse.ResponseIssueInstant.IsZero() {
+		expirationCandidates = append(expirationCandidates, validatedResponse.ResponseIssueInstant.Add(saml.MaxIssueDelay))
+	}
+
+	if assertion := validatedResponse.Assertion; assertion != nil {
+		if !assertion.IssueInstant.IsZero() {
+			expirationCandidates = append(expirationCandidates, assertion.IssueInstant.Add(saml.MaxIssueDelay))
+		}
+
+		if assertion.Conditions != nil && !assertion.Conditions.NotOnOrAfter.IsZero() {
+			expirationCandidates = append(expirationCandidates, assertion.Conditions.NotOnOrAfter.Add(saml.MaxClockSkew))
+		}
+
+		if assertion.Subject != nil {
+			for _, subjectConfirmation := range assertion.Subject.SubjectConfirmations {
+				if !subjectConfirmation.SubjectConfirmationData.NotOnOrAfter.IsZero() {
+					expirationCandidates = append(expirationCandidates, subjectConfirmation.SubjectConfirmationData.NotOnOrAfter.Add(saml.MaxClockSkew))
+				}
+			}
+		}
+	}
+
+	for _, expirationCandidate := range expirationCandidates {
+		if identifierExpiration.IsZero() || expirationCandidate.Before(identifierExpiration) {
+			identifierExpiration = expirationCandidate
+		}
+	}
+
+	if identifierExpiration.IsZero() {
+		return now.Add(saml.MaxIssueDelay)
+	}
+
+	if identifierExpiration.Before(now) {
+		return now
+	}
+
+	return identifierExpiration
 }
 
 func jitSAMLUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, principalName string, assertion *saml.Assertion, u jitUserUpserter, dogTagsService dogtags.Service) error {
