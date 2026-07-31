@@ -34,62 +34,53 @@ import (
 // based on the fiscal year start month (1=Jan, 2=Feb, etc.)
 func calculateLastFiscalQuarter(fiscalStartMonth int) (time.Time, time.Time) {
 	var (
-		now          = time.Now()
-		currentMonth = int(now.Month())
-		currentYear  = now.Year()
+		now         = time.Now()
+		currentYear = now.Year()
 	)
 
-	// Calculate which quarter we're currently in based on fiscal start
-	// and determine the previous complete quarter
-	var quarterStartMonth int
-	var startYear, endYear int
+	// Use absolute month arithmetic (months since year 0)
+	// This eliminates wraparound branches and simplifies year calculations
+	currentMonthAbs := currentYear*12 + int(now.Month())
+	fiscalStartMonthAbs := currentYear*12 + fiscalStartMonth
 
-	// Normalize current month relative to fiscal year start
-	// e.g., if fiscal starts in Feb (2), and we're in Apr (4), we're 2 months into FY
-	monthsIntoFY := currentMonth - fiscalStartMonth
-	if monthsIntoFY < 0 {
-		monthsIntoFY += 12
+	// If we haven't reached this year's fiscal start, use last year's
+	if currentMonthAbs < fiscalStartMonthAbs {
+		fiscalStartMonthAbs -= 12
 	}
 
-	// Determine which quarter just completed
-	// Quarters are 3 months each: Q1 (0-2), Q2 (3-5), Q3 (6-8), Q4 (9-11)
-	completedQuarter := (monthsIntoFY - 1) / 3 // -1 because we want the *completed* quarter
+	// Calculate months into current fiscal year
+	monthsIntoFY := currentMonthAbs - fiscalStartMonthAbs
 
-	if completedQuarter < 0 {
-		// We're in the first quarter of the FY, so last complete quarter is Q4 of previous FY
-		completedQuarter = 3
-		if fiscalStartMonth == 1 {
-			startYear = currentYear - 1
-		} else if currentMonth < fiscalStartMonth {
-			startYear = currentYear - 1
-		} else {
-			startYear = currentYear
-		}
-	} else {
-		// We're past Q1, so the completed quarter is in the current FY
-		if currentMonth < fiscalStartMonth {
-			startYear = currentYear - 1
-		} else {
-			startYear = currentYear
-		}
+	// Determine last completed quarter (0-3)
+	// Subtract 1 because we want the *completed* quarter
+	completedQuarterInFY := (monthsIntoFY - 1) / 3
+	if completedQuarterInFY < 0 {
+		// We're in Q1, so last complete quarter is Q4 of previous FY
+		completedQuarterInFY = 3
+		fiscalStartMonthAbs -= 12
 	}
 
-	// Calculate the start month of the completed quarter
-	quarterStartMonth = fiscalStartMonth + (completedQuarter * 3)
-	if quarterStartMonth > 12 {
-		quarterStartMonth -= 12
-		startYear++
+	// Calculate absolute month for quarter start
+	quarterStartAbs := fiscalStartMonthAbs + (completedQuarterInFY * 3)
+
+	// Convert back to year/month
+	startYear := quarterStartAbs / 12
+	quarterStartMonth := quarterStartAbs % 12
+	if quarterStartMonth == 0 {
+		quarterStartMonth = 12
+		startYear--
 	}
 
-	// Start of quarter
+	// Start of quarter (first day, 00:00:00 UTC)
 	start := time.Date(startYear, time.Month(quarterStartMonth), 1, 0, 0, 0, 0, time.UTC)
 
-	// End of quarter (last day of third month at 23:59:59)
-	endMonth := quarterStartMonth + 2
-	endYear = startYear
-	if endMonth > 12 {
-		endMonth -= 12
-		endYear++
+	// End of quarter (last second of third month)
+	quarterEndAbs := quarterStartAbs + 2
+	endYear := quarterEndAbs / 12
+	endMonth := quarterEndAbs % 12
+	if endMonth == 0 {
+		endMonth = 12
+		endYear--
 	}
 
 	// Last second of the last day of the month
