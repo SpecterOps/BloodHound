@@ -238,7 +238,7 @@ const ImportQueryDialog: React.FC<{
                                 <DialogClose asChild>
                                     <TextButton>Cancel</TextButton>
                                 </DialogClose>
-                                <TextButton fontColor='primary' onClick={handleSubmit} disabled={submitDialogDisabled}>
+                                <TextButton onClick={handleSubmit} disabled={submitDialogDisabled}>
                                     Upload
                                 </TextButton>
                             </>

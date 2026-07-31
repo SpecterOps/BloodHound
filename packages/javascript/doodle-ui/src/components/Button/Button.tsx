@@ -31,8 +31,7 @@ const primaryClasses = [
     'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
-    'active:bg-[#0D0A30]',
-    'dark:active:bg-[#8D8BF8]',
+    'active:bg-[#0D0A30] dark:active:bg-[#8D8BF8]',
     // Implement text-common when token experiment is ready - #0D0A30 matches light.primary.variant, #8D8BF8 matches dark.primary.variant.
     'disabled:shadow-none disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
     // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)

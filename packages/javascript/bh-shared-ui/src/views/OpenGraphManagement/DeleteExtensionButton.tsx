@@ -76,10 +76,10 @@ export const ConfirmDeleteExtensionDialog: FC<{
                         </div>
                     </DialogDescription>
                     <DialogActions>
-                        <TextButton fontColor='primary' onClick={handleCancel} disabled={isDeleting}>
+                        <TextButton onClick={handleCancel} disabled={isDeleting}>
                             Cancel
                         </TextButton>
-                        <TextButton onClick={handleAccept} disabled={isConfirmDisabled}>
+                        <TextButton fontColor='primary' onClick={handleAccept} disabled={isConfirmDisabled}>
                             Confirm
                         </TextButton>
                     </DialogActions>

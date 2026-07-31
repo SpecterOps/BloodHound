@@ -118,11 +118,14 @@ const FilterDialog: FC<{
                         </div>
 
                         <DialogActions>
-                            <TextButton fontColor='primary' className='pr-2' onClick={closeDialog}>
+                            <TextButton className='pr-2' onClick={closeDialog}>
                                 Cancel
                             </TextButton>
 
-                            <TextButton data-testid='file_ingest_log-filter_dialog_confirm' onClick={handleConfirm}>
+                            <TextButton
+                                fontColor='primary'
+                                data-testid='file_ingest_log-filter_dialog_confirm'
+                                onClick={handleConfirm}>
                                 Confirm
                             </TextButton>
                         </DialogActions>
