@@ -19,7 +19,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -53,10 +52,6 @@ type MarkdownView struct {
 	Content string `json:"content"`
 }
 
-type kindInfoContentView struct {
-	Markdown MarkdownView `json:"markdown"`
-}
-
 // NodeView is the JSON shape returned by the node handlers. It is
 // decoupled from services.Node so the wire format can evolve independently of
 // the domain model.
@@ -67,9 +62,7 @@ type NodeView struct {
 	KindInfos  []KindInfoView `json:"info,omitempty"`
 }
 
-func BuildNodeView(node services.Node, includeInfo bool) (NodeView, error) {
-	var markdownErr error
-
+func BuildNodeView(node services.Node, includeInfo bool) NodeView {
 	kinds := []NodeKindView{}
 
 	for _, kind := range node.Kinds {
@@ -91,32 +84,19 @@ func BuildNodeView(node services.Node, includeInfo bool) (NodeView, error) {
 				continue
 			}
 
-			markdown, err := buildMarkdownView(kindInfo.Content)
-			if err != nil {
-				markdownErr = errors.Join(markdownErr, err)
-			}
-
 			nodeView.KindInfos = append(nodeView.KindInfos, KindInfoView{
 				Name:       kindInfo.InfoKey,
 				Title:      kindInfo.Title,
 				Position:   kindInfo.Position,
 				NodeKindID: int(*kindInfo.NodeKindID),
-				Markdown:   markdown,
+				Markdown: MarkdownView{
+					Content: kindInfo.RenderedMarkdown,
+				},
 			})
 		}
 	}
 
-	return nodeView, markdownErr
-}
-
-func buildMarkdownView(content json.RawMessage) (MarkdownView, error) {
-	var contentView kindInfoContentView
-
-	if err := json.Unmarshal(content, &contentView); err != nil {
-		return MarkdownView{}, fmt.Errorf("unmarshalling markdown content: %w", err)
-	}
-
-	return contentView.Markdown, nil
+	return nodeView
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -146,16 +126,28 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 
 	if nodeID, err := strconv.ParseInt(nodeIDRaw, 10, 64); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
-	} else if node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
-		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
-	} else if err != nil {
-		responses.WriteInternalServerError(ctx, err, response)
-	} else if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
-		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
-	} else if nodeView, markdownErr := BuildNodeView(node, includeInfo); markdownErr != nil {
-		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
-		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)
 	} else {
-		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)
+		node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo)
+		if errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
+			responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
+			return
+		}
+
+		if err != nil {
+			var renderErrors services.KindInfoRenderErrors
+			if !errors.As(err, &renderErrors) {
+				responses.WriteInternalServerError(ctx, err, response)
+				return
+			}
+
+			slog.WarnContext(ctx, "Failed to render node kind info markdown", attr.Error(renderErrors))
+		}
+
+		if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
+			responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+			return
+		}
+
+		responses.WriteBasic(ctx, BuildNodeView(node, includeInfo), http.StatusOK, response)
 	}
 }

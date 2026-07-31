@@ -19,6 +19,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -59,6 +60,20 @@ type RelationshipKindInfoView struct {
 	Position           int32        `json:"position"`
 	RelationshipKindID int          `json:"relationship_kind_id"`
 	Markdown           MarkdownView `json:"markdown"`
+}
+
+type kindInfoContentView struct {
+	Markdown MarkdownView `json:"markdown"`
+}
+
+func buildMarkdownView(content json.RawMessage) (MarkdownView, error) {
+	var contentView kindInfoContentView
+
+	if err := json.Unmarshal(content, &contentView); err != nil {
+		return MarkdownView{}, fmt.Errorf("unmarshalling markdown content: %w", err)
+	}
+
+	return contentView.Markdown, nil
 }
 
 // BuildRelationshipView projects a services.Relationship into the view type the handlers

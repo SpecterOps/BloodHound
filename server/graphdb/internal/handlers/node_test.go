@@ -60,11 +60,12 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			Properties: map[string]any{"name": "admin"},
 			KindInfos: []services.KindInfo{
 				{
-					InfoKey:    "overview",
-					Title:      "Overview",
-					Position:   0,
-					NodeKindID: int32Ptr(1),
-					Content:    json.RawMessage(`{"markdown":{"content":"one"}}`),
+					InfoKey:          "overview",
+					Title:            "Overview",
+					Position:         0,
+					NodeKindID:       int32Ptr(1),
+					Content:          json.RawMessage(`{"markdown":{"content":"one"}}`),
+					RenderedMarkdown: "one",
 				},
 			},
 		}

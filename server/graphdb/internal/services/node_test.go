@@ -18,6 +18,7 @@ package services_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -170,4 +171,36 @@ func TestService_GetNode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestService_GetNode_RendersKindInfoMarkdown(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		nodeID     = int64(123)
+		nodeKindID = int32(7)
+		node       = services.Node{
+			ID:         nodeID,
+			Kinds:      []services.Kind{{Name: "User"}},
+			Properties: map[string]any{"name": "alice"},
+		}
+	)
+
+	databaseMock := mocks.NewMockDatabase(t)
+	databaseMock.EXPECT().GetNode(ctx, nodeID).Return(node, nil)
+	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string{"User"}).Return([]services.Kind{
+		{ID: &nodeKindID, Name: "User"},
+	}, nil)
+	databaseMock.EXPECT().GetKindInfos(ctx, "User").Return([]services.KindInfo{
+		{
+			InfoKey:    "overview",
+			NodeKindID: &nodeKindID,
+			Content:    json.RawMessage(`{"markdown":{"content":"Node {{ .NodeID }}: {{ .Properties.name | upper }}"}}`),
+		},
+	}, nil)
+
+	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+
+	require.NoError(t, err)
+	require.Len(t, result.KindInfos, 1)
+	assert.Equal(t, "Node 123: ALICE", result.KindInfos[0].RenderedMarkdown)
 }

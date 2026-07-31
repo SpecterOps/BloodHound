@@ -19,6 +19,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"text/template"
 
@@ -38,6 +39,20 @@ type NodeContext struct {
 type KindContext struct {
 	KindID *int32
 	Name   string
+}
+
+// KindInfoRenderErrors reports non-fatal errors encountered while rendering
+// kind info.
+type KindInfoRenderErrors struct {
+	Err error
+}
+
+func (s KindInfoRenderErrors) Error() string {
+	return s.Err.Error()
+}
+
+func (s KindInfoRenderErrors) Unwrap() error {
+	return s.Err
 }
 
 // String lets template helpers such as join render kinds by name rather than
@@ -126,4 +141,36 @@ func newNodeContext(node Node) NodeContext {
 		Kinds:      kinds,
 		Properties: node.Properties,
 	}
+}
+
+func renderNodeKindInfos(node *Node) error {
+	nodeContext := newNodeContext(*node)
+	var renderErrors []error
+
+	for index := range node.KindInfos {
+		if len(node.KindInfos[index].Content) == 0 {
+			continue
+		}
+
+		renderedMarkdown, err := renderNodeKindInfoMarkdown(
+			node.KindInfos[index].Content,
+			nodeContext,
+		)
+		if err != nil {
+			renderErrors = append(renderErrors, fmt.Errorf(
+				"rendering kind info %s: %w",
+				node.KindInfos[index].InfoKey,
+				err,
+			))
+			continue
+		}
+
+		node.KindInfos[index].RenderedMarkdown = renderedMarkdown
+	}
+
+	if len(renderErrors) > 0 {
+		return KindInfoRenderErrors{Err: errors.Join(renderErrors...)}
+	}
+
+	return nil
 }
