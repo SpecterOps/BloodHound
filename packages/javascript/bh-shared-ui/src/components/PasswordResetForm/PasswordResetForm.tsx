@@ -130,7 +130,7 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
                     </Button>
                     <Box mt={2}>
                         <Button
-                            variant='tertiary'
+                            variant='secondary'
                             size='large'
                             type='button'
                             onClick={handleCancel}

@@ -53,7 +53,7 @@ const TagToZoneLabel: FC<TagToZoneLabelProps> = (props) => {
         <>
             <Popover>
                 <PopoverTrigger disabled={!selectedQuery && !cypherQuery}>
-                    <Button variant='secondary' asChild size='small'>
+                    <Button variant='secondary' asChild size='small' aria-label='Tag'>
                         <div>
                             <span className='mr-2 text-base'>Tag</span>
                             <AppIcon.CaretDown size={10} />

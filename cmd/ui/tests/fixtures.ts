@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { test as playwrightTest } from 'bh-playwright-testing';
-import { installGraphHasDataStub } from 'bh-playwright-testing/stubs/graph-has-data';
+import { installGraphHasDataStub } from 'bh-playwright-testing/stubs';
 
 // Wraps `bh-playwright-testing`'s `test` with a `page` fixture that installs the shared cypher
 // stub so `useGraphHasData` resolves to "true" and the "No Data Available" upload dialog never

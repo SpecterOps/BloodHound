@@ -74,6 +74,9 @@ type IngestContext struct {
 	seenKinds        map[string]struct{}
 	// RetainIngestedFiles determines if the service should clean up working files after ingest
 	RetainIngestedFiles bool
+	// UseRawObjectIDs determines whether object identifiers are stored exactly as ingested
+	// (true) or uppercased to match legacy behavior (false)
+	UseRawObjectIDs bool
 }
 
 func NewIngestContext(ctx context.Context, opts ...IngestOption) *IngestContext {
@@ -137,6 +140,12 @@ func WithBatchUpdater(batchUpdater BatchUpdater) IngestOption {
 func WithJobId(jobId int64) IngestOption {
 	return func(s *IngestContext) {
 		s.JobId = jobId
+	}
+}
+
+func WithUseRawObjectIDs(useRawObjectIDs bool) IngestOption {
+	return func(s *IngestContext) {
+		s.UseRawObjectIDs = useRawObjectIDs
 	}
 }
 
@@ -429,7 +438,9 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 				return err
 			}
 			slog.Debug("No nodes found in opengraph payload; continuing to edges")
-		} else if err := DecodeGenericData(batch, decoder, sourceKind, ConvertGenericNode); err != nil {
+		} else if err := DecodeGenericData(batch, decoder, sourceKind, func(entity ein.GenericNode, converted *ConvertedData) error {
+			return ConvertGenericNode(entity, converted, batch.UseRawObjectIDs)
+		}); err != nil {
 			return err
 		}
 

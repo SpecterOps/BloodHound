@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,14 @@ func noopRateLimit() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler { return next }
 }
 
+func dogTagsService(etacEnabled bool) dogtags.Service {
+	return dogtags.NewTestService(dogtags.TestOverrides{
+		Bools: map[dogtags.BoolDogTag]bool{
+			dogtags.ETAC_ENABLED: etacEnabled,
+		},
+	})
+}
+
 func TestRegister_PanicsOnNilRouter(t *testing.T) {
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
@@ -44,6 +53,7 @@ func TestRegister_PanicsOnNilRouter(t *testing.T) {
 			Pool:                new(pgxpool.Pool),
 			Graph:               &graph.DatabaseSwitch{},
 			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		})
 	})
 }
@@ -61,6 +71,7 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 			Pool:                nil,
 			Graph:               &graph.DatabaseSwitch{},
 			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		})
 	})
 }
@@ -78,6 +89,7 @@ func TestRegister_PanicsOnNilGraph(t *testing.T) {
 			Pool:                new(pgxpool.Pool),
 			Graph:               nil,
 			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		})
 	})
 }
@@ -95,6 +107,25 @@ func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
 			Pool:                new(pgxpool.Pool),
 			Graph:               &graph.DatabaseSwitch{},
 			RateLimitMiddleware: nil,
+			DogTags:             dogTagsService(false),
+		})
+	})
+}
+
+func TestRegister_PanicsOnNilDogTags(t *testing.T) {
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.Panics(t, func() {
+		modules.Register(modules.Deps{
+			Router:              &routerInst,
+			Pool:                new(pgxpool.Pool),
+			Graph:               &graph.DatabaseSwitch{},
+			RateLimitMiddleware: noopRateLimit,
+			DogTags:             nil,
 		})
 	})
 }
@@ -113,6 +144,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 			Pool:                new(pgxpool.Pool),
 			Graph:               &graph.DatabaseSwitch{},
 			RateLimitMiddleware: noopRateLimit,
+			DogTags:             dogTagsService(false),
 		}
 	)
 
@@ -127,6 +159,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		{"feature flags list", http.MethodGet, "/api/v2/features"},
 		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},
 		{"relationship request", http.MethodGet, "/api/v2/relationships/1"},
+		{"node kind request", http.MethodGet, "/api/v2/node-kinds/1"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var (

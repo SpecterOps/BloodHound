@@ -32,7 +32,7 @@ const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, cla
     );
 
     return tip ? (
-        <Tooltip tooltip={tip} contentProps={{ side: 'bottom' }}>
+        <Tooltip tooltip={tip} contentProps={{ side: 'bottom', align: 'start' }}>
             {icon}
         </Tooltip>
     ) : (

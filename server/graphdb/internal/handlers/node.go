@@ -19,10 +19,13 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -38,6 +41,22 @@ type NodeKindView struct {
 	Name       string `json:"name"`
 }
 
+type KindInfoView struct {
+	Name       string       `json:"name"`
+	Title      string       `json:"title"`
+	Position   int32        `json:"position"`
+	NodeKindID int          `json:"node_kind_id"`
+	Markdown   MarkdownView `json:"markdown"`
+}
+
+type MarkdownView struct {
+	Content string `json:"content"`
+}
+
+type kindInfoContentView struct {
+	Markdown MarkdownView `json:"markdown"`
+}
+
 // NodeView is the JSON shape returned by the node handlers. It is
 // decoupled from services.Node so the wire format can evolve independently of
 // the domain model.
@@ -45,12 +64,13 @@ type NodeView struct {
 	NodeID     int64          `json:"node_id"`
 	Kinds      []NodeKindView `json:"kinds"`
 	Properties map[string]any `json:"properties"`
+	KindInfos  []KindInfoView `json:"info,omitempty"`
 }
 
-// BuildNodeView projects a services.Node into the view type the handlers
-// return in their JSON envelope.
-func BuildNodeView(node services.Node) NodeView {
-	var kinds []NodeKindView
+func BuildNodeView(node services.Node, includeInfo bool) (NodeView, error) {
+	var markdownErr error
+
+	kinds := []NodeKindView{}
 
 	for _, kind := range node.Kinds {
 		kinds = append(kinds, NodeKindView{
@@ -59,11 +79,44 @@ func BuildNodeView(node services.Node) NodeView {
 		})
 	}
 
-	return NodeView{
+	nodeView := NodeView{
 		NodeID:     node.ID,
 		Kinds:      kinds,
 		Properties: node.Properties,
 	}
+
+	if includeInfo {
+		for _, kindInfo := range node.KindInfos {
+			if kindInfo.NodeKindID == nil {
+				continue
+			}
+
+			markdown, err := buildMarkdownView(kindInfo.Content)
+			if err != nil {
+				markdownErr = errors.Join(markdownErr, err)
+			}
+
+			nodeView.KindInfos = append(nodeView.KindInfos, KindInfoView{
+				Name:       kindInfo.InfoKey,
+				Title:      kindInfo.Title,
+				Position:   kindInfo.Position,
+				NodeKindID: int(*kindInfo.NodeKindID),
+				Markdown:   markdown,
+			})
+		}
+	}
+
+	return nodeView, markdownErr
+}
+
+func buildMarkdownView(content json.RawMessage) (MarkdownView, error) {
+	var contentView kindInfoContentView
+
+	if err := json.Unmarshal(content, &contentView); err != nil {
+		return MarkdownView{}, fmt.Errorf("unmarshalling markdown content: %w", err)
+	}
+
+	return contentView.Markdown, nil
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -77,17 +130,32 @@ func (s NodeView) JSONView() ([]byte, error) {
 // node or its kinds cannot be found, and 200 with the node details otherwise.
 func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx       = request.Context()
-		rawNodeID = mux.Vars(request)[URIPathVariableNodeID]
+		ctx            = request.Context()
+		nodeIDRaw      = mux.Vars(request)[URIPathVariableNodeID]
+		includeInfoRaw = request.URL.Query().Get("include-info")
+		includeInfo    bool
+		err            error
 	)
 
-	if nodeID, err := strconv.ParseInt(rawNodeID, 10, 64); err != nil {
+	if includeInfoRaw != "" {
+		if includeInfo, err = strconv.ParseBool(includeInfoRaw); err != nil {
+			responses.WriteError(ctx, http.StatusBadRequest, "include-info is malformed", response)
+			return
+		}
+	}
+
+	if nodeID, err := strconv.ParseInt(nodeIDRaw, 10, 64); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
-	} else if node, err := s.graphDB.GetNode(ctx, nodeID); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
+	} else if node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
 	} else if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
+	} else if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+	} else if nodeView, markdownErr := BuildNodeView(node, includeInfo); markdownErr != nil {
+		slog.WarnContext(ctx, "Failed to parse node kind info markdown content", attr.Error(markdownErr))
+		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)
 	} else {
-		responses.WriteBasic(ctx, BuildNodeView(node), http.StatusOK, response)
+		responses.WriteBasic(ctx, nodeView, http.StatusOK, response)
 	}
 }

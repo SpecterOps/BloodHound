@@ -16,8 +16,7 @@
 
 import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
-import { useAssetGroupTagInfo, useMemberInfo, useRuleInfo } from '../../../../hooks';
-import { EntityKinds } from '../../../../utils';
+import { useAssetGroupTagInfo, useGetNodeById, useMemberInfo, useRuleInfo } from '../../../../hooks';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import DynamicDetails from '../DynamicDetails';
 import EntityRulesInformation from '../EntityRulesInformation';
@@ -40,20 +39,15 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
     const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const memberQuery = useMemberInfo(tagId, memberId);
+    const { data: selectedNode } = useGetNodeById(memberQuery.data?.id);
 
     if (memberQuery?.data && currentDetailsTab === ObjectTabValue) {
-        const selectedNode = {
-            graphId: memberQuery.data.id.toString(),
-            id: memberQuery.data.object_id,
-            name: memberQuery.data.name,
-            type: memberQuery.data.primary_kind as EntityKinds,
-        };
         return (
             <div className='h-full'>
                 <EntityInfoPanel
+                    selectedNode={selectedNode}
                     showPlaceholderMessage={true}
                     DataTable={EntityInfoDataTable}
-                    selectedNode={selectedNode}
                     additionalTables={[
                         {
                             sectionProps: { id: memberQuery.data.object_id, label: 'Rules' },

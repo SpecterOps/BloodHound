@@ -21,6 +21,7 @@ import {
     ExploreTable,
     FeatureFlag,
     GraphControls,
+    GraphItemInformationPanel,
     GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
@@ -29,7 +30,7 @@ import {
     baseGraphLayouts,
     defaultGraphLayout,
     glyphUtils,
-    isNode,
+    isNodeResponse,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
     useAppName,
@@ -64,7 +65,6 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
-import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
@@ -310,13 +310,13 @@ const GraphView: FC = () => {
                 flagKey='tier_management_engine'
                 enabled={
                     <ContextMenuPrivilegeZonesEnabled
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        contextMenu={isNodeResponse(selectedItemQuery.data) ? contextMenu : null}
                         onClose={handleCloseContextMenu}
                     />
                 }
                 disabled={
                     <ContextMenu
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        contextMenu={isNodeResponse(selectedItemQuery.data) ? contextMenu : null}
                         handleClose={handleCloseContextMenu}
                     />
                 }
