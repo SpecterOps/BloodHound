@@ -78,20 +78,7 @@ export const useMultiValueFilterParams = ({
         });
     };
 
-    const handleValuesChange = (options: MultiSelectOption[], newVal: any) => {
-        if (newVal.length === options.length) {
-            setSelection({ kind: 'all' });
-        } else if (newVal.length === 0) {
-            setSelection({ kind: 'none' });
-        } else {
-            setSelection({
-                kind: 'some',
-                values: newVal,
-            });
-        }
-    };
-
-    return { selection, setSelection, handleValuesChange };
+    return { selection, setSelection };
 };
 
 export const getValuesFromSelection = (selection: MultiValueSelection, options: MultiSelectOption[]) => {
@@ -102,4 +89,17 @@ export const getValuesFromSelection = (selection: MultiValueSelection, options: 
     if (selection.kind === 'none') return [];
 
     return [];
+};
+
+export const getNextSelection = (newVal: any, options: MultiSelectOption[]) => {
+    if (newVal.length === options.length) {
+        return { kind: 'all' };
+    } else if (newVal.length === 0) {
+        return { kind: 'none' };
+    } else {
+        return {
+            kind: 'some',
+            values: newVal,
+        };
+    }
 };
