@@ -123,10 +123,7 @@ const FilterDialog: FC<{
                                 Cancel
                             </TextButton>
 
-                            <TextButton
-                                data-testid='file_ingest_log-filter_dialog_confirm'
-                                onClick={handleConfirm}
-                                type='submit'>
+                            <TextButton data-testid='file_ingest_log-filter_dialog_confirm' onClick={handleConfirm}>
                                 Confirm
                             </TextButton>
                         </DialogActions>
