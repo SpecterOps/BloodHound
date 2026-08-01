@@ -1,0 +1,6 @@
+# Toolchain versions for this fork, read by mise / asdf (`mise install` or `asdf install`).
+# Kept in sync with CI (.github/workflows use node 22) and go.mod (go 1.26.4).
+# yarn is intentionally NOT pinned here — it is managed by Corepack via the
+# "packageManager" field in package.json (yarn@4.13.0). See docs/racfhound/MAINTAINING.md.
+nodejs 22
+golang 1.26.4
