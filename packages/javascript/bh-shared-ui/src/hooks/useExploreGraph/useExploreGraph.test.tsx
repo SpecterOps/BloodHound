@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { renderHook } from '@testing-library/react';
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { ExploreQueryParams } from '../useExploreParams';
 import { exploreGraphQueryFactory, useUserSettings } from './useExploreGraph';
 
@@ -33,7 +34,7 @@ describe('useExploreGraph', () => {
 
             const userSettings = {};
 
-            const queryContext = exploreGraphQueryFactory(paramOptions, userSettings);
+            const queryContext = exploreGraphQueryFactory(paramOptions, { userSettings });
 
             const config = queryContext.getQueryConfig();
             expect(config).toStrictEqual({ enabled: false });
@@ -43,7 +44,7 @@ describe('useExploreGraph', () => {
             const paramOptions: Partial<ExploreQueryParams> = { searchType: 'node', primarySearch: 'test1' };
             const userSettings = {};
 
-            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+            const context = exploreGraphQueryFactory(paramOptions, { userSettings });
 
             const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('node');
@@ -58,7 +59,7 @@ describe('useExploreGraph', () => {
 
             const userSettings = {};
 
-            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+            const context = exploreGraphQueryFactory(paramOptions, { userSettings });
 
             const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('pathfinding');
@@ -74,7 +75,7 @@ describe('useExploreGraph', () => {
 
                 const userSettings = {};
 
-                const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                const context = exploreGraphQueryFactory(paramOptions, { userSettings });
                 const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
@@ -106,7 +107,7 @@ describe('useExploreGraph', () => {
 
                         const userSettings = {};
 
-                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
+                        const context = exploreGraphQueryFactory(paramOptions, { userSettings });
                         const query = context.getQueryConfig();
 
                         expect(query.enabled).toBeFalsy();
@@ -116,52 +117,95 @@ describe('useExploreGraph', () => {
         });
 
         describe('composition search queries', () => {
-            it('returns query config when searchType is composition and all required params are passed', () => {
-                const paramOptions: Partial<ExploreQueryParams> = {
-                    searchType: 'composition',
-                    relationshipQueryItemId: 'rel_1234_member_5678',
-                };
+            const mockRelationshipDetails: RelationshipDetailsWithInfo = {
+                relationship_id: 99,
+                kind: { relationship_kind_id: 1, name: 'MemberOf' },
+                source_node_id: 1234,
+                target_node_id: 5678,
+                properties: { is_traversable: true, lastSeen: '2024-01-01' },
+            };
 
+            it('returns query config when searchType is composition and valid RelationshipDetailsWithInfo is provided', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'composition' };
                 const userSettings = {};
 
-                const context = exploreGraphQueryFactory(paramOptions, userSettings);
-
+                const context = exploreGraphQueryFactory(paramOptions, {
+                    userSettings,
+                    relationshipDetails: mockRelationshipDetails,
+                });
                 const query = context.getQueryConfig();
 
                 expect(query.enabled).toBeUndefined();
                 expect(query.queryKey).toContain('composition');
             });
 
-            it.each([{ relationshipQueryItemId: 'testId' }, { searchType: 'relationship' }])(
-                'returns disabled config when any required param is falsey',
-                ({ searchType, relationshipQueryItemId }) => {
-                    {
-                        const paramOptions: Partial<ExploreQueryParams> = {
-                            searchType,
-                            relationshipQueryItemId,
-                        } as any;
-
-                        const userSettings = {};
-
-                        const context = exploreGraphQueryFactory(paramOptions, userSettings);
-
-                        const query = context.getQueryConfig();
-                        expect(query.enabled).toBeFalsy();
-                    }
-                }
-            );
-
-            it('returns disabled if relationshipQueryItemId does not have a matching sourceId, edgeType, targetId', () => {
-                const paramOptions: Partial<ExploreQueryParams> = {
-                    searchType: 'composition',
-                    relationshipQueryItemId: 'rel_broken-member_5678',
-                };
-
+            it('includes relationship_id in the query key', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'composition' };
                 const userSettings = {};
 
-                const context = exploreGraphQueryFactory(paramOptions, userSettings);
-
+                const context = exploreGraphQueryFactory(paramOptions, {
+                    userSettings,
+                    relationshipDetails: mockRelationshipDetails,
+                });
                 const query = context.getQueryConfig();
+
+                expect(query.queryKey).toContain(mockRelationshipDetails.relationship_id.toString());
+            });
+
+            it('returns disabled config when searchType is not composition', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'relationship' };
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, {
+                    userSettings,
+                    relationshipDetails: mockRelationshipDetails,
+                });
+                const query = context.getQueryConfig();
+
+                expect(query.enabled).toBeFalsy();
+            });
+
+            it('returns disabled config when relationshipDetails is undefined', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'composition' };
+                const userSettings = {};
+
+                const context = exploreGraphQueryFactory(paramOptions, { userSettings });
+                const query = context.getQueryConfig();
+
+                expect(query.enabled).toBeFalsy();
+            });
+
+            it('returns disabled config when source_node_id is missing', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'composition' };
+                const userSettings = {};
+                const detailsWithoutSource: RelationshipDetailsWithInfo = {
+                    ...mockRelationshipDetails,
+                    source_node_id: undefined,
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions, {
+                    userSettings,
+                    relationshipDetails: detailsWithoutSource,
+                });
+                const query = context.getQueryConfig();
+
+                expect(query.enabled).toBeFalsy();
+            });
+
+            it('returns disabled config when target_node_id is missing', () => {
+                const paramOptions: Partial<ExploreQueryParams> = { searchType: 'composition' };
+                const userSettings = {};
+                const detailsWithoutTarget: RelationshipDetailsWithInfo = {
+                    ...mockRelationshipDetails,
+                    target_node_id: undefined,
+                };
+
+                const context = exploreGraphQueryFactory(paramOptions, {
+                    userSettings,
+                    relationshipDetails: detailsWithoutTarget,
+                });
+                const query = context.getQueryConfig();
+
                 expect(query.enabled).toBeFalsy();
             });
         });
@@ -173,7 +217,7 @@ describe('useExploreGraph', () => {
 
             const userSettings = {};
 
-            const context = exploreGraphQueryFactory(paramOptions, userSettings);
+            const context = exploreGraphQueryFactory(paramOptions, { userSettings });
 
             const query = context.getQueryConfig();
             expect(query?.queryKey).toContain('cypher');
@@ -186,7 +230,7 @@ describe('useExploreGraph', () => {
 
             const userSettings = {};
 
-            const query = exploreGraphQueryFactory(params, userSettings);
+            const query = exploreGraphQueryFactory(params, { userSettings });
             const result = query.getErrorMessage({ response: { status: 504 } });
             expect(result).toStrictEqual({
                 message: 'The results took too long to compute, possibly due to the complexity of the query.',
