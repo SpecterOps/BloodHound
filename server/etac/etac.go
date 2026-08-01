@@ -33,6 +33,7 @@ import (
 
 type Service interface {
 	CheckUserAccess(ctx context.Context, user users.User, environments ...string) (bool, error)
+	FilterEnvironmentsByAccess(ctx context.Context, user users.User, requestedIDs []string) ([]string, error)
 	ShouldFilterForETAC(user users.User) bool
 }
 

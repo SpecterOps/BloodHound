@@ -38,6 +38,8 @@ export { default as CommunityIcon } from './CommunityIcon';
 export * from './ConditionalTooltip';
 export * from './ConfirmationDialog';
 export { default as ConfirmationDialog } from './ConfirmationDialog';
+export * from './CopyToClipboardButton';
+export { default as CopyToClipboardButton } from './CopyToClipboardButton';
 export * from './CreateMenu';
 export { default as CreateMenu } from './CreateMenu';
 export * from './CreateUserDialog';

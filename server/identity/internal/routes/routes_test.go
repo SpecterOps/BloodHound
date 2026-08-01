@@ -48,6 +48,7 @@ func TestRegister(t *testing.T) {
 		method string
 		path   string
 	}{
+		{http.MethodGet, "/api/v2/roles"},
 		{http.MethodGet, "/api/v2/roles/1"},
 		{http.MethodGet, "/api/v2/permissions/1"},
 	} {
@@ -77,6 +78,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		method string
 		path   string
 	}{
+		{http.MethodGet, "/api/v2/roles"},
 		{http.MethodGet, "/api/v2/roles/1"},
 		{http.MethodGet, "/api/v2/permissions/1"},
 	} {

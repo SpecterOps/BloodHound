@@ -53,11 +53,11 @@ properties:
     format: int32
     description: Total failed dispatch attempts observed for this webhook.
   last_error:
-    $ref: './null.string.yaml'
+    $ref: './null.string.response.yaml'
   last_errored_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
   last_succeeded_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
   created_at:
     type: string
     format: date-time
@@ -69,6 +69,6 @@ properties:
   updated_by:
     type: string
   disabled_at:
-    $ref: './null.time.yaml'
+    $ref: './null.time.response.yaml'
   disabled_by:
-    $ref: './null.string.yaml'
+    $ref: './null.string.response.yaml'
