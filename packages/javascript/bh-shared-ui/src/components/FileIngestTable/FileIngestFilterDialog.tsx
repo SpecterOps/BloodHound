@@ -104,6 +104,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
 
             <DialogPortal>
                 <DialogContent
+                    className='text-sm'
                     DialogOverlayProps={{
                         blurBackground: true,
                     }}>
@@ -136,12 +137,9 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <UserMinimalSelect user={filters.state.user_id} onSelect={selectUser} />
                     </DialogDescription>
 
-                    <DialogActions>
+                    <DialogActions className='gap-4'>
                         <DialogClose asChild>
-                            <TextButton
-                                className='pr-2'
-                                data-testid='file_ingest_log-filter_dialog_close'
-                                type='button'>
+                            <TextButton data-testid='file_ingest_log-filter_dialog_close' type='button'>
                                 Cancel
                             </TextButton>
                         </DialogClose>

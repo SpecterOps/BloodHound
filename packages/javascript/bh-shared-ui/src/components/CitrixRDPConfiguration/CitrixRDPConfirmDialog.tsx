@@ -60,7 +60,7 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
                         Select <b>Confirm</b> to proceed. Changes will be reflected upon completion of next analysis.
                         Select <b>Cancel</b> to return to previous configuration.
                     </p>
-                    <DialogActions>
+                    <DialogActions className='gap-4'>
                         <TextButton onClick={onCancel}>Cancel</TextButton>
                         <TextButton fontColor='primary' onClick={onConfirm}>
                             Confirm

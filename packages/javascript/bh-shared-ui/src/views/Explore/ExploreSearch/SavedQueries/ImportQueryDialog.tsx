@@ -232,7 +232,7 @@ const ImportQueryDialog: React.FC<{
                         </>
                     )}
 
-                    <DialogActions className='flex justify-end gap-4'>
+                    <DialogActions className='flex justify-end gap-4 text-sm'>
                         {fileUploadStep === FileUploadStep.ADD_FILES && (
                             <>
                                 <DialogClose asChild>
