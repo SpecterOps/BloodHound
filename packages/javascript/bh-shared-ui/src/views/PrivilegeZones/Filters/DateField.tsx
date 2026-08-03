@@ -58,6 +58,7 @@ const DateField: FC<{
                             }}
                         />
                         <TextButton
+                            aria-label='clear date'
                             disabled={!field.value}
                             className={cn('w-1/12 p-0', { invisible: !field.value })}
                             onClick={() => {

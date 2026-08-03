@@ -65,7 +65,7 @@ function Calendar({
                 cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected]:not(.day-range))]:rounded-md [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-range-start)]:rounded-l-md [&:has([aria-selected].day-outside)]:bg-neutral-light-2 [&:has([aria-selected])]:bg-neutral-light-3 dark:[&:has([aria-selected])]:bg-neutral-dark-5 dark:[&:has([aria-selected].day-outside)]:bg-neutral-dark-2 dark:[&:has([aria-selected])]:bg-neutral-dark-3 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
                 day: cn(
                     TextButtonVariants(),
-                    'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:no-underline rounded-md'
+                    'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:no-underline hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-5 dark:aria-selected:text-black dark:aria-selected:hover:bg-secondary-main aria-selected:hover:bg-secondary-main aria-selected:hover:text-white rounded-md'
                 ),
                 day_range_end: 'day-range-end day-range',
                 day_range_start: 'day-range-start day-range',
