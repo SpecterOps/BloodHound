@@ -142,6 +142,29 @@ func validateKindInfoContent(content json.RawMessage) error {
 	return nil
 }
 
+// MarkdownContent extracts the inner markdown content string from the KindInfoInput's
+// Content JSON ({"markdown":{"content":"..."}}). It returns ErrInvalidKindInfoContent
+// if the content does not match the expected structure.
+func (s KindInfoInput) MarkdownContent() (string, error) {
+	var (
+		contentWrapper struct {
+			Markdown struct {
+				Content *string `json:"content"`
+			} `json:"markdown"`
+		}
+		decoder = json.NewDecoder(strings.NewReader(string(s.Content)))
+	)
+
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&contentWrapper); err != nil {
+		return "", ErrInvalidKindInfoContent
+	} else if contentWrapper.Markdown.Content == nil {
+		return "", ErrInvalidKindInfoContent
+	}
+
+	return *contentWrapper.Markdown.Content, nil
+}
+
 // validateKindInfo validates a map of KindInfo entries
 func validateKindInfo(kindName string, info KindInfoInputs) error {
 	if len(info) > 100 {

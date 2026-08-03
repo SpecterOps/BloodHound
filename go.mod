@@ -43,6 +43,7 @@ require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/jedib0t/go-pretty/v6 v6.8.2
 	github.com/lib/pq v1.11.2
+	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/pashagolub/pgxmock/v4 v4.9.0
 	github.com/peterldowns/pgtestdb v0.1.1
@@ -57,6 +58,7 @@ require (
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/unrolled/secure v1.17.0
+	github.com/yuin/goldmark v1.8.5
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.53.0
 	golang.org/x/mod v0.37.0
@@ -71,9 +73,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.25 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.2.2 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/knadh/koanf/parsers/yaml v1.1.0 // indirect
 	github.com/knadh/koanf/providers/env v1.1.0 // indirect
@@ -364,7 +368,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect
