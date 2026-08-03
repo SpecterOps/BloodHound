@@ -161,6 +161,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZRole');
 	PERFORM genscript_upsert_kind('AZDevice');
 	PERFORM genscript_upsert_kind('AZFunctionApp');
+	PERFORM genscript_upsert_kind('AZDomainService');
 	PERFORM genscript_upsert_kind('AZGroup');
 	PERFORM genscript_upsert_kind('AZKeyVault');
 	PERFORM genscript_upsert_kind('AZManagementGroup');
@@ -181,6 +182,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZAvereContributor');
 	PERFORM genscript_upsert_kind('AZContains');
 	PERFORM genscript_upsert_kind('AZContributor');
+	PERFORM genscript_upsert_kind('AZDomainServicesContributor');
 	PERFORM genscript_upsert_kind('AZGetCertificates');
 	PERFORM genscript_upsert_kind('AZGetKeys');
 	PERFORM genscript_upsert_kind('AZGetSecrets');
@@ -227,6 +229,8 @@ BEGIN
 	PERFORM genscript_upsert_kind('SyncedToEntraUser');
 	PERFORM genscript_upsert_kind('SyncedToEntraDSUser');
 	PERFORM genscript_upsert_kind('SyncedToEntraDSGroup');
+	PERFORM genscript_upsert_kind('AddEntraDSGroupMember');
+	PERFORM genscript_upsert_kind('SyncEntraDSUsers');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
 	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
@@ -237,6 +241,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZRole', 'AZRole', '', true, 'clipboard-list', '#ED8537');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZDevice', 'AZDevice', '', true, 'desktop', '#B18FCF');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZFunctionApp', 'AZFunctionApp', '', true, 'bolt', '#F4BA44');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZDomainService', 'AZDomainService', '', true, 'server', '#6D83F2');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZGroup', 'AZGroup', '', true, 'users', '#F57C9B');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZKeyVault', 'AZKeyVault', '', true, 'lock', '#ED658C');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'AZManagementGroup', 'AZManagementGroup', '', true, 'sitemap', '#BD93D8');
@@ -259,6 +264,7 @@ BEGIN
 	PERFORM genscript_upsert_custom_node_kind('AZRole', '{"icon": {"name": "clipboard-list", "type": "font-awesome", "color": "#ED8537"}}');
 	PERFORM genscript_upsert_custom_node_kind('AZDevice', '{"icon": {"name": "desktop", "type": "font-awesome", "color": "#B18FCF"}}');
 	PERFORM genscript_upsert_custom_node_kind('AZFunctionApp', '{"icon": {"name": "bolt", "type": "font-awesome", "color": "#F4BA44"}}');
+	PERFORM genscript_upsert_custom_node_kind('AZDomainService', '{"icon": {"name": "server", "type": "font-awesome", "color": "#6D83F2"}}');
 	PERFORM genscript_upsert_custom_node_kind('AZGroup', '{"icon": {"name": "users", "type": "font-awesome", "color": "#F57C9B"}}');
 	PERFORM genscript_upsert_custom_node_kind('AZKeyVault', '{"icon": {"name": "lock", "type": "font-awesome", "color": "#ED658C"}}');
 	PERFORM genscript_upsert_custom_node_kind('AZManagementGroup', '{"icon": {"name": "sitemap", "type": "font-awesome", "color": "#BD93D8"}}');
@@ -278,6 +284,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZDomainServicesContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetCertificates', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetKeys', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetSecrets', '', true);
@@ -324,6 +331,8 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraDSUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraDSGroup', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddEntraDSGroupMember', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncEntraDSUsers', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);

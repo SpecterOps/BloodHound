@@ -192,6 +192,12 @@ type FunctionAppDetails struct {
 	InboundObjectControl int `json:"inbound_object_control"`
 }
 
+type DomainServiceDetails struct {
+	Node
+
+	InboundObjectControl int `json:"inbound_object_control"`
+}
+
 type KeyVaultReaderCounts struct {
 	KeyReaders         int `json:"KeyReaders"`
 	CertificateReaders int `json:"CertificateReaders"`
