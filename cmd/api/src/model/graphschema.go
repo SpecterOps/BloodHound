@@ -121,25 +121,8 @@ func (s *ReservedKindError) Error() string {
 // JSON structure: {"markdown":{"content":"..."}}. It validates structure only; it does
 // not sanitize or inspect the markdown for unsafe HTML (see BED-8764).
 func validateKindInfoContent(content json.RawMessage) error {
-	var (
-		contentWrapper struct {
-			Markdown struct {
-				Content *string `json:"content"`
-			} `json:"markdown"`
-		}
-		decoder = json.NewDecoder(strings.NewReader(string(content)))
-	)
-
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&contentWrapper); err != nil {
-		return ErrInvalidKindInfoContent
-	}
-
-	if contentWrapper.Markdown.Content == nil {
-		return ErrInvalidKindInfoContent
-	}
-
-	return nil
+	_, err := KindInfoInput{Content: content}.MarkdownContent()
+	return err
 }
 
 // MarkdownContent extracts the inner markdown content string from the KindInfoInput's
