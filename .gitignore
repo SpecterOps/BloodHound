@@ -4,6 +4,9 @@
 # Codex
 .codex
 
+# Claude
+.claude/settings.local.json
+
 # Augment
 .augment
 
