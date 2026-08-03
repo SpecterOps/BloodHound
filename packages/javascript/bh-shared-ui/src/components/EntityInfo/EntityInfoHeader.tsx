@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='box-border text-contrast px-4 mx-2'
+                className='box-border text-contrast px-4'
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             </Tooltip>
             {selectedItem && (
                 <Icon
-                    className='h-10 box-border p-4 text-contrast'
+                    className='h-10 box-border text-contrast mr-1'
                     onClick={clearSelectedItem}
                     tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />

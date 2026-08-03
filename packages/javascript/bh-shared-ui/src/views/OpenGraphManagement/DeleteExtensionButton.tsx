@@ -76,7 +76,7 @@ export const ConfirmDeleteExtensionDialog: FC<{
                             />
                         </div>
                     </DialogDescription>
-                    <DialogActions>
+                    <DialogActions className='text-sm gap-4'>
                         <TextButton onClick={handleCancel} disabled={isDeleting}>
                             Cancel
                         </TextButton>

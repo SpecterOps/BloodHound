@@ -191,7 +191,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-label='Toggle Navigation'
                 // Negative right margin allows button to hover outside nav bar bounds
                 className={cn(
-                    'absolute top-14 w-6 h-6 border-none z-navToggle',
+                    'absolute top-14 min-h-6 min-w-6 p-1 border-none z-navToggle',
                     'transition-all duration-300 ease-in',
                     'text-main',
                     'bg-neutral-4 dark:bg-neutral-5',

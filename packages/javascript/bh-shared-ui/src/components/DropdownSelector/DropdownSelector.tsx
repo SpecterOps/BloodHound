@@ -60,7 +60,7 @@ const DropdownSelector: FC<{
                         return (
                             <li key={option.key}>
                                 <TextButton
-                                    className={cn(optionStyles)}
+                                    className={optionStyles}
                                     data-testid={option.value}
                                     onClick={() => {
                                         onChange(option);

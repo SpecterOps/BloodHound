@@ -161,7 +161,7 @@ export const ActiveExtensionsCard = () => {
 
     return (
         <Card className='flex flex-col gap-4 overflow-hidden'>
-            <header className='flex justify-between pt-6 px-6 gap-3'>
+            <header className='flex justify-between items-center pt-6 px-6 gap-3'>
                 <CardTitle className='text-base'>Active Extensions</CardTitle>
                 <SearchInput
                     className='self-start w-80'
