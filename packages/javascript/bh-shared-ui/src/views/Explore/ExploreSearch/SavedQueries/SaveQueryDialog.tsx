@@ -156,6 +156,7 @@ const SaveQueryDialog: React.FC<{
                                         <Input
                                             type='text'
                                             id='queryName'
+                                            variant='outlined'
                                             value={name}
                                             onChange={(e) => {
                                                 setName(e.target.value);
@@ -168,6 +169,7 @@ const SaveQueryDialog: React.FC<{
                                         <Input
                                             type='text'
                                             id='queryDescription'
+                                            variant='outlined'
                                             value={description}
                                             onChange={(e) => {
                                                 setDescription(e.target.value);

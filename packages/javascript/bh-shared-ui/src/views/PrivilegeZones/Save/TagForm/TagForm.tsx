@@ -482,6 +482,8 @@ export const TagForm: FC = () => {
                                                 <FormControl>
                                                     <Input
                                                         {...field}
+                                                        placeholder='Name'
+                                                        variant='outlined'
                                                         type='text'
                                                         autoComplete='off'
                                                         disabled={disableNameInput}

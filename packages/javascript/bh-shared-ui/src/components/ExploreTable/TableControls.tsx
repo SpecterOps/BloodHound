@@ -82,22 +82,19 @@ const TableControls = <TData, TValue>({
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
-                    <div className='flex justify-center items-center relative'>
+                    <div className='flex justify-center items-center relative w-full'>
                         <Label htmlFor='explore-table-search' className='sr-only'>
                             Explore Table Search
                         </Label>
                         <Input
                             id='explore-table-search'
+                            variant='outlined'
                             data-testid='explore-table-search'
                             disabled={noResults}
-                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
-                                [DISABLED_CLASSNAME]: noResults,
-                                'border-neutral-400': noResults,
-                            })}
                             {...SearchInputProps}
                         />
                         <FontAwesomeIcon
-                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            className={cn('absolute right-2 pointer-events-none', { [DISABLED_CLASSNAME]: noResults })}
                             icon={faSearch}
                         />
                     </div>

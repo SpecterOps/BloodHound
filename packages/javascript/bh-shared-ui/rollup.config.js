@@ -86,7 +86,6 @@ export default {
         'lodash/toString',
         'lucide-react',
         'luxon',
-        'memoize-one',
         'msw',
         'notistack',
         'prop-types',
