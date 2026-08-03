@@ -288,7 +288,7 @@ const UpdateUserFormInner: React.FC<{
                                                 Email Address
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='emailAddress' type='email' />
+                                                <Input {...field} id='emailAddress' variant='outlined' type='email' />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -324,7 +324,7 @@ const UpdateUserFormInner: React.FC<{
                                                 Principal Name
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='principal' />
+                                                <Input {...field} id='principal' variant='outlined' />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -360,7 +360,7 @@ const UpdateUserFormInner: React.FC<{
                                                 First Name
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='firstName' />
+                                                <Input {...field} id='firstName' variant='outlined' />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -396,7 +396,7 @@ const UpdateUserFormInner: React.FC<{
                                                 Last Name
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='lastName' />
+                                                <Input {...field} id='lastName' variant='outlined' />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

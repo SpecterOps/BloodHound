@@ -152,6 +152,8 @@ export default {
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',
+                'input-outlined-border-default': 'var(--input-outlined-border-default)',
+                'input-outlined-border-hover': 'var(--input-outlined-border-hover)',
 
                 'textarea-fill': 'var(--textarea-fill)',
                 'textarea-border-default': 'var(--textarea-border-default)',

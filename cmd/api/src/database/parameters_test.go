@@ -235,3 +235,50 @@ func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
 	require.Equal(t, apiKeyExpiration, valObtained.Enabled)
 	require.Equal(t, expirationPeriod, valObtained.ExpirationPeriod)
 }
+
+func TestParameters_GetGraphStorageOptimizationParameter(t *testing.T) {
+	var testCtx = context.Background()
+
+	type testData struct {
+		name     string
+		value    map[string]any
+		expected appcfg.GraphStorageOptimizationParameter
+	}
+
+	tt := []testData{
+		{
+			name:  "negative min interval seconds is rejected and defaults to 86400",
+			value: map[string]any{"after_boot": true, "after_analysis": true, "min_interval_seconds": -3600},
+			expected: appcfg.GraphStorageOptimizationParameter{
+				AfterBoot:          true,
+				AfterAnalysis:      true,
+				MinIntervalSeconds: 86400,
+			},
+		},
+		{
+			name:  "value that fails to map onto the struct falls back to the default for the unmapped field",
+			value: map[string]any{"after_boot": "not-a-bool", "after_analysis": true, "min_interval_seconds": 100},
+			expected: appcfg.GraphStorageOptimizationParameter{
+				AfterBoot:          false,
+				AfterAnalysis:      true,
+				MinIntervalSeconds: 100,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			db := integration.SetupDB(t)
+
+			newVal, err := types.NewJSONBObject(testCase.value)
+			require.Nil(t, err)
+
+			require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+				Key:   appcfg.GraphStorageOptimizationKey,
+				Value: newVal,
+			}))
+
+			require.Equal(t, testCase.expected, appcfg.GetGraphStorageOptimizationParameter(testCtx, db))
+		})
+	}
+}
