@@ -31,21 +31,4 @@ properties:
   info:
     $ref: './model.graph-extension.kind-info-definition.yaml'
   extension:
-    type: object
-    properties:
-      extension_id:
-        type: integer
-        format: int32
-        example: 7
-      name:
-        type: string
-        example: "Active Directory"
-      display_name:
-        type: string
-        example: "Active Directory"
-      namespace:
-        type: string
-        example: "AD"
-      version:
-        type: string
-        example: "v0.0.1"
+    $ref: './model.extension-details.yaml'
