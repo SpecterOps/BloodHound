@@ -112,10 +112,10 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverAnchor>
-                    <div className='flex items-center'>
-                        <AppIcon.MagnifyingGlass className='-mr-4' />
+                    <div className='relative'>
+                        <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
                         <Input
-                            variant='underlined'
+                            variant='outlined'
                             placeholder='Search'
                             className='pl-8'
                             {...getInputProps({ ref: inputRef })}
