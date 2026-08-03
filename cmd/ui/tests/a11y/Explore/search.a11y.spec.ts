@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
+import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
 
 test.describe('WCAG A/AA Violations - Explore - Search Tab', () => {
     test.beforeEach(async ({ page }) => {

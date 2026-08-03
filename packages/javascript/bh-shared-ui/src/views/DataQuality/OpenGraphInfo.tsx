@@ -36,25 +36,32 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-// getLatestMetricStats keeps only the latest stat per kind_id (by created_at) and
-// splits the result into node stats and the latest relationship stat.
-export const getLatestMetricStats = (
-    data: OpenGraphDataQualityStat[]
-): { nodeStats: OpenGraphDataQualityStat[]; relationshipStat: OpenGraphDataQualityStat } => {
-    const latestStatsByMetricKind = new Map<number, any>();
+export const getLatestStatsByMetricKind = (data: OpenGraphDataQualityStat[]): OpenGraphDataQualityStat[] => {
+    const latestStatsByMetricKind = new Map<number, OpenGraphDataQualityStat>();
+
     for (const stat of data) {
         const existing = latestStatsByMetricKind.get(stat.kind_id);
-        const isLatest = new Date(stat?.created_at).getTime() > new Date(existing?.created_at).getTime();
+        const isLatest = new Date(stat.created_at ?? '').getTime() > new Date(existing?.created_at ?? '').getTime();
+
         if (!existing || isLatest) {
             latestStatsByMetricKind.set(stat.kind_id, stat);
         }
     }
 
-    const stats = Array.from(latestStatsByMetricKind.values());
-    const nodeStats = stats.filter((stat) => stat.metric_type === 'node');
-    const relationshipStat = stats.find((stat) => stat.metric_type === 'relationship');
+    return Array.from(latestStatsByMetricKind.values());
+};
 
-    return { nodeStats, relationshipStat };
+export const getMetricStatsByType = (
+    stats: OpenGraphDataQualityStat[]
+): { nodeStats: OpenGraphDataQualityStat[]; relationshipStats: OpenGraphDataQualityStat[] } => {
+    return {
+        nodeStats: stats.filter((stat) => stat.metric_type === 'node'),
+        relationshipStats: stats.filter((stat) => stat.metric_type === 'relationship'),
+    };
+};
+
+export const getRelationshipsTotalCount = (relationshipStats: OpenGraphDataQualityStat[]): number => {
+    return relationshipStats.reduce((totalCount, stat) => totalCount + stat.metric_value, 0);
 };
 
 export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
@@ -68,16 +75,18 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStat={null} isLoading={true} />;
+        return <Layout nodeStats={null} relationshipTotalCount={null} isLoading={true} />;
     }
 
     if (isError || !openGraphData || !openGraphData.data.length) {
         return null;
     }
 
-    const { nodeStats, relationshipStat } = getLatestMetricStats(openGraphData.data);
+    const latestStats = getLatestStatsByMetricKind(openGraphData.data);
+    const { nodeStats, relationshipStats } = getMetricStatsByType(latestStats);
+    const relationshipTotalCount = getRelationshipsTotalCount(relationshipStats);
 
-    return <Layout nodeStats={nodeStats} relationshipStat={relationshipStat} isLoading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipTotalCount={relationshipTotalCount} isLoading={false} />;
 };
 
 export const OpenGraphPlatformInfo: React.FC<{
@@ -91,16 +100,18 @@ export const OpenGraphPlatformInfo: React.FC<{
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout nodeStats={null} relationshipStat={null} isLoading={true} />;
+        return <Layout nodeStats={null} relationshipTotalCount={null} isLoading={true} />;
     }
 
     if (isError || !platformData || !platformData.data.length) {
         return null;
     }
 
-    const { nodeStats, relationshipStat } = getLatestMetricStats(platformData.data);
+    const latestStats = getLatestStatsByMetricKind(platformData.data);
+    const { nodeStats, relationshipStats } = getMetricStatsByType(latestStats);
+    const relationshipTotalCount = getRelationshipsTotalCount(relationshipStats);
 
-    return <Layout nodeStats={nodeStats} relationshipStat={relationshipStat} isLoading={false} />;
+    return <Layout nodeStats={nodeStats} relationshipTotalCount={relationshipTotalCount} isLoading={false} />;
 };
 
 const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricName, metricType }) => {
@@ -113,10 +124,10 @@ const MetricIcon: React.FC<{ metricName: string; metricType: any }> = ({ metricN
 
 const Layout: React.FC<{
     nodeStats: OpenGraphDataQualityStat[] | null;
-    relationshipStat: OpenGraphDataQualityStat | null;
+    relationshipTotalCount: number | null;
     isLoading: boolean;
     headers?: boolean;
-}> = ({ nodeStats, relationshipStat, isLoading }) => {
+}> = ({ nodeStats, relationshipTotalCount, isLoading }) => {
     const classes = useStyles();
 
     return (
@@ -144,7 +155,7 @@ const Layout: React.FC<{
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
-                            value={relationshipStat?.metric_value ?? 0}
+                            value={relationshipTotalCount ?? 0}
                             isLoading={isLoading}
                         />
                     </TableBody>
