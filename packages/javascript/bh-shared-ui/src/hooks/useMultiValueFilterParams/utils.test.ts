@@ -32,7 +32,7 @@ describe('getValuesFromSelection', () => {
     });
 
     it('returns the values of every option for an all selection', () => {
-        expect(getValuesFromSelection({ kind: 'all' }, TEST_OPTIONS)).toEqual(['apl', 'bnana', 'gccmbr']);
+        expect(getValuesFromSelection({ kind: 'all' }, TEST_OPTIONS)).toEqual(['apl', 'bnana', 'ccmbr']);
     });
 
     it('returns an empty array for an all selection when there are no options', () => {
