@@ -17,7 +17,6 @@
 import type { AxiosResponse } from 'axios';
 import { EnvironmentRequest } from './requests';
 import {
-    Alert,
     AlertAttempt,
     AlertEvent,
     AlertEventType,
@@ -38,6 +37,7 @@ import {
     NodeDetailsWithInfo,
     NodeKindResponse,
     NodeSourceTypes,
+    Notification,
     RelationshipDetails,
     RelationshipDetailsWithInfo,
     RelationshipKindResponse,
@@ -485,10 +485,10 @@ export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEvent
 // ---------------------------------------------------------------------------
 //  Alert - Alerts
 // ---------------------------------------------------------------------------
-export type GetAlertsResponse = PaginatedResponse<{ alerts: Alert[] }>;
-export type GetAlertResponse = BasicResponse<{ alert: Alert }>;
-export type CreateAlertResponse = Alert;
-export type UpdateAlertResponse = BasicResponse<{ alert: Alert }>;
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
+export type GetAlertResponse = BasicResponse<{ alert: Notification }>;
+export type CreateAlertResponse = Notification;
+export type UpdateAlertResponse = BasicResponse<{ alert: Notification }>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 

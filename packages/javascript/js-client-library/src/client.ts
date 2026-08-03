@@ -2869,6 +2869,9 @@ class BHEAPIClient {
         this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, {
             ...options,
         });
+
+    deleteAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
 }
 
 export default BHEAPIClient;
