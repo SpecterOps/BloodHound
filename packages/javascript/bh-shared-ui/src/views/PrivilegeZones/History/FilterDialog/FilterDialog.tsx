@@ -80,6 +80,7 @@ const FilterDialog: FC<{
             <DialogTrigger asChild>
                 <IconButton
                     data-testid='privilege-zones_history_filter-button'
+                    className='ml-4'
                     aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
