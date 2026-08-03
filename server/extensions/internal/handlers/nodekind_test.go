@@ -98,7 +98,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 					IsDisplayKind: true,
 					Icon:          "user",
 					Color:         "#fff",
-					Extension:     &handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
+					Extension:     &handlers.ExtensionView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",
@@ -131,7 +131,7 @@ func TestHandlers_GetNodeKindByID(t *testing.T) {
 				assert.Equal(t, handlers.NodeKindView{
 					NodeKindID: nodeKindID,
 					Name:       "User",
-					Extension:  &handlers.ExtensionDetailsView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
+					Extension:  &handlers.ExtensionView{ExtensionID: 7, Name: "AD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1"},
 					Info: map[string]handlers.KindInfoView{
 						"overview": {
 							Title:    "Overview",

@@ -26,6 +26,7 @@ import (
 // Extensions defines the extensions service boundary for the extensions handlers package.
 type Extensions interface {
 	GetNodeKind(ctx context.Context, id int32) (services.NodeKind, error)
+	GetRelationshipKind(ctx context.Context, id int32) (services.RelationshipKind, error)
 }
 
 // Handlers is a dependency injection container for extensions handlers.
