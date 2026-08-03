@@ -30,7 +30,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/crewjam/saml v0.5.1
 	github.com/dave/jennifer v1.7.1
-	github.com/go-chi/chi/v5 v5.2.4
+	github.com/go-chi/chi/v5 v5.3.0
 	github.com/gobeam/stringy v0.0.7
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.2
@@ -52,7 +52,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.5.5
+	github.com/specterops/dawgs v0.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
@@ -368,7 +368,7 @@ require (
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260420184626-e10c466a9529 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

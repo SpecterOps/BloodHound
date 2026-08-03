@@ -17038,6 +17038,38 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "delete": {
+        "operationId": "DeleteClientArtifact",
+        "summary": "Delete a management operation artifact for the client",
+        "description": "Deletes an operation artifact associated with the client.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/clients/management/available": {
@@ -18594,6 +18626,110 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/attack-paths/finding-types": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAttackPathFindingTypes",
+        "summary": "List attack path finding types",
+        "description": "Returns distinct attack path finding types available to the caller.\nResults are always returned in ascending order by `title`.\n",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_id",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments.\nResults are scoped to the caller's Environment access.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "finding": {
+                            "type": "string",
+                            "description": "Finding name."
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Finding title."
+                          }
+                        },
+                        "required": [
+                          "finding",
+                          "title"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                },
+                "examples": {
+                  "Finding types": {
+                    "value": {
+                      "data": [
+                        {
+                          "finding": "Kerberoasting",
+                          "title": "Kerberoastable User Accounts"
+                        },
+                        {
+                          "finding": "T0WriteOwner",
+                          "title": "Write Owner"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -21781,6 +21917,11 @@
             "readOnly": true,
             "description": "OpenGraph environment kind ID for custom environments"
           },
+          "environment_kind_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "OpenGraph environment kind name for custom environments"
+          },
           "environment_kind_display_name": {
             "type": "string",
             "readOnly": true,
@@ -23074,11 +23215,7 @@
       },
       "model.graph-extension.kind-info-definition": {
         "type": "object",
-        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
-        "propertyNames": {
-          "pattern": "^[a-z0-9_-]{1,128}$",
-          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
-        },
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier and must match the pattern\n`^[a-z0-9_-]{1,128}$` (lowercase alphanumeric characters, hyphens, and underscores only).\nEach property value must be a valid KindInfo object with title, position, and content.\n",
         "additionalProperties": {
           "allOf": [
             {

@@ -13,17 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { expectNoAccessibilityViolations, test } from '../fixtures';
-
-test.describe('Explore page accessibility', () => {
-    test('explore page has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/explore');
-
-        // Wait for search widget to load
-        await page.getByLabel('Toggle search widget').waitFor({ state: 'visible' });
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
-    });
-});
+export type { MultiValueFilterConfig, MultiValueSelection } from './types';
+export { useMultiValueFilterParams } from './useMultiValueFilterParams';

@@ -61,9 +61,9 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields
-                    nodeType={primaryKind}
+                    properties={selectedNode.properties}
                     handleSourceNodeSelected={handleSourceNodeSelected}
-                    {...selectedNode.properties}
+                    nodeType={primaryKind}
                     zone={zoneName}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />

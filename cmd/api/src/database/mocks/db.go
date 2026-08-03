@@ -3082,6 +3082,20 @@ func (mr *MockDatabaseMockRecorder) RequestCollectedGraphDataDeletion(ctx, reque
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestCollectedGraphDataDeletion", reflect.TypeOf((*MockDatabase)(nil).RequestCollectedGraphDataDeletion), ctx, request)
 }
 
+// ResetLastGraphOptimizeTime mocks base method.
+func (m *MockDatabase) ResetLastGraphOptimizeTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetLastGraphOptimizeTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetLastGraphOptimizeTime indicates an expected call of ResetLastGraphOptimizeTime.
+func (mr *MockDatabaseMockRecorder) ResetLastGraphOptimizeTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetLastGraphOptimizeTime", reflect.TypeOf((*MockDatabase)(nil).ResetLastGraphOptimizeTime), ctx)
+}
+
 // SanitizeUpdateAssetGroupTagRequireCertify mocks base method.
 func (m *MockDatabase) SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag) {
 	m.ctrl.T.Helper()
@@ -3163,6 +3177,20 @@ func (m *MockDatabase) SetLastAnalysisStartTime(ctx context.Context) error {
 func (mr *MockDatabaseMockRecorder) SetLastAnalysisStartTime(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastAnalysisStartTime", reflect.TypeOf((*MockDatabase)(nil).SetLastAnalysisStartTime), ctx)
+}
+
+// SetLastGraphOptimizeTime mocks base method.
+func (m *MockDatabase) SetLastGraphOptimizeTime(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLastGraphOptimizeTime", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLastGraphOptimizeTime indicates an expected call of SetLastGraphOptimizeTime.
+func (mr *MockDatabaseMockRecorder) SetLastGraphOptimizeTime(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastGraphOptimizeTime", reflect.TypeOf((*MockDatabase)(nil).SetLastGraphOptimizeTime), ctx)
 }
 
 // SetNextScheduledAnalysisStartTime mocks base method.
