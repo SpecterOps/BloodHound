@@ -16,7 +16,7 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { Button, Input } from 'doodle-ui';
+import { Button, IconButton, Input } from 'doodle-ui';
 import { useState } from 'react';
 import { AppIcon } from '../../../../components';
 import { useSavedQueriesContext } from '../../providers';
@@ -98,26 +98,19 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             className='absolute right-2 top-[50%] -mt-[8px] pointer-events-none'
                         />
                     </div>
-                    <div className='flex items-center ml-4'>
-                        <Button variant='secondary' size='medium' onClick={importHandler}>
+                    <div className='flex items-center ml-4 gap-2'>
+                        <Button variant='secondary' onClick={importHandler}>
                             Import
                         </Button>
-                        <Button
-                            disabled={!exportEnabled}
-                            className='ml-2'
-                            variant='secondary'
-                            size='medium'
-                            onClick={exportHandler}>
+                        <Button disabled={!exportEnabled} variant='secondary' onClick={exportHandler}>
                             Export
                         </Button>
-                        <Button
+                        <IconButton
                             aria-label='delete'
                             disabled={!deleteEnabled}
-                            className='ml-2'
-                            variant='icon'
                             onClick={() => deleteHandler(selectedQuery?.id as number)}>
                             <FontAwesomeIcon icon={faTrash} />
-                        </Button>
+                        </IconButton>
                     </div>
                 </div>
                 <div className='flex w-full items-center justify-between flex-row'>

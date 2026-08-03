@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardContent, CardHeader } from 'doodle-ui';
+import { Card, CardContent, CardHeader, TextButtonVariants } from 'doodle-ui';
 import {
     NodeSourceSeed,
     SeedExpansionMethod,
@@ -89,24 +89,24 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
         }
     }, [directObjects, expandedObjects, cypherQueryYieldsNoResults, dispatch, sampleResultsFetched]);
 
-    const showViewInExploreButton = exploreUrl && ruleType === SeedTypeCypher;
-
     return (
         <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
-            <CardHeader className='pl-6 first:py-6 text-xl font-bold'>
+            <CardHeader className='pl-6 pr-6 first:py-6 text-xl font-bold'>
                 <div className='flex justify-between items-center min-h-10'>
                     <span>Sample Results</span>
-                    <Button
-                        asChild
-                        variant='text'
-                        disabled={!exploreUrl}
-                        className={cn('font-normal', {
-                            hidden: !showViewInExploreButton,
-                        })}>
-                        <a href={exploreUrl} target='_blank' rel='noreferrer'>
+                    {exploreUrl && (
+                        <a
+                            href={exploreUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className={cn(
+                                TextButtonVariants({ fontColor: 'primary' }),
+                                'text-sm',
+                                ruleType !== SeedTypeCypher && 'hidden'
+                            )}>
                             View in Explore
                         </a>
-                    </Button>
+                    )}
                 </div>
             </CardHeader>
             {sampleResultsFetched ? (

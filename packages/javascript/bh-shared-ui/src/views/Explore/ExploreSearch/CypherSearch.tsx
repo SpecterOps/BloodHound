@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { Button, CheckboxWithLabel } from 'doodle-ui';
+import { Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -38,8 +38,7 @@ import {
 import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
-import { Permission, cn } from '../../../utils';
-import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
+import { Permission, adaptClickHandlerToKeyDown, cn } from '../../../utils';
 import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
 import CommonSearches from './SavedQueries/CommonSearches';
 import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
@@ -327,7 +326,7 @@ const CypherSearchInner = ({
                         </div>
                     </div>
 
-                    <div className='flex gap-2 shrink-0 '>
+                    <div className='flex gap-2 shrink-0'>
                         <div
                             role='button'
                             tabIndex={0}
@@ -341,14 +340,14 @@ const CypherSearchInner = ({
                                     showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
                                 )}
                                 value={cypherQuery}
-                                onValueChanged={(val: string) => {
-                                    setCypherQuery(val);
+                                onValueChanged={(value: string) => {
+                                    setCypherQuery(value);
                                 }}
                                 theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
-                                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                                    // if enter and shift key is pressed, execute cypher search
-                                    if (e.key === 'Enter' && e.shiftKey) {
-                                        e.preventDefault();
+                                onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+                                    if (event.key === 'Enter' && event.shiftKey) {
+                                        // if enter and shift key is pressed, execute cypher search
+                                        event.preventDefault();
                                         handleCypherSearch();
                                     }
                                 }}
@@ -359,10 +358,12 @@ const CypherSearchInner = ({
                                 placeholder='Cypher Query'
                                 tooltipAbsolute={false}
                             />
+
                             {hasQueryParseError && (
                                 <img
                                     src={`${import.meta.env.BASE_URL}/img/query-parse-error.png`}
-                                    alt='parse-error-image'></img>
+                                    alt='The Cypher query contains a parse error'
+                                />
                             )}
                         </div>
                     </div>
@@ -391,7 +392,7 @@ const CypherSearchInner = ({
                                 variant='secondary'
                                 onClick={handleClickSave}
                                 aria-label='Save query'
-                                size={'small'}
+                                size='small'
                                 className='rounded-r-none'>
                                 <div className='flex items-center'>
                                     <p className='ml-2 text-base'>Save </p>
@@ -399,22 +400,24 @@ const CypherSearchInner = ({
                             </Button>
                             <SaveQueryActionMenu saveAs={handleSaveAs} />
 
-                            <Button asChild variant='secondary' size={'small'} className='px-1.5'>
-                                <a
-                                    href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
-                                    rel='noreferrer'
-                                    target='_blank'
-                                    aria-label='Learn more about cypher'
-                                    className='group'>
-                                    <div>
-                                        <AppIcon.Info size={24} />
-                                    </div>
-                                </a>
-                            </Button>
+                            <a
+                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                rel='noopener noreferrer'
+                                target='_blank'
+                                aria-label='Learn more about Cypher (opens in a new tab)'
+                                className={cn(
+                                    ButtonVariants({
+                                        variant: 'secondary',
+                                        size: 'small',
+                                    }),
+                                    'group px-1.5'
+                                )}>
+                                <AppIcon.Info size={24} />
+                            </a>
 
                             <Button
                                 onClick={handleCypherSearch}
-                                size={'small'}
+                                size='small'
                                 disabled={cypherSearchIsRunning}
                                 aria-label='Run cypher query'
                                 className='max-w-[83px]'>

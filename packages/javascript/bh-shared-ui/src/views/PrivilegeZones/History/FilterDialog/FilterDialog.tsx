@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -22,6 +21,8 @@ import {
     DialogTitle,
     DialogTrigger,
     Form,
+    IconButton,
+    TextButton,
     Tooltip,
     VisuallyHidden,
 } from 'doodle-ui';
@@ -77,19 +78,17 @@ const FilterDialog: FC<{
                 setOpen(open);
             }}>
             <DialogTrigger asChild>
-                <Button
+                <IconButton
                     data-testid='privilege-zones_history_filter-button'
-                    variant='text'
+                    className='ml-4'
                     aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>
                     <Tooltip tooltip='Filters'>
-                        <span>
-                            <AppIcon.FilterOutline size={22} />
-                        </span>
+                        <AppIcon.FilterOutline size={22} />
                     </Tooltip>
-                </Button>
+                </IconButton>
             </DialogTrigger>
 
             <DialogContent>
@@ -97,12 +96,12 @@ const FilterDialog: FC<{
                     <form className='flex flex-col gap-4 m-1'>
                         <DialogTitle className='flex justify-between items-center'>
                             <span className='text-xl'>Filter</span>
-                            <Button
-                                variant={'text'}
+                            <TextButton
+                                fontColor='primary'
                                 onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
-                                className='font-normal p-2'>
+                                className='font-bold p-2'>
                                 Clear All
-                            </Button>
+                            </TextButton>
                         </DialogTitle>
                         <VisuallyHidden asChild>
                             <DialogDescription>Filter Privilege Zone History</DialogDescription>
@@ -120,15 +119,16 @@ const FilterDialog: FC<{
                         </div>
 
                         <DialogActions>
-                            <Button variant={'text'} className='p-2' onClick={closeDialog}>
+                            <TextButton className='pr-2' onClick={closeDialog}>
                                 Cancel
-                            </Button>
-                            <Button
-                                variant={'text'}
-                                className='text-primary dark:text-secondary-variant-2 p-2'
+                            </TextButton>
+
+                            <TextButton
+                                fontColor='primary'
+                                data-testid='file_ingest_log-filter_dialog_confirm'
                                 onClick={handleConfirm}>
                                 Confirm
-                            </Button>
+                            </TextButton>
                         </DialogActions>
                     </form>
                 </Form>
