@@ -1,9 +1,26 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package opengraphschema
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -21,6 +38,13 @@ import (
 // difference (or any render/parse error) rejects the content. Canonicalizing both
 // sides collapses cosmetic serialization drift (entity form, void-element
 // self-closing, boolean attributes) so only genuine removals cause rejection.
+//
+// Two goldmark GFM attributes are emitted that UGCPolicy strips (which would cause
+// safe content to be rejected): table cell alignment and the fenced-code language
+// class. Tables are configured with TableCellAlignNone so no align/style attribute
+// is emitted, and the policy allows the constrained language class on <code> so both
+// compared sides retain it. Neither attribute is user-facing since this HTML is only
+// used to validate the markdown; the original markdown is what gets stored.
 
 type markdownValidator struct {
 	renderer goldmark.Markdown
@@ -31,9 +55,22 @@ func newMarkdownValidator() *markdownValidator {
 	var policy = bluemonday.UGCPolicy()
 	policy.RequireNoFollowOnLinks(false)
 	policy.RequireNoFollowOnFullyQualifiedLinks(false)
+	// Allow goldmark's fenced-code language hint. The value is class-only and
+	// non-executable, and the anchored alnum regex forbids smuggling extra attrs.
+	policy.AllowAttrs("class").
+		Matching(regexp.MustCompile(`^language-[a-zA-Z0-9]+$`)).
+		OnElements("code")
 	return &markdownValidator{
 		renderer: goldmark.New(
-			goldmark.WithExtensions(extension.GFM),
+			// Mirrors extension.GFM (Linkify, Table, Strikethrough, TaskList) but
+			// substitutes a TableCellAlignNone table so no align/style attribute is
+			// emitted. Keep this list in sync if goldmark's GFM bundle changes.
+			goldmark.WithExtensions(
+				extension.Linkify,
+				extension.Strikethrough,
+				extension.TaskList,
+				extension.NewTable(extension.WithTableCellAlignMethod(extension.TableCellAlignNone)),
+			),
 			goldmark.WithRendererOptions(goldmarkhtml.WithUnsafe()),
 		),
 		policy: policy,
