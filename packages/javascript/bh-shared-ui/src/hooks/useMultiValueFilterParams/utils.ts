@@ -55,7 +55,7 @@ export const getValuesFromSelection = (selection: MultiValueSelection, options: 
     return [];
 };
 
-export const getNextSelection = (newVal: string[], options: MultiSelectOption[]) => {
+export const getNextSelection = (newVal: string[], options: MultiSelectOption[]): MultiSelectOption => {
     if (newVal.length === options.length) {
         return { kind: 'all' };
     } else if (newVal.length === 0) {
