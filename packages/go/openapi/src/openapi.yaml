@@ -393,6 +393,8 @@ paths:
     $ref: './paths/opengraph.extension-delete.yaml'
   /api/v2/extensions-edges:
     $ref: './paths/graph-schema.edge-kinds.yaml'
+  /api/v2/node-kinds/{node_kind_id}:
+    $ref: './paths/opengraph.node-kind.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -705,6 +707,12 @@ paths:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
   # management operations
+  /api/v2/clients/{client_id}/management:
+    $ref: './paths/clients.clients.id.management.yaml'
+  /api/v2/clients/{client_id}/artifacts/{artifact_id}:
+    $ref: './paths/clients.clients.id.artifacts.id.yaml'
+  /api/v2/clients/management/available:
+    $ref: './paths/clients.clients.management.available.yaml'
   /api/v2/clients/management/start:
     $ref: './paths/clients.clients.management.start.yaml'
   /api/v2/clients/management/end:
@@ -743,6 +751,8 @@ paths:
     $ref: './paths/attack-paths.attack-paths.finding-trends.yaml'
   /api/v2/attack-path-types:
     $ref: './paths/attack-paths.attack-path-types.yaml'
+  /api/v2/attack-paths/finding-types:
+    $ref: './paths/attack-paths.attack-paths-finding-types.yaml'
   /api/v2/attack-paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:

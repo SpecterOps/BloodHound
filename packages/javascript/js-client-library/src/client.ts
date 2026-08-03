@@ -99,6 +99,7 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    ManagementOperation,
     OpenGraphDataQualityResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
@@ -113,9 +114,9 @@ import {
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
+    WebhookTestResponse,
 } from './responses';
 import * as types from './types';
-import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -503,7 +504,7 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
     getFindings = (key: string, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+        this.baseClient.get<BasicResponse<types.FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
@@ -796,8 +797,21 @@ class BHEAPIClient {
             )
         );
 
-    requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
-        this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
+    requestSupportBundle = (clientId: string, operation_type: string, options?: RequestOptions) =>
+        this.baseClient.post<ManagementOperation>(
+            `/api/v2/clients/${clientId}/management`,
+            { operation_type },
+            options
+        );
+
+    downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, {
+            ...options,
+            responseType: 'blob',
+        });
+
+    deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
@@ -805,7 +819,7 @@ class BHEAPIClient {
     ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/clients/${clientId}`, options);
+        this.baseClient.get<types.Client>(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
@@ -2781,7 +2795,13 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (skip?: number, limit?: number, sort_by?: types.WebhookSortBy, options?: RequestOptions) =>
+    getWebhooks = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.WebhookSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2789,6 +2809,7 @@ class BHEAPIClient {
                 skip,
                 limit,
                 sort_by,
+                name: name ? `~eq:${name}` : undefined,
             },
             paramsSerializer: { indexes: null },
         });
@@ -2802,13 +2823,13 @@ class BHEAPIClient {
         this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, payload, options);
 
     deleteWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+        this.baseClient.delete(`api/v2/alert-webhooks/${webhookId}`, options);
 
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
     testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
 }
 
 export default BHEAPIClient;

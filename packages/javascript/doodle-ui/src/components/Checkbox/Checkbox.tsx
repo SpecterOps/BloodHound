@@ -21,7 +21,7 @@ import { Label } from '../Label';
 import { cn } from '../utils';
 
 const CheckboxVariants = cva(
-    'peer shrink-0 rounded-sm border-2 border-input-border-default dark:border-input-border-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary dark:focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-1 dark:focus-visible:ring-offset-neutral-dark-1 enabled:hover:border-secondary enabled:hover:data-[state=checked]:border-secondary enabled:hover:data-[state=checked]:bg-secondary enabled:hover:data-[state=indeterminate]:border-secondary enabled:hover:data-[state=indeterminate]:bg-secondary enabled:active:border-primary-variant enabled:data-[state=checked]:border-primary enabled:data-[state=checked]:bg-primary enabled:data-[state=checked]:text-neutral-light-1 enabled:data-[state=indeterminate]:border-primary enabled:data-[state=indeterminate]:bg-primary enabled:data-[state=indeterminate]:text-neutral-light-1 enabled:dark:data-[state=checked]:text-neutral-dark-1 enabled:dark:data-[state=indeterminate]:text-neutral-dark-1 disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:text-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:border-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=checked]:text-neutral-light-1 enabled:aria-[invalid=true]:data-[state=indeterminate]:border-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:bg-status-error-main enabled:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-light-1 enabled:dark:aria-[invalid=true]:data-[state=checked]:text-neutral-dark-1 enabled:dark:aria-[invalid=true]:data-[state=indeterminate]:text-neutral-dark-1',
+    'peer shrink-0 rounded-sm border border-checkbox-border enabled:hover:border-checkbox-hover dark:border-checkbox-border dark:hover:border-checkbox-hover dark:active:border-primary-variant ring-offset-background focus:outline-none disabled:cursor-not-allowed data-[state=checked]:bg-checkbox-fill data-[state=checked]:text-checkbox-check dark:data-[state=checked]:bg-primary-main enabled:hover:data-[state=checked]:border-checkbox-hover enabled:hover:data-[state=checked]:bg-checkbox-hover enabled:active:data-[state=checked]:bg-primary-variant dark:data-[state=checked]:hover:bg-checkbox-hover dark:data-[state=checked]:active:bg-primary-variant enabled:hover:data-[state=indeterminate]:border-checkbox-hover enabled:hover:data-[state=indeterminate]:bg-secondary dark:disabled:bg-input-fill-disabled dark:disabled:border-input-border-disabled dark:hover:disabled:border-input-border-disabled enabled:active:border-primary-variant enabled:data-[state=checked]:border-primary enabled:data-[state=checked]:bg-primary enabled:data-[state=checked]:text-checkbox-check enabled:data-[state=indeterminate]:border-primary enabled:data-[state=indeterminate]:bg-primary enabled:data-[state=indeterminate]:text-checkbox-check disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-icon-disabled enabled:aria-[invalid=true]:data-[state=unchecked]:border-status-error-main',
     {
         variants: {
             size: {
@@ -29,9 +29,14 @@ const CheckboxVariants = cva(
                 md: 'size-[18px]',
                 sm: 'size-[12px]',
             },
+            focusRing: {
+                true: 'focus-visible:focus-ring',
+                false: '',
+            },
         },
         defaultVariants: {
             size: 'md',
+            focusRing: true,
         },
     }
 );
@@ -43,9 +48,12 @@ interface CheckboxProps
 }
 
 const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root>, CheckboxProps>(
-    ({ size, icon, className, ...props }, ref) => {
+    ({ size, focusRing, icon, className, ...props }, ref) => {
         return (
-            <CheckboxPrimitive.Root ref={ref} className={cn(CheckboxVariants({ size, className }))} {...props}>
+            <CheckboxPrimitive.Root
+                ref={ref}
+                className={cn(CheckboxVariants({ size, focusRing, className }))}
+                {...props}>
                 <CheckboxPrimitive.Indicator className='group flex items-center justify-center text-current'>
                     {/*
     Both icons are rendered with `display: none` by default. When the indicator's `data-state` is
@@ -106,8 +114,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     'inline-flex items-center gap-2 rounded-sm',
                     '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
                     'dark:[&:has(:focus-visible)]:ring-secondary-variant-2',
-                    '[&:has(:focus-visible)]:ring-offset-2 [&:has(:focus-visible)]:ring-offset-neutral-light-1',
-                    'dark:[&:has(:focus-visible)]:ring-offset-neutral-dark-1',
+                    '[&:has(:focus-visible)]:ring-offset-2',
+                    '[&:has(:focus-visible)]:ring-offset-checkbox-unchecked-fill',
                     fieldClassName
                 )}>
                 <Checkbox
@@ -116,14 +124,15 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     id={checkboxId}
                     disabled={disabled}
                     aria-invalid={error ? true : ariaInvalid}
-                    className={cn('focus-visible:ring-0 focus-visible:ring-offset-0', className)}
+                    focusRing={false}
+                    className={className}
                 />
 
                 <Label
                     htmlFor={checkboxId}
                     className={cn(
                         'cursor-pointer font-normal leading-[18px]',
-                        error && 'text-error',
+                        error && 'peer-data-[state=unchecked]:text-status-error-main',
                         disabled && 'cursor-not-allowed',
                         labelClassName
                     )}>

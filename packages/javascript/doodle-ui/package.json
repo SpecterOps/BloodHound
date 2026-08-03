@@ -110,7 +110,7 @@
         "jsdom": "^24.1.0",
         "luxon": "^3.7.1",
         "pinst": "^3.0.0",
-        "postcss": "^8.4.49",
+        "postcss": "8.5.20",
         "prettier": "3.3.1",
         "prettier-plugin-organize-imports": "^4.2.0",
         "storybook": "^8.3.6",
