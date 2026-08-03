@@ -61,8 +61,13 @@ require (
 	golang.org/x/crypto v0.53.0
 	golang.org/x/mod v0.37.0
 	golang.org/x/oauth2 v0.36.0
+<<<<<<< HEAD
 	golang.org/x/text v0.39.0
 	golang.org/x/tools v0.47.0
+=======
+	golang.org/x/text v0.38.0
+	golang.org/x/tools v0.45.0
+>>>>>>> 474d848fbb3 (chore: run go mod tidy)
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
 )
@@ -88,7 +93,10 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
+<<<<<<< HEAD
 	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
+=======
+>>>>>>> 474d848fbb3 (chore: run go mod tidy)
 	golang.org/x/term v0.44.0 // indirect
 )
 
