@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Page } from '@playwright/test';
-import { expectNoAccessibilityViolations, test } from '../fixtures';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 const SEARCH_TERM = 'test';
 const OBJECT_ID = 'playwright-gpo-1';
