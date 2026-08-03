@@ -13,12 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package handlers
 
-// ExtensionDetailsView is the JSON shape of the extension details embedded in a
-// NodeKindView.
-type ExtensionDetailsView struct {
+type ExtensionView struct {
 	ExtensionID int32  `json:"extension_id"`
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
