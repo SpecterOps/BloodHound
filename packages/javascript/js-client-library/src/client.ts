@@ -31,6 +31,7 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GraphExpansionRequest,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
@@ -94,6 +95,7 @@ import {
     GetSelfResponse,
     GetWebhookResponse,
     GetWebhooksResponse,
+    GraphExpansionResponse,
     GraphKindsResponse,
     GraphResponse,
     ListAuthTokensResponse,
@@ -164,6 +166,10 @@ class BHEAPIClient {
             { query, include_properties: includeProperties || false, headers: options?.headers },
             options
         );
+    };
+
+    expandGraph = (payload: GraphExpansionRequest, options?: RequestOptions) => {
+        return this.baseClient.post<GraphExpansionResponse>('/api/v2/graphs/expand', payload, options);
     };
 
     getUserSavedQueries = (scope: QueryScope, options?: RequestOptions) => {
