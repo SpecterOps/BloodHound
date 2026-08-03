@@ -339,6 +339,125 @@ FederatedIdentityCredentialAppID: types.#StringEnum & {
 	representation: "federatedidentitycredentialappid"
 }
 
+DomainName: types.#StringEnum & {
+	symbol:         "DomainName"
+	schema:         "azure"
+	name:           "Domain Name"
+	representation: "domainname"
+}
+
+DomainConfigurationType: types.#StringEnum & {
+	symbol:         "DomainConfigurationType"
+	schema:         "azure"
+	name:           "Domain Configuration Type"
+	representation: "domainconfigurationtype"
+}
+
+FilteredSync: types.#StringEnum & {
+	symbol:         "FilteredSync"
+	schema:         "azure"
+	name:           "Filtered Sync"
+	representation: "filteredsync"
+}
+
+SyncScope: types.#StringEnum & {
+	symbol:         "SyncScope"
+	schema:         "azure"
+	name:           "Sync Scope"
+	representation: "syncscope"
+}
+
+SyncApplicationID: types.#StringEnum & {
+	symbol:         "SyncApplicationID"
+	schema:         "azure"
+	name:           "Sync Application ID"
+	representation: "syncapplicationid"
+}
+
+NTLMV1: types.#StringEnum & {
+	symbol:         "NTLMV1"
+	schema:         "azure"
+	name:           "NTLM V1"
+	representation: "ntlmv1"
+}
+
+TLSV1: types.#StringEnum & {
+	symbol:         "TLSV1"
+	schema:         "azure"
+	name:           "TLS V1"
+	representation: "tlsv1"
+}
+
+SyncNTLMPasswords: types.#StringEnum & {
+	symbol:         "SyncNTLMPasswords"
+	schema:         "azure"
+	name:           "Sync NTLM Passwords"
+	representation: "syncntlmpasswords"
+}
+
+SyncKerberosPasswords: types.#StringEnum & {
+	symbol:         "SyncKerberosPasswords"
+	schema:         "azure"
+	name:           "Sync Kerberos Passwords"
+	representation: "synckerberospasswords"
+}
+
+SyncOnPremPasswords: types.#StringEnum & {
+	symbol:         "SyncOnPremPasswords"
+	schema:         "azure"
+	name:           "Sync On-Premises Passwords"
+	representation: "synconprempasswords"
+}
+
+KerberosRC4Encryption: types.#StringEnum & {
+	symbol:         "KerberosRC4Encryption"
+	schema:         "azure"
+	name:           "Kerberos RC4 Encryption"
+	representation: "kerberosrc4encryption"
+}
+
+KerberosArmoring: types.#StringEnum & {
+	symbol:         "KerberosArmoring"
+	schema:         "azure"
+	name:           "Kerberos Armoring"
+	representation: "kerberosarmoring"
+}
+
+LDAPSigning: types.#StringEnum & {
+	symbol:         "LDAPSigning"
+	schema:         "azure"
+	name:           "LDAP Signing"
+	representation: "ldapsigning"
+}
+
+ChannelBinding: types.#StringEnum & {
+	symbol:         "ChannelBinding"
+	schema:         "azure"
+	name:           "Channel Binding"
+	representation: "channelbinding"
+}
+
+SyncOnPremSAMAccountName: types.#StringEnum & {
+	symbol:         "SyncOnPremSAMAccountName"
+	schema:         "azure"
+	name:           "Sync On-Premises SAM Account Name"
+	representation: "synconpremsamaccountname"
+}
+
+LDAPS: types.#StringEnum & {
+	symbol:         "LDAPS"
+	schema:         "azure"
+	name:           "Secure LDAP"
+	representation: "ldaps"
+}
+
+LDAPSExternalAccess: types.#StringEnum & {
+	symbol:         "LDAPSExternalAccess"
+	schema:         "azure"
+	name:           "Secure LDAP External Access"
+	representation: "ldapsexternalaccess"
+}
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -383,7 +502,24 @@ Properties: [
 	Issuer,
 	Subject,
 	Audiences,
-	FederatedIdentityCredentialAppID
+	FederatedIdentityCredentialAppID,
+	DomainName,
+	DomainConfigurationType,
+	FilteredSync,
+	SyncScope,
+	SyncApplicationID,
+	NTLMV1,
+	TLSV1,
+	SyncNTLMPasswords,
+	SyncKerberosPasswords,
+	SyncOnPremPasswords,
+	KerberosRC4Encryption,
+	KerberosArmoring,
+	LDAPSigning,
+	ChannelBinding,
+	SyncOnPremSAMAccountName,
+	LDAPS,
+	LDAPSExternalAccess
 ]
 
 // Kinds
@@ -421,6 +557,12 @@ FunctionApp: types.#Kind & {
 	symbol:         "FunctionApp"
 	schema:         "azure"
 	representation: "AZFunctionApp"
+}
+
+DomainService: types.#Kind & {
+	symbol:         "DomainService"
+	schema:         "azure"
+	representation: "AZDomainService"
 }
 
 Group: types.#Kind & {
@@ -520,6 +662,7 @@ NodeKinds: [
 	Role,
 	Device,
 	FunctionApp,
+	DomainService,
 	Group,
 	KeyVault,
 	ManagementGroup,
@@ -655,6 +798,12 @@ Contributor: types.#Kind & {
 	symbol:         "Contributor"
 	schema:         "azure"
 	representation: "AZContributor"
+}
+
+DomainServicesContributor: types.#Kind & {
+	symbol:         "DomainServicesContributor"
+	schema:         "azure"
+	representation: "AZDomainServicesContributor"
 }
 
 GetCertificates: types.#Kind & {
@@ -830,6 +979,18 @@ SyncedToEntraDSGroup: types.#Kind & {
 	representation: "SyncedToEntraDSGroup"
 }
 
+AddEntraDSGroupMember: types.#Kind & {
+	symbol:         "AddEntraDSGroupMember"
+	schema:         "azure"
+	representation: "AddEntraDSGroupMember"
+}
+
+SyncEntraDSUsers: types.#Kind & {
+	symbol:         "SyncEntraDSUsers"
+	schema:         "azure"
+	representation: "SyncEntraDSUsers"
+}
+
 AZRoleEligible: types.#Kind & {
 	symbol: "AZRoleEligible"
 	schema: "azure"
@@ -852,6 +1013,7 @@ RelationshipKinds: [
 	AvereContributor,
 	Contains,
 	Contributor,
+	DomainServicesContributor,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -898,6 +1060,8 @@ RelationshipKinds: [
 	SyncedToEntraUser,
 	SyncedToEntraDSUser,
 	SyncedToEntraDSGroup,
+	AddEntraDSGroupMember,
+	SyncEntraDSUsers,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -924,6 +1088,7 @@ AbusableAppRoleRelationshipKinds: [
 ControlRelationshipKinds: [
 	AvereContributor,
 	Contributor,
+	DomainServicesContributor,
 	Owner,
 	VMContributor,
 	AutomationContributor,
@@ -966,6 +1131,7 @@ ExecutionPrivilegeKinds: [
 InboundOutboundRelationshipKinds: [
 	AvereContributor,
 	Contributor,
+	DomainServicesContributor,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -1003,6 +1169,8 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantRole,
 	SyncedToEntraUser,
 	SyncedToEntraDSUser,
+	AddEntraDSGroupMember,
+	SyncEntraDSUsers,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
@@ -1016,5 +1184,7 @@ PostProcessedRelationships: [
 	SyncedToEntraUser,
 	SyncedToEntraDSUser,
 	SyncedToEntraDSGroup,
+	AddEntraDSGroupMember,
+	SyncEntraDSUsers,
 	AZRoleApprover,
 ]

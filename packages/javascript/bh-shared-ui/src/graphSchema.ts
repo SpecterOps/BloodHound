@@ -932,6 +932,7 @@ export enum AzureNodeKind {
     Role = 'AZRole',
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
+    DomainService = 'AZDomainService',
     Group = 'AZGroup',
     KeyVault = 'AZKeyVault',
     ManagementGroup = 'AZManagementGroup',
@@ -962,6 +963,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'Device';
         case AzureNodeKind.FunctionApp:
             return 'FunctionApp';
+        case AzureNodeKind.DomainService:
+            return 'DomainService';
         case AzureNodeKind.Group:
             return 'Group';
         case AzureNodeKind.KeyVault:
@@ -1000,6 +1003,7 @@ export enum AzureRelationshipKind {
     AvereContributor = 'AZAvereContributor',
     Contains = 'AZContains',
     Contributor = 'AZContributor',
+    DomainServicesContributor = 'AZDomainServicesContributor',
     GetCertificates = 'AZGetCertificates',
     GetKeys = 'AZGetKeys',
     GetSecrets = 'AZGetSecrets',
@@ -1046,6 +1050,8 @@ export enum AzureRelationshipKind {
     SyncedToEntraUser = 'SyncedToEntraUser',
     SyncedToEntraDSUser = 'SyncedToEntraDSUser',
     SyncedToEntraDSGroup = 'SyncedToEntraDSGroup',
+    AddEntraDSGroupMember = 'AddEntraDSGroupMember',
+    SyncEntraDSUsers = 'SyncEntraDSUsers',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
     AZAuthenticatesTo = 'AZAuthenticatesTo',
@@ -1058,6 +1064,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'Contains';
         case AzureRelationshipKind.Contributor:
             return 'Contributor';
+        case AzureRelationshipKind.DomainServicesContributor:
+            return 'DomainServicesContributor';
         case AzureRelationshipKind.GetCertificates:
             return 'GetCertificates';
         case AzureRelationshipKind.GetKeys:
@@ -1150,6 +1158,10 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'SyncedToEntraDSUser';
         case AzureRelationshipKind.SyncedToEntraDSGroup:
             return 'SyncedToEntraDSGroup';
+        case AzureRelationshipKind.AddEntraDSGroupMember:
+            return 'AddEntraDSGroupMember';
+        case AzureRelationshipKind.SyncEntraDSUsers:
+            return 'SyncEntraDSUsers';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1206,6 +1218,23 @@ export enum AzureKindProperties {
     Subject = 'subject',
     Audiences = 'audiences',
     FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
+    DomainName = 'domainname',
+    DomainConfigurationType = 'domainconfigurationtype',
+    FilteredSync = 'filteredsync',
+    SyncScope = 'syncscope',
+    SyncApplicationID = 'syncapplicationid',
+    NTLMV1 = 'ntlmv1',
+    TLSV1 = 'tlsv1',
+    SyncNTLMPasswords = 'syncntlmpasswords',
+    SyncKerberosPasswords = 'synckerberospasswords',
+    SyncOnPremPasswords = 'synconprempasswords',
+    KerberosRC4Encryption = 'kerberosrc4encryption',
+    KerberosArmoring = 'kerberosarmoring',
+    LDAPSigning = 'ldapsigning',
+    ChannelBinding = 'channelbinding',
+    SyncOnPremSAMAccountName = 'synconpremsamaccountname',
+    LDAPS = 'ldaps',
+    LDAPSExternalAccess = 'ldapsexternalaccess',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1297,6 +1326,40 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Audiences';
         case AzureKindProperties.FederatedIdentityCredentialAppID:
             return 'Federated Identity Credential Application ID';
+        case AzureKindProperties.DomainName:
+            return 'Domain Name';
+        case AzureKindProperties.DomainConfigurationType:
+            return 'Domain Configuration Type';
+        case AzureKindProperties.FilteredSync:
+            return 'Filtered Sync';
+        case AzureKindProperties.SyncScope:
+            return 'Sync Scope';
+        case AzureKindProperties.SyncApplicationID:
+            return 'Sync Application ID';
+        case AzureKindProperties.NTLMV1:
+            return 'NTLM V1';
+        case AzureKindProperties.TLSV1:
+            return 'TLS V1';
+        case AzureKindProperties.SyncNTLMPasswords:
+            return 'Sync NTLM Passwords';
+        case AzureKindProperties.SyncKerberosPasswords:
+            return 'Sync Kerberos Passwords';
+        case AzureKindProperties.SyncOnPremPasswords:
+            return 'Sync On-Premises Passwords';
+        case AzureKindProperties.KerberosRC4Encryption:
+            return 'Kerberos RC4 Encryption';
+        case AzureKindProperties.KerberosArmoring:
+            return 'Kerberos Armoring';
+        case AzureKindProperties.LDAPSigning:
+            return 'LDAP Signing';
+        case AzureKindProperties.ChannelBinding:
+            return 'Channel Binding';
+        case AzureKindProperties.SyncOnPremSAMAccountName:
+            return 'Sync On-Premises SAM Account Name';
+        case AzureKindProperties.LDAPS:
+            return 'Secure LDAP';
+        case AzureKindProperties.LDAPSExternalAccess:
+            return 'Secure LDAP External Access';
         default:
             return undefined;
     }
@@ -1305,6 +1368,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
         AzureRelationshipKind.Contributor,
+        AzureRelationshipKind.DomainServicesContributor,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
         AzureRelationshipKind.GetSecrets,
@@ -1342,6 +1406,8 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToEntraUser,
         AzureRelationshipKind.SyncedToEntraDSUser,
+        AzureRelationshipKind.AddEntraDSGroupMember,
+        AzureRelationshipKind.SyncEntraDSUsers,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,

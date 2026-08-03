@@ -11,6 +11,36 @@
         }
     },
     {
+        "source": "AZUser",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "AddEntraDSGroupMember"
+            ]
+        }
+    },
+    {
+        "source": "AZDomainService",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "SyncEntraDSUsers"
+            ]
+        }
+    },
+    {
+        "source": "AZServicePrincipal",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "SyncEntraDSUsers"
+            ]
+        }
+    },
+    {
         "source": "Computer",
         "target": "AIACA",
         "edges": {
