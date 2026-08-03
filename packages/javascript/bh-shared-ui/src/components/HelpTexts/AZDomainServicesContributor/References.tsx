@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -23,23 +23,8 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
-                href='https://blog.netspi.com/maintaining-azure-persistence-via-automation-accounts/ '>
-                https://blog.netspi.com/maintaining-azure-persistence-via-automation-accounts/{' '}
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener noreferrer'
-                href='https://blog.netspi.com/azure-automation-accounts-key-stores/'>
-                https://blog.netspi.com/azure-automation-accounts-key-stores/
-            </Link>
-            <br />
-            <Link target='_blank' rel='noopener noreferrer' href='https://blog.netspi.com/get-azurepasswords/'>
-                https://blog.netspi.com/get-azurepasswords/
-            </Link>
-            <br />
-            <Link target='_blank' rel='noopener noreferrer' href='https://blog.netspi.com/attacking-azure-cloud-shell/'>
-                https://blog.netspi.com/attacking-azure-cloud-shell/
+                href='https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/identity#domain-services-contributor'>
+                Domain Services Contributor built-in role
             </Link>
             <br />
             <Link
@@ -53,7 +38,14 @@ const References: FC = () => {
                 target='_blank'
                 rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/entra/identity/domain-services/secure-your-domain'>
-                Secure a Microsoft Entra Domain Services managed domain
+                Harden a Microsoft Entra Domain Services managed domain
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/domain-services/scoped-synchronization'>
+                Configure scoped synchronization
             </Link>
         </Box>
     );

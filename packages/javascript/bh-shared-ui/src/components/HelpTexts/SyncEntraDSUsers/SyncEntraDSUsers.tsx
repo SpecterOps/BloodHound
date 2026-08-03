@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from 'doodle-ui';
-import { FC } from 'react';
+import General from './General';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
+import WindowsAbuse from './WindowsAbuse';
 
-const General: FC = () => {
-    return (
-        <Typography variant='body2'>
-            This indicates that the parent object contains the child object, such as a resource group containing a
-            virtual machine or Microsoft Entra Domain Services managed domain, or a tenant "containing" a subscription.
-        </Typography>
-    );
+const SyncEntraDSUsers = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
 };
 
-export default General;
+export default SyncEntraDSUsers;

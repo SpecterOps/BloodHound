@@ -36,6 +36,7 @@ import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
 import AZCloudAppAdmin from './AZCloudAppAdmin/AZCloudAppAdmin';
 import AZContains from './AZContains/AZContains';
 import AZContributor from './AZContributor/AZContributor';
+import AZDomainServicesContributor from './AZDomainServicesContributor/AZDomainServicesContributor';
 import AZExecuteCommand from './AZExecuteCommand/AZExecuteCommand';
 import AZGetCertificates from './AZGetCertificates/AZGetCertificates';
 import AZGetKeys from './AZGetKeys/AZGetKeys';
@@ -73,6 +74,7 @@ import AZVMContributor from './AZVMContributor/AZVMContributor';
 import AZWebsiteContributor from './AZWebsiteContributor/AZWebsiteContributor';
 import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import AddAllowedToAct from './AddAllowedToAct/AddAllowedToAct';
+import AddEntraDSGroupMember from './AddEntraDSGroupMember/AddEntraDSGroupMember';
 import AddKeyCredentialLink from './AddKeyCredentialLink/AddKeyCredentialLink';
 import AddMember from './AddMember/AddMember';
 import AddSelf from './AddSelf/AddSelf';
@@ -127,6 +129,7 @@ import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
+import SyncEntraDSUsers from './SyncEntraDSUsers/SyncEntraDSUsers';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraDSGroup from './SyncedToEntraDSGroup/SyncedToEntraDSGroup';
@@ -196,6 +199,7 @@ const EdgeInfoComponents = {
     AZAvereContributor: AZAvereContributor,
     AZContains: AZContains,
     AZContributor: AZContributor,
+    AZDomainServicesContributor: AZDomainServicesContributor,
     AZExecuteCommand: AZExecuteCommand,
     AZGetCertificates: AZGetCertificates,
     AZGetKeys: AZGetKeys,
@@ -218,8 +222,10 @@ const EdgeInfoComponents = {
     WriteSPN: WriteSPN,
     AddSelf: AddSelf,
     AddKeyCredentialLink: AddKeyCredentialLink,
+    AddEntraDSGroupMember: AddEntraDSGroupMember,
     DCSync: DCSync,
     SyncLAPSPassword: SyncLAPSPassword,
+    SyncEntraDSUsers: SyncEntraDSUsers,
     WriteAccountRestrictions: WriteAccountRestrictions,
     WriteGPLink: WriteGPLink,
     DumpSMSAPassword: DumpSMSAPassword,

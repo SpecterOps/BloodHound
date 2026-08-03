@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,9 @@ import { FC } from 'react';
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            This indicates that the parent object contains the child object, such as a resource group containing a
-            virtual machine or Microsoft Entra Domain Services managed domain, or a tenant "containing" a subscription.
+            AZDomainServicesContributor means an Entra principal has a direct assignment of the built-in Domain Services
+            Contributor Azure Resource Manager role on the target AZDomainService. The role grants broad management of
+            the managed-domain resource through Microsoft.AAD/domainServices/*.
         </Typography>
     );
 };

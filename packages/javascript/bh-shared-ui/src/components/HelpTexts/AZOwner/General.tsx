@@ -39,6 +39,15 @@ const AZVMLink = (
     </a>
 );
 
+const AZDomainServiceLink = (
+    <a
+        target='_blank'
+        rel='noopener noreferrer'
+        href='https://bloodhound.specterops.io/resources/nodes/az-domain-service'>
+        AZDomainService
+    </a>
+);
+
 const General: FC = () => {
     return (
         <p className='edge-accordion-body2'>
@@ -46,8 +55,8 @@ const General: FC = () => {
             Azure Resource Manager asset.
             <br />
             <br />
-            AZOwner targets resources in AzureRM (for example {AZResourceGroupLink}, {AZSubscriptionLink} and {AZVMLink}
-            ) through role assignment called “Owner”.
+            AZOwner targets resources in AzureRM (for example {AZResourceGroupLink}, {AZSubscriptionLink}, {AZVMLink},
+            and {AZDomainServiceLink}) through a role assignment called “Owner”.
         </p>
     );
 };
