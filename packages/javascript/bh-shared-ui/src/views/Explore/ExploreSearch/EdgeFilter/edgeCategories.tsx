@@ -217,13 +217,19 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 edgeTypes: [
                     AzureRelationshipKind.AKSContributor,
                     AzureRelationshipKind.AutomationContributor,
+                    AzureRelationshipKind.DomainServicesContributor,
                     AzureRelationshipKind.LogicAppContributor,
                     AzureRelationshipKind.WebsiteContributor,
                 ],
             },
             {
                 name: 'Cross Platform',
-                edgeTypes: [AzureRelationshipKind.SyncedToEntraUser, AzureRelationshipKind.SyncedToEntraDSUser],
+                edgeTypes: [
+                    AzureRelationshipKind.SyncedToEntraUser,
+                    AzureRelationshipKind.SyncedToEntraDSUser,
+                    AzureRelationshipKind.AddEntraDSGroupMember,
+                    AzureRelationshipKind.SyncEntraDSUsers,
+                ],
             },
         ],
     },

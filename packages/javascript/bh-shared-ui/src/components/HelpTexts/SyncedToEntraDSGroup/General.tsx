@@ -36,7 +36,9 @@ const General: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 This relationship is informational. Control of the Entra group does not by itself provide a usable Entra
-                Domain Services identity, so the relationship is excluded from pathfinding.
+                Domain Services identity. The related AddEntraDSGroupMember edge captures the case where a synchronized
+                Entra user can use control of a synchronized Entra group to gain effective membership in the Entra
+                Domain Services group.
             </Typography>
         </>
     );

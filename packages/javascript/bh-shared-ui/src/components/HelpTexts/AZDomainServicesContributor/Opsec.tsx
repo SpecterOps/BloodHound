@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
-const General: FC = () => {
+const Opsec: FC = () => {
     return (
         <Typography variant='body2'>
-            This indicates that the parent object contains the child object, such as a resource group containing a
-            virtual machine or Microsoft Entra Domain Services managed domain, or a tenant "containing" a subscription.
+            Azure records managed-domain updates in the Activity Log. Synchronization-scope changes can also generate
+            Microsoft Entra audit activity and trigger a full managed-domain resynchronization, including deletion of
+            objects that fall out of scope.
         </Typography>
     );
 };
 
-export default General;
+export default Opsec;

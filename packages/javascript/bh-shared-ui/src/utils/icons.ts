@@ -183,6 +183,11 @@ export const NODE_ICONS: IconDictionary = {
         color: '#F4BA44',
     },
 
+    [AzureNodeKind.DomainService]: {
+        icon: faServer,
+        color: '#6D83F2',
+    },
+
     [AzureNodeKind.ContainerRegistry]: {
         icon: faBoxOpen,
         color: '#0885D7',
