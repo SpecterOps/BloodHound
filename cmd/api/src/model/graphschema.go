@@ -296,6 +296,7 @@ type SchemaEnvironment struct {
 	SchemaExtensionDisplayName string
 	EnvironmentKindId          int32
 	EnvironmentKindName        string
+	EnvironmentKindDisplayName string
 	SourceKindId               int32
 }
 
