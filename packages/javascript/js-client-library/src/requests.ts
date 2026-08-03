@@ -342,7 +342,7 @@ export interface GetAlertEventRequest {
 export interface AlertSubscription {
     channel_id: string;
     event_type: string;
-    version: string;
+    version: number;
     disabled: boolean;
 }
 

@@ -718,9 +718,21 @@ export interface AlertEvent {
     attempts_queued_at: ISO_DATE_STRING;
 }
 
+export interface AlertEventTypeVersion {
+    created_at?: ISO_DATE_STRING;
+    dataExample: object;
+    data_version: number;
+    deprecated_at?: ISO_DATE_STRING;
+}
+
 export interface AlertEventType {
+    category: string;
+    description: string;
+    name: string;
+    namespace: string;
+    severity: string;
     type: string;
-    versions: string[];
+    versions: AlertEventTypeVersion[];
 }
 
 // ---------------------------------------------------------------------------
