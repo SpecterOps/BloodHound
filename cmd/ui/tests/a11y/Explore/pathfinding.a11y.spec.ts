@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
+import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
 
 test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     test.beforeEach(async ({ page }) => {
@@ -52,7 +52,6 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
 
         await page.getByLabel('Start Node').fill(searchTerm);
         await page.getByRole('option', { name: 'No results found for "' }).waitFor({ state: 'visible' });
-
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
