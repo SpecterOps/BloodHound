@@ -47,10 +47,19 @@ const PathfindingSearch = ({
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const dragCounter = useRef<Record<number, number>>({});
+    const dragImageRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
     const handleDragStart = (index: number) => (e: React.DragEvent) => {
         setDragIndex(index);
         e.dataTransfer.effectAllowed = 'move';
+
+        // The row owns the drag, but its node icon and connector line overflow the row box and read
+        // as detached artifacts in the browser's default drag image, so snapshot the controls alone.
+        const dragImageElement = dragImageRefs.current[index];
+        if (dragImageElement) {
+            const { left, top } = dragImageElement.getBoundingClientRect();
+            e.dataTransfer.setDragImage(dragImageElement, e.clientX - left, e.clientY - top);
+        }
     };
 
     const handleDragEnter = (index: number) => (e: React.DragEvent) => {
@@ -126,41 +135,47 @@ const PathfindingSearch = ({
                         })}>
                         <PathfindingNodeIcon isStartNode={index === 0} showConnector={index > 0} />
                         <div
-                            role='button'
-                            tabIndex={0}
-                            aria-label={`Reorder ${node.label}, position ${index + 1} of ${visibleNodes.length}`}
-                            aria-roledescription='sortable'
-                            onKeyDown={(e) => {
-                                if (e.key === 'ArrowUp' && index > 0) {
-                                    e.preventDefault();
-                                    handleReorderNodes(index, index - 1);
-                                } else if (e.key === 'ArrowDown' && index < visibleNodes.length - 1) {
-                                    e.preventDefault();
-                                    handleReorderNodes(index, index + 1);
-                                }
+                            ref={(element) => {
+                                dragImageRefs.current[index] = element;
                             }}
-                            className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity'>
-                            <FontAwesomeIcon icon={faGripVertical} size='sm' />
+                            className='relative flex flex-grow items-center gap-1'>
+                            <div
+                                role='button'
+                                tabIndex={0}
+                                aria-label={`Reorder ${node.label}, position ${index + 1} of ${visibleNodes.length}`}
+                                aria-roledescription='sortable'
+                                onKeyDown={(e) => {
+                                    if (e.key === 'ArrowUp' && index > 0) {
+                                        e.preventDefault();
+                                        handleReorderNodes(index, index - 1);
+                                    } else if (e.key === 'ArrowDown' && index < visibleNodes.length - 1) {
+                                        e.preventDefault();
+                                        handleReorderNodes(index, index + 1);
+                                    }
+                                }}
+                                className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'>
+                                <FontAwesomeIcon icon={faGripVertical} size='sm' />
+                            </div>
+                            <div className='flex-grow'>
+                                <ExploreSearchCombobox
+                                    autoFocus={node.autoFocus}
+                                    handleNodeEdited={handleNodeEdited(index)}
+                                    handleNodeSelected={handleNodeSelected(index)}
+                                    inputValue={node.searchTerm}
+                                    selectedItem={node.selectedItem || null}
+                                    labelText={node.label}
+                                />
+                            </div>
+                            {node.removable && (
+                                <button
+                                    onClick={() => handleRemoveNode(index)}
+                                    className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 z-10'
+                                    aria-label='Remove destination'
+                                    title='Remove destination'>
+                                    <FontAwesomeIcon icon={faTimes} size='sm' />
+                                </button>
+                            )}
                         </div>
-                        <div className='flex-grow'>
-                            <ExploreSearchCombobox
-                                autoFocus={node.autoFocus}
-                                handleNodeEdited={handleNodeEdited(index)}
-                                handleNodeSelected={handleNodeSelected(index)}
-                                inputValue={node.searchTerm}
-                                selectedItem={node.selectedItem || null}
-                                labelText={node.label}
-                            />
-                        </div>
-                        {node.removable && (
-                            <button
-                                onClick={() => handleRemoveNode(index)}
-                                className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 z-10'
-                                aria-label='Remove destination'
-                                title='Remove destination'>
-                                <FontAwesomeIcon icon={faTimes} size='sm' />
-                            </button>
-                        )}
                     </div>
                 ))}
                 {totalNodeCount < maxNodes && (
