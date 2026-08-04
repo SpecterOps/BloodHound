@@ -14,78 +14,51 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
+import { expectNoAccessibilityViolations, test } from '../fixtures';
 
 test.describe('API Explorer page accessibility', () => {
-    test('explore page has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
+    test.beforeEach(async ({ page }) => {
         await page.goto('/ui/api-explorer');
 
-        // Wait for the filter input to load
         await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
+    });
 
+    test('default state has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('expanded resource', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/api-explorer');
+        await page.getByRole('button', { name: 'get /api/version' }).click();
 
-        // Wait for the filter input to load
-        await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
-
-        const resourceButton = page.getByTestId('api-explorer').getByRole('button', { name: /^get.*api.*version$/i });
-
-        await resourceButton.click();
-        await expect(resourceButton).toHaveAttribute('aria-expanded', 'true');
+        await page.getByText('Returns the supported API versions.').waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('expanded disabled resource', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/api-explorer');
+        await page.getByRole('button', { name: 'get /api/v2/saml', exact: true }).click();
 
-        // Wait for the filter input to load
-        await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
-
-        const resourceButton = page
-            .getByTestId('api-explorer')
-            .getByRole('button', { name: /^put.*api.*v2.*accept-eula$/i });
-
-        await resourceButton.click();
-        await expect(resourceButton).toHaveAttribute('aria-expanded', 'true');
+        await page.getByText('Deprecated: This endpoint').waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('filter with no results', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/api-explorer');
-
-        // Wait for the filter input to load
         const filterInput = page.getByRole('textbox', { name: 'Filter by tag or path' });
-        await filterInput.waitFor({ state: 'visible' });
 
         await filterInput.fill('no-matching-api-resource');
 
-        const apiExplorer = page.getByTestId('api-explorer');
-        await expect(
-            apiExplorer.getByRole('button', { name: /^(delete|get|head|options|patch|post|put|trace)\b/i })
-        ).toHaveCount(0);
+        await page.getByRole('heading', { name: 'No operations defined in spec!' }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('expanded Schemas', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/api-explorer');
-
-        // Wait for the filter input to load
-        await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
-
-        const schemasButton = page.getByTestId('api-explorer').getByRole('button', { name: 'Schemas' });
-
-        await expect(schemasButton).toHaveAttribute('aria-expanded', 'true');
+        await page.getByText('api.error-detail', { exact: true }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
