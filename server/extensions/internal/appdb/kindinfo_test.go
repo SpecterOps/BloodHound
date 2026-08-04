@@ -58,25 +58,25 @@ func TestStore_GetKindInfos(t *testing.T) {
 		wantErr       error
 	}{
 		{
-			name: "success_-_returns_ordered_infos_with_name",
+			name: "returns ordered infos for a kind name",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnRows(
 					pool.NewRows(kindInfoColumns()).
-						AddRow(int32(1), int32(99), &nodeKindID, (*int32)(nil), "User",
+						AddRow(int32(1), int32(99), &nodeKindID, (*int32)(nil), kindName,
 							"overview", "Overview", int32(0), content, createdAt, updatedAt).
-						AddRow(int32(2), int32(99), &nodeKindID, (*int32)(nil), "User",
+						AddRow(int32(2), int32(99), &nodeKindID, (*int32)(nil), kindName,
 							"details", "Details", int32(1), content, createdAt, updatedAt),
 				)
 			},
 			wantKindInfos: []services.KindInfo{
-				{ID: 1, KindID: 99, NodeKindID: &nodeKindID, Name: "User", InfoKey: "overview",
+				{ID: 1, KindID: 99, NodeKindID: &nodeKindID, Name: kindName, InfoKey: "overview",
 					Title: "Overview", Position: 0, Content: content, CreatedAt: createdAt, UpdatedAt: updatedAt},
-				{ID: 2, KindID: 99, NodeKindID: &nodeKindID, Name: "User", InfoKey: "details",
+				{ID: 2, KindID: 99, NodeKindID: &nodeKindID, Name: kindName, InfoKey: "details",
 					Title: "Details", Position: 1, Content: content, CreatedAt: createdAt, UpdatedAt: updatedAt},
 			},
 		},
 		{
-			name: "success_-_returns_empty_slice_when_no_infos",
+			name: "returns an empty slice when no infos exist",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnRows(
 					pool.NewRows(kindInfoColumns()),
@@ -85,7 +85,7 @@ func TestStore_GetKindInfos(t *testing.T) {
 			wantKindInfos: []services.KindInfo{},
 		},
 		{
-			name: "error_-_propagates_database_error",
+			name: "propagates database errors",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetKindInfosSQL).WithArgs(kindName).WillReturnError(dbErr)
 			},

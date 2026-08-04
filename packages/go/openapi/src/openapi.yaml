@@ -395,6 +395,8 @@ paths:
     $ref: './paths/graph-schema.edge-kinds.yaml'
   /api/v2/node-kinds/{node_kind_id}:
     $ref: './paths/opengraph.node-kind.yaml'
+  /api/v2/relationship-kinds/{relationship_kind_id}:
+    $ref: './paths/opengraph.relationship-kind.yaml'
 
   # cypher
   /api/v2/saved-queries:

@@ -8316,6 +8316,113 @@
         }
       }
     },
+    "/api/v2/relationship-kinds/{relationship_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "relationship_kind_id",
+          "description": "Relationship Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetRelationshipKind",
+        "summary": "Get Relationship Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph relationship kind by its id, including its extension metadata and entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.relationship-kind-response"
+                    }
+                  }
+                },
+                "examples": {
+                  "With info": {
+                    "summary": "Relationship kind with entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 42,
+                        "name": "MemberOf",
+                        "description": "a membership relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {
+                          "overview": {
+                            "title": "Overview",
+                            "position": 0,
+                            "markdown": {
+                              "content": "This relationship represents group membership."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Without info": {
+                    "summary": "Relationship kind without entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 43,
+                        "name": "HasSession",
+                        "description": "a session relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -23463,6 +23570,34 @@
           },
           "info": {
             "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          }
+        }
+      },
+      "model.relationship-kind-response": {
+        "type": "object",
+        "properties": {
+          "relationship_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "MemberOf"
+          },
+          "description": {
+            "type": "string",
+            "example": "a membership relationship"
+          },
+          "is_traversable": {
+            "type": "boolean",
+            "example": true
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
           }
         }
       },
