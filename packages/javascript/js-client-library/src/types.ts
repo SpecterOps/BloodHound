@@ -782,12 +782,14 @@ export interface Notification {
     subscriptions: Subscription[];
 }
 
+export type AlertAttemptsSortableColumn = 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
+export type AlertAttemptsSortBy = AlertAttemptsSortableColumn | `-${AlertAttemptsSortableColumn}`;
 export interface AlertAttemptsParams {
     skip?: number;
     limit?: number;
-    sort_by?: 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
-    alert_id: string;
-    channel_id: string;
+    sort_by?: AlertAttemptsSortBy;
+    alert_id?: string;
+    channel_id?: string;
     event_id: string;
     succeeded: boolean;
     created_at?: ISO_DATE_STRING;

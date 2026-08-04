@@ -79,6 +79,7 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    GetAlertAttemptsResponse,
     GetAlertEventTypesResponse,
     GetAlertResponse,
     GetAlertsResponse,
@@ -2872,6 +2873,31 @@ class BHEAPIClient {
 
     deleteAlert = (alertId: string, options?: RequestOptions) =>
         this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
+
+    getAlertAttempts = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.AlertAttemptsSortBy,
+        alert_id?: string,
+        channel_id?: string,
+        event_id?: string,
+        succeeded?: boolean,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                alert_id,
+                channel_id,
+                event_id: event_id ? `~eq:${event_id}` : undefined,
+                succeeded,
+            },
+            paramsSerializer: { indexes: null },
+        });
 }
 
 export default BHEAPIClient;
