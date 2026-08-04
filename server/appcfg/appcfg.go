@@ -33,10 +33,10 @@ import (
 // registry and receives only the infrastructure it directly needs.
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
-		store   = appdb.NewStore(pool)
-		service = services.NewService(store)
-		hdl     = handlers.NewHandlers(service)
+		store      = appdb.NewStore(pool)
+		service    = services.NewService(store)
+		handlerSet = handlers.NewHandlers(service)
 	)
 
-	routes.Register(routerInst, hdl)
+	routes.Register(routerInst, handlerSet)
 }

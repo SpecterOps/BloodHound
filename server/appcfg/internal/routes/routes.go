@@ -22,6 +22,6 @@ import (
 )
 
 // Register attaches the appcfg endpoints to the given router instance.
-func Register(routerInst *router.Router, handlers *handlers.Handlers) {
-	routerInst.GET("/api/v2/datapipe/status", handlers.GetDatapipeStatus).RequireAuth()
+func Register(routerInst *router.Router, handlerSet *handlers.Handlers) {
+	routerInst.GET("/api/v2/datapipe/status", handlerSet.GetDatapipeStatus).RequireAuth()
 }

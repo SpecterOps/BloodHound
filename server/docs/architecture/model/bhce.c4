@@ -63,7 +63,7 @@ model {
 
       responses = goPackage 'responses' {
         description 'Shared HTTP response helpers: BasicResponse / ErrorWrapper envelopes and status-code writers.'
-        technology 'bhce/server/responses'
+        technology 'bhce/packages/go/responses'
       }
 
       analysisFeature = goPackage 'analysis' {

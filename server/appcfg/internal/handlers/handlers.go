@@ -48,16 +48,14 @@ func (s *Handlers) GetDatapipeStatus(response http.ResponseWriter, request *http
 
 	status, err := s.service.GetDatapipeStatus(ctx)
 	if err != nil {
-		handleServiceError(request, response, err)
+		handleServiceError(ctx, response, err)
 		return
 	}
 
 	responses.WriteBasic(ctx, BuildDatapipeStatusView(status), http.StatusOK, response)
 }
 
-func handleServiceError(request *http.Request, response http.ResponseWriter, err error) {
-	var ctx = request.Context()
-
+func handleServiceError(ctx context.Context, response http.ResponseWriter, err error) {
 	if errors.Is(err, services.ErrNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, response)
 	} else if errors.Is(err, context.DeadlineExceeded) {

@@ -51,7 +51,6 @@ likec4 export png -o ./diagrams
 ```
 server/
 ├── modules/        # Shared Deps container and module registry
-├── responses/       # Shared HTTP response helpers (envelopes, error wrappers)
 ├── docs/
 │   └── architecture/   # LikeC4 (C4 model) source for the diagrams above
 └── <feature>/      # One directory per vertical feature slice
@@ -62,6 +61,8 @@ server/
         ├── routes/         # Route registration
         └── services/       # Business-logic layer (domain types, interfaces)
 ```
+
+> Shared HTTP response helpers (envelopes and error wrappers) live outside this tree at `packages/go/responses` and are imported by every feature's handlers.
 
 Each feature is a self-contained vertical slice. It owns every layer from HTTP to SQL; nothing bleeds across feature boundaries.
 
@@ -165,7 +166,7 @@ The checklist covers:
 
 ### Package tree structure
 
-```
+```text
 server/myfeature/
 ├── myfeature.go         # Register entry point
 └── internal/            # Internal implementation packages
@@ -314,7 +315,7 @@ import (
     "errors"
     "net/http"
     "github.com/specterops/bloodhound/server/myfeature/internal/services"
-    "github.com/specterops/bloodhound/server/responses"
+    "github.com/specterops/bloodhound/packages/go/responses"
 )
 
 type MyFeature interface {

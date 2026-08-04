@@ -21,27 +21,17 @@ package analysis_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
-	"time"
 
-	"github.com/peterldowns/pgtestdb"
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
+	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,151 +43,21 @@ type analysisResponseEnvelope struct {
 	Data handlers.RequestedAnalysisView `json:"data"`
 }
 
-// setupAnalysisDB creates an isolated test database with all migrations applied.
-// The database is automatically closed when the test ends.
-func setupAnalysisDB(t *testing.T) *database.BloodhoundDB {
-	t.Helper()
-
-	var (
-		ctx      = context.Background()
-		connConf = pgtestdb.Custom(t, getAnalysisPostgresConfig(t), pgtestdb.NoopMigrator{})
-	)
-
-	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
-	require.NoError(t, err)
-
-	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
-	require.NoError(t, err)
-
-	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
-	require.NoError(t, db.Migrate(ctx))
-
-	t.Cleanup(func() { db.Close(ctx) })
-
-	return db
-}
-
-// getAnalysisPostgresConfig reads the integration test configuration from the
-// environment and returns a pgtestdb.Config for the analysis e2e tests.
-func getAnalysisPostgresConfig(t *testing.T) pgtestdb.Config {
-	t.Helper()
-
-	cfg, err := utils.LoadIntegrationTestConfig()
-	require.NoError(t, err)
-
-	environmentMap := make(map[string]string)
-	for entry := range strings.FieldsSeq(cfg.Database.Connection) {
-		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
-			environmentMap[parts[0]] = parts[1]
-		}
-	}
-
-	if strings.HasPrefix(environmentMap["host"], "/") {
-		return pgtestdb.Config{
-			DriverName: "pgx",
-			User:       environmentMap["user"],
-			Password:   environmentMap["password"],
-			Database:   environmentMap["dbname"],
-			Options:    fmt.Sprintf("host=%s", url.PathEscape(environmentMap["host"])),
-			TestRole: &pgtestdb.Role{
-				Username:     environmentMap["user"],
-				Password:     environmentMap["password"],
-				Capabilities: "NOSUPERUSER NOCREATEROLE",
-			},
-		}
-	}
-
-	return pgtestdb.Config{
-		DriverName:                "pgx",
-		Host:                      environmentMap["host"],
-		Port:                      environmentMap["port"],
-		User:                      environmentMap["user"],
-		Password:                  environmentMap["password"],
-		Database:                  environmentMap["dbname"],
-		Options:                   "sslmode=disable",
-		ForceTerminateConnections: true,
-	}
-}
-
-// mintJWT creates a signed JWT token for the given user using the authenticator.
-// This creates a proper session in the database and returns a valid token.
-// The user is granted the Administrator role which has all permissions.
-func mintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) string {
-	t.Helper()
-
-	var (
-		allRoles   model.Roles
-		adminRole  model.Role
-		found      bool
-		authSecret model.AuthSecret
-		dbUser     model.User
-		token      string
-		err        error
-	)
-
-	// Get the Administrator role which has all permissions
-	allRoles, err = db.GetAllRoles(ctx, "", model.SQLFilter{})
-	require.NoError(t, err)
-
-	adminRole, found = allRoles.FindByName(auth.RoleAdministrator)
-	require.True(t, found, "Administrator role should exist in database")
-
-	authSecret = model.AuthSecret{
-		Digest:       "dummy-digest-for-e2e-test",
-		DigestMethod: "argon2",
-		ExpiresAt:    time.Now().Add(24 * time.Hour).UTC(),
-	}
-	user.AuthSecret = &authSecret
-	user.Roles = model.Roles{adminRole}
-
-	dbUser, err = db.CreateUser(ctx, user)
-	require.NoError(t, err)
-
-	// CRITICAL: Must reload user with full associations before creating session
-	// The session stores UserID, and when middleware validates, it calls GetUserSession
-	// which preloads User.Roles.Permissions. We need to ensure the user_roles mapping exists.
-	dbUser, err = db.GetUser(ctx, dbUser.ID)
-	require.NoError(t, err)
-	require.NotNil(t, dbUser.AuthSecret, "User should have an AuthSecret")
-	require.NotEmpty(t, dbUser.Roles, "User should have roles assigned")
-	require.Greater(t, len(dbUser.Roles[0].Permissions), 0, "Administrator role should have permissions")
-
-	token, err = auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
-	require.NoError(t, err)
-	return token
-}
-
 func TestGetAnalysisStatus(t *testing.T) {
 	var (
-		db         = setupAnalysisDB(t)
-		ctx        = context.Background()
-		cfg, _     = config.NewDefaultConfiguration()
-		authExt    = api.NewAuthExtensions(cfg, db)
-		auther     = api.NewAuthenticator(cfg, db, authExt)
-		authorizer = auth.NewAuthorizer(db)
-		resolver   = auth.NewIdentityResolver()
-		routerInst = router.NewRouter(cfg, authorizer, "")
-	)
-
-	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
-
-	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
-
-	analysis.Register(&routerInst, db.Pool())
-
-	var (
-		handler = routerInst.Handler()
-		server  = httptest.NewServer(handler)
-	)
-	t.Cleanup(server.Close)
-
-	var (
-		user = model.User{
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+			analysis.Register(routerInst, db.Pool())
+		})
+		db     = harness.DB
+		server = harness.Server
+		user   = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
 			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
 		}
-		token = mintJWT(t, ctx, db, auther, user)
+		token = servertest.MintJWT(t, ctx, db, harness.Auther, user)
 	)
 
 	newGetRequest := func(t *testing.T) *http.Request {
@@ -287,35 +147,19 @@ func TestGetAnalysisStatus(t *testing.T) {
 
 func TestCreateAnalysisRequest(t *testing.T) {
 	var (
-		db         = setupAnalysisDB(t)
-		ctx        = context.Background()
-		cfg, _     = config.NewDefaultConfiguration()
-		authExt    = api.NewAuthExtensions(cfg, db)
-		auther     = api.NewAuthenticator(cfg, db, authExt)
-		authorizer = auth.NewAuthorizer(db)
-		resolver   = auth.NewIdentityResolver()
-		routerInst = router.NewRouter(cfg, authorizer, "")
-	)
-
-	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
-
-	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
-
-	analysis.Register(&routerInst, db.Pool())
-
-	var (
-		handler = routerInst.Handler()
-		server  = httptest.NewServer(handler)
-	)
-	t.Cleanup(server.Close)
-
-	var (
-		user = model.User{
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+			analysis.Register(routerInst, db.Pool())
+		})
+		db     = harness.DB
+		server = harness.Server
+		user   = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
 			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
 		}
-		token = mintJWT(t, ctx, db, auther, user)
+		token = servertest.MintJWT(t, ctx, db, harness.Auther, user)
 	)
 
 	newPutRequest := func(t *testing.T) *http.Request {
@@ -422,35 +266,19 @@ func TestCreateAnalysisRequest(t *testing.T) {
 
 func TestCancelAnalysisRequest(t *testing.T) {
 	var (
-		db         = setupAnalysisDB(t)
-		ctx        = context.Background()
-		cfg, _     = config.NewDefaultConfiguration()
-		authExt    = api.NewAuthExtensions(cfg, db)
-		auther     = api.NewAuthenticator(cfg, db, authExt)
-		authorizer = auth.NewAuthorizer(db)
-		resolver   = auth.NewIdentityResolver()
-		routerInst = router.NewRouter(cfg, authorizer, "")
-	)
-
-	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
-
-	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
-
-	analysis.Register(&routerInst, db.Pool())
-
-	var (
-		handler = routerInst.Handler()
-		server  = httptest.NewServer(handler)
-	)
-	t.Cleanup(server.Close)
-
-	var (
-		user = model.User{
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+			analysis.Register(routerInst, db.Pool())
+		})
+		db     = harness.DB
+		server = harness.Server
+		user   = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
 			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
 		}
-		token = mintJWT(t, ctx, db, auther, user)
+		token = servertest.MintJWT(t, ctx, db, harness.Auther, user)
 	)
 
 	newDeleteRequest := func(t *testing.T) *http.Request {

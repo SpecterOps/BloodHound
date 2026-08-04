@@ -15,7 +15,7 @@ For code patterns and examples, see the [Code Patterns Reference](#code-patterns
 
 **Expected directory structure:**
 
-```
+```text
 server/<feature>/
 ├── <feature>.go             # Register() entry point
 └── internal/                # Internal implementation packages
@@ -44,6 +44,8 @@ server/<feature>/
 ## Step 2 – Write an e2e integration test against the existing endpoint
 
 Before touching any production code, write a test that covers the HTTP contract of the endpoint in its current form. The goal is a green baseline that will still pass after migration.
+
+> **Test filename convention:** Full-stack, production-routed tests use the `<feature>_e2e_test.go` suffix; layer-level integration tests (e.g. persistence against a real database, such as `appdb_integration_test.go` in Step 4) use the `*_integration_test.go` suffix. Both carry the `//go:build integration` build tag. This is an intentional exception to the general Go naming rule in [`bhce/AGENTS.md`](../AGENTS.md).
 
 -   [ ] Add `<feature>_e2e_test.go` with build tag `//go:build integration`
 -   [ ] Wire the existing (old) handler using **production routing** (not manual mux setup)
@@ -220,6 +222,22 @@ This section contains complete code examples for each step in the checklist. Use
 **File:** `server/<feature>/<feature>_e2e_test.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 //go:build integration
 
 package appcfg_test
@@ -351,7 +369,7 @@ func toMyRecord(row myRecord) services.MyRecord {
 }
 
 // Store performs <feature> persistence operations directly against a PostgreSQL
-// connection. Callers receive appdb-level sentinels rather than raw driver errors.
+// connection. Callers receive services-layer sentinels rather than raw driver errors.
 type Store struct {
     db pgxQuerier
 }
@@ -391,6 +409,22 @@ func (s *Store) GetMyRecord(ctx context.Context, id string) (services.MyRecord, 
 **File:** `server/<feature>/internal/appdb/appdb_test.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package appdb_test
 
 import (
@@ -470,7 +504,7 @@ var (
 
 // Database describes the persistence capabilities the <feature> Service requires.
 // Implementations are expected to translate driver-specific not-found errors into
-// appdb-level sentinels so that the Service can map them to its own failure-mode errors.
+// services-layer sentinels so that the Service can map them to its own failure-mode errors.
 type Database interface {
     GetMyRecord(ctx context.Context, id string) (MyRecord, error)
 }
@@ -493,6 +527,22 @@ func (s *Service) GetMyRecord(ctx context.Context, id string) (MyRecord, error) 
 **File:** `server/<feature>/internal/services/services_test.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package services_test
 
 import (
@@ -600,6 +650,7 @@ import (
     "errors"
     "net/http"
 
+    "github.com/gorilla/mux"
     "github.com/specterops/bloodhound/packages/go/responses"
     "github.com/specterops/bloodhound/server/<feature>/internal/services"
 )
@@ -623,12 +674,12 @@ func NewHandlersContainer(feature MyFeature) *Handlers {
 }
 
 func (s Handlers) GetMyRecord(response http.ResponseWriter, request *http.Request) {
-    var ctx = request.Context()
+    var (
+        ctx = request.Context()
+        id  = mux.Vars(request)["id"]
+    )
 
-    // Extract ID from request (e.g., path parameter via gorilla/mux)
-    // id := mux.Vars(request)["id"]
-
-    record, err := s.feature.GetMyRecord(ctx, "example-id")
+    record, err := s.feature.GetMyRecord(ctx, id)
     if err != nil {
         handleMyFeatureError(ctx, err, response)
         return
@@ -655,6 +706,22 @@ func handleMyFeatureError(ctx context.Context, err error, response http.Response
 **File:** `server/<feature>/internal/handlers/handlers_test.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package handlers_test
 
 import (
@@ -663,6 +730,7 @@ import (
     "net/http/httptest"
     "testing"
 
+    "github.com/gorilla/mux"
     "github.com/specterops/bloodhound/server/<feature>/internal/handlers"
     "github.com/specterops/bloodhound/server/<feature>/internal/handlers/mocks"
     "github.com/specterops/bloodhound/server/<feature>/internal/services"
@@ -674,12 +742,13 @@ func TestHandlers_GetMyRecord(t *testing.T) {
     h := handlers.NewHandlersContainer(mockFeature)
 
     t.Run("returns 200 with record", func(t *testing.T) {
-        req := httptest.NewRequest(http.MethodGet, "/api/v2/my-record", nil)
+        req := httptest.NewRequest(http.MethodGet, "/api/v2/my-record/123", nil)
+        req = mux.SetURLVars(req, map[string]string{"id": "123"})
         rec := httptest.NewRecorder()
 
         expectedRecord := services.MyRecord{ID: "abc123", Name: "test"}
         mockFeature.EXPECT().
-            GetMyRecord(req.Context(), "example-id").
+            GetMyRecord(req.Context(), "123").
             Return(expectedRecord, nil)
 
         h.GetMyRecord(rec, req)
@@ -688,11 +757,12 @@ func TestHandlers_GetMyRecord(t *testing.T) {
     })
 
     t.Run("returns 404 when not found", func(t *testing.T) {
-        req := httptest.NewRequest(http.MethodGet, "/api/v2/my-record", nil)
+        req := httptest.NewRequest(http.MethodGet, "/api/v2/my-record/123", nil)
+        req = mux.SetURLVars(req, map[string]string{"id": "123"})
         rec := httptest.NewRecorder()
 
         mockFeature.EXPECT().
-            GetMyRecord(req.Context(), "example-id").
+            GetMyRecord(req.Context(), "123").
             Return(services.MyRecord{}, services.ErrNotFound)
 
         h.GetMyRecord(rec, req)
@@ -743,6 +813,22 @@ func Register(routerInst *router.Router, handlers *handlers.Handlers) {
 **File:** `server/<feature>/internal/routes/routes_test.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package routes_test
 
 import (
@@ -844,6 +930,22 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 **File:** `server/modules/modules.go`
 
 ```go
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package modules
 
 import (
