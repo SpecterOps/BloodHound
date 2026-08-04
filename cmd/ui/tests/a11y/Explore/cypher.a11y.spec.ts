@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
+import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
 
 test.describe('WCAG A/AA Violations - Explore - Cypher Tab', () => {
     test.beforeEach(async ({ page }) => {

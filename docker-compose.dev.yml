@@ -25,7 +25,7 @@ services:
       - ${WEB_PORT:-127.0.0.1:80}:80
       - ${TRAEFIK_PORT:-127.0.0.1:8000}:8080
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER_HOST_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro
 
   app-db:
     profiles:

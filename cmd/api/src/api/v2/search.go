@@ -194,6 +194,7 @@ func BuildEnvironmentSelectors(nodes []*graph.Node, kindToSchemaEnvironment mode
 			EnvironmentProperties: model.EnvironmentProperties{
 				Type:            envProperties.Type,
 				KindId:          envProperties.KindId,
+				KindName:        envProperties.KindName,
 				KindDisplayName: envProperties.KindDisplayName,
 			},
 		})
@@ -233,7 +234,8 @@ func resolveEnvProperties(node *graph.Node, kindToSchemaEnvironment model.Enviro
 		for _, kind := range node.Kinds {
 			if schemaEnvironment, ok := kindToSchemaEnvironment[kind.String()]; ok {
 				envProperties.Type = schemaEnvironment.SchemaExtensionDisplayName
-				envProperties.KindDisplayName = null.StringFrom(schemaEnvironment.EnvironmentKindName)
+				envProperties.KindName = null.StringFrom(schemaEnvironment.EnvironmentKindName)
+				envProperties.KindDisplayName = null.StringFrom(schemaEnvironment.EnvironmentKindDisplayName)
 				envProperties.KindId = null.Int32From(schemaEnvironment.EnvironmentKindId)
 				break
 			}
