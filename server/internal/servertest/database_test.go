@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsLocalHost(t *testing.T) {
@@ -42,20 +43,27 @@ func TestIsLocalHost(t *testing.T) {
 func TestTLSOptions(t *testing.T) {
 	t.Run("local host forces sslmode=disable regardless of configured TLS", func(t *testing.T) {
 		environmentMap := map[string]string{"host": "localhost", "sslmode": "require"}
-		assert.Equal(t, "sslmode=disable", tlsOptions(environmentMap))
+		options, err := tlsOptions(environmentMap)
+		require.NoError(t, err)
+		assert.Equal(t, "sslmode=disable", options)
 	})
 
-	t.Run("remote host preserves configured TLS settings in URL query format", func(t *testing.T) {
+	t.Run("remote host with authenticated sslmode preserves TLS settings in URL query format", func(t *testing.T) {
 		environmentMap := map[string]string{
 			"host":        "db.example.com",
-			"sslmode":     "require",
+			"sslmode":     "verify-full",
 			"sslrootcert": "/etc/ssl/root.crt",
 		}
-		assert.Equal(t, "sslmode=require&sslrootcert=%2Fetc%2Fssl%2Froot.crt", tlsOptions(environmentMap))
+		options, err := tlsOptions(environmentMap)
+		require.NoError(t, err)
+		assert.Equal(t, "sslmode=verify-full&sslrootcert=%2Fetc%2Fssl%2Froot.crt", options)
 	})
 
-	t.Run("remote host without TLS settings yields empty options", func(t *testing.T) {
-		environmentMap := map[string]string{"host": "db.example.com"}
-		assert.Empty(t, tlsOptions(environmentMap))
+	t.Run("remote host rejects insecure or unverified sslmode values", func(t *testing.T) {
+		for _, sslmode := range []string{"", "disable", "allow", "prefer", "require"} {
+			environmentMap := map[string]string{"host": "db.example.com", "sslmode": sslmode}
+			_, err := tlsOptions(environmentMap)
+			assert.Errorf(t, err, "sslmode=%q should be rejected for a remote host", sslmode)
+		}
 	})
 }

@@ -88,6 +88,9 @@ func PostgresConfig(t *testing.T) pgtestdb.Config {
 		}
 	}
 
+	options, err := tlsOptions(environmentMap)
+	require.NoError(t, err)
+
 	return pgtestdb.Config{
 		DriverName:                "pgx",
 		Host:                      environmentMap["host"],
@@ -95,20 +98,33 @@ func PostgresConfig(t *testing.T) pgtestdb.Config {
 		User:                      environmentMap["user"],
 		Password:                  environmentMap["password"],
 		Database:                  environmentMap["dbname"],
-		Options:                   tlsOptions(environmentMap),
+		Options:                   options,
 		ForceTerminateConnections: true,
 	}
 }
 
+// authenticatedSSLModes are the sslmode values that both encrypt the connection
+// and verify the server certificate, protecting against cleartext transmission
+// and man-in-the-middle attacks (CWE-319).
+var authenticatedSSLModes = map[string]bool{
+	"verify-ca":   true,
+	"verify-full": true,
+}
+
 // tlsOptions returns the TLS-related connection options for a TCP host,
 // URL-query encoded as required by pgtestdb.Config.Options (for example
-// "sslmode=require&sslrootcert=%2Fpath"). Local hosts default to sslmode=disable
-// because the local test database is not configured for TLS. Non-local hosts
-// preserve whatever TLS settings were configured in the connection string so a
-// remote database's TLS requirements are honored rather than overridden.
-func tlsOptions(environmentMap map[string]string) string {
+// "sslmode=verify-full&sslrootcert=%2Fpath"). Local hosts default to
+// sslmode=disable because the local test database is not configured for TLS.
+// Non-local hosts must specify an authenticated sslmode (verify-ca or
+// verify-full); otherwise an error is returned so credentials and data are never
+// transmitted in cleartext or over an unverified connection.
+func tlsOptions(environmentMap map[string]string) (string, error) {
 	if isLocalHost(environmentMap["host"]) {
-		return "sslmode=disable"
+		return "sslmode=disable", nil
+	}
+
+	if !authenticatedSSLModes[environmentMap["sslmode"]] {
+		return "", fmt.Errorf("non-local database host %q requires an authenticated sslmode (verify-ca or verify-full), got %q", environmentMap["host"], environmentMap["sslmode"])
 	}
 
 	options := url.Values{}
@@ -117,7 +133,7 @@ func tlsOptions(environmentMap map[string]string) string {
 			options.Set(key, value)
 		}
 	}
-	return options.Encode()
+	return options.Encode(), nil
 }
 
 // isLocalHost reports whether host refers to the local machine.
