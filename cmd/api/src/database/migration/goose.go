@@ -65,8 +65,7 @@ func (s *Migrator) HasMigrationTable() (bool, error) {
 	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
-// hasGooseDbTable is a utility for checking if goose_db is initialized. We assume that
-// if the `goose_db_version` table exists, the goose_db must be initialized, and vice versa.
+// hasGooseDbTable is a utility for checking if goose_db is initialized.
 func (s *Migrator) hasGooseDbTable() (bool, error) {
 	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'goose_db_version');`
 
