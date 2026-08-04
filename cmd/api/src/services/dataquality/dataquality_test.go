@@ -58,7 +58,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "saves opengraph node and relationship counts",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
@@ -122,17 +122,17 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "skips opengraph inserts when there are no custom extensions",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{}, 0, nil)
 			},
 		},
 		{
-			name: "skips opengraph collection when extension management feature flag is disabled",
+			name: "skips opengraph collection when data quality feature flag is disabled",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, false, nil)
+				expectOpenGraphDataQualityFlag(mockDB, false, nil)
 			},
 		},
 		{
@@ -154,7 +154,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph extension lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{}, 0, expectedError)
@@ -162,18 +162,18 @@ func TestSaveDataQuality(t *testing.T) {
 			expectedError: "could not get graph schema extensions",
 		},
 		{
-			name: "returns error when opengraph extension management feature flag lookup fails",
+			name: "returns error when opengraph data quality feature flag lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, false, expectedError)
+				expectOpenGraphDataQualityFlag(mockDB, false, expectedError)
 			},
-			expectedError: "could not get open graph extension management feature flag",
+			expectedError: "could not get open graph data quality feature flag",
 		},
 		{
 			name: "returns error when opengraph environment lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
@@ -187,7 +187,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph source kind lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
@@ -205,7 +205,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph graph read fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
@@ -224,7 +224,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph relationship kind lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 
 				mockDB.EXPECT().
 					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
@@ -246,7 +246,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when counted kind lookup fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
@@ -269,7 +269,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph stats insert fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
@@ -295,7 +295,7 @@ func TestSaveDataQuality(t *testing.T) {
 			name: "returns error when opengraph aggregation insert fails",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
-				expectOpenGraphExtensionManagementFlag(mockDB, true, nil)
+				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
@@ -342,9 +342,9 @@ func TestSaveDataQuality(t *testing.T) {
 	}
 }
 
-func expectOpenGraphExtensionManagementFlag(mockDB *mocks.MockDatabase, enabled bool, err error) {
+func expectOpenGraphDataQualityFlag(mockDB *mocks.MockDatabase, enabled bool, err error) {
 	mockDB.EXPECT().
-		GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+		GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphDataQuality).
 		Return(appcfg.FeatureFlag{Enabled: enabled}, err)
 }
 

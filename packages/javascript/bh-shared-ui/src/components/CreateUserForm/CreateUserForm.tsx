@@ -252,6 +252,7 @@ const CreateUserFormInner: React.FC<{
                                                     {...field}
                                                     type='email'
                                                     id='emailAddress'
+                                                    variant='outlined'
                                                     placeholder='user@domain.com'
                                                 />
                                             </FormControl>
@@ -289,7 +290,12 @@ const CreateUserFormInner: React.FC<{
                                                 Principal Name{' '}
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='principal' placeholder='Principal Name' />
+                                                <Input
+                                                    {...field}
+                                                    id='principal'
+                                                    variant='outlined'
+                                                    placeholder='Principal Name'
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -325,7 +331,12 @@ const CreateUserFormInner: React.FC<{
                                                     First Name
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} id='firstName' placeholder='First Name' />
+                                                    <Input
+                                                        {...field}
+                                                        id='firstName'
+                                                        variant='outlined'
+                                                        placeholder='First Name'
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -362,7 +373,12 @@ const CreateUserFormInner: React.FC<{
                                                     Last Name
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} id='lastName' placeholder='Last Name' />
+                                                    <Input
+                                                        {...field}
+                                                        id='lastName'
+                                                        variant='outlined'
+                                                        placeholder='Last Name'
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -430,6 +446,7 @@ const CreateUserFormInner: React.FC<{
                                                             <Input
                                                                 {...field}
                                                                 id='secret'
+                                                                variant='outlined'
                                                                 type='password'
                                                                 placeholder='Initial Password'
                                                             />

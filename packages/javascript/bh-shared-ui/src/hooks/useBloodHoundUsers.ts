@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from 'react-query';
 import { apiClient, Permission } from '../utils';
 import { usePermissions } from './usePermissions';
@@ -43,7 +43,6 @@ export const useGetUser = (userId?: string) => {
     );
 };
 
-// useUserNamesById returns a Map of user id to principal_name for looking up a user's display name by their id.
 export const useUserNamesById = () => {
     const { data: users } = useBloodHoundUsers();
 
@@ -52,4 +51,10 @@ export const useUserNamesById = () => {
         users?.forEach((user) => map.set(user.id, user.principal_name));
         return map;
     }, [users]);
+};
+
+export const useGetUserNameById = () => {
+    const userNamesById = useUserNamesById();
+
+    return useCallback((userId?: string) => (userId ? userNamesById.get(userId) : undefined), [userNamesById]);
 };

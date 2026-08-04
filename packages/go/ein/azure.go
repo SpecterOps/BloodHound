@@ -1992,9 +1992,7 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
 		rels = make([]IngestibleRelationship, 0)
-		// The AZRole identity is left in its raw casing here; node ingestion
-		// (normalizeEinNodeProperties) applies the use_raw_object_id-aware
-		// casing normalization to the node's ObjectID.
+		// Raw casing here; node ingestion applies use_raw_object_id-aware normalization.
 		combinedObjectId = fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId)
 	)
 
@@ -2055,11 +2053,10 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
-		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role.
-		// The identity is left in its raw casing here; graphify's relationship ingestion (ingestibleRelationshipsToUpdates)
-		// applies the use_raw_object_id-aware casing normalization to relationship endpoints, matching the casing
-		// applied to the AZRole node's own objectid during node ingestion.
-		combinedObjectId := fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId)
+		// No approvers: create the edge from the tenant's PrivilegedRoleAdministratorRole node to the target role.
+		// Uppercase the lowercase well-known constant to match the collector-sourced node objectid; under
+		// use_raw_object_id, relationship ingestion no longer normalizes it, so uppercasing here avoids a split node.
+		combinedObjectId := fmt.Sprintf("%s@%s", strings.ToUpper(azure.PrivilegedRoleAdministratorRole), policyAssignment.TenantId)
 
 		rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
 			Value: combinedObjectId,

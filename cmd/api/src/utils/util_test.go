@@ -36,7 +36,7 @@ func TestIsValidClientVersion(t *testing.T) {
 		err error
 	)
 
-	azureHoundVersion, err := utils.IsValidClientVersion("azurehound/0.0.0")
+	azureHoundVersion, err := utils.IsValidClientVersion("azurehound/0.0.0", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeAzureHound, azureHoundVersion.ClientType)
 	require.Equal(t, 0, azureHoundVersion.Major)
@@ -44,7 +44,7 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, 0, azureHoundVersion.Patch)
 	require.Empty(t, azureHoundVersion.BuildMetadata)
 
-	azureHoundDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0+docker")
+	azureHoundDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0+docker", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeAzureHound, azureHoundDockerVersion.ClientType)
 	require.Equal(t, 0, azureHoundDockerVersion.Major)
@@ -53,7 +53,7 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Empty(t, azureHoundDockerVersion.Prerelease)
 	require.Equal(t, "docker", azureHoundDockerVersion.BuildMetadata)
 
-	azureHoundRCVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1")
+	azureHoundRCVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeAzureHound, azureHoundRCVersion.ClientType)
 	require.Equal(t, 0, azureHoundRCVersion.Major)
@@ -62,10 +62,10 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, "rc1", azureHoundRCVersion.Prerelease)
 	require.Empty(t, azureHoundRCVersion.BuildMetadata)
 
-	_, err = utils.IsValidClientVersion("azurehound/0.0.0+notdocker")
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0+notdocker", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	azureHoundRCDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1+docker")
+	azureHoundRCDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1+docker", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeAzureHound, azureHoundRCDockerVersion.ClientType)
 	require.Equal(t, 0, azureHoundRCDockerVersion.Major)
@@ -74,16 +74,25 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, "rc1", azureHoundRCDockerVersion.Prerelease)
 	require.Equal(t, "docker", azureHoundRCDockerVersion.BuildMetadata)
 
-	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rc1+notdocker")
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rc1+notdocker", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rcfoo")
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rcfoo", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("azurehound/0.0.0-alpha")
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-alpha", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0")
+	// When the UseRawObjectIDs flag is enabled, AzureHound versions below v3.0.0 are rejected.
+	_, err = utils.IsValidClientVersion("azurehound/2.9.9", true)
+	require.ErrorIs(t, err, utils.ErrRecommendAzureHoundVersion)
+
+	azureHoundV3Version, err := utils.IsValidClientVersion("azurehound/3.0.0", true)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundV3Version.ClientType)
+	require.Equal(t, 3, azureHoundV3Version.Major)
+
+	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundversion.ClientType)
 	require.Equal(t, 2, sharpHoundversion.Major)
@@ -92,7 +101,7 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, 0, sharpHoundversion.Extra)
 	require.Empty(t, sharpHoundversion.Prerelease)
 
-	sharpHoundRCVersion, err := utils.IsValidClientVersion("sharphound/2.0.3.0-rc1")
+	sharpHoundRCVersion, err := utils.IsValidClientVersion("sharphound/2.0.3.0-rc1", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundRCVersion.ClientType)
 	require.Equal(t, 2, sharpHoundRCVersion.Major)
@@ -101,25 +110,25 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, 0, sharpHoundRCVersion.Extra)
 	require.Equal(t, "rc1", sharpHoundRCVersion.Prerelease)
 
-	_, err = utils.IsValidClientVersion("sharphound/2X0Y3Z0")
+	_, err = utils.IsValidClientVersion("sharphound/2X0Y3Z0", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-rcfoo")
+	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-rcfoo", false)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-alpha")
+	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-alpha", false)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0")
-	require.NotNil(t, err)
-	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
-
-	_, err = utils.IsValidClientVersion("sharphound/1.9.3.0")
+	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
-	openHoundVersion, err := utils.IsValidClientVersion("openhound/0.0.0")
+	_, err = utils.IsValidClientVersion("sharphound/1.9.3.0", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
+
+	openHoundVersion, err := utils.IsValidClientVersion("openhound/0.0.0", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeOpenHound, openHoundVersion.ClientType)
 	require.Equal(t, 0, openHoundVersion.Major)
@@ -128,7 +137,7 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Empty(t, openHoundVersion.Prerelease)
 	require.Empty(t, openHoundVersion.BuildMetadata)
 
-	openHoundRCVersion, err := utils.IsValidClientVersion("openhound/0.0.0-rc1")
+	openHoundRCVersion, err := utils.IsValidClientVersion("openhound/0.0.0-rc1", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeOpenHound, openHoundRCVersion.ClientType)
 	require.Equal(t, 0, openHoundRCVersion.Major)
@@ -137,36 +146,36 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, "rc1", openHoundRCVersion.Prerelease)
 	require.Empty(t, openHoundRCVersion.BuildMetadata)
 
-	_, err = utils.IsValidClientVersion("openhound/0.0.0+docker")
+	_, err = utils.IsValidClientVersion("openhound/0.0.0+docker", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("openhound/0.0.0-rcfoo")
+	_, err = utils.IsValidClientVersion("openhound/0.0.0-rcfoo", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("openhound/0.0.0-alpha")
+	_, err = utils.IsValidClientVersion("openhound/0.0.0-alpha", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	_, err = utils.IsValidClientVersion("openhound/1X0Y1")
+	_, err = utils.IsValidClientVersion("openhound/1X0Y1", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
 	// Unknown client type
-	_, err = utils.IsValidClientVersion("unknown/0.0.0")
+	_, err = utils.IsValidClientVersion("unknown/0.0.0", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
 	// Client type without slash is not a valid user agent
-	_, err = utils.IsValidClientVersion("azurehound")
+	_, err = utils.IsValidClientVersion("azurehound", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
 	// Client type without slash is not a valid user agent
-	_, err = utils.IsValidClientVersion("openhound")
+	_, err = utils.IsValidClientVersion("openhound", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 
 	// Invalid UA
-	_, err = utils.IsValidClientVersion("garbage")
+	_, err = utils.IsValidClientVersion("garbage", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 }

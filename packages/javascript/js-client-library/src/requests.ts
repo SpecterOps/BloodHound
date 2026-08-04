@@ -319,10 +319,6 @@ export interface GetWebhookRequest {
     id: string;
 }
 
-export interface GetWebhookRequest {
-    id: string;
-}
-
 export interface WebhookTestRequest {
     event_type: string;
     version: string;
@@ -342,16 +338,9 @@ export interface GetAlertEventRequest {
 export interface AlertSubscription {
     channel_id: string;
     event_type: string;
-    version: number;
+    version: string;
     disabled: boolean;
 }
-
-export interface CreateAlertForm {
-    name: string;
-    description: string;
-    channelId: string;
-}
-
 export interface CreateAlertRequest {
     name: string;
     description: string;

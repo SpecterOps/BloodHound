@@ -18,7 +18,12 @@ import { OpenGraphDataQualityStat } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
-import OpenGraphInfo, { OpenGraphPlatformInfo, getLatestMetricStats } from './OpenGraphInfo';
+import OpenGraphInfo, {
+    getLatestStatsByMetricKind,
+    getMetricStatsByType,
+    getRelationshipsTotalCount,
+    OpenGraphPlatformInfo,
+} from './OpenGraphInfo';
 
 const baseStat = (overrides: Partial<OpenGraphDataQualityStat> = {}): OpenGraphDataQualityStat => ({
     id: 1,
@@ -48,72 +53,65 @@ const testRelationshipStat = (overrides: Partial<OpenGraphDataQualityStat> = {})
         ...overrides,
     });
 
-describe('getLatestMetricStats', () => {
-    it('returns empty node stats and undefined relationship stats for empty input', () => {
-        const { nodeStats, relationshipStat } = getLatestMetricStats([]);
-
-        expect(nodeStats).toEqual([]);
-        expect(relationshipStat).toBeUndefined();
-    });
-
-    it('returns a single node stat and no relationship stat', () => {
-        const stat = testNodeStat();
-
-        const { nodeStats, relationshipStat } = getLatestMetricStats([stat]);
-
-        expect(nodeStats).toEqual([stat]);
-        expect(relationshipStat).toBeUndefined();
-    });
-
+describe('getLatestStatsByMetricKind', () => {
     it('keeps only the latest stat per kind_id by created_at', () => {
         const older = testNodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
         const newer = testNodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
 
-        const { nodeStats } = getLatestMetricStats([older, newer]);
+        const stats = getLatestStatsByMetricKind([older, newer]);
 
-        expect(nodeStats).toHaveLength(1);
-        expect(nodeStats[0]).toBe(newer);
+        expect(stats).toEqual([newer]);
     });
 
     it('keeps the latest regardless of input ordering', () => {
         const older = testNodeStat({ created_at: '2026-01-01T00:00:00.000Z', metric_value: 10 });
         const newer = testNodeStat({ created_at: '2026-01-02T00:00:00.000Z', metric_value: 25 });
 
-        const { nodeStats } = getLatestMetricStats([newer, older]);
+        const stats = getLatestStatsByMetricKind([newer, older]);
 
-        expect(nodeStats).toHaveLength(1);
-        expect(nodeStats[0]).toBe(newer);
+        expect(stats).toEqual([newer]);
     });
 
-    it('splits mixed node and relationship stats', () => {
-        const node1 = testNodeStat({ kind_id: 1, metric_name: 'User' });
-        const node2 = testNodeStat({ kind_id: 2, metric_name: 'Group' });
-        const relationship = testRelationshipStat({ kind_id: 100 });
-
-        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2, relationship]);
-
-        expect(nodeStats).toEqual([node1, node2]);
-        expect(relationshipStat).toBe(relationship);
-    });
-
-    it('returns undefined relationship stats when only node stats are present', () => {
-        const node1 = testNodeStat({ kind_id: 1 });
-        const node2 = testNodeStat({ kind_id: 2 });
-
-        const { nodeStats, relationshipStat } = getLatestMetricStats([node1, node2]);
-
-        expect(nodeStats).toEqual([node1, node2]);
-        expect(relationshipStat).toBeUndefined();
-    });
-
-    it('keeps the first-seen stat when created_at values are missing/invalid', () => {
+    it('keeps the first-seen stat when created_at values are missing or invalid', () => {
         const first = testNodeStat({ created_at: undefined, metric_value: 10 });
         const second = testNodeStat({ created_at: undefined, metric_value: 25 });
 
-        const { nodeStats } = getLatestMetricStats([first, second]);
+        const stats = getLatestStatsByMetricKind([first, second]);
 
-        expect(nodeStats).toHaveLength(1);
-        expect(nodeStats[0]).toBe(first);
+        expect(stats).toEqual([first]);
+    });
+});
+
+describe('getMetricStatsByType', () => {
+    it('returns empty arrays for empty input', () => {
+        const statsByType = getMetricStatsByType([]);
+
+        expect(statsByType).toEqual({ nodeStats: [], relationshipStats: [] });
+    });
+
+    it('separates node and relationship stats', () => {
+        const node1 = testNodeStat({ kind_id: 1, metric_name: 'User' });
+        const node2 = testNodeStat({ kind_id: 2, metric_name: 'Group' });
+        const relationship = testRelationshipStat({ kind_id: 100, metric_value: 50 });
+        const otherRelationship = testRelationshipStat({ kind_id: 101, metric_value: 25 });
+
+        const { nodeStats, relationshipStats } = getMetricStatsByType([node1, node2, relationship, otherRelationship]);
+
+        expect(nodeStats).toEqual([node1, node2]);
+        expect(relationshipStats).toEqual([relationship, otherRelationship]);
+    });
+});
+
+describe('getRelationshipsTotalCount', () => {
+    it('returns zero for empty input', () => {
+        expect(getRelationshipsTotalCount([])).toBe(0);
+    });
+
+    it('sums all relationship metric values', () => {
+        const relationship = testRelationshipStat({ kind_id: 100, metric_value: 50 });
+        const otherRelationship = testRelationshipStat({ kind_id: 101, metric_value: 25 });
+
+        expect(getRelationshipsTotalCount([relationship, otherRelationship])).toBe(75);
     });
 });
 
@@ -201,13 +199,14 @@ describe('OpenGraphPlatformInfo', () => {
         respondWith(AGGREGATION_URL, [
             ogStat({ id: 1, kind_id: 1, metric_name: 'User', metric_value: 10 }),
             ogStat({ id: 2, kind_id: 100, metric_type: 'relationship', metric_value: 50 }),
+            ogStat({ id: 3, kind_id: 101, metric_type: 'relationship', metric_value: 25 }),
         ]);
 
         render(<OpenGraphPlatformInfo contextKindId={101} />);
 
         expect(await screen.findByText('User')).toBeInTheDocument();
         expect(screen.getByText('Relationships')).toBeInTheDocument();
-        expect(screen.getByText('50')).toBeInTheDocument();
+        expect(screen.getByText('75')).toBeInTheDocument();
     });
 
     it('calls onDataError and renders nothing when the aggregation request fails', async () => {

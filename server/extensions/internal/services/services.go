@@ -31,6 +31,7 @@ type Database interface {
 	GetNodeKind(ctx context.Context, id int32) (NodeKind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
 	GetExtension(ctx context.Context, id int32) (Extension, error)
+	GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error)
 }
 
 // KindInfo holds the data associated with a single entity panel.
