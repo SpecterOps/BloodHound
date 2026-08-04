@@ -384,6 +384,67 @@ func TestMigrator_RunMigrations(t *testing.T) {
 	assertTableState(t, db, "goose_db_version", true)
 	assertGooseVersionsMatch(t, db, expectedVersions)
 }
+
+func TestMigrator_HasPendingMigrations(t *testing.T) {
+	testCases := []struct {
+		name                         string
+		prepareDatabase              func(t *testing.T, testContext gooseTestContext)
+		expectedHasPendingMigrations bool
+	}{
+		{
+			name:                         "NoMigrationTables",
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "LegacyMigrationTableExists",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				require.NoError(t, testContext.migrator.CreateMigrationSchema())
+			},
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "GooseMigrationsPartiallyApplied",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				migrationVersions := discoverGooseVersions(t)
+				require.Greater(t, len(migrationVersions), 1)
+
+				provider, err := goose.NewProvider(
+					goose.DialectPostgres,
+					testContext.migrator.SqlDB,
+					testContext.migrator.GooseFS,
+					goose.WithAllowOutofOrder(true),
+				)
+				require.NoError(t, err)
+
+				_, err = provider.UpTo(testContext.ctx, migrationVersions[0])
+				require.NoError(t, err)
+			},
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "GooseMigrationsFullyApplied",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				require.NoError(t, testContext.migrator.ExecuteGooseMigrations(testContext.ctx))
+			},
+			expectedHasPendingMigrations: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testContext := setupGooseTestContext(t)
+
+			if testCase.prepareDatabase != nil {
+				testCase.prepareDatabase(t, testContext)
+			}
+
+			hasPendingMigrations, err := testContext.migrator.HasPendingMigrations(testContext.ctx)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expectedHasPendingMigrations, hasPendingMigrations)
+		})
+	}
+}
+
 func TestMigrator_ExecuteGooseMigrations(t *testing.T) {
 
 	testCases := []gooseTestCase{

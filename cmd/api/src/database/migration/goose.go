@@ -28,10 +28,47 @@ import (
 	"gorm.io/gorm"
 )
 
+// newPostgresGooseProvider returns a Goose Provider with the proper configurations
+func (s *Migrator) newPostgresGooseProvider() (*goose.Provider, error) {
+	return goose.NewProvider(
+		goose.DialectPostgres,
+		s.SqlDB,
+		s.GooseFS,
+		goose.WithAllowOutofOrder(true))
+}
+
+// HasPendingMigrations returns true if the legacy table still exists, the goose DB table does not exist, or if the goose provider reports that there are pending migrations.
+func (s *Migrator) HasPendingMigrations(ctx context.Context) (bool, error) {
+	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
+		return false, fmt.Errorf("failed to check if legacy migration table exists: %w", err)
+	} else if hasLegacyTable {
+		return true, nil
+	} else if hasGooseDbTable, err := s.hasGooseDbTable(); err != nil {
+		return false, fmt.Errorf("failed to check if goose migration table exists: %w", err)
+	} else if !hasGooseDbTable {
+		return true, nil
+	} else if provider, err := s.newPostgresGooseProvider(); err != nil {
+		return false, fmt.Errorf("failed to create goose provider: %w", err)
+	} else if hasPendingMigrations, err := provider.HasPending(ctx); err != nil {
+		return false, fmt.Errorf("failed to check for pending migrations: %w", err)
+	} else {
+		return hasPendingMigrations, nil
+	}
+}
+
 // HasMigrationTable is a utility for checking if migration schema is initialized. We assume that
 // if the `migrations` table exists, the schema must be initialized, and vice versa.
 func (s *Migrator) HasMigrationTable() (bool, error) {
 	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'migrations');`
+
+	var hasTable bool
+	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
+}
+
+// hasGooseDbTable is a utility for checking if goose_db is initialized. We assume that
+// if the `goose_db_version` table exists, the goose_db must be initialized, and vice versa.
+func (s *Migrator) hasGooseDbTable() (bool, error) {
+	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'goose_db_version');`
 
 	var hasTable bool
 	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
@@ -114,12 +151,7 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 		}
 	}
 
-	provider, err := goose.NewProvider(
-		goose.DialectPostgres,
-		s.SqlDB,
-		s.GooseFS,
-		goose.WithAllowOutofOrder(true),
-	)
+	provider, err := s.newPostgresGooseProvider()
 	if err != nil {
 		return fmt.Errorf("failed to create goose provider: %w", err)
 	}
