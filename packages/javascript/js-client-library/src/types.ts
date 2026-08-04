@@ -782,7 +782,7 @@ export interface Notification {
     subscriptions: Subscription[];
 }
 
-export interface AlertAttamptsParams {
+export interface AlertAttemptsParams {
     skip?: number;
     limit?: number;
     sort_by?: 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
