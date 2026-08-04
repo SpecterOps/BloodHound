@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
-import GraphControls from './GraphControls';
+import GraphControls, { GraphControlsExportAction } from './GraphControls';
 
 const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
 
@@ -60,6 +60,8 @@ describe('GraphControls', () => {
     const onToggleNodeLabelsFn = vi.fn();
     const onToggleEdgeLabelsFn = vi.fn();
     const onSearchedNodeClickFn = vi.fn();
+    const onAdditionalActionOneFn = vi.fn();
+    const onAdditionalActionTwoFn = vi.fn();
 
     afterEach(() => {
         onResetFn.mockClear();
@@ -67,6 +69,8 @@ describe('GraphControls', () => {
         onToggleNodeLabelsFn.mockClear();
         onToggleEdgeLabelsFn.mockClear();
         onSearchedNodeClickFn.mockClear();
+        onAdditionalActionOneFn.mockClear();
+        onAdditionalActionTwoFn.mockClear();
     });
 
     type SetupOptions = {
@@ -78,6 +82,7 @@ describe('GraphControls', () => {
         isExploreLayoutSelected?: boolean;
         isExploreTableSelected?: boolean;
         route?: string;
+        additionalExportActions?: readonly GraphControlsExportAction[];
     };
 
     const setup = ({
@@ -89,6 +94,7 @@ describe('GraphControls', () => {
         isExploreLayoutSelected,
         isExploreTableSelected,
         route = '/',
+        additionalExportActions,
     }: SetupOptions = {}) => {
         const options = layoutOptionsOverride ?? layoutOptions;
         render(
@@ -106,6 +112,7 @@ describe('GraphControls', () => {
                 isExploreLayoutSelected={isExploreLayoutSelected}
                 isExploreTableSelected={isExploreTableSelected}
                 currentNodes={currentNodes}
+                additionalExportActions={additionalExportActions}
             />,
             { route }
         );
@@ -366,7 +373,94 @@ describe('GraphControls', () => {
             expect(tableItem).not.toHaveClass('Mui-selected');
         });
     });
-    describe('Exporting json', () => {
+    describe('Exporting', () => {
+        it('only renders the JSON action when no additional actions are supplied', async () => {
+            const { user } = setup();
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            expect(await screen.findAllByRole('menuitem')).toHaveLength(1);
+            expect(screen.getByRole('menuitem', { name: 'JSON' })).toBeInTheDocument();
+        });
+
+        it('renders additional actions in caller order before JSON', async () => {
+            const { user } = setup({
+                additionalExportActions: [
+                    { label: 'Additional action one', onSelect: onAdditionalActionOneFn },
+                    { label: 'Additional action two', onSelect: onAdditionalActionTwoFn },
+                ],
+            });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            expect((await screen.findAllByRole('menuitem')).map(({ textContent }) => textContent)).toEqual([
+                'Additional action one',
+                'Additional action two',
+                'JSON',
+            ]);
+        });
+
+        it('invokes only the selected additional action and closes the menu', async () => {
+            const { user } = setup({
+                additionalExportActions: [
+                    { label: 'Additional action one', onSelect: onAdditionalActionOneFn },
+                    { label: 'Additional action two', onSelect: onAdditionalActionTwoFn },
+                ],
+            });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+            await user.click(await screen.findByRole('menuitem', { name: 'Additional action two' }));
+
+            expect(onAdditionalActionOneFn).not.toHaveBeenCalled();
+            expect(onAdditionalActionTwoFn).toHaveBeenCalledOnce();
+            expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        });
+
+        it('skips disabled additional actions during keyboard selection', async () => {
+            const { user } = setup({
+                additionalExportActions: [
+                    { label: 'Additional action one', onSelect: onAdditionalActionOneFn, disabled: true },
+                    { label: 'Additional action two', onSelect: onAdditionalActionTwoFn },
+                ],
+            });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+            const disabledAction = await screen.findByRole('menuitem', { name: 'Additional action one' });
+            expect(disabledAction).toHaveAttribute('aria-disabled', 'true');
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalActionOneFn).not.toHaveBeenCalled();
+            expect(onAdditionalActionTwoFn).toHaveBeenCalledOnce();
+        });
+
+        it('supports keyboard selection for additional actions', async () => {
+            const { user } = setup({
+                additionalExportActions: [{ label: 'Additional action one', onSelect: onAdditionalActionOneFn }],
+            });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            exportMenu.focus();
+            await user.keyboard('{Enter}');
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalActionOneFn).toHaveBeenCalledOnce();
+            expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        });
+
+        it('closes on Escape and restores focus to the Export trigger', async () => {
+            const { user } = setup({
+                additionalExportActions: [{ label: 'Additional action one', onSelect: onAdditionalActionOneFn }],
+            });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            await user.click(exportMenu);
+            expect(await screen.findByRole('menu')).toBeInTheDocument();
+            await user.keyboard('{Escape}');
+
+            expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+            expect(exportMenu).toHaveFocus();
+        });
+
         it('disables the JSON button if the JSON is empty', async () => {
             const { user } = setup();
 

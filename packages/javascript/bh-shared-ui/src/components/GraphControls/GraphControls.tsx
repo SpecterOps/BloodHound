@@ -34,6 +34,12 @@ import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
 
+export interface GraphControlsExportAction {
+    label: string;
+    onSelect: () => void;
+    disabled?: boolean;
+}
+
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
     onLayoutChange: (layout: T[number]) => void;
@@ -48,6 +54,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
     currentNodes: Record<string, any> | undefined;
+    additionalExportActions?: readonly GraphControlsExportAction[];
 }
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
@@ -65,6 +72,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         showEdgeLabels,
         jsonData,
         currentNodes = {},
+        additionalExportActions = [],
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
@@ -172,6 +180,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     controlId='export'
                     displayText={<FontAwesomeIcon aria-hidden='true' icon={faDownload} />}
                     label='Export'>
+                    {additionalExportActions.map(({ label, onSelect, disabled }) => (
+                        <MenuItem key={label} onClick={onSelect} disabled={disabled}>
+                            {label}
+                        </MenuItem>
+                    ))}
                     <MenuItem onClick={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
                         JSON
                     </MenuItem>
