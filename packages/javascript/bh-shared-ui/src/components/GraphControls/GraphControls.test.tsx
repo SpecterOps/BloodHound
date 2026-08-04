@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
-import GraphControls from './GraphControls';
+import GraphControls, { type GraphExportAction } from './GraphControls';
 
 const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
 
@@ -60,6 +60,12 @@ describe('GraphControls', () => {
     const onToggleNodeLabelsFn = vi.fn();
     const onToggleEdgeLabelsFn = vi.fn();
     const onSearchedNodeClickFn = vi.fn();
+    const onAdditionalExportActionOne = vi.fn();
+    const onAdditionalExportActionTwo = vi.fn();
+    const additionalExportActions: readonly GraphExportAction[] = [
+        { id: 'additional-one', label: 'Additional action one', onSelect: onAdditionalExportActionOne },
+        { id: 'additional-two', label: 'Additional action two', onSelect: onAdditionalExportActionTwo },
+    ];
 
     afterEach(() => {
         onResetFn.mockClear();
@@ -67,6 +73,8 @@ describe('GraphControls', () => {
         onToggleNodeLabelsFn.mockClear();
         onToggleEdgeLabelsFn.mockClear();
         onSearchedNodeClickFn.mockClear();
+        onAdditionalExportActionOne.mockClear();
+        onAdditionalExportActionTwo.mockClear();
     });
 
     type SetupOptions = {
@@ -77,6 +85,7 @@ describe('GraphControls', () => {
         layoutOptionsOverride?: readonly string[];
         isExploreLayoutSelected?: boolean;
         isExploreTableSelected?: boolean;
+        additionalExportActions?: readonly GraphExportAction[];
         route?: string;
     };
 
@@ -88,6 +97,7 @@ describe('GraphControls', () => {
         layoutOptionsOverride,
         isExploreLayoutSelected,
         isExploreTableSelected,
+        additionalExportActions,
         route = '/',
     }: SetupOptions = {}) => {
         const options = layoutOptionsOverride ?? layoutOptions;
@@ -105,6 +115,7 @@ describe('GraphControls', () => {
                 selectedLayout={selectedLayout}
                 isExploreLayoutSelected={isExploreLayoutSelected}
                 isExploreTableSelected={isExploreTableSelected}
+                additionalExportActions={additionalExportActions}
                 currentNodes={currentNodes}
             />,
             { route }
@@ -367,6 +378,16 @@ describe('GraphControls', () => {
         });
     });
     describe('Exporting json', () => {
+        it('renders only the JSON action when no additional actions are supplied', async () => {
+            const { user } = setup();
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menuItems = await screen.findAllByRole('menuitem');
+            expect(menuItems).toHaveLength(1);
+            expect(menuItems[0]).toHaveAccessibleName('JSON');
+        });
+
         it('disables the JSON button if the JSON is empty', async () => {
             const { user } = setup();
 
@@ -391,6 +412,78 @@ describe('GraphControls', () => {
             await user.click(jsonButton);
 
             expect(exportToJsonSpy).toBeCalledWith(json);
+        });
+
+        it('renders additional actions before JSON in the supplied order', async () => {
+            const { user } = setup({ additionalExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menuItems = await screen.findAllByRole('menuitem');
+            expect(menuItems.map((item) => item.textContent)).toEqual([
+                'Additional action one',
+                'Additional action two',
+                'JSON',
+            ]);
+        });
+
+        it('invokes only the selected additional action, closes the menu, and restores focus', async () => {
+            const { user } = setup({ additionalExportActions });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            await user.click(exportMenu);
+            await user.click(await screen.findByRole('menuitem', { name: 'Additional action one' }));
+
+            expect(onAdditionalExportActionOne).toHaveBeenCalledOnce();
+            expect(onAdditionalExportActionTwo).not.toHaveBeenCalled();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
+        });
+
+        it('exposes disabled additional actions and prevents keyboard activation', async () => {
+            const disabledExportActions = [{ ...additionalExportActions[0], disabled: true }];
+            const { user } = setup({ additionalExportActions: disabledExportActions });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            await user.click(exportMenu);
+            const disabledAction = await screen.findByRole('menuitem', { name: 'Additional action one' });
+            expect(disabledAction).toHaveAttribute('aria-disabled', 'true');
+
+            disabledAction.focus();
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalExportActionOne).not.toHaveBeenCalled();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        it('supports keyboard activation of additional actions', async () => {
+            const { user } = setup({ additionalExportActions: additionalExportActions.slice(0, 1) });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            exportMenu.focus();
+            await user.keyboard('{Enter}');
+            const additionalAction = await screen.findByRole('menuitem', { name: 'Additional action one' });
+            expect(additionalAction).toHaveFocus();
+
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalExportActionOne).toHaveBeenCalledOnce();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
+        });
+
+        it('closes the Export menu with Escape and restores focus', async () => {
+            const { user } = setup({ additionalExportActions: additionalExportActions.slice(0, 1) });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            exportMenu.focus();
+            await user.keyboard('{Enter}');
+            expect(await screen.findByRole('menuitem', { name: 'Additional action one' })).toBeVisible();
+
+            await user.keyboard('{Escape}');
+
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
         });
     });
     describe('Searching current results', () => {
