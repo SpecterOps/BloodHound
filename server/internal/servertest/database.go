@@ -63,10 +63,14 @@ func NewDatabase(t *testing.T) *database.BloodhoundDB {
 func PostgresConfig(t *testing.T) pgtestdb.Config {
 	t.Helper()
 
+	var (
+		environmentMap = make(map[string]string)
+		options        string
+	)
+
 	cfg, err := utils.LoadIntegrationTestConfig()
 	require.NoError(t, err)
 
-	environmentMap := make(map[string]string)
 	for entry := range strings.FieldsSeq(cfg.Database.Connection) {
 		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
 			environmentMap[parts[0]] = parts[1]
@@ -88,7 +92,7 @@ func PostgresConfig(t *testing.T) pgtestdb.Config {
 		}
 	}
 
-	options, err := tlsOptions(environmentMap)
+	options, err = tlsOptions(environmentMap)
 	require.NoError(t, err)
 
 	return pgtestdb.Config{
