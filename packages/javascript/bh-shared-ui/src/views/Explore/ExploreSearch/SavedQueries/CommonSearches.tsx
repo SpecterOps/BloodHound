@@ -177,15 +177,15 @@ const CommonSearches = ({
     };
 
     return (
-        <div className='flex flex-col h-full'>
+        <div className='flex flex-col h-full px-2'>
             <div className='flex items-center'>
                 <TextButton
                     aria-expanded={showCommonQueries}
                     onClick={onToggleCommonQueries}
-                    className='flex justify-start items-center w-full pl-0'
+                    className='flex justify-start items-center w-full rounded-none'
                     data-testid='common-queries-toggle'>
-                    <FontAwesomeIcon className='px-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                    <span className='font-semibold text-lg'>Saved Queries</span>
+                    <FontAwesomeIcon className='p-2 text-sm' icon={showCommonQueries ? faChevronDown : faChevronUp} />
+                    <span className='font-semibold text-lg py-0.5'>Saved Queries</span>
                 </TextButton>
             </div>
 

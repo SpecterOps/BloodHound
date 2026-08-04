@@ -26,7 +26,7 @@ interface Props {
 // TODO BED-6062
 const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, className }): JSX.Element => {
     const icon = (
-        <IconButton aria-label={tip} className={cn('relative p-2 rounded-none', className)} onClick={click}>
+        <IconButton aria-label={tip} className={cn('relative rounded-none', className)} onClick={click}>
             {children}
         </IconButton>
     );
