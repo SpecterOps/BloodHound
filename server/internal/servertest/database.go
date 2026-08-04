@@ -95,7 +95,37 @@ func PostgresConfig(t *testing.T) pgtestdb.Config {
 		User:                      environmentMap["user"],
 		Password:                  environmentMap["password"],
 		Database:                  environmentMap["dbname"],
-		Options:                   "sslmode=disable",
+		Options:                   tlsOptions(environmentMap),
 		ForceTerminateConnections: true,
+	}
+}
+
+// tlsOptions returns the TLS-related connection options for a TCP host,
+// URL-query encoded as required by pgtestdb.Config.Options (for example
+// "sslmode=require&sslrootcert=%2Fpath"). Local hosts default to sslmode=disable
+// because the local test database is not configured for TLS. Non-local hosts
+// preserve whatever TLS settings were configured in the connection string so a
+// remote database's TLS requirements are honored rather than overridden.
+func tlsOptions(environmentMap map[string]string) string {
+	if isLocalHost(environmentMap["host"]) {
+		return "sslmode=disable"
+	}
+
+	options := url.Values{}
+	for _, key := range []string{"sslmode", "sslrootcert", "sslcert", "sslkey"} {
+		if value := environmentMap[key]; value != "" {
+			options.Set(key, value)
+		}
+	}
+	return options.Encode()
+}
+
+// isLocalHost reports whether host refers to the local machine.
+func isLocalHost(host string) bool {
+	switch host {
+	case "localhost", "127.0.0.1", "::1":
+		return true
+	default:
+		return false
 	}
 }

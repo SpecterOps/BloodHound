@@ -59,10 +59,10 @@ type Harness struct {
 func NewHarness(t *testing.T, registerRoutes func(routerInst *router.Router, db *database.BloodhoundDB)) *Harness {
 	t.Helper()
 
-	var (
-		db     = NewDatabase(t)
-		cfg, _ = config.NewDefaultConfiguration()
-	)
+	db := NewDatabase(t)
+
+	cfg, err := config.NewDefaultConfiguration()
+	require.NoError(t, err)
 
 	// Set up JWT signing key before constructing auth components, which copy cfg by value.
 	cfg.Crypto.JWT.SetSigningKeyBytes([]byte(testJWTSigningKey))

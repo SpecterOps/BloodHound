@@ -247,44 +247,38 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
-    "net/http/httptest"
     "testing"
 
-    "github.com/specterops/bloodhound/cmd/api/src/api"
-    "github.com/specterops/bloodhound/cmd/api/src/api/registration"
     "github.com/specterops/bloodhound/cmd/api/src/api/router"
-    v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
-    "github.com/specterops/bloodhound/cmd/api/src/auth"
-    "github.com/specterops/bloodhound/cmd/api/src/config"
-    "github.com/specterops/bloodhound/src/test/integration"
+    "github.com/specterops/bloodhound/cmd/api/src/database"
+    "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+    "github.com/specterops/bloodhound/cmd/api/src/model"
+    "github.com/specterops/bloodhound/server/appcfg"
+    "github.com/specterops/bloodhound/server/internal/servertest"
     "github.com/stretchr/testify/require"
 )
 
 func TestGetMyEndpoint_WithRouting(t *testing.T) {
     var (
-        db         = integration.OpenDatabase(t)
-        cfg        = config.Configuration{}
-        authorizer = auth.NewAuthorizer(db)
-        routerInst = router.NewRouter(cfg, authorizer, "")
+        ctx = context.Background()
+        // NewHarness provisions an isolated database, wires the production router
+        // with the FOSS global middleware, registers your feature's routes, and
+        // starts a test server. All resources are torn down automatically.
+        harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+            appcfg.Register(routerInst, db.Pool())
+        })
+        db     = harness.DB
+        server = harness.Server
+        user   = model.User{
+            PrincipalName: "test-user@example.com",
+            EmailAddress:  null.StringFrom("test-user@example.com"),
+            EULAAccepted:  true, // Required for permission checks to work
+            Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
+        }
+        // MintJWT persists the user with an auth secret and returns a valid bearer token.
+        token = servertest.MintJWT(t, ctx, db, harness.Auther, user)
     )
-
-    // Register global middleware (required for auth to work)
-    registration.RegisterFossGlobalMiddleware(&routerInst, cfg, nil, nil, db)
-
-    // Register old v2 routes using v2.Resources
-    resources := v2.NewResources(db, /* ... */)
-    registration.NewV2API(resources, &routerInst)
-
-    // Start test server with production routing
-    handler := routerInst.Handler()
-    server := httptest.NewServer(handler)
-    defer server.Close()
-
-    // Create authenticated session
-    authenticator := api.NewAuthenticator(cfg.CryptoConfiguration(), db)
-    user := integration.NewUser(t, db, "test-user", "Test User", auth.RoleAdministrator)
-    token, err := authenticator.CreateSession(context.Background(), user)
-    require.NoError(t, err)
+    _ = db // available for seeding data inside subtests
 
     t.Run("returns 401 when unauthenticated", func(t *testing.T) {
         req, err := http.NewRequest(http.MethodGet, server.URL+"/api/v2/my-endpoint", nil)
