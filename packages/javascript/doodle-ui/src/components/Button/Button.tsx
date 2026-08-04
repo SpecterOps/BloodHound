@@ -111,7 +111,7 @@ Button.displayName = 'Button';
 
 const TextButtonBaseClasses = cn(
     ...buttonBaseClasses,
-    'p-1 has-[svg]:px-1',
+    'px-2 py-1 has-[svg]:px-1',
     'active:text-[#0D0A30] dark:active:text-primary',
     'hover:text-secondary',
     'focus-visible:ring-0 focus-visible:ring-transparent focus-visible:text-secondary'

@@ -520,13 +520,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         '.focus-ring': {
             outline: 'var(--focus-ring-width) solid var(--focus-ring)',
             'outline-offset': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-color': 'var(--focus-ring-offset)',
-            // TODO causes issues with Text
-            // '--tw-ring-color': 'var(--focus-ring)',
-            '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
-            '--tw-ring-shadow':
-                '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
             'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
         },
         '.focus-ring-inset': {

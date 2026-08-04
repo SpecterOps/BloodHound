@@ -99,7 +99,7 @@ const FilterDialog: FC<{
                             <TextButton
                                 fontColor='primary'
                                 onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
-                                className='font-bold p-2'>
+                                className='font-bold'>
                                 Clear All
                             </TextButton>
                         </DialogTitle>
@@ -118,10 +118,8 @@ const FilterDialog: FC<{
                             <EndDateField form={form as unknown as UseFormReturn} />
                         </div>
 
-                        <DialogActions>
-                            <TextButton className='pr-2' onClick={closeDialog}>
-                                Cancel
-                            </TextButton>
+                        <DialogActions className='gap-2'>
+                            <TextButton onClick={closeDialog}>Cancel</TextButton>
 
                             <TextButton
                                 fontColor='primary'
