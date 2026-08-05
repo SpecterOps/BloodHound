@@ -64,7 +64,7 @@ func TestService_ResolveTagIDsWithFallback(t *testing.T) {
 		{
 			name:    "error_-_returns_error_when_tag_id_is_not_an_integer",
 			tagID:   "not-a-number",
-			wantErr: strconvErr,
+			wantErr: errStrconv,
 		},
 		{
 			name:  "error_-_propagates_error_when_tag_id_lookup_fails",
@@ -97,7 +97,7 @@ func TestService_ResolveTagIDsWithFallback(t *testing.T) {
 
 			result, err := svc.ResolveTagIDsWithFallback(ctx, tt.tagID)
 			if tt.wantErr != nil {
-				if errors.Is(tt.wantErr, strconvErr) {
+				if errors.Is(tt.wantErr, errStrconv) {
 					assert.Error(t, err)
 				} else {
 					assert.ErrorIs(t, err, tt.wantErr)
@@ -144,6 +144,6 @@ func TestService_GetTierZeroTag(t *testing.T) {
 	})
 }
 
-// strconvErr is a sentinel used to select the "any error" assertion branch for the
+// errStrconv is a sentinel used to select the "any error" assertion branch for the
 // non-integer tag id case, where the underlying error comes from strconv.Atoi.
-var strconvErr = errors.New("strconv error sentinel")
+var errStrconv = errors.New("strconv error sentinel")

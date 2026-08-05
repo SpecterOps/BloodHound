@@ -148,7 +148,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		}
 	)
 
-	assert.NoError(t, modules.Register(deps))
+	modules.Register(deps)
 
 	for _, tc := range []struct {
 		name   string
