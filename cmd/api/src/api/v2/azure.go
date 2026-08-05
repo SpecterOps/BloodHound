@@ -559,7 +559,7 @@ func azEntityParamToKind(entityType string) (graph.Kind, error) {
 		return azure_schema.FunctionApp, nil
 
 	case entityTypeDomainServices:
-		return azure_schema.DomainService, nil
+		return azure_schema.EntraDS, nil
 
 	case entityTypeFederatedIdentityCredentials:
 		return azure_schema.FederatedIdentityCredential, nil

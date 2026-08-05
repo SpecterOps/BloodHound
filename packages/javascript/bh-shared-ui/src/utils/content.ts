@@ -67,7 +67,7 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
         apiClient.getAZEntityInfoV2('devices', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.FunctionApp]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('function-apps', id, undefined, false, undefined, undefined, undefined, options),
-    [AzureNodeKind.DomainService]: (id: string, options?: RequestOptions) =>
+    [AzureNodeKind.EntraDS]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('domain-services', id, undefined, false, undefined, undefined, undefined, options),
     [AzureNodeKind.Group]: (id: string, options?: RequestOptions) =>
         apiClient.getAZEntityInfoV2('groups', id, undefined, false, undefined, undefined, undefined, options),

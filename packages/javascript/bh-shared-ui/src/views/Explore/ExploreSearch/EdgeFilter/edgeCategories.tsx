@@ -217,7 +217,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 edgeTypes: [
                     AzureRelationshipKind.AKSContributor,
                     AzureRelationshipKind.AutomationContributor,
-                    AzureRelationshipKind.DomainServicesContributor,
+                    AzureRelationshipKind.EntraDSContributor,
                     AzureRelationshipKind.LogicAppContributor,
                     AzureRelationshipKind.WebsiteContributor,
                 ],

@@ -90,7 +90,7 @@ func ConvertAzureDomainServiceToNode(data AzureDomainService, ingestTime time.Ti
 			azure.LDAPS.String():                    data.Properties.LDAPSSettings.LDAPS,
 			azure.LDAPSExternalAccess.String():      data.Properties.LDAPSSettings.ExternalAccess,
 		},
-		Labels: []graph.Kind{azure.DomainService},
+		Labels: []graph.Kind{azure.EntraDS},
 	}
 }
 
@@ -106,7 +106,7 @@ func ConvertAzureDomainServiceToRels(data AzureDomainService) []IngestibleRelati
 		},
 		IngestibleEndpoint{
 			Value: data.ID,
-			Kind:  azure.DomainService,
+			Kind:  azure.EntraDS,
 		},
 		IngestibleRel{
 			RelProps: map[string]any{},
@@ -134,7 +134,7 @@ func ConvertAzureDomainServiceRoleAssignmentToRels(data models.AzureRoleAssignme
 				},
 				IngestibleEndpoint{
 					Value: data.ObjectId,
-					Kind:  azure.DomainService,
+					Kind:  azure.EntraDS,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},

@@ -559,10 +559,10 @@ FunctionApp: types.#Kind & {
 	representation: "AZFunctionApp"
 }
 
-DomainService: types.#Kind & {
-	symbol:         "DomainService"
+EntraDS: types.#Kind & {
+	symbol:         "EntraDS"
 	schema:         "azure"
-	representation: "AZDomainService"
+	representation: "AZEntraDS"
 }
 
 Group: types.#Kind & {
@@ -662,7 +662,7 @@ NodeKinds: [
 	Role,
 	Device,
 	FunctionApp,
-	DomainService,
+	EntraDS,
 	Group,
 	KeyVault,
 	ManagementGroup,
@@ -800,10 +800,10 @@ Contributor: types.#Kind & {
 	representation: "AZContributor"
 }
 
-DomainServicesContributor: types.#Kind & {
-	symbol:         "DomainServicesContributor"
+EntraDSContributor: types.#Kind & {
+	symbol:         "EntraDSContributor"
 	schema:         "azure"
-	representation: "AZDomainServicesContributor"
+	representation: "AZEntraDSContributor"
 }
 
 GetCertificates: types.#Kind & {
@@ -1013,7 +1013,7 @@ RelationshipKinds: [
 	AvereContributor,
 	Contains,
 	Contributor,
-	DomainServicesContributor,
+	EntraDSContributor,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -1088,7 +1088,7 @@ AbusableAppRoleRelationshipKinds: [
 ControlRelationshipKinds: [
 	AvereContributor,
 	Contributor,
-	DomainServicesContributor,
+	EntraDSContributor,
 	Owner,
 	VMContributor,
 	AutomationContributor,
@@ -1131,7 +1131,7 @@ ExecutionPrivilegeKinds: [
 InboundOutboundRelationshipKinds: [
 	AvereContributor,
 	Contributor,
-	DomainServicesContributor,
+	EntraDSContributor,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,

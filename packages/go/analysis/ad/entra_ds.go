@@ -26,7 +26,7 @@ import (
 )
 
 // GetAddEntraDSGroupMemberEdgeComposition reconstructs the paths that compose an AddEntraDSGroupMember edge. The
-// edge's start node is the AZUser and its end node is the on-prem Group it can add a member to. The composition is:
+// edge's start node is the AZUser and its end node is the on-prem Group whose membership it can modify. The composition is:
 //
 //	p1 = (azUser)-[:SyncedToEntraDSUser]->(:User)
 //	p2 = (azUser)-[:AZOwns|AZAddMembers]->(azGroup:AZGroup)

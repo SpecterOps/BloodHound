@@ -21,7 +21,7 @@
         }
     },
     {
-        "source": "AZDomainService",
+        "source": "AZEntraDS",
         "target": "Group",
         "edges": {
             "ingest": [],
