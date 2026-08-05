@@ -2893,7 +2893,7 @@ class BHEAPIClient {
                 sort_by,
                 alert_id: alert_id ? `eq:${alert_id}` : undefined,
                 channel_id: channel_id ? `eq:${channel_id}` : undefined,
-                event_id: event_id ? `~eq:${event_id}` : undefined,
+                event_id: event_id ? `eq:${event_id}` : undefined,
                 succeeded,
             },
             paramsSerializer: { indexes: null },
