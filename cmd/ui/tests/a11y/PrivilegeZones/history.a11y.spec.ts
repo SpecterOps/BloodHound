@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export type { MultiValueFilterConfig, MultiValueSelection } from './types';
-export { useMultiValueFilterParams } from './useMultiValueFilterParams';
-export { getNextSelection, getValuesFromSelection } from './utils';
+
+import { test } from '../../fixtures';
+
+test.describe('WCAG A/AA violations - Privilege Zones - History tab', () => {});
