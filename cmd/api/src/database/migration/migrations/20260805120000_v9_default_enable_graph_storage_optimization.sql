@@ -30,3 +30,7 @@ ALTER TABLE datapipe_status
     ADD COLUMN IF NOT EXISTS last_complete_optimize_at timestamp with time zone;
 
 -- +goose Down
+ALTER TABLE datapipe_status
+    DROP COLUMN IF EXISTS last_complete_optimize_at;
+
+DELETE FROM parameters WHERE key = 'analysis.graph_storage_optimization';
