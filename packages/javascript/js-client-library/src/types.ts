@@ -737,7 +737,7 @@ export interface AlertEventType {
 }
 
 // ---------------------------------------------------------------------------
-//  Alert - Alerts
+//  Alert - Alerts (Notifications)
 // ---------------------------------------------------------------------------
 
 export interface AlertsParams {
@@ -763,7 +763,7 @@ export interface Subscription {
         valid: boolean;
     };
 }
-export interface Alert {
+export interface Notification {
     id: string;
     name: string;
     description: string;
