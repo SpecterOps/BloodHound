@@ -185,7 +185,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService)
 
-		modules.Register(modules.Deps{
+		if err := modules.Register(modules.Deps{
 			Router: &routerInst,
 			Pool:   connections.RDMS.Pool(),
 			Graph:  connections.Graph,
@@ -193,7 +193,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
 			},
 			DogTags: dogtagsService,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("failed to register BHE feature modules: %w", err)
+		}
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)
