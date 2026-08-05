@@ -59,31 +59,38 @@ type Migration struct {
 
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
 func NewMigrator(db *gorm.DB) (*Migrator, error) {
-	if sqlDB, err := db.DB(); err != nil {
+	var (
+		sqlDB               *sql.DB
+		fossMigrationsSubFS fs.FS
+		gooseProvider       *goose.Provider
+		err                 error
+	)
+	if sqlDB, err = db.DB(); err != nil {
 		slog.Error("Failed to connect to database: %v", attr.Error(err))
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
-	} else if fossMigrationsSubFS, err := fs.Sub(FossMigrations, "migrations"); err != nil {
+	}
+	if fossMigrationsSubFS, err = fs.Sub(FossMigrations, "migrations"); err != nil {
 		slog.Error("Failed to open foss migrations directory: %v", attr.Error(err))
 		return nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
-	} else if gooseProvider, err := goose.NewProvider(goose.DialectPostgres,
+	}
+	if gooseProvider, err = goose.NewProvider(goose.DialectPostgres,
 		sqlDB,
 		MergedFS(fossMigrationsSubFS),
 		goose.WithAllowOutofOrder(true)); err != nil {
 		slog.Error("Failed to create new Goose Provider: %v", attr.Error(err))
 		return nil, fmt.Errorf("failed to create new goose provider: %v", err)
-	} else {
-		return &Migrator{
-			// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v11 is released.
-			Sources: []Source{
-				{FileSystem: FossMigrations, Directory: "migrations/legacy"},
-			},
-			ExtensionsData: []Source{
-				{FileSystem: ExtensionMigrations, Directory: "extensions"},
-			},
-			GooseProvider: gooseProvider,
-			DB:            db,
-			SqlDB:         sqlDB,
-		}, nil
 	}
+	return &Migrator{
+		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v11 is released.
+		Sources: []Source{
+			{FileSystem: FossMigrations, Directory: "migrations/legacy"},
+		},
+		ExtensionsData: []Source{
+			{FileSystem: ExtensionMigrations, Directory: "extensions"},
+		},
+		GooseProvider: gooseProvider,
+		DB:            db,
+		SqlDB:         sqlDB,
+	}, nil
 
 }

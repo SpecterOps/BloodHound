@@ -163,6 +163,15 @@ func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *pg
 	} else {
 		migrator, err := migration.NewMigrator(db)
 		if err != nil {
+			// shut down resources
+			if sqlDB, sqlDBErr := db.DB(); sqlDBErr == nil {
+				_ = sqlDB.Close()
+			}
+
+			if pool != nil {
+				pool.Close()
+			}
+
 			return nil, nil, nil, fmt.Errorf("failed to create migrator: %w", err)
 		}
 		migrator.Sources = sources
