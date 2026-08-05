@@ -338,9 +338,16 @@ export interface GetAlertEventRequest {
 export interface AlertSubscription {
     channel_id: string;
     event_type: string;
-    version: string;
+    version: number;
     disabled: boolean;
 }
+
+export interface CreateAlertForm {
+    name: string;
+    description: string;
+    channelId: string;
+}
+
 export interface CreateAlertRequest {
     name: string;
     description: string;
