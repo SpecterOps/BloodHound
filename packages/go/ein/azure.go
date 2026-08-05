@@ -2106,7 +2106,7 @@ func KindFromRoleId(roleId string) graph.Kind {
 	case constants.ContributorRoleID:
 		return azure.Contributor
 	case constants.DomainServicesContributorRoleID:
-		return azure.DomainServicesContributor
+		return azure.EntraDSContributor
 	case constants.WebsiteContributorRoleID:
 		return azure.WebsiteContributor
 	case constants.AutomationContributorRoleID:

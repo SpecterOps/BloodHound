@@ -932,7 +932,7 @@ export enum AzureNodeKind {
     Role = 'AZRole',
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
-    DomainService = 'AZDomainService',
+    EntraDS = 'AZEntraDS',
     Group = 'AZGroup',
     KeyVault = 'AZKeyVault',
     ManagementGroup = 'AZManagementGroup',
@@ -963,8 +963,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'Device';
         case AzureNodeKind.FunctionApp:
             return 'FunctionApp';
-        case AzureNodeKind.DomainService:
-            return 'DomainService';
+        case AzureNodeKind.EntraDS:
+            return 'EntraDS';
         case AzureNodeKind.Group:
             return 'Group';
         case AzureNodeKind.KeyVault:
@@ -1003,7 +1003,7 @@ export enum AzureRelationshipKind {
     AvereContributor = 'AZAvereContributor',
     Contains = 'AZContains',
     Contributor = 'AZContributor',
-    DomainServicesContributor = 'AZDomainServicesContributor',
+    EntraDSContributor = 'AZEntraDSContributor',
     GetCertificates = 'AZGetCertificates',
     GetKeys = 'AZGetKeys',
     GetSecrets = 'AZGetSecrets',
@@ -1064,8 +1064,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'Contains';
         case AzureRelationshipKind.Contributor:
             return 'Contributor';
-        case AzureRelationshipKind.DomainServicesContributor:
-            return 'DomainServicesContributor';
+        case AzureRelationshipKind.EntraDSContributor:
+            return 'EntraDSContributor';
         case AzureRelationshipKind.GetCertificates:
             return 'GetCertificates';
         case AzureRelationshipKind.GetKeys:
@@ -1368,7 +1368,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
         AzureRelationshipKind.Contributor,
-        AzureRelationshipKind.DomainServicesContributor,
+        AzureRelationshipKind.EntraDSContributor,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
         AzureRelationshipKind.GetSecrets,

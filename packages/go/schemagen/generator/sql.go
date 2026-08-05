@@ -125,7 +125,7 @@ var nodeIcons = map[string]nodeIcon{
 		Icon:  "bolt",
 		Color: "#F4BA44",
 	},
-	"AZDomainService": {
+	"AZEntraDS": {
 		Icon:  "server",
 		Color: "#6D83F2",
 	},

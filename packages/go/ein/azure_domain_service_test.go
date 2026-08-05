@@ -66,7 +66,7 @@ func TestConvertAzureDomainServiceToNode(t *testing.T) {
 	node := ein.ConvertAzureDomainServiceToNode(data, ingestTime)
 
 	assert.Equal(t, data.ID, node.ObjectID)
-	assert.Equal(t, []graph.Kind{azure.DomainService}, node.Labels)
+	assert.Equal(t, []graph.Kind{azure.EntraDS}, node.Labels)
 	require.Len(t, node.PropertyMap, 20)
 	assert.Equal(t, data.Name, node.PropertyMap[common.Name.String()])
 	assert.Equal(t, ingestTime, node.PropertyMap[common.LastCollected.String()])
@@ -102,7 +102,7 @@ func TestConvertAzureDomainServiceToRels(t *testing.T) {
 	assert.Equal(t, data.ResourceGroupID, rels[0].Source.Value)
 	assert.Equal(t, azure.ResourceGroup, rels[0].Source.Kind)
 	assert.Equal(t, data.ID, rels[0].Target.Value)
-	assert.Equal(t, azure.DomainService, rels[0].Target.Kind)
+	assert.Equal(t, azure.EntraDS, rels[0].Target.Kind)
 	assert.Equal(t, azure.Contains, rels[0].RelType)
 	assert.Empty(t, rels[0].RelProps)
 
@@ -124,7 +124,7 @@ func TestConvertAzureDomainServiceRoleAssignmentToRels(t *testing.T) {
 		{name: "owner", roleDefinitionID: constants.OwnerRoleID, scope: strings.ToLower(resourceID), expectedKind: azure.Owner, expectedCount: 1},
 		{name: "user access administrator", roleDefinitionID: constants.UserAccessAdminRoleID, scope: resourceID, expectedKind: azure.UserAccessAdministrator, expectedCount: 1},
 		{name: "contributor", roleDefinitionID: constants.ContributorRoleID, scope: resourceID, expectedKind: azure.Contributor, expectedCount: 1},
-		{name: "domain services contributor", roleDefinitionID: constants.DomainServicesContributorRoleID, scope: resourceID, expectedKind: azure.DomainServicesContributor, expectedCount: 1},
+		{name: "domain services contributor", roleDefinitionID: constants.DomainServicesContributorRoleID, scope: resourceID, expectedKind: azure.EntraDSContributor, expectedCount: 1},
 		{name: "inherited role", roleDefinitionID: constants.OwnerRoleID, scope: "/SUBSCRIPTIONS/SUB/RESOURCEGROUPS/RG", expectedCount: 0},
 		{name: "unsupported role", roleDefinitionID: "00000000-0000-0000-0000-000000000000", scope: resourceID, expectedCount: 0},
 	}
@@ -150,7 +150,7 @@ func TestConvertAzureDomainServiceRoleAssignmentToRels(t *testing.T) {
 				assert.Equal(t, principalID, rels[0].Source.Value)
 				assert.Equal(t, azure.Entity, rels[0].Source.Kind)
 				assert.Equal(t, resourceID, rels[0].Target.Value)
-				assert.Equal(t, azure.DomainService, rels[0].Target.Kind)
+				assert.Equal(t, azure.EntraDS, rels[0].Target.Kind)
 				assert.Equal(t, testCase.expectedKind, rels[0].RelType)
 				assert.Empty(t, rels[0].RelProps)
 			}

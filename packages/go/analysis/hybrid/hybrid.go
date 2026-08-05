@@ -170,7 +170,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		}
 
 		// Now that we know which AZ users and AZ groups are synced to Entra Domain Services, compute the
-		// AddEntraDSGroupMember edges (an Entra DS-synced AZUser that can add members to an Entra DS-synced AZGroup)
+		// AddEntraDSGroupMember edges (an Entra DS-synced AZUser that can add or remove members from an Entra DS-synced AZGroup)
 		if err := addAddEntraDSGroupMemberEdges(tx, syncedToEntraDSUserEdgeMap, syncedToEntraDSGroupEdgeMap, addEntraDSGroupMemberEdgeMap); err != nil {
 			return err
 		}
@@ -479,7 +479,7 @@ func addSyncEntraDSUsersEdge(syncEntraDSUsersEdgeMap map[graph.ID][]graph.ID, se
 }
 
 // addAddEntraDSGroupMemberEdges computes the AddEntraDSGroupMember edges. An edge is created from an AZUser to an
-// on-prem Group when the AZUser is synced to Entra Domain Services, the AZUser owns or can add members to an AZGroup
+// on-prem Group when the AZUser is synced to Entra Domain Services, the AZUser owns or can add and remove members from an AZGroup
 // (AZOwns / AZAddMembers), and that AZGroup is itself synced to Entra Domain Services. The resulting edge is drawn
 // from the AZUser to the on-prem Group that the AZGroup is synced to.
 func addAddEntraDSGroupMemberEdges(tx graph.Transaction, syncedToEntraDSUserEdgeMap, syncedToEntraDSGroupEdgeMap, addEntraDSGroupMemberEdgeMap map[graph.ID][]graph.ID) error {
@@ -590,7 +590,7 @@ func fetchEntraGroups(tx graph.Transaction, root *graph.Node) (graph.NodeSet, er
 
 func fetchEntraDomainServices(tx graph.Transaction) ([]*graph.Node, error) {
 	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.Kind(query.Node(), azure.DomainService)
+		return query.Kind(query.Node(), azure.EntraDS)
 	}))
 }
 

@@ -493,7 +493,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.DomainService,
+					getObjectID(t, domainService): azure.EntraDS,
 				})
 			},
 		)
@@ -522,7 +522,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService):    azure.DomainService,
+					getObjectID(t, domainService):    azure.EntraDS,
 					getObjectID(t, servicePrincipal): azure.ServicePrincipal,
 				})
 			},
@@ -552,7 +552,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.DomainService,
+					getObjectID(t, domainService): azure.EntraDS,
 				})
 			},
 		)
@@ -581,7 +581,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.DomainService,
+					getObjectID(t, domainService): azure.EntraDS,
 				})
 			},
 		)
@@ -610,7 +610,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.DomainService,
+					getObjectID(t, domainService): azure.EntraDS,
 				})
 			},
 		)
@@ -717,7 +717,7 @@ func TestSyncEntraDSUsersEdge(t *testing.T) {
 				}
 
 				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.DomainService,
+					getObjectID(t, domainService): azure.EntraDS,
 				})
 			},
 		)
@@ -771,7 +771,7 @@ func setupSyncEntraDSUsersHarness(t *testing.T, testContext *integration.GraphTe
 		azure.TenantID:     adminGroupTenantID,
 		azure.FilteredSync: filteredSync,
 		azure.SyncScope:    syncScope,
-	}), azure.Entity, azure.DomainService)
+	}), azure.Entity, azure.EntraDS)
 	application = testContext.NewAzureApplication("Domain Controller Services", options.applicationID, servicePrincipalTenantID)
 	servicePrincipal = testContext.NewAzureServicePrincipal("Domain Controller Services", integration.RandomObjectID(t), servicePrincipalTenantID)
 	azAdminGroupObjectID := integration.RandomObjectID(t)

@@ -55,9 +55,9 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureFunctionApp
 	case enums.KindAZFunctionAppRoleAssignment:
 		return convertAzureFunctionAppRoleAssignment
-	case enums.Kind("AZDomainService"):
+	case enums.Kind("AZEntraDS"):
 		return convertAzureDomainService
-	case enums.Kind("AZDomainServiceRoleAssignment"):
+	case enums.Kind("AZEntraDSRoleAssignment"):
 		return convertAzureDomainServiceRoleAssignment
 	case enums.KindAZGroup:
 		return convertAzureGroup

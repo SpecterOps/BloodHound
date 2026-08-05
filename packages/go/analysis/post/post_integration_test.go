@@ -73,7 +73,7 @@ func TestDeleteTransitEdges(t *testing.T) {
 		domainService = testCtx.NewNode(graph.AsProperties(map[string]any{
 			"name":     "managed_domain",
 			"objectid": "5678",
-		}), azure.Entity, azure.DomainService)
+		}), azure.Entity, azure.EntraDS)
 	)
 
 	// In order to validate that DeleteTransitEdges and the updated PostProcessedRelationships for both AD and Azure are correct, we need to simulate
