@@ -80,4 +80,5 @@ const (
 	URIPathVariableSavedQueryID                      = "saved_query_id"
 	URIPathVariableSSOProviderID                     = "sso_provider_id"
 	URIPathVariableSSOProviderSlug                   = "sso_provider_slug"
+	URIPathVariablePartNumber                        = "part_number"
 )
