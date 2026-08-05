@@ -184,6 +184,20 @@ func TestAnalysisPipelineString(t *testing.T) {
 	assert.Equal(t, "ad_post_processing,tagging,data_quality", pipeline.String())
 }
 
+func TestAnalysisPipelineIntentString(t *testing.T) {
+	t.Parallel()
+
+	pipeline := analysisPipeline{
+		{analysisStep: model.AnalysisStepADPostProcessing()},
+		{analysisStep: model.AnalysisStepAzurePostProcessing()},
+		{analysisStep: model.AnalysisStepTagging()},
+		{name: DataQuality},
+	}
+
+	assert.Equal(t, "ad_post_processing:execute,azure_post_processing:execute,tagging:execute,data_quality:execute", pipeline.AnalysisStepsIntentString(model.AnalysisStepsFull()))
+	assert.Equal(t, "ad_post_processing:skip,azure_post_processing:skip,tagging:execute,data_quality:execute", pipeline.AnalysisStepsIntentString(model.AnalysisStepsNoPostProcessing()))
+}
+
 func TestAnalysisPipelineStepResultString(t *testing.T) {
 	t.Parallel()
 
