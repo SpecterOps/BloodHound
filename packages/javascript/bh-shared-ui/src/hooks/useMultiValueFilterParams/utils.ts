@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { type MultiSelectOption } from 'doodle-ui';
 import { MultiValueSelection } from './types';
 
 // dedupes and sorts the selected values, also accounts for the ambiguous case of { kind: 'none' } === { kind: 'some', values: [] }
@@ -42,4 +43,27 @@ export const areSelectionsEqual = (left: MultiValueSelection, right: MultiValueS
     }
 
     return true;
+};
+
+export const getValuesFromSelection = (selection: MultiValueSelection, options: MultiSelectOption[]) => {
+    if (selection.kind === 'some') return selection.values;
+
+    if (selection.kind === 'all') return options.map((option) => option.value);
+
+    if (selection.kind === 'none') return [];
+
+    return [];
+};
+
+export const getNextSelection = (newVal: string[], options: MultiSelectOption[]): MultiValueSelection => {
+    if (newVal.length === options.length) {
+        return { kind: 'all' };
+    } else if (newVal.length === 0) {
+        return { kind: 'none' };
+    } else {
+        return {
+            kind: 'some',
+            values: newVal,
+        };
+    }
 };
