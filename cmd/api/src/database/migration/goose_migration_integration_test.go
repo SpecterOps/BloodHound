@@ -28,7 +28,6 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
-	"github.com/pressly/goose/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
@@ -408,15 +407,7 @@ func TestMigrator_HasPendingMigrations(t *testing.T) {
 				migrationVersions := discoverGooseVersions(t)
 				require.Greater(t, len(migrationVersions), 1)
 
-				provider, err := goose.NewProvider(
-					goose.DialectPostgres,
-					testContext.migrator.SqlDB,
-					testContext.migrator.GooseFS,
-					goose.WithAllowOutofOrder(true),
-				)
-				require.NoError(t, err)
-
-				_, err = provider.UpTo(testContext.ctx, migrationVersions[0])
+				_, err := testContext.migrator.GooseProvider.UpTo(testContext.ctx, migrationVersions[0])
 				require.NoError(t, err)
 			},
 			expectedHasPendingMigrations: true,
@@ -540,16 +531,8 @@ func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
 
 	testContext := setupGooseTestContext(t)
 
-	provider, err := goose.NewProvider(
-		goose.DialectPostgres,
-		testContext.migrator.SqlDB,
-		testContext.migrator.GooseFS,
-		goose.WithAllowOutofOrder(true),
-	)
-	require.NoError(t, err)
-
 	// Run the baseline init so that kind and custom_node_kinds both exist.
-	_, err = provider.UpTo(testContext.ctx, previousMigrationVersion)
+	_, err := testContext.migrator.GooseProvider.UpTo(testContext.ctx, previousMigrationVersion)
 	require.NoError(t, err)
 
 	// create a pre existing kind to verify the on conflict logic
@@ -569,7 +552,7 @@ func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
 	require.NoError(t, testContext.gormDB.Raw(`SELECT last_value FROM kind_id_seq`).Scan(&kindSeqBefore).Error)
 
 	// Execute the target migration.
-	_, err = provider.UpTo(testContext.ctx, targetMigrationVersion)
+	_, err = testContext.migrator.GooseProvider.UpTo(testContext.ctx, targetMigrationVersion)
 	require.NoError(t, err)
 
 	// kind_id must be present, kind_name must be gone.

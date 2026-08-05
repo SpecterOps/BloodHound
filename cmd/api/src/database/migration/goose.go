@@ -28,15 +28,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// newPostgresGooseProvider returns a Goose Provider with the proper configurations
-func (s *Migrator) newPostgresGooseProvider() (*goose.Provider, error) {
-	return goose.NewProvider(
-		goose.DialectPostgres,
-		s.SqlDB,
-		s.GooseFS,
-		goose.WithAllowOutofOrder(true))
-}
-
 // HasPendingMigrations returns true if the legacy table still exists, the goose DB table does not exist, or if the goose provider reports that there are pending migrations.
 func (s *Migrator) HasPendingMigrations(ctx context.Context) (bool, error) {
 	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
@@ -47,9 +38,7 @@ func (s *Migrator) HasPendingMigrations(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("failed to check if goose migration table exists: %w", err)
 	} else if !hasGooseDbTable {
 		return true, nil
-	} else if provider, err := s.newPostgresGooseProvider(); err != nil {
-		return false, fmt.Errorf("failed to create goose provider: %w", err)
-	} else if hasPendingMigrations, err := provider.HasPending(ctx); err != nil {
+	} else if hasPendingMigrations, err := s.GooseProvider.HasPending(ctx); err != nil {
 		return false, fmt.Errorf("failed to check for pending migrations: %w", err)
 	} else {
 		return hasPendingMigrations, nil
@@ -150,16 +139,11 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 		}
 	}
 
-	provider, err := s.newPostgresGooseProvider()
-	if err != nil {
-		return fmt.Errorf("failed to create goose provider: %w", err)
-	}
-
-	if _, err := provider.Up(ctx); err != nil {
+	if _, err := s.GooseProvider.Up(ctx); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
 
-	if err := s.populateMigrationDescription(provider); err != nil {
+	if err := s.populateMigrationDescription(s.GooseProvider); err != nil {
 		slog.Warn("Failed to populate description column", slog.Any("error", err))
 	}
 
