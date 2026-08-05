@@ -40,8 +40,8 @@ const failedIngest = {
     status_message: 'Failed',
 };
 
-test.describe('WCAG A/AA Violations - Administration - File Ingest', () => {
-    test.beforeEach(async ({ page }) => {
+test.describe('Administration - File Ingest - has no detectable WCAG A/AA violations', () => {
+        test.beforeEach(async ({ page }) => {
         await page.route('**/api/v2/features', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();

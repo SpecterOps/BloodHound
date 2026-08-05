@@ -16,8 +16,8 @@
 
 import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
 
-test.describe('WCAG A/AA Violations - Administration - Data Quality', () => {
-    test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
+test.describe('Administration - Data Quality - has no detectable WCAG A/AA violations', () => {
+        test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.route('**/api/v2/available-domains', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
