@@ -18,6 +18,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Check, Minus } from 'lucide-react';
 import * as React from 'react';
 import { Label } from '../Label';
+import { Typography } from '../Typography';
 import { cn } from '../utils';
 
 const CheckboxVariants = cva(
@@ -109,7 +110,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
         const checkboxId = id ?? generatedId;
 
         return (
-            <div
+            <Label
+                htmlFor={checkboxId}
                 className={cn(
                     'inline-flex items-center gap-2 rounded-sm',
                     '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
@@ -127,9 +129,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                     focusRing={false}
                     className={className}
                 />
-
-                <Label
-                    htmlFor={checkboxId}
+                <Typography
+                    variant='caption'
                     className={cn(
                         'cursor-pointer font-normal leading-[18px]',
                         error && 'peer-data-[state=unchecked]:text-status-error-main',
@@ -137,8 +138,8 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                         labelClassName
                     )}>
                     {label}
-                </Label>
-            </div>
+                </Typography>
+            </Label>
         );
     }
 );
