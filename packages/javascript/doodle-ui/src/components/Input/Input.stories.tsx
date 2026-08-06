@@ -49,12 +49,19 @@ export const Default: Story = {};
 
 export const Outlined: Story = { args: { variant: 'outlined' } };
 
+export const Error: Story = {
+    args: {
+        'aria-invalid': true,
+        variant: 'outlined',
+    },
+};
+
 /**
  * Use the `disabled` prop to make the input non-interactive and appears faded,
  * indicating that input is not currently accepted.
  */
 export const Disabled: Story = {
-    args: { disabled: true },
+    args: { disabled: true, variant: 'outlined' },
 };
 
 /**

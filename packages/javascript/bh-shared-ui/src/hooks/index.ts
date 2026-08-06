@@ -50,6 +50,7 @@ export * from './useMatchingPaths';
 export * from './useMeasure';
 export * from './useMediaQuery';
 export * from './useMountEffect';
+export * from './useMultiValueFilterParams';
 export * from './useNavExpanded';
 export * from './useObjectState';
 export { default as useOnClickOutside } from './useOnClickOutside';

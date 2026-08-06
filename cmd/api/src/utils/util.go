@@ -37,6 +37,7 @@ var (
 	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
 	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
 	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
+	ErrRecommendAzureHoundVersion = errors.New("please upgrade to azurehound v3.0.0 or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
 	ErrInvalidUUID                = errors.New("invalid UUID")
 )
@@ -60,12 +61,16 @@ type ClientVersion struct {
 }
 
 // IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
-// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3).
+// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3). When useRawObjectIDsEnabled
+// is true, AzureHound versions below v3.0.0 are also rejected.
 // Returns the parsed ClientVersion and an error when invalid.
-func IsValidClientVersion(userAgent string) (ClientVersion, error) {
+func IsValidClientVersion(userAgent string, useRawObjectIDsEnabled bool) (ClientVersion, error) {
 	if version, err := ParseClientVersion(userAgent); err != nil {
 		return version, fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
+		if version.Major < 3 && useRawObjectIDsEnabled {
+			return version, fmt.Errorf("azurehound version below v3.0.0 detected and Use Raw Object ID flag is enabled: %w", ErrRecommendAzureHoundVersion)
+		}
 		return version, nil
 	} else if version.ClientType == ClientTypeOpenHound {
 		return version, nil

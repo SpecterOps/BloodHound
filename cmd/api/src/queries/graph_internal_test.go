@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -221,4 +223,173 @@ func Test_sortAndSliceResults_limit(t *testing.T) {
 
 	require.Equal(t, 3, len(actual))
 	require.Equal(t, actual, expected)
+}
+
+// extractOrComparisons unwraps a `query.Or(...)` criteria (the first entry returned by
+// createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) into its two
+// underlying comparisons: the Name comparison and the ObjectID comparison, respectively.
+func extractOrComparisons(t *testing.T, criteria graph.Criteria) (*cypher.Comparison, *cypher.Comparison) {
+	t.Helper()
+
+	parenthetical, ok := criteria.(*cypher.Parenthetical)
+	require.True(t, ok, "expected *cypher.Parenthetical, got %T", criteria)
+
+	disjunction, ok := parenthetical.Expression.(*cypher.Disjunction)
+	require.True(t, ok, "expected *cypher.Disjunction, got %T", parenthetical.Expression)
+	require.Len(t, disjunction.Expressions, 2)
+
+	nameComparison, ok := disjunction.Expressions[0].(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[0])
+
+	objectIDComparison, ok := disjunction.Expressions[1].(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[1])
+
+	return nameComparison, objectIDComparison
+}
+
+// requireCaseSensitiveComparison asserts that comparison is a plain (case-sensitive) comparison
+// of the form `n.<propertyName> <operator> <term>`.
+func requireCaseSensitiveComparison(t *testing.T, comparison *cypher.Comparison, propertyName string, operator cypher.Operator, term string) {
+	t.Helper()
+
+	propertyLookup, ok := comparison.Left.(*cypher.PropertyLookup)
+	require.True(t, ok, "expected *cypher.PropertyLookup, got %T", comparison.Left)
+	require.Equal(t, propertyName, propertyLookup.Symbol)
+
+	require.Len(t, comparison.Partials, 1)
+	require.Equal(t, operator, comparison.Partials[0].Operator)
+
+	parameter, ok := comparison.Partials[0].Right.(*cypher.Parameter)
+	require.True(t, ok, "expected *cypher.Parameter, got %T", comparison.Partials[0].Right)
+	require.Equal(t, term, parameter.Value)
+}
+
+// requireCaseInsensitiveComparison asserts that comparison is a case-insensitive comparison of
+// the form `toLower(n.<propertyName>) <operator> toLower(<term>)`.
+func requireCaseInsensitiveComparison(t *testing.T, comparison *cypher.Comparison, propertyName string, operator cypher.Operator, term string) {
+	t.Helper()
+
+	functionInvocation, ok := comparison.Left.(*cypher.FunctionInvocation)
+	require.True(t, ok, "expected *cypher.FunctionInvocation, got %T", comparison.Left)
+	require.Equal(t, "toLower", functionInvocation.Name)
+	require.Len(t, functionInvocation.Arguments, 1)
+
+	propertyLookup, ok := functionInvocation.Arguments[0].(*cypher.PropertyLookup)
+	require.True(t, ok, "expected *cypher.PropertyLookup, got %T", functionInvocation.Arguments[0])
+	require.Equal(t, propertyName, propertyLookup.Symbol)
+
+	require.Len(t, comparison.Partials, 1)
+	require.Equal(t, operator, comparison.Partials[0].Operator)
+
+	parameter, ok := comparison.Partials[0].Right.(*cypher.Parameter)
+	require.True(t, ok, "expected *cypher.Parameter, got %T", comparison.Partials[0].Right)
+	require.Equal(t, strings.ToLower(term), parameter.Value)
+}
+
+// requireNotEqualsExclusion asserts that criteria is a `query.Not(query.Equals(n.<propertyName>, <term>))`
+// clause, and that it remains case-sensitive and untouched by the term's original casing.
+func requireNotEqualsExclusion(t *testing.T, criteria graph.Criteria, propertyName string, term string) {
+	t.Helper()
+
+	negation, ok := criteria.(*cypher.Negation)
+	require.True(t, ok, "expected *cypher.Negation, got %T", criteria)
+
+	parenthetical, ok := negation.Expression.(*cypher.Parenthetical)
+	require.True(t, ok, "expected *cypher.Parenthetical, got %T", negation.Expression)
+
+	comparison, ok := parenthetical.Expression.(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", parenthetical.Expression)
+
+	requireCaseSensitiveComparison(t, comparison, propertyName, cypher.OperatorEquals, term)
+}
+
+func TestCreateFuzzyNodeSearchGraphCriteria_Search(t *testing.T) {
+	const (
+		nameTerm     = "abc"
+		objectIDTerm = "xyz"
+	)
+
+	t.Run("flag off: contains criteria stays case-sensitive", func(t *testing.T) {
+		filters := createFuzzyNodeSearchGraphCriteria(nil, nameTerm, objectIDTerm, false, false)
+		require.Len(t, filters, 3)
+
+		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
+		requireCaseSensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorContains, nameTerm)
+		requireCaseSensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
+
+		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
+		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
+	})
+
+	t.Run("flag on: contains criteria becomes case-insensitive", func(t *testing.T) {
+		filters := createFuzzyNodeSearchGraphCriteria(nil, nameTerm, objectIDTerm, false, true)
+		require.Len(t, filters, 3)
+
+		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
+		requireCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorContains, nameTerm)
+		requireCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
+
+		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
+		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
+		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
+	})
+
+	t.Run("includeGroupFilter and kinds are appended regardless of the flag", func(t *testing.T) {
+		kinds := graph.Kinds{ad.Entity}
+
+		for _, useRawObjectID := range []bool{false, true} {
+			filters := createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)
+			require.Len(t, filters, 5)
+			require.Equal(t, groupFilter, filters[3])
+
+			kindIn, ok := filters[4].(*cypher.KindMatcher)
+			require.True(t, ok, "expected *cypher.KindMatcher, got %T", filters[4])
+			require.Equal(t, kinds, kindIn.Kinds)
+		}
+	})
+}
+
+func TestCreateNodeStartsWithSearchGraphCriteria_Search(t *testing.T) {
+	const (
+		nameTerm     = "abc"
+		objectIDTerm = "xyz"
+	)
+
+	t.Run("flag off: starts-with criteria stays case-sensitive", func(t *testing.T) {
+		filters := createNodeStartsWithSearchGraphCriteria(nil, nameTerm, objectIDTerm, false)
+		require.Len(t, filters, 3)
+
+		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
+		requireCaseSensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
+		requireCaseSensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
+
+		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
+		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
+	})
+
+	t.Run("flag on: starts-with criteria becomes case-insensitive", func(t *testing.T) {
+		filters := createNodeStartsWithSearchGraphCriteria(nil, nameTerm, objectIDTerm, true)
+		require.Len(t, filters, 3)
+
+		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
+		requireCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
+		requireCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
+
+		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
+		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
+		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
+	})
+
+	t.Run("kinds are appended regardless of the flag", func(t *testing.T) {
+		kinds := graph.Kinds{ad.Entity}
+
+		for _, useRawObjectID := range []bool{false, true} {
+			filters := createNodeStartsWithSearchGraphCriteria(kinds, nameTerm, objectIDTerm, useRawObjectID)
+			require.Len(t, filters, 4)
+
+			kindIn, ok := filters[3].(*cypher.KindMatcher)
+			require.True(t, ok, "expected *cypher.KindMatcher, got %T", filters[3])
+			require.Equal(t, kinds, kindIn.Kinds)
+		}
+	})
 }
