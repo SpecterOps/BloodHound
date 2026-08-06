@@ -38,6 +38,9 @@ integration-config-local.json
 coverage/
 coverage.*
 
+# DORA metrics generated files
+.dora/trends/
+
 # Log files
 logs
 *.log
@@ -470,3 +473,10 @@ go-test-results.json
 # Playwright generated
 cmd/ui/playwright
 
+#########
+# DORA Metrics
+#################
+# Local configuration overrides (may contain sensitive data)
+.dora.local.yaml
+# DORA data directory (contains SQLite DB and authentication tokens)
+.dora/
