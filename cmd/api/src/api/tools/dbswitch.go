@@ -23,8 +23,24 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
+
+const (
+	pgErrorUniqueViolationCode           = "23505"
+	pgErrorUniqueViolationConstraintName = "pg_type_typname_nsp_index"
+)
+
+type postgresqlConnection interface {
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Close(ctx context.Context) error
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+var newGraphDriverConnection = func(ctx context.Context, cfg config.Configuration) (postgresqlConnection, error) {
+	return newPostgresqlConnection(ctx, cfg)
+}
 
 func newPostgresqlConnection(ctx context.Context, cfg config.Configuration) (*pgx.Conn, error) {
 	if pgCfg, err := pgx.ParseConfig(cfg.Database.PostgreSQLConnectionString()); err != nil {
@@ -43,7 +59,7 @@ func HasGraphDriverSet(ctx context.Context, pgxConn *pgx.Conn) (bool, error) {
 	return exists, row.Scan(&exists)
 }
 
-func GetGraphDriver(ctx context.Context, pgxConn *pgx.Conn) (string, error) {
+func getGraphDriver(ctx context.Context, pgxConn postgresqlConnection) (string, error) {
 	var (
 		driverName string
 		row        = pgxConn.QueryRow(ctx, `select driver from database_switch limit 1;`)
@@ -70,19 +86,24 @@ func SetGraphDriver(ctx context.Context, cfg config.Configuration, driverName st
 	}
 }
 
-func LookupGraphDriver(ctx context.Context, cfg config.Configuration) (string, error) {
+// ResolveGraphDriver initializes a graph driver connection and creates the `database_switch` table if it does not exist. It returns the graph driver name, or an error.
+func ResolveGraphDriver(ctx context.Context, cfg config.Configuration) (string, error) {
 	driverName := cfg.GraphDriver
 
-	if pgxConn, err := newPostgresqlConnection(ctx, cfg); err != nil {
+	if pgxConn, err := newGraphDriverConnection(ctx, cfg); err != nil {
 		return "", err
 	} else {
 		defer pgxConn.Close(ctx)
-
 		if _, err := pgxConn.Exec(ctx, `create table if not exists database_switch (driver text not null, primary key(driver));`); err != nil {
-			return "", err
+			var pgError *pgconn.PgError
+			if errors.As(err, &pgError) && pgError.Code == pgErrorUniqueViolationCode && pgError.ConstraintName == pgErrorUniqueViolationConstraintName {
+				slog.InfoContext(ctx, "Concurrent database_switch table CREATE; falling back to primary")
+			} else {
+				return "", err
+			}
 		}
 
-		if setDriverName, err := GetGraphDriver(ctx, pgxConn); err != nil {
+		if setDriverName, err := getGraphDriver(ctx, pgxConn); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				slog.InfoContext(
 					ctx,
