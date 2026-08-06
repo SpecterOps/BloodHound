@@ -108,9 +108,9 @@ func seedEnvironment(t *testing.T, pool *pgxpool.Pool, extName, kindName string,
 
 	var extID int
 	require.NoError(t, pool.QueryRow(ctx, `
-		INSERT INTO schema_extensions (name, display_name, version, is_builtin)
-		VALUES ($1, $2, '1.0.0', $3) RETURNING id
-	`, extName, extName+" Display", isBuiltin).Scan(&extID))
+		INSERT INTO schema_extensions (name, namespace, display_name, version, is_builtin)
+		VALUES ($1, $2, $3, '1.0.0', $4) RETURNING id
+	`, extName, extName, extName+" Display", isBuiltin).Scan(&extID))
 
 	var envKindID, sourceKindID int
 	require.NoError(t, pool.QueryRow(ctx, `INSERT INTO kind (name) VALUES ($1) RETURNING id`, kindName).Scan(&envKindID))
