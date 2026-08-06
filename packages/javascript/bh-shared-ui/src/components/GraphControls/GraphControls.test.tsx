@@ -119,7 +119,7 @@ describe('GraphControls', () => {
         it('calls the onReset prop when the crop button is clicked', async () => {
             const { user } = setup();
 
-            const crop = screen.getByText('crop-simple');
+            const crop = screen.getByTestId('explore_graph-controls_reset-button');
             await user.click(crop);
 
             expect(onResetFn).toBeCalled();
@@ -129,7 +129,7 @@ describe('GraphControls', () => {
     describe('Toggling labels', () => {
         it('calls onToggleNodeLabels when click show all node labels', async () => {
             const { user } = setup();
-            const labelMenu = screen.getByText('Hide Labels');
+            const labelMenu = screen.getByTestId('explore_graph-controls_hide-labels-menu');
             await user.click(labelMenu);
 
             const hideNodeLabels = await screen.findByText('Hide Node Labels');
@@ -139,7 +139,7 @@ describe('GraphControls', () => {
         });
         it('calls onToggleEdgeLabels when click show all edge labels', async () => {
             const { user } = setup();
-            const labelMenu = screen.getByText('Hide Labels');
+            const labelMenu = screen.getByTestId('explore_graph-controls_hide-labels-menu');
             await user.click(labelMenu);
 
             const hideEdgeLabels = await screen.findByText('Hide Edge Labels');
@@ -157,8 +157,11 @@ describe('GraphControls', () => {
             async ({ showEdgeLabels, showNodeLabels }) => {
                 const { user } = setup({ showEdgeLabels, showNodeLabels });
 
-                const menuLabel = !showNodeLabels || !showEdgeLabels ? 'Show Labels' : 'Hide Labels';
-                await user.click(screen.getByText(menuLabel));
+                const menuTestId =
+                    !showNodeLabels || !showEdgeLabels
+                        ? 'explore_graph-controls_show-labels-menu'
+                        : 'explore_graph-controls_hide-labels-menu';
+                await user.click(screen.getByTestId(menuTestId));
 
                 const allLabelsController = await screen.findByRole('menuitem', { name: /All Labels/i });
                 await user.click(allLabelsController);
@@ -178,7 +181,7 @@ describe('GraphControls', () => {
         it('calls onLayoutChange with the selected layout', async () => {
             const { user } = setup();
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             const selectedLayout = layoutOptions[0];
@@ -191,7 +194,7 @@ describe('GraphControls', () => {
         it('does not highlight any layout option on first load when no layout has been manually selected', async () => {
             const { user } = setup({ isExploreLayoutSelected: false });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             for (const option of layoutOptions) {
@@ -203,7 +206,7 @@ describe('GraphControls', () => {
         it('highlights the selectedLayout when isExploreLayoutSelected is true', async () => {
             const { user } = setup({ isExploreLayoutSelected: true });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
@@ -219,7 +222,7 @@ describe('GraphControls', () => {
         it('calls onLayoutChange with the same layout when the currently selected option is clicked, enabling de-selection', async () => {
             const { user } = setup({ isExploreLayoutSelected: true });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
@@ -233,7 +236,7 @@ describe('GraphControls', () => {
             // selectedLayout may still be present. No option should appear selected.
             const { user } = setup({ isExploreLayoutSelected: false, selectedLayout: preselectedLayout });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             for (const option of layoutOptions) {
@@ -255,7 +258,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=cypher',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             const tableItem = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
@@ -274,7 +277,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=cypher',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             for (const option of layoutOptionsWithTable) {
@@ -292,7 +295,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=node',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByTestId('explore_graph-controls_layout-menu');
             await user.click(layoutMenu);
 
             const sequentialItem = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
@@ -306,7 +309,7 @@ describe('GraphControls', () => {
         it('disables the JSON button if the JSON is empty', async () => {
             const { user } = setup();
 
-            const exportMenu = screen.getByText('Export');
+            const exportMenu = screen.getByTestId('explore_graph-controls_export-menu');
             await user.click(exportMenu);
 
             const jsonButton = await screen.findByText('JSON');
@@ -320,7 +323,7 @@ describe('GraphControls', () => {
             const json = { test: 'data' };
             const { user } = setup({ json });
 
-            const exportMenu = screen.getByText('Export');
+            const exportMenu = screen.getByTestId('explore_graph-controls_export-menu');
             await user.click(exportMenu);
 
             const jsonButton = await screen.findByText('JSON');
@@ -330,17 +333,17 @@ describe('GraphControls', () => {
         });
     });
     describe('Searching current results', () => {
-        it('renders GraphButton with correct text', async () => {
+        it('renders the search button', async () => {
             setup();
-            const searchResultsMenu = await screen.findByText('Search');
+            const searchResultsMenu = await screen.findByTestId('explore_graph-controls_search-current-results');
 
             expect(searchResultsMenu).toBeInTheDocument();
         });
 
-        it('disables GraphButton when isCurrentSearchOpen is true', async () => {
+        it('disables the search button when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
             await user.click(searchResultsMenu);
 
             expect(searchResultsMenu).toBeDisabled();
@@ -351,7 +354,7 @@ describe('GraphControls', () => {
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
             await user.click(searchResultsMenu);
 
             expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
@@ -370,7 +373,7 @@ describe('GraphControls', () => {
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
 
             await user.click(searchResultsMenu);
 
