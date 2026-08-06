@@ -69,6 +69,7 @@ const (
 	URIPathVariableFeatureID                         = "feature_id"
 	URIPathVariableJobID                             = "job_id"
 	URIPathVariableObjectID                          = "object_id"
+	URIPathVariablePartNumber                        = "part_number"
 	URIPathVariablePermissionID                      = "permission_id"
 	URIPathVariablePlatformID                        = "platform_id"
 	URIPathVariableRoleID                            = "role_id"
@@ -80,5 +81,4 @@ const (
 	URIPathVariableSavedQueryID                      = "saved_query_id"
 	URIPathVariableSSOProviderID                     = "sso_provider_id"
 	URIPathVariableSSOProviderSlug                   = "sso_provider_slug"
-	URIPathVariablePartNumber                        = "part_number"
 )
