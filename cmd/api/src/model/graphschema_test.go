@@ -1152,6 +1152,51 @@ func TestKindInfo_Validation(t *testing.T) {
 			wantErr: ErrInvalidKindInfoContent,
 		},
 		{
+			name: "success_-_valid_markdown_template_with_utility_function",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ .Properties.name | upper }}"}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_markdown_template_syntax_error_unclosed_action",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ .Properties.name "}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
+			name: "error_-_markdown_template_unsupported_function",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ regexMatch \"a\" \"a\" }}"}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
+			name: "error_-_markdown_template_syntax_error_in_relationship_kind",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{Name: "AD_Node"}},
+				RelationshipKindsInput: RelationshipsInput{{
+					Name: "AD_Edge",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ end }}"}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
 			name: "error_-_duplicate_info_key",
 			input: GraphExtensionInput{
 				ExtensionInput: baseExtensionInput(),
