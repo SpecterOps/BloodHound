@@ -24,6 +24,7 @@ import (
 	"log/slog"
 	"text/template"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/safetemplate"
 )
 
@@ -132,8 +133,8 @@ func renderRelationshipKindInfos(ctx context.Context, relationship Relationship,
 			relationship.KindInfos[index].RenderedMarkdown = renderedMarkdown
 			relationship.KindInfos[index].TemplateError = err.Error()
 			slog.WarnContext(ctx, "Failed to render relationship kind info markdown",
-				"info_key", relationship.KindInfos[index].InfoKey,
-				"error", err,
+				slog.String("info_key", relationship.KindInfos[index].InfoKey),
+				attr.Error(err),
 			)
 			continue
 		}
@@ -158,8 +159,8 @@ func renderNodeKindInfos(ctx context.Context, node *Node) {
 			node.KindInfos[index].RenderedMarkdown = renderedMarkdown
 			node.KindInfos[index].TemplateError = err.Error()
 			slog.WarnContext(ctx, "Failed to render node kind info markdown",
-				"info_key", node.KindInfos[index].InfoKey,
-				"error", err,
+				slog.String("info_key", node.KindInfos[index].InfoKey),
+				attr.Error(err),
 			)
 			continue
 		}

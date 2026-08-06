@@ -55,7 +55,7 @@ var unsupportedFns = []string{
 	"mustRegexSplit",
 	"urlParse",
 	"urlJoin",
-	"randint",
+	"randInt",
 	"ago",
 }
 
