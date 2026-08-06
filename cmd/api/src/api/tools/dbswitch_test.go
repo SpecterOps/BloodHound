@@ -32,7 +32,7 @@ const (
 	getGraphDriverSQL            = `select driver from database_switch limit 1;`
 )
 
-func TestLookupGraphDriver(t *testing.T) {
+func TestResolveGraphDriver(t *testing.T) {
 	var (
 		ctx              = context.Background()
 		configuredDriver = "neo4j"
@@ -135,7 +135,7 @@ func TestLookupGraphDriver(t *testing.T) {
 	}
 }
 
-func TestLookupGraphDriverReturnsConnectionError(t *testing.T) {
+func TestResolveGraphDriverReturnsConnectionError(t *testing.T) {
 	var (
 		connectionError = errors.New("connection failed")
 		cfg             = config.Configuration{GraphDriver: "neo4j"}
