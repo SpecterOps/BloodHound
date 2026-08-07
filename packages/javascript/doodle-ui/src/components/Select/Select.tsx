@@ -33,7 +33,7 @@ const SelectValue = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Val
     ({ placeholder, required = false, ...props }, ref) => (
         <SelectPrimitive.Value
             ref={ref}
-            placeholder={required && placeholder !== null ? <>{placeholder} *</> : placeholder}
+            placeholder={required && placeholder != null ? <>{placeholder} *</> : placeholder}
             {...props}
         />
     )
