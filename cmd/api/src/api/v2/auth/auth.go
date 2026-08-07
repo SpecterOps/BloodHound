@@ -47,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/specterops/bloodhound/server/alerts"
 )
 
 const (
@@ -67,9 +68,10 @@ type ManagementResource struct {
 	SAML                       saml.Service
 	GraphQuery                 queries.Graph
 	DogTags                    dogtags.Service
+	AlertPublisher             alerts.Publisher
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service, alertPublisher alerts.Publisher) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -81,6 +83,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		SAML:                       &saml.Client{},
 		GraphQuery:                 graphQuery,
 		DogTags:                    dogTagsService,
+		AlertPublisher:             alertPublisher,
 	}
 }
 
