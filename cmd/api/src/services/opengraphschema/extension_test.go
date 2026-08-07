@@ -18,6 +18,7 @@ package opengraphschema_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -401,6 +402,141 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 							RemediationInput:     model.RemediationInput{},
 						},
 					},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: false,
+		},
+		{
+			name: "fail - unsafe kind info markdown",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+						Info: model.KindInfoInputs{{
+							InfoKey:  "overview",
+							Title:    "Overview",
+							Position: 0,
+							Content:  json.RawMessage(`{"markdown":{"content":"<script>alert(1)</script>"}}`),
+						}},
+					}},
+				},
+			},
+			wantErr:     model.ErrGraphExtensionValidation,
+			wantUpdated: false,
+		},
+		{
+			name: "success_-_safe_kind_info_markdown_inserted",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+				},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+						Info: model.KindInfoInputs{{
+							InfoKey:  "overview",
+							Title:    "Overview",
+							Position: 0,
+							Content:  json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`),
+						}},
+					}},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: false,
+		},
+		{
+			name: "fail - unsafe remediation markdown",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+					}},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
+					}},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{{
+						Name:                 "DEFAULT_Finding_1",
+						RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+						RemediationInput: model.RemediationInput{
+							ShortDescription: "<script>alert(1)</script>",
+						},
+					}},
+				},
+			},
+			wantErr:     model.ErrGraphExtensionValidation,
+			wantUpdated: false,
+		},
+		{
+			name: "success - safe remediation markdown inserted",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+				},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+					}},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
+					}},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{{
+						Name:                 "DEFAULT_Finding_1",
+						RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+						RemediationInput: model.RemediationInput{
+							ShortDescription: "A **bold** summary.",
+							LongDescription:  "See [docs](http://example.com).",
+							ShortRemediation: "Do the thing.",
+							LongRemediation:  "# Steps\n\n1. First\n2. Second",
+						},
+					}},
 				},
 			},
 			wantErr:     nil,
