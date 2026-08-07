@@ -85,8 +85,7 @@ func ResolveGraphDriver(ctx context.Context, cfg config.Configuration) (string, 
 	} else {
 		defer pgxConn.Close(ctx)
 		if _, err := pgxConn.Exec(ctx, `create table if not exists database_switch (driver text not null, primary key(driver));`); err != nil {
-			var pgError *pgconn.PgError
-			if errors.As(err, &pgError) && pgError.Code == pgErrorUniqueViolationCode && pgError.ConstraintName == pgErrorUniqueViolationConstraintName {
+			if pgError, ok := errors.AsType[*pgconn.PgError](err); ok && pgError.Code == pgErrorUniqueViolationCode && pgError.ConstraintName == pgErrorUniqueViolationConstraintName {
 				slog.InfoContext(ctx, "Concurrent database_switch table CREATE; falling back to primary")
 			} else {
 				return "", err
