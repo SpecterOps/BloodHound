@@ -379,6 +379,8 @@ paths:
     $ref: './paths/graph.nodes.id.yaml'
   /api/v2/graphs/shortest-path:
     $ref: './paths/graph.graphs.shortest-path.yaml'
+  /api/v2/graphs/expand:
+    $ref: './paths/graph.graphs.expand.yaml'
   /api/v2/graphs/edge-composition:
     $ref: './paths/graph.graphs.edge-composition.yaml'
   /api/v2/graphs/relay-targets:

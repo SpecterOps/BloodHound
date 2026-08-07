@@ -7592,6 +7592,92 @@
         }
       }
     },
+    "/api/v2/graphs/expand": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "ExpandGraph",
+        "summary": "Expand a graph node",
+        "description": "Returns a bounded one-hop graph expansion for a node using traversable relationship kinds.",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "node_id",
+                  "direction"
+                ],
+                "properties": {
+                  "node_id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "inbound",
+                      "outbound"
+                    ]
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "default": 500
+                  },
+                  "include_properties": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A bounded one-hop graph expansion for the requested node.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.unified-graph.expansion"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/edge-composition": {
       "parameters": [
         {
@@ -23260,6 +23346,91 @@
           }
         }
       },
+      "model.unified-graph.graph.w.property.keys": {
+        "type": "object",
+        "properties": {
+          "node_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "edge_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/model.unified-graph.node"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          },
+          "literals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "object",
+                  "nullable": true,
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "model.unified-graph.expansion": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.unified-graph.graph.w.property.keys"
+          },
+          {
+            "type": "object",
+            "required": [
+              "limit",
+              "truncated"
+            ],
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
       "api.response.graph-extensions-info": {
         "type": "object",
         "properties": {
@@ -23678,67 +23849,6 @@
             }
           }
         ]
-      },
-      "model.unified-graph.graph.w.property.keys": {
-        "type": "object",
-        "properties": {
-          "node_keys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "edge_keys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "nodes": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/model.unified-graph.node"
-            }
-          },
-          "edges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.unified-graph.edge"
-            }
-          },
-          "literals": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "key": {
-                  "type": "string"
-                },
-                "value": {
-                  "type": "object",
-                  "nullable": true,
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "object"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
       },
       "api.response.time-window": {
         "type": "object",
