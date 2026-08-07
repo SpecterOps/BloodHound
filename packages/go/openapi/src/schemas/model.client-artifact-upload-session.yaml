@@ -18,6 +18,8 @@ allOf:
   - $ref: './model.components.uuid.yaml'
   - type: object
     properties:
+      artifact_id:
+        type: string
       storage_key:
         type: string
       content_type:
