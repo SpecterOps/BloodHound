@@ -14,10 +14,34 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
+
+const dataQualityResult = {
+    acls: 34,
+    aiacas: 1,
+    certtemplates: 8,
+    computers: 12,
+    containers: 5,
+    created_at: '2026-08-01T12:00:00Z',
+    deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
+    domains: 1,
+    enterprisecas: 1,
+    gpos: 4,
+    groups: 9,
+    issuancepolicies: 2,
+    local_group_completeness: 0.75,
+    ntauthstores: 1,
+    ous: 6,
+    relationships: 56,
+    rootcas: 1,
+    session_completeness: 0.5,
+    sessions: 23,
+    updated_at: '2026-08-01T12:00:00Z',
+    users: 10,
+};
 
 test.describe('Administration - Data Quality - has no detectable WCAG A/AA violations', () => {
-        test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.route('**/api/v2/available-domains', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -27,8 +51,7 @@ test.describe('Administration - Data Quality - has no detectable WCAG A/AA viola
         });
 
         await page.goto('/ui/administration/data-quality');
-        await expect(page.getByText('No Domain or Tenant Selected', { exact: true })).toBeVisible();
-
+        await page.getByText('No Domain or Tenant Selected', { exact: true }).waitFor();
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -63,31 +86,7 @@ test.describe('Administration - Data Quality - has no detectable WCAG A/AA viola
             await route.fulfill({
                 json: {
                     count: 1,
-                    data: [
-                        {
-                            acls: 34,
-                            aiacas: 1,
-                            certtemplates: 8,
-                            computers: 12,
-                            containers: 5,
-                            created_at: '2026-08-01T12:00:00Z',
-                            deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
-                            domains: 1,
-                            enterprisecas: 1,
-                            gpos: 4,
-                            groups: 9,
-                            issuancepolicies: 2,
-                            local_group_completeness: 0.75,
-                            ntauthstores: 1,
-                            ous: 6,
-                            relationships: 56,
-                            rootcas: 1,
-                            session_completeness: 0.5,
-                            sessions: 23,
-                            updated_at: '2026-08-01T12:00:00Z',
-                            users: 10,
-                        },
-                    ],
+                    data: [dataQualityResult],
                     limit: 1,
                     skip: 0,
                 },
@@ -95,7 +94,7 @@ test.describe('Administration - Data Quality - has no detectable WCAG A/AA viola
         });
 
         await page.goto('/ui/administration/data-quality');
-        await expect(page.getByText('Group Completeness')).toBeVisible();
+        await page.getByText('Group Completeness').waitFor();
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });

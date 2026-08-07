@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
-
+import { hideBySelector } from 'bh-playwright-testing/axe';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 const completedIngest = {
     created_at: '2026-08-01T12:00:00Z',
     deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
@@ -41,7 +41,7 @@ const failedIngest = {
 };
 
 test.describe('Administration - File Ingest - has no detectable WCAG A/AA violations', () => {
-        test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
         await page.route('**/api/v2/features', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -68,9 +68,8 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
         });
 
         await page.goto('/ui/administration/file-ingest');
-        await expect(page.getByRole('columnheader', { name: 'ID / User / Status' })).toBeVisible();
-        await expect(page.getByText('0–0 of 0')).toBeVisible();
-
+        await page.getByRole('columnheader', { name: 'ID / User / Status' }).waitFor({ state: 'visible' });
+        await page.getByText('0–0 of 0').waitFor({ state: 'visible' });
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -88,8 +87,7 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
         });
 
         await page.goto('/ui/administration/file-ingest');
-        await expect(page.getByRole('button', { name: 'View ingest 1 details' })).toBeVisible();
-
+        await page.getByRole('button', { name: 'View ingest 1 details' }).waitFor({ state: 'visible' });
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -129,8 +127,7 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
 
         await page.goto('/ui/administration/file-ingest');
         await page.getByRole('button', { name: 'View ingest 1 details' }).click();
-        await expect(page.getByText('bloodhound-data.zip')).toBeVisible();
-
+        await page.getByText('bloodhound-data.zip').waitFor({ state: 'visible' });
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -172,8 +169,7 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
         await page.goto('/ui/administration/file-ingest');
         await page.getByRole('button', { name: 'View ingest 2 details' }).click();
         await page.getByRole('button', { name: /invalid-data\.json Failure/ }).click();
-        await expect(page.getByText('The uploaded file could not be parsed.')).toBeVisible();
-
+        await page.getByText('The uploaded file could not be parsed.').waitFor({ state: 'visible' });
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
@@ -199,9 +195,12 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
 
         await page.goto('/ui/administration/file-ingest');
         await page.getByTestId('file_ingest_log-open_filter_dialog').click();
-        await expect(page.getByRole('heading', { name: 'Filter' })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('heading', { name: 'Filter' }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 });
