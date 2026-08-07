@@ -232,7 +232,6 @@ const UpdateUserFormInner: React.FC<{
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
                                                                     variant='outlined'
-                                                                    className='bg-transparent'
                                                                     id='role'
                                                                     disabled={
                                                                         selectedSSOProviderHasRoleProvisionEnabled
@@ -413,10 +412,7 @@ const UpdateUserFormInner: React.FC<{
 
                                         <Select onValueChange={setAuthenticationMethod} value={authenticationMethod}>
                                             <FormControl className='pointer-events-auto'>
-                                                <SelectTrigger
-                                                    variant='outlined'
-                                                    className='bg-transparent'
-                                                    id='authenticationMethod'>
+                                                <SelectTrigger variant='outlined' id='authenticationMethod'>
                                                     <SelectValue
                                                         placeholder={
                                                             authenticationMethod === 'password'
