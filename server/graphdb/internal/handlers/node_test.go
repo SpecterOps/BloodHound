@@ -60,11 +60,12 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 			Properties: map[string]any{"name": "admin"},
 			KindInfos: []services.KindInfo{
 				{
-					InfoKey:    "overview",
-					Title:      "Overview",
-					Position:   0,
-					NodeKindID: int32Ptr(1),
-					Content:    json.RawMessage(`{"markdown":{"content":"one"}}`),
+					InfoKey:          "overview",
+					Title:            "Overview",
+					Position:         0,
+					NodeKindID:       int32Ptr(1),
+					Content:          json.RawMessage(`{"markdown":{"content":"one"}}`),
+					RenderedMarkdown: "one",
 				},
 			},
 		}
@@ -104,6 +105,48 @@ func TestHandlers_GetNodeByID(t *testing.T) {
 				require.Len(t, envelope.Data.KindInfos, 1)
 				assert.Equal(t, "one", envelope.Data.KindInfos[0].Markdown.Content)
 				assert.NotContains(t, string(body), `\"markdown\"`)
+			},
+		},
+		{
+			name:     "returns 200 with valid node info when a template fails to render",
+			rawID:    "9876543210",
+			rawQuery: "include-info=true",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				renderedNode := node
+				renderedNode.KindInfos = []services.KindInfo{
+					{
+						InfoKey:          "bad",
+						Title:            "Bad",
+						Position:         0,
+						NodeKindID:       int32Ptr(1),
+						RenderedMarkdown: "{{ .UnknownField }}",
+						TemplateError:    "template failed",
+					},
+					{
+						InfoKey:          "good",
+						Title:            "Good",
+						Position:         1,
+						NodeKindID:       int32Ptr(1),
+						RenderedMarkdown: "ALICE",
+					},
+				}
+
+				graphDBMock.EXPECT().GetNode(mock.Anything, nodeID, true).Return(
+					renderedNode,
+					nil,
+				)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, renderedNode).Return(true)
+			},
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data handlers.NodeView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				require.Len(t, envelope.Data.KindInfos, 2)
+				assert.Equal(t, "{{ .UnknownField }}", envelope.Data.KindInfos[0].Markdown.Content)
+				assert.Equal(t, "template failed", envelope.Data.KindInfos[0].Markdown.TemplateError)
+				assert.Equal(t, "ALICE", envelope.Data.KindInfos[1].Markdown.Content)
 			},
 		},
 		{

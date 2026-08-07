@@ -57,7 +57,10 @@ type KindInfo struct {
 	InfoKey  string
 	Title    string
 	Position int32
-	Content  json.RawMessage
+	Content  json.RawMessage // persisted JSONB document
+
+	RenderedMarkdown string // successful or fallback template text when `Content` is parsed using sprig
+	TemplateError    string // per-entry failure reason
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

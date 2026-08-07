@@ -129,6 +129,8 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 		})
 
 		node.KindInfos = allKindInfos
+
+		renderNodeKindInfos(ctx, &node)
 	}
 
 	return node, nil
