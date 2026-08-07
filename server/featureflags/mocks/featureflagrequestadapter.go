@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -50,6 +51,72 @@ type MockFeatureFlagRequestAdapter_Expecter struct {
 
 func (_m *MockFeatureFlagRequestAdapter) EXPECT() *MockFeatureFlagRequestAdapter_Expecter {
 	return &MockFeatureFlagRequestAdapter_Expecter{mock: &_m.Mock}
+}
+
+// GetFlagByKey provides a mock function for the type MockFeatureFlagRequestAdapter
+func (_mock *MockFeatureFlagRequestAdapter) GetFlagByKey(ctx context.Context, key string) (services.FeatureFlag, error) {
+	ret := _mock.Called(ctx, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFlagByKey")
+	}
+
+	var r0 services.FeatureFlag
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (services.FeatureFlag, error)); ok {
+		return returnFunc(ctx, key)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) services.FeatureFlag); ok {
+		r0 = returnFunc(ctx, key)
+	} else {
+		r0 = ret.Get(0).(services.FeatureFlag)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockFeatureFlagRequestAdapter_GetFlagByKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFlagByKey'
+type MockFeatureFlagRequestAdapter_GetFlagByKey_Call struct {
+	*mock.Call
+}
+
+// GetFlagByKey is a helper method to define mock.On call
+//   - ctx context.Context
+//   - key string
+func (_e *MockFeatureFlagRequestAdapter_Expecter) GetFlagByKey(ctx interface{}, key interface{}) *MockFeatureFlagRequestAdapter_GetFlagByKey_Call {
+	return &MockFeatureFlagRequestAdapter_GetFlagByKey_Call{Call: _e.mock.On("GetFlagByKey", ctx, key)}
+}
+
+func (_c *MockFeatureFlagRequestAdapter_GetFlagByKey_Call) Run(run func(ctx context.Context, key string)) *MockFeatureFlagRequestAdapter_GetFlagByKey_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockFeatureFlagRequestAdapter_GetFlagByKey_Call) Return(featureFlag services.FeatureFlag, err error) *MockFeatureFlagRequestAdapter_GetFlagByKey_Call {
+	_c.Call.Return(featureFlag, err)
+	return _c
+}
+
+func (_c *MockFeatureFlagRequestAdapter_GetFlagByKey_Call) RunAndReturn(run func(ctx context.Context, key string) (services.FeatureFlag, error)) *MockFeatureFlagRequestAdapter_GetFlagByKey_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // IsEnabled provides a mock function for the type MockFeatureFlagRequestAdapter

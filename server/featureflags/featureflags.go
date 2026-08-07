@@ -38,6 +38,7 @@ const (
 
 type FeatureFlagRequestAdapter interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
+	GetFlagByKey(ctx context.Context, key string) (services.FeatureFlag, error)
 }
 
 func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter {
