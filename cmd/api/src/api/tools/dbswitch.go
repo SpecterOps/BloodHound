@@ -32,16 +32,6 @@ const (
 	pgErrorUniqueViolationConstraintName = "pg_type_typname_nsp_index"
 )
 
-type postgresqlConnection interface {
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Close(ctx context.Context) error
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-}
-
-var newGraphDriverConnection = func(ctx context.Context, cfg config.Configuration) (postgresqlConnection, error) {
-	return newPostgresqlConnection(ctx, cfg)
-}
-
 func newPostgresqlConnection(ctx context.Context, cfg config.Configuration) (*pgx.Conn, error) {
 	if pgCfg, err := pgx.ParseConfig(cfg.Database.PostgreSQLConnectionString()); err != nil {
 		return nil, err
@@ -59,7 +49,7 @@ func HasGraphDriverSet(ctx context.Context, pgxConn *pgx.Conn) (bool, error) {
 	return exists, row.Scan(&exists)
 }
 
-func getGraphDriver(ctx context.Context, pgxConn postgresqlConnection) (string, error) {
+func GetGraphDriver(ctx context.Context, pgxConn *pgx.Conn) (string, error) {
 	var (
 		driverName string
 		row        = pgxConn.QueryRow(ctx, `select driver from database_switch limit 1;`)
@@ -90,7 +80,7 @@ func SetGraphDriver(ctx context.Context, cfg config.Configuration, driverName st
 func ResolveGraphDriver(ctx context.Context, cfg config.Configuration) (string, error) {
 	driverName := cfg.GraphDriver
 
-	if pgxConn, err := newGraphDriverConnection(ctx, cfg); err != nil {
+	if pgxConn, err := newPostgresqlConnection(ctx, cfg); err != nil {
 		return "", err
 	} else {
 		defer pgxConn.Close(ctx)
@@ -103,7 +93,7 @@ func ResolveGraphDriver(ctx context.Context, cfg config.Configuration) (string, 
 			}
 		}
 
-		if setDriverName, err := getGraphDriver(ctx, pgxConn); err != nil {
+		if setDriverName, err := GetGraphDriver(ctx, pgxConn); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				slog.InfoContext(
 					ctx,
