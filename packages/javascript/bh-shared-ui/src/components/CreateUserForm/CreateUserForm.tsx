@@ -205,7 +205,7 @@ const CreateUserFormInner: React.FC<{
                                                         className='bg-transparent'
                                                         data-testid='create-user-dialog_select_role'
                                                         id='role'
-                                                        variant='underlined'>
+                                                        variant='outlined'>
                                                         <SelectValue placeholder={field.value} />
                                                     </SelectTrigger>
                                                 </FormControl>

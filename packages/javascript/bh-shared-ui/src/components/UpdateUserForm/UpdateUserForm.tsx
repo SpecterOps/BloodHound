@@ -231,7 +231,7 @@ const UpdateUserFormInner: React.FC<{
                                                             value={String(selectedRoleId)}>
                                                             <FormControl className='pointer-events-auto'>
                                                                 <SelectTrigger
-                                                                    variant='underlined'
+                                                                    variant='outlined'
                                                                     className='bg-transparent'
                                                                     id='role'
                                                                     disabled={
@@ -414,7 +414,7 @@ const UpdateUserFormInner: React.FC<{
                                         <Select onValueChange={setAuthenticationMethod} value={authenticationMethod}>
                                             <FormControl className='pointer-events-auto'>
                                                 <SelectTrigger
-                                                    variant='underlined'
+                                                    variant='outlined'
                                                     className='bg-transparent'
                                                     id='authenticationMethod'>
                                                     <SelectValue
