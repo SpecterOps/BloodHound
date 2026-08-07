@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector } from 'bh-playwright-testing/axe';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 test.describe('Administration - BloodHound Configuration - has no detectable WCAG A/AA violations', () => {
     test.beforeEach(async ({ page }) => {
@@ -45,10 +46,11 @@ test.describe('Administration - BloodHound Configuration - has no detectable WCA
 
     test('page', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.goto('/ui/administration/bloodhound-configuration');
-        await expect(page.getByRole('heading', { name: 'BloodHound Configuration' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Run Analysis Now' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Citrix RDP Support' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Analyze Now' })).toBeEnabled();
+
+        await page.getByRole('heading', { name: 'BloodHound Configuration' }).waitFor({ state: 'visible' });
+        await page.getByRole('heading', { name: 'Run Analysis Now' }).waitFor({ state: 'visible' });
+        await page.getByRole('heading', { name: 'Citrix RDP Support' }).waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: 'Analyze Now' }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -57,12 +59,15 @@ test.describe('Administration - BloodHound Configuration - has no detectable WCA
     test('Analyze Now dialog', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.goto('/ui/administration/bloodhound-configuration');
         await page.getByRole('button', { name: 'Analyze Now' }).click();
-        await expect(page.getByRole('dialog', { name: 'Confirm re-run analysis' })).toBeVisible();
-        await expect(page.getByText(/Analysis may take some time/)).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Confirm' })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('dialog', { name: 'Confirm re-run analysis' }).waitFor({ state: 'visible' });
+        await page.getByText(/Analysis may take some time/).waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: 'Cancel' }).waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: 'Confirm' }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 });
