@@ -66,6 +66,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 					Position:           1,
 					RelationshipKindID: &kindID,
 					Content:            json.RawMessage(`{"markdown":{"content":"relationship markdown"}}`),
+					RenderedMarkdown:   markdown,
 				},
 			},
 		}

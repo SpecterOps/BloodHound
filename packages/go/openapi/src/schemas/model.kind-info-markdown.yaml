@@ -21,3 +21,7 @@ properties:
     properties:
       content:
         type: string
+        description: Rendered markdown content, or the original unexecuted template string when rendering fails.
+      template_error:
+        type: string
+        description: Template parsing or execution error, when the markdown template could not be rendered for the requested entity.

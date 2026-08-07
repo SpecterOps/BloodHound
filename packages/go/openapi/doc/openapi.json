@@ -7408,7 +7408,11 @@
                                     "properties": {
                                       "content": {
                                         "type": "string",
-                                        "description": "Markdown content for the kindinfo object."
+                                        "description": "Rendered markdown content, or the original unexecuted template string when rendering fails."
+                                      },
+                                      "template_error": {
+                                        "type": "string",
+                                        "description": "Template parsing or execution error, when the markdown template could not be rendered for the requested node."
                                       }
                                     }
                                   }
@@ -7873,7 +7877,7 @@
                             "title": "Overview",
                             "position": 1,
                             "markdown": {
-                              "content": "This is an overview panel for Node Kind 1"
+                              "content": "This is an overview panel for **{{ .Properties.name | upper }}** (node {{ .NodeID }})"
                             }
                           },
                           "details": {
@@ -7910,7 +7914,7 @@
                             "title": "Abuse Info",
                             "position": 1,
                             "markdown": {
-                              "content": "Information about how this relationship can be abused"
+                              "content": "Information about how the {{ .Kind.Name }} relationship from {{ .Source.Properties.name }} to {{ .Target.Properties.name }} can be abused"
                             }
                           }
                         }
@@ -23398,7 +23402,12 @@
             ],
             "properties": {
               "content": {
-                "type": "string"
+                "type": "string",
+                "description": "Rendered markdown content, or the original unexecuted template string when rendering fails."
+              },
+              "template_error": {
+                "type": "string",
+                "description": "Template parsing or execution error, when the markdown template could not be rendered for the requested entity."
               }
             }
           }

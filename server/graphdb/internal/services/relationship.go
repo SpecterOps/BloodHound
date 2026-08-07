@@ -20,6 +20,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 )
 
@@ -91,6 +92,20 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 		})
 
 		relationship.KindInfos = allKindInfos
+
+		if len(relationship.KindInfos) > 0 {
+			source, sourceErr := s.GetNode(ctx, relationship.SourceNodeID, false)
+			if sourceErr != nil {
+				return Relationship{}, fmt.Errorf("fetching relationship source node: %w", sourceErr)
+			}
+
+			target, targetErr := s.GetNode(ctx, relationship.TargetNodeID, false)
+			if targetErr != nil {
+				return Relationship{}, fmt.Errorf("fetching relationship target node: %w", targetErr)
+			}
+
+			renderRelationshipKindInfos(ctx, relationship, source, target)
+		}
 	}
 
 	return relationship, nil
