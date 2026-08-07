@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
-
+import { hideBySelector } from 'bh-playwright-testing/axe';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 const earlyAccessFeature = {
     id: 1,
     name: 'Example Early Access Feature',
@@ -68,24 +68,30 @@ test.describe('Administration - Early Access Features - has no detectable WCAG A
 
     test('Heads up dialog', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.goto('/ui/administration/early-access-features');
+
+        await hideBySelector(page, '#content-wrapper');
+
         await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'visible' });
-        await expect(page.getByRole('button', { name: 'Take me back' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'I understand, show me the new stuff!' })).toBeVisible();
+        await page.getByRole('button', { name: 'Take me back' }).waitFor({ state: 'visible' });
+        await page.getByRole('button', { name: 'I understand, show me the new stuff!' }).waitFor({ state: 'visible' });
 
-        await expect(page.getByRole('dialog')).toBeVisible();
+        const results = await makeAxeBuilder()
+            .include('[data-testid="early-access-features-warning-dialog"]')
+            .analyze();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('page', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.goto('/ui/administration/early-access-features');
+
         await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'I understand, show me the new stuff!' }).click();
-        await expect(page.getByRole('heading', { name: 'Heads up!' })).not.toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Early Access Features' })).toBeVisible();
-        await expect(page.getByText(earlyAccessFeature.name)).toBeVisible();
-        await expect(page.getByText(earlyAccessFeature.description)).toBeVisible();
+
+        await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'hidden' });
+        await page.getByRole('heading', { name: 'Early Access Features' }).waitFor({ state: 'visible' });
+        await page.getByText(earlyAccessFeature.name).waitFor({ state: 'visible' });
+        await page.getByText(earlyAccessFeature.description).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
