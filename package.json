@@ -52,6 +52,6 @@
     "vitest/vite": "7.3.5",
     "vite-node/vite": "7.3.5",
     "ws": "^8.21.0",
-    "js-yaml": "^4.3.0"
+    "js-yaml": "4.3.1"
   }
 }
