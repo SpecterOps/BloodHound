@@ -19212,7 +19212,8 @@
                                   "active",
                                   "accepted",
                                   "remediated",
-                                  "deprecated"
+                                  "deprecated",
+                                  "orphaned"
                                 ]
                               },
                               "first_seen": {

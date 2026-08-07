@@ -13,6 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export type { MultiValueFilterConfig, MultiValueSelection } from './types';
+export type { MultiValueFilterConfig, MultiValueSelection, UseMultiValueFilterParams } from './types';
 export { useMultiValueFilterParams } from './useMultiValueFilterParams';
 export { getNextSelection, getValuesFromSelection } from './utils';
