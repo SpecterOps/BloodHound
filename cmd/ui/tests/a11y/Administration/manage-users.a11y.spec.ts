@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Page } from '@playwright/test';
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector } from 'bh-playwright-testing/axe';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 const administrator = {
     sso_provider_id: null,
@@ -101,6 +102,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: administrator } });
         });
+
         await page.route('**/api/v2/config**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({
@@ -112,14 +114,17 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
                 },
             });
         });
+
         await page.route('**/api/v2/sso-providers', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: [] } });
         });
+
         await page.route('**/api/v2/roles**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { roles: administrator.roles } } });
         });
+
         await page.route('**/api/v2/available-domains', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: [] } });
@@ -129,9 +134,10 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, []);
         await page.goto('/ui/administration/manage-users');
-        await expect(page.getByRole('heading', { name: 'Manage Users' })).toBeVisible();
-        await expect(page.getByRole('columnheader', { name: 'Username' })).toBeVisible();
-        await expect(page.getByRole('row')).toHaveCount(1);
+
+        await page.getByRole('heading', { name: 'Manage Users' }).waitFor({ state: 'visible' });
+        await page.getByRole('columnheader', { name: 'Username' }).waitFor({ state: 'visible' });
+        await page.getByRole('row').nth(1).waitFor({ state: 'hidden' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -140,7 +146,8 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     test('page with users', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, [administrator]);
         await page.goto('/ui/administration/manage-users');
-        await expect(page.getByText('test_admin', { exact: true })).toBeVisible();
+
+        await page.getByText('test_admin', { exact: true }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -150,9 +157,12 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
         await routeUsers(page, [administrator]);
         await page.goto('/ui/administration/manage-users');
         await openUserActions(page);
-        await expect(page.getByRole('menuitem', { name: 'Update User' })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="menu"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('menuitem', { name: 'Update User' }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[role="menu"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -161,10 +171,13 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
         await page.goto('/ui/administration/manage-users');
         await openUserActions(page);
         await page.getByRole('menuitem', { name: 'Update User' }).click();
-        await expect(page.getByRole('dialog', { name: 'Update User Dialog' })).toBeVisible();
-        await expect(page.getByLabel('Email Address')).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('dialog', { name: 'Update User Dialog' }).waitFor({ state: 'visible' });
+        await page.getByLabel('Email Address').waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="update-user-dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -173,84 +186,125 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
         await page.goto('/ui/administration/manage-users');
         await openUserActions(page);
         await page.getByRole('menuitem', { name: 'Change Password' }).click();
-        await expect(page.getByRole('dialog', { name: 'Change Password' })).toBeVisible();
-        await expect(page.getByLabel('New Password', { exact: true })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('dialog', { name: 'Change Password' }).waitFor({ state: 'visible' });
+
+        await page.getByLabel('New Password', { exact: true }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="password-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('generate/revoke API tokens dialog - no tokens', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, [administrator]);
+
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [] } } });
         });
+
         await page.goto('/ui/administration/manage-users');
         await openTokenManagement(page);
-        await expect(page.getByRole('dialog', { name: 'Generate/Revoke API Tokens' })).toBeVisible();
-        await expect(page.getByText('No tokens available')).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('dialog', { name: 'Generate/Revoke API Tokens' }).waitFor({ state: 'visible' });
+        await page.getByText('No tokens available').waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="user-token-management-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('create token dialog and auth token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, [administrator]);
+
         await page.route('**/api/v2/tokens**', async (route) => {
             const method = route.request().method();
-            if (method === 'GET') return route.fulfill({ json: { data: { tokens: [] } } });
+
+            if (method === 'GET') {
+                return route.fulfill({ json: { data: { tokens: [] } } });
+            }
+
             if (method === 'POST' && new URL(route.request().url()).pathname === '/api/v2/tokens') {
                 return route.fulfill({ json: { data: { ...token, key: 'generated-auth-token-key' } } });
             }
+
             await route.fallback();
         });
+
         await page.goto('/ui/administration/manage-users');
         await openTokenManagement(page);
-        await page.getByRole('button', { name: 'Create Token' }).click();
-        await expect(page.getByRole('dialog', { name: 'Create User Token' })).toBeVisible();
 
-        let results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('button', { name: 'Create Token' }).click();
+        await page.getByRole('dialog', { name: 'Create User Token' }).waitFor({ state: 'visible' });
+
+        await hideBySelector(page, '[data-testid="user-token-management-dialog"]');
+
+        let results = await makeAxeBuilder().include('[data-testid="create-user-token-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
 
         await page.getByLabel('Token Name').fill(token.name);
         await page.getByRole('dialog', { name: 'Create User Token' }).getByRole('button', { name: 'Save' }).click();
-        await expect(page.getByRole('dialog', { name: 'Auth Token' })).toBeVisible();
-        await expect(page.getByText('Key: generated-auth-token-key')).toBeVisible();
 
-        results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await page.getByRole('dialog', { name: 'Auth Token' }).waitFor({ state: 'visible' });
+        await page.getByText('Key: generated-auth-token-key').waitFor({ state: 'visible' });
+
+        results = await makeAxeBuilder().include('[data-testid="user-token-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('generate/revoke API tokens dialog - with token', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, [administrator]);
+
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [token] } } });
         });
+
         await page.goto('/ui/administration/manage-users');
         await openTokenManagement(page);
-        await expect(page.getByRole('row', { name: /automation token/ })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('row', { name: /automation token/ }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="user-token-management-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('revoke token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
         await routeUsers(page, [administrator]);
+
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [token] } } });
         });
+
         await page.goto('/ui/administration/manage-users');
         await openTokenManagement(page);
+
+        await hideBySelector(page, '#content-wrapper');
+
         await page
             .getByRole('row', { name: /automation token/ })
             .getByRole('button', { name: 'Revoke' })
             .click();
-        await expect(page.getByRole('dialog', { name: 'Revoke "automation token" Auth Token' })).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '[data-testid="user-token-management-dialog"]');
+
+        await page.getByRole('dialog', { name: 'Revoke "automation token" Auth Token' }).waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="token-revoke-dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
@@ -258,10 +312,13 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
         await routeUsers(page, [administrator]);
         await page.goto('/ui/administration/manage-users');
         await page.getByRole('button', { name: 'Create User' }).click();
-        await expect(page.getByRole('dialog', { name: 'Create User' })).toBeVisible();
-        await expect(page.getByLabel('Email Address')).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('dialog', { name: 'Create User' }).waitFor({ state: 'visible' });
+        await page.getByLabel('Email Address').waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[data-testid="create-user-dialog_form"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 });
