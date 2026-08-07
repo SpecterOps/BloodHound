@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -72,6 +73,7 @@ func RegisterFossRoutes(
 	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService v2.OpenGraphSchemaService,
+	alertPublisher alerts.Publisher,
 ) {
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(rdms)
@@ -90,6 +92,6 @@ func RegisterFossRoutes(
 	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
 	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)
 }
