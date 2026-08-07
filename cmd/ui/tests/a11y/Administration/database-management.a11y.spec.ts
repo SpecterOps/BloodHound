@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector } from 'bh-playwright-testing/axe';
+import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 test.describe('Administration - Database Management - has no detectable WCAG A/AA violations', () => {
     test.beforeEach(async ({ page }) => {
@@ -91,8 +92,8 @@ test.describe('Administration - Database Management - has no detectable WCAG A/A
 
     test('page', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.goto('/ui/administration/database-management');
-        await expect(page.getByRole('heading', { name: 'Database Management' })).toBeVisible();
-        await expect(page.getByRole('checkbox', { name: 'All graph data' })).toBeVisible();
+        await page.getByRole('heading', { name: 'Database Management' }).waitFor({ state: 'visible' });
+        await page.getByRole('checkbox', { name: 'All graph data' }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
@@ -102,9 +103,14 @@ test.describe('Administration - Database Management - has no detectable WCAG A/A
         await page.goto('/ui/administration/database-management');
         await page.getByRole('checkbox', { name: 'All asset group selectors' }).check();
         await page.getByRole('button', { name: 'Delete' }).click();
-        await expect(page.getByRole('dialog', { name: 'Delete data from the current environment?' })).toBeVisible();
+        await hideBySelector(page, '#content-wrapper');
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="dialog"]').analyze();
+        await page
+            .getByRole('dialog', { name: 'Delete data from the current environment?' })
+            .waitFor({ state: 'visible' });
+
+        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
+
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 });
