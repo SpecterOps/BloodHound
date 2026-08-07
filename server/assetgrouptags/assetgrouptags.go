@@ -14,17 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package assetgroups is the wireup module for the asset groups feature. It composes
+// Package assetgrouptags is the wireup module for the asset group tags feature. It composes
 // the store and service so other feature slices can obtain a ready-to-use adapter
 // without reaching into the persistence layer.
-package assetgroups
+package assetgrouptags
 
 import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/appdb"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/services"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/appdb"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/services"
 )
 
 // AssetGroupTag is the domain representation of an asset group tag exposed to other
@@ -32,17 +32,17 @@ import (
 // internal package.
 type AssetGroupTag = services.AssetGroupTag
 
-// AssetGroupsRequestAdapter is the exported asset groups capability other feature slices
+// AssetGroupTagsRequestAdapter is the exported asset group tags capability other feature slices
 // depend on. It is satisfied by the internal service constructed by
-// NewAssetGroupsRequestAdapter.
-type AssetGroupsRequestAdapter interface {
+// NewAssetGroupTagsRequestAdapter.
+type AssetGroupTagsRequestAdapter interface {
 	ResolveTagIDsWithFallback(ctx context.Context, maybeAssetGroupTagID string) ([]int, error)
 	GetTierZeroTag(ctx context.Context) (AssetGroupTag, error)
 }
 
-// NewAssetGroupsRequestAdapter builds a ready-to-use asset groups adapter backed by the
+// NewAssetGroupTagsRequestAdapter builds a ready-to-use asset group tags adapter backed by the
 // pgx pool, wiring the store and service together so callers obtain the service without
 // reaching into the persistence layer.
-func NewAssetGroupsRequestAdapter(pool *pgxpool.Pool) AssetGroupsRequestAdapter {
+func NewAssetGroupTagsRequestAdapter(pool *pgxpool.Pool) AssetGroupTagsRequestAdapter {
 	return services.NewService(appdb.NewStore(pool))
 }

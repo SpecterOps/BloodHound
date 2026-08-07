@@ -21,8 +21,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/specterops/bloodhound/server/assetgroups/internal/services"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/services/mocks"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/services"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

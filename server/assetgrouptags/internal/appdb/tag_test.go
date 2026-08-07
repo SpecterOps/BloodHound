@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/pashagolub/pgxmock/v4"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/appdb"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/services"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/appdb"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

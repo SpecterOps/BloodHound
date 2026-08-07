@@ -22,7 +22,7 @@ import (
 	"context"
 )
 
-// Database describes the persistence capabilities the assetgroups Service requires.
+// Database describes the persistence capabilities the assetgrouptags Service requires.
 // Implementations are expected to translate driver-specific not-found errors into the
 // sentinels defined in this package so that callers can map them without importing the
 // persistence layer.
@@ -31,7 +31,7 @@ type Database interface {
 	GetTierZeroTag(ctx context.Context) (AssetGroupTag, error)
 }
 
-// Service implements the assetgroups use cases on top of a Database implementation.
+// Service implements the assetgrouptags use cases on top of a Database implementation.
 type Service struct {
 	db Database
 }

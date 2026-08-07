@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/specterops/bloodhound/server/assetgroups/internal/services"
+	"github.com/specterops/bloodhound/server/assetgrouptags/internal/services"
 )
 
 const (
