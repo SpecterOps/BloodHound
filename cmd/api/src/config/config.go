@@ -217,6 +217,21 @@ type DefaultAdminConfiguration struct {
 	ExpireNow     bool   `json:"expire_now"`
 }
 
+type FileServiceConfiguration struct {
+	Provider string `json:"provider"`
+	Prefix   string `json:"prefix"`
+}
+
+type BucketConfiguration struct {
+	Name   string `json:"name"`
+	Region string `json:"region"`
+}
+
+type StorageConfiguration struct {
+	InstanceBucket BucketConfiguration                 `json:"instance_bucket"`
+	FileServices   map[string]FileServiceConfiguration `json:"file_services"`
+}
+
 type Configuration struct {
 	Version                         int                       `json:"version"`
 	BindAddress                     string                    `json:"bind_addr"`
@@ -253,6 +268,7 @@ type Configuration struct {
 	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
 	EmbeddedExtensionsBasePath      string                    `json:"embedded_extensions_base_path"`
 	Teleport                        TeleportConfiguration     `json:"teleport"`
+	Storage                         StorageConfiguration      `json:"storage"`
 }
 
 func (s Configuration) ScratchDirectory() string {
@@ -276,7 +292,7 @@ func (s Configuration) CollectorsDirectory() string {
 }
 
 func WriteConfigurationFile(path string, config Configuration) error {
-	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
+	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644); err != nil {
 		return fmt.Errorf("failed opening configuration file %s: %w", path, err)
 	} else {
 		defer fout.Close()
