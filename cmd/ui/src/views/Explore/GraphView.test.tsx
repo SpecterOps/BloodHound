@@ -405,7 +405,7 @@ describe('GraphView', () => {
             });
 
             const user = userEvent.setup();
-            const layoutMenu = await screen.findByText('Layout');
+            const layoutMenu = await screen.findByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
@@ -433,7 +433,7 @@ describe('GraphView', () => {
             });
 
             const user = userEvent.setup();
-            const layoutMenu = await screen.findByText('Layout');
+            const layoutMenu = await screen.findByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
@@ -468,7 +468,7 @@ describe('GraphView', () => {
             expect(await screen.findByRole('table')).toBeInTheDocument();
 
             const user = userEvent.setup();
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const closeTableBtn = await screen.findByTestId('close-button');

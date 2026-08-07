@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
-import GraphControls from './GraphControls';
+import GraphControls, { type GraphExportAction } from './GraphControls';
 
 const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
 
@@ -60,6 +60,12 @@ describe('GraphControls', () => {
     const onToggleNodeLabelsFn = vi.fn();
     const onToggleEdgeLabelsFn = vi.fn();
     const onSearchedNodeClickFn = vi.fn();
+    const onAdditionalExportActionOne = vi.fn();
+    const onAdditionalExportActionTwo = vi.fn();
+    const additionalExportActions: readonly GraphExportAction[] = [
+        { id: 'additional-one', label: 'Additional action one', onSelect: onAdditionalExportActionOne },
+        { id: 'additional-two', label: 'Additional action two', onSelect: onAdditionalExportActionTwo },
+    ];
 
     afterEach(() => {
         onResetFn.mockClear();
@@ -67,6 +73,8 @@ describe('GraphControls', () => {
         onToggleNodeLabelsFn.mockClear();
         onToggleEdgeLabelsFn.mockClear();
         onSearchedNodeClickFn.mockClear();
+        onAdditionalExportActionOne.mockClear();
+        onAdditionalExportActionTwo.mockClear();
     });
 
     type SetupOptions = {
@@ -77,6 +85,7 @@ describe('GraphControls', () => {
         layoutOptionsOverride?: readonly string[];
         isExploreLayoutSelected?: boolean;
         isExploreTableSelected?: boolean;
+        additionalExportActions?: readonly GraphExportAction[];
         route?: string;
     };
 
@@ -88,6 +97,7 @@ describe('GraphControls', () => {
         layoutOptionsOverride,
         isExploreLayoutSelected,
         isExploreTableSelected,
+        additionalExportActions,
         route = '/',
     }: SetupOptions = {}) => {
         const options = layoutOptionsOverride ?? layoutOptions;
@@ -105,6 +115,7 @@ describe('GraphControls', () => {
                 selectedLayout={selectedLayout}
                 isExploreLayoutSelected={isExploreLayoutSelected}
                 isExploreTableSelected={isExploreTableSelected}
+                additionalExportActions={additionalExportActions}
                 currentNodes={currentNodes}
             />,
             { route }
@@ -115,11 +126,75 @@ describe('GraphControls', () => {
         return { user };
     };
 
+    describe('Accessible icon controls', () => {
+        it('provides concise names without visible label text', () => {
+            setup();
+
+            for (const name of ['Reset Graph', 'Hide Labels', 'Layout', 'Export', 'Search']) {
+                const control = screen.getByRole('button', { name });
+
+                expect(control).toBeInTheDocument();
+                expect(control).not.toHaveTextContent(name);
+            }
+        });
+
+        it('shows matching tooltips on hover and keyboard focus', async () => {
+            const { user } = setup();
+            const reset = screen.getByRole('button', { name: 'Reset Graph' });
+            const layout = screen.getByRole('button', { name: 'Layout' });
+
+            await user.hover(reset);
+            expect(await screen.findByRole('tooltip', { name: 'Reset Graph' })).toBeVisible();
+
+            await user.unhover(reset);
+            reset.focus();
+            await user.tab();
+            await user.tab();
+            expect(layout).toHaveFocus();
+            expect(await screen.findByRole('tooltip', { name: 'Layout' })).toBeVisible();
+        });
+
+        it('keeps stable menu relationships and restores focus after Escape', async () => {
+            const { user } = setup();
+            const layout = screen.getByRole('button', { name: 'Layout' });
+
+            expect(layout).toHaveAttribute('id', 'graph-layout-button');
+            expect(layout).toHaveAttribute('aria-haspopup', 'menu');
+            expect(layout).toHaveAttribute('aria-expanded', 'false');
+            expect(layout).toHaveAttribute('aria-controls', 'graph-layout-menu');
+
+            layout.focus();
+            await user.keyboard('{Enter}');
+
+            const menu = await screen.findByRole('menu');
+            expect(menu).toHaveAttribute('id', 'graph-layout-menu');
+            expect(menu).toHaveAttribute('aria-labelledby', 'graph-layout-button');
+            expect(layout).toHaveAttribute('aria-expanded', 'true');
+
+            await user.keyboard('{Escape}');
+
+            expect(layout).toHaveAttribute('aria-expanded', 'false');
+            expect(layout).toHaveAttribute('aria-controls', 'graph-layout-menu');
+            expect(layout).toHaveFocus();
+        });
+
+        it('closes a menu and restores focus after selection', async () => {
+            const { user } = setup();
+            const layout = screen.getByRole('button', { name: 'Layout' });
+
+            await user.click(layout);
+            await user.click(await screen.findByText(layoutOptions[0]));
+
+            expect(layout).toHaveAttribute('aria-expanded', 'false');
+            expect(layout).toHaveFocus();
+        });
+    });
+
     describe('Resetting graph', () => {
         it('calls the onReset prop when the crop button is clicked', async () => {
             const { user } = setup();
 
-            const crop = screen.getByText('crop-simple');
+            const crop = screen.getByRole('button', { name: 'Reset Graph' });
             await user.click(crop);
 
             expect(onResetFn).toBeCalled();
@@ -129,7 +204,7 @@ describe('GraphControls', () => {
     describe('Toggling labels', () => {
         it('calls onToggleNodeLabels when click show all node labels', async () => {
             const { user } = setup();
-            const labelMenu = screen.getByText('Hide Labels');
+            const labelMenu = screen.getByRole('button', { name: 'Hide Labels' });
             await user.click(labelMenu);
 
             const hideNodeLabels = await screen.findByText('Hide Node Labels');
@@ -139,7 +214,7 @@ describe('GraphControls', () => {
         });
         it('calls onToggleEdgeLabels when click show all edge labels', async () => {
             const { user } = setup();
-            const labelMenu = screen.getByText('Hide Labels');
+            const labelMenu = screen.getByRole('button', { name: 'Hide Labels' });
             await user.click(labelMenu);
 
             const hideEdgeLabels = await screen.findByText('Hide Edge Labels');
@@ -158,7 +233,7 @@ describe('GraphControls', () => {
                 const { user } = setup({ showEdgeLabels, showNodeLabels });
 
                 const menuLabel = !showNodeLabels || !showEdgeLabels ? 'Show Labels' : 'Hide Labels';
-                await user.click(screen.getByText(menuLabel));
+                await user.click(screen.getByRole('button', { name: menuLabel }));
 
                 const allLabelsController = await screen.findByRole('menuitem', { name: /All Labels/i });
                 await user.click(allLabelsController);
@@ -178,7 +253,7 @@ describe('GraphControls', () => {
         it('calls onLayoutChange with the selected layout', async () => {
             const { user } = setup();
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const selectedLayout = layoutOptions[0];
@@ -191,7 +266,7 @@ describe('GraphControls', () => {
         it('does not highlight any layout option on first load when no layout has been manually selected', async () => {
             const { user } = setup({ isExploreLayoutSelected: false });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             for (const option of layoutOptions) {
@@ -203,7 +278,7 @@ describe('GraphControls', () => {
         it('highlights the selectedLayout when isExploreLayoutSelected is true', async () => {
             const { user } = setup({ isExploreLayoutSelected: true });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
@@ -219,7 +294,7 @@ describe('GraphControls', () => {
         it('calls onLayoutChange with the same layout when the currently selected option is clicked, enabling de-selection', async () => {
             const { user } = setup({ isExploreLayoutSelected: true });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const selected = await screen.findByTestId(`explore_graph-controls_${preselectedLayout}-buttonLabel`);
@@ -233,7 +308,7 @@ describe('GraphControls', () => {
             // selectedLayout may still be present. No option should appear selected.
             const { user } = setup({ isExploreLayoutSelected: false, selectedLayout: preselectedLayout });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             for (const option of layoutOptions) {
@@ -255,7 +330,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=cypher',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const tableItem = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
@@ -274,7 +349,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=cypher',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             for (const option of layoutOptionsWithTable) {
@@ -292,7 +367,7 @@ describe('GraphControls', () => {
                 route: '/?searchType=node',
             });
 
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const sequentialItem = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
@@ -303,10 +378,20 @@ describe('GraphControls', () => {
         });
     });
     describe('Exporting json', () => {
+        it('renders only the JSON action when no additional actions are supplied', async () => {
+            const { user } = setup();
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menuItems = await screen.findAllByRole('menuitem');
+            expect(menuItems).toHaveLength(1);
+            expect(menuItems[0]).toHaveAccessibleName('JSON');
+        });
+
         it('disables the JSON button if the JSON is empty', async () => {
             const { user } = setup();
 
-            const exportMenu = screen.getByText('Export');
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
             await user.click(exportMenu);
 
             const jsonButton = await screen.findByText('JSON');
@@ -320,7 +405,7 @@ describe('GraphControls', () => {
             const json = { test: 'data' };
             const { user } = setup({ json });
 
-            const exportMenu = screen.getByText('Export');
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
             await user.click(exportMenu);
 
             const jsonButton = await screen.findByText('JSON');
@@ -328,19 +413,92 @@ describe('GraphControls', () => {
 
             expect(exportToJsonSpy).toBeCalledWith(json);
         });
+
+        it('renders additional actions before JSON in the supplied order', async () => {
+            const { user } = setup({ additionalExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menuItems = await screen.findAllByRole('menuitem');
+            expect(menuItems.map((item) => item.textContent)).toEqual([
+                'Additional action one',
+                'Additional action two',
+                'JSON',
+            ]);
+        });
+
+        it('invokes only the selected additional action, closes the menu, and restores focus', async () => {
+            const { user } = setup({ additionalExportActions });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            await user.click(exportMenu);
+            await user.click(await screen.findByRole('menuitem', { name: 'Additional action one' }));
+
+            expect(onAdditionalExportActionOne).toHaveBeenCalledOnce();
+            expect(onAdditionalExportActionTwo).not.toHaveBeenCalled();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
+        });
+
+        it('exposes disabled additional actions and prevents keyboard activation', async () => {
+            const disabledExportActions = [{ ...additionalExportActions[0], disabled: true }];
+            const { user } = setup({ additionalExportActions: disabledExportActions });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            await user.click(exportMenu);
+            const disabledAction = await screen.findByRole('menuitem', { name: 'Additional action one' });
+            expect(disabledAction).toHaveAttribute('aria-disabled', 'true');
+
+            disabledAction.focus();
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalExportActionOne).not.toHaveBeenCalled();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        it('supports keyboard activation of additional actions', async () => {
+            const { user } = setup({ additionalExportActions: additionalExportActions.slice(0, 1) });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            exportMenu.focus();
+            await user.keyboard('{Enter}');
+            const additionalAction = await screen.findByRole('menuitem', { name: 'Additional action one' });
+            expect(additionalAction).toHaveFocus();
+
+            await user.keyboard('{Enter}');
+
+            expect(onAdditionalExportActionOne).toHaveBeenCalledOnce();
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
+        });
+
+        it('closes the Export menu with Escape and restores focus', async () => {
+            const { user } = setup({ additionalExportActions: additionalExportActions.slice(0, 1) });
+            const exportMenu = screen.getByRole('button', { name: 'Export' });
+
+            exportMenu.focus();
+            await user.keyboard('{Enter}');
+            expect(await screen.findByRole('menuitem', { name: 'Additional action one' })).toBeVisible();
+
+            await user.keyboard('{Escape}');
+
+            expect(exportMenu).toHaveAttribute('aria-expanded', 'false');
+            expect(exportMenu).toHaveFocus();
+        });
     });
     describe('Searching current results', () => {
-        it('renders GraphButton with correct text', async () => {
+        it('renders an icon button with an accessible name', async () => {
             setup();
-            const searchResultsMenu = await screen.findByText('Search');
+            const searchResultsMenu = await screen.findByRole('button', { name: 'Search' });
 
             expect(searchResultsMenu).toBeInTheDocument();
+            expect(searchResultsMenu).not.toHaveTextContent('Search');
         });
 
         it('disables GraphButton when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByRole('button', { name: 'Search' });
             await user.click(searchResultsMenu);
 
             expect(searchResultsMenu).toBeDisabled();
@@ -351,7 +509,7 @@ describe('GraphControls', () => {
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-popper')).not.toBeInTheDocument();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByRole('button', { name: 'Search' });
             await user.click(searchResultsMenu);
 
             expect(screen.getByTestId('explore_graph-controls_search-current-nodes-popper')).toBeInTheDocument();
@@ -370,7 +528,7 @@ describe('GraphControls', () => {
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByText('Search');
+            const searchResultsMenu = screen.getByRole('button', { name: 'Search' });
 
             await user.click(searchResultsMenu);
 
