@@ -126,31 +126,37 @@ func (s *ReservedKindError) Error() string {
 // path renderer. It does not sanitize or inspect the markdown for unsafe HTML
 // (see BED-8764).
 func validateKindInfoContent(content json.RawMessage) error {
+	if content, err := (KindInfoInput{Content: content}).MarkdownContent(); err != nil {
+		return err
+	} else if _, err := template.New("kind-info-markdown").
+		Funcs(safetemplate.FuncMap()).
+		Parse(content); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidKindInfoTemplate, err)
+	}
+	return nil
+}
+
+// MarkdownContent extracts the inner markdown content string from the KindInfoInput's
+// Content JSON ({"markdown":{"content":"..."}}). It returns ErrInvalidKindInfoContent
+// if the content does not match the expected structure.
+func (s KindInfoInput) MarkdownContent() (string, error) {
 	var (
 		contentWrapper struct {
 			Markdown struct {
 				Content *string `json:"content"`
 			} `json:"markdown"`
 		}
-		decoder = json.NewDecoder(strings.NewReader(string(content)))
+		decoder = json.NewDecoder(strings.NewReader(string(s.Content)))
 	)
 
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&contentWrapper); err != nil {
-		return ErrInvalidKindInfoContent
+		return "", ErrInvalidKindInfoContent
+	} else if contentWrapper.Markdown.Content == nil {
+		return "", ErrInvalidKindInfoContent
 	}
 
-	if contentWrapper.Markdown.Content == nil {
-		return ErrInvalidKindInfoContent
-	}
-
-	if _, err := template.New("kind-info-markdown").
-		Funcs(safetemplate.FuncMap()).
-		Parse(*contentWrapper.Markdown.Content); err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidKindInfoTemplate, err)
-	}
-
-	return nil
+	return *contentWrapper.Markdown.Content, nil
 }
 
 // validateKindInfo validates a map of KindInfo entries

@@ -16,13 +16,6 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-  - name: client_id
-    description: Client ID
-    in: path
-    required: true
-    schema:
-      type: string
-      format: uuid
   - name: artifact_id
     description: Artifact ID
     in: path
@@ -31,38 +24,27 @@ parameters:
       type: string
       format: uuid
 
-get:
-  operationId: DownloadClientArtifact
-  summary: Download a management operation artifact for the client
+post:
+  operationId: CompleteClientArtifactUploadSession
+  summary: Complete an artifact upload session
   description: |
-    Downloads an operation artifact associated with the client.
+    Endpoint for clients to complete an artifact upload session after all
+    expected parts have been uploaded.
+
+    Note: caller must be a client. For users, this endpoint will return a 403 as
+    they are not expected or allowed to call this endpoint.
   tags:
     - Clients
     - Enterprise
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/model.client-artifact-upload-session-complete-request.yaml'
   responses:
-    200:
-      description: |
-        **OK**
-        This response will contain the artifact file.
-      headers:
-        Content-Disposition:
-          schema:
-            type: string
-        Content-Length:
-          schema:
-            type: integer
-            format: int64
-      content:
-        application/zip:
-          schema:
-            type: string
-            format: binary
-          example: '[this request has a binary response]'
-        application/octet-stream:
-          schema:
-            type: string
-            format: binary
-          example: '[this request has a binary response]'
+    204:
+      $ref: './../responses/no-content.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -84,31 +66,6 @@ get:
             errors:
               - context: ""
                 message: artifact not finished uploading, must upload missing parts
-    429:
-      $ref: './../responses/too-many-requests.yaml'
-    500:
-      $ref: './../responses/internal-server-error.yaml'
-
-
-delete:
-  operationId: DeleteClientArtifact
-  summary: Delete a management operation artifact for the client
-  description: |
-    Deletes an operation artifact associated with the client.
-  tags:
-    - Clients
-    - Enterprise
-  responses:
-    204:
-      $ref: './../responses/no-content.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
-    401:
-      $ref: './../responses/unauthorized.yaml'
-    403:
-      $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

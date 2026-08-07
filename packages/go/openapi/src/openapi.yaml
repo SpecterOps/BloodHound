@@ -719,6 +719,14 @@ paths:
     $ref: './paths/clients.clients.management.start.yaml'
   /api/v2/clients/management/end:
     $ref: './paths/clients.clients.management.end.yaml'
+  /api/v2/clients/management/artifacts:
+    $ref: './paths/clients.clients.management.artifacts.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}:
+    $ref: './paths/clients.clients.management.artifacts.id.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}:
+    $ref: './paths/clients.clients.management.artifacts.id.parts.part-number.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/complete:
+    $ref: './paths/clients.clients.management.artifacts.id.complete.yaml'
 
   #  tasks (deprecated)
   /api/v2/tasks/available:
