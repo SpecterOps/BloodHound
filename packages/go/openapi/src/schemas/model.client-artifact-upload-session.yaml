@@ -14,48 +14,46 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-allOf:
-  - $ref: './model.components.uuid.yaml'
-  - type: object
-    properties:
-      artifact_id:
-        type: string
-      storage_key:
-        type: string
-      content_type:
-        type: string
-      status:
-        $ref: './enum.artifact-status.yaml'
-      total_size:
-        type: integer
-        format: int64
-      part_size:
-        type: integer
-        format: int64
-      part_count:
-        type: integer
-        format: int32
-      checksum_algorithm:
-        $ref: './enum.checksum-algorithm.yaml'
-      checksum:
-        type: string
-        description: Hex-encoded checksum for the completed artifact.
-      uploaded_parts:
-        type: array
-        items:
-          $ref: './model.client-artifact-upload-session-part.yaml'
-      missing_parts:
-        type: array
-        items:
-          type: integer
-          format: int32
-      created_at:
-        type: string
-        format: date-time
-      updated_at:
-        type: string
-        format: date-time
-      expires_at:
-        $ref: './null.time.response.yaml'
-      completed_at:
-        $ref: './null.time.response.yaml'
+type: object
+properties:
+  artifact_id:
+    type: string
+  storage_key:
+    type: string
+  content_type:
+    type: string
+  status:
+    $ref: './enum.artifact-status.yaml'
+  total_size:
+    type: integer
+    format: int64
+  part_size:
+    type: integer
+    format: int64
+  part_count:
+    type: integer
+    format: int32
+  checksum_algorithm:
+    $ref: './enum.checksum-algorithm.yaml'
+  checksum:
+    type: string
+    description: Hex-encoded checksum for the completed artifact.
+  uploaded_parts:
+    type: array
+    items:
+      $ref: './model.client-artifact-upload-session-part.yaml'
+  missing_parts:
+    type: array
+    items:
+      type: integer
+      format: int32
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
+  expires_at:
+    $ref: './null.time.response.yaml'
+  completed_at:
+    $ref: './null.time.response.yaml'

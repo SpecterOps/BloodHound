@@ -25057,71 +25057,67 @@
         }
       },
       "model.client-artifact-upload-session": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.uuid"
+        "type": "object",
+        "properties": {
+          "artifact_id": {
+            "type": "string"
           },
-          {
-            "type": "object",
-            "properties": {
-              "storage_key": {
-                "type": "string"
-              },
-              "content_type": {
-                "type": "string"
-              },
-              "status": {
-                "$ref": "#/components/schemas/enum.artifact-status"
-              },
-              "total_size": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "part_size": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "part_count": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "checksum_algorithm": {
-                "$ref": "#/components/schemas/enum.checksum-algorithm"
-              },
-              "checksum": {
-                "type": "string",
-                "description": "Hex-encoded checksum for the completed artifact."
-              },
-              "uploaded_parts": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.client-artifact-upload-session-part"
-                }
-              },
-              "missing_parts": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int32"
-                }
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "expires_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "completed_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              }
+          "storage_key": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/enum.artifact-status"
+          },
+          "total_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checksum_algorithm": {
+            "$ref": "#/components/schemas/enum.checksum-algorithm"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for the completed artifact."
+          },
+          "uploaded_parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.client-artifact-upload-session-part"
             }
+          },
+          "missing_parts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "completed_at": {
+            "$ref": "#/components/schemas/null.time.response"
           }
-        ]
+        }
       },
       "model.client-artifact-upload-session-complete-request": {
         "type": "object",
