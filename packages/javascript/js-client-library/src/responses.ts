@@ -373,6 +373,7 @@ export type ManagementOperation = {
     artifact_size: number | null;
     artifact_status: ArtifactStatus | null;
     type: 'support_bundle';
+    status: ManagementOperationStatus;
     requested_by_user_id: string | null;
     created_at: string;
     started_at: string | null;
