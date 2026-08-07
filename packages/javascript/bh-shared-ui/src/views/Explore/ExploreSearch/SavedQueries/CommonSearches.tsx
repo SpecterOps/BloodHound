@@ -181,7 +181,7 @@ const CommonSearches = ({
             <div className='flex items-center'>
                 <Button
                     onClick={onToggleCommonQueries}
-                    className='flex justify-start items-center w-full pl-0'
+                    className='flex justify-start items-center w-full pl-0 text-contrast'
                     data-testid='common-queries-toggle'
                     variant={'text'}>
                     <FontAwesomeIcon className='px-2 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />

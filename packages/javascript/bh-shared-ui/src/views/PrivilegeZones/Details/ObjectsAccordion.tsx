@@ -24,9 +24,10 @@ import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../co
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
+import { useGraphNodeKinds } from '../../../hooks/useGraphKinds';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
-import { cn } from '../../../utils';
+import { cn, createNodeKindDisplayLabelMap, getNodeKindDisplayLabel, NodeKindDisplayLabelMap } from '../../../utils';
 import { SelectedHighlight } from './SelectedHighlight';
 
 export interface ObjectsAccordionProps {
@@ -47,6 +48,8 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
     onObjectClick,
 }) => {
     const [openAccordion, setOpenAccordion] = useState('');
+    const nodeKindsQuery = useGraphNodeKinds();
+    const nodeKindDisplayLabels = createNodeKindDisplayLabelMap(nodeKindsQuery.data?.node_kinds);
 
     return (
         <div>
@@ -63,7 +66,11 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                 className='w-full min-w-0 rounded-none bg-neutral-2'
                 data-testid='privilege-zones_details_objects-accordion'>
                 {Object.entries(kindCounts)
-                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .sort((a, b) =>
+                        getNodeKindDisplayLabel(a[0], nodeKindDisplayLabels).localeCompare(
+                            getNodeKindDisplayLabel(b[0], nodeKindDisplayLabels)
+                        )
+                    )
                     .map(([kind, count]) => (
                         <ObjectAccordionItem
                             key={kind}
@@ -75,6 +82,7 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                             isOpen={kind === openAccordion}
                             onOpen={setOpenAccordion}
                             onObjectClick={onObjectClick}
+                            nodeKindDisplayLabels={nodeKindDisplayLabels}
                         />
                     ))}
             </Accordion>
@@ -91,6 +99,7 @@ interface ObjectAccordionItemProps {
     objectId?: string;
     onOpen: React.Dispatch<React.SetStateAction<string>>;
     onObjectClick: (object: AssetGroupTagMemberListItem) => void;
+    nodeKindDisplayLabels: NodeKindDisplayLabelMap;
 }
 
 const LoadingRow = (_: number, style: React.CSSProperties) => (
@@ -111,8 +120,10 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
     isOpen,
     onOpen,
     onObjectClick,
+    nodeKindDisplayLabels,
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+    const kindDisplayLabel = getNodeKindDisplayLabel(kind, nodeKindDisplayLabels);
 
     const environments = useEnvironmentIdList(ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES, false);
 
@@ -154,7 +165,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center'>
                     <Button
-                        className='w-6'
+                        className='w-6 text-contrast'
                         variant='text'
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
@@ -165,14 +176,14 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                     <div className='flex flex-1 items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
-                            title={kind}
+                            title={kindDisplayLabel}
                             onSort={() => {
                                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                             }}
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base text-contrast', {
                                     '[&>svg]:hidden': !isOpen,
                                 }),
                             }}

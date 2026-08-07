@@ -86,6 +86,7 @@ describe('CommonSearches', () => {
 
         const header = screen.getByText(/Saved Queries/i);
         expect(header).toBeInTheDocument();
+        expect(screen.getByTestId('common-queries-toggle')).toHaveClass('text-contrast');
     });
 
     it('should display filter dropwdowns', async () => {

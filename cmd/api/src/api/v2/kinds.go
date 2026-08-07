@@ -28,7 +28,15 @@ import (
 )
 
 type ListKindsResponse struct {
-	Kinds graph.Kinds `json:"kinds"`
+	Kinds     graph.Kinds         `json:"kinds"`
+	NodeKinds ListNodeKindDetails `json:"node_kinds,omitempty"`
+}
+
+type ListNodeKindDetails []ListNodeKindDetail
+
+type ListNodeKindDetail struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name,omitempty"`
 }
 
 // ListKinds returns all node kinds, edge kinds, and tier tags present in the system.
@@ -54,12 +62,13 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 			}
 		}
 
+		var schemaNodeKinds model.GraphSchemaNodeKinds
 		if len(queryFilters) > 0 {
 			if filters, ok := queryFilters["type"]; ok {
 				validNodeKinds := make(map[graph.Kind]bool)
 
 				// Schema based node kinds
-				if schemaNodeKinds, _, err := s.DB.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
+				if schemaNodeKinds, _, err = s.DB.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
@@ -120,14 +129,44 @@ func (s Resources) ListKinds(response http.ResponseWriter, request *http.Request
 				kinds = filteredKinds
 			}
 		}
+		if schemaNodeKinds == nil {
+			if schemaNodeKindsResult, _, err := s.DB.GetGraphSchemaNodeKinds(ctx, model.Filters{}, model.Sort{}, 0, 0); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				schemaNodeKinds = schemaNodeKindsResult
+			}
+		}
 
 		// Alpha sort
 		slices.SortFunc(kinds, func(a, b graph.Kind) int {
 			return strings.Compare(a.String(), b.String())
 		})
 
-		api.WriteBasicResponse(request.Context(), ListKindsResponse{Kinds: kinds}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), ListKindsResponse{Kinds: kinds, NodeKinds: buildNodeKindDetails(kinds, schemaNodeKinds)}, http.StatusOK, response)
 	}
+}
+
+func buildNodeKindDetails(kinds graph.Kinds, schemaNodeKinds model.GraphSchemaNodeKinds) ListNodeKindDetails {
+	var (
+		detailsByName = make(map[string]ListNodeKindDetail, len(schemaNodeKinds))
+		details       = make(ListNodeKindDetails, 0, len(schemaNodeKinds))
+	)
+
+	for _, schemaNodeKind := range schemaNodeKinds {
+		detailsByName[schemaNodeKind.Name] = ListNodeKindDetail{
+			Name:        schemaNodeKind.Name,
+			DisplayName: schemaNodeKind.DisplayName,
+		}
+	}
+
+	for _, kind := range kinds {
+		if detail, ok := detailsByName[kind.String()]; ok {
+			details = append(details, detail)
+		}
+	}
+
+	return details
 }
 
 type ListSourceKindsResponse struct {

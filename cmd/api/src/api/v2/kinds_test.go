@@ -68,7 +68,7 @@ func TestResources_ListKinds(t *testing.T) {
 			customNodeKind,
 		}
 
-		mockSchemaNodeKindsResp = model.GraphSchemaNodeKinds{{Name: ad.User.String()}}
+		mockSchemaNodeKindsResp = model.GraphSchemaNodeKinds{{Name: ad.User.String(), DisplayName: "User Display"}}
 		mockCustomNodeKindsResp = []model.CustomNodeKind{{KindName: customNodeKind.String()}}
 		mockSrcKindsResp        = []model.SourceKind{{ID: 1, Name: azure.Entity.String()}}
 	)
@@ -227,11 +227,12 @@ func TestResources_ListKinds(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"kinds":["AZBase", "AZHasRole", "DCSync", "MigrationData", "Tag_Tier_Zero", "User", "Villain"]}}`,
+				responseBody:   `{"data":{"kinds":["AZBase", "AZHasRole", "DCSync", "MigrationData", "Tag_Tier_Zero", "User", "Villain"],"node_kinds":[{"name":"User","display_name":"User Display"}]}}`,
 			},
 		},
 		{
@@ -254,7 +255,7 @@ func TestResources_ListKinds(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"kinds":["AZBase","MigrationData","Tag_Tier_Zero","User","Villain"]}}`,
+				responseBody:   `{"data":{"kinds":["AZBase","MigrationData","Tag_Tier_Zero","User","Villain"],"node_kinds":[{"name":"User","display_name":"User Display"}]}}`,
 			},
 		},
 		{
