@@ -14744,6 +14744,10 @@
                           "type": "string",
                           "format": "date-time"
                         },
+                        "last_complete_optimize_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "next_scheduled_analysis_at": {
                           "type": "string",
                           "format": "date-time",
@@ -24137,7 +24141,11 @@
         "enum": [
           "idle",
           "ingesting",
-          "analyzing"
+          "analyzing",
+          "purging",
+          "pruning",
+          "starting",
+          "optimizing"
         ]
       },
       "model.components.base-ad-entity": {
