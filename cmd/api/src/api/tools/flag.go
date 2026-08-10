@@ -23,6 +23,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 const (
@@ -49,22 +51,45 @@ func (s ToolContainer) GetFlags(response http.ResponseWriter, request *http.Requ
 	}
 }
 
+func shouldRequestAnalysisOnEnable(previouslyEnabled bool, currentlyEnabled bool) bool {
+	if previouslyEnabled || !currentlyEnabled {
+		return false
+	}
+	return true
+}
+
 func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Request) {
 	rawFeatureID := chi.URLParam(request, URIPathVariableFeatureID)
 
-	if featureID, err := strconv.ParseInt(rawFeatureID, 10, 32); err != nil {
+	featureID, err := strconv.ParseInt(rawFeatureID, 10, 32)
+	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if featureFlag, err := s.db.GetFlag(request.Context(), int32(featureID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		featureFlag.Enabled = !featureFlag.Enabled
+		return
+	}
 
-		if err := s.db.SetFlag(request.Context(), featureFlag); err != nil {
+	featureFlag, err := s.db.GetFlag(request.Context(), int32(featureID))
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	previouslyEnabled := featureFlag.Enabled
+	featureFlag.Enabled = !featureFlag.Enabled
+
+	if err := s.db.SetFlag(request.Context(), featureFlag); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 &&
+		shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
+		if err := s.db.RequestAnalysis(request.Context(), "prioritization-feature-flag-toggle", model.AnalysisModeFull); err != nil {
 			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), ToggleFlagResponse{
-				Enabled: featureFlag.Enabled,
-			}, http.StatusOK, response)
+			return
 		}
 	}
+
+	api.WriteBasicResponse(request.Context(), ToggleFlagResponse{
+		Enabled: featureFlag.Enabled,
+	}, http.StatusOK, response)
 }
