@@ -21,6 +21,7 @@ import { INHERITANCE_DROPDOWN_DESCRIPTION } from '../../../components/HelpTexts/
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryRelationshipKind,
+    AzureRelationshipKind,
     CommonKindProperties,
 } from '../../../graphSchema';
 import { mockSourceKindsHandler } from '../../../mocks';
@@ -170,6 +171,16 @@ const selectedEdgeADCSESC4: RelationshipDetails = {
     kind: { name: ActiveDirectoryRelationshipKind.ADCSESC4, relationship_kind_id: 4 },
 };
 
+const selectedEdgeAZEntraDSContributor: RelationshipDetails = {
+    ...selectedEdge,
+    kind: { name: AzureRelationshipKind.EntraDSContributor, relationship_kind_id: 5 },
+};
+
+const selectedEdgeAZManageEntraDS: RelationshipDetails = {
+    ...selectedEdge,
+    kind: { name: AzureRelationshipKind.ManageEntraDS, relationship_kind_id: 6 },
+};
+
 const selectedEdgeACLInheritance: RelationshipDetails = {
     relationship_id: 2,
     kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
@@ -219,6 +230,22 @@ describe('EdgeInfoContent', () => {
         expect(
             screen.queryByText('An unexpected error has occurred. Please refresh the page and try again.')
         ).not.toBeInTheDocument();
+    });
+    test('Selecting an AZEntraDSContributor edge shows its help sections', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeAZEntraDSContributor} />);
+
+        expect(await screen.findByText('General')).toBeInTheDocument();
+        expect(screen.getByText('Abuse')).toBeInTheDocument();
+        expect(screen.getByText('OPSEC')).toBeInTheDocument();
+        expect(screen.getByText('References')).toBeInTheDocument();
+    });
+    test('Selecting an AZManageEntraDS edge shows its help sections', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeAZManageEntraDS} />);
+
+        expect(await screen.findByText('General')).toBeInTheDocument();
+        expect(screen.getByText('Abuse')).toBeInTheDocument();
+        expect(screen.getByText('OPSEC')).toBeInTheDocument();
+        expect(screen.getByText('References')).toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHasLapsEnabled} />);

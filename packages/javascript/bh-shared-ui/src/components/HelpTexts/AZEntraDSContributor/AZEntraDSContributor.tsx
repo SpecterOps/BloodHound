@@ -14,17 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from 'doodle-ui';
-import { FC } from 'react';
+import Abuse from './Abuse';
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-const General: FC = () => {
-    return (
-        <Typography variant='body2'>
-            AZDomainServicesContributor means an Entra principal has a direct assignment of the built-in Domain Services
-            Contributor Azure Resource Manager role on the target AZDomainService. The role grants broad management of
-            the managed-domain resource through Microsoft.AAD/domainServices/*.
-        </Typography>
-    );
+const AZEntraDSContributor = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
 };
 
-export default General;
+export default AZEntraDSContributor;

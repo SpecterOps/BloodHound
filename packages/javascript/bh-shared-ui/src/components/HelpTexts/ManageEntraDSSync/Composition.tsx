@@ -32,8 +32,8 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
     return (
         <>
             <Typography variant='body2'>
-                The relationship represents the effective outcome of the configuration and relationships between several
-                different objects. All objects involved in the creation of this relationship are listed here:
+                The relationship is composed from AZManageEntraDS, EntraDSFor, and an AD containment path to Domain
+                Users. All three paths are required for the attack edge to exist.
             </Typography>
             <Box py={1}>
                 {isLoading ? (

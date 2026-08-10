@@ -27,6 +27,10 @@ const References: FC = () => {
             label: 'Add members to a group using Microsoft Graph',
             link: 'https://learn.microsoft.com/en-us/graph/api/group-post-members',
         },
+        {
+            label: 'MITRE ATT&CK T1098.007: Account Manipulation - Additional Local or Domain Groups',
+            link: 'https://attack.mitre.org/techniques/T1098/007/',
+        },
     ];
     return (
         <Box className='overflow-x-auto'>

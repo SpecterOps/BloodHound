@@ -36,11 +36,11 @@ const Abuse: FC = () => {
                 <strong>Virtual Machine</strong>: Run SYSTEM commands on the VM
             </Typography>
             <Typography variant='body2'>
-                <strong>Microsoft Entra Domain Services</strong>: Modify the managed domain's configurable security and
-                synchronization settings. This can include enabling legacy authentication protocols, weakening LDAP
-                protections, exposing Secure LDAP, or changing synchronization behavior. Microsoft documents additional
-                Entra roles for some of these settings, so those routes depend on the target service's authorization
-                checks.
+                <strong>Microsoft Entra Domain Services</strong>: Contributor supplies the Azure Resource Manager
+                portion of managed-domain configuration authorization. Live validation required the same effective
+                principal to also have Application Administrator and Groups Administrator before changing a
+                representative security setting, syncScope, or filteredSync. BloodHound represents that conjunction with
+                the post-processed AZManageEntraDS edge.
             </Typography>
             <Typography variant='body2'>
                 <strong>Resource Group</strong>: NOT abusable, and not collected by AzureHound

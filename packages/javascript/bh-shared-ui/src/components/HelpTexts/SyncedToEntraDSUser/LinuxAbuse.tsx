@@ -19,11 +19,30 @@ import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <Typography variant='body2'>
-            An attacker may authenticate as the Entra Domain Services user using the Entra user's credentials. For a
-            cloud-only user that has not changed its password while the managed domain is active, changing the Entra
-            user's password and waiting for Entra Domain Services synchronization to complete generates the password
-            material required for authentication.
+        <Typography variant='body2' component='div'>
+            An attacker may authenticate as the Microsoft Entra Domain Services (Entra DS) user using the Entra user's
+            credentials:
+            <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                <li>
+                    Obtain the Entra user's current password, or use the control represented by the path to change or
+                    reset it to a known value.
+                </li>
+                <li>
+                    If the account is cloud-only and has not completed a qualifying password change while the managed
+                    domain is active, perform that change. When a reset operation permits it, set{' '}
+                    <code>forceChangePasswordNextSignIn</code> to <code>false</code>; otherwise complete the required
+                    interactive password change before proceeding.
+                </li>
+                <li>
+                    Wait for the legacy Kerberos and NTLM password material to synchronize. Do not treat the AD user's
+                    existence alone as proof that its credential is usable; poll with a harmless authentication attempt
+                    when <code>pwdLastSet</code> or equivalent synchronization evidence is unavailable.
+                </li>
+                <li>
+                    Authenticate with the Entra UPN and the changed password through Kerberos, NTLM, LDAP, or a domain
+                    logon.
+                </li>
+            </ol>
         </Typography>
     );
 };

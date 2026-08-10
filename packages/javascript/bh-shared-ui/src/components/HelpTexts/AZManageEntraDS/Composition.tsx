@@ -32,8 +32,9 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
     return (
         <>
             <Typography variant='body2'>
-                The relationship represents the effective outcome of the configuration and relationships between several
-                different objects. All objects involved in the creation of this relationship are listed here:
+                The relationship combines the source principal's effective Contributor or Domain Services Contributor
+                path to this managed domain with its Application Administrator and Groups Administrator role paths in
+                the tenant. All three permission components must apply to the same source principal.
             </Typography>
             <Box py={1}>
                 {isLoading ? (
