@@ -14744,6 +14744,10 @@
                           "type": "string",
                           "format": "date-time"
                         },
+                        "last_complete_optimize_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "next_scheduled_analysis_at": {
                           "type": "string",
                           "format": "date-time",
@@ -24494,7 +24498,11 @@
         "enum": [
           "idle",
           "ingesting",
-          "analyzing"
+          "analyzing",
+          "purging",
+          "pruning",
+          "starting",
+          "optimizing"
         ]
       },
       "model.components.base-ad-entity": {
@@ -24698,7 +24706,17 @@
           "canceled"
         ]
       },
-      "model.client-management-operation": {
+      "enum.artifact-status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "uploading",
+          "complete",
+          "failed",
+          "canceled"
+        ]
+      },
+      "model.client-support-bundle": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.uuid"
@@ -24732,21 +24750,6 @@
                   }
                 ]
               },
-              "requested_by_user_id": {
-                "type": "string",
-                "format": "uuid",
-                "nullable": true
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
               "started_at": {
                 "readOnly": true,
                 "allOf": [
@@ -24767,6 +24770,19 @@
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
+              },
+              "artifact_status": {
+                "nullable": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.artifact-status"
+                  }
+                ]
+              },
+              "artifact_size": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true
               }
             }
           }
@@ -24779,7 +24795,7 @@
             "nullable": true,
             "allOf": [
               {
-                "$ref": "#/components/schemas/model.client-management-operation"
+                "$ref": "#/components/schemas/model.client-support-bundle"
               }
             ]
           },
@@ -24787,7 +24803,7 @@
             "nullable": true,
             "allOf": [
               {
-                "$ref": "#/components/schemas/model.client-management-operation"
+                "$ref": "#/components/schemas/model.client-support-bundle"
               }
             ]
           }
@@ -24886,6 +24902,80 @@
           }
         }
       },
+      "model.client-management-operation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "artifact_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "type": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
+                ]
+              },
+              "status": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-status"
+                  }
+                ]
+              },
+              "requested_by_user_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "started_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "completed_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              }
+            }
+          }
+        ]
+      },
       "model.client-management-operation-start-request": {
         "type": "object",
         "required": [
@@ -24977,16 +25067,6 @@
             "description": "Hex-encoded checksum for the completed artifact."
           }
         }
-      },
-      "enum.artifact-status": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "uploading",
-          "complete",
-          "failed",
-          "canceled"
-        ]
       },
       "model.client-artifact-upload-session-create-response": {
         "type": "object",
