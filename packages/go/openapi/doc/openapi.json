@@ -15382,6 +15382,10 @@
                     "items": {
                       "$ref": "#/components/schemas/model.client-schedule"
                     }
+                  },
+                  "iwa_claim_value": {
+                    "description": "Expected value of the tenant-configured IWA JWT claim. Required (non-empty) for\nSharpHound clients using Windows auth when `auth.iwa_claim_name` is configured;\notherwise optional and ignored.\n",
+                    "type": "string"
                   }
                 }
               }
@@ -15636,6 +15640,10 @@
                     "type": "string"
                   },
                   "domain_controller": {
+                    "type": "string"
+                  },
+                  "iwa_claim_value": {
+                    "description": "Expected value of the tenant-configured IWA JWT claim. Required (non-empty) for\nSharpHound clients using Windows auth when `auth.iwa_claim_name` is configured;\notherwise optional and ignored.\n",
                     "type": "string"
                   }
                 }
@@ -21761,6 +21769,15 @@
                     "$ref": "#/components/schemas/enum.client-type"
                   }
                 ]
+              },
+              "iwa_claim_value": {
+                "description": "Expected value of the tenant-configured IWA JWT claim used to identify this SharpHound\nclient. Only populated for Windows-auth SharpHound clients when the tenant has configured\n`auth.iwa_claim_name`. Uniqueness is enforced across active Windows-auth clients using\nexact, case-sensitive equality.\n",
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  }
+                ]
               }
             }
           }
@@ -24874,6 +24891,9 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
+              },
+              "iwa_claim_value": {
+                "$ref": "#/components/schemas/null.string"
               },
               "support_bundle_summary": {
                 "$ref": "#/components/schemas/model.client-support-bundle-summary"

@@ -73,6 +73,12 @@ put:
               type: string
             domain_controller:
               type: string
+            iwa_claim_value:
+              description: |
+                Expected value of the tenant-configured IWA JWT claim. Required (non-empty) for
+                SharpHound clients using Windows auth when `auth.iwa_claim_name` is configured;
+                otherwise optional and ignored.
+              type: string
   responses:
     200:
       description: OK

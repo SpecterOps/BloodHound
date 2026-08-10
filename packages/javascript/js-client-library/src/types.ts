@@ -574,6 +574,7 @@ export type Client = {
     type: string;
     issuer_address: string;
     issuer_address_override: string;
+    iwa_claim_value: string | null;
     support_bundle_summary: SupportBundleSummaryStatus;
 };
 

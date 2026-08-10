@@ -58,5 +58,7 @@ allOf:
         $ref: './null.string.yaml'
       type:
         $ref: './enum.client-type.yaml'
+      iwa_claim_value:
+        $ref: './null.string.yaml'
       support_bundle_summary:
         $ref: './model.client-support-bundle-summary.yaml'

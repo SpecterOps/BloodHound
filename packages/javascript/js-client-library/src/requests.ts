@@ -99,6 +99,7 @@ export interface CreateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
+    iwa_claim_value?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -119,6 +120,7 @@ export interface UpdateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
+    iwa_claim_value?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {

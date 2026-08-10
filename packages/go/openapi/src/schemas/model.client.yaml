@@ -73,3 +73,12 @@ allOf:
         readOnly: true
         allOf:
           - $ref: './enum.client-type.yaml'
+      iwa_claim_value:
+        description: |
+          Expected value of the tenant-configured IWA JWT claim used to identify this SharpHound
+          client. Only populated for Windows-auth SharpHound clients when the tenant has configured
+          `auth.iwa_claim_name`. Uniqueness is enforced across active Windows-auth clients using
+          exact, case-sensitive equality.
+        readOnly: true
+        allOf:
+          - $ref: './null.string.yaml'
