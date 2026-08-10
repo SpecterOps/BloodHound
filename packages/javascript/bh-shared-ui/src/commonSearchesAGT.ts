@@ -358,6 +358,11 @@ RETURN p\nLIMIT 1000`,
         category: categoryAzure,
         queries: [
             {
+                name: 'Entra DS instances and their associated domains',
+                description: '',
+                query: `MATCH p=(:AZTenant)-[:AZContains*1..]->(:AZEntraDS)-[:EntraDSFor]->(:Domain)\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'All Global Administrators',
                 description: '',
                 query: `MATCH p=(:AZBase)-[:AZHasRole*1..]->(t:AZRole)\nWHERE t.name =~ '(?i)Global Administrator.*'\nRETURN p\nLIMIT 1000`,
@@ -436,6 +441,11 @@ RETURN p\nLIMIT 1000`,
         category: categoryAzure,
         queries: [
             {
+                name: 'Entra DS domains exposing Secure LDAP externally',
+                description: '',
+                query: `MATCH (domainService:AZEntraDS)\nWHERE domainService.ldapsenabled = true\nAND domainService.ldapsexternalaccessenabled = true\nRETURN domainService\nLIMIT 1000`,
+            },
+            {
                 name: 'Foreign principals in Tier Zero / High Value targets',
                 description: '',
                 query: `MATCH (n:AZServicePrincipal)\nWHERE (n:${TAG_TIER_ZERO_AGT})\nAND NOT toUpper(n.appownerorganizationid) = toUpper(n.tenantid)\nAND n.appownerorganizationid CONTAINS '-'\nRETURN n\nLIMIT 100`,
@@ -467,6 +477,21 @@ RETURN p\nLIMIT 1000`,
         category: categoryAzure,
         queries: [
             {
+                name: 'Principals with Entra DS synchronization control',
+                description: '',
+                query: `OPTIONAL MATCH broadSyncPath = (:AZBase)-[:ManageEntraDSSync]->(:Group)\n\nOPTIONAL MATCH filteredSyncPath = (app:AZApp)-[:AZRunsAs]->(sp:AZServicePrincipal)-[:ManageEntraDSSyncFilter]->(:Group)\nWHERE app.objectid = '2565BD9D-DA50-47D4-8B85-4C97F669DC36'\n\nOPTIONAL MATCH applicationControlPath = (app)<-[:AZ_ATTACK_PATHS]-(applicationController:AZBase)\nWHERE NOT (applicationController)-[:SyncedToEntraDSUser]->(:User)\n\nOPTIONAL MATCH servicePrincipalControlPath = (sp)<-[:AZ_ATTACK_PATHS]-(servicePrincipalController:AZBase)\nWHERE NOT (servicePrincipalController)-[:SyncedToEntraDSUser]->(:User)\nAND (servicePrincipalController:AZUser OR servicePrincipalController:AZServicePrincipal)\n\nOPTIONAL MATCH roleControlPath = (sp)<-[:AZ_ATTACK_PATHS]-(:AZRole)-[:AZRoleEligible|AZHasRole]-(roleAssignee:AZBase)\nWHERE NOT (roleAssignee)-[:SyncedToEntraDSUser]->(:User)\n\nRETURN broadSyncPath,filteredSyncPath,applicationControlPath,servicePrincipalControlPath,roleControlPath\nLIMIT 1000`,
+            },
+            {
+                name: 'Members of the Entra DS Administrators group',
+                description: '',
+                query: `MATCH p = (entraMember:AZBase)-[:AZMemberOf]->(entraGroup:AZGroup)-[:SyncedToEntraDSGroup]->(entraDSGroup:Group)<-[:MemberOf]-(entraDSMember:Base)\nWHERE toUpper(entraGroup.displayname) = 'AAD DC ADMINISTRATORS'\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Entra DS-synchronized principals that can add Entra DS group membership they do not hold',
+                description: '',
+                query: `MATCH p = (entraUser:AZUser)-[:AddEntraDSGroupMember]->(entraDSGroup:Group)\nWHERE NOT((entraUser)-[:SyncedToEntraDSUser]->(:User)-[:MemberOf]->(entraDSGroup))\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'Entra Users synced from On-Prem Users added to Domain Admins group',
                 description: '',
                 query: `MATCH p = (:AZUser)-[:SyncedToADUser]->(:User)-[:MemberOf]->(t:Group)\nWHERE t.objectid ENDS WITH '-512'\nRETURN p\nLIMIT 1000`,
@@ -484,12 +509,12 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'On-Prem Users synced to Entra Users with Azure RM Roles (direct)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZEntraDSContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZManageEntraDS|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users with Azure RM Roles (group delegated)',
                 description: '',
-                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZEntraDSContributor|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
+                query: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZOwner|AZUserAccessAdministrator|AZGetCertificates|AZGetKeys|AZGetSecrets|AZAvereContributor|AZKeyVaultContributor|AZContributor|AZManageEntraDS|AZVMAdminLogin|AZVMContributor|AZAKSContributor|AZAutomationContributor|AZLogicAppContributor|AZWebsiteContributor]->(:AZBase)\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'On-Prem Users synced to Entra Users that Own Entra Objects',
