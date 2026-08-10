@@ -1103,6 +1103,8 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 		return &aggregateStats, err
 	} else if addOwnerStats, err := CreateAZAddOwnerEdge(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if entraDSContributorStats, err := ManageEntraDS(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if pimRolesStats, err := CreateAZRoleApproverEdge(ctx, db); err != nil {
@@ -1110,6 +1112,7 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 	} else {
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(addOwnerStats)
+		aggregateStats.Merge(entraDSContributorStats)
 		aggregateStats.Merge(hybridStats)
 		aggregateStats.Merge(pimRolesStats)
 

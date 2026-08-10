@@ -42,6 +42,7 @@ import (
 	ExecutionPrivilegeKinds: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
 	InboundOutboundRelationshipKinds: [...types.#Kind]
+	EdgeCompositionRelationships: [...types.#Kind]
 	PostProcessedRelationships: [...types.#Kind]
 }
 
@@ -78,6 +79,7 @@ Azure: #Azure & {
 	ExecutionPrivilegeKinds:          azure.ExecutionPrivilegeKinds
 	PathfindingRelationships:         azure.PathfindingRelationships
 	InboundOutboundRelationshipKinds: azure.InboundOutboundRelationshipKinds
+	EdgeCompositionRelationships:     azure.EdgeCompositionRelationships
 	PostProcessedRelationships:       azure.PostProcessedRelationships
 }
 

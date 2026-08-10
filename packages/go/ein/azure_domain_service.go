@@ -66,31 +66,43 @@ type AzureDomainService struct {
 }
 
 func ConvertAzureDomainServiceToNode(data AzureDomainService, ingestTime time.Time) IngestibleNode {
-	return IngestibleNode{
+	node := IngestibleNode{
 		ObjectID: data.ID,
 		PropertyMap: map[string]any{
-			common.Name.String():                    data.Name,
-			common.LastCollected.String():           ingestTime,
-			azure.TenantID.String():                 strings.ToUpper(data.Properties.TenantID),
-			azure.DomainName.String():               data.Properties.DomainName,
-			azure.DomainConfigurationType.String():  data.Properties.DomainConfigurationType,
-			azure.FilteredSync.String():             data.Properties.FilteredSync,
-			azure.SyncScope.String():                data.Properties.SyncScope,
-			azure.SyncApplicationID.String():        strings.ToUpper(data.Properties.SyncApplicationID),
-			azure.NTLMV1.String():                   data.Properties.DomainSecuritySettings.NTLMV1,
-			azure.TLSV1.String():                    data.Properties.DomainSecuritySettings.TLSV1,
-			azure.SyncNTLMPasswords.String():        data.Properties.DomainSecuritySettings.SyncNTLMPasswords,
-			azure.SyncKerberosPasswords.String():    data.Properties.DomainSecuritySettings.SyncKerberosPasswords,
-			azure.SyncOnPremPasswords.String():      data.Properties.DomainSecuritySettings.SyncOnPremPasswords,
-			azure.KerberosRC4Encryption.String():    data.Properties.DomainSecuritySettings.KerberosRC4Encryption,
-			azure.KerberosArmoring.String():         data.Properties.DomainSecuritySettings.KerberosArmoring,
-			azure.LDAPSigning.String():              data.Properties.DomainSecuritySettings.LDAPSigning,
-			azure.ChannelBinding.String():           data.Properties.DomainSecuritySettings.ChannelBinding,
-			azure.SyncOnPremSAMAccountName.String(): data.Properties.DomainSecuritySettings.SyncOnPremSAMAccountName,
-			azure.LDAPS.String():                    data.Properties.LDAPSSettings.LDAPS,
-			azure.LDAPSExternalAccess.String():      data.Properties.LDAPSSettings.ExternalAccess,
+			common.Name.String():                   data.Name,
+			common.LastCollected.String():          ingestTime,
+			azure.TenantID.String():                strings.ToUpper(data.Properties.TenantID),
+			azure.DomainName.String():              data.Properties.DomainName,
+			azure.DomainConfigurationType.String(): data.Properties.DomainConfigurationType,
+			azure.SyncScope.String():               data.Properties.SyncScope,
+			azure.SyncApplicationID.String():       strings.ToUpper(data.Properties.SyncApplicationID),
 		},
 		Labels: []graph.Kind{azure.EntraDS},
+	}
+
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.FilteredSyncEnabled.String(), data.Properties.FilteredSync)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.NTLMV1Enabled.String(), data.Properties.DomainSecuritySettings.NTLMV1)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.TLSV1Enabled.String(), data.Properties.DomainSecuritySettings.TLSV1)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.SyncNTLMPasswordsEnabled.String(), data.Properties.DomainSecuritySettings.SyncNTLMPasswords)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.SyncKerberosPasswordsEnabled.String(), data.Properties.DomainSecuritySettings.SyncKerberosPasswords)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.SyncOnPremPasswordsEnabled.String(), data.Properties.DomainSecuritySettings.SyncOnPremPasswords)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.KerberosRC4EncryptionEnabled.String(), data.Properties.DomainSecuritySettings.KerberosRC4Encryption)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.KerberosArmoringEnabled.String(), data.Properties.DomainSecuritySettings.KerberosArmoring)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.LDAPSigningEnabled.String(), data.Properties.DomainSecuritySettings.LDAPSigning)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.ChannelBindingEnabled.String(), data.Properties.DomainSecuritySettings.ChannelBinding)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.SyncOnPremSAMAccountNameEnabled.String(), data.Properties.DomainSecuritySettings.SyncOnPremSAMAccountName)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.LDAPSEnabled.String(), data.Properties.LDAPSSettings.LDAPS)
+	setAzureDomainServiceBooleanProperty(node.PropertyMap, azure.LDAPSExternalAccessEnabled.String(), data.Properties.LDAPSSettings.ExternalAccess)
+
+	return node
+}
+
+func setAzureDomainServiceBooleanProperty(properties map[string]any, propertyName, rawValue string) {
+	switch {
+	case strings.EqualFold(strings.TrimSpace(rawValue), "Enabled"):
+		properties[propertyName] = true
+	case strings.EqualFold(strings.TrimSpace(rawValue), "Disabled"):
+		properties[propertyName] = false
 	}
 }
 

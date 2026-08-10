@@ -342,25 +342,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
     }
 }
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
-export const EdgeCompositionRelationships = [
-    'GoldenCert',
-    'ADCSESC1',
-    'ADCSESC3',
-    'ADCSESC4',
-    'ADCSESC6a',
-    'ADCSESC6b',
-    'ADCSESC9a',
-    'ADCSESC9b',
-    'ADCSESC10a',
-    'ADCSESC10b',
-    'ADCSESC13',
-    'CoerceAndRelayNTLMToSMB',
-    'CoerceAndRelayNTLMToADCS',
-    'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPS',
-    'GPOAppliesTo',
-    'CanApplyGPO',
-];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
@@ -1004,6 +985,7 @@ export enum AzureRelationshipKind {
     Contains = 'AZContains',
     Contributor = 'AZContributor',
     EntraDSContributor = 'AZEntraDSContributor',
+    ManageEntraDS = 'AZManageEntraDS',
     GetCertificates = 'AZGetCertificates',
     GetKeys = 'AZGetKeys',
     GetSecrets = 'AZGetSecrets',
@@ -1051,7 +1033,9 @@ export enum AzureRelationshipKind {
     SyncedToEntraDSUser = 'SyncedToEntraDSUser',
     SyncedToEntraDSGroup = 'SyncedToEntraDSGroup',
     AddEntraDSGroupMember = 'AddEntraDSGroupMember',
-    SyncEntraDSUsers = 'SyncEntraDSUsers',
+    EntraDSFor = 'EntraDSFor',
+    ManageEntraDSSync = 'ManageEntraDSSync',
+    ManageEntraDSSyncFilter = 'ManageEntraDSSyncFilter',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
     AZAuthenticatesTo = 'AZAuthenticatesTo',
@@ -1066,6 +1050,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'Contributor';
         case AzureRelationshipKind.EntraDSContributor:
             return 'EntraDSContributor';
+        case AzureRelationshipKind.ManageEntraDS:
+            return 'ManageEntraDS';
         case AzureRelationshipKind.GetCertificates:
             return 'GetCertificates';
         case AzureRelationshipKind.GetKeys:
@@ -1160,8 +1146,12 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'SyncedToEntraDSGroup';
         case AzureRelationshipKind.AddEntraDSGroupMember:
             return 'AddEntraDSGroupMember';
-        case AzureRelationshipKind.SyncEntraDSUsers:
-            return 'SyncEntraDSUsers';
+        case AzureRelationshipKind.EntraDSFor:
+            return 'EntraDSFor';
+        case AzureRelationshipKind.ManageEntraDSSync:
+            return 'ManageEntraDSSync';
+        case AzureRelationshipKind.ManageEntraDSSyncFilter:
+            return 'ManageEntraDSSyncFilter';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1220,21 +1210,21 @@ export enum AzureKindProperties {
     FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
     DomainName = 'domainname',
     DomainConfigurationType = 'domainconfigurationtype',
-    FilteredSync = 'filteredsync',
+    FilteredSyncEnabled = 'filteredsyncenabled',
     SyncScope = 'syncscope',
     SyncApplicationID = 'syncapplicationid',
-    NTLMV1 = 'ntlmv1',
-    TLSV1 = 'tlsv1',
-    SyncNTLMPasswords = 'syncntlmpasswords',
-    SyncKerberosPasswords = 'synckerberospasswords',
-    SyncOnPremPasswords = 'synconprempasswords',
-    KerberosRC4Encryption = 'kerberosrc4encryption',
-    KerberosArmoring = 'kerberosarmoring',
-    LDAPSigning = 'ldapsigning',
-    ChannelBinding = 'channelbinding',
-    SyncOnPremSAMAccountName = 'synconpremsamaccountname',
-    LDAPS = 'ldaps',
-    LDAPSExternalAccess = 'ldapsexternalaccess',
+    NTLMV1Enabled = 'ntlmv1enabled',
+    TLSV1Enabled = 'tlsv1enabled',
+    SyncNTLMPasswordsEnabled = 'syncntlmpasswordsenabled',
+    SyncKerberosPasswordsEnabled = 'synckerberospasswordsenabled',
+    SyncOnPremPasswordsEnabled = 'synconprempasswordsenabled',
+    KerberosRC4EncryptionEnabled = 'kerberosrc4encryptionenabled',
+    KerberosArmoringEnabled = 'kerberosarmoringenabled',
+    LDAPSigningEnabled = 'ldapsigningenabled',
+    ChannelBindingEnabled = 'channelbindingenabled',
+    SyncOnPremSAMAccountNameEnabled = 'synconpremsamaccountnameenabled',
+    LDAPSEnabled = 'ldapsenabled',
+    LDAPSExternalAccessEnabled = 'ldapsexternalaccessenabled',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1330,36 +1320,36 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Domain Name';
         case AzureKindProperties.DomainConfigurationType:
             return 'Domain Configuration Type';
-        case AzureKindProperties.FilteredSync:
-            return 'Filtered Sync';
+        case AzureKindProperties.FilteredSyncEnabled:
+            return 'Filtered Sync Enabled';
         case AzureKindProperties.SyncScope:
             return 'Sync Scope';
         case AzureKindProperties.SyncApplicationID:
             return 'Sync Application ID';
-        case AzureKindProperties.NTLMV1:
-            return 'NTLM V1';
-        case AzureKindProperties.TLSV1:
-            return 'TLS V1';
-        case AzureKindProperties.SyncNTLMPasswords:
-            return 'Sync NTLM Passwords';
-        case AzureKindProperties.SyncKerberosPasswords:
-            return 'Sync Kerberos Passwords';
-        case AzureKindProperties.SyncOnPremPasswords:
-            return 'Sync On-Premises Passwords';
-        case AzureKindProperties.KerberosRC4Encryption:
-            return 'Kerberos RC4 Encryption';
-        case AzureKindProperties.KerberosArmoring:
-            return 'Kerberos Armoring';
-        case AzureKindProperties.LDAPSigning:
-            return 'LDAP Signing';
-        case AzureKindProperties.ChannelBinding:
-            return 'Channel Binding';
-        case AzureKindProperties.SyncOnPremSAMAccountName:
-            return 'Sync On-Premises SAM Account Name';
-        case AzureKindProperties.LDAPS:
-            return 'Secure LDAP';
-        case AzureKindProperties.LDAPSExternalAccess:
-            return 'Secure LDAP External Access';
+        case AzureKindProperties.NTLMV1Enabled:
+            return 'NTLM V1 Enabled';
+        case AzureKindProperties.TLSV1Enabled:
+            return 'TLS V1 Enabled';
+        case AzureKindProperties.SyncNTLMPasswordsEnabled:
+            return 'Sync NTLM Passwords Enabled';
+        case AzureKindProperties.SyncKerberosPasswordsEnabled:
+            return 'Sync Kerberos Passwords Enabled';
+        case AzureKindProperties.SyncOnPremPasswordsEnabled:
+            return 'Sync On-Premises Passwords Enabled';
+        case AzureKindProperties.KerberosRC4EncryptionEnabled:
+            return 'Kerberos RC4 Encryption Enabled';
+        case AzureKindProperties.KerberosArmoringEnabled:
+            return 'Kerberos Armoring Enabled';
+        case AzureKindProperties.LDAPSigningEnabled:
+            return 'LDAP Signing Enabled';
+        case AzureKindProperties.ChannelBindingEnabled:
+            return 'Channel Binding Enabled';
+        case AzureKindProperties.SyncOnPremSAMAccountNameEnabled:
+            return 'Sync On-Premises SAM Account Name Enabled';
+        case AzureKindProperties.LDAPSEnabled:
+            return 'Secure LDAP Enabled';
+        case AzureKindProperties.LDAPSExternalAccessEnabled:
+            return 'Secure LDAP External Access Enabled';
         default:
             return undefined;
     }
@@ -1368,7 +1358,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
         AzureRelationshipKind.Contributor,
-        AzureRelationshipKind.EntraDSContributor,
+        AzureRelationshipKind.ManageEntraDS,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
         AzureRelationshipKind.GetSecrets,
@@ -1407,13 +1397,36 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.SyncedToEntraUser,
         AzureRelationshipKind.SyncedToEntraDSUser,
         AzureRelationshipKind.AddEntraDSGroupMember,
-        AzureRelationshipKind.SyncEntraDSUsers,
+        AzureRelationshipKind.ManageEntraDSSync,
+        AzureRelationshipKind.ManageEntraDSSyncFilter,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
         AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
+export const EdgeCompositionRelationships = [
+    'GoldenCert',
+    'ADCSESC1',
+    'ADCSESC3',
+    'ADCSESC4',
+    'ADCSESC6a',
+    'ADCSESC6b',
+    'ADCSESC9a',
+    'ADCSESC9b',
+    'ADCSESC10a',
+    'ADCSESC10b',
+    'ADCSESC13',
+    'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToLDAP',
+    'CoerceAndRelayNTLMToLDAPS',
+    'GPOAppliesTo',
+    'CanApplyGPO',
+    'AZManageEntraDS',
+    'AddEntraDSGroupMember',
+    'ManageEntraDSSync',
+];
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
 }
