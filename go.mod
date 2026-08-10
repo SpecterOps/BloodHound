@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 module github.com/specterops/bloodhound
 
-go 1.26.4
+go 1.26.5
 
 require (
 	cuelang.org/go v0.17.0
@@ -60,11 +60,11 @@ require (
 	github.com/unrolled/secure v1.17.0
 	github.com/yuin/goldmark v1.8.5
 	go.uber.org/mock v0.5.2
-	golang.org/x/crypto v0.53.0
-	golang.org/x/mod v0.37.0
+	golang.org/x/crypto v0.54.0
+	golang.org/x/mod v0.38.0
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/text v0.39.0
-	golang.org/x/tools v0.47.0
+	golang.org/x/text v0.40.0
+	golang.org/x/tools v0.48.0
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
 )
@@ -93,7 +93,8 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
+	golang.org/x/term v0.45.0 // indirect
+	golang.org/x/vuln v1.6.0 // indirect
 )
 
 require (
@@ -368,10 +369,10 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358 // indirect
-	golang.org/x/net v0.56.0
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect
+	golang.org/x/net v0.57.0
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260708182218-49f421fb7959 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
@@ -392,4 +393,5 @@ tool (
 	github.com/specterops/bloodhound/packages/go/stbernard
 	github.com/vektra/mockery/v3
 	golang.org/x/tools/cmd/goimports
+	golang.org/x/vuln/cmd/govulncheck
 )
