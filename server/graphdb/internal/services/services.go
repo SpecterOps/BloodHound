@@ -21,6 +21,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -34,6 +35,12 @@ type Database interface {
 	GetKindByName(ctx context.Context, name string) (Kind, error)
 	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
+}
+
+// NodeAccessChecker determines whether the caller in ctx may access a node.
+// Implementations may use ETAC or another authorization policy.
+type NodeAccessChecker interface {
+	CanAccessNode(ctx context.Context, node Node) bool
 }
 
 // Kind is the domain representation of a relationship or node kind, pairing the kind name
@@ -66,12 +73,20 @@ type KindInfo struct {
 	UpdatedAt time.Time
 }
 
+// ErrNodeAccessDenied indicates that the caller cannot access a requested node
+// or one of a relationship's endpoint nodes due to ETAC gating.
+var ErrNodeAccessDenied = errors.New("node access denied")
+
 // Service implements the graphdb use cases on top of a Database implementation.
 type Service struct {
-	db Database
+	db                Database
+	nodeAccessChecker NodeAccessChecker
 }
 
 // NewService constructs a Service backed by the supplied Database implementation.
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+func NewService(databaseInterface Database, nodeAccessChecker NodeAccessChecker) *Service {
+	return &Service{
+		db:                databaseInterface,
+		nodeAccessChecker: nodeAccessChecker,
+	}
 }

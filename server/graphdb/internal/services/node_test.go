@@ -156,8 +156,9 @@ func TestService_GetNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				databaseMock  = mocks.NewMockDatabase(t)
+				accessChecker = newAllowAllNodeAccessChecker(t)
+				svc           = services.NewService(databaseMock, accessChecker)
 			)
 
 			tt.setupMock(databaseMock)
@@ -198,7 +199,7 @@ func TestService_GetNode_RendersKindInfoMarkdown(t *testing.T) {
 		},
 	}, nil)
 
-	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 1)
@@ -235,7 +236,7 @@ func TestService_GetNode_PreservesTemplateErrorsPerKindInfo(t *testing.T) {
 		},
 	}, nil)
 
-	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 2)
@@ -262,7 +263,7 @@ func TestService_GetNode_IgnoresEmptyKindInfoContent(t *testing.T) {
 		{InfoKey: "empty", NodeKindID: &nodeKindID},
 	}, nil)
 
-	result, err := services.NewService(databaseMock).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 1)

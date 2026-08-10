@@ -65,6 +65,16 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 		relationship.Kind = kind
 	}
 
+	sourceNode, sourceErr := s.GetNode(ctx, relationship.SourceNodeID, false)
+	if sourceErr != nil {
+		return Relationship{}, fmt.Errorf("fetching relationship source node: %w", sourceErr)
+	}
+
+	targetNode, targetErr := s.GetNode(ctx, relationship.TargetNodeID, false)
+	if targetErr != nil {
+		return Relationship{}, fmt.Errorf("fetching relationship target node: %w", targetErr)
+	}
+
 	if includeKindInfo && relationship.Kind.ID != nil {
 		kindInfos, err := s.db.GetKindInfos(ctx, relationship.Kind.Name)
 		if err != nil {
@@ -94,17 +104,7 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 		relationship.KindInfos = allKindInfos
 
 		if len(relationship.KindInfos) > 0 {
-			source, sourceErr := s.GetNode(ctx, relationship.SourceNodeID, false)
-			if sourceErr != nil {
-				return Relationship{}, fmt.Errorf("fetching relationship source node: %w", sourceErr)
-			}
-
-			target, targetErr := s.GetNode(ctx, relationship.TargetNodeID, false)
-			if targetErr != nil {
-				return Relationship{}, fmt.Errorf("fetching relationship target node: %w", targetErr)
-			}
-
-			renderRelationshipKindInfos(ctx, relationship, source, target)
+			renderRelationshipKindInfos(ctx, relationship, sourceNode, targetNode)
 		}
 	}
 

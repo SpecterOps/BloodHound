@@ -41,10 +41,10 @@ import (
 func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, rateLimit func() mux.MiddlewareFunc, dogTags dogtags.Service) {
 	var (
 		store          = appdb.NewStore(graphDatabase, pool)
-		service        = services.NewService(store)
 		etacService    = etac.Register(pool, dogTags)
 		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
-		handlerSet     = handlers.NewHandlersContainer(service, nodeAuthorizer)
+		service        = services.NewService(store, nodeAuthorizer)
+		handlerSet     = handlers.NewHandlersContainer(service)
 	)
 
 	routes.Register(routerInst, handlerSet, rateLimit)
