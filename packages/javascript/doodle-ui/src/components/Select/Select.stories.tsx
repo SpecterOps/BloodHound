@@ -69,6 +69,84 @@ export const Default: Story = {
     ),
 };
 
+export const Value: Story = {
+    render: () => (
+        <Select defaultValue='green'>
+            <SelectTrigger className='w-60'>
+                <SelectValue placeholder='Placeholder' />
+            </SelectTrigger>
+            <SelectPortal>
+                <SelectContent>
+                    <SelectItem value='red'>Red</SelectItem>
+                    <SelectItem value='green'>Green</SelectItem>
+                    <SelectItem value='blue'>Blue</SelectItem>
+                </SelectContent>
+            </SelectPortal>
+        </Select>
+    ),
+};
+
+export const ErrorPlaceholder: Story = {
+    render: () => (
+        <Select>
+            <SelectTrigger aria-invalid='true' className='w-60'>
+                <SelectValue placeholder='Placeholder' />
+            </SelectTrigger>
+            <SelectPortal>
+                <SelectContent>
+                    <SelectItem value='red'>Red</SelectItem>
+                    <SelectItem value='green'>Green</SelectItem>
+                    <SelectItem value='blue'>Blue</SelectItem>
+                </SelectContent>
+            </SelectPortal>
+        </Select>
+    ),
+};
+
+export const ErrorValue: Story = {
+    render: () => (
+        <Select defaultValue='green'>
+            <SelectTrigger aria-invalid='true' className='w-60'>
+                <SelectValue placeholder='Placeholder' />
+            </SelectTrigger>
+            <SelectPortal>
+                <SelectContent>
+                    <SelectItem value='red'>Red</SelectItem>
+                    <SelectItem value='green'>Green</SelectItem>
+                    <SelectItem value='blue'>Blue</SelectItem>
+                </SelectContent>
+            </SelectPortal>
+        </Select>
+    ),
+};
+
+export const Disabled: Story = {
+    render: () => (
+        <Select disabled>
+            <SelectTrigger className='w-60'>
+                <SelectValue placeholder='Placeholder' />
+            </SelectTrigger>
+        </Select>
+    ),
+};
+
+export const Required: Story = {
+    render: () => (
+        <Select required>
+            <SelectTrigger className='w-60'>
+                <SelectValue required placeholder='Placeholder' />
+            </SelectTrigger>
+            <SelectPortal>
+                <SelectContent>
+                    <SelectItem value='red'>Red</SelectItem>
+                    <SelectItem value='green'>Green</SelectItem>
+                    <SelectItem value='blue'>Blue</SelectItem>
+                </SelectContent>
+            </SelectPortal>
+        </Select>
+    ),
+};
+
 /**
  * SelectTrigger variant underlined.
  */
