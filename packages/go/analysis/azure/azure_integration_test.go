@@ -1216,7 +1216,9 @@ func TestManageEntraDSRequiresARMAndBothDirectoryRoles(t *testing.T) {
 		graphAzure.TenantID: tenantID,
 	}), graphAzure.Entity, graphAzure.User)
 
-	for _, principal := range []*graph.Node{appAdminRole, groupsAdminRole, armGroup, qualifiedUser, appOnlyUser, domainServicesContributor} {
+	// Role tenant scope is represented by each AZRole's tenantid property. AZManageEntraDS must not require or return
+	// tenant-to-role AZContains relationships.
+	for _, principal := range []*graph.Node{armGroup, qualifiedUser, appOnlyUser, domainServicesContributor} {
 		NewRelationship(t, &suite, tenant, principal, graphAzure.Contains)
 	}
 	NewRelationship(t, &suite, tenant, subscription, graphAzure.Contains)
@@ -1257,7 +1259,7 @@ func TestManageEntraDSRequiresARMAndBothDirectoryRoles(t *testing.T) {
 		composition, err := edgecomposition.GetEdgeCompositionPath(context.Background(), suite.GraphDB, edge)
 		require.NoError(t, err)
 		nodes := composition.AllNodes()
-		assert.True(t, nodes.Contains(tenant))
+		assert.False(t, nodes.Contains(tenant))
 		assert.True(t, nodes.Contains(appAdminRole))
 		assert.True(t, nodes.Contains(groupsAdminRole))
 		assert.True(t, nodes.Contains(domainService))

@@ -33,8 +33,9 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
         <>
             <Typography variant='body2'>
                 The relationship combines the source principal's effective Contributor or Domain Services Contributor
-                path to this managed domain with its Application Administrator and Groups Administrator role paths in
-                the tenant. All three permission components must apply to the same source principal.
+                path to this managed domain with its Application Administrator and Groups Administrator role paths. All
+                three permission components must apply to the same source principal. Tenant-to-role containment is
+                neither required nor included in this composition.
             </Typography>
             <Box py={1}>
                 {isLoading ? (

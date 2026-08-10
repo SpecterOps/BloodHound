@@ -25,7 +25,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	azschema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -48,21 +47,14 @@ func GetManageEntraDSEdgeComposition(ctx context.Context, db graph.Database, edg
 			return nil
 		}
 
-		tenant, err := getEntraDSTenant(tx, domainService)
-		if err != nil {
-			return err
-		} else if tenant == nil {
-			return nil
-		}
-
-		applicationAdministratorPaths, err := getManageEntraDSRoleComposition(tx, tenant, source, azschema.ApplicationAdministratorRole)
+		applicationAdministratorPaths, err := getManageEntraDSRoleComposition(tx, domainService, source, azschema.ApplicationAdministratorRole)
 		if err != nil {
 			return err
 		} else if applicationAdministratorPaths.Len() == 0 {
 			return nil
 		}
 
-		groupsAdministratorPaths, err := getManageEntraDSRoleComposition(tx, tenant, source, azschema.GroupsAdministratorRole)
+		groupsAdministratorPaths, err := getManageEntraDSRoleComposition(tx, domainService, source, azschema.GroupsAdministratorRole)
 		if err != nil {
 			return err
 		} else if groupsAdministratorPaths.Len() == 0 {
@@ -176,28 +168,46 @@ func getManageEntraDSARMComposition(tx graph.Transaction, source, domainService 
 	return finalPaths, nil
 }
 
-func getEntraDSTenant(tx graph.Transaction, domainService *graph.Node) (*graph.Node, error) {
-	tenantID, err := domainService.Properties.Get(azschema.TenantID.String()).String()
+func getManageEntraDSRoles(tx graph.Transaction, tenantScopedNode *graph.Node, roleTemplateID string) (graph.NodeSet, error) {
+	roles, err := FetchDescendentKindByTenantID(tx, tenantScopedNode, azschema.Role)
 	if err != nil {
 		return nil, err
 	}
 
-	tenants, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), azschema.Tenant)))
-	if err != nil {
-		return nil, err
-	}
-	for _, tenant := range tenants {
-		if objectID, err := tenant.Properties.Get(common.ObjectID.String()).String(); err == nil && strings.EqualFold(strings.TrimSpace(objectID), strings.TrimSpace(tenantID)) {
-			return tenant, nil
+	matchingRoles := graph.NewNodeSet()
+	for _, role := range roles {
+		if templateID, err := role.Properties.Get(azschema.RoleTemplateID.String()).String(); graph.IsErrPropertyNotFound(err) {
+			continue
+		} else if err != nil {
+			return nil, err
+		} else if strings.EqualFold(strings.TrimSpace(templateID), strings.TrimSpace(roleTemplateID)) {
+			matchingRoles.Add(role)
 		}
 	}
 
-	return nil, nil
+	return matchingRoles, nil
 }
 
-func getManageEntraDSRoleComposition(tx graph.Transaction, tenant, source *graph.Node, roleTemplateID string) (graph.PathSet, error) {
+func getManageEntraDSRolePrincipals(tx graph.Transaction, tenantScopedNode *graph.Node, roleTemplateID string) (graph.NodeSet, error) {
+	roles, err := getManageEntraDSRoles(tx, tenantScopedNode, roleTemplateID)
+	if err != nil {
+		return nil, err
+	}
+
+	principals, err := roleMembers(tx, roles)
+	if err != nil {
+		return nil, err
+	}
+	for _, role := range roles {
+		principals.Remove(role.ID)
+	}
+
+	return principals, nil
+}
+
+func getManageEntraDSRoleComposition(tx graph.Transaction, tenantScopedNode, source *graph.Node, roleTemplateID string) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
-	roles, err := TenantRoles(tx, tenant, roleTemplateID)
+	roles, err := getManageEntraDSRoles(tx, tenantScopedNode, roleTemplateID)
 	if err != nil {
 		return nil, err
 	}
@@ -223,19 +233,7 @@ func getManageEntraDSRoleComposition(tx graph.Transaction, tenant, source *graph
 			continue
 		}
 
-		tenantPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Equals(query.StartID(), tenant.ID),
-			query.Equals(query.EndID(), role.ID),
-			query.Kind(query.Relationship(), azschema.Contains),
-		)))
-		if err != nil {
-			return nil, err
-		} else if tenantPaths.Len() == 0 {
-			continue
-		}
-
 		finalPaths.AddPathSet(rolePaths)
-		finalPaths.AddPathSet(tenantPaths)
 	}
 
 	return finalPaths, nil
@@ -244,6 +242,7 @@ func getManageEntraDSRoleComposition(tx graph.Transaction, tenant, source *graph
 // ManageEntraDS creates the traversable AZManageEntraDS relationship only when the same
 // effective principal has all permissions observed in validation: Contributor or Domain Services
 // Contributor over the managed-domain resource, Application Administrator, and Groups Administrator.
+// Directory roles are scoped by their tenantid property; tenant-to-role AZContains is not required.
 // The source ARM assignment may be direct, inherited through AZContains, or effective through nested
 // AZMemberOf membership.
 func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
@@ -263,20 +262,17 @@ func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProc
 
 	operation := post.NewPostRelationshipOperation(ctx, db, "AZManageEntraDS Post Processing")
 	for _, tenant := range tenants {
-		roleAssignments, err := FetchTenantRoleAssignments(ctx, db, tenant)
-		if err != nil {
-			_ = operation.Done()
-			return &operation.Stats, err
-		}
-
-		qualifiedPrincipals := roleAssignments.PrincipalsWithRole(azschema.ApplicationAdministratorRole)
-		qualifiedPrincipals.And(roleAssignments.PrincipalsWithRole(azschema.GroupsAdministratorRole))
-		if qualifiedPrincipals.Cardinality() == 0 {
-			continue
-		}
-
 		tenant := tenant
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+			applicationAdministrators, err := getManageEntraDSRolePrincipals(tx, tenant, azschema.ApplicationAdministratorRole)
+			if err != nil {
+				return err
+			}
+			groupsAdministrators, err := getManageEntraDSRolePrincipals(tx, tenant, azschema.GroupsAdministratorRole)
+			if err != nil {
+				return err
+			}
+
 			domainServices, err := FetchDescendentKindByTenantID(tx, tenant, azschema.EntraDS)
 			if err != nil {
 				return err
@@ -289,7 +285,7 @@ func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProc
 				}
 
 				for _, controller := range controllers {
-					if qualifiedPrincipals.Contains(controller.ID.Uint64()) {
+					if applicationAdministrators.ContainsID(controller.ID) && groupsAdministrators.ContainsID(controller.ID) {
 						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 							FromID: controller.ID,
 							ToID:   domainService.ID,
