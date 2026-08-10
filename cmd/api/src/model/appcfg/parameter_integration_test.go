@@ -44,6 +44,10 @@ func TestParameters_IsValidKey(t *testing.T) {
 	t.Run("should return true for scheduled analysis key", func(t *testing.T) {
 		require.True(t, parameter.IsValidKey(appcfg.ScheduledAnalysis))
 	})
+
+	t.Run("should return true for IWA claim name key", func(t *testing.T) {
+		require.True(t, parameter.IsValidKey(appcfg.IWAClaimNameKey))
+	})
 }
 
 func TestParameters_Validate(t *testing.T) {
@@ -139,6 +143,91 @@ func TestParameters_Validate(t *testing.T) {
 		parameter := appcfg.Parameter{Value: val, Key: appcfg.ScheduledAnalysis}
 		errs := parameter.Validate()
 		require.Len(t, errs, 0)
+	})
+
+	t.Run("should validate IWA claim name with a simple string", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"name": "employeeid"})
+		require.NoError(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.IWAClaimNameKey}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+
+		var stored appcfg.IWAClaimNameParameter
+		require.NoError(t, parameter.Value.Map(&stored))
+		require.Equal(t, "employeeid", stored.Name)
+	})
+
+	t.Run("should trim leading and trailing whitespace on IWA claim name before persistence", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"name": "  \tclaim.name  \n"})
+		require.NoError(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.IWAClaimNameKey}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+
+		var stored appcfg.IWAClaimNameParameter
+		require.NoError(t, parameter.Value.Map(&stored))
+		require.Equal(t, "claim.name", stored.Name)
+	})
+
+	t.Run("should treat whitespace-only IWA claim name as unset after trimming", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"name": "   \t\n  "})
+		require.NoError(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.IWAClaimNameKey}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+
+		var stored appcfg.IWAClaimNameParameter
+		require.NoError(t, parameter.Value.Map(&stored))
+		require.Equal(t, "", stored.Name)
+	})
+
+	t.Run("should error on IWA claim name with an unexpected field", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"name": "sub", "extra": true})
+		require.NoError(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.IWAClaimNameKey}
+		errs := parameter.Validate()
+		require.Len(t, errs, 1)
+		require.Equal(t, "value property contains an invalid field", errs[0].Error())
+	})
+}
+
+func TestParameters_GetIWAClaimName(t *testing.T) {
+	t.Run("should return empty string when parameter not set", func(t *testing.T) {
+		require.Equal(t, "", appcfg.GetIWAClaimName(context.Background(), integration.SetupDB(t)))
+	})
+
+	t.Run("should return the trimmed configured claim name", func(t *testing.T) {
+		var (
+			db  = integration.SetupDB(t)
+			ctx = context.Background()
+		)
+
+		val, err := types.NewJSONBObject(map[string]any{"name": "  employeeid  "})
+		require.NoError(t, err)
+
+		parameter := appcfg.Parameter{Key: appcfg.IWAClaimNameKey, Value: val}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+		require.NoError(t, db.SetConfigurationParameter(ctx, parameter))
+
+		require.Equal(t, "employeeid", appcfg.GetIWAClaimName(ctx, db))
+	})
+
+	t.Run("should return empty string when persisted value is whitespace only", func(t *testing.T) {
+		var (
+			db  = integration.SetupDB(t)
+			ctx = context.Background()
+		)
+
+		val, err := types.NewJSONBObject(map[string]any{"name": "     "})
+		require.NoError(t, err)
+
+		parameter := appcfg.Parameter{Key: appcfg.IWAClaimNameKey, Value: val}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+		require.NoError(t, db.SetConfigurationParameter(ctx, parameter))
+
+		require.Equal(t, "", appcfg.GetIWAClaimName(ctx, db))
 	})
 }
 

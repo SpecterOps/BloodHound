@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"strings"
 	"time"
 
 	iso8601 "github.com/channelmeter/iso8601duration"
@@ -46,6 +47,7 @@ const (
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
 	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
 	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
+	IWAClaimNameKey          ParameterKey = "auth.iwa_claim_name"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
@@ -95,7 +97,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration, IWAClaimNameKey:
 		return true
 	default:
 		return false
@@ -164,6 +166,21 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &APITokenExpirationParameter{}
 	case GraphStorageOptimizationKey:
 		v = &GraphStorageOptimizationParameter{}
+	case IWAClaimNameKey:
+		v = &IWAClaimNameParameter{}
+		// Normalize the claim name before persistence so whitespace-only input is stored as an
+		// unset value and non-empty input is trimmed consistently with the read-side helper.
+		if rawName, isString := objMap["name"].(string); isString {
+			trimmedName := strings.TrimSpace(rawName)
+			if trimmedName != rawName {
+				objMap["name"] = trimmedName
+				if normalizedValue, normalizeErr := types.NewJSONBObject(objMap); normalizeErr != nil {
+					return utils.Errors{normalizeErr}
+				} else {
+					s.Value = normalizedValue
+				}
+			}
+		}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -705,4 +722,27 @@ func GetGraphStorageOptimizationParameter(ctx context.Context, service Parameter
 	}
 
 	return result
+}
+
+// IWAClaimNameParameter carries the tenant-configured JWT claim name used to identify SharpHound IWA
+// clients. An empty or whitespace-only Name is treated as unset and preserves the legacy
+// sub-equals-client-UUID authentication path.
+type IWAClaimNameParameter struct {
+	Name string `json:"name"`
+}
+
+// GetIWAClaimName returns the tenant-configured claim name with surrounding whitespace trimmed.
+// An empty string means the tenant has not configured a custom claim.
+func GetIWAClaimName(ctx context.Context, service ParameterService) string {
+	var result IWAClaimNameParameter
+
+	if cfg, err := service.GetConfigurationParameter(ctx, IWAClaimNameKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch IWA claim name configuration; returning default value")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid IWA claim name configuration supplied; returning default value.",
+			attr.Error(err),
+			slog.String("parameter_key", string(IWAClaimNameKey)))
+	}
+
+	return strings.TrimSpace(result.Name)
 }
