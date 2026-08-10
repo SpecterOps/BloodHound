@@ -14,16 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import Abuse from './Abuse';
-import General from './General';
-import Opsec from './Opsec';
-import References from './References';
+import { Typography } from 'doodle-ui';
+import { FC } from 'react';
 
-const AZDomainServicesContributor = {
-    general: General,
-    abuse: Abuse,
-    opsec: Opsec,
-    references: References,
+const General: FC = () => {
+    return (
+        <Typography variant='body2'>
+            AZEntraDSContributor records an assignment of the built-in Domain Services Contributor Azure Resource
+            Manager role on the target AZEntraDS resource. It is raw authorization evidence and is not independently
+            traversable.
+        </Typography>
+    );
 };
 
-export default AZDomainServicesContributor;
+export default General;

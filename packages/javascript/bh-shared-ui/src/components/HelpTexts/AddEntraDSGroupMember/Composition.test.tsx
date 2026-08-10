@@ -61,7 +61,7 @@ const CompositionGraphProbe = () => {
 };
 
 describe('AddEntraDSGroupMember Composition', () => {
-    it('uses the tuple-form relationship key required by the composition graph query', async () => {
+    it('preserves the selected relationship ID used by the composition graph query', async () => {
         render(
             <>
                 <Composition sourceDBId={1} targetDBId={2} edgeName='AddEntraDSGroupMember' />
@@ -72,11 +72,10 @@ describe('AddEntraDSGroupMember Composition', () => {
             }
         );
 
-        await waitFor(() => {
-            expect(window.location.search).toContain(
-                'relationshipQueryItemId=rel_1_AddEntraDSGroupMember_2'
-            );
-        });
         expect(await screen.findByText('graph-loaded')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(window.location.search).toContain('relationshipQueryItemId=rel_99');
+        });
+        expect(window.location.search).not.toContain('relationshipQueryItemId=rel_1_AddEntraDSGroupMember_2');
     });
 });

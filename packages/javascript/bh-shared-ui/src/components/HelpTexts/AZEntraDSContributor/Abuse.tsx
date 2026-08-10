@@ -14,18 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import General from './General';
-import LinuxAbuse from './LinuxAbuse';
-import Opsec from './Opsec';
-import References from './References';
-import WindowsAbuse from './WindowsAbuse';
+import { Typography } from 'doodle-ui';
+import { FC } from 'react';
 
-const SyncEntraDSUsers = {
-    general: General,
-    windowsAbuse: WindowsAbuse,
-    linuxAbuse: LinuxAbuse,
-    opsec: Opsec,
-    references: References,
+const Abuse: FC = () => {
+    return (
+        <Typography variant='body2'>
+            This assignment supplies the Azure Resource Manager portion of managed-domain configuration changes. Live
+            validation found it insufficient by itself and with either Application Administrator or Groups Administrator
+            alone. When the same effective principal also has both Entra roles, BloodHound creates the traversable
+            AZManageEntraDS edge.
+        </Typography>
+    );
 };
 
-export default SyncEntraDSUsers;
+export default Abuse;

@@ -19,22 +19,35 @@ import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <>
-            <Typography variant='body2'>
-                Using the Entra user's control over the Entra group, add the Entra user or another controlled
-                synchronized principal as a direct member of the Entra group. Using the Microsoft Graph API, for example
-                with a POST to the group's members reference:
-            </Typography>
-            <Typography component={'pre'} variant='body2'>
-                {
-                    'curl -X POST -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\\n  https://graph.microsoft.com/v1.0/groups/<entra-group-object-id>/members/\\$ref \\\n  -d \'{"@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/<member-object-id>"}\''
-                }
-            </Typography>
-            <Typography variant='body2'>
-                After Entra Domain Services synchronizes the direct membership change, the principal becomes a member of
-                the corresponding Entra Domain Services group and inherits its access within the managed domain.
-            </Typography>
-        </>
+        <Typography variant='body2' component='div'>
+            <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                <li>
+                    Add a user as a <strong>direct</strong> member of the Entra AZGroup that correlates to the
+                    destination Microsoft Entra Domain Services (Entra DS) group. Nested group membership does not reach
+                    Entra DS. Submit the following Microsoft Graph request:
+                    <Typography component={'pre'} variant='body2'>
+                        {
+                            'POST https://graph.microsoft.com/v1.0/groups/{entra-group-object-id}/members/$ref\nContent-Type: application/json\n\n{\n  "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/{controlled-user-object-id}"\n}'
+                        }
+                    </Typography>
+                    A successful request returns <code>204 No Content</code> with no response body. The same request can
+                    be sent with <code>curl</code>:
+                    <Typography component={'pre'} variant='body2'>
+                        {
+                            'curl -X POST -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\\n  https://graph.microsoft.com/v1.0/groups/<entra-group-object-id>/members/\\$ref \\\n  -d \'{"@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/<member-object-id>"}\''
+                        }
+                    </Typography>
+                </li>
+                <li>
+                    Wait for Entra DS to synchronize the membership and verify the destination group's direct{' '}
+                    <code>member</code> value when LDAP read access is available.
+                </li>
+                <li>
+                    Reauthenticate the controlled user to Entra DS so its logon session or Kerberos ticket contains the
+                    newly synchronized group SID.
+                </li>
+            </ol>
+        </Typography>
     );
 };
 

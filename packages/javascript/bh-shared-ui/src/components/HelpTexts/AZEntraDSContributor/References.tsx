@@ -47,6 +47,10 @@ const References: FC = () => {
                 href='https://learn.microsoft.com/en-us/entra/identity/domain-services/scoped-synchronization'>
                 Configure scoped synchronization
             </Link>
+            <br />
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1484/'>
+                MITRE ATT&amp;CK T1484: Domain or Tenant Policy Modification
+            </Link>
         </Box>
     );
 };

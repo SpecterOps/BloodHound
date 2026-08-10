@@ -23,6 +23,10 @@ const References: FC = () => {
             label: 'How objects and credentials are synchronized in a Microsoft Entra Domain Services managed domain',
             link: 'https://learn.microsoft.com/en-us/entra/identity/domain-services/synchronization',
         },
+        {
+            label: 'MITRE ATT&CK T1098.007: Account Manipulation - Additional Local or Domain Groups',
+            link: 'https://attack.mitre.org/techniques/T1098/007/',
+        },
     ];
     return (
         <Box className='overflow-x-auto'>
