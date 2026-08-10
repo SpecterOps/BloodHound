@@ -19,7 +19,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -43,29 +42,11 @@ type NodeKindView struct {
 	IsDisplayKind bool                    `json:"is_display_kind"`
 	Icon          string                  `json:"icon"`
 	Color         string                  `json:"color"`
-	Extension     *ExtensionDetailsView   `json:"extension"`
+	Extension     *ExtensionView          `json:"extension"`
 	Info          map[string]KindInfoView `json:"info"`
 }
 
-// KindInfoView is the JSON shape of a kind info embedded in a NodeKindView.
-type KindInfoView struct {
-	Title    string       `json:"title"`
-	Position int32        `json:"position"`
-	Markdown MarkdownView `json:"markdown"`
-}
-
-// MarkdownView is the JSON shape of the flattened markdown content.
-type MarkdownView struct {
-	Content string `json:"content"`
-}
-
-// kindInfoContentView unwraps the stored content JSON object shaped
-// {"markdown": {"content": "..."}} into its inner MarkdownView.
-type kindInfoContentView struct {
-	Markdown MarkdownView `json:"markdown"`
-}
-
-// BuildNodeKindView maps a services.NodeKind onto its view layer model, keying the
+// BuildNodeKindView maps a services.NodeKind onto its wire representation, keying the
 // info entries by their info_key and flattening each stored markdown content object.
 // Entries whose content fails to parse are retained with an empty markdown view, and
 // the joined parse errors are returned so the caller can log them.
@@ -84,7 +65,7 @@ func BuildNodeKindView(nodeKind services.NodeKind) (NodeKindView, error) {
 	}
 
 	if nodeKind.Extension.ID != 0 {
-		nodeKindView.Extension = &ExtensionDetailsView{
+		nodeKindView.Extension = &ExtensionView{
 			ExtensionID: nodeKind.Extension.ID,
 			Name:        nodeKind.Extension.Name,
 			DisplayName: nodeKind.Extension.DisplayName,
@@ -107,18 +88,6 @@ func BuildNodeKindView(nodeKind services.NodeKind) (NodeKindView, error) {
 	}
 
 	return nodeKindView, markdownErr
-}
-
-// buildMarkdownView unwraps the stored content object into its inner MarkdownView,
-// returning an empty MarkdownView and an error when the content cannot be parsed.
-func buildMarkdownView(content json.RawMessage) (MarkdownView, error) {
-	var contentView kindInfoContentView
-
-	if err := json.Unmarshal(content, &contentView); err != nil {
-		return MarkdownView{}, fmt.Errorf("unmarshalling markdown content: %w", err)
-	}
-
-	return contentView.Markdown, nil
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,

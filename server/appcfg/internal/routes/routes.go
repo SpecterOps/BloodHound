@@ -14,16 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../fixtures';
+package routes
 
-test.describe('Explore page accessibility', () => {
-    test('explore page has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/explore');
+import (
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
+)
 
-        // Wait for search widget to load
-        await page.getByLabel('Toggle search widget').waitFor({ state: 'visible' });
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
-    });
-});
+// Register attaches the appcfg endpoints to the given router instance.
+func Register(routerInst *router.Router, handlerSet *handlers.Handlers) {
+	routerInst.GET("/api/v2/datapipe/status", handlerSet.GetDatapipeStatus).RequireAuth()
+}

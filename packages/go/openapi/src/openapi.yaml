@@ -395,6 +395,8 @@ paths:
     $ref: './paths/graph-schema.edge-kinds.yaml'
   /api/v2/node-kinds/{node_kind_id}:
     $ref: './paths/opengraph.node-kind.yaml'
+  /api/v2/relationship-kinds/{relationship_kind_id}:
+    $ref: './paths/opengraph.relationship-kind.yaml'
 
   # cypher
   /api/v2/saved-queries:
@@ -717,6 +719,14 @@ paths:
     $ref: './paths/clients.clients.management.start.yaml'
   /api/v2/clients/management/end:
     $ref: './paths/clients.clients.management.end.yaml'
+  /api/v2/clients/management/artifacts:
+    $ref: './paths/clients.clients.management.artifacts.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}:
+    $ref: './paths/clients.clients.management.artifacts.id.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}:
+    $ref: './paths/clients.clients.management.artifacts.id.parts.part-number.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/complete:
+    $ref: './paths/clients.clients.management.artifacts.id.complete.yaml'
 
   #  tasks (deprecated)
   /api/v2/tasks/available:

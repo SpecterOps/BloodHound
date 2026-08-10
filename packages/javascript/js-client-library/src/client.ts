@@ -114,6 +114,7 @@ import {
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
+    WebhookTestResponse,
 } from './responses';
 import * as types from './types';
 
@@ -2794,7 +2795,13 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (skip?: number, limit?: number, sort_by?: types.WebhookSortBy, options?: RequestOptions) =>
+    getWebhooks = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.WebhookSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2802,6 +2809,7 @@ class BHEAPIClient {
                 skip,
                 limit,
                 sort_by,
+                name: name ? `~eq:${name}` : undefined,
             },
             paramsSerializer: { indexes: null },
         });
@@ -2815,13 +2823,13 @@ class BHEAPIClient {
         this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, payload, options);
 
     deleteWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+        this.baseClient.delete(`api/v2/alert-webhooks/${webhookId}`, options);
 
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
     testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
 }
 
 export default BHEAPIClient;

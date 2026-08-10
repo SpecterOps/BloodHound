@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+import { test } from '../../fixtures';
 
-import (
-	"net/http"
-
-	"github.com/specterops/bloodhound/cmd/api/src/api"
-)
-
-func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
-	if datapipeStatus, err := s.DB.GetDatapipeStatus(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), datapipeStatus, http.StatusOK, response)
-	}
-}
+test.describe('WCAG A/AA violations - Privilege Zones - History tab', () => {});

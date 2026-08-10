@@ -21,6 +21,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetValuesFromEnv(t *testing.T) {
@@ -72,6 +73,19 @@ func TestSetValuesFromEnv(t *testing.T) {
 
 		assert.Equal(t, "neo4j://neo4j:neo4jj@localhost:7070/neo4j", cfg.Neo4J.Neo4JConnectionString())
 		assert.Equal(t, "postgresql://bhe:supersecretpassword@localhost:5432/bhe", cfg.Database.PostgreSQLConnectionString())
+	})
+
+	t.Run("instance bucket configuration", func(t *testing.T) {
+		const envPrefix = "bhe"
+		var cfg config.Configuration
+
+		require.NoError(t, config.SetValuesFromEnv(envPrefix, &cfg, []string{
+			"BHE_STORAGE_INSTANCE_BUCKET_NAME=test-bucket",
+			"BHE_STORAGE_INSTANCE_BUCKET_REGION=us-east-1",
+		}))
+
+		assert.Equal(t, "test-bucket", cfg.Storage.InstanceBucket.Name)
+		assert.Equal(t, "us-east-1", cfg.Storage.InstanceBucket.Region)
 	})
 
 	// This test ensures that fields that could be considered sensitive are configurable through expected environment
@@ -176,4 +190,36 @@ func TestSetValuesFromEnv(t *testing.T) {
 			assert.Equal(t, options[DEFADMINLAST], cfg.DefaultAdmin.LastName)
 		})
 	})
+}
+
+func TestParseConfiguration_Storage(t *testing.T) {
+	configuration, err := config.ParseConfiguration([]byte(`{
+		"storage": {
+			"instance_bucket": {
+				"name": "test-bucket",
+				"region": "us-east-1"
+			},
+			"file_services": {
+				"ingest": {
+					"provider": "s3",
+					"prefix": "ingest"
+				},
+				"work": {
+					"provider": "local",
+					"prefix": ""
+				}
+			}
+		}
+	}`))
+
+	require.NoError(t, err)
+	assert.Equal(t, "test-bucket", configuration.Storage.InstanceBucket.Name)
+	assert.Equal(t, "us-east-1", configuration.Storage.InstanceBucket.Region)
+	assert.Equal(t, config.FileServiceConfiguration{
+		Provider: "s3",
+		Prefix:   "ingest",
+	}, configuration.Storage.FileServices["ingest"])
+	assert.Equal(t, config.FileServiceConfiguration{
+		Provider: "local",
+	}, configuration.Storage.FileServices["work"])
 }
