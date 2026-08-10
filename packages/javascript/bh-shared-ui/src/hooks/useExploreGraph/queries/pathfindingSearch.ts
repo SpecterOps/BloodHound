@@ -27,7 +27,7 @@ import {
 } from './utils';
 
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { searchType, primarySearch, secondarySearch, pathFilters } = paramOptions;
+    const { searchType, primarySearch, secondarySearch, pathFilters, exploreSearchTab } = paramOptions;
 
     if (!primarySearch || !searchType || !secondarySearch || areFiltersEmpty(pathFilters)) {
         return { enabled: false };
@@ -37,7 +37,14 @@ export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryPa
 
     return {
         ...sharedGraphQueryOptions,
-        queryKey: [ExploreGraphQueryKey, searchType, primarySearch, secondarySearch, filter],
+        queryKey: [
+            ExploreGraphQueryKey,
+            searchType,
+            primarySearch,
+            secondarySearch,
+            filter,
+            exploreSearchTab || undefined,
+        ],
         queryFn: ({ signal }) => {
             return apiClient
                 .getShortestPathV2(primarySearch, secondarySearch, filter, { signal })
