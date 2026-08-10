@@ -46,6 +46,8 @@ type DataQualityData interface {
 	DeleteAllDataQuality(ctx context.Context) error
 }
 
+const batchSize = 1000
+
 //Data Quality Stats
 
 func (s *BloodhoundDB) CreateADDataQualityStats(ctx context.Context, stats model.ADDataQualityStats) (model.ADDataQualityStats, error) {
@@ -183,7 +185,7 @@ func (s *BloodhoundDB) GetAzureDataQualityStats(ctx context.Context, tenantId st
 }
 
 func (s *BloodhoundDB) CreateDataQualityStats(ctx context.Context, stats model.DataQualityStats) (model.DataQualityStats, error) {
-	result := s.db.WithContext(ctx).Create(&stats)
+	result := s.db.WithContext(ctx).CreateInBatches(&stats, batchSize)
 	return stats, CheckError(result)
 }
 
@@ -316,7 +318,7 @@ func (s *BloodhoundDB) CreateDataQualityAggregations(ctx context.Context, aggreg
 		return aggregations, nil
 	}
 
-	result := s.db.WithContext(ctx).Create(&aggregations)
+	result := s.db.WithContext(ctx).CreateInBatches(&aggregations, batchSize)
 	return aggregations, CheckError(result)
 }
 

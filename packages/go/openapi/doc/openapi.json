@@ -8320,6 +8320,113 @@
         }
       }
     },
+    "/api/v2/relationship-kinds/{relationship_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "relationship_kind_id",
+          "description": "Relationship Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetRelationshipKind",
+        "summary": "Get Relationship Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph relationship kind by its id, including its extension metadata and entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.relationship-kind-response"
+                    }
+                  }
+                },
+                "examples": {
+                  "With info": {
+                    "summary": "Relationship kind with entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 42,
+                        "name": "MemberOf",
+                        "description": "a membership relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {
+                          "overview": {
+                            "title": "Overview",
+                            "position": 0,
+                            "markdown": {
+                              "content": "This relationship represents group membership."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Without info": {
+                    "summary": "Relationship kind without entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 43,
+                        "name": "HasSession",
+                        "description": "a session relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/saved-queries": {
       "parameters": [
         {
@@ -16999,6 +17106,13 @@
                   "format": "binary"
                 },
                 "example": "[this request has a binary response]"
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
               }
             }
           },
@@ -17272,6 +17386,356 @@
                     {
                       "context": "",
                       "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateClientArtifactUploadSession",
+        "summary": "Create an artifact upload session",
+        "description": "Endpoint for clients to create an artifact upload session and associate it\nwith a running management operation.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-artifact-upload-session-create-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session-create-response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "management operation already has an associated artifact"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientArtifactUploadSession",
+        "summary": "Get an artifact upload session",
+        "description": "Endpoint for clients to get artifact upload-session state.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "part_number",
+          "description": "Artifact part number, starting at 1.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          }
+        }
+      ],
+      "post": {
+        "operationId": "UploadClientArtifactPart",
+        "summary": "Upload an artifact part",
+        "description": "Endpoint for clients to upload one part of an artifact upload session.\n\nThe part checksum is supplied through the Content-Digest header. Supported\ndigest names are sha-256 and sha-512. The digest value must be a structured\nfield byte sequence containing the base64-encoded digest bytes, for example\nsha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Length",
+            "description": "Size of the uploaded artifact part, in bytes.",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "Content-Digest",
+            "description": "Structured field digest for the uploaded artifact part.",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "sha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact part already uploaded with a different checksum"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}/complete": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "CompleteClientArtifactUploadSession",
+        "summary": "Complete an artifact upload session",
+        "description": "Endpoint for clients to complete an artifact upload session after all\nexpected parts have been uploaded.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-artifact-upload-session-complete-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact not finished uploading, must upload missing parts"
                     }
                   ]
                 }
@@ -19105,7 +19569,8 @@
                                   "active",
                                   "accepted",
                                   "remediated",
-                                  "deprecated"
+                                  "deprecated",
+                                  "orphaned"
                                 ]
                               },
                               "first_seen": {
@@ -21920,6 +22385,11 @@
             "readOnly": true,
             "description": "OpenGraph environment kind ID for custom environments"
           },
+          "environment_kind_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "OpenGraph environment kind name for custom environments"
+          },
           "environment_kind_display_name": {
             "type": "string",
             "readOnly": true,
@@ -23218,11 +23688,7 @@
       },
       "model.graph-extension.kind-info-definition": {
         "type": "object",
-        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
-        "propertyNames": {
-          "pattern": "^[a-z0-9_-]{1,128}$",
-          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
-        },
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier and must match the pattern\n`^[a-z0-9_-]{1,128}$` (lowercase alphanumeric characters, hyphens, and underscores only).\nEach property value must be a valid KindInfo object with title, position, and content.\n",
         "additionalProperties": {
           "allOf": [
             {
@@ -23471,6 +23937,34 @@
           },
           "info": {
             "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          }
+        }
+      },
+      "model.relationship-kind-response": {
+        "type": "object",
+        "properties": {
+          "relationship_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "MemberOf"
+          },
+          "description": {
+            "type": "string",
+            "example": "a membership relationship"
+          },
+          "is_traversable": {
+            "type": "boolean",
+            "example": true
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
           }
         }
       },
@@ -24213,7 +24707,17 @@
           "canceled"
         ]
       },
-      "model.client-management-operation": {
+      "enum.artifact-status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "uploading",
+          "complete",
+          "failed",
+          "canceled"
+        ]
+      },
+      "model.client-support-bundle": {
         "allOf": [
           {
             "$ref": "#/components/schemas/model.components.uuid"
@@ -24247,21 +24751,6 @@
                   }
                 ]
               },
-              "requested_by_user_id": {
-                "type": "string",
-                "format": "uuid",
-                "nullable": true
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
               "started_at": {
                 "readOnly": true,
                 "allOf": [
@@ -24282,6 +24771,19 @@
                 "type": "string",
                 "format": "date-time",
                 "readOnly": true
+              },
+              "artifact_status": {
+                "nullable": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.artifact-status"
+                  }
+                ]
+              },
+              "artifact_size": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true
               }
             }
           }
@@ -24294,7 +24796,7 @@
             "nullable": true,
             "allOf": [
               {
-                "$ref": "#/components/schemas/model.client-management-operation"
+                "$ref": "#/components/schemas/model.client-support-bundle"
               }
             ]
           },
@@ -24302,7 +24804,7 @@
             "nullable": true,
             "allOf": [
               {
-                "$ref": "#/components/schemas/model.client-management-operation"
+                "$ref": "#/components/schemas/model.client-support-bundle"
               }
             ]
           }
@@ -24401,6 +24903,80 @@
           }
         }
       },
+      "model.client-management-operation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.uuid"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true
+              },
+              "artifact_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "type": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-type"
+                  }
+                ]
+              },
+              "status": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.client-management-operation-status"
+                  }
+                ]
+              },
+              "requested_by_user_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              },
+              "started_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "completed_at": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.time.response"
+                  }
+                ]
+              },
+              "execution_time": {
+                "type": "string",
+                "format": "date-time",
+                "readOnly": true
+              }
+            }
+          }
+        ]
+      },
       "model.client-management-operation-start-request": {
         "type": "object",
         "required": [
@@ -24431,6 +25007,208 @@
               "failed",
               "canceled"
             ]
+          }
+        }
+      },
+      "enum.artifact-type": {
+        "type": "string",
+        "enum": [
+          "support_bundle"
+        ]
+      },
+      "enum.checksum-algorithm": {
+        "type": "string",
+        "enum": [
+          "sha256",
+          "sha512"
+        ]
+      },
+      "model.client-artifact-upload-session-create-request": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "artifact_type",
+          "total_size",
+          "part_count",
+          "checksum_algorithm",
+          "checksum"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "artifact_type": {
+            "$ref": "#/components/schemas/enum.artifact-type"
+          },
+          "total_size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Optional upload part size. When omitted or zero, the server default is used."
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "content_type": {
+            "type": "string",
+            "description": "Optional artifact content type. Support bundle uploads default to application/zip."
+          },
+          "checksum_algorithm": {
+            "$ref": "#/components/schemas/enum.checksum-algorithm"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for the completed artifact."
+          }
+        }
+      },
+      "model.client-artifact-upload-session-create-response": {
+        "type": "object",
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/enum.artifact-status"
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missing_parts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "management_operation": {
+            "$ref": "#/components/schemas/model.client-management-operation"
+          }
+        }
+      },
+      "model.client-artifact-upload-session-part": {
+        "type": "object",
+        "properties": {
+          "part_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for this uploaded part."
+          },
+          "offset_start": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          }
+        }
+      },
+      "model.client-artifact-upload-session": {
+        "type": "object",
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/enum.artifact-status"
+          },
+          "total_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checksum_algorithm": {
+            "$ref": "#/components/schemas/enum.checksum-algorithm"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for the completed artifact."
+          },
+          "uploaded_parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.client-artifact-upload-session-part"
+            }
+          },
+          "missing_parts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "completed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          }
+        }
+      },
+      "model.client-artifact-upload-session-complete-request": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
