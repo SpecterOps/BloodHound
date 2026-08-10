@@ -17102,6 +17102,13 @@
                   "format": "binary"
                 },
                 "example": "[this request has a binary response]"
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
               }
             }
           },
@@ -17375,6 +17382,356 @@
                     {
                       "context": "",
                       "message": "invalid management operation status transition"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateClientArtifactUploadSession",
+        "summary": "Create an artifact upload session",
+        "description": "Endpoint for clients to create an artifact upload session and associate it\nwith a running management operation.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-artifact-upload-session-create-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session-create-response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "management operation already has an associated artifact"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetClientArtifactUploadSession",
+        "summary": "Get an artifact upload session",
+        "description": "Endpoint for clients to get artifact upload-session state.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "part_number",
+          "description": "Artifact part number, starting at 1.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          }
+        }
+      ],
+      "post": {
+        "operationId": "UploadClientArtifactPart",
+        "summary": "Upload an artifact part",
+        "description": "Endpoint for clients to upload one part of an artifact upload session.\n\nThe part checksum is supplied through the Content-Digest header. Supported\ndigest names are sha-256 and sha-512. The digest value must be a structured\nfield byte sequence containing the base64-encoded digest bytes, for example\nsha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Length",
+            "description": "Size of the uploaded artifact part, in bytes.",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "Content-Digest",
+            "description": "Structured field digest for the uploaded artifact part.",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "sha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.client-artifact-upload-session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact part already uploaded with a different checksum"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/clients/management/artifacts/{artifact_id}/complete": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "artifact_id",
+          "description": "Artifact ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "CompleteClientArtifactUploadSession",
+        "summary": "Complete an artifact upload session",
+        "description": "Endpoint for clients to complete an artifact upload session after all\nexpected parts have been uploaded.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
+        "tags": [
+          "Clients",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.client-artifact-upload-session-complete-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-07-01T13:44:43.247Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "artifact not finished uploading, must upload missing parts"
                     }
                   ]
                 }
@@ -24559,6 +24916,218 @@
               "failed",
               "canceled"
             ]
+          }
+        }
+      },
+      "enum.artifact-type": {
+        "type": "string",
+        "enum": [
+          "support_bundle"
+        ]
+      },
+      "enum.checksum-algorithm": {
+        "type": "string",
+        "enum": [
+          "sha256",
+          "sha512"
+        ]
+      },
+      "model.client-artifact-upload-session-create-request": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "artifact_type",
+          "total_size",
+          "part_count",
+          "checksum_algorithm",
+          "checksum"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "artifact_type": {
+            "$ref": "#/components/schemas/enum.artifact-type"
+          },
+          "total_size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Optional upload part size. When omitted or zero, the server default is used."
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "content_type": {
+            "type": "string",
+            "description": "Optional artifact content type. Support bundle uploads default to application/zip."
+          },
+          "checksum_algorithm": {
+            "$ref": "#/components/schemas/enum.checksum-algorithm"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for the completed artifact."
+          }
+        }
+      },
+      "enum.artifact-status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "uploading",
+          "complete",
+          "failed",
+          "canceled"
+        ]
+      },
+      "model.client-artifact-upload-session-create-response": {
+        "type": "object",
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/enum.artifact-status"
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missing_parts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "management_operation": {
+            "$ref": "#/components/schemas/model.client-management-operation"
+          }
+        }
+      },
+      "model.client-artifact-upload-session-part": {
+        "type": "object",
+        "properties": {
+          "part_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for this uploaded part."
+          },
+          "offset_start": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          }
+        }
+      },
+      "model.client-artifact-upload-session": {
+        "type": "object",
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "storage_key": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/enum.artifact-status"
+          },
+          "total_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checksum_algorithm": {
+            "$ref": "#/components/schemas/enum.checksum-algorithm"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "Hex-encoded checksum for the completed artifact."
+          },
+          "uploaded_parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.client-artifact-upload-session-part"
+            }
+          },
+          "missing_parts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "completed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          }
+        }
+      },
+      "model.client-artifact-upload-session-complete-request": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
