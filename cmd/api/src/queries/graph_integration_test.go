@@ -796,6 +796,12 @@ func TestGraphQuery_GetAllShortestPaths(t *testing.T) {
 		})
 }
 
+func newEmptyProperties() *graph.Properties {
+	return &graph.Properties{
+		Map: map[string]interface{}{},
+	}
+}
+
 func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 	type testData struct {
 		name        string
@@ -840,7 +846,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 							StartID:    7,
 							EndID:      12,
 							Kind:       graph.StringKind("IsParent"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 					},
 				}),
@@ -876,7 +882,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 							StartID:    5,
 							EndID:      10,
 							Kind:       graph.StringKind("Contains"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 					},
 				}),
@@ -912,7 +918,7 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 							StartID:    7,
 							EndID:      10,
 							Kind:       graph.StringKind("Contains"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 					},
 				}),
@@ -961,27 +967,26 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 					},
 					Edges: []*graph.Relationship{
-
 						{
 							ID:         1,
 							StartID:    7,
 							EndID:      8,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 						{
 							ID:         2,
 							StartID:    8,
 							EndID:      9,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 						{
 							ID:         3,
 							StartID:    9,
 							EndID:      12,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 					},
 				}),
@@ -1030,27 +1035,26 @@ func TestGetAllShortestPathsWithOpenGraph(t *testing.T) {
 						},
 					},
 					Edges: []*graph.Relationship{
-
 						{
 							ID:         1,
 							StartID:    7,
 							EndID:      8,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 						{
 							ID:         2,
 							StartID:    8,
 							EndID:      9,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 						{
 							ID:         3,
 							StartID:    9,
 							EndID:      12,
 							Kind:       graph.StringKind("Knows"),
-							Properties: graph.NewPropertiesRed(),
+							Properties: newEmptyProperties(),
 						},
 					},
 				}),
@@ -1211,7 +1215,6 @@ func TestRawCypherQuery(t *testing.T) {
 		require.Equal(t, true, results.Literals[0].Value)
 		require.Equal(t, int64(1), results.Literals[1].Value)
 		require.Equal(t, "ALICE", results.Literals[2].Value)
-
 	})
 
 	t.Run("Test return combination", func(t *testing.T) {
