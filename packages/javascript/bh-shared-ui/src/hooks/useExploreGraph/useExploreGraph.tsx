@@ -90,9 +90,9 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
-        enabled: !cypherQueryIsEmpty && rest.enabled,
         ...rest,
         ...userSettings,
+        enabled: !cypherQueryIsEmpty && rest.enabled,
     });
 };
 
