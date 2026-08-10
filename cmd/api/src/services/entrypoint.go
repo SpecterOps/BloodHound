@@ -85,7 +85,7 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 // are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
 	dependencies := bootstrap.RuntimeDependencies{}
-	if fileServices, err := storageService.NewDefaultFileServices(cfg); err != nil {
+	if fileServices, err := storageService.NewDefaultFileServices(ctx, cfg); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storageService.NewFileServiceResolver(fileServices); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
