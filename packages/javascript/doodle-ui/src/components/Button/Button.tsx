@@ -33,6 +33,8 @@ export const ButtonVariants = cva(
                     'bg-transparent border border-transparent-btn-border text-main hover:bg-primary hover:text-common-white dark:hover:text-common-dark hover:border-primary hover:no-underline focus-visible:bg-primary focus-visible:text-common-white dark:focus-visible:text-common-dark focus-visible:border-primary',
                 text: 'text-primary hover:text-secondary active:text-primary-variant focus-visible:text-secondary disabled:text-text-disabled',
                 icon: 'rounded-full text-common-dark bg-icon-btn-fill p-0 size-10 shadow-outer-1 hover:border-2 hover:border-secondary focus-visible:border-2 focus-visible:border-secondary active:border-none',
+                sortable:
+                    'text-neutral-dark-5 dark:text-neutral-light-5 hover:text-secondary active:text-primary-variant focus-visible:text-secondary',
             },
             fontColor: {
                 primary: 'text-primary',
