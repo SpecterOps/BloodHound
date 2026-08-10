@@ -1,5 +1,70 @@
 [
     {
+        "source": "AZResourceGroup",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContains"
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "AZUser",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZServicePrincipal",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZEntraDS",
+        "target": "Domain",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "EntraDSFor"
+            ]
+        }
+    },
+    {
         "source": "AZUser",
         "target": "User",
         "edges": {
@@ -21,12 +86,22 @@
         }
     },
     {
-        "source": "AZEntraDS",
+        "source": "AZUser",
         "target": "Group",
         "edges": {
             "ingest": [],
             "post": [
-                "SyncEntraDSUsers"
+                "ManageEntraDSSync"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "ManageEntraDSSync"
             ]
         }
     },
@@ -36,7 +111,8 @@
         "edges": {
             "ingest": [],
             "post": [
-                "SyncEntraDSUsers"
+                "ManageEntraDSSync",
+                "ManageEntraDSSyncFilter"
             ]
         }
     },

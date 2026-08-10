@@ -73,21 +73,42 @@ func TestConvertAzureDomainServiceToNode(t *testing.T) {
 	assert.Equal(t, strings.ToUpper(data.Properties.TenantID), node.PropertyMap[azure.TenantID.String()])
 	assert.Equal(t, data.Properties.DomainName, node.PropertyMap[azure.DomainName.String()])
 	assert.Equal(t, data.Properties.DomainConfigurationType, node.PropertyMap[azure.DomainConfigurationType.String()])
-	assert.Equal(t, data.Properties.FilteredSync, node.PropertyMap[azure.FilteredSync.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.FilteredSyncEnabled.String()])
 	assert.Equal(t, data.Properties.SyncScope, node.PropertyMap[azure.SyncScope.String()])
 	assert.Equal(t, strings.ToUpper(data.Properties.SyncApplicationID), node.PropertyMap[azure.SyncApplicationID.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.NTLMV1, node.PropertyMap[azure.NTLMV1.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.TLSV1, node.PropertyMap[azure.TLSV1.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.SyncNTLMPasswords, node.PropertyMap[azure.SyncNTLMPasswords.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.SyncKerberosPasswords, node.PropertyMap[azure.SyncKerberosPasswords.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.SyncOnPremPasswords, node.PropertyMap[azure.SyncOnPremPasswords.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.KerberosRC4Encryption, node.PropertyMap[azure.KerberosRC4Encryption.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.KerberosArmoring, node.PropertyMap[azure.KerberosArmoring.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.LDAPSigning, node.PropertyMap[azure.LDAPSigning.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.ChannelBinding, node.PropertyMap[azure.ChannelBinding.String()])
-	assert.Equal(t, data.Properties.DomainSecuritySettings.SyncOnPremSAMAccountName, node.PropertyMap[azure.SyncOnPremSAMAccountName.String()])
-	assert.Equal(t, data.Properties.LDAPSSettings.LDAPS, node.PropertyMap[azure.LDAPS.String()])
-	assert.Equal(t, data.Properties.LDAPSSettings.ExternalAccess, node.PropertyMap[azure.LDAPSExternalAccess.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.NTLMV1Enabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.TLSV1Enabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.SyncNTLMPasswordsEnabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.SyncKerberosPasswordsEnabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.SyncOnPremPasswordsEnabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.KerberosRC4EncryptionEnabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.KerberosArmoringEnabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.LDAPSigningEnabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.ChannelBindingEnabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.SyncOnPremSAMAccountNameEnabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.LDAPSEnabled.String()])
+	assert.Equal(t, true, node.PropertyMap[azure.LDAPSExternalAccessEnabled.String()])
+}
+
+func TestConvertAzureDomainServiceToNodeOmitsUnknownBooleanSettings(t *testing.T) {
+	data := ein.AzureDomainService{
+		Properties: ein.AzureDomainServiceProperties{
+			FilteredSync: " enabled ",
+			DomainSecuritySettings: ein.AzureDomainServiceSecuritySettings{
+				NTLMV1: "FutureValue",
+			},
+			LDAPSSettings: ein.AzureDomainServiceLDAPSSettings{
+				LDAPS: "Disabled",
+			},
+		},
+	}
+
+	node := ein.ConvertAzureDomainServiceToNode(data, time.Time{})
+
+	assert.Equal(t, true, node.PropertyMap[azure.FilteredSyncEnabled.String()])
+	assert.Equal(t, false, node.PropertyMap[azure.LDAPSEnabled.String()])
+	assert.NotContains(t, node.PropertyMap, azure.NTLMV1Enabled.String())
+	assert.NotContains(t, node.PropertyMap, azure.TLSV1Enabled.String())
 }
 
 func TestConvertAzureDomainServiceToRels(t *testing.T) {

@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	analysisAD "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -34,6 +33,7 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHybridAttackPaths(t *testing.T) {
@@ -456,7 +456,7 @@ func TestGetAddEntraDSGroupMemberEdgeComposition(t *testing.T) {
 				return nil
 			})
 
-			composition, err := analysisAD.GetAddEntraDSGroupMemberEdgeComposition(context.Background(), db, edge)
+			composition, err := GetAddEntraDSGroupMemberEdgeComposition(context.Background(), db, edge)
 			assert.Nil(t, err)
 
 			nodes := composition.AllNodes()
@@ -469,370 +469,359 @@ func TestGetAddEntraDSGroupMemberEdgeComposition(t *testing.T) {
 	)
 }
 
-func TestSyncEntraDSUsersEdge(t *testing.T) {
-	t.Run("DomainServiceEdgeCreatedAcrossSyncScopes", func(t *testing.T) {
+func TestManageEntraDSSyncEdges(t *testing.T) {
+	testCases := []struct {
+		name               string
+		options            manageEntraDSSyncHarnessOptions
+		expectCorrelation  bool
+		expectManageSync   bool
+		expectManageFilter bool
+	}{
+		{
+			name:              "BothEdgesCreatedForCorrelatedDomainAndEnabledFilter",
+			options:           validManageEntraDSSyncOptions(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: true,
+		},
+		{
+			name: "BroadEdgeIgnoresCurrentSynchronizationBoundary",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.filteredSyncEnabled = false
+				options.syncScope = "CloudOnly"
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
+		{
+			name: "FilterEdgeRequiresFilteredSyncEnabled",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.filteredSyncEnabled = false
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
+		{
+			name: "FilterEdgeRequiresSyncScopeAll",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.syncScope = "CloudOnly"
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
+		{
+			name: "FilterEdgeRequiresKnownApplication",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.applicationID = integration.RandomObjectID(t)
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
+		{
+			name: "FilterEdgeRequiresSameTenant",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.sameTenant = false
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
+		{
+			name: "CorrelationRequiresAADDCAdministratorsName",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.adminGroupName = "NOT AAD DC ADMINISTRATORS@SPECTER.DEV"
+				return options
+			}(),
+		},
+		{
+			name: "CorrelationRequiresSynchronizedAADDCAdministrators",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.syncAdminGroup = false
+				return options
+			}(),
+		},
+		{
+			name: "CorrelationRequiresMatchingDomainName",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.matchingDomainName = false
+				return options
+			}(),
+		},
+		{
+			name: "CorrelationRequiresMatchingAdminGroupDomainSID",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.matchingAdminGroupDomainSID = false
+				return options
+			}(),
+		},
+		{
+			name: "DomainUsersRequiresRID513InCorrelatedDomain",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.matchingDomainUsersSID = false
+				return options
+			}(),
+			expectCorrelation: true,
+		},
+		{
+			name: "BroadSyncRequiresDomainUsersContainment",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.containDomainUsers = false
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: false, expectManageFilter: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+			var syncHarness manageEntraDSSyncHarness
+
+			testContext.DatabaseTestWithSetup(
+				func(harness *integration.HarnessDetails) error {
+					syncHarness = setupManageEntraDSSyncHarness(t, testContext, testCase.options)
+					return nil
+				},
+				func(harness integration.HarnessDetails, db graph.Database) {
+					_, err := PostHybrid(context.Background(), db)
+					require.NoError(t, err)
+					verifyManageEntraDSSyncEdges(t, db, syncHarness, testCase.expectCorrelation, testCase.expectManageSync, testCase.expectManageFilter)
+				},
+			)
+		})
+	}
+
+	t.Run("AmbiguousDomainNameFailsClosed", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, domainUsers *graph.Node
+		var syncHarness manageEntraDSSyncHarness
 
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
-				domainService, _, _, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Disabled",
-					syncScope:         "CloudOnly",
-				})
+				syncHarness = setupManageEntraDSSyncHarness(t, testContext, validManageEntraDSSyncOptions())
+				testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+					common.Name:     "specter.dev",
+					common.ObjectID: integration.RandomDomainSID(),
+					ad.DomainSID:    integration.RandomDomainSID(),
+				}), ad.Entity, ad.Domain)
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.EntraDS,
-				})
-			},
-		)
-	})
-
-	t.Run("ServicePrincipalEdgeCreatedWhenFilteredSyncEnabledAndScopeAll", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, servicePrincipal, domainUsers *graph.Node
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				domainService, _, servicePrincipal, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService):    azure.EntraDS,
-					getObjectID(t, servicePrincipal): azure.ServicePrincipal,
-				})
-			},
-		)
-	})
-
-	t.Run("ServicePrincipalEdgeNotCreatedWhenFilteredSyncDisabled", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, domainUsers *graph.Node
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				domainService, _, _, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Disabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.EntraDS,
-				})
-			},
-		)
-	})
-
-	t.Run("ServicePrincipalEdgeNotCreatedWhenSyncScopeCloudOnly", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, domainUsers *graph.Node
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				domainService, _, _, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "CloudOnly",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.EntraDS,
-				})
-			},
-		)
-	})
-
-	t.Run("ServicePrincipalEdgeNotCreatedForWrongApplication", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, domainUsers *graph.Node
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				domainService, _, _, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     integration.RandomObjectID(t),
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.EntraDS,
-				})
-			},
-		)
-	})
-
-	t.Run("EdgeNotCreatedForUnrelatedGroup", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    "NOT AAD DC ADMINISTRATORS@SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, "", nil)
-			},
-		)
-	})
-
-	t.Run("EdgeNotCreatedWhenAdminGroupIsNotSynced", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    false,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, "", nil)
-			},
-		)
-	})
-
-	t.Run("EdgeNotCreatedForDifferentDomainSID", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        true,
-					syncAdminGroup:    true,
-					matchingDomainSID: false,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, "", nil)
-			},
-		)
-	})
-
-	t.Run("ServicePrincipalEdgeNotCreatedAcrossTenants", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var domainService, domainUsers *graph.Node
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				domainService, _, _, _, _, domainUsers = setupSyncEntraDSUsersHarness(t, testContext, syncEntraDSUsersHarnessOptions{
-					applicationID:     entraDSScopedSyncApplicationID,
-					adminGroupName:    entraDSAdminGroupNamePrefix + "SPECTER.DEV",
-					sameTenant:        false,
-					syncAdminGroup:    true,
-					matchingDomainSID: true,
-					filteredSync:      "Enabled",
-					syncScope:         "All",
-				})
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
-					t.Fatalf("failed post processing for SyncEntraDSUsers edge: %v", err)
-				}
-
-				verifySyncEntraDSUsersEdges(t, db, getObjectID(t, domainUsers), map[string]graph.Kind{
-					getObjectID(t, domainService): azure.EntraDS,
-				})
+				_, err := PostHybrid(context.Background(), db)
+				require.NoError(t, err)
+				verifyManageEntraDSSyncEdges(t, db, syncHarness, false, false, false)
 			},
 		)
 	})
 }
 
-type syncEntraDSUsersHarnessOptions struct {
-	applicationID     string
-	adminGroupName    string
-	sameTenant        bool
-	syncAdminGroup    bool
-	matchingDomainSID bool
-	filteredSync      string
-	syncScope         string
+func TestGetManageEntraDSSyncEdgeComposition(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	var syncHarness manageEntraDSSyncHarness
+	var container *graph.Node
+	var unrelatedDomainService *graph.Node
+	var unrelatedDomain *graph.Node
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			options := validManageEntraDSSyncOptions()
+			options.containDomainUsers = false
+			syncHarness = setupManageEntraDSSyncHarness(t, testContext, options)
+			container = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "USERS@SPECTER.DEV",
+				common.ObjectID: integration.RandomObjectID(t),
+			}), ad.Entity, ad.Container)
+			testContext.NewRelationship(syncHarness.domain, container, ad.Contains)
+			testContext.NewRelationship(container, syncHarness.domainUsers, ad.Contains)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, err := PostHybrid(context.Background(), db)
+			require.NoError(t, err)
+
+			unrelatedDomainService = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "UNRELATED.SPECTER.DEV",
+				common.ObjectID: integration.RandomObjectID(t),
+			}), azure.Entity, azure.EntraDS)
+			unrelatedDomain = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "UNRELATED.SPECTER.DEV",
+				common.ObjectID: integration.RandomDomainSID(),
+				ad.DomainSID:    integration.RandomDomainSID(),
+			}), ad.Entity, ad.Domain)
+			testContext.NewRelationship(syncHarness.manager, unrelatedDomainService, azure.ManageEntraDS)
+			testContext.NewRelationship(unrelatedDomainService, unrelatedDomain, azure.EntraDSFor)
+
+			var edge *graph.Relationship
+			err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				edges, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), azure.ManageEntraDSSync)))
+				require.NoError(t, err)
+				require.Len(t, edges, 1)
+				edge = edges[0]
+				return nil
+			})
+			require.NoError(t, err)
+
+			composition, err := GetManageEntraDSSyncEdgeComposition(context.Background(), db, edge)
+			require.NoError(t, err)
+			nodes := composition.AllNodes()
+			assert.True(t, nodes.Contains(syncHarness.manager))
+			assert.True(t, nodes.Contains(syncHarness.domainService))
+			assert.True(t, nodes.Contains(syncHarness.domain))
+			assert.True(t, nodes.Contains(container))
+			assert.True(t, nodes.Contains(syncHarness.domainUsers))
+			assert.False(t, nodes.Contains(syncHarness.azAdminGroup))
+			assert.False(t, nodes.Contains(syncHarness.adAdminGroup))
+			assert.False(t, nodes.Contains(unrelatedDomainService))
+			assert.False(t, nodes.Contains(unrelatedDomain))
+		},
+	)
 }
 
-func setupSyncEntraDSUsersHarness(t *testing.T, testContext *integration.GraphTestContext, options syncEntraDSUsersHarnessOptions) (domainService, application, servicePrincipal, azAdminGroup, adAdminGroup, domainUsers *graph.Node) {
+type manageEntraDSSyncHarnessOptions struct {
+	applicationID               string
+	adminGroupName              string
+	sameTenant                  bool
+	syncAdminGroup              bool
+	matchingDomainName          bool
+	matchingAdminGroupDomainSID bool
+	matchingDomainUsersSID      bool
+	containDomainUsers          bool
+	filteredSyncEnabled         bool
+	syncScope                   string
+}
+
+type manageEntraDSSyncHarness struct {
+	domainService, application, servicePrincipal, manager, azAdminGroup, adAdminGroup, domain, domainUsers *graph.Node
+}
+
+func validManageEntraDSSyncOptions() manageEntraDSSyncHarnessOptions {
+	return manageEntraDSSyncHarnessOptions{
+		applicationID:               entraDSScopedSyncApplicationID,
+		adminGroupName:              entraDSAdminGroupNamePrefix + "SPECTER.DEV",
+		sameTenant:                  true,
+		syncAdminGroup:              true,
+		matchingDomainName:          true,
+		matchingAdminGroupDomainSID: true,
+		matchingDomainUsersSID:      true,
+		containDomainUsers:          true,
+		filteredSyncEnabled:         true,
+		syncScope:                   "All",
+	}
+}
+
+func setupManageEntraDSSyncHarness(t *testing.T, testContext *integration.GraphTestContext, options manageEntraDSSyncHarnessOptions) manageEntraDSSyncHarness {
 	t.Helper()
 
 	var (
-		adminGroupTenantID       = integration.RandomObjectID(t)
-		servicePrincipalTenantID = adminGroupTenantID
+		tenantID                 = integration.RandomObjectID(t)
+		servicePrincipalTenantID = tenantID
 		domainSID                = integration.RandomDomainSID()
+		adminGroupDomainSID      = domainSID
 		domainUsersDomainSID     = domainSID
-		filteredSync             = options.filteredSync
-		syncScope                = options.syncScope
+		domainName               = "SPECTER.DEV"
+		domainServiceDomainName  = " specter.dev "
 	)
 
 	if !options.sameTenant {
 		servicePrincipalTenantID = integration.RandomObjectID(t)
 	}
-	if !options.matchingDomainSID {
+	if !options.matchingDomainName {
+		domainServiceDomainName = "other.example"
+	}
+	if !options.matchingAdminGroupDomainSID {
+		adminGroupDomainSID = integration.RandomDomainSID()
+	}
+	if !options.matchingDomainUsersSID {
 		domainUsersDomainSID = integration.RandomDomainSID()
 	}
-	if filteredSync == "" {
-		filteredSync = "Disabled"
-	}
-	if syncScope == "" {
-		syncScope = "CloudOnly"
-	}
 
-	adminGroupTenant := testContext.NewAzureTenant(adminGroupTenantID)
-	servicePrincipalTenant := adminGroupTenant
+	tenant := testContext.NewAzureTenant(tenantID)
+	servicePrincipalTenant := tenant
 	if !options.sameTenant {
 		servicePrincipalTenant = testContext.NewAzureTenant(servicePrincipalTenantID)
 	}
 
-	domainService = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
-		common.Name:        "SPECTER.DEV",
-		common.ObjectID:    integration.RandomObjectID(t),
-		azure.TenantID:     adminGroupTenantID,
-		azure.FilteredSync: filteredSync,
-		azure.SyncScope:    syncScope,
+	domainService := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:               "Managed Domain",
+		common.ObjectID:           integration.RandomObjectID(t),
+		azure.TenantID:            tenantID,
+		azure.DomainName:          domainServiceDomainName,
+		azure.FilteredSyncEnabled: options.filteredSyncEnabled,
+		azure.SyncScope:           options.syncScope,
 	}), azure.Entity, azure.EntraDS)
-	application = testContext.NewAzureApplication("Domain Controller Services", options.applicationID, servicePrincipalTenantID)
-	servicePrincipal = testContext.NewAzureServicePrincipal("Domain Controller Services", integration.RandomObjectID(t), servicePrincipalTenantID)
+	application := testContext.NewAzureApplication("Domain Controller Services", options.applicationID, servicePrincipalTenantID)
+	servicePrincipal := testContext.NewAzureServicePrincipal("Domain Controller Services", integration.RandomObjectID(t), servicePrincipalTenantID)
+	manager := testContext.NewAzureGroup("Managed Domain Manager", integration.RandomObjectID(t), tenantID)
 	azAdminGroupObjectID := integration.RandomObjectID(t)
-	azAdminGroup = testContext.NewAzureGroup(options.adminGroupName, azAdminGroupObjectID, adminGroupTenantID)
+	azAdminGroup := testContext.NewAzureGroup(options.adminGroupName, azAdminGroupObjectID, tenantID)
 	testContext.NewRelationship(application, servicePrincipal, azure.RunsAs)
 	testContext.NewRelationship(servicePrincipalTenant, servicePrincipal, azure.Contains)
-	testContext.NewRelationship(adminGroupTenant, azAdminGroup, azure.Contains)
+	testContext.NewRelationship(tenant, manager, azure.Contains)
+	testContext.NewRelationship(tenant, azAdminGroup, azure.Contains)
+	testContext.NewRelationship(manager, domainService, azure.ManageEntraDS)
 
 	adminGroupAADObjectID := integration.RandomObjectID(t)
 	if options.syncAdminGroup {
 		adminGroupAADObjectID = azAdminGroupObjectID
 	}
 
-	adAdminGroup = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+	adAdminGroup := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     "AAD DC ADMINISTRATORS",
-		common.ObjectID: domainSID + "-1104",
-		ad.DomainSID:    domainSID,
+		common.ObjectID: adminGroupDomainSID + "-1104",
+		ad.DomainSID:    adminGroupDomainSID,
 		ad.AADObjectID:  adminGroupAADObjectID,
 	}), ad.Entity, ad.Group)
-	domainUsers = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+	domain := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     domainName,
+		common.ObjectID: domainSID,
+		ad.DomainSID:    domainSID,
+	}), ad.Entity, ad.Domain)
+	domainUsers := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     "DOMAIN USERS",
 		common.ObjectID: domainUsersDomainSID + domainUsersObjectIDSuffix,
 		ad.DomainSID:    domainUsersDomainSID,
 	}), ad.Entity, ad.Group)
+	if options.containDomainUsers {
+		testContext.NewRelationship(domain, domainUsers, ad.Contains)
+	}
 
-	return domainService, application, servicePrincipal, azAdminGroup, adAdminGroup, domainUsers
+	return manageEntraDSSyncHarness{
+		domainService: domainService, application: application, servicePrincipal: servicePrincipal, manager: manager,
+		azAdminGroup: azAdminGroup, adAdminGroup: adAdminGroup, domain: domain, domainUsers: domainUsers,
+	}
 }
 
-func verifySyncEntraDSUsersEdges(t *testing.T, db graph.Database, expectedEndObjectID string, expectedStartKinds map[string]graph.Kind) {
+func verifyManageEntraDSSyncEdges(t *testing.T, db graph.Database, syncHarness manageEntraDSSyncHarness, expectCorrelation, expectManageSync, expectManageFilter bool) {
 	t.Helper()
 
 	db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-		edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), azure.SyncEntraDSUsers)
-		}))
-		assert.Nil(t, err)
-
-		if len(expectedStartKinds) == 0 {
-			assert.Empty(t, edges)
-			return nil
-		}
-
-		assert.Len(t, edges, len(expectedStartKinds))
-		seen := make(map[string]struct{}, len(expectedStartKinds))
-		for _, edge := range edges {
-			start, end, err := ops.FetchRelationshipNodes(tx, edge)
-			assert.Nil(t, err)
-
-			startObjectID := getObjectID(t, start)
-			expectedStartKind, ok := expectedStartKinds[startObjectID]
-			assert.True(t, ok)
-			if !ok {
+		for _, expectation := range []struct {
+			kind        graph.Kind
+			start, end  *graph.Node
+			shouldExist bool
+		}{
+			{azure.EntraDSFor, syncHarness.domainService, syncHarness.domain, expectCorrelation},
+			{azure.ManageEntraDSSync, syncHarness.manager, syncHarness.domainUsers, expectManageSync},
+			{azure.ManageEntraDSSyncFilter, syncHarness.servicePrincipal, syncHarness.domainUsers, expectManageFilter},
+		} {
+			edges, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), expectation.kind)))
+			require.NoError(t, err)
+			if !expectation.shouldExist {
+				assert.Empty(t, edges)
 				continue
 			}
 
-			assert.True(t, start.Kinds.ContainsOneOf(expectedStartKind))
-			assert.True(t, end.Kinds.ContainsOneOf(ad.Group))
-			assert.Equal(t, expectedEndObjectID, getObjectID(t, end))
-			seen[startObjectID] = struct{}{}
+			require.Len(t, edges, 1)
+			assert.Equal(t, expectation.start.ID, edges[0].StartID)
+			assert.Equal(t, expectation.end.ID, edges[0].EndID)
 		}
-		assert.Len(t, seen, len(expectedStartKinds))
 
 		return nil
 	})

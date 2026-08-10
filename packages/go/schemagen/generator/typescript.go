@@ -111,8 +111,6 @@ func GenerateTypeScriptActiveDirectory(root tsgen.File, schema model.ActiveDirec
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryRelationshipKind", schema.RelationshipKinds)
 	GenerateTypeScriptUnionType(root, "ActiveDirectoryKind", unionKinds...)
 
-	GenerateTypeScriptArray(root, "EdgeCompositionRelationships", schema.EdgeCompositionRelationships)
-
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryKindProperties", schema.Properties)
 
 	GenerateTypeScriptPathfindingEdgesFn(root, "ActiveDirectoryPathfindingEdges", "ActiveDirectoryRelationshipKind", schema.PathfindingRelationships)

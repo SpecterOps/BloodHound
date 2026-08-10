@@ -353,11 +353,11 @@ DomainConfigurationType: types.#StringEnum & {
 	representation: "domainconfigurationtype"
 }
 
-FilteredSync: types.#StringEnum & {
-	symbol:         "FilteredSync"
+FilteredSyncEnabled: types.#StringEnum & {
+	symbol:         "FilteredSyncEnabled"
 	schema:         "azure"
-	name:           "Filtered Sync"
-	representation: "filteredsync"
+	name:           "Filtered Sync Enabled"
+	representation: "filteredsyncenabled"
 }
 
 SyncScope: types.#StringEnum & {
@@ -374,88 +374,88 @@ SyncApplicationID: types.#StringEnum & {
 	representation: "syncapplicationid"
 }
 
-NTLMV1: types.#StringEnum & {
-	symbol:         "NTLMV1"
+NTLMV1Enabled: types.#StringEnum & {
+	symbol:         "NTLMV1Enabled"
 	schema:         "azure"
-	name:           "NTLM V1"
-	representation: "ntlmv1"
+	name:           "NTLM V1 Enabled"
+	representation: "ntlmv1enabled"
 }
 
-TLSV1: types.#StringEnum & {
-	symbol:         "TLSV1"
+TLSV1Enabled: types.#StringEnum & {
+	symbol:         "TLSV1Enabled"
 	schema:         "azure"
-	name:           "TLS V1"
-	representation: "tlsv1"
+	name:           "TLS V1 Enabled"
+	representation: "tlsv1enabled"
 }
 
-SyncNTLMPasswords: types.#StringEnum & {
-	symbol:         "SyncNTLMPasswords"
+SyncNTLMPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncNTLMPasswordsEnabled"
 	schema:         "azure"
-	name:           "Sync NTLM Passwords"
-	representation: "syncntlmpasswords"
+	name:           "Sync NTLM Passwords Enabled"
+	representation: "syncntlmpasswordsenabled"
 }
 
-SyncKerberosPasswords: types.#StringEnum & {
-	symbol:         "SyncKerberosPasswords"
+SyncKerberosPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncKerberosPasswordsEnabled"
 	schema:         "azure"
-	name:           "Sync Kerberos Passwords"
-	representation: "synckerberospasswords"
+	name:           "Sync Kerberos Passwords Enabled"
+	representation: "synckerberospasswordsenabled"
 }
 
-SyncOnPremPasswords: types.#StringEnum & {
-	symbol:         "SyncOnPremPasswords"
+SyncOnPremPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncOnPremPasswordsEnabled"
 	schema:         "azure"
-	name:           "Sync On-Premises Passwords"
-	representation: "synconprempasswords"
+	name:           "Sync On-Premises Passwords Enabled"
+	representation: "synconprempasswordsenabled"
 }
 
-KerberosRC4Encryption: types.#StringEnum & {
-	symbol:         "KerberosRC4Encryption"
+KerberosRC4EncryptionEnabled: types.#StringEnum & {
+	symbol:         "KerberosRC4EncryptionEnabled"
 	schema:         "azure"
-	name:           "Kerberos RC4 Encryption"
-	representation: "kerberosrc4encryption"
+	name:           "Kerberos RC4 Encryption Enabled"
+	representation: "kerberosrc4encryptionenabled"
 }
 
-KerberosArmoring: types.#StringEnum & {
-	symbol:         "KerberosArmoring"
+KerberosArmoringEnabled: types.#StringEnum & {
+	symbol:         "KerberosArmoringEnabled"
 	schema:         "azure"
-	name:           "Kerberos Armoring"
-	representation: "kerberosarmoring"
+	name:           "Kerberos Armoring Enabled"
+	representation: "kerberosarmoringenabled"
 }
 
-LDAPSigning: types.#StringEnum & {
-	symbol:         "LDAPSigning"
+LDAPSigningEnabled: types.#StringEnum & {
+	symbol:         "LDAPSigningEnabled"
 	schema:         "azure"
-	name:           "LDAP Signing"
-	representation: "ldapsigning"
+	name:           "LDAP Signing Enabled"
+	representation: "ldapsigningenabled"
 }
 
-ChannelBinding: types.#StringEnum & {
-	symbol:         "ChannelBinding"
+ChannelBindingEnabled: types.#StringEnum & {
+	symbol:         "ChannelBindingEnabled"
 	schema:         "azure"
-	name:           "Channel Binding"
-	representation: "channelbinding"
+	name:           "Channel Binding Enabled"
+	representation: "channelbindingenabled"
 }
 
-SyncOnPremSAMAccountName: types.#StringEnum & {
-	symbol:         "SyncOnPremSAMAccountName"
+SyncOnPremSAMAccountNameEnabled: types.#StringEnum & {
+	symbol:         "SyncOnPremSAMAccountNameEnabled"
 	schema:         "azure"
-	name:           "Sync On-Premises SAM Account Name"
-	representation: "synconpremsamaccountname"
+	name:           "Sync On-Premises SAM Account Name Enabled"
+	representation: "synconpremsamaccountnameenabled"
 }
 
-LDAPS: types.#StringEnum & {
-	symbol:         "LDAPS"
+LDAPSEnabled: types.#StringEnum & {
+	symbol:         "LDAPSEnabled"
 	schema:         "azure"
-	name:           "Secure LDAP"
-	representation: "ldaps"
+	name:           "Secure LDAP Enabled"
+	representation: "ldapsenabled"
 }
 
-LDAPSExternalAccess: types.#StringEnum & {
-	symbol:         "LDAPSExternalAccess"
+LDAPSExternalAccessEnabled: types.#StringEnum & {
+	symbol:         "LDAPSExternalAccessEnabled"
 	schema:         "azure"
-	name:           "Secure LDAP External Access"
-	representation: "ldapsexternalaccess"
+	name:           "Secure LDAP External Access Enabled"
+	representation: "ldapsexternalaccessenabled"
 }
 
 Properties: [
@@ -505,21 +505,21 @@ Properties: [
 	FederatedIdentityCredentialAppID,
 	DomainName,
 	DomainConfigurationType,
-	FilteredSync,
+	FilteredSyncEnabled,
 	SyncScope,
 	SyncApplicationID,
-	NTLMV1,
-	TLSV1,
-	SyncNTLMPasswords,
-	SyncKerberosPasswords,
-	SyncOnPremPasswords,
-	KerberosRC4Encryption,
-	KerberosArmoring,
-	LDAPSigning,
-	ChannelBinding,
-	SyncOnPremSAMAccountName,
-	LDAPS,
-	LDAPSExternalAccess
+	NTLMV1Enabled,
+	TLSV1Enabled,
+	SyncNTLMPasswordsEnabled,
+	SyncKerberosPasswordsEnabled,
+	SyncOnPremPasswordsEnabled,
+	KerberosRC4EncryptionEnabled,
+	KerberosArmoringEnabled,
+	LDAPSigningEnabled,
+	ChannelBindingEnabled,
+	SyncOnPremSAMAccountNameEnabled,
+	LDAPSEnabled,
+	LDAPSExternalAccessEnabled
 ]
 
 // Kinds
@@ -806,6 +806,12 @@ EntraDSContributor: types.#Kind & {
 	representation: "AZEntraDSContributor"
 }
 
+ManageEntraDS: types.#Kind & {
+	symbol:         "ManageEntraDS"
+	schema:         "azure"
+	representation: "AZManageEntraDS"
+}
+
 GetCertificates: types.#Kind & {
 	symbol:         "GetCertificates"
 	schema:         "azure"
@@ -985,10 +991,22 @@ AddEntraDSGroupMember: types.#Kind & {
 	representation: "AddEntraDSGroupMember"
 }
 
-SyncEntraDSUsers: types.#Kind & {
-	symbol:         "SyncEntraDSUsers"
+EntraDSFor: types.#Kind & {
+	symbol:         "EntraDSFor"
 	schema:         "azure"
-	representation: "SyncEntraDSUsers"
+	representation: "EntraDSFor"
+}
+
+ManageEntraDSSync: types.#Kind & {
+	symbol:         "ManageEntraDSSync"
+	schema:         "azure"
+	representation: "ManageEntraDSSync"
+}
+
+ManageEntraDSSyncFilter: types.#Kind & {
+	symbol:         "ManageEntraDSSyncFilter"
+	schema:         "azure"
+	representation: "ManageEntraDSSyncFilter"
 }
 
 AZRoleEligible: types.#Kind & {
@@ -1014,6 +1032,7 @@ RelationshipKinds: [
 	Contains,
 	Contributor,
 	EntraDSContributor,
+	ManageEntraDS,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -1061,7 +1080,9 @@ RelationshipKinds: [
 	SyncedToEntraDSUser,
 	SyncedToEntraDSGroup,
 	AddEntraDSGroupMember,
-	SyncEntraDSUsers,
+	EntraDSFor,
+	ManageEntraDSSync,
+	ManageEntraDSSyncFilter,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -1088,7 +1109,7 @@ AbusableAppRoleRelationshipKinds: [
 ControlRelationshipKinds: [
 	AvereContributor,
 	Contributor,
-	EntraDSContributor,
+	ManageEntraDS,
 	Owner,
 	VMContributor,
 	AutomationContributor,
@@ -1131,7 +1152,7 @@ ExecutionPrivilegeKinds: [
 InboundOutboundRelationshipKinds: [
 	AvereContributor,
 	Contributor,
-	EntraDSContributor,
+	ManageEntraDS,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -1170,7 +1191,8 @@ InboundOutboundRelationshipKinds: [
 	SyncedToEntraUser,
 	SyncedToEntraDSUser,
 	AddEntraDSGroupMember,
-	SyncEntraDSUsers,
+	ManageEntraDSSync,
+	ManageEntraDSSyncFilter,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
@@ -1179,12 +1201,21 @@ InboundOutboundRelationshipKinds: [
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 
+EdgeCompositionRelationships: [
+	ManageEntraDS,
+	AddEntraDSGroupMember,
+	ManageEntraDSSync,
+]
+
 PostProcessedRelationships: [
 	ExecuteCommand,
+	ManageEntraDS,
 	SyncedToEntraUser,
 	SyncedToEntraDSUser,
 	SyncedToEntraDSGroup,
 	AddEntraDSGroupMember,
-	SyncEntraDSUsers,
+	EntraDSFor,
+	ManageEntraDSSync,
+	ManageEntraDSSyncFilter,
 	AZRoleApprover,
 ]

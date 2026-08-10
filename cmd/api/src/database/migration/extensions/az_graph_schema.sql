@@ -183,6 +183,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZContains');
 	PERFORM genscript_upsert_kind('AZContributor');
 	PERFORM genscript_upsert_kind('AZEntraDSContributor');
+	PERFORM genscript_upsert_kind('AZManageEntraDS');
 	PERFORM genscript_upsert_kind('AZGetCertificates');
 	PERFORM genscript_upsert_kind('AZGetKeys');
 	PERFORM genscript_upsert_kind('AZGetSecrets');
@@ -230,7 +231,9 @@ BEGIN
 	PERFORM genscript_upsert_kind('SyncedToEntraDSUser');
 	PERFORM genscript_upsert_kind('SyncedToEntraDSGroup');
 	PERFORM genscript_upsert_kind('AddEntraDSGroupMember');
-	PERFORM genscript_upsert_kind('SyncEntraDSUsers');
+	PERFORM genscript_upsert_kind('EntraDSFor');
+	PERFORM genscript_upsert_kind('ManageEntraDSSync');
+	PERFORM genscript_upsert_kind('ManageEntraDSSyncFilter');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
 	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
@@ -284,7 +287,8 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAvereContributor', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContains', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZContributor', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZEntraDSContributor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZEntraDSContributor', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZManageEntraDS', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetCertificates', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetKeys', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZGetSecrets', '', true);
@@ -332,7 +336,9 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraDSUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraDSGroup', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddEntraDSGroupMember', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncEntraDSUsers', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'EntraDSFor', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ManageEntraDSSync', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ManageEntraDSSyncFilter', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);

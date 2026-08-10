@@ -51,6 +51,7 @@ var (
 	Contains                             = graph.StringKind("AZContains")
 	Contributor                          = graph.StringKind("AZContributor")
 	EntraDSContributor                   = graph.StringKind("AZEntraDSContributor")
+	ManageEntraDS                        = graph.StringKind("AZManageEntraDS")
 	GetCertificates                      = graph.StringKind("AZGetCertificates")
 	GetKeys                              = graph.StringKind("AZGetKeys")
 	GetSecrets                           = graph.StringKind("AZGetSecrets")
@@ -98,7 +99,9 @@ var (
 	SyncedToEntraDSUser                  = graph.StringKind("SyncedToEntraDSUser")
 	SyncedToEntraDSGroup                 = graph.StringKind("SyncedToEntraDSGroup")
 	AddEntraDSGroupMember                = graph.StringKind("AddEntraDSGroupMember")
-	SyncEntraDSUsers                     = graph.StringKind("SyncEntraDSUsers")
+	EntraDSFor                           = graph.StringKind("EntraDSFor")
+	ManageEntraDSSync                    = graph.StringKind("ManageEntraDSSync")
+	ManageEntraDSSyncFilter              = graph.StringKind("ManageEntraDSSyncFilter")
 	AZRoleEligible                       = graph.StringKind("AZRoleEligible")
 	AZRoleApprover                       = graph.StringKind("AZRoleApprover")
 	AZAuthenticatesTo                    = graph.StringKind("AZAuthenticatesTo")
@@ -153,25 +156,25 @@ const (
 	FederatedIdentityCredentialAppID                  Property = "federatedidentitycredentialappid"
 	DomainName                                        Property = "domainname"
 	DomainConfigurationType                           Property = "domainconfigurationtype"
-	FilteredSync                                      Property = "filteredsync"
+	FilteredSyncEnabled                               Property = "filteredsyncenabled"
 	SyncScope                                         Property = "syncscope"
 	SyncApplicationID                                 Property = "syncapplicationid"
-	NTLMV1                                            Property = "ntlmv1"
-	TLSV1                                             Property = "tlsv1"
-	SyncNTLMPasswords                                 Property = "syncntlmpasswords"
-	SyncKerberosPasswords                             Property = "synckerberospasswords"
-	SyncOnPremPasswords                               Property = "synconprempasswords"
-	KerberosRC4Encryption                             Property = "kerberosrc4encryption"
-	KerberosArmoring                                  Property = "kerberosarmoring"
-	LDAPSigning                                       Property = "ldapsigning"
-	ChannelBinding                                    Property = "channelbinding"
-	SyncOnPremSAMAccountName                          Property = "synconpremsamaccountname"
-	LDAPS                                             Property = "ldaps"
-	LDAPSExternalAccess                               Property = "ldapsexternalaccess"
+	NTLMV1Enabled                                     Property = "ntlmv1enabled"
+	TLSV1Enabled                                      Property = "tlsv1enabled"
+	SyncNTLMPasswordsEnabled                          Property = "syncntlmpasswordsenabled"
+	SyncKerberosPasswordsEnabled                      Property = "synckerberospasswordsenabled"
+	SyncOnPremPasswordsEnabled                        Property = "synconprempasswordsenabled"
+	KerberosRC4EncryptionEnabled                      Property = "kerberosrc4encryptionenabled"
+	KerberosArmoringEnabled                           Property = "kerberosarmoringenabled"
+	LDAPSigningEnabled                                Property = "ldapsigningenabled"
+	ChannelBindingEnabled                             Property = "channelbindingenabled"
+	SyncOnPremSAMAccountNameEnabled                   Property = "synconpremsamaccountnameenabled"
+	LDAPSEnabled                                      Property = "ldapsenabled"
+	LDAPSExternalAccessEnabled                        Property = "ldapsexternalaccessenabled"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime, Issuer, Subject, Audiences, FederatedIdentityCredentialAppID, DomainName, DomainConfigurationType, FilteredSync, SyncScope, SyncApplicationID, NTLMV1, TLSV1, SyncNTLMPasswords, SyncKerberosPasswords, SyncOnPremPasswords, KerberosRC4Encryption, KerberosArmoring, LDAPSigning, ChannelBinding, SyncOnPremSAMAccountName, LDAPS, LDAPSExternalAccess}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation, LastSuccessfulSignInDateTime, Issuer, Subject, Audiences, FederatedIdentityCredentialAppID, DomainName, DomainConfigurationType, FilteredSyncEnabled, SyncScope, SyncApplicationID, NTLMV1Enabled, TLSV1Enabled, SyncNTLMPasswordsEnabled, SyncKerberosPasswordsEnabled, SyncOnPremPasswordsEnabled, KerberosRC4EncryptionEnabled, KerberosArmoringEnabled, LDAPSigningEnabled, ChannelBindingEnabled, SyncOnPremSAMAccountNameEnabled, LDAPSEnabled, LDAPSExternalAccessEnabled}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -267,36 +270,36 @@ func ParseProperty(source string) (Property, error) {
 		return DomainName, nil
 	case "domainconfigurationtype":
 		return DomainConfigurationType, nil
-	case "filteredsync":
-		return FilteredSync, nil
+	case "filteredsyncenabled":
+		return FilteredSyncEnabled, nil
 	case "syncscope":
 		return SyncScope, nil
 	case "syncapplicationid":
 		return SyncApplicationID, nil
-	case "ntlmv1":
-		return NTLMV1, nil
-	case "tlsv1":
-		return TLSV1, nil
-	case "syncntlmpasswords":
-		return SyncNTLMPasswords, nil
-	case "synckerberospasswords":
-		return SyncKerberosPasswords, nil
-	case "synconprempasswords":
-		return SyncOnPremPasswords, nil
-	case "kerberosrc4encryption":
-		return KerberosRC4Encryption, nil
-	case "kerberosarmoring":
-		return KerberosArmoring, nil
-	case "ldapsigning":
-		return LDAPSigning, nil
-	case "channelbinding":
-		return ChannelBinding, nil
-	case "synconpremsamaccountname":
-		return SyncOnPremSAMAccountName, nil
-	case "ldaps":
-		return LDAPS, nil
-	case "ldapsexternalaccess":
-		return LDAPSExternalAccess, nil
+	case "ntlmv1enabled":
+		return NTLMV1Enabled, nil
+	case "tlsv1enabled":
+		return TLSV1Enabled, nil
+	case "syncntlmpasswordsenabled":
+		return SyncNTLMPasswordsEnabled, nil
+	case "synckerberospasswordsenabled":
+		return SyncKerberosPasswordsEnabled, nil
+	case "synconprempasswordsenabled":
+		return SyncOnPremPasswordsEnabled, nil
+	case "kerberosrc4encryptionenabled":
+		return KerberosRC4EncryptionEnabled, nil
+	case "kerberosarmoringenabled":
+		return KerberosArmoringEnabled, nil
+	case "ldapsigningenabled":
+		return LDAPSigningEnabled, nil
+	case "channelbindingenabled":
+		return ChannelBindingEnabled, nil
+	case "synconpremsamaccountnameenabled":
+		return SyncOnPremSAMAccountNameEnabled, nil
+	case "ldapsenabled":
+		return LDAPSEnabled, nil
+	case "ldapsexternalaccessenabled":
+		return LDAPSExternalAccessEnabled, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -395,36 +398,36 @@ func (s Property) String() string {
 		return string(DomainName)
 	case DomainConfigurationType:
 		return string(DomainConfigurationType)
-	case FilteredSync:
-		return string(FilteredSync)
+	case FilteredSyncEnabled:
+		return string(FilteredSyncEnabled)
 	case SyncScope:
 		return string(SyncScope)
 	case SyncApplicationID:
 		return string(SyncApplicationID)
-	case NTLMV1:
-		return string(NTLMV1)
-	case TLSV1:
-		return string(TLSV1)
-	case SyncNTLMPasswords:
-		return string(SyncNTLMPasswords)
-	case SyncKerberosPasswords:
-		return string(SyncKerberosPasswords)
-	case SyncOnPremPasswords:
-		return string(SyncOnPremPasswords)
-	case KerberosRC4Encryption:
-		return string(KerberosRC4Encryption)
-	case KerberosArmoring:
-		return string(KerberosArmoring)
-	case LDAPSigning:
-		return string(LDAPSigning)
-	case ChannelBinding:
-		return string(ChannelBinding)
-	case SyncOnPremSAMAccountName:
-		return string(SyncOnPremSAMAccountName)
-	case LDAPS:
-		return string(LDAPS)
-	case LDAPSExternalAccess:
-		return string(LDAPSExternalAccess)
+	case NTLMV1Enabled:
+		return string(NTLMV1Enabled)
+	case TLSV1Enabled:
+		return string(TLSV1Enabled)
+	case SyncNTLMPasswordsEnabled:
+		return string(SyncNTLMPasswordsEnabled)
+	case SyncKerberosPasswordsEnabled:
+		return string(SyncKerberosPasswordsEnabled)
+	case SyncOnPremPasswordsEnabled:
+		return string(SyncOnPremPasswordsEnabled)
+	case KerberosRC4EncryptionEnabled:
+		return string(KerberosRC4EncryptionEnabled)
+	case KerberosArmoringEnabled:
+		return string(KerberosArmoringEnabled)
+	case LDAPSigningEnabled:
+		return string(LDAPSigningEnabled)
+	case ChannelBindingEnabled:
+		return string(ChannelBindingEnabled)
+	case SyncOnPremSAMAccountNameEnabled:
+		return string(SyncOnPremSAMAccountNameEnabled)
+	case LDAPSEnabled:
+		return string(LDAPSEnabled)
+	case LDAPSExternalAccessEnabled:
+		return string(LDAPSExternalAccessEnabled)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -523,36 +526,36 @@ func (s Property) Name() string {
 		return "Domain Name"
 	case DomainConfigurationType:
 		return "Domain Configuration Type"
-	case FilteredSync:
-		return "Filtered Sync"
+	case FilteredSyncEnabled:
+		return "Filtered Sync Enabled"
 	case SyncScope:
 		return "Sync Scope"
 	case SyncApplicationID:
 		return "Sync Application ID"
-	case NTLMV1:
-		return "NTLM V1"
-	case TLSV1:
-		return "TLS V1"
-	case SyncNTLMPasswords:
-		return "Sync NTLM Passwords"
-	case SyncKerberosPasswords:
-		return "Sync Kerberos Passwords"
-	case SyncOnPremPasswords:
-		return "Sync On-Premises Passwords"
-	case KerberosRC4Encryption:
-		return "Kerberos RC4 Encryption"
-	case KerberosArmoring:
-		return "Kerberos Armoring"
-	case LDAPSigning:
-		return "LDAP Signing"
-	case ChannelBinding:
-		return "Channel Binding"
-	case SyncOnPremSAMAccountName:
-		return "Sync On-Premises SAM Account Name"
-	case LDAPS:
-		return "Secure LDAP"
-	case LDAPSExternalAccess:
-		return "Secure LDAP External Access"
+	case NTLMV1Enabled:
+		return "NTLM V1 Enabled"
+	case TLSV1Enabled:
+		return "TLS V1 Enabled"
+	case SyncNTLMPasswordsEnabled:
+		return "Sync NTLM Passwords Enabled"
+	case SyncKerberosPasswordsEnabled:
+		return "Sync Kerberos Passwords Enabled"
+	case SyncOnPremPasswordsEnabled:
+		return "Sync On-Premises Passwords Enabled"
+	case KerberosRC4EncryptionEnabled:
+		return "Kerberos RC4 Encryption Enabled"
+	case KerberosArmoringEnabled:
+		return "Kerberos Armoring Enabled"
+	case LDAPSigningEnabled:
+		return "LDAP Signing Enabled"
+	case ChannelBindingEnabled:
+		return "Channel Binding Enabled"
+	case SyncOnPremSAMAccountNameEnabled:
+		return "Sync On-Premises SAM Account Name Enabled"
+	case LDAPSEnabled:
+		return "Secure LDAP Enabled"
+	case LDAPSExternalAccessEnabled:
+		return "Secure LDAP External Access Enabled"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -566,7 +569,7 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contains, Contributor, EntraDSContributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, SyncedToEntraDSUser, SyncedToEntraDSGroup, AddEntraDSGroupMember, SyncEntraDSUsers, AZRoleEligible, AZRoleApprover, AZAuthenticatesTo}
+	return []graph.Kind{AvereContributor, Contains, Contributor, EntraDSContributor, ManageEntraDS, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, SyncedToEntraDSUser, SyncedToEntraDSGroup, AddEntraDSGroupMember, EntraDSFor, ManageEntraDSSync, ManageEntraDSSyncFilter, AZRoleEligible, AZRoleApprover, AZAuthenticatesTo}
 }
 func AppRoleTransitRelationshipKinds() []graph.Kind {
 	return []graph.Kind{AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
@@ -575,16 +578,16 @@ func AbusableAppRoleRelationshipKinds() []graph.Kind {
 	return []graph.Kind{ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll}
 }
 func ControlRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, EntraDSContributor, Owner, VMContributor, AutomationContributor, KeyVaultContributor, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, AZAuthenticatesTo}
+	return []graph.Kind{AvereContributor, Contributor, ManageEntraDS, Owner, VMContributor, AutomationContributor, KeyVaultContributor, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, AZAuthenticatesTo}
 }
 func ExecutionPrivileges() []graph.Kind {
 	return []graph.Kind{VMAdminLogin, VMContributor, AvereContributor, WebsiteContributor, Contributor, ExecuteCommand}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, EntraDSContributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, SyncedToEntraDSUser, AddEntraDSGroupMember, SyncEntraDSUsers, AZRoleEligible, AZRoleApprover, Contains, AZAuthenticatesTo}
+	return []graph.Kind{AvereContributor, Contributor, ManageEntraDS, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, SyncedToEntraDSUser, AddEntraDSGroupMember, ManageEntraDSSync, ManageEntraDSSyncFilter, AZRoleEligible, AZRoleApprover, Contains, AZAuthenticatesTo}
 }
 func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{ExecuteCommand, SyncedToEntraUser, SyncedToEntraDSUser, SyncedToEntraDSGroup, AddEntraDSGroupMember, SyncEntraDSUsers, AZRoleApprover}
+	return []graph.Kind{ExecuteCommand, ManageEntraDS, SyncedToEntraUser, SyncedToEntraDSUser, SyncedToEntraDSGroup, AddEntraDSGroupMember, EntraDSFor, ManageEntraDSSync, ManageEntraDSSyncFilter, AZRoleApprover}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, EntraDS, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount, FederatedIdentityCredential}
