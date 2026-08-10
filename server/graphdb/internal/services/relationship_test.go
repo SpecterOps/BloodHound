@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -187,6 +188,8 @@ func TestService_GetRelationship(t *testing.T) {
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(baseRelationship, nil)
 				databaseMock.EXPECT().GetKindByName(ctx, kindName).Return(services.Kind{}, services.ErrKindNotFound)
+				expectRelationshipEndpointNode(databaseMock, ctx, 100, "User", 1, nil)
+				expectRelationshipEndpointNode(databaseMock, ctx, 200, "Group", 2, nil)
 			},
 			wantResult: services.Relationship{
 				ID:           relationshipID,
@@ -318,6 +321,36 @@ func TestService_GetRelationship_ReturnsAccessDeniedForEndpoint(t *testing.T) {
 	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string(nil)).Return([]services.Kind(nil), nil)
 
 	result, err := services.NewService(databaseMock, newDenyAllNodeAccessChecker(t)).GetRelationship(ctx, relationshipID, false)
+
+	assert.ErrorIs(t, err, services.ErrNodeAccessDenied)
+	assert.Empty(t, result)
+}
+
+func TestService_GetRelationship_ReturnsAccessDeniedForUnresolvedKindEndpoint(t *testing.T) {
+	var (
+		ctx            = context.Background()
+		relationshipID = int64(1234567890)
+		relationship   = services.Relationship{
+			ID:           relationshipID,
+			SourceNodeID: 100,
+			TargetNodeID: 200,
+			Kind:         services.Kind{Name: "GraphOnlyKind"},
+		}
+	)
+
+	databaseMock := mocks.NewMockDatabase(t)
+	databaseMock.EXPECT().GetRelationship(ctx, relationshipID).Return(relationship, nil)
+	databaseMock.EXPECT().GetNode(ctx, int64(100)).Return(services.Node{ID: 100}, nil)
+	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string(nil)).Return([]services.Kind(nil), nil)
+	databaseMock.EXPECT().GetNode(ctx, int64(200)).Return(services.Node{ID: 200}, nil)
+	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string(nil)).Return([]services.Kind(nil), nil)
+	databaseMock.EXPECT().GetKindByName(ctx, "GraphOnlyKind").Return(services.Kind{}, services.ErrKindNotFound)
+
+	accessChecker := mocks.NewMockNodeAccessChecker(t)
+	accessChecker.EXPECT().CanAccessNode(mock.Anything, mock.Anything).Return(true).Once()
+	accessChecker.EXPECT().CanAccessNode(mock.Anything, mock.Anything).Return(false).Once()
+
+	result, err := services.NewService(databaseMock, accessChecker).GetRelationship(ctx, relationshipID, false)
 
 	assert.ErrorIs(t, err, services.ErrNodeAccessDenied)
 	assert.Empty(t, result)
