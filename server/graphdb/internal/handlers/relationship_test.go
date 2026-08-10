@@ -18,6 +18,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,6 +40,20 @@ func newRequestWithID(t *testing.T, rawID string, rawQuery string) *http.Request
 	require.NoError(t, err)
 	request.URL.RawQuery = rawQuery
 	return mux.SetURLVars(request, map[string]string{handlers.URIPathVariableRelationshipID: rawID})
+}
+
+func expectAccessibleRelationshipEndpoints(
+	graphDBMock *mocks.MockGraphDB,
+	authorizerMock *mocks.MockNodeAuthorizer,
+	relationship services.Relationship,
+) {
+	sourceNode := services.Node{ID: relationship.SourceNodeID}
+	targetNode := services.Node{ID: relationship.TargetNodeID}
+
+	graphDBMock.EXPECT().GetNode(mock.Anything, relationship.SourceNodeID, false).Return(sourceNode, nil)
+	graphDBMock.EXPECT().GetNode(mock.Anything, relationship.TargetNodeID, false).Return(targetNode, nil)
+	authorizerMock.EXPECT().CanAccessNode(mock.Anything, sourceNode).Return(true)
+	authorizerMock.EXPECT().CanAccessNode(mock.Anything, targetNode).Return(true)
 }
 
 func TestHandlers_GetRelationshipByID(t *testing.T) {
@@ -83,15 +98,16 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 		name       string
 		rawID      string
 		rawQuery   string
-		setupMock  func(graphDBMock *mocks.MockGraphDB)
+		setupMock  func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer)
 		wantStatus int
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
 			name:  "returns 200 with the relationship view on success",
 			rawID: "1234567890",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
+				expectAccessibleRelationshipEndpoints(graphDBMock, authorizerMock, relationship)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -112,8 +128,9 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:     "returns 200 with relationship info when include-info is true",
 			rawID:    "1234567890",
 			rawQuery: "include-info=true",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, true).Return(relationshipWithInfo, nil)
+				expectAccessibleRelationshipEndpoints(graphDBMock, authorizerMock, relationshipWithInfo)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -133,8 +150,9 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			name:     "returns 200 without relationship info when include-info is false",
 			rawID:    "1234567890",
 			rawQuery: "include-info=false",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationshipWithInfo, nil)
+				expectAccessibleRelationshipEndpoints(graphDBMock, authorizerMock, relationshipWithInfo)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -149,8 +167,9 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 		{
 			name:  "returns 200 with a null relationship kind id when the kind has no schema entry",
 			rawID: "1234567890",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(nilKindRelationship, nil)
+				expectAccessibleRelationshipEndpoints(graphDBMock, authorizerMock, nilKindRelationship)
 			},
 			wantStatus: http.StatusOK,
 			assertBody: func(t *testing.T, body []byte) {
@@ -163,6 +182,53 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 				assert.Nil(t, envelope.Data.Kind.RelationshipKindID)
 				assert.Equal(t, "MemberOf", envelope.Data.Kind.Name)
 			},
+		},
+		{
+			name:  "returns 500 when the source node cannot be fetched",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.SourceNodeID, false).Return(services.Node{}, errors.New("source node unavailable"))
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:  "returns 500 when the target node cannot be fetched",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				sourceNode := services.Node{ID: relationship.SourceNodeID}
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.SourceNodeID, false).Return(sourceNode, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.TargetNodeID, false).Return(services.Node{}, errors.New("target node unavailable"))
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:  "returns 403 when the source node is forbidden",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				sourceNode := services.Node{ID: relationship.SourceNodeID}
+				targetNode := services.Node{ID: relationship.TargetNodeID}
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.SourceNodeID, false).Return(sourceNode, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.TargetNodeID, false).Return(targetNode, nil)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, sourceNode).Return(false)
+			},
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:  "returns 403 when the target node is forbidden",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
+				sourceNode := services.Node{ID: relationship.SourceNodeID}
+				targetNode := services.Node{ID: relationship.TargetNodeID}
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(relationship, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.SourceNodeID, false).Return(sourceNode, nil)
+				graphDBMock.EXPECT().GetNode(mock.Anything, relationship.TargetNodeID, false).Return(targetNode, nil)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, sourceNode).Return(true)
+				authorizerMock.EXPECT().CanAccessNode(mock.Anything, targetNode).Return(false)
+			},
+			wantStatus: http.StatusForbidden,
 		},
 		{
 			name:       "returns 400 when the id is malformed",
@@ -178,7 +244,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 		{
 			name:  "returns 404 when the relationship is not found",
 			rawID: "1234567890",
-			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+			setupMock: func(graphDBMock *mocks.MockGraphDB, authorizerMock *mocks.MockNodeAuthorizer) {
 				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, services.ErrRelationshipNotFound)
 			},
 			wantStatus: http.StatusNotFound,
@@ -196,7 +262,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			)
 
 			if tt.setupMock != nil {
-				tt.setupMock(graphDBMock)
+				tt.setupMock(graphDBMock, authorizerMock)
 			}
 
 			handlerSet.GetRelationshipByID(recorder, request)

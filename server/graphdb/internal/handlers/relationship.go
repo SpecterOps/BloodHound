@@ -134,5 +134,28 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		return
 	}
 
+	// check both endpoints for ETAC compatibility
+	sourceNode, err := s.graphDB.GetNode(ctx, relationship.SourceNodeID, false)
+	if err != nil {
+		responses.WriteError(ctx, http.StatusInternalServerError, "get source node failed", response)
+		return
+	}
+
+	targetNode, err := s.graphDB.GetNode(ctx, relationship.TargetNodeID, false)
+	if err != nil {
+		responses.WriteError(ctx, http.StatusInternalServerError, "get target node failed", response)
+		return
+	}
+
+	if !s.nodeAuthorizer.CanAccessNode(ctx, sourceNode) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+		return
+	}
+
+	if !s.nodeAuthorizer.CanAccessNode(ctx, targetNode) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+		return
+	}
+
 	responses.WriteBasic(ctx, BuildRelationshipView(relationship, includeKindInfo), http.StatusOK, response)
 }
