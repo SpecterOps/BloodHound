@@ -20,6 +20,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
@@ -45,20 +46,44 @@ type AuditService interface {
 // request. It writes an intent row before the handler runs and a success or
 // failure row afterward based on the response status. If the intent write fails
 // the request is rejected with a 500 and the handler never runs. muxRouter is
-// used to resolve the bounded route template for the audited action.
-func AuditMiddleware(auditService AuditService, muxRouter *mux.Router) mux.MiddlewareFunc {
+// used to resolve the bounded route template for the audited action. Route
+// templates listed in excludedRoutes (e.g. /health) are not audited.
+func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, excludedRoutes ...string) mux.MiddlewareFunc {
+	exclusions := make(map[string]bool, len(excludedRoutes))
+	for _, route := range excludedRoutes {
+		exclusions[route] = true
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			auditHandler(auditService, muxRouter, next, response, request)
+			auditHandler(auditService, muxRouter, exclusions, next, response, request)
 		})
 	}
 }
 
-func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Handler, response http.ResponseWriter, request *http.Request) {
+// auditOutcomeWriteTimeout bounds the best-effort success/failure write so a slow
+// or unavailable database cannot block the request goroutine indefinitely after
+// the handler has already returned.
+const auditOutcomeWriteTimeout = 30 * time.Second
+
+func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRoutes map[string]bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx           = request.Context()
+		routeTemplate = routeTemplateFor(muxRouter, request)
+	)
+
+	// Skip routes we cannot name (routeTemplate == unmatchedRouteLabel) and
+	// explicitly excluded routes such as /health: they carry no audit value and
+	// auditing them would place a synchronous, fail-closed write in front of
+	// high-volume traffic.
+	if routeTemplate == unmatchedRouteLabel || excludedRoutes[routeTemplate] {
+		next.ServeHTTP(response, request)
+		return
+	}
+
+	var (
 		recorder      = &responseRecorder{delegate: response}
-		entry         = buildAuditEntry(request, muxRouter)
+		entry         = buildAuditEntry(request, routeTemplate)
 		commitID, err = auditService.Intent(ctx, entry)
 	)
 	// A failed intent write rejects the request: without a durable intent row
@@ -71,12 +96,18 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, next http.Ha
 
 	next.ServeHTTP(recorder, request)
 
+	// The success/failure write is best-effort but must survive the client
+	// disconnecting after the handler runs, so it uses a context detached from the
+	// request's cancellation, bounded by auditOutcomeWriteTimeout.
+	outcomeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
+	defer cancel()
+
 	if recorder.statusCode >= http.StatusBadRequest {
-		if failureErr := auditService.Failure(ctx, commitID, entry); failureErr != nil {
-			slog.ErrorContext(ctx, "Failed to write audit failure row", attr.Error(failureErr))
+		if failureErr := auditService.Failure(outcomeCtx, commitID, entry); failureErr != nil {
+			slog.ErrorContext(outcomeCtx, "Failed to write audit failure row", attr.Error(failureErr))
 		}
-	} else if successErr := auditService.Success(ctx, commitID, entry); successErr != nil {
-		slog.ErrorContext(ctx, "Failed to write audit success row", attr.Error(successErr))
+	} else if successErr := auditService.Success(outcomeCtx, commitID, entry); successErr != nil {
+		slog.ErrorContext(outcomeCtx, "Failed to write audit success row", attr.Error(successErr))
 	}
 }
 
@@ -89,11 +120,11 @@ const anonymousActorName = "anonymous"
 // the actor from the authenticated user when present and falling back to an
 // anonymous actor attributed to the source IP when the request is
 // unauthenticated.
-func buildAuditEntry(request *http.Request, muxRouter *mux.Router) audit.Entry {
+func buildAuditEntry(request *http.Request, routeTemplate string) audit.Entry {
 	var (
 		bhCtx = bhctx.FromRequest(request)
 		entry = audit.Entry{
-			Action:          request.Method + routeTemplateFor(muxRouter, request),
+			Action:          request.Method + routeTemplate,
 			RequestID:       bhCtx.RequestID,
 			SourceIPAddress: parseUserIP(request),
 			Fields:          map[string]any{},

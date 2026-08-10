@@ -48,6 +48,12 @@ type fakeAuditService struct {
 	intentEntries  []audit.Entry
 	successCommits []uuid.UUID
 	failureCommits []uuid.UUID
+
+	// successCtxErr/failureCtxErr capture ctx.Err() at the time the outcome write
+	// was invoked so tests can assert the write is not tied to the request's
+	// cancellation.
+	successCtxErr error
+	failureCtxErr error
 }
 
 func (s *fakeAuditService) Intent(_ context.Context, entry audit.Entry) (uuid.UUID, error) {
@@ -55,13 +61,15 @@ func (s *fakeAuditService) Intent(_ context.Context, entry audit.Entry) (uuid.UU
 	return s.commitID, s.intentErr
 }
 
-func (s *fakeAuditService) Success(_ context.Context, commitID uuid.UUID, _ audit.Entry) error {
+func (s *fakeAuditService) Success(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
 	s.successCommits = append(s.successCommits, commitID)
+	s.successCtxErr = ctx.Err()
 	return s.successErr
 }
 
-func (s *fakeAuditService) Failure(_ context.Context, commitID uuid.UUID, _ audit.Entry) error {
+func (s *fakeAuditService) Failure(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
 	s.failureCommits = append(s.failureCommits, commitID)
+	s.failureCtxErr = ctx.Err()
 	return s.failureErr
 }
 
@@ -212,6 +220,55 @@ func TestAuditMiddleware_ResultErrorSwallowed(t *testing.T) {
 	// completes normally.
 	require.Equal(t, http.StatusCreated, recorder.Code)
 	require.Len(t, fake.successCommits, 1)
+}
+
+func TestAuditMiddleware_ExcludedRouteNotAudited(t *testing.T) {
+	var (
+		fake     = &fakeAuditService{}
+		router   = mux.NewRouter()
+		recorder = httptest.NewRecorder()
+		request  = httptest.NewRequest(http.MethodGet, "/health", nil)
+	)
+	router.Use(middleware.AuditMiddleware(fake, router, "/health"))
+	router.HandleFunc("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+	request = request.WithContext(bhctx.Set(request.Context(), &bhctx.Context{RequestID: testRequestID}))
+
+	router.ServeHTTP(recorder, request)
+
+	// An excluded route runs its handler normally but produces no audit rows.
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Empty(t, fake.intentEntries)
+	require.Empty(t, fake.successCommits)
+	require.Empty(t, fake.failureCommits)
+}
+
+func TestAuditMiddleware_OutcomeWriteSurvivesRequestCancellation(t *testing.T) {
+	var (
+		fake            = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		router          = mux.NewRouter()
+		recorder        = httptest.NewRecorder()
+		baseCtx, cancel = context.WithCancel(context.Background())
+	)
+	defer cancel()
+
+	router.Use(middleware.AuditMiddleware(fake, router))
+	router.HandleFunc(testRoute, func(response http.ResponseWriter, _ *http.Request) {
+		// Simulate the client disconnecting while the handler runs.
+		cancel()
+		response.WriteHeader(http.StatusOK)
+	})
+
+	request := httptest.NewRequest(http.MethodGet, "/api/v2/things/abc", nil)
+	request = request.WithContext(bhctx.Set(baseCtx, &bhctx.Context{RequestID: testRequestID}))
+
+	router.ServeHTTP(recorder, request)
+
+	// The outcome write still happens and is handed a context that is not
+	// cancelled even though the request's context was cancelled mid-handler.
+	require.Len(t, fake.successCommits, 1)
+	require.NoError(t, fake.successCtxErr)
 }
 
 func TestAuditMiddleware_UnauthenticatedActorEmpty(t *testing.T) {
