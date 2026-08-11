@@ -21,20 +21,27 @@ const General: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                This relationship indicates that a synchronized Entra user can effectively add or remove members from an
-                Entra Domain Services group by controlling the corresponding synchronized Entra group.
+                This relationship indicates that a synchronized Entra user can effectively add or remove members from a
+                Microsoft Entra Domain Services (Entra DS) group by controlling the corresponding synchronized Entra
+                group.
             </Typography>
             <Typography variant='body2'>
-                The relationship is composed from three conditions: the Entra user is synchronized to Entra Domain
-                Services; the Entra user owns or can add and remove members from an Entra group; and the Entra group is
-                synchronized to an Entra Domain Services group.
+                The relationship is composed from three conditions: BloodHound correlates the Entra user with an Entra
+                DS user; the Entra user owns or can add and remove members from an Entra group; and the Entra group is
+                synchronized to an Entra DS group.
             </Typography>
             <Typography variant='body2'>
-                Because the Entra user already has a usable Entra Domain Services identity, they can add themselves or
-                another controlled synchronized principal to the Entra group, remove existing members, and wait for the
-                membership change to synchronize into the Entra Domain Services group. Adding membership effectively
-                grants the Entra user any privileges held by the Entra Domain Services group; removing membership can
-                revoke those privileges from another principal.
+                The user can add themselves or another controlled synchronized principal to the Entra group, remove
+                existing members, and wait for the membership change to synchronize into the Entra DS group. Adding
+                membership can grant privileges held by the Entra DS group; removing membership can revoke those
+                privileges from another principal.
+            </Typography>
+            <Typography variant='body2'>
+                User correlation relies on the BloodHound aadobjectid property. Current collection does not include the
+                Entra user&apos;s identities, creationType, or externalUserState properties, so B2B external identities
+                can be misclassified. BloodHound also does not verify synchronized password material or runtime
+                credential usability, which can make this composed relationship a false positive for direct
+                exploitation.
             </Typography>
             <Typography variant='body2'>
                 Only direct membership in the source Entra group is synchronized. Nested Entra groups do not satisfy
