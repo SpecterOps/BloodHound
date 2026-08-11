@@ -21,19 +21,20 @@ const General: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                This relationship indicates that the Entra user and the Entra Domain Services user are the same identity
-                across the Entra ID and managed domain boundary.
+                This relationship indicates that BloodHound correlated a Microsoft Entra user with a user in a Microsoft
+                Entra Domain Services (Entra DS) managed domain.
             </Typography>
             <Typography variant='body2'>
-                The Entra Domain Services user is created from the Entra user during synchronization and can be
-                correlated through the BloodHound aadobjectid property, collected from the LDAP attribute
-                msDS-aadObjectId. Password changes in Entra ID generate and synchronize the password material required
-                for the Entra Domain Services user to authenticate.
+                Correlation uses the BloodHound aadobjectid property, collected from the LDAP attribute
+                msDS-aadObjectId. Current collection does not include the Entra user&apos;s identities, creationType, or
+                externalUserState properties, so B2B external identities can be misclassified. Treat this edge as
+                evidence of correlation, not proof that the source user can authenticate to the managed domain.
             </Typography>
             <Typography variant='body2'>
-                For cloud-only users, Entra ID does not generate the NT hash required by Entra Domain Services until a
-                password change occurs while the managed domain is active. A newly synchronized cloud-only user may
-                exist in Entra Domain Services but remain unusable until the password is changed in Entra ID.
+                For cloud-only users, Entra ID does not generate the NT hash required by Entra DS until a password
+                change occurs while the managed domain is active. A newly synchronized cloud-only user may exist in
+                Entra DS but remain unusable until the password is changed in Entra ID. BloodHound does not verify
+                password-material availability or runtime credential usability.
             </Typography>
         </>
     );
