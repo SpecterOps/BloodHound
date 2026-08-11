@@ -319,6 +319,5 @@ func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
 		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
-
 	return nil
 }

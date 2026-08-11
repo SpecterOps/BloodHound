@@ -44,11 +44,13 @@ type GraphDBKindRepository interface {
 type OpenGraphSchemaService struct {
 	openGraphSchemaRepository OpenGraphSchemaRepository
 	graphDBKindRepository     GraphDBKindRepository
+	markdownValidator         *markdownValidator
 }
 
 func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository) *OpenGraphSchemaService {
 	return &OpenGraphSchemaService{
 		openGraphSchemaRepository: openGraphSchemaExtensionRepository,
 		graphDBKindRepository:     graphDBKindRepository,
+		markdownValidator:         newMarkdownValidator(),
 	}
 }

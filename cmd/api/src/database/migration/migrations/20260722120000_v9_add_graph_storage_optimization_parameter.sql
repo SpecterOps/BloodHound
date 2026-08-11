@@ -15,19 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- +goose Up
-INSERT INTO parameters (key, name, description, value, created_at, updated_at)
-VALUES (
-    'analysis.graph_storage_optimization',
-    'When to run graph storage optimization',
-    'This configuration parameter controls which pipeline stages trigger graph storage optimization (vacuum/analyze) on the graph database. Each stage can be independently enabled or disabled.',
-    '{"after_boot": false, "after_analysis": false, "min_interval_seconds": 86400}',
-    current_timestamp,
-    current_timestamp
-)
-ON CONFLICT DO NOTHING;
-
-ALTER TABLE datapipe_status
-    ADD COLUMN IF NOT EXISTS last_complete_optimize_at timestamp with time zone;
+-- Intentionally empty - see 20260805120000_v9_default_enable_graph_storage_optimization.sql for the up migration
 
 -- +goose Down
 ALTER TABLE datapipe_status

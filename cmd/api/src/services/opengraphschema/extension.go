@@ -35,7 +35,26 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 
 	if err = openGraphExtension.Validate(); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
-	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+	}
+
+	// Separated due to markdown needing a stateful and long lived validation object.
+	for _, nodeKind := range openGraphExtension.NodeKindsInput {
+		if err = s.validateKindInfoMarkdown(nodeKind.Info); err != nil {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+	for _, relationshipKind := range openGraphExtension.RelationshipKindsInput {
+		if err = s.validateKindInfoMarkdown(relationshipKind.Info); err != nil {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+	for _, finding := range openGraphExtension.RelationshipFindingsInput {
+		if err = s.validateRemediationMarkdown(finding.RemediationInput); err != nil {
+			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+
+	if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
 		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
 			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
@@ -51,6 +70,28 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
 	return schemaExists, nil
+}
+
+// validateKindInfoMarkdown runs markdown safety validation over each kind-info entry's content.
+func (s *OpenGraphSchemaService) validateKindInfoMarkdown(info model.KindInfoInputs) error {
+	for _, infoEntry := range info {
+		if content, err := infoEntry.MarkdownContent(); err != nil {
+			return err
+		} else if err := s.markdownValidator.validate(content); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateRemediationMarkdown runs markdown safety validation over a finding's remediation fields.
+func (s *OpenGraphSchemaService) validateRemediationMarkdown(remediation model.RemediationInput) error {
+	for _, field := range []string{remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation} {
+		if err := s.markdownValidator.validate(field); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetGraphSchemaExtensions retrieves extensions from the repository with filtering, sorting, and pagination
