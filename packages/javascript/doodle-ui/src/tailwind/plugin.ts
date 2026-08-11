@@ -386,7 +386,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input
             // '--input-label': common.white,
-            '--input-fill': palette.neutral.dark[400],
+            '--input-fill': palette.neutral.dark[50],
             '--input-fill-disabled': palette.neutral.dark[400],
             '--input-border-default': palette.neutral.light[400],
             '--input-border-focus': secondaryVariant2,
@@ -413,11 +413,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-trigger-fill': palette.neutral.dark[400],
-            '--select-trigger-placeholder-text': palette.neutral.dark[700],
+            '--select-trigger-placeholder-text': dark.input.placeholder,
             '--select-trigger-outlined-fill': palette.neutral.dark[50],
             '--select-border-default': palette.neutral.light[400],
             '--select-border-focus': secondaryVariant2,
-            '--select-content-border': palette.neutral.light[400],
+            '--select-content-border': palette.neutral.dark[400],
             '--select-content-fill': palette.neutral.dark[400],
             '--select-item-checked-text': secondaryVariant2,
             '--select-separator-fill': palette.neutral.light[200],
@@ -425,7 +425,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-popover-border': palette.neutral.dark[700],
             '--dropdown-popover-fill': common.dark,
             '--dropdown-option-hover-fill': palette.neutral.dark[600],
-            '--dropdown-option-disabled-fill': palette.neutral.dark[600],
+            '--dropdown-option-disabled-fill': palette.neutral.dark[700],
             '--dropdown-tooltip-fill': palette.neutral.dark[600],
             '--switch-fill': common.white,
             '--switch-disabled-fill': common.disabled,

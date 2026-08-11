@@ -23,6 +23,7 @@
     -   Example: `auth.go` has `package api`, `auth_test.go` is only testing exported logic in `auth.go` and should have `package api_test`
 -   Integration tests should be separated from unit tests, such that if we have an `auth.go` file, `auth_test.go` should have unit tests and `auth_integration_test.go` should have integration tests.
 -   Integration test files should have an `*integration` build tag at the top of the file, underneath the license header: example: `//go:build integration` or `//go:build serial_integration` or `//go:build slow_integration`
+-   Exception for vertical-slice features under `server/<feature>/`: full-stack, production-routed tests that exercise the endpoint end-to-end through the real router and middleware use the `<feature>_e2e_test.go` suffix, while layer-level integration tests (e.g. persistence against a real database) keep the `*_integration_test.go` suffix. Both use the `//go:build integration` build tag.
 
 ## Code review instructions
 

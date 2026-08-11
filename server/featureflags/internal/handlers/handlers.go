@@ -37,6 +37,7 @@ type FeatureFlag interface {
 	GetAllFlags(ctx context.Context) ([]services.FeatureFlag, error)
 	ToggleFlag(ctx context.Context, id int32) (services.FeatureFlag, error)
 	IsEnabled(ctx context.Context, key string) (bool, error)
+	GetFlagByKey(ctx context.Context, key string) (services.FeatureFlag, error)
 }
 
 // Handlers is a dependency injection container for featureflags handlers
@@ -99,6 +100,10 @@ func (s Handlers) ToggleFlag(response http.ResponseWriter, request *http.Request
 // a feature flag without going through the HTTP layer.
 func (s Handlers) IsEnabled(ctx context.Context, key string) (bool, error) {
 	return s.featureFlag.IsEnabled(ctx, key)
+}
+
+func (s Handlers) GetFlagByKey(ctx context.Context, key string) (services.FeatureFlag, error) {
+	return s.featureFlag.GetFlagByKey(ctx, key)
 }
 
 // handleFeatureFlagError maps service-layer errors to HTTP responses, translating
