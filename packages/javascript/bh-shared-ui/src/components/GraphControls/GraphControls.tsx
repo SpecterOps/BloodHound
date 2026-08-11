@@ -23,16 +23,22 @@ import {
     faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { MenuItem, Popper } from '@mui/material';
-import { IconButton, Tooltip } from 'doodle-ui';
+import { IconButton, MenuItem, Tooltip } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
+
+export interface GraphExportAction {
+    id: string;
+    label: string;
+    onSelect: () => void;
+    disabled?: boolean;
+}
 
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
@@ -48,6 +54,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
     currentNodes: Record<string, any> | undefined;
+    additionalExportActions?: readonly GraphExportAction[];
 }
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
@@ -65,11 +72,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         showEdgeLabels,
         jsonData,
         currentNodes = {},
+        additionalExportActions = [],
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
-    const currentSearchAnchorElement = useRef(null);
     useKeybindings({
         shift: {
             Slash: () => {
@@ -92,11 +99,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     };
 
     return (
-        <>
-            <div
-                data-testid='explore_graph-controls'
-                className='flex gap-1 pointer-events-auto'
-                ref={currentSearchAnchorElement}>
+        <div className='relative'>
+            <div data-testid='explore_graph-controls' className='flex gap-1 pointer-events-auto'>
                 <Tooltip
                     tooltip={<span>Reset Graph</span>}
                     triggerProps={{ className: 'pointer-events-auto' }}
@@ -117,19 +121,19 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     <MenuItem
                         aria-label={`${!showEdgeLabels ? 'Show' : 'Hide'} All Labels Toggle`}
                         data-testid='explore_graph-controls_all-labels-toggle'
-                        onClick={handleToggleAllLabels}>
+                        onSelect={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
                         aria-label={`${showNodeLabels ? 'Hide' : 'Show'} Node Labels Toggle`}
                         data-testid='explore_graph-controls_node-labels-toggle'
-                        onClick={onToggleNodeLabels}>
+                        onSelect={onToggleNodeLabels}>
                         {showNodeLabels ? 'Hide' : 'Show'} Node Labels
                     </MenuItem>
                     <MenuItem
                         aria-label={`${showEdgeLabels ? 'Hide' : 'Show'} Edge Labels Toggle`}
                         data-testid='explore_graph-controls_edge-labels-toggle'
-                        onClick={onToggleEdgeLabels}>
+                        onSelect={onToggleEdgeLabels}>
                         {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels
                     </MenuItem>
                 </GraphMenu>
@@ -145,8 +149,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                             <MenuItem
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
-                                selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}
+                                onSelect={() => onLayoutChange(buttonLabel)}
                                 className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
@@ -155,7 +158,12 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphMenu label='Export' icon={faDownload}>
-                    <MenuItem onClick={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
+                    {additionalExportActions.map((action) => (
+                        <MenuItem key={action.id} onSelect={action.onSelect} disabled={action.disabled}>
+                            {action.label}
+                        </MenuItem>
+                    ))}
+                    <MenuItem onSelect={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
                         JSON
                     </MenuItem>
                 </GraphMenu>
@@ -175,14 +183,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     </div>
                 </Tooltip>
             </div>
-            <Popper
-                open={isCurrentSearchOpen}
-                anchorEl={currentSearchAnchorElement.current}
-                placement='top'
-                disablePortal
-                aria-label='Search Current Nodes'
-                className='w-[90%] z-[1]'>
-                <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
+            {isCurrentSearchOpen && (
+                <div
+                    aria-label='Search Current Nodes'
+                    className='absolute bottom-full left-0 w-[90%] z-[1] pointer-events-auto'
+                    data-testid='explore_graph-controls_search-current-nodes-panel'>
                     <SearchCurrentNodes
                         className='p-2 mb-2'
                         currentNodes={currentNodes}
@@ -193,8 +198,8 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         onClose={() => setIsCurrentSearchOpen(false)}
                     />
                 </div>
-            </Popper>
-        </>
+            )}
+        </div>
     );
 }
 

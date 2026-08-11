@@ -16,86 +16,36 @@
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Menu } from '@mui/material';
-import { IconButton, Tooltip } from 'doodle-ui';
-import React, { Children, FC, JSXElementConstructor, ReactElement, useState } from 'react';
-
-type RenderableChild = ReactElement<any, string | JSXElementConstructor<any>>;
-type Attributes = Partial<React.HTMLAttributes<Element>>;
+import { IconButton, Menu, MenuContent, MenuTrigger, Tooltip } from 'doodle-ui';
+import { FC, ReactNode, useId } from 'react';
 
 const GraphMenu: FC<{
     label: string;
     icon: IconDefinition;
     tooltip?: string;
-    children: RenderableChild | RenderableChild[];
+    children: ReactNode;
 }> = ({ children, label, icon, tooltip }) => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    const open = Boolean(anchorEl);
-
-    const handleClose = () => setAnchorEl(null);
-
+    const controlId = useId();
+    const buttonId = `graph-menu-button-${controlId}`;
+    const menuId = `graph-menu-${controlId}`;
     const testId = `explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`;
-    const handleTriggerClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const trigger = (
-        <Tooltip
-            tooltip={<span>{tooltip ?? label}</span>}
-            triggerProps={{ className: 'pointer-events-auto' }}
-            contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
-            <div>
-                <IconButton
-                    aria-label={label}
-                    data-testid={testId}
-                    onClick={handleTriggerClick}
-                    aria-controls={open ? `${label}-menu` : undefined}
-                    aria-haspopup='true'
-                    aria-expanded={open ? 'true' : undefined}>
-                    <FontAwesomeIcon icon={icon} />
-                </IconButton>
-            </div>
-        </Tooltip>
-    );
 
     return (
-        <>
-            {trigger}
-            <Menu
-                id={`${label}-menu`}
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                MenuListProps={{
-                    'aria-labelledby': `${label}-button`,
-                }}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                }}>
-                {Children.map(children, (child) => {
-                    if (React.isValidElement(child) && child.props && (child.props as Attributes)?.onClick) {
-                        try {
-                            return React.cloneElement(child, {
-                                onClick: (e: React.MouseEvent) => {
-                                    (child?.props as Attributes).onClick?.(e);
-                                    handleClose();
-                                },
-                            } as Attributes);
-                        } catch (e) {
-                            return child;
-                        }
-                    }
-
-                    return child;
-                })}
-            </Menu>
-        </>
+        <Menu>
+            <Tooltip
+                tooltip={<span>{tooltip ?? label}</span>}
+                triggerProps={{ asChild: true, className: 'pointer-events-auto' }}
+                contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
+                <MenuTrigger asChild>
+                    <IconButton id={buttonId} aria-controls={menuId} aria-label={label} data-testid={testId}>
+                        <FontAwesomeIcon icon={icon} />
+                    </IconButton>
+                </MenuTrigger>
+            </Tooltip>
+            <MenuContent id={menuId} aria-labelledby={buttonId} side='top' align='start'>
+                {children}
+            </MenuContent>
+        </Menu>
     );
 };
 
