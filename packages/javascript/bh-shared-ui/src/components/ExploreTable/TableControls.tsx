@@ -138,6 +138,7 @@ const TableControls = <TData, TValue>({
                         onResetColumnSize={onResetColumnSize}
                     />
                 )}
+                {/* TODO - fix focus state in this component BED-9173 */}
                 {onCloseClick && (
                     <TextButton
                         onClick={onCloseClick}

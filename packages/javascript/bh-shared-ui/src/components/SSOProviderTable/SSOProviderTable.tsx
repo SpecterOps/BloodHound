@@ -70,12 +70,12 @@ const SSOProviderTableActionsMenu: FC<{
                 anchorEl={anchorEl}
                 elevation={0}
                 anchorOrigin={{
-                    vertical: 'bottom',
+                    vertical: 'top',
                     horizontal: 'right',
                 }}
                 transformOrigin={{
                     vertical: 'top',
-                    horizontal: 'right',
+                    horizontal: 'left',
                 }}
                 classes={{ paper: 'border border-gray-300' }}
                 keepMounted

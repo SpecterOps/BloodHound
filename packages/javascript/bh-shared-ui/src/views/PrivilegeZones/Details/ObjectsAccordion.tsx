@@ -19,8 +19,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionContent, AccordionItem, IconButton, Skeleton, TextButton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useState } from 'react';
-import { optionStyles } from '../../..';
 import { SortableHeader } from '../../../components/ColumnHeaders';
+import { optionStyles } from '../../../components/DropdownSelector/constants';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
@@ -138,7 +138,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                         onClick={() => {
                             onObjectClick(item);
                         }}>
-                        <span className='pl-6 text-base ml-3.5'>{item.name}</span>
+                        <span className='pl-8 text-base ml-3.5'>{item.name}</span>
                     </TextButton>
                 </div>
             </Tooltip>
@@ -154,13 +154,13 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2 h-10'>
                     <IconButton
-                        className='my-1.5 mx-2 max-xl:px-2 max-lg:px-6 w-6'
+                        className='my-1.5 ml-2 max-xl:px-2 max-lg:px-6 w-6'
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === kind ? '' : kind));
                         }}>
-                        <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
+                        <FontAwesomeIcon icon={faChevronUp} size='sm' />
                     </IconButton>
                     <div className='flex items-center gap-2'>
                         <NodeIcon nodeType={kind} />

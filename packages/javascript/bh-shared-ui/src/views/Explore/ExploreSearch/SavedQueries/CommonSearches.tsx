@@ -181,6 +181,7 @@ const CommonSearches = ({
             <div className='flex items-center'>
                 <TextButton
                     aria-expanded={showCommonQueries}
+                    aria-controls='common-queries-panel'
                     onClick={onToggleCommonQueries}
                     className='flex justify-start items-center w-full rounded-none'
                     data-testid='common-queries-toggle'>
@@ -189,7 +190,7 @@ const CommonSearches = ({
                 </TextButton>
             </div>
 
-            <div className={cn({ hidden: !showCommonQueries })}>
+            <div id='common-queries-panel' className={cn({ hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
                     exportHandler={handleExport}

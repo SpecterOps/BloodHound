@@ -32,23 +32,35 @@ const meta = {
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
+        render: {
+            description: 'Use as a replacement for the `asChild` prop',
+        },
         variant: {
             // TODO - remove transparent option
             options: ['primary', 'secondary'],
             control: 'select',
         },
         // TODO - remove fontColor
-        fontColor: { options: ['primary', 'default'], control: 'select' },
-        size: { options: ['small', 'medium', 'large'], control: 'select' },
+        fontColor: {
+            description: '**Deprecated:** Use `TextButton` instead. This prop will be removed in BED-7642.',
+            control: false,
+            table: {
+                type: {
+                    summary: "'primary' | null",
+                },
+            },
+        },
+        size: {
+            options: ['small', 'medium', 'large'],
+            control: 'select',
+            description: 'deprecated',
+            table: {
+                category: 'Deprecated',
+            },
+        },
         disabled: {
             control: 'boolean',
             description: 'Disables button interactions.',
-        },
-        render: {
-            control: false,
-            table: {
-                disable: true,
-            },
         },
     },
     // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
@@ -61,6 +73,44 @@ type TextButtonStory = StoryObj<typeof TextButtonComponent>;
 type IconButtonStory = StoryObj<typeof IconButtonComponent>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
+export const DefaultType: ButtonStory = {
+    args: {
+        children: 'Type is Button',
+        disabled: false,
+        variant: 'primary',
+        size: 'medium',
+    },
+    argTypes: {
+        type: {
+            description: 'Sets the native HTML button type.',
+            options: ['button', 'submit', 'reset'],
+            control: {
+                type: 'select',
+            },
+            table: {
+                category: 'HTML attributes',
+                defaultValue: {
+                    summary: 'button',
+                },
+                type: {
+                    summary: "'button' | 'submit' | 'reset'",
+                },
+            },
+        },
+    },
+    render: ({ children, ...buttonProps }) => {
+        return <Button {...buttonProps}>{children}</Button>;
+    },
+    play: async ({ canvasElement, args }) => {
+        const canvas = within(canvasElement);
+        const button = await canvas.findByRole('button');
+
+        // Button defaults to `type="button"` so it does not
+        // unintentionally submit a containing form.
+        expect(button).toHaveAttribute('type', args.type ?? 'button');
+    },
+};
+
 export const Primary: ButtonStory = {
     args: {
         variant: 'primary',
@@ -214,17 +264,4 @@ export const IconButton: IconButtonStory = {
             </div>
         </>
     ),
-};
-
-export const DefaultType: ButtonStory = {
-    render: () => {
-        return <Button>Type is Button</Button>;
-    },
-    play: async ({ canvasElement }) => {
-        const canvas = within(canvasElement);
-        const button = await canvas.findByRole('button');
-        // Assert that the default type is button
-        // We default to this type so that the element does not submit forms if a type is not passed
-        expect(button).toHaveAttribute('type', 'button');
-    },
 };

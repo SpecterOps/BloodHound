@@ -95,7 +95,9 @@ describe('FileIngest', () => {
     });
     it('displays a Filters button', async () => {
         await act(async () => render(<FileIngest />));
-        const filterButton = screen.getByTestId('file_ingest_log-open_filter_dialog');
+        const filterButton = screen.getByRole('button', {
+            name: /open file ingest filters/i,
+        });
         expect(filterButton).toBeInTheDocument();
     });
     it('displays a table of completed ingest logs', async () => {

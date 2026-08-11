@@ -77,10 +77,10 @@ const EdgeFilteringDialog = ({
     return (
         <Dialog open={isOpen}>
             <DialogContent maxWidth='md' className='flex flex-col h-[80vh]'>
-                <div className='flex items-start justify-between'>
+                <div className='flex items-start justify-between mt-1'>
                     <div>
                         <DialogTitle>{title}</DialogTitle>
-                        <DialogDescription className='ml-1 mt-1'>{description}</DialogDescription>
+                        <DialogDescription className='ml-1'>{description}</DialogDescription>
                     </div>
                     <div className='flex gap-5'>
                         <TextButton

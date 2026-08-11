@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardContent, CardHeader, TextButtonVariants } from 'doodle-ui';
+import { Card, CardContent, CardHeader, TextButton, TextButtonVariants } from 'doodle-ui';
 import {
     NodeSourceSeed,
     SeedExpansionMethod,
@@ -94,24 +94,28 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
             <CardHeader className='pl-6 pr-6 first:py-6 text-xl font-bold'>
                 <div className='flex justify-between items-center min-h-10'>
                     <span>Sample Results</span>
+                    {/* TODO - replace with AppLink in BED-7636 */}
                     {exploreUrl && (
-                        <a
-                            href={exploreUrl}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className={cn(
-                                TextButtonVariants({ fontColor: 'primary' }),
-                                'text-sm',
-                                ruleType !== SeedTypeCypher && 'hidden'
-                            )}>
-                            View in Explore
-                        </a>
+                        <TextButton
+                            render={
+                                <a
+                                    href={exploreUrl}
+                                    target='_blank'
+                                    rel='noreferrer'
+                                    className={cn(
+                                        TextButtonVariants({ fontColor: 'primary' }),
+                                        'text-sm',
+                                        ruleType !== SeedTypeCypher && 'hidden'
+                                    )}>
+                                    View in Explore
+                                </a>
+                            }></TextButton>
                     )}
                 </div>
             </CardHeader>
             {sampleResultsFetched ? (
                 <>
-                    <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4 '>
+                    <CardContent data-testid='pz-rule-preview__direct-objects-list' className='pl-4'>
                         <div className='font-bold pl-2 border-b border-neutral-light-5 pb-2'>Direct Objects</div>
                         {directObjects?.length ? (
                             <VirtualizedNodeList nodes={directObjects} itemSize={46} heightScalar={5} />
@@ -119,7 +123,7 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
                             <EmptySeedResults className='pl-2' displayText='No results found' />
                         )}
                     </CardContent>
-                    <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4 '>
+                    <CardContent data-testid='pz-rule-preview__expanded-objects-list' className='pl-4'>
                         <div className='font-bold pl-2 mb-2'>Expanded Objects</div>
                         {expandedObjects?.length ? (
                             <VirtualizedNodeList nodes={expandedObjects} itemSize={46} heightScalar={5} />

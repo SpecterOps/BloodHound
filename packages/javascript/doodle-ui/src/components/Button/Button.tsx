@@ -49,16 +49,21 @@ export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
             primary: primaryClasses,
-
             secondary: secondaryClasses,
-            // TODO - remove in BED-7635
+            // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
+            /**
+             * @deprecated Use TextButton instead.
+             */
             transparent: [
                 'border border-transparent-btn-border bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
                 'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
             ],
             // TODO - legacy, remove in BED-7635
+            /**
+             * @deprecated Use IconButton instead.
+             */
             icon: [
                 'rounded-full text-common-dark bg-icon-btn-fill shadow-outer-1 has-[svg]:p-2',
                 'hover:border-2 hover:border-primary',
@@ -66,10 +71,15 @@ export const ButtonVariants = cva(buttonBaseClasses, {
             ],
         },
         // TODO - remove as the only usage of this is with variant="text"
+        /**
+         * @deprecated Use TextButton instead.
+         */
         fontColor: {
             primary: 'text-primary',
         },
-
+        /**
+         * @deprecated .
+         */
         size: {
             // TODO remove small variant in BED-7635
             small: 'h-9 px-4 py-1 text-xs',
@@ -109,7 +119,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
 
 Button.displayName = 'Button';
 
-const TextButtonBaseClasses = cn(
+export const TextButtonBaseClasses = cn(
     ...buttonBaseClasses,
     'px-2 py-1 has-[svg]:px-1',
     'active:text-[#0D0A30] dark:active:text-primary',
@@ -129,13 +139,24 @@ export const TextButtonVariants = cva(TextButtonBaseClasses, {
     },
 });
 
-export type TextButtonProps = Omit<BaseUIButton.Props, 'children'> & {
-    children: React.ReactNode;
+type TextButtonBaseProps = Omit<BaseUIButton.Props, 'children' | 'render'> & {
     fontColor?: 'primary' | 'default' | null;
 };
 
+type TextButtonContent =
+    | {
+          children: React.ReactNode;
+          render?: BaseUIButton.Props['render'];
+      }
+    | {
+          children?: React.ReactNode;
+          render: NonNullable<BaseUIButton.Props['render']>;
+      };
+
+export type TextButtonProps = TextButtonBaseProps & TextButtonContent;
+
 export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, TextButtonProps>(
-    function TextButton({ className, children, disabled = false, fontColor, ...props }, ref) {
+    function TextButton({ className, disabled = false, fontColor, ...props }, ref) {
         return (
             <BaseUIButton
                 {...props}
@@ -143,12 +164,12 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 disabled={disabled}
                 className={(state) =>
                     cn(
-                        TextButtonVariants({ fontColor }),
+                        TextButtonBaseClasses,
+                        fontColor === 'primary' ? 'text-primary' : 'text-main',
                         typeof className === 'function' ? className(state) : className
                     )
-                }>
-                {children}
-            </BaseUIButton>
+                }
+            />
         );
     }
 );

@@ -20,6 +20,7 @@ export const triggerStyles =
 export const popoverContentStyles =
     'flex flex-col p-0 rounded-md border border-dropdown-popover-border bg-dropdown-popover-fill';
 
+// TODO optionStyles is nested but used globally in RulesAccordion, ObjectsAccordion, Zone and Label Selector BED-6572
 export const optionStyles =
     'has-[svg]:px-4 px-4 truncate rounded-none w-full justify-normal text-main hover:no-underline hover:bg-dropdown-option-hover-fill disabled:bg-dropdown-option-disabled-fill group';
 

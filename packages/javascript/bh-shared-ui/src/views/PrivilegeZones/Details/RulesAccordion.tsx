@@ -209,7 +209,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='rule' />
                     <TextButton className={cn(optionStyles, 'px-1')} onClick={() => handleClick(item.id)}>
-                        <span className='pl-6 text-base ml-3.5'>{item.name}</span>
+                        <span className='pl-8 text-base ml-3.5'>{item.name}</span>
                     </TextButton>
                     {isSelected && <SelectedCaretRight />}
                 </div>
