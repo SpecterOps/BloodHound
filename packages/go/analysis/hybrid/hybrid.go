@@ -503,6 +503,14 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 	}
 
 	for _, runsAsRelationship := range runsAsRelationships {
+		// Merged Azure application and service-principal records can produce a
+		// self-referential AZRunsAs edge. It cannot identify two distinct sides
+		// of the scoped-sync application relationship and FetchRelationshipNodes
+		// intentionally requires two nodes, so ignore it as non-evidence.
+		if runsAsRelationship.StartID == runsAsRelationship.EndID {
+			continue
+		}
+
 		application, servicePrincipal, err := ops.FetchRelationshipNodes(tx, runsAsRelationship)
 		if err != nil {
 			return err
@@ -547,7 +555,13 @@ func filterContainedDomainUsers(tx graph.Transaction, domain *graph.Node, domain
 			return isDomainUserGroup
 		},
 	})
-	if err != nil {
+	// PostgreSQL reports an empty traversal as ErrNoResultsFound while other
+	// graph drivers return an empty PathSet. Missing containment means that the
+	// broad synchronization edge is not supported; it must not fail the entire
+	// hybrid post-processing operation or suppress unrelated derived edges.
+	if errors.Is(err, graph.ErrNoResultsFound) {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 

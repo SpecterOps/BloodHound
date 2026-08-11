@@ -620,6 +620,57 @@ func TestManageEntraDSSyncEdges(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("SelfReferentialRunsAsIsIgnored", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		var syncHarness manageEntraDSSyncHarness
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				syncHarness = setupManageEntraDSSyncHarness(t, testContext, validManageEntraDSSyncOptions())
+				mergedApplication := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: integration.RandomObjectID(t),
+					azure.TenantID:  integration.RandomObjectID(t),
+				}), azure.Entity, azure.App, azure.ServicePrincipal)
+				testContext.NewRelationship(mergedApplication, mergedApplication, azure.RunsAs)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				_, err := PostHybrid(context.Background(), db)
+				require.NoError(t, err)
+				verifyManageEntraDSSyncEdges(t, db, syncHarness, true, true, true)
+			},
+		)
+	})
+}
+
+func TestFilterContainedDomainUsersEmptyTraversal(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	var domain, domainUsers *graph.Node
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domain = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "SPECTER.DEV",
+				common.ObjectID: integration.RandomDomainSID(),
+			}), ad.Entity, ad.Domain)
+			domainUsers = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "DOMAIN USERS@SPECTER.DEV",
+				common.ObjectID: integration.RandomDomainSID(),
+			}), ad.Entity, ad.Group)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			var containedDomainUsers []graph.ID
+			err := db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				var err error
+				containedDomainUsers, err = filterContainedDomainUsers(tx, domain, []graph.ID{domainUsers.ID})
+				return err
+			})
+			require.NoError(t, err)
+			assert.Empty(t, containedDomainUsers)
+		},
+	)
 }
 
 func TestGetManageEntraDSSyncEdgeComposition(t *testing.T) {
