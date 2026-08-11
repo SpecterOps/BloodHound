@@ -38,6 +38,7 @@ import {
     PutUserAuthSecretRequest,
     QueryScope,
     RequestOptions,
+    UpdateAlertRequest,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
     UpdateAssetGroupTagRequest,
@@ -2870,6 +2871,9 @@ class BHEAPIClient {
         this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, {
             ...options,
         });
+
+    updateAlert = (alertId: string, payload: UpdateAlertRequest, options?: RequestOptions) =>
+        this.baseClient.patch<GetAlertResponse>(`api/v2/alerts/${alertId}`, payload, options);
 
     deleteAlert = (alertId: string, options?: RequestOptions) =>
         this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
