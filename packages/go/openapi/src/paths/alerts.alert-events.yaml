@@ -34,6 +34,7 @@ get:
         $ref: './../schemas/api.params.query.sort-by.yaml'
     - name: type
       in: query
+      description: Supported operators are `eq` and `neq`. If matching with `eq`, must provide a valid alert event type.
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - $ref: './../parameters/query.created-at.yaml'
