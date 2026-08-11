@@ -25,10 +25,15 @@ const General: FC = () => {
                 Entra Domain Services (Entra DS) managed domain.
             </Typography>
             <Typography variant='body2'>
-                Correlation uses the BloodHound aadobjectid property, collected from the LDAP attribute
-                msDS-aadObjectId. Current collection does not include the Entra user&apos;s identities, creationType, or
-                externalUserState properties, so B2B external identities can be misclassified. Treat this edge as
-                evidence of correlation, not proof that the source user can authenticate to the managed domain.
+                The Entra DS user is created from the Entra user during synchronization and can be correlated through
+                the BloodHound <code>aadobjectid</code> property, collected from the LDAP attribute{' '}
+                <code>msDS-aadObjectId</code>. Password changes in Entra ID generate and synchronize the password
+                material required for the Entra DS user to authenticate.
+            </Typography>
+            <Typography variant='body2'>
+                BloodHound does not consider whether the Entra user is a B2B external identity when creating this
+                relationship. A B2B external identity will be synchronized to Entra DS but cannot authenticate to the
+                managed domain by design.
             </Typography>
             <Typography variant='body2'>
                 For cloud-only users, Entra ID does not generate the NT hash required by Entra DS until a password

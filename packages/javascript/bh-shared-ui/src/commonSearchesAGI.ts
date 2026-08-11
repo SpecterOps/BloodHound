@@ -482,6 +482,12 @@ RETURN p\nLIMIT 1000`,
                 query: `OPTIONAL MATCH broadSyncPath = (:AZBase)-[:ManageEntraDSSync]->(:Group)\n\nOPTIONAL MATCH filteredSyncPath = (app:AZApp)-[:AZRunsAs]->(sp:AZServicePrincipal)-[:ManageEntraDSSyncFilter]->(:Group)\nWHERE app.objectid = '2565BD9D-DA50-47D4-8B85-4C97F669DC36'\n\nOPTIONAL MATCH applicationControlPath = (app)<-[:AZ_ATTACK_PATHS]-(applicationController:AZBase)\nWHERE NOT (applicationController)-[:SyncedToEntraDSUser]->(:User)\n\nOPTIONAL MATCH servicePrincipalControlPath = (sp)<-[:AZ_ATTACK_PATHS]-(servicePrincipalController:AZBase)\nWHERE NOT (servicePrincipalController)-[:SyncedToEntraDSUser]->(:User)\nAND (servicePrincipalController:AZUser OR servicePrincipalController:AZServicePrincipal)\n\nOPTIONAL MATCH roleControlPath = (sp)<-[:AZ_ATTACK_PATHS]-(:AZRole)-[:AZRoleEligible|AZHasRole]-(roleAssignee:AZBase)\nWHERE NOT (roleAssignee)-[:SyncedToEntraDSUser]->(:User)\n\nRETURN broadSyncPath,filteredSyncPath,applicationControlPath,servicePrincipalControlPath,roleControlPath\nLIMIT 1000`,
             },
             {
+                name: 'Principals that can manage Entra DS',
+                description:
+                    'Shows principals that can manage Microsoft Entra Domain Services (Entra DS) synchronization, identified by the ManageEntraDSSync edge, and security settings including NTLM, Kerberos, TLS, LDAP signing, channel binding, and Secure LDAP configuration and certificates.',
+                query: `MATCH p = (principal:AZBase)-[:AZManageEntraDS]->(domainService:AZEntraDS)\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'Members of the Entra DS Administrators group',
                 description: '',
                 query: `MATCH p = (entraMember:AZBase)-[:AZMemberOf]->(entraGroup:AZGroup)-[:SyncedToEntraDSGroup]->(entraDSGroup:Group)<-[:MemberOf]-(entraDSMember:Base)\nWHERE toUpper(entraGroup.displayname) = 'AAD DC ADMINISTRATORS'\nRETURN p\nLIMIT 1000`,

@@ -37,13 +37,6 @@ const General: FC = () => {
                 privileges from another principal.
             </Typography>
             <Typography variant='body2'>
-                User correlation relies on the BloodHound aadobjectid property. Current collection does not include the
-                Entra user&apos;s identities, creationType, or externalUserState properties, so B2B external identities
-                can be misclassified. BloodHound also does not verify synchronized password material or runtime
-                credential usability, which can make this composed relationship a false positive for direct
-                exploitation.
-            </Typography>
-            <Typography variant='body2'>
                 Only direct membership in the source Entra group is synchronized. Nested Entra groups do not satisfy
                 this relationship.
             </Typography>
