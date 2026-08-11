@@ -44,7 +44,7 @@ type GraphDBRequestAdapter interface {
 // NewGraphDBRequestAdapter constructs a GraphDBRequestAdapter backed by the graph database
 // and the pgx connection pool.
 func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) GraphDBRequestAdapter {
-	return services.NewService(appdb.NewStore(graphDatabase, pool))
+	return appdb.NewStore(graphDatabase, pool)
 }
 
 // Register builds the graphdb store -> service -> handler chain and attaches the graphdb
