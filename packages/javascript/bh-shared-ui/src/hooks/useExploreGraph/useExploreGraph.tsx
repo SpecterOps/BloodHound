@@ -92,7 +92,7 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
         },
         ...rest,
         ...userSettings,
-        enabled: !cypherQueryIsEmpty && rest.enabled,
+        enabled: !cypherQueryIsEmpty && rest.enabled !== false && queryConfig.enabled !== false,
     });
 };
 
