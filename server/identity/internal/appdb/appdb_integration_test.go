@@ -313,12 +313,12 @@ func TestStore_ListRoles_Integration(t *testing.T) {
 	})
 }
 
-// addStrayDeletedAtColumn simulates the shape of an upgraded/GORM-era database by
+// addDeprecatedDeletedAtColumn simulates the shape of an upgraded/GORM-era database by
 // adding a deleted_at column that the current migrations do not create and that the
 // Go structs do not model. Reading from such a table with SELECT * would return an
 // extra column the strict pgx.RowToStructByName mapper cannot place, reproducing the
 // original "struct doesn't have corresponding row field deleted_at" failure.
-func addStrayDeletedAtColumn(t *testing.T, ctx context.Context, pool *pgxpool.Pool, table string) {
+func addDeprecatedDeletedAtColumn(t *testing.T, ctx context.Context, pool *pgxpool.Pool, table string) {
 	t.Helper()
 
 	_, err := pool.Exec(ctx, fmt.Sprintf("ALTER TABLE %s ADD COLUMN deleted_at timestamp with time zone", table))
