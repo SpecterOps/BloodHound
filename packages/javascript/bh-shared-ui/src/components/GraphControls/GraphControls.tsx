@@ -110,7 +110,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                             aria-label='Reset Graph'
                             onClick={onReset}
                             data-testid='explore_graph-controls_reset-button'>
-                            <FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />
+                            <FontAwesomeIcon aria-hidden='true' icon={faCropAlt} />
                         </IconButton>
                     </div>
                 </Tooltip>
@@ -174,7 +174,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
                     <div>
                         <IconButton
-                            aria-label='Search node in results'
+                            aria-label='Search'
                             onClick={() => setIsCurrentSearchOpen(true)}
                             disabled={isCurrentSearchOpen}
                             data-testid='explore_graph-controls_search-current-results'>

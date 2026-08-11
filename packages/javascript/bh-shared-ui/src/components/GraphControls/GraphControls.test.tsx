@@ -130,7 +130,7 @@ describe('GraphControls', () => {
         it('provides accessible names without visible label text', () => {
             setup();
 
-            for (const name of ['Reset Graph', 'Hide Labels', 'Layout', 'Export', 'Search node in results']) {
+            for (const name of ['Reset Graph', 'Hide Labels', 'Layout', 'Export', 'Search']) {
                 const control = screen.getByRole('button', { name });
 
                 expect(control).toBeInTheDocument();
