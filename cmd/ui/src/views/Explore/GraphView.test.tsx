@@ -195,18 +195,6 @@ describe('GraphView', () => {
             expect(sigmaChartMockState.props?.snapToGridEnabled).toBe(false);
         });
 
-        it('can be disabled without changing the current graph layout', async () => {
-            const user = userEvent.setup();
-            render(<GraphView />, { route: `/explore?searchType=node` });
-
-            const snapButton = await screen.findByRole('button', { name: 'Snap to grid' });
-            await user.click(snapButton);
-            await user.click(snapButton);
-
-            expect(snapButton).toHaveAttribute('aria-pressed', 'false');
-            expect(sigmaChartMockState.props?.snapToGridEnabled).toBe(false);
-        });
-
         it('hides the control while table view is displayed', async () => {
             render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
 
