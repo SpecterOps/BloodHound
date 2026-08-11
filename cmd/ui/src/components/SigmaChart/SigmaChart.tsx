@@ -33,7 +33,7 @@ import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import { GraphEdgeEvents } from './GraphEdgeEvents';
 import { GraphEvents } from './GraphEvents';
 
-interface SigmaChartProps {
+export interface SigmaChartProps {
     graph?: MultiDirectedGraph<Attributes, Attributes, Attributes>;
     highlightedItem: string | null;
     onClickNode: (id: string) => void;
@@ -42,6 +42,7 @@ interface SigmaChartProps {
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
+    snapToGridEnabled?: boolean;
 }
 
 const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(function SigmaChart(
@@ -54,6 +55,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
         handleContextMenu,
         showNodeLabels = true,
         showEdgeLabels = true,
+        snapToGridEnabled = false,
     }: SigmaChartProps,
     ref
 ) {
@@ -106,6 +108,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}
                     showEdgeLabels={showEdgeLabels}
+                    snapToGridEnabled={snapToGridEnabled}
                     ref={ref}
                 />
             </SigmaContainer>

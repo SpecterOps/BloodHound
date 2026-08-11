@@ -14,12 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { faBorderAll, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from '@mui/material';
 import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
     DEFAULT_PINNED_COLUMN_KEYS,
     ExploreTable,
     FeatureFlag,
+    GraphButton,
     GraphControls,
     GraphItemInformationPanel,
     GraphProgress,
@@ -113,6 +117,7 @@ const GraphView: FC = () => {
 
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
+    const [isSnapToGridEnabled, setIsSnapToGridEnabled] = useState(false);
 
     const isWebGLEnabledMemo = useMemo(() => isWebGLEnabled(), []);
 
@@ -281,29 +286,53 @@ const GraphView: FC = () => {
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
+                snapToGridEnabled={isSnapToGridEnabled}
                 ref={sigmaChartRef}
             />
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <GraphControls
-                    isExploreTableSelected={isExploreTableSelected}
-                    isExploreLayoutSelected={isExploreLayoutSelected}
-                    layoutOptions={baseGraphLayouts}
-                    selectedLayout={exploreLayout ?? defaultGraphLayout}
-                    onLayoutChange={setLayout}
-                    showNodeLabels={showNodeLabels}
-                    onToggleNodeLabels={toggleShowNodeLabels}
-                    showEdgeLabels={showEdgeLabels}
-                    onToggleEdgeLabels={toggleShowEdgeLabels}
-                    jsonData={graphQuery.data}
-                    onReset={() => sigmaChartRef.current?.resetCamera()}
-                    currentNodes={graphQuery.data?.nodes}
-                    onSearchedNodeClick={(node) => {
-                        node.id && setSelectedItem(node.id);
-                        sigmaChartRef?.current?.zoomTo(node.id);
-                    }}
-                />
+                <div className='flex gap-1 items-end pointer-events-auto'>
+                    <GraphControls
+                        isExploreTableSelected={isExploreTableSelected}
+                        isExploreLayoutSelected={isExploreLayoutSelected}
+                        layoutOptions={baseGraphLayouts}
+                        selectedLayout={exploreLayout ?? defaultGraphLayout}
+                        onLayoutChange={setLayout}
+                        showNodeLabels={showNodeLabels}
+                        onToggleNodeLabels={toggleShowNodeLabels}
+                        showEdgeLabels={showEdgeLabels}
+                        onToggleEdgeLabels={toggleShowEdgeLabels}
+                        jsonData={graphQuery.data}
+                        onReset={() => sigmaChartRef.current?.resetCamera()}
+                        currentNodes={graphQuery.data?.nodes}
+                        onSearchedNodeClick={(node) => {
+                            node.id && setSelectedItem(node.id);
+                            sigmaChartRef?.current?.zoomTo(node.id);
+                        }}
+                    />
+                    {!displayTable && (
+                        <Tooltip title={`${isSnapToGridEnabled ? 'Disable' : 'Enable'} snap to grid`} placement='top'>
+                            <span>
+                                <GraphButton
+                                    aria-label='Snap to grid'
+                                    aria-pressed={isSnapToGridEnabled}
+                                    className={isSnapToGridEnabled ? '!bg-primary !text-white' : ''}
+                                    data-testid='explore_graph-controls_snap-to-grid'
+                                    displayText={
+                                        <span className='flex items-center gap-1'>
+                                            <FontAwesomeIcon aria-hidden='true' icon={faBorderAll} />
+                                            {isSnapToGridEnabled && (
+                                                <FontAwesomeIcon aria-hidden='true' icon={faCheck} />
+                                            )}
+                                        </span>
+                                    }
+                                    onClick={() => setIsSnapToGridEnabled((isEnabled) => !isEnabled)}
+                                />
+                            </span>
+                        </Tooltip>
+                    )}
+                </div>
             </div>
             <GraphItemInformationPanel />
             <FeatureFlag

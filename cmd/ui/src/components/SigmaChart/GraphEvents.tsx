@@ -16,24 +16,26 @@
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { useTheme } from 'bh-shared-ui';
+import { MultiDirectedGraph } from 'graphology';
 import type { Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
     DRAG_THRESHOLD,
-    MOUSE_BUTTON_PRIMARY,
     getDistanceBetween,
     getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
     getNodeOffset,
     graphToFramedGraph,
+    MOUSE_BUTTON_PRIMARY,
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
+import { getOccupiedGridPoints, snapPositionsToGrid, snapPositionToGrid } from 'src/views/Explore/snapToGrid';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
@@ -51,6 +53,7 @@ interface GraphEventProps {
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
+    snapToGridEnabled?: boolean;
 }
 
 /** Meta info about the currently dragged node */
@@ -72,6 +75,9 @@ type DragMetadata = {
 
     /** Node's original position, for determining how far it's been dragged. */
     origin: Coordinates | null;
+
+    /** Grid cells occupied by every node except the one being dragged. */
+    occupiedGridPoints: Set<string>;
 };
 
 const DEFAULT_DRAGGED_META = {
@@ -79,6 +85,21 @@ const DEFAULT_DRAGGED_META = {
     cancelNextClick: false,
     offset: null,
     origin: null,
+    occupiedGridPoints: new Set<string>(),
+};
+
+const getGraphPositions = (graph: MultiDirectedGraph<Attributes, Attributes, Attributes>) =>
+    Object.fromEntries(
+        graph.nodes().map((id) => {
+            const { x, y } = graph.getNodeAttributes(id);
+            return [id, { x, y }];
+        })
+    );
+
+const snapGraphPositions = (graph: MultiDirectedGraph<Attributes, Attributes, Attributes>) => {
+    const snappedPositions = snapPositionsToGrid(getGraphPositions(graph));
+
+    graph.updateEachNodeAttributes((id, attributes) => ({ ...attributes, ...snappedPositions[id] }));
 };
 
 export const GraphEvents = forwardRef(function GraphEvents(
@@ -89,6 +110,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         onRightClickNode,
         showNodeLabels = true,
         showEdgeLabels = true,
+        snapToGridEnabled = false,
     }: GraphEventProps,
     ref
 ) {
@@ -136,14 +158,23 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
             runSequentialLayout: () => {
                 sequentialLayout(graph);
+                if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
             runStandardLayout: () => {
                 standardLayout(graph);
+                if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
         };
-    }, [sigma, graph]);
+    }, [sigma, graph, snapToGridEnabled]);
+
+    useEffect(() => {
+        if (!snapToGridEnabled) return;
+
+        snapGraphPositions(graph);
+        sigma.refresh();
+    }, [graph, sigma, snapToGridEnabled]);
 
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
@@ -206,6 +237,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         id: event.node,
                         offset: getNodeOffset(node, sigma.viewportToGraph(event.event)),
                         origin: { x: node.x, y: node.y },
+                        occupiedGridPoints: getOccupiedGridPoints(getGraphPositions(graph), new Set([event.node])),
                     });
                 }
             },
@@ -228,6 +260,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         x: position.x - draggedMeta.offset.x,
                         y: position.y - draggedMeta.offset.y,
                     };
+                    const displayedPosition = snapToGridEnabled
+                        ? snapPositionToGrid(newPosition, draggedMeta.occupiedGridPoints)
+                        : newPosition;
 
                     // Determine if node has been dragged past click-cancel threshold
                     if (!draggedMeta.cancelNextClick && draggedMeta.origin) {
@@ -237,8 +272,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         }
                     }
 
-                    graph.setNodeAttribute(draggedMeta.id, 'x', newPosition.x);
-                    graph.setNodeAttribute(draggedMeta.id, 'y', newPosition.y);
+                    graph.setNodeAttribute(draggedMeta.id, 'x', displayedPosition.x);
+                    graph.setNodeAttribute(draggedMeta.id, 'y', displayedPosition.y);
                 }
             },
             doubleClickNode: (event) => {
@@ -278,6 +313,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         registerEvents,
         sigma,
         sigmaContainer,
+        snapToGridEnabled,
     ]);
 
     const isHighlightedItemInGraph = useMemo(
