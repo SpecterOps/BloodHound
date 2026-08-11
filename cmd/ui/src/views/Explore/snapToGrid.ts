@@ -32,10 +32,19 @@ function* getGridOffsets(): Generator<[number, number], never> {
     yield [0, 0];
 
     for (let radius = 1; ; radius++) {
-        for (let x = -radius; x <= radius; x++) yield [x, -radius];
-        for (let y = -radius + 1; y <= radius; y++) yield [radius, y];
-        for (let x = radius - 1; x >= -radius; x--) yield [x, radius];
-        for (let y = radius - 1; y > -radius; y--) yield [-radius, y];
+        const offsets: [number, number][] = [];
+
+        for (let x = -radius; x <= radius; x++) offsets.push([x, -radius]);
+        for (let y = -radius + 1; y <= radius; y++) offsets.push([radius, y]);
+        for (let x = radius - 1; x >= -radius; x--) offsets.push([x, radius]);
+        for (let y = radius - 1; y > -radius; y--) offsets.push([-radius, y]);
+
+        offsets.sort(
+            ([firstX, firstY], [secondX, secondY]) =>
+                firstX ** 2 + firstY ** 2 - (secondX ** 2 + secondY ** 2) || firstY - secondY || firstX - secondX
+        );
+
+        yield* offsets;
     }
 }
 

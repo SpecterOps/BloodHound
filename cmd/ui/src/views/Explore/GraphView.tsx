@@ -317,7 +317,7 @@ const GraphView: FC = () => {
                                 <GraphButton
                                     aria-label='Snap to grid'
                                     aria-pressed={isSnapToGridEnabled}
-                                    className={isSnapToGridEnabled ? '!bg-primary !text-white' : ''}
+                                    className={isSnapToGridEnabled ? '!bg-primary !text-white dark:!text-black' : ''}
                                     data-testid='explore_graph-controls_snap-to-grid'
                                     displayText={
                                         <span className='flex items-center gap-1'>

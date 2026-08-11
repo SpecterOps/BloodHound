@@ -18,9 +18,19 @@ import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { useTheme } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
+import {
+    forwardRef,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
+import { animateNodes } from 'sigma/utils/animate';
 import {
     DRAG_THRESHOLD,
     getDistanceBetween,
@@ -128,6 +138,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
     const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
+    const cancelSnapAnimation = useRef<(() => void) | null>(null);
+
+    useEffect(() => () => cancelSnapAnimation.current?.(), []);
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
@@ -231,6 +244,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             downNode: (event) => {
                 if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    cancelSnapAnimation.current?.();
+                    cancelSnapAnimation.current = null;
+
                     const node = graph.getNodeAttributes(event.node);
                     setDraggedMeta({
                         cancelNextClick: false,
@@ -244,7 +260,24 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 }
             },
             mouseup: () => {
-                if (draggedNode) {
+                if (draggedMeta.id) {
+                    if (snapToGridEnabled) {
+                        const { x, y } = graph.getNodeAttributes(draggedMeta.id);
+                        const snappedPosition = snapPositionToGrid({ x, y }, draggedMeta.occupiedGridPoints);
+                        const animationTarget: Record<string, Record<string, number>> = {
+                            [draggedMeta.id]: { x: snappedPosition.x, y: snappedPosition.y },
+                        };
+
+                        cancelSnapAnimation.current = animateNodes(
+                            graph,
+                            animationTarget,
+                            { duration: 100, easing: 'quadraticOut' },
+                            () => {
+                                cancelSnapAnimation.current = null;
+                            }
+                        );
+                    }
+
                     // Timeout prevents state update race conditions between this an mousemovebody.
                     setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
                 }
@@ -262,9 +295,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         x: position.x - draggedMeta.offset.x,
                         y: position.y - draggedMeta.offset.y,
                     };
-                    const displayedPosition = snapToGridEnabled
-                        ? snapPositionToGrid(newPosition, draggedMeta.occupiedGridPoints)
-                        : newPosition;
 
                     // Determine if node has been dragged past click-cancel threshold
                     if (!draggedMeta.cancelNextClick && draggedMeta.origin) {
@@ -274,8 +304,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         }
                     }
 
-                    graph.setNodeAttribute(draggedMeta.id, 'x', displayedPosition.x);
-                    graph.setNodeAttribute(draggedMeta.id, 'y', displayedPosition.y);
+                    graph.setNodeAttribute(draggedMeta.id, 'x', newPosition.x);
+                    graph.setNodeAttribute(draggedMeta.id, 'y', newPosition.y);
                 }
             },
             doubleClickNode: (event) => {

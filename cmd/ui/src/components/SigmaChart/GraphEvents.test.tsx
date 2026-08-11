@@ -28,6 +28,16 @@ const sigmaMocks = vi.hoisted(() => ({
     sigma: undefined as any,
 }));
 
+const animationMocks = vi.hoisted(() => ({
+    animateNodes: vi.fn(
+        (graph: MultiDirectedGraph, targets: Record<string, { x: number; y: number }>, _options, callback) => {
+            Object.entries(targets).forEach(([id, position]) => graph.mergeNodeAttributes(id, position));
+            callback?.();
+            return vi.fn();
+        }
+    ),
+}));
+
 const layoutMocks = vi.hoisted(() => ({
     sequentialLayout: vi.fn((graph: MultiDirectedGraph) => {
         graph.setNodeAttribute('alpha', 'x', 12);
@@ -52,6 +62,8 @@ vi.mock('@react-sigma/core', () => ({
 vi.mock('bh-shared-ui', () => ({
     useTheme: () => ({ contrast: '#ffffff', neutral: { primary: '#000000' } }),
 }));
+
+vi.mock('sigma/utils/animate', () => animationMocks);
 
 vi.mock('src/store', () => ({
     useAppSelector: (selector: (state: any) => unknown) =>
@@ -112,6 +124,7 @@ describe('GraphEvents snap to grid', () => {
         sigmaMocks.handlers = {};
         sigmaMocks.registerEvents.mockClear();
         sigmaMocks.setSettings.mockClear();
+        animationMocks.animateNodes.mockClear();
         layoutMocks.sequentialLayout.mockClear();
         layoutMocks.standardLayout.mockClear();
     });
@@ -126,7 +139,7 @@ describe('GraphEvents snap to grid', () => {
         expect(sigmaMocks.sigma.refresh).toHaveBeenCalledOnce();
     });
 
-    it('snaps only the dragged node around occupied cells while enabled', () => {
+    it('moves freely while dragging, then snaps around occupied cells on release', () => {
         const graph = createGraph();
         sigmaMocks.sigma = createSigma(graph);
         render(<GraphEvents highlightedItem={null} snapToGridEnabled />);
@@ -139,9 +152,22 @@ describe('GraphEvents snap to grid', () => {
             sigmaMocks.handlers.mousemovebody({ ...fixedPosition });
         });
 
+        expect(getPosition(graph, 'alpha')).toEqual(fixedPosition);
+
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+
         expect(getPosition(graph, 'bravo')).toEqual(fixedPosition);
         expect(getPosition(graph, 'alpha')).not.toEqual(fixedPosition);
         expectGridAlignedWithoutCollision(graph);
+        expect(animationMocks.animateNodes).toHaveBeenCalledWith(
+            graph,
+            { alpha: { x: 0, y: -200 } },
+            { duration: 100, easing: 'quadraticOut' },
+            expect.any(Function)
+        );
+        expect(sigmaMocks.sigma.refresh).toHaveBeenCalledOnce();
     });
 
     it('resnaps both imperative layouts while enabled', () => {

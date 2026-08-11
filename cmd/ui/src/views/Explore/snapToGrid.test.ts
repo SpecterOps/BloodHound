@@ -54,7 +54,7 @@ describe('snapPositionsToGrid', () => {
 
         expect(snapPositionsToGrid(positions, new Set(['fixed']), 100)).toEqual({
             fixed: { x: 0, y: 0 },
-            dragged: { x: -100, y: -100 },
+            dragged: { x: 0, y: -100 },
         });
     });
 
@@ -77,6 +77,6 @@ describe('snapPositionToGrid', () => {
         };
         const occupiedGridPoints = getOccupiedGridPoints(positions, new Set(['dragged']), 100);
 
-        expect(snapPositionToGrid({ x: 20, y: 20 }, occupiedGridPoints, 100)).toEqual({ x: -100, y: -100 });
+        expect(snapPositionToGrid({ x: 20, y: 20 }, occupiedGridPoints, 100)).toEqual({ x: 0, y: -100 });
     });
 });
