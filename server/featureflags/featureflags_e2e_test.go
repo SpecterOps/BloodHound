@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
@@ -167,6 +168,35 @@ func seedFeatureFlag(t *testing.T, ctx context.Context, pool *pgxpool.Pool, key,
 	return id
 }
 
+func assertAnalysisRequest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, expectedRequestedBy string, expectedStep int32) {
+	t.Helper()
+
+	var (
+		requestedBy  string
+		requestType  string
+		analysisStep int32
+	)
+
+	err := pool.QueryRow(ctx, `
+		SELECT requested_by, request_type, analysis_step
+		FROM analysis_request_switch
+		LIMIT 1
+	`).Scan(&requestedBy, &requestType, &analysisStep)
+	require.NoError(t, err)
+	assert.Equal(t, expectedRequestedBy, requestedBy)
+	assert.Equal(t, string(model.AnalysisRequestAnalysis), requestType)
+	assert.Equal(t, expectedStep, analysisStep)
+}
+
+func assertNoAnalysisRequest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	t.Helper()
+
+	var count int
+	err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM analysis_request_switch`).Scan(&count)
+	require.NoError(t, err)
+	assert.Zero(t, count)
+}
+
 func TestGetAllFlags(t *testing.T) {
 	var (
 		db        = setupFeatureFlagsDB(t)
@@ -238,44 +268,102 @@ func TestToggleFlag(t *testing.T) {
 		return server
 	}
 
-	t.Run("returns 200 OK and flips the flag when it is user-updatable", func(t *testing.T) {
-		var (
-			server    = newServer(t)
-			featureID = seedFeatureFlag(t, ctx, db.Pool(), "e2e_toggle_flag", "E2E Toggle Flag", false, true)
-		)
+	type testCase struct {
+		name           string
+		seedFlag       func(t *testing.T) int32
+		expectedStatus int
+		assertResponse func(t *testing.T, body *http.Response)
+		assertDB       func(t *testing.T)
+	}
 
-		resp, err := http.DefaultClient.Do(newToggleRequest(t, server, featureID))
-		require.NoError(t, err)
-		defer resp.Body.Close()
+	testCases := []testCase{
+		{
+			name: "Success: returns 200 OK and flips the flag when it is user-updatable",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return seedFeatureFlag(t, ctx, db.Pool(), "e2e_toggle_flag", "E2E Toggle Flag", false, true)
+			},
+			expectedStatus: http.StatusOK,
+			assertResponse: func(t *testing.T, body *http.Response) {
+				t.Helper()
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+				var envelope featureFlagEnvelope
+				require.NoError(t, json.NewDecoder(body.Body).Decode(&envelope))
+				assert.True(t, envelope.Data.Enabled, "Enabled should have flipped from false to true")
+			},
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertNoAnalysisRequest(t, ctx, db.Pool())
+			},
+		},
+		{
+			name: "Success: requests analysis when findings prioritization is enabled",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return seedFeatureFlag(t, ctx, db.Pool(), services.FeatureFindingsPrioritizationV0, "Findings Prioritization v0", false, true)
+			},
+			expectedStatus: http.StatusOK,
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertAnalysisRequest(t, ctx, db.Pool(), appcfg.PrioritizationFlagAnalysisRequester, int32(model.AnalysisStepsFull().Bits()))
+			},
+		},
+		{
+			name: "Success: does not request analysis when findings prioritization is disabled",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return seedFeatureFlag(t, ctx, db.Pool(), services.FeatureFindingsPrioritizationV0, "Findings Prioritization v0", true, true)
+			},
+			expectedStatus: http.StatusOK,
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertNoAnalysisRequest(t, ctx, db.Pool())
+			},
+		},
+		{
+			name: "Error: returns 403 Forbidden when the flag is not user-updatable",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return seedFeatureFlag(t, ctx, db.Pool(), "e2e_locked_flag", "E2E Locked Flag", false, false)
+			},
+			expectedStatus: http.StatusForbidden,
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertNoAnalysisRequest(t, ctx, db.Pool())
+			},
+		},
+		{
+			name: "Error: returns 404 Not Found when the flag does not exist",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return 999999
+			},
+			expectedStatus: http.StatusNotFound,
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertNoAnalysisRequest(t, ctx, db.Pool())
+			},
+		},
+	}
 
-		var envelope featureFlagEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, featureID, envelope.Data.ID)
-		assert.True(t, envelope.Data.Enabled, "Enabled should have flipped from false to true")
-	})
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			require.NoError(t, db.DeleteAnalysisRequest(ctx))
 
-	t.Run("returns 403 Forbidden when the flag is not user-updatable", func(t *testing.T) {
-		var (
-			server    = newServer(t)
-			featureID = seedFeatureFlag(t, ctx, db.Pool(), "e2e_locked_flag", "E2E Locked Flag", false, false)
-		)
+			server := newServer(t)
+			featureID := testCase.seedFlag(t)
 
-		resp, err := http.DefaultClient.Do(newToggleRequest(t, server, featureID))
-		require.NoError(t, err)
-		defer resp.Body.Close()
+			resp, err := http.DefaultClient.Do(newToggleRequest(t, server, featureID))
+			require.NoError(t, err)
+			defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
-	})
-
-	t.Run("returns 404 Not Found when the flag does not exist", func(t *testing.T) {
-		server := newServer(t)
-
-		resp, err := http.DefaultClient.Do(newToggleRequest(t, server, 999999))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	})
+			assert.Equal(t, testCase.expectedStatus, resp.StatusCode)
+			if testCase.assertResponse != nil {
+				testCase.assertResponse(t, resp)
+			}
+			if testCase.assertDB != nil {
+				testCase.assertDB(t)
+			}
+		})
+	}
 }

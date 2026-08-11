@@ -52,22 +52,22 @@ func (s ToolContainer) GetFlags(response http.ResponseWriter, request *http.Requ
 }
 
 func shouldRequestAnalysisOnEnable(previouslyEnabled bool, currentlyEnabled bool) bool {
-	if previouslyEnabled || !currentlyEnabled {
-		return false
-	}
-	return true
+	return !previouslyEnabled && currentlyEnabled
 }
 
 func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Request) {
-	rawFeatureID := chi.URLParam(request, URIPathVariableFeatureID)
+	var (
+		ctx          = request.Context()
+		rawFeatureID = chi.URLParam(request, URIPathVariableFeatureID)
+	)
 
 	featureID, err := strconv.ParseInt(rawFeatureID, 10, 32)
 	if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 		return
 	}
 
-	featureFlag, err := s.db.GetFlag(request.Context(), int32(featureID))
+	featureFlag, err := s.db.GetFlag(ctx, int32(featureID))
 	if err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
@@ -76,20 +76,20 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 	previouslyEnabled := featureFlag.Enabled
 	featureFlag.Enabled = !featureFlag.Enabled
 
-	if err := s.db.SetFlag(request.Context(), featureFlag); err != nil {
+	if err := s.db.SetFlag(ctx, featureFlag); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
 	}
 
 	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 &&
 		shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
-		if err := s.db.RequestAnalysis(request.Context(), "prioritization-feature-flag-toggle", model.AnalysisModeFull); err != nil {
+		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		}
 	}
 
-	api.WriteBasicResponse(request.Context(), ToggleFlagResponse{
+	api.WriteBasicResponse(ctx, ToggleFlagResponse{
 		Enabled: featureFlag.Enabled,
 	}, http.StatusOK, response)
 }

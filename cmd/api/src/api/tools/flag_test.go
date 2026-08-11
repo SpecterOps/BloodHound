@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -109,7 +109,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
-				mock.database.EXPECT().RequestAnalysis(gomock.Any(), "prioritization-feature-flag-toggle", model.AnalysisModeFull).Return(errors.New("request analysis failed"))
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(errors.New("request analysis failed"))
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()
@@ -133,7 +133,33 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
-				mock.database.EXPECT().RequestAnalysis(gomock.Any(), "prioritization-feature-flag-toggle", model.AnalysisModeFull).Return(nil)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(nil)
+			},
+			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
+				t.Helper()
+				assertToggleFlagResponseEnabled(t, response, http.StatusOK, true)
+			},
+		},
+		{
+			name: "Success: enabling non-user-updatable findings prioritization still requests analysis and returns enabled response",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				featureFlag := appcfg.FeatureFlag{
+					Key:           appcfg.FeatureFindingsPrioritizationV0,
+					Enabled:       false,
+					UserUpdatable: false,
+				}
+
+				mock.database.EXPECT().GetFlag(gomock.Any(), int32(1)).Return(featureFlag, nil)
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.True(t, updatedFeatureFlag.Enabled, "expected persisted feature flag to be enabled")
+						require.False(t, updatedFeatureFlag.UserUpdatable, "expected tools path to preserve non-user-updatable flags")
+						return nil
+					},
+				)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(nil)
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()

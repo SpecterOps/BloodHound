@@ -24,14 +24,16 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // Feature-flag keys referenced by BHE feature slices. These mirror the keys
 // defined in cmd/api/src/model/appcfg but are redeclared here so consumers do
 // not need to import the appcfg package.
 const (
-	FeatureOpenHoundSupport = "openhound_support"
-	FeatureAlerts           = "alerts"
+	FeatureOpenHoundSupport         = "openhound_support"
+	FeatureAlerts                   = "alerts"
+	FeatureFindingsPrioritizationV0 = appcfg.FeatureFindingsPrioritizationV0
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
@@ -71,6 +73,7 @@ type Database interface {
 	GetFlagByID(ctx context.Context, id int32) (FeatureFlag, error)
 	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
 	SetFlag(ctx context.Context, featureFlag FeatureFlag) error
+	RequestAnalysis(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
 // Service implements feature-flag use cases on top of a Database implementation.
@@ -123,6 +126,12 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	if err := s.db.SetFlag(ctx, flag); err != nil {
 		return flag, err
+	}
+
+	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
+		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull); err != nil {
+			return flag, err
+		}
 	}
 
 	return flag, nil

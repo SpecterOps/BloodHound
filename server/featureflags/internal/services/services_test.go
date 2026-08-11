@@ -20,6 +20,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -46,6 +48,10 @@ func (f fakeFlagDatabase) GetAllFlags(_ context.Context) ([]services.FeatureFlag
 }
 
 func (f fakeFlagDatabase) SetFlag(_ context.Context, _ services.FeatureFlag) error {
+	return f.err
+}
+
+func (f fakeFlagDatabase) RequestAnalysis(_ context.Context, _ string, _ model.AnalysisMode) error {
 	return f.err
 }
 
@@ -175,11 +181,14 @@ func TestService_GetAllFlags(t *testing.T) {
 }
 
 func TestService_ToggleFlag(t *testing.T) {
+	t.Parallel()
+
 	var (
-		ctx           = context.Background()
-		unexpectedErr = errors.New("connection refused")
-		setFlagErr    = errors.New("set flag failed")
-		updatableFlag = services.FeatureFlag{
+		ctx                = context.Background()
+		unexpectedErr      = errors.New("connection refused")
+		setFlagErr         = errors.New("set flag failed")
+		requestAnalysisErr = errors.New("request analysis failed")
+		updatableFlag      = services.FeatureFlag{
 			ID:            7,
 			Key:           services.FeatureOpenHoundSupport,
 			Enabled:       false,
@@ -191,61 +200,127 @@ func TestService_ToggleFlag(t *testing.T) {
 			Enabled:       true,
 			UserUpdatable: false,
 		}
+		findingsPrioritizationFlag = services.FeatureFlag{
+			ID:            9,
+			Key:           services.FeatureFindingsPrioritizationV0,
+			Enabled:       false,
+			UserUpdatable: true,
+		}
 	)
 
-	t.Run("toggles the flag and returns the updated value", func(t *testing.T) {
-		var (
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-			toggled      = updatableFlag
-		)
-		toggled.Enabled = !updatableFlag.Enabled
+	type testCase struct {
+		name       string
+		featureID  int32
+		setupMocks func(databaseMock *mocks.MockDatabase)
+		assert     func(t *testing.T, got services.FeatureFlag, err error)
+	}
 
-		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
-		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(nil)
+	toggledUpdatableFlag := updatableFlag
+	toggledUpdatableFlag.Enabled = true
 
-		got, err := svc.ToggleFlag(ctx, updatableFlag.ID)
-		require.NoError(t, err)
-		assert.Equal(t, toggled, got)
-	})
+	enabledFindingsPrioritizationFlag := findingsPrioritizationFlag
+	enabledFindingsPrioritizationFlag.Enabled = true
 
-	t.Run("returns ErrNotUserUpdatable when the flag is not user updatable", func(t *testing.T) {
-		var (
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
+	testCases := []testCase{
+		{
+			name:      "toggles the flag and returns the updated value",
+			featureID: updatableFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, toggledUpdatableFlag, got)
+			},
+		},
+		{
+			name:      "requests analysis when findings prioritization is enabled",
+			featureID: findingsPrioritizationFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				databaseMock.EXPECT().RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(nil)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, enabledFindingsPrioritizationFlag, got)
+			},
+		},
+		{
+			name:      "does not request analysis when findings prioritization is disabled",
+			featureID: enabledFindingsPrioritizationFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, enabledFindingsPrioritizationFlag.ID).Return(enabledFindingsPrioritizationFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, findingsPrioritizationFlag, got)
+			},
+		},
+		{
+			name:      "returns ErrNotUserUpdatable when the flag is not user updatable",
+			featureID: nonUpdatableFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				assert.ErrorIs(t, err, services.ErrNotUserUpdatable)
+				assert.Equal(t, nonUpdatableFlag, got)
+			},
+		},
+		{
+			name:      "propagates errors from GetFlagByID",
+			featureID: 99,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				assert.ErrorIs(t, err, unexpectedErr)
+				assert.Equal(t, services.FeatureFlag{}, got)
+			},
+		},
+		{
+			name:      "propagates errors from SetFlag",
+			featureID: updatableFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(setFlagErr)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				assert.ErrorIs(t, err, setFlagErr)
+				assert.Equal(t, toggledUpdatableFlag, got)
+			},
+		},
+		{
+			name:      "propagates errors from RequestAnalysis",
+			featureID: findingsPrioritizationFlag.ID,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				databaseMock.EXPECT().RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(requestAnalysisErr)
+			},
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
+				assert.ErrorIs(t, err, requestAnalysisErr)
+				assert.Equal(t, enabledFindingsPrioritizationFlag, got)
+			},
+		},
+	}
 
-		databaseMock.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 
-		got, err := svc.ToggleFlag(ctx, nonUpdatableFlag.ID)
-		assert.ErrorIs(t, err, services.ErrNotUserUpdatable)
-		assert.Equal(t, nonUpdatableFlag, got)
-	})
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
 
-	t.Run("propagates errors from GetFlagByID", func(t *testing.T) {
-		var (
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-		)
+			testCase.setupMocks(databaseMock)
 
-		databaseMock.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
-
-		_, err := svc.ToggleFlag(ctx, 99)
-		assert.ErrorIs(t, err, unexpectedErr)
-	})
-
-	t.Run("propagates errors from SetFlag", func(t *testing.T) {
-		var (
-			databaseMock = mocks.NewMockDatabase(t)
-			svc          = services.NewService(databaseMock)
-			toggled      = updatableFlag
-		)
-		toggled.Enabled = !updatableFlag.Enabled
-
-		databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
-		databaseMock.EXPECT().SetFlag(ctx, toggled).Return(setFlagErr)
-
-		_, err := svc.ToggleFlag(ctx, updatableFlag.ID)
-		assert.ErrorIs(t, err, setFlagErr)
-	})
+			got, err := svc.ToggleFlag(ctx, testCase.featureID)
+			testCase.assert(t, got, err)
+		})
+	}
 }
