@@ -18,15 +18,6 @@ import { Button, ButtonProps } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
 import { cn } from '../../utils';
 
-// Preserves the legacy MUI GraphButton appearance (neutral chip, capitalized text, no underline)
-// while rendering on the doodle-ui Button. Colors match the neutral.secondary/tertiary and
-// color.primary palette values for light and dark themes.
-const graphButtonClasses = cn(
-    'h-4 min-w-0 rounded-lg p-3 text-base capitalize',
-    'bg-[#F4F4F4] text-[#1D1B20] dark:bg-[#222222] dark:text-white',
-    'hover:bg-[#E3E7EA] hover:no-underline dark:hover:bg-[#272727]'
-);
-
 export interface GraphButtonProps extends Omit<ButtonProps, 'children'> {
     displayText: string | ReactNode;
 }
@@ -35,7 +26,14 @@ const GraphButton: FC<GraphButtonProps> = (props) => {
     const { displayText, className, ...attributes } = props;
 
     return (
-        <Button {...attributes} className={cn(graphButtonClasses, className)}>
+        <Button
+            {...attributes}
+            className={cn(
+                'h-4 min-w-0 rounded-lg p-3 text-base capitalize',
+                'bg-[#F4F4F4] text-[#1D1B20] dark:bg-[#222222] dark:text-white',
+                'hover:bg-[#E3E7EA] hover:no-underline dark:hover:bg-[#272727]',
+                className
+            )}>
             {displayText}
         </Button>
     );

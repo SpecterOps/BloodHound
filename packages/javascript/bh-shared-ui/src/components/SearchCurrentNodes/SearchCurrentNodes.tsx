@@ -115,7 +115,7 @@ const SearchCurrentNodes: FC<{
 
     return (
         <div ref={containerRef}>
-            <div className={cn('bg-neutral-2 shadow-outer-1 ', className)}>
+            <div className={cn('bg-neutral-2 shadow-outer-1', className)}>
                 <div className={cn('overflow-auto max-h-80')}>
                     <ul
                         data-testid={'current-results-list'}
