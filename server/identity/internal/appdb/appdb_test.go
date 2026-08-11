@@ -31,10 +31,10 @@ import (
 )
 
 // expectedGetPermissionSQL is the literal SQL the Store issues for GetPermission.
-const expectedGetPermissionSQL = `SELECT * FROM permissions WHERE id = $1 LIMIT $2`
+const expectedGetPermissionSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions WHERE id = $1 LIMIT $2`
 
 // expectedGetRoleSQL is the literal SQL the Store issues for the roles query in GetRole.
-const expectedGetRoleSQL = `SELECT * FROM roles WHERE id = $1 LIMIT $2`
+const expectedGetRoleSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE id = $1 LIMIT $2`
 
 // expectedGetRolePermissionsSQL is the literal SQL the Store issues for the
 // per-role permissions query in GetRole.
@@ -49,19 +49,19 @@ const expectedListRolePermissionsTwoSQL = `SELECT rp.role_id, p.id, p.authority,
 
 // expectedListRolesSQL is the literal SQL the Store issues for the roles query in
 // ListRoles when no filters or sorts are supplied.
-const expectedListRolesSQL = `SELECT * FROM roles`
+const expectedListRolesSQL = `SELECT id, name, description, created_at, updated_at FROM roles`
 
 // expectedListRolesSortedSQL is the literal SQL the Store issues when a single
 // ascending sort on name is supplied.
-const expectedListRolesSortedSQL = `SELECT * FROM roles ORDER BY name ASC`
+const expectedListRolesSortedSQL = `SELECT id, name, description, created_at, updated_at FROM roles ORDER BY name ASC`
 
 // expectedListRolesFilteredSQL is the literal SQL the Store issues when a single
 // equality filter on name is supplied.
-const expectedListRolesFilteredSQL = `SELECT * FROM roles WHERE (name = $1)`
+const expectedListRolesFilteredSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE (name = $1)`
 
 // expectedListRolesFilteredByIDSQL is the literal SQL the Store issues when a
 // single greater-than filter on the numeric id column is supplied.
-const expectedListRolesFilteredByIDSQL = `SELECT * FROM roles WHERE (id > $1)`
+const expectedListRolesFilteredByIDSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE (id > $1)`
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
