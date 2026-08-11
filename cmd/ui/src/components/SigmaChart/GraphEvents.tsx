@@ -138,9 +138,22 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
     const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
-    const cancelSnapAnimation = useRef<(() => void) | null>(null);
+    const cancelSnapAnimationRef = useRef<(() => void) | null>(null);
+    const dragResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const dragGenerationRef = useRef(0);
 
-    useEffect(() => () => cancelSnapAnimation.current?.(), []);
+    const cancelSnapAnimation = useCallback(() => {
+        cancelSnapAnimationRef.current?.();
+        cancelSnapAnimationRef.current = null;
+    }, []);
+
+    useEffect(
+        () => () => {
+            cancelSnapAnimation();
+            if (dragResetTimeoutRef.current) clearTimeout(dragResetTimeoutRef.current);
+        },
+        [cancelSnapAnimation]
+    );
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
@@ -170,24 +183,27 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
 
             runSequentialLayout: () => {
+                cancelSnapAnimation();
                 sequentialLayout(graph);
                 if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
             runStandardLayout: () => {
+                cancelSnapAnimation();
                 standardLayout(graph);
                 if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
         };
-    }, [sigma, graph, snapToGridEnabled]);
+    }, [sigma, graph, snapToGridEnabled, cancelSnapAnimation]);
 
     useEffect(() => {
+        cancelSnapAnimation();
         if (!snapToGridEnabled) return;
 
         snapGraphPositions(graph);
         sigma.refresh();
-    }, [graph, sigma, snapToGridEnabled]);
+    }, [graph, sigma, snapToGridEnabled, cancelSnapAnimation]);
 
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
@@ -244,8 +260,12 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             downNode: (event) => {
                 if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
-                    cancelSnapAnimation.current?.();
-                    cancelSnapAnimation.current = null;
+                    cancelSnapAnimation();
+                    if (dragResetTimeoutRef.current) {
+                        clearTimeout(dragResetTimeoutRef.current);
+                        dragResetTimeoutRef.current = null;
+                    }
+                    dragGenerationRef.current += 1;
 
                     const node = graph.getNodeAttributes(event.node);
                     setDraggedMeta({
@@ -268,18 +288,24 @@ export const GraphEvents = forwardRef(function GraphEvents(
                             [draggedMeta.id]: { x: snappedPosition.x, y: snappedPosition.y },
                         };
 
-                        cancelSnapAnimation.current = animateNodes(
+                        cancelSnapAnimationRef.current = animateNodes(
                             graph,
                             animationTarget,
                             { duration: 100, easing: 'quadraticOut' },
                             () => {
-                                cancelSnapAnimation.current = null;
+                                cancelSnapAnimationRef.current = null;
                             }
                         );
                     }
 
                     // Timeout prevents state update race conditions between this an mousemovebody.
-                    setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
+                    const releasedGeneration = dragGenerationRef.current;
+                    dragResetTimeoutRef.current = setTimeout(() => {
+                        if (dragGenerationRef.current === releasedGeneration) {
+                            setDraggedMeta(DEFAULT_DRAGGED_META);
+                        }
+                        dragResetTimeoutRef.current = null;
+                    }, 10);
                 }
             },
             mousemovebody: (event) => {
@@ -334,6 +360,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             clickStage: () => onClickStage?.(),
         });
     }, [
+        cancelSnapAnimation,
         draggedMeta,
         draggedMeta.id,
         draggedMeta.offset,

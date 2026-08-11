@@ -29,14 +29,35 @@ const sigmaMocks = vi.hoisted(() => ({
 }));
 
 const animationMocks = vi.hoisted(() => ({
-    animateNodes: vi.fn(
-        (graph: MultiDirectedGraph, targets: Record<string, { x: number; y: number }>, _options, callback) => {
-            Object.entries(targets).forEach(([id, position]) => graph.mergeNodeAttributes(id, position));
-            callback?.();
-            return vi.fn();
-        }
-    ),
+    pending: [] as Array<{
+        callback?: () => void;
+        cancel: ReturnType<typeof vi.fn>;
+        cancelled: boolean;
+        graph: MultiDirectedGraph;
+        targets: Record<string, { x: number; y: number }>;
+    }>,
+    animateNodes: vi.fn((graph, targets, _options, callback) => {
+        const animation = {
+            callback,
+            cancel: vi.fn(() => {
+                animation.cancelled = true;
+            }),
+            cancelled: false,
+            graph,
+            targets,
+        };
+        animationMocks.pending.push(animation);
+        return animation.cancel;
+    }),
 }));
+
+const completeLatestAnimation = () => {
+    const animation = animationMocks.pending.at(-1);
+    if (!animation || animation.cancelled) return;
+
+    Object.entries(animation.targets).forEach(([id, position]) => animation.graph.mergeNodeAttributes(id, position));
+    animation.callback?.();
+};
 
 const layoutMocks = vi.hoisted(() => ({
     sequentialLayout: vi.fn((graph: MultiDirectedGraph) => {
@@ -125,6 +146,7 @@ describe('GraphEvents snap to grid', () => {
         sigmaMocks.registerEvents.mockClear();
         sigmaMocks.setSettings.mockClear();
         animationMocks.animateNodes.mockClear();
+        animationMocks.pending = [];
         layoutMocks.sequentialLayout.mockClear();
         layoutMocks.standardLayout.mockClear();
     });
@@ -156,6 +178,7 @@ describe('GraphEvents snap to grid', () => {
 
         act(() => {
             sigmaMocks.handlers.mouseup({});
+            completeLatestAnimation();
         });
 
         expect(getPosition(graph, 'bravo')).toEqual(fixedPosition);
@@ -168,6 +191,81 @@ describe('GraphEvents snap to grid', () => {
             expect.any(Function)
         );
         expect(sigmaMocks.sigma.refresh).toHaveBeenCalledOnce();
+    });
+
+    it('keeps a rapid re-grab active after the prior drag reset delay', () => {
+        vi.useFakeTimers();
+        const graph = createGraph();
+        sigmaMocks.sigma = createSigma(graph);
+        render(<GraphEvents highlightedItem={null} snapToGridEnabled />);
+
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 0, y: 0 }, node: 'alpha' });
+        });
+        act(() => {
+            sigmaMocks.handlers.mousemovebody({ x: 37, y: 43 });
+        });
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+        const firstAnimation = animationMocks.pending[0];
+
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 37, y: 43 }, node: 'alpha' });
+        });
+        act(() => {
+            vi.advanceTimersByTime(10);
+            sigmaMocks.handlers.mousemovebody({ x: 71, y: 83 });
+        });
+
+        expect(firstAnimation.cancel).toHaveBeenCalledOnce();
+        expect(getPosition(graph, 'alpha')).toEqual({ x: 71, y: 83 });
+        vi.useRealTimers();
+    });
+
+    it('cancels settlement before disabling snap or applying another layout', () => {
+        const graph = createGraph();
+        const ref = createRef<any>();
+        sigmaMocks.sigma = createSigma(graph);
+        const { rerender } = render(<GraphEvents highlightedItem={null} snapToGridEnabled ref={ref} />);
+
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 0, y: 0 }, node: 'alpha' });
+        });
+        act(() => {
+            sigmaMocks.handlers.mousemovebody({ x: 37, y: 43 });
+        });
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+        const animationBeforeDisable = animationMocks.pending[0];
+        rerender(<GraphEvents highlightedItem={null} snapToGridEnabled={false} ref={ref} />);
+        const positionAtDisable = getPosition(graph, 'alpha');
+        completeLatestAnimation();
+
+        expect(animationBeforeDisable.cancel).toHaveBeenCalledOnce();
+        expect(getPosition(graph, 'alpha')).toEqual(positionAtDisable);
+
+        rerender(<GraphEvents highlightedItem={null} snapToGridEnabled ref={ref} />);
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 0, y: 0 }, node: 'alpha' });
+        });
+        act(() => {
+            sigmaMocks.handlers.mousemovebody({ x: 137, y: 143 });
+        });
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+        act(() => {
+            ref.current.runSequentialLayout();
+        });
+        const animationBeforeLayout = animationMocks.pending[1];
+        const positionAfterLayout = getPosition(graph, 'alpha');
+        completeLatestAnimation();
+
+        expect(animationBeforeLayout.cancel).toHaveBeenCalledOnce();
+        expect(getPosition(graph, 'alpha')).toEqual(positionAfterLayout);
+        expectGridAlignedWithoutCollision(graph);
     });
 
     it('resnaps both imperative layouts while enabled', () => {
