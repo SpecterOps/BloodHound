@@ -192,7 +192,7 @@ func assertNoAnalysisRequest(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	t.Helper()
 
 	var count int
-	err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM analysis_request_switch`).Scan(&count)
+	err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM analysis_request_switch WHERE request_type = $1`, model.AnalysisRequestAnalysis).Scan(&count)
 	require.NoError(t, err)
 	assert.Zero(t, count)
 }
