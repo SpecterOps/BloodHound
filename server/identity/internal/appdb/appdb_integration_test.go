@@ -338,7 +338,7 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 			store, pool = setupStoreAndPool(t)
 		)
 
-		addStrayDeletedAtColumn(t, ctx, pool, "roles")
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
 
 		expected := seededRole(t, ctx, pool)
 
@@ -354,7 +354,7 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 			store, pool = setupStoreAndPool(t)
 		)
 
-		addStrayDeletedAtColumn(t, ctx, pool, "roles")
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
 
 		expectedCount := seededRoleCount(t, ctx, pool)
 		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
@@ -370,7 +370,7 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 			store, pool = setupStoreAndPool(t)
 		)
 
-		addStrayDeletedAtColumn(t, ctx, pool, "permissions")
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "permissions")
 
 		expected := seededPermission(t, ctx, pool)
 
