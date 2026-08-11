@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services/mocks"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,6 +168,56 @@ func TestService_GetNode(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestService_FetchNodesByObjectIDsAndKinds(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		unexpectedErr = errors.New("connection refused")
+		kinds         = graph.Kinds{graph.StringKind("Base"), graph.StringKind("AZBase")}
+		objectIDs     = []string{"S-1-5-21-1", "S-1-5-21-2"}
+		wantNodes     = graph.NewNodeSet(graph.NewNode(graph.ID(1), graph.NewProperties()))
+	)
+
+	tests := []struct {
+		name      string
+		setupMock func(databaseMock *mocks.MockDatabase)
+		wantErr   error
+	}{
+		{
+			name: "success_-_forwards_kinds_and_object_ids_to_database",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().FetchNodesByObjectIDsAndKinds(ctx, kinds, []string{objectIDs[0], objectIDs[1]}).Return(wantNodes, nil)
+			},
+		},
+		{
+			name: "error_-_propagates_database_error",
+			setupMock: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().FetchNodesByObjectIDsAndKinds(ctx, kinds, []string{objectIDs[0], objectIDs[1]}).Return(nil, unexpectedErr)
+			},
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			tt.setupMock(databaseMock)
+
+			result, err := svc.FetchNodesByObjectIDsAndKinds(ctx, kinds, objectIDs...)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				assert.Nil(t, result)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, wantNodes, result)
 			}
 		})
 	}

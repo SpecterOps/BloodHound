@@ -22,6 +22,8 @@ import (
 	"context"
 	"encoding/json"
 	"time"
+
+	"github.com/specterops/dawgs/graph"
 )
 
 // Database describes the persistence capabilities the graphdb Service requires.
@@ -34,6 +36,7 @@ type Database interface {
 	GetKindByName(ctx context.Context, name string) (Kind, error)
 	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
+	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 }
 
 // Kind is the domain representation of a relationship or node kind, pairing the kind name
@@ -71,4 +74,10 @@ type Service struct {
 // NewService constructs a Service backed by the supplied Database implementation.
 func NewService(databaseInterface Database) *Service {
 	return &Service{db: databaseInterface}
+}
+
+// FetchNodesByObjectIDsAndKinds returns the graph nodes matching any of the supplied kinds
+// whose object id is contained in objectIDs.
+func (s *Service) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error) {
+	return s.db.FetchNodesByObjectIDsAndKinds(ctx, kinds, objectIDs...)
 }
