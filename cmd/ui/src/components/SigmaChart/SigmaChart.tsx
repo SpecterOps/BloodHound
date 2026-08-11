@@ -33,7 +33,7 @@ import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
 import { GraphEdgeEvents } from './GraphEdgeEvents';
 import { GraphEvents } from './GraphEvents';
 
-export interface SigmaChartProps {
+interface SigmaChartProps {
     graph?: MultiDirectedGraph<Attributes, Attributes, Attributes>;
     highlightedItem: string | null;
     onClickNode: (id: string) => void;

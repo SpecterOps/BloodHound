@@ -237,7 +237,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
                         id: event.node,
                         offset: getNodeOffset(node, sigma.viewportToGraph(event.event)),
                         origin: { x: node.x, y: node.y },
-                        occupiedGridPoints: getOccupiedGridPoints(getGraphPositions(graph), new Set([event.node])),
+                        occupiedGridPoints: snapToGridEnabled
+                            ? getOccupiedGridPoints(getGraphPositions(graph), new Set([event.node]))
+                            : new Set(),
                     });
                 }
             },
