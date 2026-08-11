@@ -135,6 +135,17 @@ describe('RulesAccordion', () => {
         );
     });
 
+    it('disables sortable headers only while their accordions are closed', () => {
+        render(<RulesAccordion />);
+
+        const customRulesSortButton = screen.getByRole('button', { name: 'Sort by Custom Rules' });
+        const defaultRulesSortButton = screen.getByRole('button', { name: 'Sort by Default Rules' });
+
+        expect(customRulesSortButton).toBeEnabled();
+        expect(defaultRulesSortButton).toBeDisabled();
+        expect(defaultRulesSortButton).toHaveClass('disabled:!text-text-main', 'disabled:!opacity-100');
+    });
+
     it('navigates to rule details when clicking a rule row', async () => {
         render(<RulesAccordion />);
 

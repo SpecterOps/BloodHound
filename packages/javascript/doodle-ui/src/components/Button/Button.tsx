@@ -177,17 +177,16 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
 TextButton.displayName = 'TextButton';
 
 // TODO remove/refactor in BED-6062
-const defaultIconButtonClasses = cn(
+const defaultIconButtonClasses = [
     'hover:text-primary dark:hover:text-primary',
     'active:bg-transparent active:text-secondary dark:active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary'
-);
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary',
+];
 
 export const IconButtonVariants = cva(
     [
         ...buttonBaseClasses,
-        'inline-grid size-fit min-h-8 min-w-8 shrink-0 place-items-center',
-        'rounded-full border-0 p-2',
+        'h-fit w-fit min-h-8 min-w-8 p-2 inline-grid shrink-0 place-items-center rounded-full border-0',
     ],
     {
         variants: {
@@ -215,7 +214,9 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
     { variant = 'default', children, className, color, disabled = false, size, ...props },
     ref
 ) {
-    // TODO remove BED-6062
+    // TODO remove/refactor BED-6062
+    // allow for Icon prop and chosing the icon
+    // add tooltip / see Icon component
     return (
         <BaseUIButton
             {...props}

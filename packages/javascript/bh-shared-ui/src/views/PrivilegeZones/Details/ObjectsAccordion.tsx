@@ -170,9 +170,11 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                             }}
                             sortOrder={sortOrder}
+                            disable={!isOpen}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
                                 button: cn('font-bold text-base', {
+                                    'disabled:!text-text-main disabled:!opacity-100': !isOpen,
                                     '[&>svg]:hidden': !isOpen,
                                 }),
                             }}

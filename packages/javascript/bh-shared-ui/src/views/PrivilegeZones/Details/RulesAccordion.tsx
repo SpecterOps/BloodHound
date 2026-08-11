@@ -238,7 +238,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     <div className='flex items-center gap-2'>
                         <SortableHeader
                             title={filterLabels[filterKey]}
-                            disable={isAccordionDisabled}
+                            disable={!isOpen || isAccordionDisabled}
                             onSort={() => {
                                 setSortOrder((sortOrder) =>
                                     sortOrder === SortOrderAscending ? SortOrderDescending : SortOrderAscending
@@ -250,6 +250,8 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                                 button: cn('font-bold text-base', {
                                     '[&>svg]:hidden': !isOpen || isAccordionDisabled,
                                     'opacity-50': isAccordionDisabled,
+                                    'disabled:!text-text-main disabled:!opacity-100 disabled:dark:!text-common-white disabled:dark:!opacity-100':
+                                        !isOpen && !isAccordionDisabled,
                                 }),
                             }}
                         />

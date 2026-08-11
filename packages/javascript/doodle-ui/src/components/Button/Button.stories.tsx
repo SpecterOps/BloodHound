@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faInfo, faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
@@ -242,16 +242,16 @@ export const IconButton: IconButtonStory = {
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
-            <div className='flex items-center gap-6'>
+            <div className='flex items-center gap-4'>
                 <div className='flex flex-col items-center gap-4'>
                     <IconButtonComponent aria-label='Star Icon' variant='primary'>
-                        <FontAwesomeIcon icon={faStar} />
+                        <FontAwesomeIcon icon={faInfo} />
                     </IconButtonComponent>
                     Primary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
                     <IconButtonComponent aria-label='Gear Icon' variant='secondary'>
-                        <FontAwesomeIcon icon={faStar} />
+                        <FontAwesomeIcon icon={faTrash} />
                     </IconButtonComponent>
                     Secondary
                 </div>
