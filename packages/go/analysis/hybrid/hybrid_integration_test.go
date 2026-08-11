@@ -578,6 +578,24 @@ func TestManageEntraDSSyncEdges(t *testing.T) {
 			}(),
 			expectCorrelation: true, expectManageSync: false, expectManageFilter: true,
 		},
+		{
+			name: "MissingManagerDoesNotSuppressCorrelationOrFilterEdge",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.manageDomainService = false
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: false, expectManageFilter: true,
+		},
+		{
+			name: "MissingRunsAsDoesNotSuppressCorrelationOrManagerEdge",
+			options: func() manageEntraDSSyncHarnessOptions {
+				options := validManageEntraDSSyncOptions()
+				options.includeRunsAs = false
+				return options
+			}(),
+			expectCorrelation: true, expectManageSync: true, expectManageFilter: false,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -738,6 +756,8 @@ func TestGetManageEntraDSSyncEdgeComposition(t *testing.T) {
 type manageEntraDSSyncHarnessOptions struct {
 	applicationID               string
 	adminGroupName              string
+	manageDomainService         bool
+	includeRunsAs               bool
 	sameTenant                  bool
 	syncAdminGroup              bool
 	matchingDomainName          bool
@@ -756,6 +776,8 @@ func validManageEntraDSSyncOptions() manageEntraDSSyncHarnessOptions {
 	return manageEntraDSSyncHarnessOptions{
 		applicationID:               entraDSScopedSyncApplicationID,
 		adminGroupName:              entraDSAdminGroupNamePrefix + "SPECTER.DEV",
+		manageDomainService:         true,
+		includeRunsAs:               true,
 		sameTenant:                  true,
 		syncAdminGroup:              true,
 		matchingDomainName:          true,
@@ -812,11 +834,15 @@ func setupManageEntraDSSyncHarness(t *testing.T, testContext *integration.GraphT
 	manager := testContext.NewAzureGroup("Managed Domain Manager", integration.RandomObjectID(t), tenantID)
 	azAdminGroupObjectID := integration.RandomObjectID(t)
 	azAdminGroup := testContext.NewAzureGroup(options.adminGroupName, azAdminGroupObjectID, tenantID)
-	testContext.NewRelationship(application, servicePrincipal, azure.RunsAs)
+	if options.includeRunsAs {
+		testContext.NewRelationship(application, servicePrincipal, azure.RunsAs)
+	}
 	testContext.NewRelationship(servicePrincipalTenant, servicePrincipal, azure.Contains)
 	testContext.NewRelationship(tenant, manager, azure.Contains)
 	testContext.NewRelationship(tenant, azAdminGroup, azure.Contains)
-	testContext.NewRelationship(manager, domainService, azure.ManageEntraDS)
+	if options.manageDomainService {
+		testContext.NewRelationship(manager, domainService, azure.ManageEntraDS)
+	}
 
 	adminGroupAADObjectID := integration.RandomObjectID(t)
 	if options.syncAdminGroup {

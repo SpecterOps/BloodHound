@@ -173,14 +173,21 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		// Now that we know which AZ users and AZ groups are synced to Entra Domain Services, compute the
 		// AddEntraDSGroupMember edges (an Entra DS-synced AZUser that can add or remove members from an Entra DS-synced AZGroup)
 		if err := addAddEntraDSGroupMemberEdges(tx, syncedToEntraDSUserEdgeMap, syncedToEntraDSGroupEdgeMap, addEntraDSGroupMemberEdgeMap); err != nil {
-			return err
+			return fmt.Errorf("adding Entra DS group membership relationships: %w", err)
 		}
 
 		// A qualified AZManageEntraDS principal controls the broad synchronization boundary. The Domain Controller
 		// Services service principal can only add users through filtered group scope when the related managed domain is
 		// currently configured for filtered synchronization across all users.
 		if err := addManageEntraDSSyncEdges(tx, adGroups, entraDSAdminGroupTenantMap, syncedToEntraDSGroupEdgeMap, entraDSForEdgeMap, manageEntraDSSyncEdgeMap, manageEntraDSSyncFilterEdgeMap); err != nil {
-			return err
+			if !errors.Is(err, graph.ErrNoResultsFound) {
+				return fmt.Errorf("adding Entra DS synchronization relationships: %w", err)
+			}
+
+			// The synchronization-control relationships depend on optional evidence from both graph platforms. Missing
+			// evidence must fail closed for those relationships without suppressing the independently supported identity
+			// correlation and group-control relationships assembled above.
+			slog.WarnContext(ctx, "Skipping incomplete Entra DS synchronization correlation", attr.Error(err))
 		}
 
 		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
@@ -293,13 +300,19 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			return err
 		}
 
-		return tx.Commit()
+		return nil
 	})
 
-	// Because we need to close the operation either way at this stage, we attempt to close it and then report either or
-	// both errors in one line
-	if opErr := operation.Done(); opErr != nil || err != nil {
-		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %v", opErr, err)
+	// Close the operation even when the read phase failed so in-flight workers cannot leak. Keep the read and write
+	// failures distinct; formatting a nil operation error with %w obscures the actual cause.
+	if opErr := operation.Done(); opErr != nil {
+		if err != nil {
+			return &operation.Stats, fmt.Errorf("marking hybrid operation as done: %w; read error: %v", opErr, err)
+		}
+
+		return &operation.Stats, fmt.Errorf("marking hybrid operation as done: %w", opErr)
+	} else if err != nil {
+		return &operation.Stats, fmt.Errorf("reading hybrid relationship inputs: %w", err)
 	}
 
 	return &operation.Stats, nil
@@ -400,7 +413,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 
 	domains, err := fetchADDomains(tx)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetching AD domains: %w", err)
 	}
 
 	for _, domain := range domains {
@@ -414,7 +427,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 
 	domainServices, err := fetchEntraDomainServices(tx)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetching Entra DS resources: %w", err)
 	}
 
 	for _, domainService := range domainServices {
@@ -458,7 +471,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 
 		containedDomainUserGroups, err := filterContainedDomainUsers(tx, domain, domainUserGroups)
 		if err != nil {
-			return err
+			return fmt.Errorf("finding Domain Users containment for domain %d: %w", domain.ID, err)
 		}
 
 		if len(containedDomainUserGroups) > 0 {
@@ -470,7 +483,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 				)
 			}))
 			if err != nil {
-				return err
+				return fmt.Errorf("fetching Entra DS managers for resource %d: %w", domainService.ID, err)
 			}
 
 			for _, manager := range managers {
@@ -499,7 +512,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 		)
 	}))
 	if err != nil {
-		return err
+		return fmt.Errorf("fetching Domain Controller Services application relationships: %w", err)
 	}
 
 	for _, runsAsRelationship := range runsAsRelationships {
@@ -513,7 +526,7 @@ func addManageEntraDSSyncEdges(tx graph.Transaction, adGroups []*graph.Node, ent
 
 		application, servicePrincipal, err := ops.FetchRelationshipNodes(tx, runsAsRelationship)
 		if err != nil {
-			return err
+			return fmt.Errorf("fetching endpoints for AZRunsAs relationship %d: %w", runsAsRelationship.ID, err)
 		}
 
 		applicationID, hasApplicationID, err := normalizedNodeProperty(application, common.ObjectID.String())
