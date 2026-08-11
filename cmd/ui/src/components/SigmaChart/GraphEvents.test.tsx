@@ -268,6 +268,57 @@ describe('GraphEvents snap to grid', () => {
         expectGridAlignedWithoutCollision(graph);
     });
 
+    it('cancels settlement when the Sigma graph is replaced', () => {
+        const originalGraph = createGraph();
+        sigmaMocks.sigma = createSigma(originalGraph);
+        const { rerender } = render(<GraphEvents highlightedItem={null} snapToGridEnabled />);
+
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 0, y: 0 }, node: 'alpha' });
+        });
+        act(() => {
+            sigmaMocks.handlers.mousemovebody({ x: 37, y: 43 });
+        });
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+        const pendingAnimation = animationMocks.pending[0];
+        const positionBeforeReplacement = getPosition(originalGraph, 'alpha');
+
+        const replacementGraph = createGraph();
+        sigmaMocks.sigma = createSigma(replacementGraph);
+        rerender(<GraphEvents highlightedItem={null} snapToGridEnabled />);
+        completeLatestAnimation();
+
+        expect(pendingAnimation.cancel).toHaveBeenCalledOnce();
+        expect(getPosition(originalGraph, 'alpha')).toEqual(positionBeforeReplacement);
+        expectGridAlignedWithoutCollision(replacementGraph);
+    });
+
+    it('cancels settlement when unmounted', () => {
+        const graph = createGraph();
+        sigmaMocks.sigma = createSigma(graph);
+        const { unmount } = render(<GraphEvents highlightedItem={null} snapToGridEnabled />);
+
+        act(() => {
+            sigmaMocks.handlers.downNode({ event: { original: { button: 0 }, x: 0, y: 0 }, node: 'alpha' });
+        });
+        act(() => {
+            sigmaMocks.handlers.mousemovebody({ x: 37, y: 43 });
+        });
+        act(() => {
+            sigmaMocks.handlers.mouseup({});
+        });
+        const pendingAnimation = animationMocks.pending[0];
+        const positionBeforeUnmount = getPosition(graph, 'alpha');
+
+        unmount();
+        completeLatestAnimation();
+
+        expect(pendingAnimation.cancel).toHaveBeenCalledOnce();
+        expect(getPosition(graph, 'alpha')).toEqual(positionBeforeUnmount);
+    });
+
     it('resnaps both imperative layouts while enabled', () => {
         const graph = createGraph();
         const ref = createRef<any>();
