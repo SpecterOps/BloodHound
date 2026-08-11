@@ -42,6 +42,7 @@ export enum ConfigurationKey {
     APITokenExpiration = 'auth.api_token_expiration',
     ScheduledAnalysis = 'analysis.scheduled',
     SupportAccountProvisioning = 'auth.support_account_provisioning',
+    IWAClaimName = 'auth.iwa_claim_name',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -127,6 +128,13 @@ export type SupportAccountConfiguration = {
     };
 };
 
+export type IWAClaimNameConfiguration = {
+    key: ConfigurationKey.IWAClaimName;
+    value: {
+        name: string;
+    };
+};
+
 export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
@@ -138,7 +146,8 @@ export type ConfigurationPayload =
     | APITokenExpirationConfiguration
     | ScheduledAnalysisConfiguration
     | TimeoutLimitConfiguration
-    | SupportAccountConfiguration;
+    | SupportAccountConfiguration
+    | IWAClaimNameConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -241,4 +250,13 @@ export const parseSupportAccountConfiguration = (
     const config = getConfigurationFromKey(response, key);
 
     return config?.key == key ? config : undefined;
+};
+
+export const parseIWAClaimNameConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<IWAClaimNameConfiguration> | undefined => {
+    const key = ConfigurationKey.IWAClaimName;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
 };
