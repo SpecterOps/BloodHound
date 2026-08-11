@@ -154,16 +154,23 @@ func newToggleFlagHandler(db *database.BloodhoundDB, userID uuid.UUID) http.Hand
 
 // seedFeatureFlag inserts a feature_flags row directly, bypassing the Store API
 // which does not expose flag creation. Returns the inserted flag's ID.
+// If the key already exists, the row is updated in place so built-in migrated flags can be reused by tests.
 func seedFeatureFlag(t *testing.T, ctx context.Context, pool *pgxpool.Pool, key, name string, enabled, userUpdatable bool) int32 {
 	t.Helper()
 
 	var id int32
-	err := pool.QueryRow(ctx,
-		`INSERT INTO feature_flags (key, name, description, enabled, user_updatable, created_at, updated_at)
-		   VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		   RETURNING id`,
-		key, name, "seeded flag", enabled, userUpdatable,
-	).Scan(&id)
+	err := pool.QueryRow(ctx, `
+		INSERT INTO feature_flags (key, name, description, enabled, user_updatable, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+		ON CONFLICT (key) DO UPDATE
+		SET
+			name = EXCLUDED.name,
+			description = EXCLUDED.description,
+			enabled = EXCLUDED.enabled,
+			user_updatable = EXCLUDED.user_updatable,
+			updated_at = NOW()
+		RETURNING id
+	`, key, name, "seeded flag", enabled, userUpdatable).Scan(&id)
 	require.NoError(t, err)
 	return id
 }
