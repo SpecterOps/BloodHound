@@ -21,18 +21,23 @@ import References from '../AZEntraDSContributor/References';
 import Composition from './Composition';
 
 const General: FC = () => (
-    <Typography variant='body2'>
-        AZManageEntraDS is a post-processed, traversable relationship. The same effective principal has Contributor or
-        raw AZEntraDSContributor over the managed domain and also has Application Administrator and Groups Administrator
-        in the tenant.
+    <Typography variant='body2' component='div'>
+        BloodHound creates this post-processed relationship only when one effective principal has:
+        <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+            <li>AZContributor or raw AZEntraDSContributor over the target AZEntraDS resource.</li>
+            <li>Application Administrator in the target tenant.</li>
+            <li>Groups Administrator in the target tenant.</li>
+        </ol>
+        Post-processing accounts for inherited ARM scope, nested Azure group membership, and effective Entra role
+        assignments. Role scope is matched from <code>AZRole.tenantid</code>; a tenant-to-role AZContains relationship
+        is not required.
     </Typography>
 );
 
 const Abuse: FC = () => (
     <Typography variant='body2' component='div'>
         The source can change the Microsoft Entra Domain Services (Entra DS) managed domain's security configuration and
-        broad synchronization boundary. Live validation confirmed changes to a representative security setting,{' '}
-        <code>syncScope</code>, and <code>filteredSync</code> only when all three authorization components were present.
+        broad synchronization boundary when all three authorization components are present.
         <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
             <li>
                 Obtain an Azure Resource Manager access token and all three authorization components represented by the

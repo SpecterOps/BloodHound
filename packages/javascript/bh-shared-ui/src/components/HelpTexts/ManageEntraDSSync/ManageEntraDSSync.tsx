@@ -9,11 +9,18 @@ import { FC } from 'react';
 import Composition from './Composition';
 
 const General: FC = () => (
-    <Typography variant='body2'>
-        ManageEntraDSSync means the source can broaden the synchronization boundary of the correlated Microsoft Entra
-        Domain Services (Entra DS) domain and cause eligible Entra users to materialize with Domain Users access. It is
-        emitted from an AZManageEntraDS principal regardless of the current filteredSync and syncScope settings.
-    </Typography>
+    <>
+        <Typography variant='body2'>
+            BloodHound emits ManageEntraDSSync from each principal with AZManageEntraDS to a correlated Microsoft Entra
+            Domain Services (Entra DS) resource. The destination is the RID 513 Domain Users group in the Domain
+            identified by EntraDSFor.
+        </Typography>
+        <Typography variant='body2'>
+            The relationship is independent of current <code>filteredSync</code> and <code>syncScope</code> values
+            because the source can change both settings. BloodHound does not emit an unconditional attack edge from the
+            AZEntraDS resource.
+        </Typography>
+    </>
 );
 
 const Abuse: FC = () => (
@@ -49,6 +56,17 @@ const References: FC = () => (
             rel='noopener noreferrer'
             href='https://learn.microsoft.com/en-us/entra/identity/domain-services/synchronization'>
             Microsoft Entra Domain Services synchronization
+        </Link>
+        <br />
+        <Link
+            target='_blank'
+            rel='noopener noreferrer'
+            href='https://learn.microsoft.com/en-us/entra/identity/domain-services/scoped-synchronization'>
+            Configure scoped synchronization
+        </Link>
+        <br />
+        <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/techniques/T1136/002/'>
+            MITRE ATT&amp;CK T1136.002: Create Account - Domain Account
         </Link>
     </Box>
 );

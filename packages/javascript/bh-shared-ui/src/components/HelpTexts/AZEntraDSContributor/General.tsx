@@ -19,11 +19,18 @@ import { FC } from 'react';
 
 const General: FC = () => {
     return (
-        <Typography variant='body2'>
-            AZEntraDSContributor records an assignment of the built-in Domain Services Contributor Azure Resource
-            Manager role on the target AZEntraDS resource. It is raw authorization evidence and is not independently
-            traversable.
-        </Typography>
+        <>
+            <Typography variant='body2'>
+                AZEntraDSContributor records raw Azure Resource Manager authorization. The built-in Domain Services
+                Contributor role, definition ID <code>eeaeda52-9324-47f6-8069-5d5bade478b2</code>, grants{' '}
+                <code>Microsoft.AAD/domainServices/*</code> and related network permissions over the target AZEntraDS
+                resource.
+            </Typography>
+            <Typography variant='body2'>
+                The edge is not independently traversable. BloodHound creates AZManageEntraDS only when the same
+                effective principal also has Application Administrator and Groups Administrator.
+            </Typography>
+        </>
     );
 };
 

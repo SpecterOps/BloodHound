@@ -21,24 +21,22 @@ const General: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                This relationship indicates that the Entra group and the Entra Domain Services group are the same group
-                across the Entra ID and managed domain boundary.
+                This relationship indicates that the Entra group and the Microsoft Entra Domain Services (Entra DS)
+                group are the same group across the Entra ID and managed domain boundary.
             </Typography>
             <Typography variant='body2'>
-                The Entra Domain Services group is created from the Entra group during synchronization and can be
-                correlated through the BloodHound aadobjectid property, collected from the LDAP attribute
-                msDS-aadObjectId. Membership changes made to the Entra group are synchronized into the corresponding
-                Entra Domain Services group.
+                The Entra DS group is created from the Entra group during synchronization and can be correlated through
+                the BloodHound aadobjectid property, collected from the LDAP attribute msDS-aadObjectId. Membership
+                changes made to the Entra group are synchronized into the corresponding Entra DS group.
             </Typography>
             <Typography variant='body2'>
-                Only direct membership is synchronized. Nested Entra groups do not become nested Entra Domain Services
-                groups through this relationship.
+                Only direct membership is synchronized. Nested Entra groups do not become nested Entra DS groups through
+                this relationship.
             </Typography>
             <Typography variant='body2'>
                 This relationship is informational. Control of the Entra group does not by itself provide a usable Entra
-                Domain Services identity. The related AddEntraDSGroupMember edge captures the case where a synchronized
-                Entra user can use control of a synchronized Entra group to gain effective membership in the Entra
-                Domain Services group.
+                DS identity. The related AddEntraDSGroupMember edge captures the case where a synchronized Entra user
+                can use control of a synchronized Entra group to gain effective membership in the Entra DS group.
             </Typography>
         </>
     );

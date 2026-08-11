@@ -37,10 +37,10 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 <strong>Microsoft Entra Domain Services</strong>: Contributor supplies the Azure Resource Manager
-                portion of managed-domain configuration authorization. Live validation required the same effective
-                principal to also have Application Administrator and Groups Administrator before changing a
-                representative security setting, syncScope, or filteredSync. BloodHound represents that conjunction with
-                the post-processed AZManageEntraDS edge.
+                portion of managed-domain configuration authorization. The same effective principal must also have
+                Application Administrator and Groups Administrator to change managed-domain security settings,
+                syncScope, or filteredSync. BloodHound represents that conjunction with the post-processed
+                AZManageEntraDS edge.
             </Typography>
             <Typography variant='body2'>
                 <strong>Resource Group</strong>: NOT abusable, and not collected by AzureHound

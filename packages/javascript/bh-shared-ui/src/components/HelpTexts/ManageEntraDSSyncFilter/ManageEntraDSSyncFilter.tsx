@@ -8,11 +8,17 @@ import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const General: FC = () => (
-    <Typography variant='body2'>
-        ManageEntraDSSyncFilter means the Domain Controller Services service principal can assign groups to the filtered
-        synchronization scope of the correlated managed domain. BloodHound emits it only for application ID
-        2565bd9d-da50-47d4-8b85-4c97f669dc36 when filteredSync is Enabled and syncScope is All.
-    </Typography>
+    <>
+        <Typography variant='body2'>
+            BloodHound emits ManageEntraDSSyncFilter from the service principal associated through AZRunsAs with Domain
+            Controller Services application ID <code>2565bd9d-da50-47d4-8b85-4c97f669dc36</code>. The service principal
+            and Microsoft Entra Domain Services (Entra DS) resource must belong to the same tenant, and the resource
+            must have <code>filteredSync=Enabled</code> and <code>syncScope=All</code>.
+        </Typography>
+        <Typography variant='body2'>
+            The destination is the RID 513 Domain Users group in the Domain identified by EntraDSFor.
+        </Typography>
+    </>
 );
 
 const Abuse: FC = () => (
@@ -61,6 +67,20 @@ const References: FC = () => (
             rel='noopener noreferrer'
             href='https://learn.microsoft.com/en-us/entra/identity/domain-services/scoped-synchronization'>
             Configure scoped synchronization
+        </Link>
+        <br />
+        <Link
+            target='_blank'
+            rel='noopener noreferrer'
+            href='https://learn.microsoft.com/en-us/entra/identity/domain-services/synchronization'>
+            Microsoft Entra Domain Services synchronization
+        </Link>
+        <br />
+        <Link
+            target='_blank'
+            rel='noopener noreferrer'
+            href='https://learn.microsoft.com/en-us/graph/api/resources/approleassignment'>
+            Microsoft Graph appRoleAssignedTo resource
         </Link>
     </Box>
 );
