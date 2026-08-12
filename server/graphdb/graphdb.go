@@ -44,7 +44,7 @@ type GraphDBRequestAdapter interface {
 // NewGraphDBRequestAdapter constructs a GraphDBRequestAdapter backed by the graph database
 // and the pgx connection pool.
 func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) GraphDBRequestAdapter {
-	return services.NewService(appdb.NewStore(graphDatabase, pool))
+	return appdb.NewStore(graphDatabase, pool)
 }
 
 // Register builds the graphdb store -> service -> handler chain and attaches the graphdb
@@ -55,10 +55,10 @@ func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) 
 func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, rateLimit func() mux.MiddlewareFunc, dogTags dogtags.Service) {
 	var (
 		store          = appdb.NewStore(graphDatabase, pool)
-		service        = services.NewService(store)
 		etacService    = etac.Register(pool, dogTags)
 		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
-		handlerSet     = handlers.NewHandlersContainer(service, nodeAuthorizer)
+		service        = services.NewService(store, nodeAuthorizer)
+		handlerSet     = handlers.NewHandlersContainer(service)
 	)
 
 	routes.Register(routerInst, handlerSet, rateLimit)

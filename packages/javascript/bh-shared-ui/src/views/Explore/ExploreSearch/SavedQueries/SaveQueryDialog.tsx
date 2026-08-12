@@ -18,7 +18,6 @@ import { useEffect, useRef, useState } from 'react';
 
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import {
-    Button,
     Card,
     CardContent,
     CardDescription,
@@ -33,6 +32,7 @@ import {
     DialogTitle,
     Input,
     Label,
+    TextButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import { UpdateUserQueryRequest } from 'js-client-library';
@@ -205,12 +205,16 @@ const SaveQueryDialog: React.FC<{
                                     ) : null}
 
                                     <DialogActions className='flex justify-end gap-4'>
-                                        <Button variant='text' onClick={onCancel}>
+                                        <TextButton className='text-sm' onClick={onCancel}>
                                             Cancel
-                                        </Button>
-                                        <Button variant='text' disabled={saveDisabled} onClick={handleSave}>
+                                        </TextButton>
+                                        <TextButton
+                                            fontColor='primary'
+                                            className='text-sm'
+                                            disabled={saveDisabled}
+                                            onClick={handleSave}>
                                             Save
-                                        </Button>
+                                        </TextButton>
                                     </DialogActions>
                                 </CardFooter>
                             </Card>

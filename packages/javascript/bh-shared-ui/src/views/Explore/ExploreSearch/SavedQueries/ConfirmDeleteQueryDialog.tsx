@@ -26,7 +26,7 @@ interface ConfirmDeleteQueryDialogProps {
 
 const ConfirmDeleteQueryDialog: FC<ConfirmDeleteQueryDialogProps> = ({ open, queryId, handleClose, deleteHandler }) => {
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth='xs' fullWidth>
             <DialogTitle>Delete Query</DialogTitle>
             <DialogContent>
                 <DialogContentText>Are you sure you want to delete this query?</DialogContentText>
@@ -40,7 +40,7 @@ const ConfirmDeleteQueryDialog: FC<ConfirmDeleteQueryDialogProps> = ({ open, que
                         if (deleteHandler) deleteHandler(queryId!);
                         handleClose();
                     }}
-                    color='primary'
+                    variant='primary'
                     autoFocus>
                     Confirm
                 </Button>

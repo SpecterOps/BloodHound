@@ -17,7 +17,6 @@
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Button,
     Card,
     CardContent,
     CardDescription,
@@ -26,6 +25,7 @@ import {
     TableBody,
     TableCell,
     TableRow,
+    TextButton,
     Tooltip,
 } from 'doodle-ui';
 import { useState } from 'react';
@@ -77,12 +77,11 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
                             {selectedObjects.map((node, index) => (
                                 <TableRow key={node.objectid + index} className='p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
-                                        <Button
-                                            variant={'text'}
+                                        <TextButton
                                             onClick={() => handleDeleteNode(node)}
                                             aria-label={`Remove ${node.name || node.objectid}`}>
                                             <FontAwesomeIcon icon={faTrashCan} />
-                                        </Button>
+                                        </TextButton>
                                     </TableCell>
                                     <TableCell className='text-center w-[60px]'>
                                         <NodeIcon nodeType={node.type || ''} />

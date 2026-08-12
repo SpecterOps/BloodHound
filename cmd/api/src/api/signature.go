@@ -17,19 +17,12 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"hash"
 	"io"
-	"net/http"
 	"os"
-	"time"
-
-	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 const ErrTemplateHMACSignature string = "unable to compute hmac signature: %w"
@@ -142,40 +135,4 @@ func NewRequestSignature(ctx context.Context, hasher func() hash.Hash, key strin
 	}
 
 	return digester.Sum(nil), nil
-}
-
-// SignRequestAtTime signs a given HTTP request using the BHE request signature scheme. The passed-in time value is used
-// for the DateKey portion of the signature digest.
-func SignRequestAtTime(hasher func() hash.Hash, id string, token string, datetime time.Time, request *http.Request) error {
-	datetimeFormatted := datetime.Format(time.RFC3339)
-	var (
-		buffer bytes.Buffer
-		tee    io.Reader
-	)
-
-	if request.Body != nil {
-		tee = io.TeeReader(request.Body, &buffer)
-	}
-
-	if signature, err := NewRequestSignature(request.Context(), hasher, token, datetimeFormatted, request.Method, request.URL.Path, tee); err != nil {
-		return err
-	} else {
-		// Overwrite the request body reader if the request body wasn't nil
-		if request.Body != nil {
-			request.Body = io.NopCloser(&buffer)
-		}
-
-		// Set the request headers
-		request.Header.Set(headers.Authorization.String(), fmt.Sprintf("%s %s", AuthorizationSchemeBHESignature, id))
-		request.Header.Set(headers.RequestDate.String(), datetimeFormatted)
-		request.Header.Set(headers.Signature.String(), base64.StdEncoding.EncodeToString(signature))
-	}
-
-	return nil
-}
-
-// SignRequest signs a given HTTP request using the BHE request signature scheme. Note: signatures are time-sensitive and
-// may only be valid for a maximum period of 2 hours.
-func SignRequest(tokenID, token string, request *http.Request) error {
-	return SignRequestAtTime(sha256.New, tokenID, token, time.Now(), request)
 }

@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, light, palette, text } from './colors';
+import { common, dark, elevation, light, palette, text } from './colors';
 
 const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
-const focusRingOffsetWidth = '1px';
+const focusRingOffsetWidth = '2px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -92,11 +92,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.light[0],
-            // '--elevation-1': elevation.light[1],
-            // '--elevation-2': elevation.light[2],
-            // '--elevation-3': elevation.light[3],
-            // '--elevation-4': elevation.light[4],
-            // '--elevation-5': elevation.light[5],
+            '--elevation-1': elevation.light[1],
+            '--elevation-2': elevation.light[2],
+            '--elevation-3': elevation.light[3],
+            '--elevation-4': elevation.light[4],
+            '--elevation-5': elevation.light[5],
 
             // STATUS
             '--status-error-main': light.status.error.main,
@@ -126,6 +126,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Button
             '--secondary-btn-fill': palette.neutral.light[300],
             '--secondary-btn-active-fill': palette.neutral.light[400],
+            // TODO remove
             '--tertiary-btn-border': palette.neutral.light[400],
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
@@ -337,11 +338,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            // '--elevation-1': elevation.dark[1],
-            // '--elevation-2': elevation.dark[2],
-            // '--elevation-3': elevation.dark[3],
-            // '--elevation-4': elevation.dark[4],
-            // '--elevation-5': elevation.dark[5],
+            '--elevation-1': elevation.dark[1],
+            '--elevation-2': elevation.dark[2],
+            '--elevation-3': elevation.dark[3],
+            '--elevation-4': elevation.dark[4],
+            '--elevation-5': elevation.dark[5],
 
             // STATUS
             '--status-error-main': dark.status.error.main,
@@ -519,12 +520,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         '.focus-ring': {
             outline: 'var(--focus-ring-width) solid var(--focus-ring)',
             'outline-offset': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-color': 'var(--focus-ring-offset)',
-            '--tw-ring-color': 'var(--focus-ring)',
-            '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
-            '--tw-ring-shadow':
-                '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
             'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
         },
         '.focus-ring-inset': {
