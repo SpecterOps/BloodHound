@@ -28,7 +28,7 @@ get:
     - name: sort_by
       description: |
         Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,
-        `asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.
+        `asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`, `risk_score`.
       in: query
       schema:
         $ref: "./../schemas/api.params.query.sort-by.yaml"
@@ -213,6 +213,10 @@ get:
                           type: string
                           format: date-time
                           description: Timestamp of last update.
+                        risk_score:
+                          type: string
+                          pattern: '^\d+$'
+                          description: Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision.
           examples:
             Mixed findings (relationship and list):
               summary: Unified response with both finding types
@@ -239,6 +243,7 @@ get:
                     status: "active"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
+                    risk_score: "451000000000"
                   - severity: "high"
                     finding: "Kerberoasting"
                     title: "Kerberoastable User Accounts"
@@ -257,6 +262,7 @@ get:
                     status: "accepted"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
+                    risk_score: "300000"
     400:
       $ref: "./../responses/bad-request.yaml"
     401:

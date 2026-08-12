@@ -34,12 +34,16 @@ allOf:
       AcceptedUntil:
         type: string
         format: date-time
-      ImpactPercentage: 
+      ImpactPercentage:
         type: number
         format: double
-      ImpactCount: 
+      ImpactCount:
         type: integer
         format: int64
+      risk_score:
+        type: string
+        pattern: '^\d+$'
+        description: Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision.
       Severity:
         type: string
         enum:
