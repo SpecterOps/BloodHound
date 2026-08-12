@@ -33,7 +33,7 @@ export const cypherSearchGraphQuery = (
     paramOptions: Partial<ExploreQueryParams>,
     userSettings: UserSettings
 ): ExploreGraphQueryOptions => {
-    const { searchType, cypherSearch, exploreSearchTab } = paramOptions;
+    const { searchType, cypherSearch } = paramOptions;
 
     if (!cypherSearch || !searchType) {
         return { enabled: false };
@@ -41,13 +41,7 @@ export const cypherSearchGraphQuery = (
 
     const decoded = decodeCypherQuery(cypherSearch);
 
-    const queryKey = [
-        ExploreGraphQueryKey,
-        searchType,
-        cypherSearch,
-        userSettings.headers?.Prefer,
-        exploreSearchTab || undefined,
-    ];
+    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch, userSettings.headers?.Prefer];
 
     const includeProperties = true;
 
