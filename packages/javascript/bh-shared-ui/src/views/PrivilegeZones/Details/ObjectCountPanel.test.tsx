@@ -52,7 +52,7 @@ describe('ObjectCountPanel', () => {
                     ctx.json({
                         data: {
                             total_count: 100,
-                            counts: { 'Object A': 50, 'Object B': 30, 'Object C': 20 },
+                            counts: { AZApp: 50, AZServicePrincipal: 30, CertTemplate: 20 },
                         },
                     })
                 );
@@ -63,11 +63,11 @@ describe('ObjectCountPanel', () => {
 
         expect(screen.getByText('Total Count')).toBeInTheDocument();
         expect(await screen.findByText('100')).toBeInTheDocument();
-        expect(screen.getByText('Object A')).toBeInTheDocument();
+        expect(screen.getByText('Azure Application')).toBeInTheDocument();
         expect(screen.getByText('50')).toBeInTheDocument();
-        expect(screen.getByText('Object B')).toBeInTheDocument();
+        expect(screen.getByText('Azure Service Principal')).toBeInTheDocument();
         expect(screen.getByText('30')).toBeInTheDocument();
-        expect(screen.getByText('Object C')).toBeInTheDocument();
+        expect(screen.getByText('Certificate Template')).toBeInTheDocument();
         expect(screen.getByText('20')).toBeInTheDocument();
     });
 });

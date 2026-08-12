@@ -20,14 +20,19 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { createMockAssetGroupMemberParams, createMockMemberCounts } from '../../mocks/factories';
+import { mockKindsHandler } from '../../mocks/handlers';
 import { act, render, screen, waitFor } from '../../test-utils';
 import AssetGroupFilters, { FILTERABLE_PARAMS } from './AssetGroupFilters';
 
 const filterParams = createMockAssetGroupMemberParams();
 const memberCounts = createMockMemberCounts();
+const nodeKindDisplayNames = {
+    AZApp: 'Azure Application',
+};
 
 describe('AssetGroupEdit', () => {
     const server = setupServer(
+        mockKindsHandler(undefined, undefined, nodeKindDisplayNames),
         rest.get(`/api/v2/custom-nodes`, async (req, res, ctx) => {
             return res(
                 ctx.json({
@@ -52,7 +57,7 @@ describe('AssetGroupEdit', () => {
                 <AssetGroupFilters
                     filterParams={options?.filterParams ?? {}}
                     handleFilterChange={handleFilterChange}
-                    memberCounts={memberCounts}
+                    memberCounts={options?.memberCounts ?? memberCounts}
                 />
             );
         });
@@ -126,6 +131,24 @@ describe('AssetGroupEdit', () => {
 
             expect(handleFilterChange).toBeCalledTimes(1);
             expect(handleFilterChange).toHaveBeenCalledWith('primary_kind', `eq:${expectedNodeKind}`);
+        });
+
+        it('shows human-readable node kind labels while preserving filter values', async () => {
+            const { user, handleFilterChange } = await setup({
+                memberCounts: {
+                    total_count: 1,
+                    counts: {
+                        AZApp: 1,
+                    },
+                },
+            });
+
+            await user.click(screen.getByTestId('display-filters-button'));
+            await user.click(screen.getByLabelText('Node Type'));
+            await user.click(screen.getByText('Azure Application'));
+
+            expect(screen.queryByText('AZApp')).not.toBeInTheDocument();
+            expect(handleFilterChange).toHaveBeenCalledWith('primary_kind', 'eq:AZApp');
         });
     });
 

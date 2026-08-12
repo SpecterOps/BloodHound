@@ -23,9 +23,10 @@ import {
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
+import { useGraphNodeKinds } from '../../hooks';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../providers';
-import { apiClient } from '../../utils';
+import { apiClient, createNodeKindDisplayLabelMap, getNodeKindDisplayLabel } from '../../utils';
 import { SubHeader } from '../../views/Explore/fragments';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
 import AssetGroupChangelogTable from './AssetGroupChangelogTable';
@@ -43,6 +44,8 @@ const AssetGroupEdit: FC<{
     const { addNotification } = useNotifications();
     const theme = useTheme();
     const queryClient = useQueryClient();
+    const nodeKindsQuery = useGraphNodeKinds();
+    const nodeKindDisplayLabels = createNodeKindDisplayLabelMap(nodeKindsQuery.data?.node_kinds);
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
         if (changelogEntry.action === ChangelogAction.ADD || changelogEntry.action === ChangelogAction.REMOVE) {
@@ -115,7 +118,9 @@ const AssetGroupEdit: FC<{
                 </>
             )}
             {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
-                return <SubHeader key={kind} label={kind} count={count} />;
+                return (
+                    <SubHeader key={kind} label={getNodeKindDisplayLabel(kind, nodeKindDisplayLabels)} count={count} />
+                );
             })}
         </Box>
     );
