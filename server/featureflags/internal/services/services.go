@@ -141,21 +141,10 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 	}
 
 	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
-		analysisMode := s.resolvePrioritizationAnalysisMode(ctx)
-
-		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, analysisMode); err != nil {
+		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			return flag, err
 		}
 	}
 
 	return flag, nil
-}
-
-func (s *Service) resolvePrioritizationAnalysisMode(ctx context.Context) model.AnalysisMode {
-	variableAnalysisModeFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureVariableAnalysisMode)
-	if err != nil || !variableAnalysisModeFlag.Enabled {
-		return model.AnalysisModeFull
-	}
-
-	return model.AnalysisModeNoPostProcessing
 }

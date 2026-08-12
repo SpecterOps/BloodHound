@@ -305,7 +305,7 @@ func TestToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: requests full analysis when findings prioritization is enabled and variable analysis mode is disabled",
+			name: "Success: requests no-post-processing analysis when findings prioritization is enabled",
 			seedFlag: func(t *testing.T) int32 {
 				t.Helper()
 				seedFeatureFlag(t, ctx, db.Pool(), appcfg.FeatureVariableAnalysisMode, "Variable Analysis Mode", false, true)
@@ -314,7 +314,7 @@ func TestToggleFlag(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			assertDB: func(t *testing.T) {
 				t.Helper()
-				assertAnalysisRequest(t, ctx, db.Pool(), services.PrioritizationFlagRequestSource, int32(model.AnalysisStepsFull().Bits()))
+				assertAnalysisRequest(t, ctx, db.Pool(), services.PrioritizationFlagRequestSource, int32(model.AnalysisStepsNoPostProcessing().Bits()))
 			},
 		},
 		{

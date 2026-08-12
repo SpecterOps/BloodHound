@@ -214,12 +214,6 @@ func TestService_ToggleFlag(t *testing.T) {
 			Enabled:       false,
 			UserUpdatable: true,
 		}
-		variableAnalysisModeEnabledFlag = services.FeatureFlag{
-			ID:            10,
-			Key:           "variable_analysis_mode",
-			Enabled:       true,
-			UserUpdatable: true,
-		}
 	)
 
 	type testCase struct {
@@ -250,28 +244,11 @@ func TestService_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name:      "requests full analysis when findings prioritization is enabled and variable analysis mode is disabled",
+			name:      "requests no-post-processing analysis when findings prioritization is enabled",
 			featureID: findingsPrioritizationFlag.ID,
 			setupMocks: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
 				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
-				databaseMock.EXPECT().GetFlagByKey(ctx, "variable_analysis_mode").Return(services.FeatureFlag{}, services.ErrNotFound)
-			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
-				require.NoError(t, err)
-				assert.True(t, analysisRequester.called)
-				assert.Equal(t, services.PrioritizationFlagRequestSource, analysisRequester.requestedBy)
-				assert.Equal(t, model.AnalysisModeFull, analysisRequester.analysisMode)
-				assert.Equal(t, enabledFindingsPrioritizationFlag, got)
-			},
-		},
-		{
-			name:      "requests no-post-processing analysis when findings prioritization is enabled and variable analysis mode is enabled",
-			featureID: findingsPrioritizationFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
-				databaseMock.EXPECT().GetFlagByKey(ctx, "variable_analysis_mode").Return(variableAnalysisModeEnabledFlag, nil)
 			},
 			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
 				require.NoError(t, err)
@@ -337,7 +314,6 @@ func TestService_ToggleFlag(t *testing.T) {
 			setupMocks: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
 				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
-				databaseMock.EXPECT().GetFlagByKey(ctx, "variable_analysis_mode").Return(services.FeatureFlag{}, services.ErrNotFound)
 			},
 			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, requestAnalysisErr)
