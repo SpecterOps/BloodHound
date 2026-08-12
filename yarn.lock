@@ -6975,7 +6975,7 @@ __metadata:
     "@vitest/coverage-v8": "npm:^4.1.0"
     allure-vitest: "npm:^3.4.3"
     clsx: "npm:^2.1.1"
-    dompurify: "npm:^3.4.0"
+    dompurify: "npm:^3.4.13"
     doodle-ui: "workspace:*"
     downshift: "npm:^7.0.0"
     eslint: "npm:^9.26.0"
