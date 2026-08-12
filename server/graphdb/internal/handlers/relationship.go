@@ -129,6 +129,10 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		responses.WriteError(ctx, http.StatusNotFound, "relationship not found", response)
 		return
 	}
+	if errors.Is(err, services.ErrNodeAccessDenied) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+		return
+	}
 	if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 		return

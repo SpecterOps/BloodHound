@@ -132,14 +132,13 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 			responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
 			return
 		}
-
-		if err != nil {
-			responses.WriteInternalServerError(ctx, err, response)
+		if errors.Is(err, services.ErrNodeAccessDenied) {
+			responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
 			return
 		}
 
-		if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
-			responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+		if err != nil {
+			responses.WriteInternalServerError(ctx, err, response)
 			return
 		}
 

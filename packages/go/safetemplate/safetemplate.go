@@ -26,8 +26,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
-// unsupportedFns lists the sprig functions that are not supported in
-// author-supplied templates.
+// we don't support these template functions
 var unsupportedFns = []string{
 	"bcrypt",
 	"htpasswd",

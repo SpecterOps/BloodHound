@@ -169,7 +169,7 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	store := appdb.NewStore(graphDatabase, dbPool)
 	etacService := etac.Register(dbPool, dogtags.NewDefaultService())
 	nodeAuthorizer := authz.NewNodeAuthorizer(etacService)
-	handlerSet := handlers.NewHandlersContainer(services.NewService(store), nodeAuthorizer)
+	handlerSet := handlers.NewHandlersContainer(services.NewService(store, nodeAuthorizer))
 
 	harness.handler = mux.NewRouter()
 	harness.handler.Use(withAuthenticatedUser)
