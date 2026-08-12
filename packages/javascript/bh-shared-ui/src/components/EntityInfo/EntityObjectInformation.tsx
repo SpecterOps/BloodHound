@@ -17,7 +17,7 @@ import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
 import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
-import { EntityField, formatObjectInfoFields } from '../../utils';
+import { EntityField, formatObjectInfoFields, privilegeZonePropertyDisplayNames } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
@@ -51,7 +51,13 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
         setIsObjectInfoPanelOpen(!isObjectInfoPanelOpen);
     };
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(selectedNode.properties);
+    const isPrivilegeZoneNode = kindNames.some((kind) =>
+        ['PZ_PrivilegeZone', 'PZ_PrivilegeZoneEnvironment'].includes(kind)
+    );
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(
+        selectedNode.properties,
+        isPrivilegeZoneNode ? privilegeZonePropertyDisplayNames : undefined
+    );
 
     const handleSourceNodeSelected = (sourceNode: SearchValue) => {
         setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });

@@ -36,6 +36,7 @@ import {
     formatRelationshipKind,
     getEntityName,
     NoEntitySelectedHeader,
+    privilegeZonePropertyDisplayNames,
     validateProperty,
 } from './entityInfoDisplay';
 
@@ -49,15 +50,22 @@ describe('Formatting privilege zone graph labels', () => {
     });
 
     it.each([
+        ['environment_name', 'Environment Name'],
+        ['member_count', 'Member Count'],
+        ['custom_property', 'Custom Property'],
+    ])('keeps generic property %s formatted as %s', (property, expected) => {
+        expect(formatPotentiallyUnknownLabel(property)).toBe(expected);
+    });
+
+    it.each([
         ['relationship', 'Relationship'],
         ['source_object', 'Source object'],
         ['zone_name', 'Zone'],
         ['environment_name', 'Environment'],
         ['member_count', 'Members in environment'],
         ['source', 'Source'],
-        ['custom_property', 'Custom Property'],
-    ])('formats property %s as %s', (property, expected) => {
-        expect(formatPotentiallyUnknownLabel(property)).toBe(expected);
+    ])('formats privilege zone property %s as %s', (property, expected) => {
+        expect(formatPotentiallyUnknownLabel(property, privilegeZonePropertyDisplayNames)).toBe(expected);
     });
 });
 

@@ -41,7 +41,7 @@ const privilegeZoneRelationshipDisplayNames: Record<string, string> = {
     PZ_PartOfZone: 'Part Of Zone',
 };
 
-const privilegeZonePropertyDisplayNames: Record<string, string> = {
+export const privilegeZonePropertyDisplayNames: Record<string, string> = {
     relationship: 'Relationship',
     source_object: 'Source object',
     zone_name: 'Zone',
@@ -52,15 +52,16 @@ const privilegeZonePropertyDisplayNames: Record<string, string> = {
 
 export const formatRelationshipKind = (kind: string): string => privilegeZoneRelationshipDisplayNames[kind] ?? kind;
 
-export const formatPotentiallyUnknownLabel = (propKey: string) => {
+export const formatPotentiallyUnknownLabel = (propKey: string, propertyDisplayNames: Record<string, string> = {}) => {
     const { kind, isKnownProperty } = validateProperty(propKey);
 
-    return isKnownProperty
-        ? getFieldLabel(kind!, propKey)
-        : privilegeZonePropertyDisplayNames[propKey] ?? `${startCase(propKey)}`;
+    return isKnownProperty ? getFieldLabel(kind!, propKey) : propertyDisplayNames[propKey] ?? `${startCase(propKey)}`;
 };
 
-export const formatObjectInfoFields = (props: any): EntityField[] => {
+export const formatObjectInfoFields = (
+    props: any,
+    propertyDisplayNames: Record<string, string> = {}
+): EntityField[] => {
     let mappedFields: EntityField[] = [];
     const propKeys = Object.keys(props || {});
 
@@ -83,7 +84,7 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallyUnknownLabel(key)}:`,
+            label: `${formatPotentiallyUnknownLabel(key, propertyDisplayNames)}:`,
             value: value,
             keyprop: key,
         });

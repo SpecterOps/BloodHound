@@ -83,4 +83,30 @@ describe('EntityObjectInformation', () => {
             consoleErrorSpy.mockRestore();
         }
     });
+
+    it('uses privilege zone labels only for privilege zone nodes', async () => {
+        const selectedNode: NodeDetails = {
+            node_id: 3,
+            kinds: [{ name: 'PZ_PrivilegeZoneEnvironment', node_kind_id: 2 }],
+            properties: { objectid: 'pz-environment', environment_name: 'contoso.local', member_count: 42 },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Environment:')).toBeInTheDocument();
+        expect(screen.getByText('Members in environment:')).toBeInTheDocument();
+    });
+
+    it('keeps generic labels for unrelated nodes', async () => {
+        const selectedNode: NodeDetails = {
+            node_id: 4,
+            kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+            properties: { objectid: 'generic-user', environment_name: 'contoso.local', member_count: 42 },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Environment Name:')).toBeInTheDocument();
+        expect(screen.getByText('Member Count:')).toBeInTheDocument();
+    });
 });
