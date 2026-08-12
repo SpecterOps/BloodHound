@@ -21,6 +21,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/specterops/dawgs/graph"
@@ -37,6 +38,12 @@ type Database interface {
 	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
+}
+
+// NodeAccessChecker determines whether the caller in ctx may access a node.
+// Implementations may use ETAC or another authorization policy.
+type NodeAccessChecker interface {
+	CanAccessNode(ctx context.Context, node Node) bool
 }
 
 // Kind is the domain representation of a relationship or node kind, pairing the kind name
@@ -60,20 +67,31 @@ type KindInfo struct {
 	InfoKey  string
 	Title    string
 	Position int32
-	Content  json.RawMessage
+	Content  json.RawMessage // persisted JSONB document
+
+	RenderedMarkdown string // successful or fallback template text when `Content` is parsed using sprig
+	TemplateError    string // per-entry failure reason
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
+// ErrNodeAccessDenied indicates that the caller cannot access a requested node
+// or one of a relationship's endpoint nodes due to ETAC gating.
+var ErrNodeAccessDenied = errors.New("node access denied")
+
 // Service implements the graphdb use cases on top of a Database implementation.
 type Service struct {
-	db Database
+	db                Database
+	nodeAccessChecker NodeAccessChecker
 }
 
 // NewService constructs a Service backed by the supplied Database implementation.
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+func NewService(databaseInterface Database, nodeAccessChecker NodeAccessChecker) *Service {
+	return &Service{
+		db:                databaseInterface,
+		nodeAccessChecker: nodeAccessChecker,
+	}
 }
 
 // FetchNodesByObjectIDsAndKinds returns the graph nodes matching any of the supplied kinds

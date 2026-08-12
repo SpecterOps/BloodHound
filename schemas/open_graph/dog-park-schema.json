@@ -18,7 +18,7 @@
           "title": "Overview",
           "position": 1,
           "markdown": {
-            "content": "The **Large Dog Area** is an off-leash play area reserved for large-breed dogs and their registered owners."
+            "content": "The **{{ .Properties.name | default \"Large Dog Area\" }}** is an off-leash play area reserved for large-breed dogs and their registered owners."
           }
         },
         "access_rules": {
@@ -42,7 +42,7 @@
           "title": "Overview",
           "position": 1,
           "markdown": {
-            "content": "A **Patron** is a dog park member or visitor who may own one or more dogs and access permitted areas."
+            "content": "**{{ .Properties.name | default \"Patron\" }}** is a dog park member or visitor. Object ID: `{{ .Properties.objectid }}`."
           }
         },
         "membership": {
@@ -66,7 +66,7 @@
           "title": "Overview",
           "position": 1,
           "markdown": {
-            "content": "A **Dog** is a happy park attendee owned by a patron."
+            "content": "**{{ .Properties.name | default \"Dog\" }}** is a happy park attendee. Node ID: `{{ .NodeID }}`."
           }
         }
       }
@@ -82,7 +82,7 @@
           "title": "Overview",
           "position": 1,
           "markdown": {
-            "content": "The **CanAccess** edge indicates that a principal is permitted to enter a given area."
+            "content": "**{{ .Source.Properties.name | default \"Source\" }}** can access **{{ .Target.Properties.name | default \"Target\" }}** through `{{ .Kind }}`."
           }
         }
       }
@@ -96,7 +96,7 @@
           "title": "Overview",
           "position": 1,
           "markdown": {
-            "content": "The **OwnedBy** edge links a dog to the patron who owns it."
+            "content": "**{{ .Source.Properties.name | default \"Dog\" }}** is owned by **{{ .Target.Properties.name | default \"Patron\" }}**. Relationship ID: `{{ .RelationshipID }}`."
           }
         }
       }
