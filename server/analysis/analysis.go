@@ -43,22 +43,6 @@ type AnalysisRequestSubmitter interface {
 	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
-type handlersAnalysisAdapter struct {
-	service *services.Service
-}
-
-func (s handlersAnalysisAdapter) GetRequest(ctx context.Context) (services.RequestedAnalysis, error) {
-	return s.service.GetRequest(ctx)
-}
-
-func (s handlersAnalysisAdapter) CreateRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
-	return s.service.CreateAnalysisRequest(ctx, requestedBy)
-}
-
-func (s handlersAnalysisAdapter) CancelAnalysisRequest(ctx context.Context) error {
-	return s.service.CancelAnalysisRequest(ctx)
-}
-
 // NewAnalysisRequestAdapter creates a new AnalysisRequestAdapter by wiring up the
 // analysis store, service, and handlers. It accepts a PostgreSQL connection pool
 // and returns a fully initialized adapter ready to handle analysis requests.
@@ -66,7 +50,7 @@ func NewAnalysisRequestAdapter(pool *pgxpool.Pool) AnalysisRequestAdapter {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(handlersAnalysisAdapter{service: svc})
+		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
 	return handlerSet
@@ -90,7 +74,7 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(handlersAnalysisAdapter{service: svc})
+		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
 	routes.Register(routerInst, handlerSet)

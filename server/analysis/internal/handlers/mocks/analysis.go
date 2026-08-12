@@ -104,12 +104,12 @@ func (_c *MockAnalysis_CancelAnalysisRequest_Call) RunAndReturn(run func(ctx con
 	return _c
 }
 
-// CreateRequest provides a mock function for the type MockAnalysis
-func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
+// CreateAnalysisRequest provides a mock function for the type MockAnalysis
+func (_mock *MockAnalysis) CreateAnalysisRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
 	ret := _mock.Called(ctx, requestedBy)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateRequest")
+		panic("no return value specified for CreateAnalysisRequest")
 	}
 
 	var r0 services.RequestedAnalysis
@@ -136,19 +136,19 @@ func (_mock *MockAnalysis) CreateRequest(ctx context.Context, requestedBy string
 	return r0, r1, r2
 }
 
-// MockAnalysis_CreateRequest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateRequest'
-type MockAnalysis_CreateRequest_Call struct {
+// MockAnalysis_CreateAnalysisRequest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateRequest'
+type MockAnalysis_CreateAnalysisRequest_Call struct {
 	*mock.Call
 }
 
-// CreateRequest is a helper method to define mock.On call
+// CreateAnalysisRequest is a helper method to define mock.On call
 //   - ctx context.Context
 //   - requestedBy string
-func (_e *MockAnalysis_Expecter) CreateRequest(ctx interface{}, requestedBy interface{}) *MockAnalysis_CreateRequest_Call {
-	return &MockAnalysis_CreateRequest_Call{Call: _e.mock.On("CreateRequest", ctx, requestedBy)}
+func (_e *MockAnalysis_Expecter) CreateAnalysisRequest(ctx interface{}, requestedBy interface{}) *MockAnalysis_CreateAnalysisRequest_Call {
+	return &MockAnalysis_CreateAnalysisRequest_Call{Call: _e.mock.On("CreateAnalysisRequest", ctx, requestedBy)}
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) Run(run func(ctx context.Context, requestedBy string)) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateAnalysisRequest_Call) Run(run func(ctx context.Context, requestedBy string)) *MockAnalysis_CreateAnalysisRequest_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -166,12 +166,12 @@ func (_c *MockAnalysis_CreateRequest_Call) Run(run func(ctx context.Context, req
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) Return(requestedAnalysis services.RequestedAnalysis, b bool, err error) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateAnalysisRequest_Call) Return(requestedAnalysis services.RequestedAnalysis, b bool, err error) *MockAnalysis_CreateAnalysisRequest_Call {
 	_c.Call.Return(requestedAnalysis, b, err)
 	return _c
 }
 
-func (_c *MockAnalysis_CreateRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error)) *MockAnalysis_CreateRequest_Call {
+func (_c *MockAnalysis_CreateAnalysisRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error)) *MockAnalysis_CreateAnalysisRequest_Call {
 	_c.Call.Return(run)
 	return _c
 }
