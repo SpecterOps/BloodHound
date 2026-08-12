@@ -59,7 +59,8 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     let IconComponent = AppIcon.SortEmpty;
     if (sortOrder === 'asc') IconComponent = AppIcon.SortAsc;
     if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
-
+    const headerClass =
+        'text-neutral-dark-5 dark:text-neutral-light-5 hover:text-secondary active:text-primary-variant focus-visible:text-secondary';
     return (
         <TooltipProvider>
             <TooltipRoot>
@@ -68,7 +69,11 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                         <Button
                             disabled={disable}
                             aria-label={`Sort by ${title}`}
-                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            className={cn(
+                                'p-0 font-semibold text-base hover:no-underline relative',
+                                headerClass,
+                                buttonClass
+                            )}
                             onClick={onSort}
                             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
                             tabIndex={0}
