@@ -108,13 +108,21 @@ const PathfindingSearch = ({
         return !node.searchTerm;
     };
 
-    const visibleNodes = nodes.slice(0, totalNodeCount).map((node, index) => ({
-        label: index === 0 ? 'Start Node' : 'Destination Node',
-        searchTerm: node.searchTerm,
-        selectedItem: node.selectedItem,
-        removable: index > 0 && totalNodeCount > 2,
-        autoFocus: shouldAutoFocus(index, node),
-    }));
+    const visibleNodes = nodes.slice(0, totalNodeCount).map((node, index) => {
+        // Every destination shows the same label on screen, so the accessible name appends the
+        // destination number to keep the rows distinguishable to assistive tech. It keeps the
+        // visible text as a prefix so the spoken name still matches the screen (WCAG 2.5.3).
+        const label = index === 0 ? 'Start Node' : 'Destination Node';
+
+        return {
+            label,
+            ariaLabel: index === 0 ? label : `${label} ${index}`,
+            searchTerm: node.searchTerm,
+            selectedItem: node.selectedItem,
+            removable: index > 0 && totalNodeCount > 2,
+            autoFocus: shouldAutoFocus(index, node),
+        };
+    });
 
     return (
         <div className='flex items-center gap-2' data-testid='pathfinding-search'>
@@ -142,7 +150,7 @@ const PathfindingSearch = ({
                             <div
                                 role='button'
                                 tabIndex={0}
-                                aria-label={`Reorder ${node.label}, position ${index + 1} of ${visibleNodes.length}`}
+                                aria-label={`Reorder ${node.ariaLabel}, position ${index + 1} of ${visibleNodes.length}`}
                                 aria-roledescription='sortable'
                                 onKeyDown={(e) => {
                                     if (e.key === 'ArrowUp' && index > 0) {
@@ -158,6 +166,7 @@ const PathfindingSearch = ({
                             </div>
                             <div className='flex-grow'>
                                 <ExploreSearchCombobox
+                                    ariaLabel={node.ariaLabel}
                                     autoFocus={node.autoFocus}
                                     handleNodeEdited={handleNodeEdited(index)}
                                     handleNodeSelected={handleNodeSelected(index)}
@@ -170,8 +179,8 @@ const PathfindingSearch = ({
                                 <button
                                     onClick={() => handleRemoveNode(index)}
                                     className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 z-10'
-                                    aria-label='Remove destination'
-                                    title='Remove destination'>
+                                    aria-label={`Remove ${node.ariaLabel}`}
+                                    title={`Remove ${node.ariaLabel}`}>
                                     <FontAwesomeIcon icon={faTimes} size='sm' />
                                 </button>
                             )}
