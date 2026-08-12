@@ -47,11 +47,8 @@ type KindInfoView struct {
 }
 
 type MarkdownView struct {
-	Content string `json:"content"`
-}
-
-type kindInfoContentView struct {
-	Markdown MarkdownView `json:"markdown"`
+	Content       string `json:"content"`
+	TemplateError string `json:"template_error,omitempty"`
 }
 
 // NodeView is the JSON shape returned by the node handlers. It is
@@ -91,22 +88,15 @@ func BuildNodeView(node services.Node, includeInfo bool) NodeView {
 				Title:      kindInfo.Title,
 				Position:   kindInfo.Position,
 				NodeKindID: int(*kindInfo.NodeKindID),
-				Markdown:   buildMarkdownView(kindInfo.Content),
+				Markdown: MarkdownView{
+					Content:       kindInfo.RenderedMarkdown,
+					TemplateError: kindInfo.TemplateError,
+				},
 			})
 		}
 	}
 
 	return nodeView
-}
-
-func buildMarkdownView(content json.RawMessage) MarkdownView {
-	var contentView kindInfoContentView
-
-	if err := json.Unmarshal(content, &contentView); err != nil {
-		return MarkdownView{}
-	}
-
-	return contentView.Markdown
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -136,13 +126,22 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 
 	if nodeID, err := strconv.ParseInt(nodeIDRaw, 10, 64); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
-	} else if node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo); errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
-		responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
-	} else if err != nil {
-		responses.WriteInternalServerError(ctx, err, response)
-	} else if !s.nodeAuthorizer.CanAccessNode(ctx, node) {
-		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
 	} else {
+		node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo)
+		if errors.Is(err, services.ErrNodeNotFound) || errors.Is(err, services.ErrKindNotFound) {
+			responses.WriteError(ctx, http.StatusNotFound, "node not found", response)
+			return
+		}
+		if errors.Is(err, services.ErrNodeAccessDenied) {
+			responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+			return
+		}
+
+		if err != nil {
+			responses.WriteInternalServerError(ctx, err, response)
+			return
+		}
+
 		responses.WriteBasic(ctx, BuildNodeView(node, includeInfo), http.StatusOK, response)
 	}
 }

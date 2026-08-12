@@ -1515,3 +1515,35 @@ func Test_parseInfoPayload(t *testing.T) {
 		})
 	}
 }
+
+func TestKindInfoInput_MarkdownContent(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		content     json.RawMessage
+		wantContent string
+		wantErr     error
+	}{
+		{name: "success_-_valid_markdown_content", content: json.RawMessage(`{"markdown":{"content":"# Hello"}}`), wantContent: "# Hello", wantErr: nil},
+		{name: "error_-_missing_content", content: json.RawMessage(`{"markdown":{}}`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+		{name: "error_-_unknown_field", content: json.RawMessage(`{"markdown":{"content":"x"},"extra":"y"}`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+		{name: "error_-_not_an_object", content: json.RawMessage(`"just a string"`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			kindInfoInput := KindInfoInput{Content: testCase.content}
+
+			got, err := kindInfoInput.MarkdownContent()
+			if testCase.wantErr != nil {
+				assert.ErrorIs(t, err, testCase.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.wantContent, got)
+			}
+		})
+	}
+}

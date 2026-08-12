@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -181,5 +182,202 @@ func TestStore_GetRole_Integration(t *testing.T) {
 
 		_, err := store.GetRole(ctx, 99999999)
 		assert.ErrorIs(t, err, services.ErrNoRoleFound)
+	})
+}
+
+// seededRoleCount reads the number of roles seeded by the migrations directly
+// from the pool so tests can assert against the full set.
+func seededRoleCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int {
+	t.Helper()
+
+	var count int
+	err := pool.QueryRow(ctx, "SELECT count(*) FROM roles").Scan(&count)
+	require.NoError(t, err)
+
+	return count
+}
+
+func TestStore_ListRoles_Integration(t *testing.T) {
+	t.Run("returns every seeded role with its permissions", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, roles, expectedCount)
+
+		var withPermissions int
+		for _, r := range roles {
+			if len(r.Permissions) > 0 {
+				withPermissions++
+			}
+		}
+		assert.NotZero(t, withPermissions, "expected at least one role to preload its permissions")
+	})
+
+	t.Run("returns roles sorted by name ascending", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+
+		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}})
+		require.NoError(t, err)
+		require.Len(t, roles, expectedCount)
+
+		for i := 1; i < len(roles); i++ {
+			assert.LessOrEqual(t, roles[i-1].Name, roles[i].Name, "roles should be sorted by name ascending")
+		}
+	})
+
+	t.Run("returns roles filtered by name", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		target := seededRole(t, ctx, pool)
+
+		roles, err := store.ListRoles(ctx, params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: target.Name, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		require.Len(t, roles, 1)
+		assert.Equal(t, target.Name, roles[0].Name)
+	})
+
+	t.Run("returns an empty slice when no role matches the filter", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		roles, err := store.ListRoles(ctx, params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, roles)
+	})
+
+	t.Run("returns roles filtered by created_at date comparison", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			epoch       = "2000-01-01T00:00:00Z"
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		afterEpoch, err := store.ListRoles(ctx, params.Filters{
+			"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, afterEpoch, expectedCount, "every seeded role was created after the epoch")
+
+		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
+			"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, beforeEpoch, "no seeded role was created before the epoch")
+	})
+
+	t.Run("returns roles filtered by updated_at date comparison", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			epoch       = "2000-01-01T00:00:00Z"
+		)
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		afterEpoch, err := store.ListRoles(ctx, params.Filters{
+			"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, afterEpoch, expectedCount, "every seeded role was updated after the epoch")
+
+		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
+			"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Empty(t, beforeEpoch, "no seeded role was updated before the epoch")
+	})
+}
+
+// addDeprecatedDeletedAtColumn simulates the shape of an upgraded/GORM-era database by
+// adding a deleted_at column that the current migrations do not create and that the
+// Go structs do not model. Reading from such a table with SELECT * would return an
+// extra column the strict pgx.RowToStructByName mapper cannot place, reproducing the
+// original "struct doesn't have corresponding row field deleted_at" failure.
+func addDeprecatedDeletedAtColumn(t *testing.T, ctx context.Context, pool *pgxpool.Pool, table string) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx, fmt.Sprintf("ALTER TABLE %s ADD COLUMN deleted_at timestamp with time zone", table))
+	require.NoError(t, err)
+}
+
+// TestStore_SchemaDrift_DeletedAt_Integration is a regression test for the case where
+// the physical roles/permissions tables carry a stray deleted_at column (as on
+// databases upgraded from the GORM era) that the Go structs do not model. The reads
+// must remain resilient to that schema drift by selecting explicit columns rather than
+// SELECT *. This test fails against the old SELECT * queries and passes against the
+// explicit-column queries.
+func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
+	t.Run("GetRole succeeds when roles has a stray deleted_at column", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
+
+		expected := seededRole(t, ctx, pool)
+
+		retrieved, err := store.GetRole(ctx, expected.ID)
+		require.NoError(t, err)
+		assert.Equal(t, expected.ID, retrieved.ID)
+		assert.Equal(t, expected.Name, retrieved.Name)
+	})
+
+	t.Run("ListRoles succeeds when roles has a stray deleted_at column", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
+
+		expectedCount := seededRoleCount(t, ctx, pool)
+		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+
+		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Len(t, roles, expectedCount)
+	})
+
+	t.Run("GetPermission succeeds when permissions has a stray deleted_at column", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		addDeprecatedDeletedAtColumn(t, ctx, pool, "permissions")
+
+		expected := seededPermission(t, ctx, pool)
+
+		retrieved, err := store.GetPermission(ctx, int(expected.ID))
+		require.NoError(t, err)
+		assert.Equal(t, expected.ID, retrieved.ID)
+		assert.Equal(t, expected.Authority, retrieved.Authority)
+		assert.Equal(t, expected.Name, retrieved.Name)
 	})
 }

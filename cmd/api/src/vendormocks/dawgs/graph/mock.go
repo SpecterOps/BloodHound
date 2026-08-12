@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) FetchKinds(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchKinds", reflect.TypeOf((*MockDatabase)(nil).FetchKinds), ctx)
 }
 
+// OptimizeStorage mocks base method.
+func (m *MockDatabase) OptimizeStorage(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OptimizeStorage", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OptimizeStorage indicates an expected call of OptimizeStorage.
+func (mr *MockDatabaseMockRecorder) OptimizeStorage(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OptimizeStorage", reflect.TypeOf((*MockDatabase)(nil).OptimizeStorage), ctx)
+}
+
 // ReadTransaction mocks base method.
 func (m *MockDatabase) ReadTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
 	m.ctrl.T.Helper()

@@ -4,6 +4,9 @@
 # Codex
 .codex
 
+# Augment
+.augment
+
 # Temporary backup files
 *.bak
 

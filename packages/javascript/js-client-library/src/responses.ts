@@ -17,6 +17,10 @@
 import type { AxiosResponse } from 'axios';
 import { EnvironmentRequest } from './requests';
 import {
+    Alert,
+    AlertAttempt,
+    AlertEvent,
+    AlertEventType,
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
@@ -345,6 +349,40 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export enum ArtifactStatus {
+    PENDING = 'pending',
+    UPLOADING = 'uploading',
+    COMPLETE = 'complete',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    // total byte size of the artifact to download
+    artifact_size: number | null;
+    artifact_status: ArtifactStatus | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    started_at: string | null;
+    completed_at: string | null;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -416,7 +454,7 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     environment_name: string;
-    zone_id: number;
+    asset_group_tag_id: number;
     zone_name: string;
     source_principal_id: string;
     source_principal_name: string;
@@ -433,15 +471,35 @@ export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
-
-export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
+export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
-export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
+export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
 export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export type GetAlertEventsResponse = PaginatedResponse<{ events: AlertEvent[] }>;
+export type GetAlertEventResponse = BasicResponse<{ event: AlertEvent }>;
+export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEventType[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+type AlertPayload = { alert: Alert };
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Alert[] }>;
+export type GetAlertResponse = BasicResponse<AlertPayload>;
+export type CreateAlertResponse = BasicResponse<AlertPayload>;
+export type UpdateAlertResponse = BasicResponse<AlertPayload>;
+export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
+export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 

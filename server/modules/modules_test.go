@@ -156,9 +156,11 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		path   string
 	}{
 		{"analysis status", http.MethodGet, "/api/v2/analysis/status"},
+		{"datapipe status", http.MethodGet, "/api/v2/datapipe/status"},
 		{"feature flags list", http.MethodGet, "/api/v2/features"},
 		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},
 		{"relationship request", http.MethodGet, "/api/v2/relationships/1"},
+		{"node kind request", http.MethodGet, "/api/v2/node-kinds/1"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var (

@@ -163,9 +163,15 @@ const GlyphSelectDialog: React.FC<{
                                 )}
                             </div>
 
-                            <span className='flex items-center w-64 self-end'>
-                                <AppIcon.MagnifyingGlass className='-mr-4' />
-                                <Input placeholder='Search' onChange={handleChange} autoFocus className='pl-8' />
+                            <span className='relative flex items-center w-64 self-end'>
+                                <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
+                                <Input
+                                    placeholder='Search'
+                                    variant='outlined'
+                                    onChange={handleChange}
+                                    autoFocus
+                                    className='pl-8'
+                                />
                             </span>
                         </div>
 
