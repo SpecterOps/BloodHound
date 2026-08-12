@@ -75,9 +75,6 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
 
     const queryConfig = query.getQueryConfig();
 
-    const cypherSearchExists = params.cypherSearch;
-    const cypherQueryIsEmpty = !cypherSearchExists && params.exploreSearchTab === 'cypher';
-
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {
@@ -92,7 +89,6 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
         },
         ...rest,
         ...userSettings,
-        enabled: !cypherQueryIsEmpty && rest.enabled !== false && queryConfig.enabled !== false,
     });
 };
 

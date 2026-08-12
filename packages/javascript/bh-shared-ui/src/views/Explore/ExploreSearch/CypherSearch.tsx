@@ -26,6 +26,7 @@ import ProcessingIndicator from '../../../components/Animations';
 import {
     useCreateSavedQuery,
     useExploreGraph,
+    useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
     useKeybindings,
@@ -63,6 +64,8 @@ const CypherSearchInner = ({
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
     onExploreMenuCollapse: () => void;
 }) => {
+    const { cypherSearch, exploreSearchTab, searchType } = useExploreParams();
+
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -101,11 +104,17 @@ const CypherSearchInner = ({
         onSuccess: (data) => {
             if (isGraphResponse(data)) {
                 const returnedNodes = Object.keys(data.data.nodes || {});
+
+                const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
+                const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
+
                 if (returnedNodes.length > 1) {
                     clearSelectedItem();
-                    onExploreMenuCollapse();
                 } else if (returnedNodes.length === 1) {
                     setSelectedItem(returnedNodes[0]);
+                }
+
+                if (shouldCloseMenu) {
                     onExploreMenuCollapse();
                 }
             }
