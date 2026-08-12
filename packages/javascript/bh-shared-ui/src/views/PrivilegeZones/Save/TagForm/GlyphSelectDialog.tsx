@@ -27,6 +27,7 @@ import {
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    IconButton,
     Input,
     Tooltip,
 } from 'doodle-ui';
@@ -45,19 +46,24 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
     iconName,
     onClick,
 }) => (
-    <Button
-        variant={'text'}
-        className={clsx(['relative', !iconName && 'invisible'])}
-        onClick={() => {
-            iconName && onClick(iconName);
-        }}>
-        <Card className='flex items-center justify-center h-24 w-24'>
-            <CardContent className='first:pt-0'>
-                {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
-            </CardContent>
-        </Card>
-        <p className='absolute -bottom-16'>{iconName}</p>
-    </Button>
+    <div className='flex flex-col justify-center'>
+        <IconButton
+            aria-label={`${iconName}-glyph`}
+            className={clsx(
+                ['relative', !iconName && 'invisible'],
+                'justify-center focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
+            )}
+            onClick={() => {
+                iconName && onClick(iconName);
+            }}>
+            <Card className='flex items-center justify-center h-24 w-24'>
+                <CardContent className='first:pt-0'>
+                    {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
+                </CardContent>
+            </Card>
+        </IconButton>
+        <p className='mt-4 m-auto'>{iconName}</p>
+    </div>
 );
 
 const Row = ({
@@ -143,14 +149,16 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
+                                    // TODO BED-6062
                                     <Tooltip
-                                        tooltip={'Clear selection'}
+                                        tooltip='Clear selection'
                                         contentProps={{
                                             className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
                                         }}>
-                                        <Button
-                                            variant={'text'}
+                                        <IconButton
+                                            aria-label='Clear selection'
                                             onClick={handleClear}
+                                            className='focus-visible:rounded-sm'
                                             aria-describedby='Clear selection'>
                                             <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
                                                 <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
@@ -158,7 +166,7 @@ const GlyphSelectDialog: React.FC<{
                                                     <FontAwesomeIcon icon={selectedIcon} size='2xl' />
                                                 </CardContent>
                                             </Card>
-                                        </Button>
+                                        </IconButton>
                                     </Tooltip>
                                 )}
                             </div>

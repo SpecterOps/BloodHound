@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { IconName, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, IconName } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from '@mui/material';
 import clsx from 'clsx';
@@ -36,6 +36,7 @@ import {
     Skeleton,
     Switch,
     Textarea,
+    TextButton,
     Tooltip,
 } from 'doodle-ui';
 import {
@@ -320,11 +321,12 @@ export const TagForm: FC = () => {
                         </CardContent>
                     </Card>
                     {showSalesMessage && <SalesMessage />}
-                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
+                    <div className='flex justify-end gap-2 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton() && (
-                            <Button
+                            <TextButton
                                 data-testid='privilege-zones_save_tag-form_delete-button'
-                                variant={'text'}
+                                fontColor='primary'
+                                className='p-0'
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
                                 }}>
@@ -332,17 +334,17 @@ export const TagForm: FC = () => {
                                     <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
                                     {`Delete ${tagTypeDisplay}`}
                                 </span>
-                            </Button>
+                            </TextButton>
                         )}
                         <Button
                             data-testid='privilege-zones_save_tag-form_cancel-button'
-                            variant={'secondary'}
+                            variant='secondary'
                             onClick={() => {
                                 navigate(-1);
                             }}>
                             Cancel
                         </Button>
-                        <Button data-testid='privilege-zones_save_tag-form_save-button' variant={'primary'}>
+                        <Button data-testid='privilege-zones_save_tag-form_save-button'>
                             {tagId === '' ? 'Define Rule' : 'Save Edits'}
                         </Button>
                     </div>
@@ -409,20 +411,6 @@ export const TagForm: FC = () => {
                                 <CardHeader>
                                     <CardTitle>{formTitle}</CardTitle>
                                 </CardHeader>
-                                {showDeleteButton() && (
-                                    <Button
-                                        className='pb-0'
-                                        data-testid='privilege-zones_save_tag-form_delete-button'
-                                        variant={'text'}
-                                        onClick={() => {
-                                            setDeleteDialogOpen(true);
-                                        }}>
-                                        <span>
-                                            <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                                            {`Delete ${tagTypeDisplay}`}
-                                        </span>
-                                    </Button>
-                                )}
                             </div>
                             {/* Checks if Certification is truthy since it is only available on BHE and we want to display this message only on BHE */}
                             {Certification && (
@@ -629,7 +617,7 @@ export const TagForm: FC = () => {
                                                                 setGlyphDialogOpen(true);
                                                             }}
                                                             className='w-48'
-                                                            variant={'secondary'}>
+                                                            variant='secondary'>
                                                             <span>Select Glyph</span>
                                                         </Button>
                                                     </div>
@@ -663,9 +651,23 @@ export const TagForm: FC = () => {
                         </Card>
                         {showSalesMessage && <SalesMessage />}
                         <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
+                            {showDeleteButton() && (
+                                <TextButton
+                                    fontColor='primary'
+                                    data-testid='privilege-zones_save_tag-form_delete-button'
+                                    className='p-0'
+                                    onClick={() => {
+                                        setDeleteDialogOpen(true);
+                                    }}>
+                                    <span>
+                                        <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                        {`Delete ${tagTypeDisplay}`}
+                                    </span>
+                                </TextButton>
+                            )}
                             <Button
                                 data-testid='privilege-zones_save_tag-form_cancel-button'
-                                variant={'secondary'}
+                                variant='secondary'
                                 onClick={() => {
                                     navigate(-1);
                                 }}>
@@ -673,7 +675,7 @@ export const TagForm: FC = () => {
                             </Button>
                             <Button
                                 data-testid='privilege-zones_save_tag-form_save-button'
-                                variant={'primary'}
+                                variant='primary'
                                 onClick={handleSubmit(onSubmit)}>
                                 {tagId === '' ? 'Define Rule' : 'Save Edits'}
                             </Button>

@@ -18,11 +18,11 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Alert, TextField } from '@mui/material';
 import {
-    Button,
     ButtonProps,
     Popover,
     PopoverContent,
     Skeleton,
+    TextButton,
     TooltipContent,
     TooltipPortal,
     TooltipProvider,
@@ -41,7 +41,7 @@ import {
     sortEnvironmentsByName,
 } from '../../utils/environments';
 import { cn } from '../../utils/theme';
-import { DropdownTrigger, optionIconStyles, optionStyles, popoverContentStyles } from '../DropdownSelector';
+import { DropdownTrigger, optionStyles, popoverContentStyles } from '../DropdownSelector';
 import { SelectedEnvironment } from './types';
 
 const selectedText = (
@@ -81,10 +81,7 @@ const SelectorListItemContent: React.FC<{
     isUpperCase?: boolean;
 }> = ({ displayName, displayIcon, isUpperCase = false, onClick }) => {
     return (
-        <Button
-            className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-            onClick={onClick}
-            variant={'text'}>
+        <TextButton className={cn(optionStyles, 'flex justify-between items-center gap-2')} onClick={onClick}>
             <TooltipProvider>
                 <TooltipRoot>
                     <TooltipTrigger>
@@ -99,8 +96,8 @@ const SelectorListItemContent: React.FC<{
                     </TooltipPortal>
                 </TooltipRoot>
             </TooltipProvider>
-            <FontAwesomeIcon className={optionIconStyles} icon={displayIcon} size='sm' />
-        </Button>
+            <FontAwesomeIcon icon={displayIcon} size='sm' />
+        </TextButton>
     );
 };
 
@@ -199,12 +196,11 @@ const SimpleEnvironmentSelector: React.FC<{
                 <ul className='border-b border-neutral-light-5 pb-2 mb-2'>
                     {isPrivilegeZonesPage && (
                         <li key='all-environments'>
-                            <Button
+                            <TextButton
                                 className={cn(optionStyles, 'flex justify-between items-center gap-2')}
-                                onClick={() => handlePlatformClick()}
-                                variant='text'>
+                                onClick={() => handlePlatformClick()}>
                                 All Environments
-                            </Button>
+                            </TextButton>
                         </li>
                     )}
                     {environmentTypes?.map(
