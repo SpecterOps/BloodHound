@@ -218,4 +218,25 @@ describe('Evaluating the entity display name from a given entity', () => {
             })
         ).toBe('foo');
     });
+    it.each(['PZ_PrivilegeZone', 'PZ_PrivilegeZoneEnvironment'])(
+        'should prefer the human display name for %s entities',
+        (kind) => {
+            expect(
+                getEntityName({
+                    node_id: 1,
+                    kinds: [{ name: kind, node_kind_id: 1 }],
+                    properties: { name: 'TIER ZERO', displayname: 'Tier Zero' },
+                })
+            ).toBe('Tier Zero');
+        }
+    );
+    it('should preserve name priority for non-Privilege Zone entities', () => {
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { name: 'LEGACY NAME', displayname: 'Human Name' },
+            })
+        ).toBe('LEGACY NAME');
+    });
 });

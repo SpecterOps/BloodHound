@@ -195,6 +195,49 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
 }
 
+func Test_filterAndFormatSearchResults_PrivilegeZonesUseHumanDisplayName(t *testing.T) {
+	t.Parallel()
+
+	for _, kind := range []graph.Kind{
+		graph.StringKind("PZ_PrivilegeZone"),
+		graph.StringKind("PZ_PrivilegeZoneEnvironment"),
+	} {
+		t.Run(kind.String(), func(t *testing.T) {
+			node := &graph.Node{
+				Kinds: graph.Kinds{kind},
+				Properties: graph.AsProperties(map[string]any{
+					common.Name.String():        "TIER ZERO IN PHANTOM.CORP",
+					common.DisplayName.String(): "Tier Zero in PHANTOM.CORP",
+					common.ObjectID.String():    "pz:test",
+				}),
+			}
+
+			results := filterAndFormatSearchResults([]*graph.Node{node}, nil, nil)
+
+			require.Len(t, results, 1)
+			require.Equal(t, "Tier Zero in PHANTOM.CORP", results[0].Name)
+		})
+	}
+}
+
+func Test_filterAndFormatSearchResults_NonPrivilegeZonePreservesLegacyNamePriority(t *testing.T) {
+	t.Parallel()
+
+	node := &graph.Node{
+		Kinds: graph.Kinds{graph.StringKind("CustomKind")},
+		Properties: graph.AsProperties(map[string]any{
+			common.Name.String():        "LEGACY NAME",
+			common.DisplayName.String(): "Human Name",
+			common.ObjectID.String():    "custom:test",
+		}),
+	}
+
+	results := filterAndFormatSearchResults([]*graph.Node{node}, nil, nil)
+
+	require.Len(t, results, 1)
+	require.Equal(t, "LEGACY NAME", results[0].Name)
+}
+
 func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"

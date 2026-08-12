@@ -89,7 +89,7 @@ func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *gr
 	var (
 		props       = node.Properties
 		objectId    = getTypedPropertyOrDefault(props, common.ObjectID.String(), "")
-		label       = getTypedPropertyOrDefault(props, common.Name.String(), objectId)
+		label       = getNodeDisplayName(node, objectId)
 		lastSeen    = getTypedPropertyOrDefault(props, common.LastSeen.String(), time.Now())
 		primaryKind = getTypedPropertyOrDefault(props, common.PrimaryKind.String(), "")
 	)
@@ -115,6 +115,16 @@ func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *gr
 		LastSeen:      lastSeen,
 		Properties:    properties,
 	}
+}
+
+func getNodeDisplayName(node *graph.Node, defaultValue string) string {
+	if node.Kinds.ContainsOneOf(graph.StringKind("PZ_PrivilegeZone"), graph.StringKind("PZ_PrivilegeZoneEnvironment")) {
+		if displayName := getTypedPropertyOrDefault(node.Properties, common.DisplayName.String(), ""); displayName != "" {
+			return displayName
+		}
+	}
+
+	return getTypedPropertyOrDefault(node.Properties, common.Name.String(), defaultValue)
 }
 
 // This is being used with slices.Map so it is necessary to return a closure

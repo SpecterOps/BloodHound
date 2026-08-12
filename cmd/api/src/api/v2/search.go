@@ -88,7 +88,7 @@ func filterAndFormatSearchResults(nodes []*graph.Node, etacAllowedList []string,
 
 func graphNodeToSearchResult(node *graph.Node, primaryDisplayKinds graphschema.PrimaryDisplayKinds) model.SearchResult {
 	var (
-		name, _              = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+		name                 = getNodeSearchResultName(node)
 		objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), graphschema.DefaultMissingObjectId).String()
 		distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
 		systemTags, _        = node.Properties.GetOrDefault(common.SystemTags.String(), "").String()
@@ -102,6 +102,16 @@ func graphNodeToSearchResult(node *graph.Node, primaryDisplayKinds graphschema.P
 		DistinguishedName: distinguishedName,
 		SystemTags:        systemTags,
 	}
+}
+
+func getNodeSearchResultName(node *graph.Node) string {
+	if node.Kinds.ContainsOneOf(graph.StringKind("PZ_PrivilegeZone"), graph.StringKind("PZ_PrivilegeZoneEnvironment")) {
+		name, _ := node.Properties.GetWithFallback(common.DisplayName.String(), graphschema.DefaultMissingName, common.Name.String(), common.ObjectID.String()).String()
+		return name
+	}
+
+	name, _ := node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
+	return name
 }
 
 // getSearchableNodeKinds returns the kinds that should be searched based on the OpenGraphSearch feature flag and the primary display kinds.
