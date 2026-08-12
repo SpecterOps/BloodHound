@@ -708,25 +708,25 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-  # management operations
-  /api/v2/clients/{client_id}/management:
-    $ref: './paths/clients.clients.id.management.yaml'
-  /api/v2/clients/{client_id}/artifacts/{artifact_id}:
-    $ref: './paths/clients.clients.id.artifacts.id.yaml'
-  /api/v2/clients/management/available:
-    $ref: './paths/clients.clients.management.available.yaml'
-  /api/v2/clients/management/start:
-    $ref: './paths/clients.clients.management.start.yaml'
-  /api/v2/clients/management/end:
-    $ref: './paths/clients.clients.management.end.yaml'
-  /api/v2/clients/management/artifacts:
-    $ref: './paths/clients.clients.management.artifacts.yaml'
-  /api/v2/clients/management/artifacts/{artifact_id}:
-    $ref: './paths/clients.clients.management.artifacts.id.yaml'
-  /api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}:
-    $ref: './paths/clients.clients.management.artifacts.id.parts.part-number.yaml'
-  /api/v2/clients/management/artifacts/{artifact_id}/complete:
-    $ref: './paths/clients.clients.management.artifacts.id.complete.yaml'
+  # management operations (disabled while support bundles are disabled (BED-9162))
+  # /api/v2/clients/{client_id}/management:
+  #   $ref: './paths/clients.clients.id.management.yaml'
+  # /api/v2/clients/{client_id}/artifacts/{artifact_id}:
+  #   $ref: './paths/clients.clients.id.artifacts.id.yaml'
+  # /api/v2/clients/management/available:
+  #   $ref: './paths/clients.clients.management.available.yaml'
+  # /api/v2/clients/management/start:
+  #   $ref: './paths/clients.clients.management.start.yaml'
+  # /api/v2/clients/management/end:
+  #   $ref: './paths/clients.clients.management.end.yaml'
+  # /api/v2/clients/management/artifacts:
+  #   $ref: './paths/clients.clients.management.artifacts.yaml'
+  # /api/v2/clients/management/artifacts/{artifact_id}:
+  #   $ref: './paths/clients.clients.management.artifacts.id.yaml'
+  # /api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}:
+  #   $ref: './paths/clients.clients.management.artifacts.id.parts.part-number.yaml'
+  # /api/v2/clients/management/artifacts/{artifact_id}/complete:
+  #   $ref: './paths/clients.clients.management.artifacts.id.complete.yaml'
 
   #  tasks (deprecated)
   /api/v2/tasks/available:

@@ -58,5 +58,6 @@ allOf:
         $ref: './null.string.yaml'
       type:
         $ref: './enum.client-type.yaml'
-      support_bundle_summary:
-        $ref: './model.client-support-bundle-summary.yaml'
+      ## Removed temporarily until support bundles can be enabled (BED-9162)
+      # support_bundle_summary:
+      #   $ref: './model.client-support-bundle-summary.yaml'
