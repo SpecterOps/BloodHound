@@ -62,6 +62,12 @@ type ListOptions struct {
 	Limit     int
 }
 
+type DeleteOptions struct {
+	// PruneEmptyParents removes empty parent directories after deleting a file.
+	// Storage backends without physical directories ignore this option.
+	PruneEmptyParents bool
+}
+
 // Storage serves as a storage abstraction that can be used to store and manage files
 // in a variety of storage backends.
 type Storage interface {
@@ -110,6 +116,9 @@ type FileService interface {
 	// DeleteFile deletes a file at a specific name from the storage backend. If the file
 	// is not found, no error is returned.
 	DeleteFile(ctx context.Context, name string) error
+
+	// DeleteFileWithOptions deletes a file and applies backend-specific cleanup options.
+	DeleteFileWithOptions(ctx context.Context, name string, opts DeleteOptions) error
 
 	// WriteTempFile handles the creation of a temp file when given an io.Reader. A prefix
 	// can also be used to define how the temp file is created. WriteOptions can also be
@@ -170,6 +179,22 @@ func (s *StorageFileService) WriteFileFromReader(ctx context.Context, name strin
 
 func (s *StorageFileService) DeleteFile(ctx context.Context, name string) error {
 	return s.Storage.Delete(ctx, name)
+}
+
+func (s *StorageFileService) DeleteFileWithOptions(ctx context.Context, name string, options DeleteOptions) error {
+	if err := s.Storage.Delete(ctx, name); err != nil {
+		return err
+	}
+
+	if options.PruneEmptyParents {
+		if storageBackend, supportsPruning := s.Storage.(interface {
+			PruneEmptyParents(ctx context.Context, name string) error
+		}); supportsPruning {
+			return storageBackend.PruneEmptyParents(ctx, name)
+		}
+	}
+
+	return nil
 }
 
 func (s *StorageFileService) WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error) {

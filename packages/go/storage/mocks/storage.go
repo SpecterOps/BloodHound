@@ -213,6 +213,20 @@ func (mr *MockFileServiceMockRecorder) DeleteFile(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFile", reflect.TypeOf((*MockFileService)(nil).DeleteFile), ctx, name)
 }
 
+// DeleteFileWithOptions mocks base method.
+func (m *MockFileService) DeleteFileWithOptions(ctx context.Context, name string, opts storage.DeleteOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFileWithOptions", ctx, name, opts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFileWithOptions indicates an expected call of DeleteFileWithOptions.
+func (mr *MockFileServiceMockRecorder) DeleteFileWithOptions(ctx, name, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFileWithOptions", reflect.TypeOf((*MockFileService)(nil).DeleteFileWithOptions), ctx, name, opts)
+}
+
 // GetFile mocks base method.
 func (m *MockFileService) GetFile(ctx context.Context, name string) (io.ReadCloser, storage.FileInfo, error) {
 	m.ctrl.T.Helper()
