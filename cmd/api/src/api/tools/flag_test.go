@@ -109,7 +109,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
-				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(errors.New("request analysis failed"))
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(errors.New("request analysis failed"))
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()
@@ -133,7 +133,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
-				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(nil)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()
@@ -159,7 +159,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
-				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull).Return(nil)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()

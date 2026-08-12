@@ -40,6 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
@@ -140,7 +141,7 @@ func getFeatureFlagsPostgresConfig(t *testing.T) pgtestdb.Config {
 // and returns its GET handler.
 func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store)
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()))
 	return handlers.NewHandlersContainer(svc).GetAllFlags
 }
 
@@ -148,7 +149,7 @@ func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 // by a pgx-backed featureflags stack and wrapped with auth-injecting middleware.
 func newToggleFlagHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store)
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()))
 	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).ToggleFlag, userID)
 }
 
@@ -304,15 +305,29 @@ func TestToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: requests analysis when findings prioritization is enabled",
+			name: "Success: requests full analysis when findings prioritization is enabled and variable analysis mode is disabled",
 			seedFlag: func(t *testing.T) int32 {
 				t.Helper()
+				seedFeatureFlag(t, ctx, db.Pool(), appcfg.FeatureVariableAnalysisMode, "Variable Analysis Mode", false, true)
 				return seedFeatureFlag(t, ctx, db.Pool(), services.FeatureFindingsPrioritizationV0, "Findings Prioritization v0", false, true)
 			},
 			expectedStatus: http.StatusOK,
 			assertDB: func(t *testing.T) {
 				t.Helper()
-				assertAnalysisRequest(t, ctx, db.Pool(), appcfg.PrioritizationFlagAnalysisRequester, int32(model.AnalysisStepsFull().Bits()))
+				assertAnalysisRequest(t, ctx, db.Pool(), services.PrioritizationFlagRequestSource, int32(model.AnalysisStepsFull().Bits()))
+			},
+		},
+		{
+			name: "Success: requests no post-processing analysis when findings prioritization is enabled and variable analysis mode is enabled",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				seedFeatureFlag(t, ctx, db.Pool(), appcfg.FeatureVariableAnalysisMode, "Variable Analysis Mode", true, true)
+				return seedFeatureFlag(t, ctx, db.Pool(), services.FeatureFindingsPrioritizationV0, "Findings Prioritization v0", false, true)
+			},
+			expectedStatus: http.StatusOK,
+			assertDB: func(t *testing.T) {
+				t.Helper()
+				assertAnalysisRequest(t, ctx, db.Pool(), services.PrioritizationFlagRequestSource, int32(model.AnalysisStepsNoPostProcessing().Bits()))
 			},
 		},
 		{

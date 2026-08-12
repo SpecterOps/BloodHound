@@ -17,5 +17,5 @@
 package appcfg
 
 const (
-	PrioritizationFlagAnalysisRequester = "prioritization-feature-flag-toggle"
+	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
 )

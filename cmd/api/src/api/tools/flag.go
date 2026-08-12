@@ -83,7 +83,7 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 
 	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 &&
 		shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
-		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull); err != nil {
+		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
 		}

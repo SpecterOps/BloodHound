@@ -36,6 +36,11 @@ const (
 	FeatureFindingsPrioritizationV0 = appcfg.FeatureFindingsPrioritizationV0
 )
 
+// Request source values used by the feature flags slice.
+const (
+	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
+)
+
 // ErrNotFound indicates that no feature flag exists for the requested key.
 var (
 	ErrNotFound         = errors.New("feature flag not found")
@@ -73,22 +78,29 @@ type Database interface {
 	GetFlagByID(ctx context.Context, id int32) (FeatureFlag, error)
 	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
 	SetFlag(ctx context.Context, featureFlag FeatureFlag) error
-	RequestAnalysis(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
+}
+
+type AnalysisRequestSubmitter interface {
+	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
 // Service implements feature-flag use cases on top of a Database implementation.
 type Service struct {
-	db Database
+	db                Database
+	analysisRequester AnalysisRequestSubmitter
 }
 
 // NewService constructs a Service from the supplied Database port. The
 // PostgreSQL implementation (Store) lives alongside in sql.go so callers obtain
 // a ready-to-use service without taking on a storage-layer dependency directly.
-func NewService(db Database) *Service {
+func NewService(db Database, analysisRequester AnalysisRequestSubmitter) *Service {
 	if db == nil {
 		panic("feature-flag: service requires a non-nil Database")
 	}
-	return &Service{db: db}
+	if analysisRequester == nil {
+		panic("feature-flag: service requires a non-nil AnalysisRequestSubmitter")
+	}
+	return &Service{db: db, analysisRequester: analysisRequester}
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
@@ -129,10 +141,21 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 	}
 
 	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
-		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagAnalysisRequester, model.AnalysisModeFull); err != nil {
+		analysisMode := s.resolvePrioritizationAnalysisMode(ctx)
+
+		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, analysisMode); err != nil {
 			return flag, err
 		}
 	}
 
 	return flag, nil
+}
+
+func (s *Service) resolvePrioritizationAnalysisMode(ctx context.Context) model.AnalysisMode {
+	variableAnalysisModeFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureVariableAnalysisMode)
+	if err != nil || !variableAnalysisModeFlag.Enabled {
+		return model.AnalysisModeFull
+	}
+
+	return model.AnalysisModeNoPostProcessing
 }

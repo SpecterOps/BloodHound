@@ -20,10 +20,12 @@
 package analysis
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/routes"
@@ -36,6 +38,27 @@ type AnalysisRequestAdapter interface {
 	CreateAnalysisRequest(response http.ResponseWriter, request *http.Request)
 }
 
+// AnalysisRequestSubmitter lets other slices submit analysis requests.
+type AnalysisRequestSubmitter interface {
+	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
+}
+
+type handlersAnalysisAdapter struct {
+	service *services.Service
+}
+
+func (s handlersAnalysisAdapter) GetRequest(ctx context.Context) (services.RequestedAnalysis, error) {
+	return s.service.GetRequest(ctx)
+}
+
+func (s handlersAnalysisAdapter) CreateRequest(ctx context.Context, requestedBy string) (services.RequestedAnalysis, bool, error) {
+	return s.service.CreateAnalysisRequest(ctx, requestedBy)
+}
+
+func (s handlersAnalysisAdapter) CancelAnalysisRequest(ctx context.Context) error {
+	return s.service.CancelAnalysisRequest(ctx)
+}
+
 // NewAnalysisRequestAdapter creates a new AnalysisRequestAdapter by wiring up the
 // analysis store, service, and handlers. It accepts a PostgreSQL connection pool
 // and returns a fully initialized adapter ready to handle analysis requests.
@@ -43,10 +66,21 @@ func NewAnalysisRequestAdapter(pool *pgxpool.Pool) AnalysisRequestAdapter {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		handlerSet = handlers.NewHandlersContainer(handlersAnalysisAdapter{service: svc})
 	)
 
 	return handlerSet
+}
+
+// NewAnalysisRequestSubmitter creates the internal interface other slices use
+// to submit analysis work without depending on HTTP handlers.
+func NewAnalysisRequestSubmitter(pool *pgxpool.Pool) AnalysisRequestSubmitter {
+	var (
+		store = appdb.NewStore(pool)
+		svc   = services.NewService(store)
+	)
+
+	return svc
 }
 
 // Register builds the analysis store -> service -> handler chain and attaches
@@ -56,7 +90,7 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		handlerSet = handlers.NewHandlersContainer(handlersAnalysisAdapter{service: svc})
 	)
 
 	routes.Register(routerInst, handlerSet)

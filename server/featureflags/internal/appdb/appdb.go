@@ -36,8 +36,6 @@ import (
 const (
 	tableFeatureFlags = "feature_flags"
 	tableAuditLogs    = "audit_logs"
-
-	analysisRequestTypeAnalysis = "analysis"
 )
 
 // queryExecer is the minimal pgx surface the feature-flag store relies on. It is
@@ -282,77 +280,4 @@ func (s *Store) SetFlag(ctx context.Context, flag services.FeatureFlag) error {
 	}
 
 	return tx.Commit(ctx)
-}
-
-func (s *Store) RequestAnalysis(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
-	var steps = analysisMode.AnalysisStepsFromMode()
-
-	var (
-		now  = time.Now().UTC()
-		args = []any{
-			analysisRequestTypeAnalysis,
-			requestedBy,
-			analysisRequestTypeAnalysis,
-			now,
-			steps.Bits(),
-			false,
-			false,
-			[]string{},
-			[]string{},
-		}
-		upsertSQL = `
-			WITH request_constants AS (
-				SELECT $1::text AS analysis_request_analysis_type
-			)
-			INSERT INTO analysis_request_switch (
-					requested_by,
-					request_type,
-					requested_at,
-					analysis_step,
-					delete_all_graph,
-					delete_sourceless_graph,
-					delete_source_kinds,
-					delete_relationships
-				)
-			VALUES ($2, $3, $4, $5, $6, $7, $8::text[], $9::text[])
-			ON CONFLICT (singleton) DO UPDATE
-			SET
-				requested_by = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.requested_by
-					ELSE EXCLUDED.requested_by
-				END,
-				request_type = EXCLUDED.request_type,
-				requested_at = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.requested_at
-					ELSE EXCLUDED.requested_at
-				END,
-				analysis_step = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN COALESCE(analysis_request_switch.analysis_step, 0) | COALESCE(EXCLUDED.analysis_step, 0)
-					ELSE EXCLUDED.analysis_step
-				END,
-				delete_all_graph = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_all_graph
-					ELSE EXCLUDED.delete_all_graph
-				END,
-				delete_sourceless_graph = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_sourceless_graph
-					ELSE EXCLUDED.delete_sourceless_graph
-				END,
-				delete_source_kinds = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_source_kinds
-					ELSE EXCLUDED.delete_source_kinds
-				END,
-				delete_relationships = CASE
-					WHEN EXCLUDED.request_type = analysis_request_switch.request_type THEN analysis_request_switch.delete_relationships
-					ELSE EXCLUDED.delete_relationships
-				END
-			WHERE analysis_request_switch.request_type = (SELECT analysis_request_analysis_type FROM request_constants)
-				AND (
-					EXCLUDED.request_type <> (SELECT analysis_request_analysis_type FROM request_constants)
-					OR COALESCE(analysis_request_switch.analysis_step, 0) <> (COALESCE(analysis_request_switch.analysis_step, 0) | COALESCE(EXCLUDED.analysis_step, 0))
-				);`
-	)
-
-	_, err := s.db.Exec(ctx, upsertSQL, args...)
-	return err
 }
