@@ -18,7 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { Button, CheckboxWithLabel } from 'doodle-ui';
-import { UpdateUserQueryRequest } from 'js-client-library';
+import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
 import { AppIcon } from '../../../components';
@@ -26,8 +26,6 @@ import ProcessingIndicator from '../../../components/Animations';
 import {
     useCreateSavedQuery,
     useExploreGraph,
-    useExploreParams,
-    useExploreSelectedItem,
     useFeatureFlag,
     useKeybindings,
     usePermissions,
@@ -36,7 +34,6 @@ import {
     useUpdateQueryPermissions,
     useUpdateSavedQuery,
 } from '../../../hooks';
-import { isGraphResponse } from '../../../hooks/useExploreGraph/queries/utils';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { useNotifications } from '../../../providers';
 import { Permission, cn } from '../../../utils';
@@ -55,17 +52,15 @@ const CypherSearchInner = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
-    onExploreMenuCollapse,
+    onQuerySuccess,
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
-    onExploreMenuCollapse: () => void;
+    onQuerySuccess?: (data: GraphResponse | FlatGraphResponse) => void;
 }) => {
-    const { cypherSearch, exploreSearchTab, searchType } = useExploreParams();
-
     const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
         useSavedQueriesContext();
 
@@ -98,27 +93,8 @@ const CypherSearchInner = ({
     const { checkPermission } = usePermissions();
     const { data: permissions } = useQueryPermissions(selectedQuery?.id);
 
-    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
-
     const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
-        onSuccess: (data) => {
-            if (isGraphResponse(data)) {
-                const returnedNodes = Object.keys(data.data.nodes || {});
-
-                const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
-                const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
-
-                if (returnedNodes.length > 1) {
-                    clearSelectedItem();
-                } else if (returnedNodes.length === 1) {
-                    setSelectedItem(returnedNodes[0]);
-                }
-
-                if (shouldCloseMenu) {
-                    onExploreMenuCollapse();
-                }
-            }
-        },
+        onSuccess: onQuerySuccess,
     });
 
     const timeoutLimitEnabled = useTimeoutLimitConfiguration();
@@ -467,14 +443,14 @@ const CypherSearch = ({
     setAutoRun,
     disableQueryLimit,
     setDisableQueryLimit,
-    onExploreMenuCollapse = () => {},
+    onQuerySuccess = () => {},
 }: {
     cypherSearchState: CypherSearchState;
     autoRun: boolean;
     setAutoRun: (autoRunQueries: boolean) => void;
     disableQueryLimit: boolean;
     setDisableQueryLimit: (timeoutSetting: boolean) => void;
-    onExploreMenuCollapse?: () => void;
+    onQuerySuccess?: (data: GraphResponse | FlatGraphResponse) => void;
 }) => {
     return (
         <SavedQueriesProvider>
@@ -484,7 +460,7 @@ const CypherSearch = ({
                 setAutoRun={setAutoRun}
                 disableQueryLimit={disableQueryLimit}
                 setDisableQueryLimit={setDisableQueryLimit}
-                onExploreMenuCollapse={onExploreMenuCollapse}
+                onQuerySuccess={onQuerySuccess}
             />
         </SavedQueriesProvider>
     );

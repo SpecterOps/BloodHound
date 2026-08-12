@@ -78,7 +78,7 @@ describe('CypherSearch', () => {
                 setAutoRun={() => {}}
                 disableQueryLimit={disableQueryLimit}
                 setDisableQueryLimit={() => {}}
-                onExploreMenuCollapse={mockOnExploreMenuCollapse}
+                onQuerySuccess={mockOnExploreMenuCollapse}
             />,
             { route }
         );
@@ -274,7 +274,7 @@ describe('CypherSearch', () => {
             expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
         });
 
-        it('calls onExploreMenuCollapse again when user reopens widget and runs another multi-node query', async () => {
+        it('calls onQuerySuccess again when user reopens widget and runs another multi-node query', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
             await waitFor(() => expect(mockOnExploreMenuCollapse).toHaveBeenCalledTimes(1));
