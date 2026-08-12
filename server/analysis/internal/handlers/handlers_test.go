@@ -166,7 +166,7 @@ func TestHandlers_CreateAnalysisRequest(t *testing.T) {
 			name:          "returns 202 Accepted when request is created",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
-				m.EXPECT().CreateAnalysisRequest(ctx, userIDString).Return(createdResult, true, nil)
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(createdResult, true, nil)
 			},
 			wantStatus: http.StatusAccepted,
 		},
@@ -174,7 +174,7 @@ func TestHandlers_CreateAnalysisRequest(t *testing.T) {
 			name:          "returns 202 Accepted when a request already exists",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
-				m.EXPECT().CreateAnalysisRequest(ctx, userIDString).Return(existingResult, false, nil)
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(existingResult, false, nil)
 			},
 			wantStatus: http.StatusAccepted,
 		},
@@ -185,7 +185,7 @@ func TestHandlers_CreateAnalysisRequest(t *testing.T) {
 			name:          "uses unknown-user fallback when auth context has no user",
 			authenticated: false,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
-				m.EXPECT().CreateAnalysisRequest(ctx, "unknown-user").Return(createdResult, true, nil)
+				m.EXPECT().CreateRequest(ctx, "unknown-user").Return(createdResult, true, nil)
 			},
 			wantStatus: http.StatusAccepted,
 		},
@@ -193,7 +193,7 @@ func TestHandlers_CreateAnalysisRequest(t *testing.T) {
 			name:          "returns 500 on service error",
 			authenticated: true,
 			expect: func(m *mocks.MockAnalysis, ctx context.Context) {
-				m.EXPECT().CreateAnalysisRequest(ctx, userIDString).Return(services.RequestedAnalysis{}, false, serviceErr)
+				m.EXPECT().CreateRequest(ctx, userIDString).Return(services.RequestedAnalysis{}, false, serviceErr)
 			},
 			wantStatus: http.StatusInternalServerError,
 		},

@@ -138,7 +138,7 @@ func TestService_CreateAnalysisRequest(t *testing.T) {
 
 			databaseMock.EXPECT().CreateAnalysisRequest(ctx, requester).Return(tt.dbResult, tt.dbCreated, tt.dbErr)
 
-			current, gotCreated, err := svc.CreateAnalysisRequest(ctx, requester)
+			current, gotCreated, err := svc.CreateRequest(ctx, requester)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {

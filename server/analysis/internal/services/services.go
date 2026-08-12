@@ -82,10 +82,10 @@ func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
 	return s.db.GetAnalysisRequest(ctx)
 }
 
-// CreateAnalysisRequest submits a new analysis request attributed to the given user. The currently
+// CreateRequest submits a new analysis request attributed to the given user. The currently
 // pending request is returned along with a boolean indicating whether this call created it
 // (true) or a request was already pending (false).
-func (s *Service) CreateAnalysisRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
+func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
 	return s.db.CreateAnalysisRequest(ctx, requestedBy)
 }
 
