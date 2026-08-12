@@ -31,10 +31,19 @@ import (
 
 func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 	var (
-		testURL1       = "/api/v2/bloodhound-users"
-		testURL2       = "/api/v2/search"
-		healthURL      = "/health"
-		ssoCallbackURL = "/api/v2/sso/73d94be8-a18c-4de2-b63c-75c28d3d4bff/callback"
+		testURL1  = "/api/v2/bloodhound-users"
+		testURL2  = "/api/v2/search"
+		healthURL = "/health"
+
+		// Excluded paths (should NOT emit query_parameters)
+		loginSupportURL = "/api/v2/login/support"
+		ssoCallbackURL  = "/api/v2/sso/abcd/callback"
+		samlACSURL      = "/api/v2/login/saml/abcd/acs"
+
+		// Non-excluded paths (SHOULD still emit query_parameters)
+		samlMetadataURL = "/api/v2/login/saml/abcd/metadata"
+		ssoLoginURL     = "/api/v2/sso/abcd/login"
+		ssoProvidersURL = "/api/v2/sso-providers"
 	)
 	testCases := []struct {
 		name              string
@@ -61,10 +70,43 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			logDoesNotContain: []string{"query_parameters"},
 		},
 		{
-			name:              "SSO callback path with query params does not add query_parameters field and logs",
+			name:              "SSO callback path with query params does not add query_parameters field",
 			url:               ssoCallbackURL + "?code=abc123&state=xyz789",
 			logContains:       []string{"HTTP request"},
 			logDoesNotContain: []string{`"query_parameters":"`, `"code":`, `"state":`},
+		},
+		{
+			name:        "other SSO path with query params still adds query_parameters field",
+			url:         ssoProvidersURL + "?sort_by=name",
+			logContains: []string{`"query_parameters":"`, "sort_by"},
+		},
+		{
+			name:              "login/support path with query params does not add query_parameters field",
+			url:               loginSupportURL + "?auth_code=abcd1111-25a9-4a08-9e11-9965acb126f7",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{`"query_parameters":"`, `"auth_code":`},
+		},
+		{
+			name:        "SSO login path with query params still adds query_parameters field",
+			url:         ssoLoginURL + "?redirect=/ui",
+			logContains: []string{`"query_parameters":"`, "redirect"},
+		},
+		{
+			name:              "SAML ACS path with query params does not add query_parameters field",
+			url:               samlACSURL + "?SAMLart=AAQAAMx8test123",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{`"query_parameters":"`, `"SAMLart":`},
+		},
+		{
+			name:        "SAML metadata path with query params still adds query_parameters field",
+			url:         samlMetadataURL + "?entityID=urn:test",
+			logContains: []string{`"query_parameters":"`, "entityID"},
+		},
+		{
+			name:              "non /api/v2 path (v1 SAML ACS) does not add query_parameters field",
+			url:               "/api/v1/login/saml/abcd/acs?SAMLart=AAQAAMx8test123",
+			logContains:       []string{"HTTP request"},
+			logDoesNotContain: []string{`"query_parameters":"`},
 		},
 		{
 			name:        "/api/v2 path with query params adds a query_parameters field",
