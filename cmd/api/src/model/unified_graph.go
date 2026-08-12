@@ -74,6 +74,17 @@ type UnifiedEdge struct {
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
+func getRelationshipDisplayName(kind string) string {
+	switch kind {
+	case "PZ_InZone":
+		return "In Zone"
+	case "PZ_PartOfZone":
+		return "Part Of Zone"
+	default:
+		return kind
+	}
+}
+
 func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, includeProperties bool) UnifiedNode {
 	var (
 		props       = node.Properties
@@ -109,7 +120,10 @@ func FromDAWGSNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *gr
 // This is being used with slices.Map so it is necessary to return a closure
 func FromDAWGSRelationship(includeProperties bool) func(*graph.Relationship) UnifiedEdge {
 	return func(rel *graph.Relationship) UnifiedEdge {
-		var properties map[string]any
+		var (
+			properties   map[string]any
+			relationship = rel.Kind.String()
+		)
 
 		if includeProperties {
 			properties = rel.Properties.Map
@@ -119,8 +133,8 @@ func FromDAWGSRelationship(includeProperties bool) func(*graph.Relationship) Uni
 			ID:         rel.ID.String(),
 			Source:     rel.StartID.String(),
 			Target:     rel.EndID.String(),
-			Kind:       rel.Kind.String(),
-			Label:      rel.Kind.String(),
+			Kind:       relationship,
+			Label:      getRelationshipDisplayName(relationship),
 			LastSeen:   getTypedPropertyOrDefault(rel.Properties, common.LastSeen.String(), time.Now()),
 			Properties: properties,
 		}

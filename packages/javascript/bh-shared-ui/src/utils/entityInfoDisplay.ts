@@ -36,10 +36,28 @@ import { MappedStringLiteral } from '../types';
 import { EntityKinds } from './content';
 import { LuxonFormat } from './datetime';
 
+const privilegeZoneRelationshipDisplayNames: Record<string, string> = {
+    PZ_InZone: 'In Zone',
+    PZ_PartOfZone: 'Part Of Zone',
+};
+
+const privilegeZonePropertyDisplayNames: Record<string, string> = {
+    relationship: 'Relationship',
+    source_object: 'Source object',
+    zone_name: 'Zone',
+    environment_name: 'Environment',
+    member_count: 'Members in environment',
+    source: 'Source',
+};
+
+export const formatRelationshipKind = (kind: string): string => privilegeZoneRelationshipDisplayNames[kind] ?? kind;
+
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
     const { kind, isKnownProperty } = validateProperty(propKey);
 
-    return isKnownProperty ? getFieldLabel(kind!, propKey) : `${startCase(propKey)}`;
+    return isKnownProperty
+        ? getFieldLabel(kind!, propKey)
+        : privilegeZonePropertyDisplayNames[propKey] ?? `${startCase(propKey)}`;
 };
 
 export const formatObjectInfoFields = (props: any): EntityField[] => {
