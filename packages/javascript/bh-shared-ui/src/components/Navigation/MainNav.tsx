@@ -203,8 +203,9 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                         'left-[2.75rem]': !isExpanded,
                     }
                 )}
+                size={16}
                 onClick={handleToggleNav}>
-                <FontAwesomeIcon icon={faCaretRight} size='sm' />
+                <FontAwesomeIcon icon={faCaretRight} />
             </IconButton>
 
             <nav

@@ -186,7 +186,10 @@ const defaultIconButtonClasses = [
 export const IconButtonVariants = cva(
     [
         ...buttonBaseClasses,
-        'h-fit w-fit min-h-8 min-w-8 p-2 inline-grid shrink-0 place-items-center rounded-full border-0',
+        'inline-grid h-fit min-h-8 aspect-square box-border',
+        'shrink-0 place-items-center align-middle rounded-full border-0 p-2',
+        '[&>svg]:h-[var(--icon-button-icon-size)]',
+        '[&>svg]:w-[var(--icon-button-icon-size)]',
     ],
     {
         variants: {
@@ -210,8 +213,12 @@ export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | '
     size?: number;
 }
 
+type IconButtonStyle = React.CSSProperties & {
+    '--icon-button-icon-size': string;
+};
+
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-    { variant = 'default', children, className, color, disabled = false, size, ...props },
+    { variant = 'default', children, className, color, disabled = false, size = 16, ...props },
     ref
 ) {
     // TODO remove/refactor BED-6062
@@ -225,7 +232,13 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
             className={(state) =>
                 cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
             }
-            style={{ ...props.style, fontSize: size, color }}>
+            style={(state) =>
+                ({
+                    ...(typeof props.style === 'function' ? props.style(state) : props.style),
+                    '--icon-button-icon-size': `${size}px`,
+                    color,
+                }) as IconButtonStyle
+            }>
             {children}
         </BaseUIButton>
     );

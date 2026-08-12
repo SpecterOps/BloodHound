@@ -325,6 +325,8 @@ export const TagForm: FC = () => {
                         {showDeleteButton() && (
                             <TextButton
                                 data-testid='privilege-zones_save_tag-form_delete-button'
+                                fontColor='primary'
+                                className='p-0'
                                 onClick={() => {
                                     setDeleteDialogOpen(true);
                                 }}>
@@ -653,6 +655,7 @@ export const TagForm: FC = () => {
                                 <TextButton
                                     fontColor='primary'
                                     data-testid='privilege-zones_save_tag-form_delete-button'
+                                    className='p-0'
                                     onClick={() => {
                                         setDeleteDialogOpen(true);
                                     }}>

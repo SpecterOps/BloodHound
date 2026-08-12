@@ -154,7 +154,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2 h-10'>
                     <IconButton
-                        className='my-1.5 ml-2 max-xl:px-2 max-lg:px-6 w-6'
+                        className='my-1.5 ml-2 rounded-none'
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
@@ -173,7 +173,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                             disable={!isOpen}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base rounded-none', {
                                     'disabled:!text-text-main disabled:!opacity-100': !isOpen,
                                     '[&>svg]:hidden': !isOpen,
                                 }),

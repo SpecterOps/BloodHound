@@ -81,12 +81,13 @@ const FilterDialog: FC<{
                 <IconButton
                     data-testid='privilege-zones_history_filter-button'
                     className='ml-4'
+                    size={24}
                     aria-label='Filter'
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>
                     <Tooltip tooltip='Filters'>
-                        <AppIcon.FilterOutline size={22} />
+                        <AppIcon.FilterOutline />
                     </Tooltip>
                 </IconButton>
             </DialogTrigger>
