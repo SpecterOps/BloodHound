@@ -53,12 +53,20 @@ const PathfindingSearch = ({
         setDragIndex(index);
         e.dataTransfer.effectAllowed = 'move';
 
-        // The row owns the drag, but its node icon and connector line overflow the row box and read
-        // as detached artifacts in the browser's default drag image, so snapshot the controls alone.
+        // The row owns the drag, but a drag image is rasterized from the whole painted subtree of
+        // whatever element it is given. Snapshot the input box alone: the row would drag along the
+        // node icon and connector line, and the combobox would drag along its results dropdown,
+        // which is open whenever the input has focus.
         const dragImageElement = dragImageRefs.current[index];
         if (dragImageElement) {
-            const { left, top } = dragImageElement.getBoundingClientRect();
-            e.dataTransfer.setDragImage(dragImageElement, e.clientX - left, e.clientY - top);
+            const { left, top, width, height } = dragImageElement.getBoundingClientRect();
+
+            // The grab point can sit outside the input box (on the grip or the node icon), which
+            // would leave the drag image floating away from the cursor.
+            const cursorOffsetX = Math.min(Math.max(e.clientX - left, 0), width);
+            const cursorOffsetY = Math.min(Math.max(e.clientY - top, 0), height);
+
+            e.dataTransfer.setDragImage(dragImageElement, cursorOffsetX, cursorOffsetY);
         }
     };
 
@@ -139,14 +147,9 @@ const PathfindingSearch = ({
                         onDragEnd={handleDragEnd}
                         className={cn('relative flex items-center gap-1 rounded transition-all group', {
                             'opacity-40': dragIndex === index,
-                            'ring-2 ring-primary ring-offset-1': dragOverIndex === index,
                         })}>
                         <PathfindingNodeIcon isStartNode={index === 0} showConnector={index > 0} />
-                        <div
-                            ref={(element) => {
-                                dragImageRefs.current[index] = element;
-                            }}
-                            className='relative flex flex-grow items-center gap-1'>
+                        <div className='relative flex flex-grow items-center gap-1'>
                             <div
                                 role='button'
                                 tabIndex={0}
@@ -164,9 +167,15 @@ const PathfindingSearch = ({
                                 className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'>
                                 <FontAwesomeIcon icon={faGripVertical} size='sm' />
                             </div>
-                            <div className='flex-grow'>
+                            <div
+                                className={cn('flex-grow rounded', {
+                                    'ring-2 ring-primary ring-offset-1': dragOverIndex === index,
+                                })}>
                                 <ExploreSearchCombobox
                                     ariaLabel={node.ariaLabel}
+                                    inputContainerRef={(element) => {
+                                        dragImageRefs.current[index] = element;
+                                    }}
                                     autoFocus={node.autoFocus}
                                     handleNodeEdited={handleNodeEdited(index)}
                                     handleNodeSelected={handleNodeSelected(index)}
