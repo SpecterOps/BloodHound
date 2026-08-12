@@ -36,7 +36,7 @@ import (
 func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {
 	var (
 		loginResource      = authapi.NewLoginResource(resources.Config, resources.Authenticator, resources.DB)
-		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator, resources.GraphQuery, resources.DogTags)
+		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator, resources.GraphQuery, resources.DogTags, resources.AlertPublisher)
 	)
 
 	router.With(func() mux.MiddlewareFunc {
@@ -250,7 +250,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/containers/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
 		// Domain Entity API
-		routerInst.PATCH(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.PatchDomain).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
+		routerInst.PATCH(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.PatchDomain).RequirePermissions(permissions.GraphDBWrite).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}", api.URIPathVariableObjectID), resources.GetDomainEntityInfo).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/users", api.URIPathVariableObjectID), resources.ListADDomainContainedUsers).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
 		routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/groups", api.URIPathVariableObjectID), resources.ListADDomainContainedGroups).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),
@@ -345,9 +345,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
 		routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
-
-		// Datapipe API
-		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
 
 		// Custom Node Management
 		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequirePermissions(permissions.OpenGraphRead),

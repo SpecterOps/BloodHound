@@ -357,17 +357,25 @@ export enum ManagementOperationStatus {
     CANCELED = 'canceled',
 }
 
+export enum ArtifactStatus {
+    PENDING = 'pending',
+    UPLOADING = 'uploading',
+    COMPLETE = 'complete',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
 export type ManagementOperation = {
     id: string;
     client_id: string;
     artifact_id: string | null;
+    // total byte size of the artifact to download
+    artifact_size: number | null;
+    artifact_status: ArtifactStatus | null;
     type: 'support_bundle';
     status: ManagementOperationStatus;
-    requested_by_user_id: string | null;
-    created_at: string;
     started_at: string | null;
     completed_at: string | null;
-    execution_time: string;
 };
 
 export type SupportBundleSummaryStatus = {

@@ -202,10 +202,9 @@ const CreateUserFormInner: React.FC<{
                                                 value={String(selectedRoleId)}>
                                                 <FormControl>
                                                     <SelectTrigger
-                                                        className='bg-transparent'
                                                         data-testid='create-user-dialog_select_role'
                                                         id='role'
-                                                        variant='underlined'>
+                                                        variant='outlined'>
                                                         <SelectValue placeholder={field.value} />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -396,10 +395,9 @@ const CreateUserFormInner: React.FC<{
                                         <Select onValueChange={setAuthenticationMethod} value={authenticationMethod}>
                                             <FormControl className='mt-2'>
                                                 <SelectTrigger
-                                                    className='bg-transparent'
                                                     data-testid='create-user-dialog_select_authentication-method'
                                                     id='authenticationMethod'
-                                                    variant='underlined'>
+                                                    variant='outlined'>
                                                     <SelectValue placeholder={authenticationMethod} />
                                                 </SelectTrigger>
                                             </FormControl>
