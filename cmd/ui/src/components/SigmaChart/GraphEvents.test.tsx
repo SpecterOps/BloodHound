@@ -151,6 +151,10 @@ describe('GraphEvents snap to grid', () => {
         layoutMocks.standardLayout.mockClear();
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('aligns the current graph immediately when enabled', () => {
         const graph = createGraph();
         sigmaMocks.sigma = createSigma(graph);
@@ -220,7 +224,6 @@ describe('GraphEvents snap to grid', () => {
 
         expect(firstAnimation.cancel).toHaveBeenCalledOnce();
         expect(getPosition(graph, 'alpha')).toEqual({ x: 71, y: 83 });
-        vi.useRealTimers();
     });
 
     it('cancels settlement before disabling snap or applying another layout', () => {

@@ -67,6 +67,17 @@ describe('snapPositionsToGrid', () => {
 
         expect(new Set(Object.values(snapped).map(({ x, y }) => `${x}:${y}`))).toHaveLength(5_000);
     });
+
+    it('normalizes non-finite coordinates without creating duplicate cells', () => {
+        const snapped = snapPositionsToGrid({
+            nan: { x: Number.NaN, y: Number.NaN },
+            positiveInfinity: { x: Number.POSITIVE_INFINITY, y: Number.POSITIVE_INFINITY },
+            negativeInfinity: { x: Number.NEGATIVE_INFINITY, y: Number.NEGATIVE_INFINITY },
+        });
+
+        expect(Object.values(snapped).every(({ x, y }) => Number.isFinite(x) && Number.isFinite(y))).toBe(true);
+        expect(new Set(Object.values(snapped).map(({ x, y }) => `${x}:${y}`))).toHaveLength(3);
+    });
 });
 
 describe('snapPositionToGrid', () => {

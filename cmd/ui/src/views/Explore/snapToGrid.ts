@@ -19,7 +19,7 @@ import type { Coordinates } from 'sigma/types';
 export const SNAP_TO_GRID_SIZE = 100;
 
 const roundToGrid = (value: number, gridSize: number) => {
-    const scaledValue = value / gridSize;
+    const scaledValue = Number.isFinite(value) ? value / gridSize : 0;
     const roundedValue = scaledValue >= 0 ? Math.floor(scaledValue + 0.5) : Math.ceil(scaledValue - 0.5);
     const result = roundedValue * gridSize;
 
