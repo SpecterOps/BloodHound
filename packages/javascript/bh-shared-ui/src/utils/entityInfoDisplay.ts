@@ -41,8 +41,6 @@ const privilegeZoneRelationshipDisplayNames: Record<string, string> = {
     PZ_PartOfZone: 'Part Of Zone',
 };
 
-const privilegeZoneNodeKinds = new Set(['PZ_PrivilegeZone', 'PZ_PrivilegeZoneEnvironment']);
-
 export const privilegeZonePropertyDisplayNames: Record<string, string> = {
     relationship: 'Relationship',
     source_object: 'Source object',
@@ -217,10 +215,7 @@ export const NoEntitySelectedHeader = 'None Selected';
 export const getEntityName = (selectedEntity: NodeDetails | NodeDetailsWithInfo | undefined) => {
     if (!selectedEntity) return NoEntitySelectedHeader;
 
-    const isPrivilegeZone = selectedEntity.kinds.some(({ name }) => privilegeZoneNodeKinds.has(name));
-    const name = isPrivilegeZone
-        ? selectedEntity.properties.displayname || selectedEntity.properties.name || selectedEntity.properties.objectid
-        : selectedEntity.properties.name || selectedEntity.properties.objectid;
+    const name = selectedEntity.properties.name || selectedEntity.properties.objectid;
 
     if (!name) return 'Name not found';
 

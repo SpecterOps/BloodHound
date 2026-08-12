@@ -232,7 +232,7 @@ func TestFromDAWGSRelationship(t *testing.T) {
 	}
 }
 
-func TestFromDAWGSNode_PrivilegeZonesUseHumanDisplayName(t *testing.T) {
+func TestFromDAWGSNode_PrivilegeZonesUseStandardName(t *testing.T) {
 	t.Parallel()
 
 	node := &graph.Node{
@@ -246,22 +246,5 @@ func TestFromDAWGSNode_PrivilegeZonesUseHumanDisplayName(t *testing.T) {
 
 	result := FromDAWGSNode(nil, node, false)
 
-	require.Equal(t, "Tier Zero", result.Label)
-}
-
-func TestFromDAWGSNode_NonPrivilegeZonePreservesLegacyNamePriority(t *testing.T) {
-	t.Parallel()
-
-	node := &graph.Node{
-		Kinds: graph.Kinds{graph.StringKind("CustomKind")},
-		Properties: graph.AsProperties(map[string]any{
-			common.Name.String():        "LEGACY NAME",
-			common.DisplayName.String(): "Human Name",
-			common.ObjectID.String():    "custom:1",
-		}),
-	}
-
-	result := FromDAWGSNode(nil, node, false)
-
-	require.Equal(t, "LEGACY NAME", result.Label)
+	require.Equal(t, "TIER ZERO", result.Label)
 }

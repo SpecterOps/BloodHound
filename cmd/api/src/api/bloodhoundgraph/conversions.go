@@ -32,7 +32,7 @@ const (
 func NodeToBloodHoundGraph(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node) BloodHoundGraphNode {
 	var (
 		nodeKindLabel       = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
-		name                = getNodeDisplayName(node)
+		name, _             = node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
 		bloodHoundGraphNode = BloodHoundGraphNode{
 			BloodHoundGraphItem: &BloodHoundGraphItem{
 				Data: getNodeDisplayProperties(primaryDisplayKinds, node),
@@ -53,16 +53,6 @@ func NodeToBloodHoundGraph(primaryDisplayKinds graphschema.PrimaryDisplayKinds, 
 	bloodHoundGraphNode.SetFontIcon(nodeKindLabel, primaryDisplayKinds)
 
 	return bloodHoundGraphNode
-}
-
-func getNodeDisplayName(node *graph.Node) string {
-	if node.Kinds.ContainsOneOf(graph.StringKind("PZ_PrivilegeZone"), graph.StringKind("PZ_PrivilegeZoneEnvironment")) {
-		name, _ := node.Properties.GetWithFallback(common.DisplayName.String(), graphschema.DefaultMissingName, common.Name.String(), common.ObjectID.String()).String()
-		return name
-	}
-
-	name, _ := node.Properties.GetWithFallback(common.Name.String(), graphschema.DefaultMissingName, common.DisplayName.String(), common.ObjectID.String()).String()
-	return name
 }
 
 func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink {

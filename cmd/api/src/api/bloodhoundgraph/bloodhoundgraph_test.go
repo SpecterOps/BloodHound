@@ -138,7 +138,7 @@ func TestSetFontIcon(t *testing.T) {
 	})
 }
 
-func TestNodeToBloodHoundGraph_PrivilegeZonesUseHumanDisplayName(t *testing.T) {
+func TestNodeToBloodHoundGraph_PrivilegeZonesUseStandardName(t *testing.T) {
 	t.Parallel()
 
 	node := &graph.Node{
@@ -153,23 +153,5 @@ func TestNodeToBloodHoundGraph_PrivilegeZonesUseHumanDisplayName(t *testing.T) {
 	result := NodeToBloodHoundGraph(nil, node)
 
 	require.NotNil(t, result.Label)
-	require.Equal(t, "Tier Zero in PHANTOM.CORP", result.Label.Text)
-}
-
-func TestNodeToBloodHoundGraph_NonPrivilegeZonePreservesLegacyNamePriority(t *testing.T) {
-	t.Parallel()
-
-	node := &graph.Node{
-		Kinds: graph.Kinds{graph.StringKind("CustomKind")},
-		Properties: graph.AsProperties(map[string]any{
-			common.Name.String():        "LEGACY NAME",
-			common.DisplayName.String(): "Human Name",
-			common.ObjectID.String():    "custom:1",
-		}),
-	}
-
-	result := NodeToBloodHoundGraph(nil, node)
-
-	require.NotNil(t, result.Label)
-	require.Equal(t, "LEGACY NAME", result.Label.Text)
+	require.Equal(t, "TIER ZERO IN PHANTOM.CORP", result.Label.Text)
 }
