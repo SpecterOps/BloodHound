@@ -44,6 +44,8 @@ allOf:
         type: string
         pattern: '^\d+$'
         description: Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision.
+      risk_score_calculation:
+        $ref: './model.finding-risk-score-calculation.yaml'
       Severity:
         type: string
         enum:
