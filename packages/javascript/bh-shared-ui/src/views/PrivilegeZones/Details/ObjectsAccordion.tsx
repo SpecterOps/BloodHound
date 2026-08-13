@@ -28,6 +28,7 @@ import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
+import { disabledStylesOverride } from './constants';
 import { SelectedHighlight } from './SelectedHighlight';
 
 export interface ObjectsAccordionProps {
@@ -173,9 +174,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                             disable={!isOpen}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn({
-                                    '[&>svg]:hidden': !isOpen,
-                                }),
+                                button: cn(!isOpen && disabledStylesOverride),
                             }}
                         />
                     </div>

@@ -31,6 +31,7 @@ import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
 import { RuleTabValue, TagTabValue } from '../utils';
+import { disabledStylesOverride } from './constants';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 import { SelectedHighlight } from './SelectedHighlight';
 
@@ -247,10 +248,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn({ 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn({
-                                    '[&>svg]:hidden': !isOpen || isAccordionDisabled,
-                                    'opacity-50': isAccordionDisabled,
-                                }),
+                                button: cn((!isOpen || isAccordionDisabled) && disabledStylesOverride),
                             }}
                         />
                     </div>
