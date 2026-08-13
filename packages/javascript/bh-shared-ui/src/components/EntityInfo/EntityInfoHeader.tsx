@@ -28,7 +28,7 @@ export interface HeaderProps {
     name: string;
     nodeType?: EntityKinds | string;
 }
-
+// TODO - refactor in BED-6062
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             </Tooltip>
             {selectedItem && (
                 <Icon
-                    className='h-10 box-border p-4 text-contrast'
+                    className='h-10 box-border text-contrast mr-1'
                     onClick={clearSelectedItem}
                     tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />

@@ -15,14 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    IconButton,
     Input,
+    TextButton,
 } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -75,13 +76,13 @@ export const ConfirmDeleteExtensionDialog: FC<{
                             />
                         </div>
                     </DialogDescription>
-                    <DialogActions>
-                        <Button variant='text' onClick={handleCancel} disabled={isDeleting}>
+                    <DialogActions className='text-sm gap-4'>
+                        <TextButton onClick={handleCancel} disabled={isDeleting}>
                             Cancel
-                        </Button>
-                        <Button variant='text' fontColor='primary' onClick={handleAccept} disabled={isConfirmDisabled}>
+                        </TextButton>
+                        <TextButton fontColor='primary' onClick={handleAccept} disabled={isConfirmDisabled}>
                             Confirm
-                        </Button>
+                        </TextButton>
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>
@@ -105,7 +106,7 @@ export const DeleteExtensionButton: FC<{
                         ? 'Built-in extensions cannot be deleted.'
                         : 'You do not have permission to delete this extension.'
                 }>
-                <button
+                <IconButton
                     aria-label={`Delete ${extensionName}`}
                     className={cn({
                         'cursor-pointer': !isUndeletable && hasDeletePermission,
@@ -114,7 +115,7 @@ export const DeleteExtensionButton: FC<{
                     onClick={() => onDeleteClick(extension)}
                     disabled={isUndeletable || !hasDeletePermission}>
                     <AppIcon.Trash size={18} />
-                </button>
+                </IconButton>
             </ConditionalTooltip>
         </div>
     );

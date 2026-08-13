@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Theme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
-import { Button, Typography } from 'doodle-ui';
+import { TextButton, Typography } from 'doodle-ui';
 import { PropsWithChildren, useMemo, useState } from 'react';
 import { copyToClipboard } from '../../../utils/copyToClipboard';
 
@@ -42,12 +42,8 @@ export const useStyles = makeStyles((theme: Theme) => ({
             width: '100%',
 
             '& button': {
-                color: theme.palette.color.primary,
                 transition: 'opacity 100ms ease-in-out',
-                boxShadow: 'none',
                 fontSize: theme.typography.body1,
-                padding: theme.spacing(0.5, 1),
-                height: 'fit-content',
 
                 '&:last-of-type': {
                     marginRight: '20px',
@@ -129,24 +125,20 @@ function CodeController(props: PropsWithChildren<Props>) {
                 onScroll={handleScroll}>
                 {(!hideCopy || !hideWrap) && (
                     <>
-                        <div className='codeController'>
+                        <span className='codeController gap-4 mb-1'>
                             {!hideCopy && (
-                                <Button variant='text' onClick={handleCopy}>
-                                    <FontAwesomeIcon icon={faCopy} />
-                                    <Typography component='span' className='ml-[6px]'>
-                                        {copied ? 'Copied' : 'Copy'}
-                                    </Typography>
-                                </Button>
+                                <TextButton onClick={handleCopy} className='has-[svg]:gap-1'>
+                                    <FontAwesomeIcon icon={faCopy} size='lg' />
+                                    {copied ? 'Copied' : 'Copy'}
+                                </TextButton>
                             )}
                             {!hideWrap && (
-                                <Button variant='text' onClick={handleWrap}>
-                                    <FontAwesomeIcon icon={faAlignJustify} />
-                                    <Typography component='span' className='ml-[6px]'>
-                                        {wrapped ? 'Unwrap' : 'Wrap'}
-                                    </Typography>
-                                </Button>
+                                <TextButton onClick={handleWrap}>
+                                    <FontAwesomeIcon icon={faAlignJustify} size='lg' className='has-[svg]:gap-1' />
+                                    {wrapped ? 'Unwrap' : 'Wrap'}
+                                </TextButton>
                             )}
-                        </div>
+                        </span>
                         <br />
                         <br />
                     </>
