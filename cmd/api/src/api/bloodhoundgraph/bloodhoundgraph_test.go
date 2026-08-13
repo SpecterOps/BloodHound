@@ -155,3 +155,12 @@ func TestNodeToBloodHoundGraph_PrivilegeZonesUseStandardName(t *testing.T) {
 	require.NotNil(t, result.Label)
 	require.Equal(t, "TIER ZERO IN PHANTOM.CORP", result.Label.Text)
 }
+
+func TestRelationshipToBloodHoundGraph_PrivilegeZoneLabel(t *testing.T) {
+	t.Parallel()
+
+	result := RelationshipToBloodHoundGraph(&graph.Relationship{Kind: graph.StringKind("PZ_InZone")})
+
+	require.NotNil(t, result.Label)
+	require.Equal(t, "In Zone", result.Label.Text)
+}

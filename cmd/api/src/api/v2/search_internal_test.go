@@ -419,6 +419,27 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 	require.Equal(t, "objectid3", actual[0].ObjectID)
 }
 
+func TestFilterAndFormatSearchResultsPrivilegeZoneEnvironmentETAC(t *testing.T) {
+	t.Parallel()
+
+	node := &graph.Node{
+		ID:    4,
+		Kinds: graph.Kinds{graph.StringKind("PZ_PrivilegeZoneEnvironment")},
+		Properties: graph.AsProperties(map[string]any{
+			common.ObjectID.String():     "pze:1:allowed",
+			common.Name.String():         "TIER ZERO IN ALLOWED",
+			graphschema.EnvironmentIDKey: "allowed-environment",
+		}),
+	}
+
+	allowed := filterAndFormatSearchResults([]*graph.Node{node}, []string{"allowed-environment"}, nil)
+	denied := filterAndFormatSearchResults([]*graph.Node{node}, []string{"other-environment"}, nil)
+
+	require.Len(t, allowed, 1)
+	assert.Equal(t, "pze:1:allowed", allowed[0].ObjectID)
+	assert.Empty(t, denied)
+}
+
 func Test_getSearchableNodeKinds(t *testing.T) {
 	tests := []struct {
 		name                   string
