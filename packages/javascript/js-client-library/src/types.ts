@@ -800,23 +800,11 @@ export interface AlertAttempt {
     channel_id: string;
     event_id: string;
     created_at: ISO_DATE_STRING;
-    succeeded_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    last_status_code: {
-        int32: number;
-        valid: boolean;
-    };
-    last_error: {
-        string: string;
-        valid: boolean;
-    };
+    succeeded_at: ISO_DATE_STRING;
+    last_status_code: number;
+    last_error: string;
     attempts: number;
-    next_attempt_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
+    next_attempt_at: ISO_DATE_STRING;
 }
 
 // ---------------------------------------------------------------------------
