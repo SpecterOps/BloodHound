@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tooltip } from 'doodle-ui';
+import { IconButton, Tooltip } from 'doodle-ui';
 import { BloodHoundString } from 'js-client-library';
 import { AppIcon } from '../../../components/AppIcon';
 import { useHistoryTableContext } from './HistoryTableContext';
@@ -38,9 +38,9 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
                 {!note ? (
                     <p>-</p>
                 ) : (
-                    <Button aria-label={noteToolTipContent} variant='text' onClick={handleClick}>
+                    <IconButton aria-label={noteToolTipContent} onClick={handleClick}>
                         <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
-                    </Button>
+                    </IconButton>
                 )}
             </div>
         </Tooltip>

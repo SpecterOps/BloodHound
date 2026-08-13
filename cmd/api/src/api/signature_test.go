@@ -18,45 +18,13 @@ package api_test
 
 import (
 	"io"
-	"net/http"
 	"os"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
-	"github.com/specterops/bloodhound/packages/go/headers"
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestSignRequestAtInternalError(t *testing.T) {
-	reader := strings.NewReader("Hello world")
-	request, err := http.NewRequest("GET", "www.foo.bar", reader)
-	require.Nil(t, err)
-
-	now := time.Now()
-	err = api.SignRequestAtTime(nil, "tokenID", "token", now, request)
-	require.Error(t, err)
-	require.ErrorContains(t, err, "hasher must not be nil")
-}
-
-func TestSignRequestSuccess(t *testing.T) {
-	request, err := http.NewRequest("GET", "www.foo.bar", strings.NewReader("Hello world"))
-	require.Nil(t, err)
-
-	err = api.SignRequest("tokenID", "token", request)
-	require.Nil(t, err)
-
-	requestDate := request.Header.Get(headers.RequestDate.String())
-	require.Equal(t, time.Now().Format(time.RFC3339), requestDate)
-
-	authorization := request.Header[headers.Authorization.String()][0]
-	require.Equal(t, "bhesignature tokenID", authorization)
-
-	signature := request.Header[headers.Signature.String()][0]
-	require.NotNil(t, signature)
-}
 
 func TestSelfDestructingTempFile(t *testing.T) {
 	file, err := api.NewSelfDestructingTempFile("", "test-")

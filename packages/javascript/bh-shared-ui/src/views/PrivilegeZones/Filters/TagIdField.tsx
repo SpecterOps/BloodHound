@@ -16,7 +16,6 @@
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Button,
     FormControl,
     FormField,
     FormItem,
@@ -27,6 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
     Skeleton,
+    TextButton,
 } from 'doodle-ui';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
@@ -60,8 +60,7 @@ export const TagIdField: FC<{
                                     </SelectTrigger>
                                 )}
                             </FormControl>
-                            <Button
-                                variant={'text'}
+                            <TextButton
                                 aria-label={`clear ${fieldLabel}`}
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
@@ -69,7 +68,7 @@ export const TagIdField: FC<{
                                     form.setValue(field.name, '');
                                 }}>
                                 <FontAwesomeIcon icon={faClose} />
-                            </Button>
+                            </TextButton>
                         </div>
 
                         {tagsQuery.isLoading ? (

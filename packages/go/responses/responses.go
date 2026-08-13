@@ -73,6 +73,24 @@ type ErrorWrapper struct {
 	Errors     []ErrorDetails `json:"errors"`
 }
 
+// WriteJSON writes data as the entire response body with the supplied status code, without
+// wrapping it in any envelope. Use this for endpoints whose top-level response shape is owned
+// by the view itself and does not fit the Basic, Paginated, or CSV envelopes.
+func WriteJSON(ctx context.Context, data JSONViewer, statusCode int, response http.ResponseWriter) {
+	rawData, err := data.JSONView()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed marshaling data for JSON response", attr.Error(err))
+		WriteError(ctx, http.StatusInternalServerError, failedToMarshalMessage, response)
+		return
+	}
+
+	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	response.WriteHeader(statusCode)
+	if _, writeErr := response.Write(rawData); writeErr != nil {
+		slog.ErrorContext(ctx, "Failed to write JSON response body", attr.Error(writeErr))
+	}
+}
+
 // WriteBasic marshals data as the data field of a BasicResponse and writes it with the
 // supplied status code.
 func WriteBasic(ctx context.Context, data JSONViewer, statusCode int, response http.ResponseWriter) {

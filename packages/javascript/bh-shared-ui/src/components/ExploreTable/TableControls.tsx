@@ -17,7 +17,7 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Button, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
+import { Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger, TextButton } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -138,15 +138,15 @@ const TableControls = <TData, TValue>({
                         onResetColumnSize={onResetColumnSize}
                     />
                 )}
+                {/* TODO - fix focus state in this component BED-9173 */}
                 {onCloseClick && (
-                    <Button
-                        variant='text'
+                    <TextButton
                         onClick={onCloseClick}
                         onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
                         data-testid='close-button'
                         aria-label='Close table view'>
                         <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
-                    </Button>
+                    </TextButton>
                 )}
             </div>
         </div>

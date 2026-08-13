@@ -16,11 +16,11 @@
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { PopperContentProps } from '@radix-ui/react-popper';
-import { Button, ButtonProps, Popover, PopoverContent, Tooltip, Typography } from 'doodle-ui';
+import { ButtonProps, Popover, PopoverContent, TextButton, Typography } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { cn } from '../../utils';
 import DropdownTrigger from './DropdownTrigger';
-import { optionIconStyles, optionStyles, popoverContentStyles, tooltipStyles } from './constants';
+import { optionStyles, popoverContentStyles } from './constants';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
@@ -35,8 +35,6 @@ const DropdownSelector: FC<{
     const [open, setOpen] = useState<boolean>(false);
 
     const handleClose = () => setOpen(false);
-
-    const buttonPrimary = variant === 'primary';
 
     const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
@@ -56,34 +54,28 @@ const DropdownSelector: FC<{
                     aria-describedby={caption ? 'dropdown-caption' : undefined}
                 />
             </div>
-            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48', { 'w-64': buttonPrimary })}>
+            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48')}>
                 <ul>
                     {options.map((option: DropdownOption) => {
                         return (
                             <li key={option.key}>
-                                <Tooltip tooltip={option.value} contentProps={{ className: tooltipStyles }}>
-                                    <Button
-                                        variant={'text'}
-                                        className={optionStyles}
-                                        data-testid={option.value}
-                                        onClick={() => {
-                                            onChange(option);
-                                            handleClose();
-                                        }}>
-                                        <span className={cn('max-w-96 truncate', { uppercase: buttonPrimary })}>
-                                            {option.value}
-                                        </span>
-                                        {option.icon && (
-                                            <FontAwesomeIcon
-                                                className={optionIconStyles}
-                                                style={{ width: '10%', alignSelf: 'center' }}
-                                                icon={option.icon}
-                                                data-testid={`dropdown-icon-${option.icon.iconName}`}
-                                                size='sm'
-                                            />
-                                        )}
-                                    </Button>
-                                </Tooltip>
+                                <TextButton
+                                    className={optionStyles}
+                                    data-testid={option.value}
+                                    onClick={() => {
+                                        onChange(option);
+                                        handleClose();
+                                    }}>
+                                    {option.value}
+                                    {option.icon && (
+                                        <FontAwesomeIcon
+                                            style={{ width: '10%', alignSelf: 'center' }}
+                                            icon={option.icon}
+                                            data-testid={`dropdown-icon-${option.icon.iconName}`}
+                                            size='sm'
+                                        />
+                                    )}
+                                </TextButton>
                             </li>
                         );
                     })}

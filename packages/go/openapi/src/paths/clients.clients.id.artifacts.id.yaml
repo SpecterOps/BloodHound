@@ -58,6 +58,11 @@ get:
             type: string
             format: binary
           example: '[this request has a binary response]'
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+          example: '[this request has a binary response]'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

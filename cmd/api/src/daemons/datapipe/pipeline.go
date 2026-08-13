@@ -366,6 +366,13 @@ func (s *BHCEPipeline) Optimize(ctx context.Context) error {
 		}
 	}
 
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"Graph Storage Optimization",
+		attr.Namespace("optimize"),
+		attr.Function("Optimize"),
+	)()
+
 	start := time.Now()
 	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
 		slog.ErrorContext(ctx, "Error optimizing graph storage after analysis", attr.Error(err))
@@ -397,6 +404,13 @@ func (s *BHCEPipeline) OptimizeOnBoot(ctx context.Context) error {
 			return nil
 		}
 	}
+
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"Graph Storage Optimization",
+		attr.Namespace("optimize"),
+		attr.Function("OptimizeOnBoot"),
+	)()
 
 	start := time.Now()
 	if err := s.graphdb.OptimizeStorage(ctx); err != nil {
