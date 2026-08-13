@@ -95,6 +95,10 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 		node.Kinds = kinds
 	}
 
+	if !s.nodeAccessChecker.CanAccessNode(ctx, node) {
+		return Node{}, ErrNodeAccessDenied
+	}
+
 	// grab all the associated kind info objects for every kind.
 	if includeKindInfo {
 		var allKindInfos []KindInfo
@@ -129,6 +133,8 @@ func (s *Service) GetNode(ctx context.Context, id int64, includeKindInfo bool) (
 		})
 
 		node.KindInfos = allKindInfos
+
+		renderNodeKindInfos(ctx, &node)
 	}
 
 	return node, nil

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -22,6 +21,7 @@ import {
     DialogOverlay,
     DialogPortal,
     DialogTitle,
+    TextButton,
 } from 'doodle-ui';
 import { FC } from 'react';
 
@@ -40,13 +40,11 @@ const ConfirmUpdateQueryDialog: FC<{
                     <DialogDescription className='text-neutral-dark-5 dark:text-neutral-light-5'>
                         {dialogContent}
                     </DialogDescription>
-                    <DialogActions className='px-0 flex-row justify-end'>
-                        <Button variant='text' onClick={handleCancel}>
-                            Cancel
-                        </Button>
-                        <Button variant='text' onClick={handleApply}>
+                    <DialogActions className='px-0 flex-row justify-end gap-4 text-sm'>
+                        <TextButton onClick={handleCancel}>Cancel</TextButton>
+                        <TextButton fontColor='primary' onClick={handleApply}>
                             Ok
-                        </Button>
+                        </TextButton>
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>
