@@ -138,10 +138,7 @@ export const ManageColumnsComboBox = ({
     return (
         <>
             <div className='mb-1'>
-                <Button
-                    disabled={disabled}
-                    onClick={handleManageColumnsClick}
-                    className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
+                <Button disabled={disabled} onClick={handleManageColumnsClick}>
                     Columns
                 </Button>
             </div>

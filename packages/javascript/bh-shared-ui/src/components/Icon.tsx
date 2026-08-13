@@ -13,22 +13,22 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { Button, Tooltip } from 'doodle-ui';
+// TODO - move to DUI BED-7635
+import { IconButton, Tooltip } from 'doodle-ui';
 import { FC, MouseEvent, PropsWithChildren } from 'react';
 import { cn } from '../utils';
 
 interface Props {
-    tip?: string;
+    tip: string;
     onClick?: (event: MouseEvent) => void;
     className?: string;
 }
-
+// TODO BED-6062
 const Icon: FC<PropsWithChildren<Props>> = ({ tip, onClick: click, children, className }): JSX.Element => {
     const icon = (
-        <Button variant='text' aria-label={tip} className={cn('relative p-0 rounded-none', className)} onClick={click}>
+        <IconButton aria-label={tip} className={cn('relative rounded-none', className)} onClick={click}>
             {children}
-        </Button>
+        </IconButton>
     );
 
     return tip ? (

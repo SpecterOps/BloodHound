@@ -19,12 +19,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -63,9 +61,7 @@ type RelationshipKindInfoView struct {
 
 // BuildRelationshipView projects a services.Relationship into the view type the handlers
 // return in their JSON envelope.
-func BuildRelationshipView(relationship services.Relationship, includeKindInfo bool) (RelationshipView, error) {
-	var markdownErr error
-
+func BuildRelationshipView(relationship services.Relationship, includeKindInfo bool) RelationshipView {
 	relView := RelationshipView{
 		RelationshipID: relationship.ID,
 		SourceNodeID:   relationship.SourceNodeID,
@@ -79,22 +75,20 @@ func BuildRelationshipView(relationship services.Relationship, includeKindInfo b
 
 	if includeKindInfo {
 		for _, kindInfo := range relationship.KindInfos {
-			markdown, err := buildMarkdownView(kindInfo.Content)
-			if err != nil {
-				markdownErr = errors.Join(markdownErr, err)
-			}
-
 			relView.Info = append(relView.Info, RelationshipKindInfoView{
 				Name:               kindInfo.InfoKey,
 				Title:              kindInfo.Title,
 				Position:           kindInfo.Position,
 				RelationshipKindID: int(*relationship.Kind.ID),
-				Markdown:           markdown,
+				Markdown: MarkdownView{
+					Content:       kindInfo.RenderedMarkdown,
+					TemplateError: kindInfo.TemplateError,
+				},
 			})
 		}
 	}
 
-	return relView, markdownErr
+	return relView
 }
 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
@@ -135,15 +129,14 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 		responses.WriteError(ctx, http.StatusNotFound, "relationship not found", response)
 		return
 	}
+	if errors.Is(err, services.ErrNodeAccessDenied) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
+		return
+	}
 	if err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 		return
 	}
 
-	relationshipView, markdownErr := BuildRelationshipView(relationship, includeKindInfo)
-	if markdownErr != nil {
-		slog.WarnContext(ctx, "Failed to parse relationship kind info markdown content", attr.Error(markdownErr))
-	}
-
-	responses.WriteBasic(ctx, relationshipView, http.StatusOK, response)
+	responses.WriteBasic(ctx, BuildRelationshipView(relationship, includeKindInfo), http.StatusOK, response)
 }
