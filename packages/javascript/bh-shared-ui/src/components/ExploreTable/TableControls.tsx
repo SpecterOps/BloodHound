@@ -17,13 +17,11 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger, IconButton } from 'doodle-ui';
+import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import { ExportColumns } from './explore-table-utils';
-
-const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
