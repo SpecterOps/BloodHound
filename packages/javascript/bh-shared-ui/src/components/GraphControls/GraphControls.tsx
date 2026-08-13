@@ -26,7 +26,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, MenuItem, Tooltip } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
@@ -76,11 +76,22 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
+    const searchButtonRef = useRef<HTMLButtonElement>(null);
+
+    const closeCurrentSearch = useCallback(() => {
+        setIsCurrentSearchOpen(false);
+        // Restore focus to the search control after the panel closes
+        requestAnimationFrame(() => searchButtonRef.current?.focus());
+    }, []);
 
     useKeybindings({
         shift: {
             Slash: () => {
-                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+                if (isCurrentSearchOpen) {
+                    closeCurrentSearch();
+                } else {
+                    setIsCurrentSearchOpen(true);
+                }
             },
         },
         KeyG: onReset,
@@ -150,7 +161,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
                                 onSelect={() => onLayoutChange(buttonLabel)}
-                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
+                                className={cn({ '!bg-primary !text-white dark:!text-neutral-1': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );
@@ -174,6 +185,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
                     <div>
                         <IconButton
+                            ref={searchButtonRef}
                             aria-label='Search'
                             onClick={() => setIsCurrentSearchOpen(true)}
                             disabled={isCurrentSearchOpen}
@@ -185,6 +197,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
             </div>
             {isCurrentSearchOpen && (
                 <div
+                    role='search'
                     aria-label='Search Current Nodes'
                     className='absolute bottom-full left-0 w-[90%] z-[1] pointer-events-auto'
                     data-testid='explore_graph-controls_search-current-nodes-panel'>
@@ -193,9 +206,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         currentNodes={currentNodes}
                         onSelect={(node) => {
                             onSearchedNodeClick(node);
-                            setIsCurrentSearchOpen(false);
+                            closeCurrentSearch();
                         }}
-                        onClose={() => setIsCurrentSearchOpen(false)}
+                        onClose={closeCurrentSearch}
                     />
                 </div>
             )}

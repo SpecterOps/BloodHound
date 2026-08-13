@@ -17,7 +17,7 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, Menu, MenuContent, MenuTrigger, Tooltip } from 'doodle-ui';
-import { FC, ReactNode, useId } from 'react';
+import { FC, ReactNode } from 'react';
 
 const GraphMenu: FC<{
     label: string;
@@ -25,9 +25,6 @@ const GraphMenu: FC<{
     tooltip?: string;
     children: ReactNode;
 }> = ({ children, label, icon, tooltip }) => {
-    const controlId = useId();
-    const buttonId = `graph-menu-button-${controlId}`;
-    const menuId = `graph-menu-${controlId}`;
     const testId = `explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`;
 
     return (
@@ -37,12 +34,12 @@ const GraphMenu: FC<{
                 triggerProps={{ asChild: true, className: 'pointer-events-auto' }}
                 contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
                 <MenuTrigger asChild>
-                    <IconButton id={buttonId} aria-controls={menuId} aria-label={label} data-testid={testId}>
+                    <IconButton aria-label={label} data-testid={testId}>
                         <FontAwesomeIcon icon={icon} />
                     </IconButton>
                 </MenuTrigger>
             </Tooltip>
-            <MenuContent id={menuId} aria-labelledby={buttonId} side='top' align='start'>
+            <MenuContent side='top' align='start'>
                 {children}
             </MenuContent>
         </Menu>

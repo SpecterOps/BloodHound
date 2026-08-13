@@ -16,7 +16,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
 import GraphControls, { type GraphExportAction } from './GraphControls';
 
@@ -154,19 +154,21 @@ describe('GraphControls', () => {
         it('exposes menu state and supports keyboard focus restoration', async () => {
             const { user } = setup();
             const layout = screen.getByRole('button', { name: 'Layout' });
-            const menuId = layout.getAttribute('aria-controls');
 
             expect(layout).toHaveAttribute('aria-haspopup', 'menu');
             expect(layout).toHaveAttribute('aria-expanded', 'false');
-            expect(menuId).toBeTruthy();
 
             act(() => layout.focus());
             await user.keyboard('{Enter}');
 
             const menu = await screen.findByRole('menu');
             expect(menu).toBeVisible();
-            expect(menu).toHaveAttribute('id', menuId);
             expect(layout).toHaveAttribute('aria-expanded', 'true');
+
+            // Radix generates the trigger/menu relationships while the menu is open.
+            const menuId = layout.getAttribute('aria-controls');
+            expect(menuId).toBeTruthy();
+            expect(menu).toHaveAttribute('id', menuId);
 
             await user.keyboard('{Escape}');
 
@@ -377,7 +379,7 @@ describe('GraphControls', () => {
         });
 
         it('disables the JSON button if the JSON is empty', async () => {
-            const { user } = setup();
+            const { user } = setup({ json: {} });
 
             const exportMenu = screen.getByTestId('explore_graph-controls_export-menu');
             await user.click(exportMenu);
@@ -516,6 +518,22 @@ describe('GraphControls', () => {
             expect(onSearchedNodeClickFn).toBeCalled();
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-panel')).not.toBeInTheDocument();
+        });
+
+        it('restores focus to the search button after the panel closes', async () => {
+            const { user } = setup();
+
+            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
+            await user.click(searchResultsMenu);
+
+            expect(screen.getByTestId('explore_graph-controls_search-current-nodes-panel')).toBeInTheDocument();
+
+            await user.keyboard('{Escape}');
+
+            expect(
+                screen.queryByTestId('explore_graph-controls_search-current-nodes-panel')
+            ).not.toBeInTheDocument();
+            await waitFor(() => expect(searchResultsMenu).toHaveFocus());
         });
     });
 });
