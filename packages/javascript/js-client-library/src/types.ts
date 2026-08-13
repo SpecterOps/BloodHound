@@ -752,7 +752,7 @@ export interface AlertsParams {
 export interface Subscription {
     channel_id: string;
     event_type: string;
-    version: string;
+    version: number;
     created_at: ISO_DATE_STRING;
     disabled_at: {
         time: ISO_DATE_STRING;
