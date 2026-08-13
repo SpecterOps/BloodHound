@@ -18517,7 +18517,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`, `risk_score`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -18690,7 +18690,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt,RiskScore\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,,451000000000\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,,PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,,300000\n"
                   }
                 }
               },
@@ -18798,6 +18798,11 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
+                              },
+                              "risk_score": {
+                                "type": "string",
+                                "pattern": "^\\d+$",
+                                "description": "Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision."
                               }
                             }
                           }
@@ -18832,7 +18837,8 @@
                           "target_principal_name": "Domain Admin",
                           "status": "active",
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "risk_score": "451000000000"
                         },
                         {
                           "severity": "high",
@@ -18852,7 +18858,8 @@
                           "target_principal_name": "Backup Admin",
                           "status": "accepted",
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "risk_score": "300000"
                         }
                       ]
                     }
@@ -19015,7 +19022,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`, `exposure_percentage`, `impact_percentage`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
+            "description": "Sortable columns are `domain_sid`, `index`, `AcceptedUntil`, `id`, `created_at`, `updated_at`, `deleted_at`, `exposure_percentage`, `impact_percentage`, `risk_score`. Relationship risks can be sorted on `FromPrincipal` and `ToPrincipal` in addition to the sortable columns for List Risks.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -24224,6 +24231,11 @@
                 "type": "integer",
                 "format": "int64"
               },
+              "risk_score": {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision."
+              },
               "Severity": {
                 "type": "string",
                 "enum": [
@@ -24278,6 +24290,11 @@
               "ImpactCount": {
                 "type": "integer",
                 "format": "int64"
+              },
+              "risk_score": {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision."
               },
               "Severity": {
                 "type": "string",
