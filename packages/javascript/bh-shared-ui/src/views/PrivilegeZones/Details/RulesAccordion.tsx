@@ -20,8 +20,8 @@ import { Accordion, AccordionContent, AccordionItem, IconButton, Skeleton, TextB
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useEffect, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
-import { optionStyles } from '../../..';
 import { SortableHeader } from '../../../components/ColumnHeaders';
+import { optionStyles } from '../../../components/DropdownSelector/constants';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
 import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';

@@ -17,14 +17,11 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger, TextButton } from 'doodle-ui';
+import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
-import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import { ExportColumns } from './explore-table-utils';
-
-const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
@@ -102,14 +99,14 @@ const TableControls = <TData, TValue>({
                 {onDownloadClick && (
                     <Menu>
                         <MenuTrigger asChild>
-                            <button
+                            <IconButton
+                                variant='secondary'
                                 aria-disabled={noResults}
                                 data-testid='download-button'
                                 aria-label='Download CSV'
-                                className={cn({ [DISABLED_CLASSNAME]: noResults })}
                                 disabled={noResults}>
-                                <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
-                            </button>
+                                <FontAwesomeIcon icon={faDownload} />
+                            </IconButton>
                         </MenuTrigger>
                         <MenuContent align='start'>
                             <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
@@ -118,15 +115,13 @@ const TableControls = <TData, TValue>({
                     </Menu>
                 )}
                 {onExpandClick && (
-                    <div
-                        role='button'
-                        tabIndex={0}
+                    <IconButton
+                        variant='secondary'
                         onClick={onExpandClick}
-                        onKeyDown={adaptClickHandlerToKeyDown(onExpandClick)}
                         data-testid='expand-button'
                         aria-label='Expand table view'>
-                        <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
-                    </div>
+                        <FontAwesomeIcon icon={faExpand} />
+                    </IconButton>
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
@@ -138,15 +133,14 @@ const TableControls = <TData, TValue>({
                         onResetColumnSize={onResetColumnSize}
                     />
                 )}
-                {/* TODO - fix focus state in this component BED-9173 */}
                 {onCloseClick && (
-                    <TextButton
+                    <IconButton
+                        variant='secondary'
                         onClick={onCloseClick}
-                        onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
                         data-testid='close-button'
                         aria-label='Close table view'>
-                        <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
-                    </TextButton>
+                        <FontAwesomeIcon icon={faClose} />
+                    </IconButton>
                 )}
             </div>
         </div>
