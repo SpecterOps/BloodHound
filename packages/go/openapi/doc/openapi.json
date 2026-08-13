@@ -24158,6 +24158,100 @@
           "finding_assets"
         ]
       },
+      "model.finding-risk-score-calculation": {
+        "type": "object",
+        "required": [
+          "stored_exposure",
+          "effective_exposure",
+          "impact",
+          "aggregate_score",
+          "zones"
+        ],
+        "properties": {
+          "stored_exposure": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "effective_exposure": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Exposure used by score math, with a minimum value of one."
+          },
+          "impact": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "aggregate_score": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "asset_group_tag_id",
+                "zone_name",
+                "environment_id",
+                "hop_count",
+                "hop_count_reason",
+                "hop_divisor",
+                "source_principal_count",
+                "source_principal_count_reason",
+                "contribution"
+              ],
+              "properties": {
+                "asset_group_tag_id": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "zone_name": {
+                  "type": "string"
+                },
+                "environment_id": {
+                  "type": "string"
+                },
+                "hop_count": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                },
+                "hop_count_reason": {
+                  "type": "string",
+                  "enum": [
+                    "target_is_zone",
+                    "shortest_path",
+                    "fallback_missing_zone",
+                    "fallback_no_path",
+                    "fallback_query_error"
+                  ]
+                },
+                "hop_divisor": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 1
+                },
+                "source_principal_count": {
+                  "type": "string",
+                  "pattern": "^\\d+$"
+                },
+                "source_principal_count_reason": {
+                  "type": "string",
+                  "enum": [
+                    "single_object",
+                    "transitive_group_members",
+                    "fallback_group_query_error"
+                  ]
+                },
+                "contribution": {
+                  "type": "string",
+                  "pattern": "^\\d+$"
+                }
+              }
+            }
+          }
+        }
+      },
       "model.relationship-finding": {
         "allOf": [
           {
@@ -24236,6 +24330,9 @@
                 "pattern": "^\\d+$",
                 "description": "Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision."
               },
+              "risk_score_calculation": {
+                "$ref": "#/components/schemas/model.finding-risk-score-calculation"
+              },
               "Severity": {
                 "type": "string",
                 "enum": [
@@ -24295,6 +24392,9 @@
                 "type": "string",
                 "pattern": "^\\d+$",
                 "description": "Exact non-negative integer risk score encoded as a decimal string to preserve arbitrary precision."
+              },
+              "risk_score_calculation": {
+                "$ref": "#/components/schemas/model.finding-risk-score-calculation"
               },
               "Severity": {
                 "type": "string",
