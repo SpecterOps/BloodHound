@@ -30,8 +30,9 @@ import (
 // defined in cmd/api/src/model/appcfg but are redeclared here so consumers do
 // not need to import the appcfg package.
 const (
-	FeatureOpenHoundSupport = "openhound_support"
-	FeatureAlerts           = "alerts"
+	FeatureOpenHoundSupport          = "openhound_support"
+	FeatureAlerts                    = "alerts"
+	FeatureArtifactExpirationCleanup = "artifact_expiration_cleanup"
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
