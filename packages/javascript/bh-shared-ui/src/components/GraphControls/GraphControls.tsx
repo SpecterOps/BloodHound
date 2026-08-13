@@ -14,19 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCropAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+    faCropAlt,
+    faDiagramProject,
+    faDownload,
+    faEye,
+    faEyeSlash,
+    faMagnifyingGlass,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { MenuItem, Popper } from '@mui/material';
-import { TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { IconButton, MenuItem, Tooltip } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
-import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
+
+export interface GraphExportAction {
+    id: string;
+    label: string;
+    onSelect: () => void;
+    disabled?: boolean;
+}
 
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
@@ -42,6 +54,7 @@ interface GraphControlsProps<T extends readonly string[]> {
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
     currentNodes: Record<string, any> | undefined;
+    additionalExportActions?: readonly GraphExportAction[];
 }
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
@@ -59,15 +72,26 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         showEdgeLabels,
         jsonData,
         currentNodes = {},
+        additionalExportActions = [],
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
+    const searchButtonRef = useRef<HTMLButtonElement>(null);
 
-    const currentSearchAnchorElement = useRef(null);
+    const closeCurrentSearch = useCallback(() => {
+        setIsCurrentSearchOpen(false);
+        // Restore focus to the search control after the panel closes
+        requestAnimationFrame(() => searchButtonRef.current?.focus());
+    }, []);
+
     useKeybindings({
         shift: {
             Slash: () => {
-                setIsCurrentSearchOpen(!isCurrentSearchOpen);
+                if (isCurrentSearchOpen) {
+                    closeCurrentSearch();
+                } else {
+                    setIsCurrentSearchOpen(true);
+                }
             },
         },
         KeyG: onReset,
@@ -86,54 +110,46 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     };
 
     return (
-        <>
-            <div
-                data-testid='explore_graph-controls'
-                className='flex gap-1 pointer-events-auto'
-                ref={currentSearchAnchorElement}>
-                <TooltipProvider>
-                    <TooltipRoot>
-                        <TooltipTrigger className='pointer-events-auto'>
-                            {/* tooltip won't show without this wrapper div for some reason */}
-                            <div>
-                                <GraphButton
-                                    aria-label='Reset Graph'
-                                    onClick={onReset}
-                                    displayText={<FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />}
-                                    data-testid='explore_graph-controls_reset-button'
-                                />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipPortal>
-                            <TooltipContent className='dark:bg-neutral-dark-5 border-0'>
-                                <span>Reset Graph</span>
-                            </TooltipContent>
-                        </TooltipPortal>
-                    </TooltipRoot>
-                </TooltipProvider>
+        <div className='relative'>
+            <div data-testid='explore_graph-controls' className='flex gap-1 pointer-events-auto'>
+                <Tooltip
+                    tooltip='Reset Graph'
+                    triggerProps={{ className: 'pointer-events-auto' }}
+                    contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
+                    <div>
+                        <IconButton
+                            aria-label='Reset Graph'
+                            onClick={onReset}
+                            data-testid='explore_graph-controls_reset-button'>
+                            <FontAwesomeIcon aria-hidden='true' icon={faCropAlt} />
+                        </IconButton>
+                    </div>
+                </Tooltip>
 
-                <GraphMenu label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}>
+                <GraphMenu
+                    label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}
+                    icon={!showNodeLabels || !showEdgeLabels ? faEyeSlash : faEye}>
                     <MenuItem
                         aria-label={`${!showEdgeLabels ? 'Show' : 'Hide'} All Labels Toggle`}
                         data-testid='explore_graph-controls_all-labels-toggle'
-                        onClick={handleToggleAllLabels}>
+                        onSelect={handleToggleAllLabels}>
                         {!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} All Labels
                     </MenuItem>
                     <MenuItem
                         aria-label={`${showNodeLabels ? 'Hide' : 'Show'} Node Labels Toggle`}
                         data-testid='explore_graph-controls_node-labels-toggle'
-                        onClick={onToggleNodeLabels}>
+                        onSelect={onToggleNodeLabels}>
                         {showNodeLabels ? 'Hide' : 'Show'} Node Labels
                     </MenuItem>
                     <MenuItem
                         aria-label={`${showEdgeLabels ? 'Hide' : 'Show'} Edge Labels Toggle`}
                         data-testid='explore_graph-controls_edge-labels-toggle'
-                        onClick={onToggleEdgeLabels}>
+                        onSelect={onToggleEdgeLabels}>
                         {showEdgeLabels ? 'Hide' : 'Show'} Edge Labels
                     </MenuItem>
                 </GraphMenu>
 
-                <GraphMenu label='Layout'>
+                <GraphMenu label='Layout' icon={faDiagramProject}>
                     {layoutOptions.map((buttonLabel) => {
                         const tableViewIsSelected = isExploreTableSelected && searchType === 'cypher';
                         const isSelected = tableViewIsSelected
@@ -144,49 +160,59 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                             <MenuItem
                                 data-testid={`explore_graph-controls_${buttonLabel}-buttonLabel`}
                                 key={buttonLabel}
-                                selected={isSelected}
-                                onClick={() => onLayoutChange(buttonLabel)}
-                                className={cn({ '!bg-primary text-white dark:text-[#121212]': isSelected })}>
+                                onSelect={() => onLayoutChange(buttonLabel)}
+                                className={cn({ '!bg-primary !text-white dark:!text-neutral-1': isSelected })}>
                                 {capitalize(buttonLabel)}
                             </MenuItem>
                         );
                     })}
                 </GraphMenu>
 
-                <GraphMenu label='Export'>
-                    <MenuItem onClick={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
+                <GraphMenu label='Export' icon={faDownload}>
+                    {additionalExportActions.map((action) => (
+                        <MenuItem key={action.id} onSelect={action.onSelect} disabled={action.disabled}>
+                            {action.label}
+                        </MenuItem>
+                    ))}
+                    <MenuItem onSelect={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
                         JSON
                     </MenuItem>
                 </GraphMenu>
 
-                <GraphButton
-                    aria-label='Search node in results'
-                    onClick={() => setIsCurrentSearchOpen(true)}
-                    displayText={'Search'}
-                    disabled={isCurrentSearchOpen}
-                    data-testid='explore_graph-controls_search-current-results'
-                />
+                <Tooltip
+                    tooltip='Search'
+                    triggerProps={{ className: 'pointer-events-auto' }}
+                    contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
+                    <div>
+                        <IconButton
+                            ref={searchButtonRef}
+                            aria-label='Search'
+                            onClick={() => setIsCurrentSearchOpen(true)}
+                            disabled={isCurrentSearchOpen}
+                            data-testid='explore_graph-controls_search-current-results'>
+                            <FontAwesomeIcon icon={faMagnifyingGlass} />
+                        </IconButton>
+                    </div>
+                </Tooltip>
             </div>
-            <Popper
-                open={isCurrentSearchOpen}
-                anchorEl={currentSearchAnchorElement.current}
-                placement='top'
-                disablePortal
-                aria-label='Search Current Nodes'
-                className='w-[90%] z-[1]'>
-                <div className='pointer-events-auto' data-testid='explore_graph-controls_search-current-nodes-popper'>
+            {isCurrentSearchOpen && (
+                <div
+                    role='search'
+                    aria-label='Search Current Nodes'
+                    className='absolute bottom-full left-0 w-[90%] z-[1] pointer-events-auto'
+                    data-testid='explore_graph-controls_search-current-nodes-panel'>
                     <SearchCurrentNodes
                         className='p-2 mb-2'
                         currentNodes={currentNodes}
                         onSelect={(node) => {
                             onSearchedNodeClick(node);
-                            setIsCurrentSearchOpen(false);
+                            closeCurrentSearch();
                         }}
-                        onClose={() => setIsCurrentSearchOpen(false)}
+                        onClose={closeCurrentSearch}
                     />
                 </div>
-            </Popper>
-        </>
+            )}
+        </div>
     );
 }
 
