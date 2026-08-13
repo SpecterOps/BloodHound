@@ -240,7 +240,7 @@ describe('FileIngestTable', () => {
 
             // Apply Complete filter. The filtered pool only has 5 jobs, so without resetting page
             // the request would be skip=10 against a 5-row pool and the table would render empty.
-            await user.click(screen.getByTestId('file_ingest_log-open_filter_dialog'));
+            await user.click(screen.getByRole('button', { name: 'Open file ingest filters' }));
             await user.click(await screen.findByRole('combobox', { name: 'Status Select' }));
             await user.click(await screen.findByRole('option', { name: 'Complete' }));
             await user.click(screen.getByTestId('file_ingest_log-filter_dialog_confirm'));

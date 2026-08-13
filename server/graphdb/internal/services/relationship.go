@@ -20,6 +20,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 )
 
@@ -50,18 +51,41 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 	var (
 		relationship Relationship
 		kind         Kind
+		kindNotFound bool
 		err          error
 	)
 
 	if relationship, err = s.db.GetRelationship(ctx, id); err != nil {
 		return Relationship{}, err
-	} else if kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name); errors.Is(err, ErrKindNotFound) {
-		// Kind exists in the graph but not in schema_relationship_kinds; return with nil ID
-		return relationship, nil
+	}
+
+	if kind, err = s.db.GetKindByName(ctx, relationship.Kind.Name); errors.Is(err, ErrKindNotFound) {
+		kindNotFound = true
 	} else if err != nil {
 		return Relationship{}, err
 	} else {
 		relationship.Kind = kind
+	}
+
+	sourceNode, sourceErr := s.GetNode(ctx, relationship.SourceNodeID, false)
+	if sourceErr != nil {
+		if errors.Is(sourceErr, ErrNodeAccessDenied) {
+			return Relationship{}, ErrNodeAccessDenied
+		}
+		return Relationship{}, fmt.Errorf("fetching relationship source node: %w", sourceErr)
+	}
+
+	targetNode, targetErr := s.GetNode(ctx, relationship.TargetNodeID, false)
+	if targetErr != nil {
+		if errors.Is(targetErr, ErrNodeAccessDenied) {
+			return Relationship{}, ErrNodeAccessDenied
+		}
+		return Relationship{}, fmt.Errorf("fetching relationship target node: %w", targetErr)
+	}
+
+	if kindNotFound {
+		// Kind exists in the graph but not in schema_relationship_kinds; return with nil ID
+		return relationship, nil
 	}
 
 	if includeKindInfo && relationship.Kind.ID != nil {
@@ -91,6 +115,10 @@ func (s *Service) GetRelationship(ctx context.Context, id int64, includeKindInfo
 		})
 
 		relationship.KindInfos = allKindInfos
+
+		if len(relationship.KindInfos) > 0 {
+			renderRelationshipKindInfos(ctx, relationship, sourceNode, targetNode)
+		}
 	}
 
 	return relationship, nil

@@ -28,7 +28,7 @@ import {
     TableRow,
     TableSortLabel,
 } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { IconButton, TextButton } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
 import { usePermissions } from '../../hooks';
@@ -63,19 +63,19 @@ const SSOProviderTableActionsMenu: FC<{
 
     return (
         <>
-            <Button variant={'text'} onClick={handleOnOpen} size='small' aria-label='Open provider actions menu'>
+            <IconButton onClick={handleOnOpen} aria-label='Open provider actions menu'>
                 <FontAwesomeIcon icon={faEllipsisVertical} />
-            </Button>
+            </IconButton>
             <Menu
                 anchorEl={anchorEl}
                 elevation={0}
                 anchorOrigin={{
-                    vertical: 'bottom',
+                    vertical: 'top',
                     horizontal: 'right',
                 }}
                 transformOrigin={{
                     vertical: 'top',
-                    horizontal: 'right',
+                    horizontal: 'left',
                 }}
                 classes={{ paper: 'border border-gray-300' }}
                 keepMounted
@@ -166,16 +166,15 @@ const SSOProviderTable: FC<{
                                     />
                                 </TableCell>
                                 <TableCell size='small'>
-                                    <Button
-                                        variant='text'
-                                        fontColor={'primary'}
+                                    <TextButton
+                                        fontColor='primary'
                                         className='p-0'
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onClickSSOProvider(ssoProvider.id);
                                         }}>
                                         {ssoProvider.name}
-                                    </Button>
+                                    </TextButton>
                                 </TableCell>
                                 <TableCell>{ssoProvider.type.toUpperCase()}</TableCell>
                             </TableRow>
