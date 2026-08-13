@@ -530,9 +530,7 @@ describe('GraphControls', () => {
 
             await user.keyboard('{Escape}');
 
-            expect(
-                screen.queryByTestId('explore_graph-controls_search-current-nodes-panel')
-            ).not.toBeInTheDocument();
+            expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-panel')).not.toBeInTheDocument();
             await waitFor(() => expect(searchResultsMenu).toHaveFocus());
         });
     });
