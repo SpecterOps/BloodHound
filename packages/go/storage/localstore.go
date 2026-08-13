@@ -291,6 +291,9 @@ func (s *LocalStore) PruneEmptyParents(ctx context.Context, name string) error {
 			}
 			return err
 		}
+		if err := syncDir(s.root, path.Dir(parentDirectory)); err != nil {
+			return err
+		}
 	}
 
 	return nil

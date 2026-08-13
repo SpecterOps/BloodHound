@@ -182,6 +182,8 @@ func (s *StorageFileService) DeleteFile(ctx context.Context, name string) error 
 }
 
 func (s *StorageFileService) DeleteFileWithOptions(ctx context.Context, name string, options DeleteOptions) error {
+	// Do not check whether the file exists before deleting. Pruning must remain
+	// retryable when an earlier attempt deleted the file but did not finish cleanup.
 	if err := s.Storage.Delete(ctx, name); err != nil {
 		return err
 	}
