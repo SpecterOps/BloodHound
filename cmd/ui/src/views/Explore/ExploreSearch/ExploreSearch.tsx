@@ -165,7 +165,7 @@ const ExploreSearch: React.FC = () => {
                 <IconButton
                     aria-label='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
-                    className='rounded-none'
+                    className='rounded-sm'
                     onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>

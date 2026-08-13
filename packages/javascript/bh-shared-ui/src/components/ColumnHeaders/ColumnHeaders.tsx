@@ -35,7 +35,7 @@ export const BaseColumnHeader: React.FC<BaseColumnHeader> = (props) => {
         'text-right': textAlign === 'right',
     };
 
-    return <div className={cn('font-semibold text-base -mb-1', textAlignment, className)}>{title}</div>;
+    return <div className={cn('font-semibold text-base text-text-main -mb-1', textAlignment, className)}>{title}</div>;
 };
 
 interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -68,7 +68,14 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                         <TextButton
                             disabled={disable}
                             aria-label={`Sort by ${title}`}
-                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            className={cn(
+                                'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
+                                {
+                                    'disabled:!text-text-main disabled:!opacity-100 disabled:dark:!text-common-white disabled:dark:!opacity-100':
+                                        disable,
+                                },
+                                buttonClass
+                            )}
                             onClick={onSort}
                             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
                             tabIndex={0}>
@@ -82,7 +89,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                                         role='img'
                                         aria-label='More information in tooltip'
                                         data-testid='column-header_tooltip-trigger-icon'>
-                                        <FontAwesomeIcon className='m-1' size='sm' icon={faInfoCircle} />
+                                        <FontAwesomeIcon size='sm' icon={faInfoCircle} />
                                     </span>
                                     <span className='flex items-center'>
                                         <IconComponent size={12} />

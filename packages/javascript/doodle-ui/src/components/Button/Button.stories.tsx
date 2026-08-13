@@ -238,6 +238,7 @@ export const IconButton: IconButtonStory = {
     args: {
         variant: 'default',
         disabled: false,
+        size: 16,
     },
     argTypes: {
         variant: {
@@ -262,7 +263,7 @@ export const IconButton: IconButtonStory = {
         },
         size: {
             description:
-                'Sets the icon width and height in pixels. Defaults to 16. The button remains square and grows when necessary to contain larger icons.',
+                'Sets the icon width and height in pixels. Defaults to 16. The square button resizes with the icon.',
             control: {
                 type: 'number',
                 min: 8,
@@ -306,27 +307,27 @@ Tooltip for IconButton`,
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <IconButtonComponent {...buttonProps} aria-label='Filter' size={24}>
-                    <AppIcon.FilterOutline />
+                <IconButtonComponent {...buttonProps} aria-label='Info Icon' variant='primary'>
+                    <FontAwesomeIcon icon={faInfo} />
                 </IconButtonComponent>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Star Icon' variant='primary'>
-                        <FontAwesomeIcon icon={faInfo} />
+                    <IconButtonComponent aria-label='Trash Icon'>
+                        <FontAwesomeIcon icon={faTrash} />
                     </IconButtonComponent>
                     Primary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Gear Icon' variant='secondary'>
-                        <FontAwesomeIcon icon={faTrash} />
+                    <IconButtonComponent aria-label='Filter' size={24} variant='secondary'>
+                        <AppIcon.FilterOutline />
                     </IconButtonComponent>
                     Secondary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Gear Icon' variant='primary' disabled size={24}>
+                    <IconButtonComponent aria-label='Filter Icon' variant='primary' disabled size={24}>
                         <AppIcon.FilterOutline />
                     </IconButtonComponent>
                     Disabled
