@@ -83,9 +83,10 @@ describe('ColumnHeaders', () => {
         it('renders the tooltip icon when tooltipText prop is passed', () => {
             render(<SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />);
 
-            const tooltipIcon = screen.getByTestId('column-header_tooltip-trigger-icon');
+            const tooltipIcon = screen.getByRole('img', { name: /more information in tooltip/i });
 
-            expect(tooltipIcon).toBeInTheDocument();
+            expect(tooltipIcon).toHaveAttribute('tabindex', '0');
+            expect(screen.queryByRole('button', { name: /more information in tooltip/i })).not.toBeInTheDocument();
         });
 
         // Not hovered

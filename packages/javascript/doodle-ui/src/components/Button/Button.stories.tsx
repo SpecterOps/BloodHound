@@ -330,6 +330,7 @@ export const IconButton: IconButtonStory = {
         variant: 'default',
         disabled: false,
         size: 16,
+        'aria-label': 'Show information',
     },
     argTypes: {
         variant: {
@@ -412,7 +413,7 @@ Tooltip for IconButton`,
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <IconButtonComponent {...buttonProps} aria-label='Info Icon' variant='primary'>
+                <IconButtonComponent {...buttonProps}>
                     <FontAwesomeIcon icon={faInfo} />
                 </IconButtonComponent>
             </div>

@@ -143,7 +143,7 @@ describe('ActiveExtensionsCard', () => {
         expect(screen.getByText('CUSTOM')).toBeInTheDocument();
     });
 
-    it('renders the Namespace column header with focusable info icon', async () => {
+    it('renders the Namespace column header with an informational icon', async () => {
         render(<ActiveExtensionsCard />);
 
         await screen.findByText('Active Directory');
@@ -153,9 +153,10 @@ describe('ActiveExtensionsCard', () => {
         expect(namespaceHeader).toBeInTheDocument();
         expect(namespaceHeader).toHaveTextContent('Namespace');
 
-        // Verify the info icon is a focusable button for keyboard accessibility
-        const infoButton = screen.getByRole('button', { name: /namespace information/i });
-        expect(infoButton).toBeInTheDocument();
+        // Verify the info icon is informational rather than an action
+        const infoIcon = screen.getByRole('img', { name: /namespace information/i });
+        expect(infoIcon).toHaveAttribute('tabindex', '0');
+        expect(screen.queryByRole('button', { name: /namespace information/i })).not.toBeInTheDocument();
     });
 
     it('renders delete buttons for each extension', async () => {

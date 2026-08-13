@@ -70,10 +70,6 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             aria-label={`Sort by ${title}`}
                             className={cn(
                                 'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
-                                {
-                                    'disabled:!text-text-main disabled:!opacity-100 disabled:dark:!text-common-white disabled:dark:!opacity-100':
-                                        disable,
-                                },
                                 buttonClass
                             )}
                             onClick={onSort}
@@ -84,13 +80,17 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
                             {tooltipText && (
                                 <>
+                                    {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
+                                    {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
                                     <span
                                         className='flex items-center'
                                         role='img'
                                         aria-label='More information in tooltip'
+                                        tabIndex={0}
                                         data-testid='column-header_tooltip-trigger-icon'>
                                         <FontAwesomeIcon size='sm' icon={faInfoCircle} />
                                     </span>
+                                    {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                                     <span className='flex items-center'>
                                         <IconComponent size={12} />
                                     </span>
