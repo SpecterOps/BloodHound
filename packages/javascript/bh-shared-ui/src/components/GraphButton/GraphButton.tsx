@@ -29,7 +29,7 @@ const GraphButton: FC<GraphButtonProps> = (props) => {
         <Button
             {...attributes}
             className={cn(
-                'h-4 min-w-0 rounded-lg p-3 text-base capitalize',
+                'box-content h-4 min-w-0 rounded p-3 text-base font-medium leading-4 capitalize',
                 'bg-[#F4F4F4] text-[#1D1B20] dark:bg-[#222222] dark:text-white',
                 'hover:bg-[#E3E7EA] hover:no-underline dark:hover:bg-[#272727]',
                 className

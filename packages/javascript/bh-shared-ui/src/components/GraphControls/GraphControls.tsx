@@ -113,7 +113,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         <div className='relative'>
             <div data-testid='explore_graph-controls' className='flex gap-1 pointer-events-auto'>
                 <Tooltip
-                    tooltip={<span>Reset Graph</span>}
+                    tooltip='Reset Graph'
                     triggerProps={{ className: 'pointer-events-auto' }}
                     contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
                     <div>
@@ -180,7 +180,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <Tooltip
-                    tooltip={<span>Search</span>}
+                    tooltip='Search'
                     triggerProps={{ className: 'pointer-events-auto' }}
                     contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
                     <div>
