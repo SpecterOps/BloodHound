@@ -162,11 +162,14 @@ const ExploreSearch: React.FC = () => {
     };
 
     const handleQuerySuccess: (data: GraphResponse | FlatGraphResponse) => void = (data) => {
+        console.log('wow', { data });
         if (isGraphResponse(data)) {
             const returnedNodes = Object.keys(data.data.nodes || {});
 
             const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
             const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
+
+            console.log('wow', { returnedNodes });
 
             if (returnedNodes.length > 1) {
                 clearSelectedItem();
