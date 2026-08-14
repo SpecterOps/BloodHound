@@ -221,6 +221,20 @@ func getGPOLinks(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship,
 	}
 }
 
+func getGPOLinksWithoutSite(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
+	if gpLinks, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.StartID(), node.ID),
+			query.Kind(query.Relationship(), ad.GPLink),
+			query.KindIn(query.End(), ad.Domain, ad.OU),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		return gpLinks, nil
+	}
+}
+
 func CreateGPOAffectedIntermediariesListDelegate(candidateFilter ops.NodeFilter) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		nodeSet := graph.NewNodeSet()
@@ -323,7 +337,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
 
-	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+	if gpLinks, err := getGPOLinksWithoutSite(tx, node); err != nil {
 		return nil, err
 	} else {
 		for _, rel := range gpLinks {
@@ -336,10 +350,6 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 			if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
 				return nil, err
 			} else {
-				if end.Kinds.ContainsOneOf(ad.Site) {
-					// We don't want to handle Sites here, only domain and OUs
-					continue
-				}
 				var descentFilter ops.SegmentFilter
 
 				// Set our descent filter based on enforcement status
