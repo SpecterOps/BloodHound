@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert } from 'doodle-ui';
-import { SnackbarContent, SnackbarProvider, useSnackbar } from 'notistack';
+import { SnackbarContent, SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import React, { Dispatch, ReactNode, createContext, useReducer } from 'react';
 import { NotificationAction } from './actions';
 import { Notification } from './model';
@@ -27,12 +27,10 @@ interface NotificationProviderProps {
     children?: ReactNode;
 }
 
-type SnackVariant = 'default' | 'error' | 'info' | 'warning' | 'success';
-
 interface NotificationSnackbarProps {
     id: string | number;
     message: string | React.ReactNode;
-    variant: SnackVariant | null | undefined;
+    variant: VariantType | null | undefined;
     title?: string;
 }
 
