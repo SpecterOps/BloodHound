@@ -64,24 +64,9 @@ const token = {
     expires_at: null,
 };
 
-const routeUsers = async (page: Page, users: (typeof administrator)[]) => {
-    await page.route('**/api/v2/bloodhound-users**', async (route) => {
-        if (route.request().method() !== 'GET') {
-            return route.fallback();
-        }
-
-        const pathname = new URL(route.request().url()).pathname;
-        if (pathname === '/api/v2/bloodhound-users') {
-            return route.fulfill({ json: { data: { users } } });
-        }
-
-        const user = users.find(({ id }) => pathname === `/api/v2/bloodhound-users/${id}`);
-        if (user) {
-            return route.fulfill({ json: { data: user } });
-        }
-
-        await route.fallback();
-    });
+const openPage = async (page: Page) => {
+    await page.goto('/ui/administration/manage-users');
+    await page.getByRole('button', { name: 'Toggle Navigation' }).click();
 };
 
 const openUserActions = async (page: Page) => {
@@ -129,12 +114,47 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: [] } });
         });
+
+        await page.route('**/api/v2/bloodhound-users**', async (route) => {
+            if (route.request().method() !== 'GET') {
+                return route.fallback();
+            }
+            const users = [administrator];
+            const pathname = new URL(route.request().url()).pathname;
+            if (pathname === '/api/v2/bloodhound-users') {
+                return route.fulfill({ json: { data: { users } } });
+            }
+
+            const user = users.find(({ id }) => pathname === `/api/v2/bloodhound-users/${id}`);
+            if (user) {
+                return route.fulfill({ json: { data: user } });
+            }
+
+            await route.fallback();
+        });
     });
 
     test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, []);
-        await page.goto('/ui/administration/manage-users');
+        // Override the users call to be empty users list
+        await page.route('**/api/v2/bloodhound-users**', async (route) => {
+            if (route.request().method() !== 'GET') {
+                return route.fallback();
+            }
+            const users: (typeof administrator)[] = [];
+            const pathname = new URL(route.request().url()).pathname;
+            if (pathname === '/api/v2/bloodhound-users') {
+                return route.fulfill({ json: { data: { users } } });
+            }
 
+            const user = users.find(({ id }) => pathname === `/api/v2/bloodhound-users/${id}`);
+            if (user) {
+                return route.fulfill({ json: { data: user } });
+            }
+
+            await route.fallback();
+        });
+
+        await openPage(page);
         await page.getByRole('heading', { name: 'Manage Users' }).waitFor({ state: 'visible' });
         await page.getByRole('columnheader', { name: 'Username' }).waitFor({ state: 'visible' });
         await page.getByRole('row').nth(1).waitFor({ state: 'hidden' });
@@ -144,8 +164,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('page with users', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
 
         await page.getByText('test_admin', { exact: true }).waitFor({ state: 'visible' });
 
@@ -154,8 +173,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('user actions menu displayed', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openUserActions(page);
 
         await hideBySelector(page, '#content-wrapper');
@@ -167,8 +185,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('update user dialog', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openUserActions(page);
         await page.getByRole('menuitem', { name: 'Update User' }).click();
 
@@ -182,8 +199,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('change password dialog', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openUserActions(page);
         await page.getByRole('menuitem', { name: 'Change Password' }).click();
 
@@ -199,14 +215,12 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('generate/revoke API tokens dialog - no tokens', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [] } } });
         });
 
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openTokenManagement(page);
 
         await hideBySelector(page, '#content-wrapper');
@@ -219,9 +233,28 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
-    test('create token dialog and auth token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
+    test('create token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+        await page.route('**/api/v2/tokens**', async (route) => {
+            if (route.request().method() !== 'GET') return route.fallback();
+            await route.fulfill({ json: { data: { tokens: [] } } });
+        });
 
+        await openPage(page);
+        await openTokenManagement(page);
+
+        await hideBySelector(page, '#content-wrapper');
+
+        await page.getByRole('button', { name: 'Create Token' }).click();
+        await page.getByRole('dialog', { name: 'Create User Token' }).waitFor({ state: 'visible' });
+
+        await hideBySelector(page, '[data-testid="user-token-management-dialog"]');
+
+        const results = await makeAxeBuilder().include('[data-testid="create-user-token-dialog"]').analyze();
+
+        await expectNoAccessibilityViolations(testInfo, results, { page });
+    });
+
+    test('auth token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
         await page.route('**/api/v2/tokens**', async (route) => {
             const method = route.request().method();
 
@@ -236,7 +269,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
             await route.fallback();
         });
 
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openTokenManagement(page);
 
         await hideBySelector(page, '#content-wrapper');
@@ -246,30 +279,24 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
 
         await hideBySelector(page, '[data-testid="user-token-management-dialog"]');
 
-        let results = await makeAxeBuilder().include('[data-testid="create-user-token-dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
-
         await page.getByLabel('Token Name').fill(token.name);
         await page.getByRole('dialog', { name: 'Create User Token' }).getByRole('button', { name: 'Save' }).click();
 
         await page.getByRole('dialog', { name: 'Auth Token' }).waitFor({ state: 'visible' });
         await page.getByText('Key: generated-auth-token-key').waitFor({ state: 'visible' });
 
-        results = await makeAxeBuilder().include('[data-testid="user-token-dialog"]').analyze();
+        const results = await makeAxeBuilder().include('[data-testid="user-token-dialog"]').analyze();
 
         await expectNoAccessibilityViolations(testInfo, results, { page });
     });
 
     test('generate/revoke API tokens dialog - with token', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [token] } } });
         });
 
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openTokenManagement(page);
 
         await hideBySelector(page, '#content-wrapper');
@@ -282,14 +309,12 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('revoke token dialog', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-
         await page.route('**/api/v2/tokens**', async (route) => {
             if (route.request().method() !== 'GET') return route.fallback();
             await route.fulfill({ json: { data: { tokens: [token] } } });
         });
 
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await openTokenManagement(page);
 
         await hideBySelector(page, '#content-wrapper');
@@ -309,8 +334,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
     });
 
     test('create user form', async ({ page, makeAxeBuilder }, testInfo) => {
-        await routeUsers(page, [administrator]);
-        await page.goto('/ui/administration/manage-users');
+        await openPage(page);
         await page.getByRole('button', { name: 'Create User' }).click();
 
         await hideBySelector(page, '#content-wrapper');
