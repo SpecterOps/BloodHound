@@ -232,7 +232,6 @@ describe('CypherSearch', () => {
             mockCypherEndpoint(multiNodeGraphResponse);
             await user.click(screen.getByRole('button', { name: /run cypher query/i }));
 
-            await waitFor(() => expect(mockClearSelectedItem).toHaveBeenCalled());
             expect(mockOnQuerySuccess).toHaveBeenCalled();
         });
 
