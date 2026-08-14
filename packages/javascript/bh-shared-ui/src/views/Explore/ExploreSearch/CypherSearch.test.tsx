@@ -236,7 +236,7 @@ describe('CypherSearch', () => {
             expect(mockOnQuerySuccess).toHaveBeenCalled();
         });
 
-        it('does not close explore search tab menu or entity info panel when search returns zero nodes', async () => {
+        it('calls onQuerySucess but does not does not entity info panel when search returns zero nodes', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
@@ -255,7 +255,7 @@ describe('CypherSearch', () => {
             expect(mockOnQuerySuccess).not.toHaveBeenCalled();
         });
 
-        it('closes explore search tab menu when search returns one node, entity info panel remains open', async () => {
+        it('calls mockOnQuerySuccess when search returns one node, entity info panel remains open', async () => {
             mockCypherEndpoint(singleNodeGraphResponse);
             const { screen, user } = await setup(cypherSearchState, cypherSearchRoute);
 
