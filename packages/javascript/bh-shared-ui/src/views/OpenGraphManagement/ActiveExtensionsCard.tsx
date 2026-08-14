@@ -188,6 +188,8 @@ export const ActiveExtensionsCard = () => {
 
             <div
                 data-testid='active-extensions-table-container'
+                // DataTable currently has some issues with table and cell height within a Card element
+                // Tailwind doesn't have a way to calculate dynamic heights, so inline styles are used
                 style={{
                     height:
                         !hasData || isEmptySearch
