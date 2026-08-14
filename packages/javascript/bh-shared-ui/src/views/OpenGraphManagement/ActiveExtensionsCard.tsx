@@ -106,6 +106,7 @@ export const ActiveExtensionsCard = () => {
                     <Tooltip
                         contentProps={{
                             className: 'max-w-96 dark:bg-neutral-5 dark:text-white border-neutral-300',
+                            id: 'namespace-info-tooltip',
                         }}
                         tooltip={
                             <>
@@ -119,13 +120,17 @@ export const ActiveExtensionsCard = () => {
                                 </Typography>
                             </>
                         }>
-                        <FontAwesomeIcon
+                        <span
+                            className={
+                                'w-fit h-fit shrink-0 inline-flex items-center justify-center rounded-[50%] ' +
+                                'bg-transparent border-none p-0 cursor-default hover:text-main dark:hover:text-main'
+                            }
+                            role='button'
+                            aria-describedby='namespace-info-tooltip'
                             tabIndex={0}
-                            className='rounded-[50%] bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
-                            aria-label='Namespace information'
-                            icon={faInfoCircle}
-                            size='sm'
-                        />
+                            aria-label='Namespace information'>
+                            <FontAwesomeIcon icon={faInfoCircle} size='sm' />
+                        </span>
                     </Tooltip>
                 </div>
             ),
