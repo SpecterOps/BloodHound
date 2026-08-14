@@ -60,12 +60,13 @@ test.describe('Administration - BloodHound Configuration - has no detectable WCA
         await page.goto('/ui/administration/bloodhound-configuration');
         await page.getByRole('button', { name: 'Analyze Now' }).click();
 
-        await hideBySelector(page, '#content-wrapper');
-
         await page.getByRole('dialog', { name: 'Confirm re-run analysis' }).waitFor({ state: 'visible' });
         await page.getByText(/Analysis may take some time/).waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'Cancel' }).waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'Confirm' }).waitFor({ state: 'visible' });
+
+        // This dialog is mixed in with the page content rather than on its own portal
+        await hideBySelector(page, '[data-aria-hidden="true"]');
 
         const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
