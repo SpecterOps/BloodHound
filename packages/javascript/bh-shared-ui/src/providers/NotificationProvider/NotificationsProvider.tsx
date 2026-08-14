@@ -16,7 +16,7 @@
 
 import { Alert } from 'doodle-ui';
 import { SnackbarContent, SnackbarProvider, useSnackbar, VariantType } from 'notistack';
-import React, { Dispatch, ReactNode, createContext, useReducer } from 'react';
+import React, { createContext, Dispatch, ReactNode, useReducer } from 'react';
 import { NotificationAction } from './actions';
 import { Notification } from './model';
 import { notificationsReducer } from './reducer';

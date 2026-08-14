@@ -40,9 +40,7 @@ describe('NotificationSnackbar', () => {
     });
 
     it('renders the title as a heading when a title is provided', () => {
-        render(
-            <NotificationSnackbar id='snack-1' message='Details of the event' variant='error' title='With Title' />
-        );
+        render(<NotificationSnackbar id='snack-1' message='Details of the event' variant='error' title='With Title' />);
 
         expect(screen.getByRole('heading', { name: 'With Title' })).toBeInTheDocument();
         expect(screen.getByText('Details of the event')).toBeInTheDocument();
