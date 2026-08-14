@@ -198,7 +198,7 @@ export const ActiveExtensionsCard = () => {
                         </TableRow>
                     }
                     columns={columns}
-                    TableCellProps={{ className: 'h-[57px] py-2' }}
+                    TableCellProps={{ className: `h-[${TABLE_CELL_HEIGHT}px] py-2` }}
                     TableProps={{
                         className:
                             'table-fixed [&_tr>*:nth-child(1)]:!w-[42%] [&_tr>*:nth-child(2)]:!w-[28%] [&_tr>*:nth-child(3)]:!w-[16%] [&_tr>*:nth-child(4)]:!w-[14%]',
