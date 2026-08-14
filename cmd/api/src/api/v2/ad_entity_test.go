@@ -143,11 +143,8 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
-					mockGraph.EXPECT().
-						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionInbound, ad.ServerIs, ad.SiteServer).
-						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -162,16 +159,14 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
-					siteServerProperties := graph.NewProperties().
-						Set(common.ObjectID.String(), "SITE-SERVER-1").
-						Set(common.Name.String(), "SITE-SERVER-NAME")
+					computerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "COMPUTER-1").
+						Set("siteservernode", "SITE-SERVER-1").
+						Set("siteservernodename", "SITE-SERVER-NAME")
 
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(graph.NewNode(graph.ID(1), graph.NewProperties().Set(common.ObjectID.String(), "COMPUTER-1")), nil)
-					mockGraph.EXPECT().
-						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionInbound, ad.ServerIs, ad.SiteServer).
-						Return(graph.NewNode(graph.ID(2), siteServerProperties, ad.SiteServer), nil)
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
+						Return(graph.NewNode(graph.ID(1), computerProperties, ad.Computer), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -209,11 +204,8 @@ func TestResources_GetSiteServerEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), "1", ad.SiteServer).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
-					mockGraph.EXPECT().
-						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionOutbound, ad.ServerIs, ad.Computer).
-						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -228,16 +220,14 @@ func TestResources_GetSiteServerEntityInfo(t *testing.T) {
 					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
-					computerProperties := graph.NewProperties().
-						Set(common.ObjectID.String(), "COMPUTER-1").
-						Set(common.Name.String(), "COMPUTER-NAME")
+					siteServerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "SITE-SERVER-1").
+						Set("serverreferencecomputer", "COMPUTER-1").
+						Set("serverreferencecomputername", "COMPUTER-NAME")
 
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(graph.NewNode(graph.ID(1), graph.NewProperties().Set(common.ObjectID.String(), "SITE-SERVER-1")), nil)
-					mockGraph.EXPECT().
-						GetEntityByRelationship(gomock.Any(), gomock.Any(), graph.DirectionOutbound, ad.ServerIs, ad.Computer).
-						Return(graph.NewNode(graph.ID(2), computerProperties, ad.Computer), nil)
+						GetADEntityDetails(gomock.Any(), "1", ad.SiteServer).
+						Return(graph.NewNode(graph.ID(1), siteServerProperties, ad.SiteServer), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

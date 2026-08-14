@@ -143,8 +143,8 @@ type Graph interface {
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int) ([]*graph.Node, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
+	GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
-	GetEntityByRelationship(ctx context.Context, node *graph.Node, direction graph.Direction, relationshipKind graph.Kind, relatedKind graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
@@ -630,12 +630,7 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 		err  error
 	)
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err = tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
-				query.KindIn(query.Node(), kinds...),
-			)
-		}).First(); err != nil {
+		if node, err = getEntityByObjectID(tx, objectID, kinds...); err != nil {
 			return err
 		}
 
@@ -647,45 +642,13 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 	}
 }
 
-func (s *GraphQuery) GetEntityByRelationship(ctx context.Context, node *graph.Node, direction graph.Direction, relationshipKind graph.Kind, relatedKind graph.Kind) (*graph.Node, error) {
-	var (
-		err         error
-		relatedNode *graph.Node
-		relatedSet  graph.NodeSet
-	)
-
-	if err = s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		relationshipQuery := tx.Relationships().Filterf(func() graph.Criteria {
-			if direction == graph.DirectionInbound {
-				return query.And(
-					query.Kind(query.Start(), relatedKind),
-					query.Kind(query.Relationship(), relationshipKind),
-					query.Equals(query.EndID(), node.ID),
-				)
-			}
-
-			return query.And(
-				query.Equals(query.StartID(), node.ID),
-				query.Kind(query.Relationship(), relationshipKind),
-				query.Kind(query.End(), relatedKind),
-			)
-		})
-
-		if direction == graph.DirectionInbound {
-			relatedSet, err = ops.FetchStartNodes(relationshipQuery)
-		} else {
-			relatedSet, err = ops.FetchEndNodes(relationshipQuery)
-		}
-
-		return err
-	}); err != nil {
-		return nil, err
-	} else if relatedSet.Len() == 0 {
-		return nil, nil
-	} else {
-		relatedNode = relatedSet.Pick()
-		return relatedNode, nil
-	}
+func getEntityByObjectID(tx graph.Transaction, objectID string, kinds ...graph.Kind) (*graph.Node, error) {
+	return tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
+			query.KindIn(query.Node(), kinds...),
+		)
+	}).First()
 }
 
 func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any {

@@ -166,6 +166,21 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByObjectIDsAndKinds", reflect.TypeOf((*MockGraph)(nil).FetchNodesByObjectIDsAndKinds), varargs...)
 }
 
+// GetADEntityDetails mocks base method.
+func (m *MockGraph) GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetADEntityDetails", ctx, objectID, entityType)
+	ret0, _ := ret[0].(*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetADEntityDetails indicates an expected call of GetADEntityDetails.
+func (mr *MockGraphMockRecorder) GetADEntityDetails(ctx, objectID, entityType any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityDetails", reflect.TypeOf((*MockGraph)(nil).GetADEntityDetails), ctx, objectID, entityType)
+}
+
 // GetADEntityQueryResult mocks base method.
 func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
@@ -260,21 +275,6 @@ func (mr *MockGraphMockRecorder) GetEntityByObjectId(ctx, objectID any, kinds ..
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, objectID}, kinds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEntityByObjectId", reflect.TypeOf((*MockGraph)(nil).GetEntityByObjectId), varargs...)
-}
-
-// GetEntityByRelationship mocks base method.
-func (m *MockGraph) GetEntityByRelationship(ctx context.Context, node *graph.Node, direction graph.Direction, relationshipKind, relatedKind graph.Kind) (*graph.Node, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEntityByRelationship", ctx, node, direction, relationshipKind, relatedKind)
-	ret0, _ := ret[0].(*graph.Node)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEntityByRelationship indicates an expected call of GetEntityByRelationship.
-func (mr *MockGraphMockRecorder) GetEntityByRelationship(ctx, node, direction, relationshipKind, relatedKind any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEntityByRelationship", reflect.TypeOf((*MockGraph)(nil).GetEntityByRelationship), ctx, node, direction, relationshipKind, relatedKind)
 }
 
 // GetEntityCountResults mocks base method.
