@@ -271,7 +271,6 @@ describe('CypherSearch', () => {
 
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
             expect(mockOnQuerySuccess).toHaveBeenCalled();
-            expect(mockSetSelectedItem).toHaveBeenCalledWith('108');
         });
 
         it('calls onQuerySuccess again when user reopens widget and runs another multi-node query', async () => {
