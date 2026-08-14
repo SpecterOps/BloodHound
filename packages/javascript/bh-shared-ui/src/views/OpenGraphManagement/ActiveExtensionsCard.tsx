@@ -25,11 +25,7 @@ import {
     IconButton,
     TableCell,
     TableRow,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
+    Tooltip,
     Typography,
 } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
@@ -49,7 +45,21 @@ export const NO_SEARCH_RESULTS_MESSAGE = 'No extensions match your search terms'
 
 const TABLE_CELL_HEIGHT = 57;
 const TABLE_HEADER_HEIGHT = 52;
-const EMPTY_STATE_HEIGHT = `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * 2}px`;
+const EMPTY_STATE_HEIGHT = TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * 2;
+
+const TruncatedCell = ({ className = '', value }: { className?: string; value: string }) => {
+    return (
+        <Tooltip
+            tooltip={value}
+            contentProps={{
+                align: 'start',
+                'aria-hidden': true,
+                className: 'min-[600px]:hidden dark:bg-neutral-5 dark:text-white border-neutral-300',
+            }}>
+            <div className={`${className} line-clamp-2 break-words leading-5`}>{value}</div>
+        </Tooltip>
+    );
+};
 
 export const ActiveExtensionsCard = () => {
     const [search, setSearch] = useState('');
@@ -93,24 +103,22 @@ export const ActiveExtensionsCard = () => {
     const columns: ColumnDef<Extension, string>[] = [
         columnHelper.accessor('name', {
             id: 'name',
+            size: 480,
             header: () => <span className='pl-6'>Name</span>,
-            cell: ({ row }) => <span className='pl-6'>{row.original.name}</span>,
+            cell: ({ row }) => <TruncatedCell className='pl-6' value={row.original.name} />,
         }),
         columnHelper.accessor('namespace', {
             id: 'namespace',
+            size: 240,
             header: () => (
-                <div className='flex items-center gap-1'>
+                <div className='flex items-center gap-0.25'>
                     <span>Namespace</span>
-                    <TooltipRoot>
-                        <TooltipTrigger asChild>
-                            <IconButton
-                                className='bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
-                                aria-label='Namespace information'>
-                                <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                            </IconButton>
-                        </TooltipTrigger>
-                        <TooltipPortal>
-                            <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
+                    <Tooltip
+                        contentProps={{
+                            className: 'max-w-96 dark:bg-neutral-5 dark:text-white border-neutral-300',
+                        }}
+                        tooltip={
+                            <>
                                 <Typography variant='caption' component='p'>
                                     Namespace Key is a set prefix for all node and edge kinds defined by an OpenGraph
                                     extension (e.g. GH_User, AWS_User).
@@ -119,15 +127,22 @@ export const ActiveExtensionsCard = () => {
                                     This helps quickly inform which extension defines a node or edge kind and
                                     differentiate common types across platforms.
                                 </Typography>
-                            </TooltipContent>
-                        </TooltipPortal>
-                    </TooltipRoot>
+                            </>
+                        }>
+                        <IconButton
+                            className='bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
+                            aria-label='Namespace information'
+                            size={14}>
+                            <FontAwesomeIcon icon={faInfoCircle} size='sm' />
+                        </IconButton>
+                    </Tooltip>
                 </div>
             ),
-            cell: ({ row }) => <span>{row.original.namespace}</span>,
+            cell: ({ row }) => <TruncatedCell value={row.original.namespace} />,
         }),
         columnHelper.accessor('version', {
             id: 'version',
+            size: 160,
             header: () => <span>Version</span>,
             cell: ({ row }) => <span>{row.original.version}</span>,
         }),
@@ -141,7 +156,7 @@ export const ActiveExtensionsCard = () => {
                     hasDeletePermission={hasDeletePermission}
                 />
             ),
-            size: 0,
+            size: 56,
         }),
     ];
 
@@ -172,27 +187,31 @@ export const ActiveExtensionsCard = () => {
             </header>
 
             <div
-                // DataTable currently has some issues with table and cell height within a Card element
-                // Tailwind doesn't have a way to calculate dynamic heights, so inline styles are used
+                data-testid='active-extensions-table-container'
                 style={{
-                    minHeight:
+                    height:
                         !hasData || isEmptySearch
-                            ? EMPTY_STATE_HEIGHT
+                            ? `${EMPTY_STATE_HEIGHT}px`
                             : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
                 }}>
-                <TooltipProvider>
-                    <DataTable
-                        data={filteredData}
-                        noResultsFallback={
-                            <TableRow>
-                                <TableCell colSpan={4} className='h-28 text-center'>
-                                    {fallbackMessage}
-                                </TableCell>
-                            </TableRow>
-                        }
-                        columns={columns}
-                    />
-                </TooltipProvider>
+                <DataTable
+                    className='h-full'
+                    data={filteredData}
+                    noResultsFallback={
+                        <TableRow>
+                            <TableCell colSpan={4} className='h-28 text-center'>
+                                {fallbackMessage}
+                            </TableCell>
+                        </TableRow>
+                    }
+                    columns={columns}
+                    TableCellProps={{ className: 'h-[57px] py-2' }}
+                    TableProps={{
+                        className:
+                            'table-fixed [&_tr>*:nth-child(1)]:!w-[42%] [&_tr>*:nth-child(2)]:!w-[28%] [&_tr>*:nth-child(3)]:!w-[16%] [&_tr>*:nth-child(4)]:!w-[14%]',
+                        disableDefaultOverflowAuto: true,
+                    }}
+                />
             </div>
 
             <ConfirmDeleteExtensionDialog
