@@ -275,9 +275,9 @@ func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.
 	var (
 		countQueries = map[string]any{
 			"gpos":      adAnalysis.FetchEnforcedGPOs,
-			"users":     adAnalysis.CreateOUContainedListDelegate(ad.User),
-			"groups":    adAnalysis.CreateOUContainedListDelegate(ad.Group),
-			"computers": adAnalysis.CreateOUContainedListDelegate(ad.Computer),
+			"users":     adAnalysis.CreateContainedListDelegate(ad.User),
+			"groups":    adAnalysis.CreateContainedListDelegate(ad.Group),
+			"computers": adAnalysis.CreateContainedListDelegate(ad.Computer),
 		}
 	)
 
@@ -338,8 +338,8 @@ func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *htt
 		countQueries = map[string]any{
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 			"linkedgpos":  adAnalysis.FetchEntityLinkedGPOList,
-			"siteServers": adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer),
-			"siteSubnets": adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet),
+			"siteServers": adAnalysis.CreateContainedListDelegate(ad.SiteServer),
+			"siteSubnets": adAnalysis.CreateContainedListDelegate(ad.SiteSubnet),
 		}
 	)
 

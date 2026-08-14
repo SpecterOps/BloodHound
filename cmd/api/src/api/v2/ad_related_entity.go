@@ -206,15 +206,15 @@ func (s *Resources) ListADDomainDCSyncers(response http.ResponseWriter, request 
 }
 
 func (s *Resources) ListADOUContainedUsers(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedUsers", adAnalysis.CreateOUContainedPathDelegate(ad.User), adAnalysis.CreateOUContainedListDelegate(ad.User))
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedUsers", adAnalysis.CreateContainedPathDelegate(ad.User), adAnalysis.CreateContainedListDelegate(ad.User))
 }
 
 func (s *Resources) ListADOUContainedGroups(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedGroups", adAnalysis.CreateOUContainedPathDelegate(ad.Group), adAnalysis.CreateOUContainedListDelegate(ad.Group))
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedGroups", adAnalysis.CreateContainedPathDelegate(ad.Group), adAnalysis.CreateContainedListDelegate(ad.Group))
 }
 
 func (s *Resources) ListADOUContainedComputers(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedComputers", adAnalysis.CreateOUContainedPathDelegate(ad.Computer), adAnalysis.CreateOUContainedListDelegate(ad.Computer))
+	s.handleAdRelatedEntityQuery(response, request, "ListADOUContainedComputers", adAnalysis.CreateContainedPathDelegate(ad.Computer), adAnalysis.CreateContainedListDelegate(ad.Computer))
 }
 
 func (s *Resources) ListADGPOAffectedContainers(response http.ResponseWriter, request *http.Request) {
@@ -266,7 +266,7 @@ func (s *Resources) ListADCSEscalations(response http.ResponseWriter, request *h
 }
 
 func (s *Resources) ListADSiteLinkedServers(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedServers", adAnalysis.CreateSiteContainedPathDelegate(ad.SiteServer), adAnalysis.CreateSiteContainedListDelegate(ad.SiteServer))
+	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedServers", adAnalysis.CreateContainedPathDelegate(ad.SiteServer), adAnalysis.CreateContainedListDelegate(ad.SiteServer))
 }
 
 func (s *Resources) ListADSiteLinkedGPOs(response http.ResponseWriter, request *http.Request) {
@@ -274,5 +274,5 @@ func (s *Resources) ListADSiteLinkedGPOs(response http.ResponseWriter, request *
 }
 
 func (s *Resources) ListADSiteLinkedSubnets(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedSubnets", adAnalysis.CreateSiteContainedPathDelegate(ad.SiteSubnet), adAnalysis.CreateSiteContainedListDelegate(ad.SiteSubnet))
+	s.handleAdRelatedEntityQuery(response, request, "ListADSiteLinkedSubnets", adAnalysis.CreateContainedPathDelegate(ad.SiteSubnet), adAnalysis.CreateContainedListDelegate(ad.SiteSubnet))
 }

@@ -1350,13 +1350,13 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 	})
 }
 
-func TestCreateOUContainedPathDelegate(t *testing.T) {
+func TestCreateContainedPathDelegate(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OUHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		paths, err := adAnalysis.CreateOUContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUA)
+		paths, err := adAnalysis.CreateContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUA)
 
 		test.RequireNilErr(t, err)
 		nodes := paths.AllNodes().IDs()
@@ -1366,7 +1366,7 @@ func TestCreateOUContainedPathDelegate(t *testing.T) {
 		require.Contains(t, nodes, harness.OUHarness.OUC.ID)
 		require.Contains(t, nodes, harness.OUHarness.UserB.ID)
 
-		paths, err = adAnalysis.CreateOUContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUB)
+		paths, err = adAnalysis.CreateContainedPathDelegate(ad.User)(tx, harness.OUHarness.OUB)
 		test.RequireNilErr(t, err)
 		nodes = paths.AllNodes().IDs()
 		require.Equal(t, 4, len(nodes))
@@ -1377,18 +1377,18 @@ func TestCreateOUContainedPathDelegate(t *testing.T) {
 	})
 }
 
-func TestCreateOUContainedListDelegate(t *testing.T) {
+func TestCreateContainedListDelegate(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.OUHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		contained, err := adAnalysis.CreateOUContainedListDelegate(ad.User)(tx, harness.OUHarness.OUA, 0, 0)
+		contained, err := adAnalysis.CreateContainedListDelegate(ad.User)(tx, harness.OUHarness.OUA, 0, 0)
 
 		test.RequireNilErr(t, err)
 		require.Equal(t, 2, contained.Len())
 
-		contained, err = adAnalysis.CreateOUContainedListDelegate(ad.User)(tx, harness.OUHarness.OUB, 0, 0)
+		contained, err = adAnalysis.CreateContainedListDelegate(ad.User)(tx, harness.OUHarness.OUB, 0, 0)
 		test.RequireNilErr(t, err)
 		require.Equal(t, 1, contained.Len())
 	})

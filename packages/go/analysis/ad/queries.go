@@ -730,7 +730,7 @@ func FetchContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.Node
 	return containers, nil
 }
 
-func CreateOUContainedListDelegate(kind graph.Kind) ListDelegate {
+func CreateContainedListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -749,43 +749,7 @@ func CreateOUContainedListDelegate(kind graph.Kind) ListDelegate {
 	}
 }
 
-func CreateOUContainedPathDelegate(kind graph.Kind) PathDelegate {
-	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-		return ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: graph.DirectionOutbound,
-			BranchQuery: func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.Contains),
-				)
-			},
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return segment.Node.Kinds.ContainsOneOf(kind)
-			},
-		})
-	}
-}
-
-func CreateSiteContainedListDelegate(kind graph.Kind) ListDelegate {
-	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: graph.DirectionOutbound,
-			BranchQuery: func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.Contains),
-				)
-			},
-			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-				return segment.Node.Kinds.ContainsOneOf(kind)
-			},
-			Skip:  skip,
-			Limit: limit,
-		})
-	}
-}
-
-func CreateSiteContainedPathDelegate(kind graph.Kind) PathDelegate {
+func CreateContainedPathDelegate(kind graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
