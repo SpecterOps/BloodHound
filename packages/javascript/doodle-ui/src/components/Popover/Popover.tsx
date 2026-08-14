@@ -25,7 +25,7 @@ const PopoverTrigger = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <PopoverPrimitive.Trigger
         ref={ref}
-        className={cn('focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring', className)}
+        className={cn('focus:outline-none focus-visible:focus-ring', className)}
         {...props}
     />
 ));

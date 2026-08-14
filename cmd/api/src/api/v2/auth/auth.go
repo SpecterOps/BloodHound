@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -48,6 +47,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/specterops/bloodhound/server/alerts"
 )
 
 const (
@@ -68,9 +68,10 @@ type ManagementResource struct {
 	SAML                       saml.Service
 	GraphQuery                 queries.Graph
 	DogTags                    dogtags.Service
+	AlertPublisher             alerts.Publisher
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service, alertPublisher alerts.Publisher) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -82,6 +83,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		SAML:                       &saml.Client{},
 		GraphQuery:                 graphQuery,
 		DogTags:                    dogTagsService,
+		AlertPublisher:             alertPublisher,
 	}
 }
 
@@ -146,99 +148,6 @@ func (s ManagementResource) ListPermissions(response http.ResponseWriter, reques
 		} else {
 			api.WriteBasicResponse(request.Context(), v2.ListPermissionsResponse{Permissions: permissions}, http.StatusOK, response)
 		}
-	}
-}
-
-func (s ManagementResource) GetPermission(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars        = mux.Vars(request)
-		rawPermissionID = pathVars[api.URIPathVariablePermissionID]
-	)
-
-	if permissionID, err := strconv.Atoi(rawPermissionID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if permission, err := s.db.GetPermission(request.Context(), permissionID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), permission, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) ListRoles(response http.ResponseWriter, request *http.Request) {
-	var (
-		order         []string
-		roles         model.Roles
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
-	)
-
-	for _, column := range sortByColumns {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !roles.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, column), request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
-	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(roles.GetFilterableColumns(), name); !valid {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			}
-
-			if validPredicates, err := roles.GetValidFilterPredicatesAsStrings(name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					}
-
-					queryFilters[name][i].IsStringData = roles.IsString(filter.Name)
-				}
-			}
-		}
-
-		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
-		} else if roles, err = s.db.GetAllRoles(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), v2.ListRolesResponse{Roles: roles}, http.StatusOK, response)
-		}
-	}
-}
-
-func (s ManagementResource) GetRole(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars  = mux.Vars(request)
-		rawRoleID = pathVars[api.URIPathVariableRoleID]
-	)
-
-	if roleID, err := strconv.ParseInt(rawRoleID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if role, err := s.db.GetRole(request.Context(), int32(roleID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), role, http.StatusOK, response)
 	}
 }
 

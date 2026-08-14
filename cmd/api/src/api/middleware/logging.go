@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -117,9 +118,24 @@ func setSignedRequestFields(request *http.Request, logAttrs *[]slog.Attr) {
 	}
 }
 
+// isQueryLoggingExcludedPath matches paths whose query_parameters field should be omitted (v2 only)
+func isQueryLoggingExcludedPath(requestPath string) bool {
+	if requestPath == "/api/v2/login/support" {
+		return true
+	}
+	if strings.HasPrefix(requestPath, "/api/v2/sso/") && strings.HasSuffix(requestPath, "/callback") {
+		return true
+	}
+	if strings.HasPrefix(requestPath, "/api/v2/login/saml/") && strings.HasSuffix(requestPath, "/acs") {
+		return true
+	}
+
+	return false
+}
+
 // LoggingMiddleware is a middleware func that outputs a log for each request-response lifecycle. It includes timestamped
 // information organized into fields suitable for searching or parsing.
-func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
+func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			var (
@@ -190,6 +206,11 @@ func LoggingMiddleware(idResolver auth.IdentityResolver, bypassLimitsParam bool)
 				slog.Int("status", loggedResponse.statusCode),
 				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
 			)
+
+			// Add logging of query parameters for /api/v2 endpoints, excluding potentially sensitive paths
+			if strings.HasPrefix(request.URL.Path, "/api/v2/") && request.URL.RawQuery != "" && !isQueryLoggingExcludedPath(request.URL.Path) {
+				logAttrs = append(logAttrs, slog.String("query_parameters", request.URL.RawQuery))
+			}
 		})
 	}
 }

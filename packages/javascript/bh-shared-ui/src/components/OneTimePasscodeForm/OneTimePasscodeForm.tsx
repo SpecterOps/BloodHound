@@ -67,7 +67,7 @@ const OneTimePasscodeForm: React.FC<OneTimePasscodeFormProps> = ({ onSubmit, onC
                     <Box mt={2}>
                         <Button
                             onClick={onCancel}
-                            variant='tertiary'
+                            variant='secondary'
                             size='large'
                             type='button'
                             style={{ width: '100%' }}

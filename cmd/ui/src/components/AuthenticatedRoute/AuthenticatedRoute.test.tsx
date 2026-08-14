@@ -15,13 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Route, Routes } from 'react-router-dom';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
-import { render, screen } from 'src/test-utils';
+import { ROUTE_ADMINISTRATION, ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
+import { act, render, screen } from 'src/test-utils';
 import AuthenticatedRoute from './AuthenticatedRoute';
 
 const AUTHENTICATED_COPY = 'authenticated';
 const LOGIN_PAGE_COPY = 'login page';
 const EXPIRED_PASSWORD_PAGE_COPY = 'expired password page';
+const DISALLOWED_ROLE_NAME = 'DISALLOWED_ROLE_NAME';
+const TEST_NOTIFICATION = '__USER ROLE DISALLOWED FOR THIS ROUTE!';
 
 const TestRoutes = () => (
     <Routes>
@@ -29,6 +31,20 @@ const TestRoutes = () => (
             path={ROUTE_HOME}
             element={
                 <AuthenticatedRoute>
+                    <div>{AUTHENTICATED_COPY}</div>
+                </AuthenticatedRoute>
+            }
+        />
+        <Route
+            path={ROUTE_ADMINISTRATION}
+            element={
+                <AuthenticatedRoute
+                    disallowedRoles={[
+                        {
+                            name: DISALLOWED_ROLE_NAME,
+                            notification: TEST_NOTIFICATION,
+                        },
+                    ]}>
                     <div>{AUTHENTICATED_COPY}</div>
                 </AuthenticatedRoute>
             }
@@ -113,5 +129,56 @@ describe('AuthenticatedRoute', () => {
 
         expect(screen.queryByText(AUTHENTICATED_COPY)).toBeInTheDocument();
         expect(window.location.pathname).toBe(ROUTE_HOME);
+    });
+
+    it('when user has a disallowed role for a route with disallowed roles, they see the disallowed notification.', async () => {
+        await act(async () => {
+            render(<TestRoutes />, {
+                initialState: {
+                    auth: {
+                        sessionToken: 'validToken',
+                        user: {
+                            id: 'validUserId',
+                            AuthSecret: {
+                                expires_at: '9999-01-01T00:00:00Z', // not expired
+                            },
+                            roles: [
+                                {
+                                    name: DISALLOWED_ROLE_NAME,
+                                },
+                            ],
+                        },
+                    },
+                },
+                route: ROUTE_ADMINISTRATION,
+            });
+        });
+
+        expect(screen.queryByText(AUTHENTICATED_COPY)).not.toBeInTheDocument();
+        expect(screen.queryByText(TEST_NOTIFICATION)).toBeInTheDocument();
+        expect(window.location.pathname).toBe(ROUTE_ADMINISTRATION);
+    });
+
+    it('when user does not have a disallowed role for a route with disallowed roles, they see the normal page', async () => {
+        await act(async () => {
+            render(<TestRoutes />, {
+                initialState: {
+                    auth: {
+                        sessionToken: 'validToken',
+                        user: {
+                            id: 'validUserId',
+                            AuthSecret: {
+                                expires_at: '9999-01-01T00:00:00Z', // not expired
+                            },
+                        },
+                    },
+                },
+                route: ROUTE_ADMINISTRATION,
+            });
+        });
+
+        expect(screen.queryByText(AUTHENTICATED_COPY)).toBeInTheDocument();
+        expect(screen.queryByText(TEST_NOTIFICATION)).not.toBeInTheDocument();
+        expect(window.location.pathname).toBe(ROUTE_ADMINISTRATION);
     });
 });

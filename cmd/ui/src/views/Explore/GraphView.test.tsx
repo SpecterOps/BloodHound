@@ -20,6 +20,7 @@ import {
     cypherTestResponse,
     mockGetConfigurationHandler,
     mockKindsHandler,
+    mockSourceKindsHandler,
     singleNodeResponse,
 } from 'bh-shared-ui';
 import { GraphEdge } from 'js-client-library';
@@ -71,6 +72,29 @@ const graphSearchResponse = {
     data: { data: { nodes: { '42': searchedNode }, edges: [] } },
 };
 
+const buildGraphShapedCypherResponse = () => {
+    const edges: Array<GraphEdge> = [
+        {
+            id: 1,
+            source: '108',
+            target: '108',
+            label: 'some label',
+            kind: 'some kind',
+            lastSeen: 'some lastSeen',
+            impactPercent: 10,
+            exploreGraphId: 'some exploreGraphId',
+            data: {},
+        },
+    ];
+    return {
+        ...cypherTestResponse,
+        data: {
+            ...cypherTestResponse.data,
+            edges,
+        },
+    };
+};
+
 const server = setupServer(
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherTestResponse));
@@ -98,6 +122,7 @@ const server = setupServer(
     }),
     mockKindsHandler(),
     mockGetConfigurationHandler(),
+    mockSourceKindsHandler(),
     rest.get(`/api/v2/roles`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -135,6 +160,21 @@ const server = setupServer(
                 skip: 0,
                 limit: 128,
                 data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/nodes/:id', (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    node_id: 42,
+                    kinds: [{ node_kind_id: 1, name: searchedNode.kind }],
+                    properties: {
+                        objectid: searchedNode.objectId,
+                        name: searchedNode.label,
+                        lastSeen: searchedNode.lastSeen,
+                    },
+                },
             })
         );
     })
@@ -221,13 +261,14 @@ describe('GraphView', () => {
         };
 
         clonedCypherResponse.data.edges.push({
+            id: 1,
             source: '108',
             target: '108',
             label: 'some label',
-            kind: 'some kind',
+            kind: 'kind',
             lastSeen: 'some lastSeen',
             impactPercent: 10,
-            exploreGraphId: 'some exploreGraphId',
+            exploreGraphId: '108_kind_108',
             data: {},
         });
 
@@ -387,17 +428,17 @@ describe('GraphView', () => {
             });
 
             const user = userEvent.setup();
-            const layoutMenu = await screen.findByText('Layout');
+            const layoutMenu = await screen.findByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
-            expect(standardOption).toHaveClass('Mui-selected');
+            expect(standardOption).toHaveClass('!bg-primary');
 
             const sequentialOption = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
-            expect(sequentialOption).not.toHaveClass('Mui-selected');
+            expect(sequentialOption).not.toHaveClass('!bg-primary');
 
             const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
-            expect(tableOption).not.toHaveClass('Mui-selected');
+            expect(tableOption).not.toHaveClass('!bg-primary');
         });
 
         it('reverts to the default unselected state when the user de-selects the currently selected graph layout', async () => {
@@ -415,7 +456,7 @@ describe('GraphView', () => {
             });
 
             const user = userEvent.setup();
-            const layoutMenu = await screen.findByText('Layout');
+            const layoutMenu = await screen.findByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
             const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
@@ -424,16 +465,23 @@ describe('GraphView', () => {
             await user.click(layoutMenu);
 
             const standardOptionAfter = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
-            expect(standardOptionAfter).not.toHaveClass('Mui-selected');
+            expect(standardOptionAfter).not.toHaveClass('!bg-primary');
 
             const sequentialOptionAfter = await screen.findByTestId('explore_graph-controls_sequential-buttonLabel');
-            expect(sequentialOptionAfter).not.toHaveClass('Mui-selected');
+            expect(sequentialOptionAfter).not.toHaveClass('!bg-primary');
 
             const tableOptionAfter = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
-            expect(tableOptionAfter).not.toHaveClass('Mui-selected');
+            expect(tableOptionAfter).not.toHaveClass('!bg-primary');
         });
 
         it('reverts to the default graph view when the user de-selects the currently selected table layout', async () => {
+            // Use a graph-shaped response so the default view after de-selection is the graph, not the table.
+            server.use(
+                rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                    return res(ctx.json(buildGraphShapedCypherResponse()));
+                })
+            );
+
             render(<GraphView />, {
                 route: cypherRoute,
                 initialState: {
@@ -450,11 +498,11 @@ describe('GraphView', () => {
             expect(await screen.findByRole('table')).toBeInTheDocument();
 
             const user = userEvent.setup();
-            const layoutMenu = screen.getByText('Layout');
+            const layoutMenu = screen.getByRole('button', { name: 'Layout' });
             await user.click(layoutMenu);
 
-            const closeTableBtn = await screen.findByTestId('close-button');
-            await user.click(closeTableBtn);
+            const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            await user.click(tableOption);
 
             await waitFor(() => {
                 expect(screen.queryByRole('table')).not.toBeInTheDocument();

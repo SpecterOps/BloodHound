@@ -19,7 +19,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from 'doodle-ui';
 import { SeedTypeCypher } from 'js-client-library';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { TagLabelPrefix } from '../../../hooks/useAssetGroupTags';
+import { TagLabelPrefix } from '../../../constants';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { usePZPathParams } from '../../../hooks/usePZParams';
 import { cn } from '../../../utils';

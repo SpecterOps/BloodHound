@@ -18,6 +18,7 @@ package opengraphschema_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -407,6 +408,141 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantUpdated: false,
 		},
 		{
+			name: "fail - unsafe kind info markdown",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+						Info: model.KindInfoInputs{{
+							InfoKey:  "overview",
+							Title:    "Overview",
+							Position: 0,
+							Content:  json.RawMessage(`{"markdown":{"content":"<script>alert(1)</script>"}}`),
+						}},
+					}},
+				},
+			},
+			wantErr:     model.ErrGraphExtensionValidation,
+			wantUpdated: false,
+		},
+		{
+			name: "success_-_safe_kind_info_markdown_inserted",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+				},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+						Info: model.KindInfoInputs{{
+							InfoKey:  "overview",
+							Title:    "Overview",
+							Position: 0,
+							Content:  json.RawMessage(`{"markdown":{"content":"# Overview\n\nThis is **bold**."}}`),
+						}},
+					}},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: false,
+		},
+		{
+			name: "fail - unsafe remediation markdown",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+					}},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
+					}},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{{
+						Name:                 "DEFAULT_Finding_1",
+						RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+						RemediationInput: model.RemediationInput{
+							ShortDescription: "<script>alert(1)</script>",
+						},
+					}},
+				},
+			},
+			wantErr:     model.ErrGraphExtensionValidation,
+			wantUpdated: false,
+		},
+		{
+			name: "success - safe remediation markdown inserted",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+				},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				graphExtension: model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{
+						Name:        "Test extension",
+						DisplayName: "Test extension",
+						Version:     "v1.0.0",
+						Namespace:   "DEFAULT",
+					},
+					NodeKindsInput: model.NodesInput{{
+						Name: "DEFAULT_Node",
+					}},
+					RelationshipKindsInput: model.RelationshipsInput{{
+						Name: "DEFAULT_Relationship_Kind_1",
+					}},
+					RelationshipFindingsInput: model.RelationshipFindingsInput{{
+						Name:                 "DEFAULT_Finding_1",
+						RelationshipKindName: "DEFAULT_Relationship_Kind_1",
+						RemediationInput: model.RemediationInput{
+							ShortDescription: "A **bold** summary.",
+							LongDescription:  "See [docs](http://example.com).",
+							ShortRemediation: "Do the thing.",
+							LongRemediation:  "# Steps\n\n1. First\n2. Second",
+						},
+					}},
+				},
+			},
+			wantErr:     nil,
+			wantUpdated: false,
+		},
+		{
 			name: "success - updated",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
@@ -785,7 +921,7 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 	}
 }
 
-func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(t *testing.T) {
+func TestOpenGraphSchemaService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 	t.Parallel()
 
 	type mocks struct {
@@ -797,9 +933,9 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 		onlyBuiltin bool
 	}
 	type expected struct {
-		graphKinds     graph.Kinds
-		displayNameMap map[string]string
-		err            error
+		graphKinds                    graph.Kinds
+		environmentKindsToEnvironment model.EnvironmentKindsToEnvironment
+		err                           error
 	}
 	tests := []struct {
 		name       string
@@ -826,10 +962,12 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					{
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
+						SchemaExtensionId:          1,
 					},
 					{
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
+						SchemaExtensionId:          2,
 					},
 				}, nil)
 			},
@@ -838,9 +976,17 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					graph.StringKind("Domain"),
 					graph.StringKind("Tenant"),
 				},
-				displayNameMap: map[string]string{
-					"Domain": "AD",
-					"Tenant": "Azure",
+				environmentKindsToEnvironment: model.EnvironmentKindsToEnvironment{
+					"Domain": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "AD",
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionId:          1,
+					},
+					"Tenant": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "Azure",
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionId:          2,
+					},
 				},
 			},
 			args: args{
@@ -855,10 +1001,12 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					{
 						EnvironmentKindName:        "Domain",
 						SchemaExtensionDisplayName: "AD",
+						SchemaExtensionId:          1,
 					},
 					{
 						EnvironmentKindName:        "Tenant",
 						SchemaExtensionDisplayName: "Azure",
+						SchemaExtensionId:          2,
 					},
 				}, nil)
 			},
@@ -867,9 +1015,17 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 					graph.StringKind("Domain"),
 					graph.StringKind("Tenant"),
 				},
-				displayNameMap: map[string]string{
-					"Domain": "AD",
-					"Tenant": "Azure",
+				environmentKindsToEnvironment: model.EnvironmentKindsToEnvironment{
+					"Domain": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "AD",
+						EnvironmentKindName:        "Domain",
+						SchemaExtensionId:          1,
+					},
+					"Tenant": model.SchemaEnvironment{
+						SchemaExtensionDisplayName: "Azure",
+						EnvironmentKindName:        "Tenant",
+						SchemaExtensionId:          2,
+					},
 				},
 			},
 			args: args{
@@ -891,11 +1047,11 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndEnvironmentExtensionDispla
 
 			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB)
 
-			if envKinds, envKindToExtensionDisplayName, err := service.GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
+			if envKinds, envKindToSchemaEnvironmentData, err := service.GetEnvironmentKindsAndSchemaEnvironmentData(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
 			} else {
-				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
-				assert.Equalf(t, tt.expected.displayNameMap, envKindToExtensionDisplayName, "GetEnvironmentKindsAndEnvironmentExtensionDisplayNames(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.graphKinds, envKinds, "GetEnvironmentKindsAndSchemaEnvironmentData(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
+				assert.Equalf(t, tt.expected.environmentKindsToEnvironment, envKindToSchemaEnvironmentData, "GetEnvironmentKindsAndSchemaEnvironmentData(%v, %v)", tt.args.ctx, tt.args.onlyBuiltin)
 			}
 		})
 	}

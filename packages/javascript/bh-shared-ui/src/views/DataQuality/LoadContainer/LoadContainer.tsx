@@ -20,7 +20,7 @@ import React from 'react';
 
 interface LoadContainerProps {
     icon: JSX.Element;
-    loading: boolean;
+    isLoading: boolean;
     display: string;
     value?: number;
     type?: 'percent' | 'number';
@@ -34,18 +34,26 @@ const StyledTableRow = withStyles({
     },
 })(TableRow);
 
-const LoadContainer: React.FC<LoadContainerProps> = ({ icon, loading, display, value = 0, type = 'number' }) => {
+const LoadContainer: React.FC<LoadContainerProps> = ({ icon, isLoading, display, value = 0, type = 'number' }) => {
     return (
         <StyledTableRow>
             <TableCell>
-                <Box display='inline-block' width='32px' textAlign='center'>
-                    {icon}
-                </Box>
-                {display}
+                {isLoading ? (
+                    <Skeleton width={160} variant='text' />
+                ) : (
+                    <>
+                        <Box display='inline-block' width='32px' textAlign='center'>
+                            {icon}
+                        </Box>
+                        {display}
+                    </>
+                )}
             </TableCell>
             <TableCell align='right'>
-                {loading ? (
-                    <Skeleton variant='text' />
+                {isLoading ? (
+                    <div className='flex justify-end'>
+                        <Skeleton width={30} variant='text' />
+                    </div>
                 ) : type === 'percent' ? (
                     `${Math.floor(value * 100)}%`
                 ) : (

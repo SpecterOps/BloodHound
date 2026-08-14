@@ -40,8 +40,8 @@ func TestResolver_StartDone(t *testing.T) {
 	mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).AnyTimes()
 
 	// Ensure that start and done are reentrant-safe
-	resolver.Start(ctx, 4)
-	resolver.Start(ctx, 4)
+	resolver.Start(ctx, 4, false)
+	resolver.Start(ctx, 4, false)
 
 	assert.NoError(t, resolver.Done())
 	assert.NoError(t, resolver.Done())

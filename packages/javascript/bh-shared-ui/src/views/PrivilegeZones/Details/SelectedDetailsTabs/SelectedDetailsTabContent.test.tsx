@@ -16,7 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { zoneHandlers } from '../../../../mocks';
+import { mockSourceKindsHandler, zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
 import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
@@ -33,7 +33,8 @@ const server = setupServer(
             })
         );
     }),
-    ...zoneHandlers
+    ...zoneHandlers,
+    mockSourceKindsHandler()
 );
 
 beforeAll(() => server.listen());
@@ -70,5 +71,40 @@ describe('Selected Details Tab Content', () => {
         const entityInfoPanel = await screen.findByTestId('explore_entity-information-panel');
 
         expect(entityInfoPanel).toBeInTheDocument();
+    });
+    it('renders object information for an OpenGraph object', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/members/:memberId', async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            member: {
+                                id: 123,
+                                asset_group_tag_id: 1,
+                                name: 'Custom Node',
+                                object_id: 'CUSTOM-OBJECT-ID',
+                            },
+                        },
+                    })
+                );
+            }),
+            rest.get('/api/v2/nodes/:id', async (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            kinds: [{ name: 'Custom' }],
+                            properties: {
+                                customprop: 'OpenGraph Value',
+                            },
+                        },
+                    })
+                );
+            })
+        );
+
+        render(<SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' memberId='123' />);
+
+        expect(await screen.findByText('OpenGraph Value')).toBeInTheDocument();
+        expect(screen.queryByText('Unable to load object information for this node.')).not.toBeInTheDocument();
     });
 });

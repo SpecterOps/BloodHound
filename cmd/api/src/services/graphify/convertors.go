@@ -30,8 +30,11 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
-	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData, useRawObjectIDs bool) error {
+	objectID := entity.ID
+	if !useRawObjectIDs {
+		objectID = strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+	}
 
 	node := ein.IngestibleNode{
 		ObjectID:    objectID,
@@ -60,15 +63,18 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
 	}
 
-	// BloodHound convention: environment IDs are uppercased
-	if envID, ok := node.PropertyMap[graphschema.EnvironmentIDKey]; ok {
-		if envIDStr, ok := envID.(string); ok {
-			node.PropertyMap[graphschema.EnvironmentIDKey] = strings.ToUpper(envIDStr)
+	// BloodHound convention: environment IDs are uppercased (based on flag)
+	if !useRawObjectIDs {
+		if envID, ok := node.PropertyMap[graphschema.EnvironmentIDKey]; ok {
+			if envIDStr, ok := envID.(string); ok {
+				node.PropertyMap[graphschema.EnvironmentIDKey] = strings.ToUpper(envIDStr)
+			}
 		}
 	}
 
 	// if a domain is generically-ingested; it needs this property uppercased to
-	// be consistent with the traditional sharphound ingestion code path
+	// be consistent with the traditional sharphound ingestion code path, which
+	// always uppercases domain SIDs regardless of useRawObjectIDs
 	if domainSID, ok := node.PropertyMap[ad.DomainSID.String()]; ok {
 		if domainSIDStr, ok := domainSID.(string); ok {
 			node.PropertyMap[ad.DomainSID.String()] = strings.ToUpper(domainSIDStr)
@@ -76,7 +82,8 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	}
 
 	// if a tenant is generically-ingested; it needs this property uppercased to
-	// be consistent with the traditional azurehound ingestion code path
+	// be consistent with the traditional azurehound ingestion code path, which
+	// always uppercases tenant IDs regardless of useRawObjectIDs
 	if tenantID, ok := node.PropertyMap[azure.TenantID.String()]; ok {
 		if tenantIDStr, ok := tenantID.(string); ok {
 			node.PropertyMap[azure.TenantID.String()] = strings.ToUpper(tenantIDStr)

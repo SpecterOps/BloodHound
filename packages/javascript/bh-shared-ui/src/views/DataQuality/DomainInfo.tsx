@@ -16,7 +16,7 @@
 
 import { faChartPie, faSignInAlt, faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ActiveDirectoryQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
@@ -67,9 +67,8 @@ export const DomainMap = {
     },
 };
 
-export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
+export const DomainInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
     contextId,
-    headers = false,
     onDataError = () => {},
 }) => {
     const { data: domainData, isLoading, isError } = useActiveDirectoryDataQualityStatsQuery(contextId);
@@ -79,7 +78,7 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} headers={headers} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !domainData || !domainData.data.length) {
@@ -88,7 +87,7 @@ export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onData
 
     const stats = domainData.data[0];
 
-    return <Layout stats={stats} headers={headers} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
@@ -99,7 +98,7 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
     if (isError || !adPlatformData || !adPlatformData.data.length) {
@@ -108,27 +107,18 @@ export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }>
 
     const stats = adPlatformData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 const Layout: React.FC<{
     stats: ActiveDirectoryQualityStat | null;
-    loading: boolean;
-    headers?: boolean;
-}> = ({ stats, loading, headers }) => {
+    isLoading: boolean;
+}> = ({ stats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
             <TableContainer component={Paper} className={classes.container}>
                 <Table>
-                    {headers && (
-                        <TableHead className={classes.print}>
-                            <TableRow>
-                                <TableCell align={'left'}>Item</TableCell>
-                                <TableCell align={'right'}>Result</TableCell>
-                            </TableRow>
-                        </TableHead>
-                    )}
                     <TableBody>
                         {Object.keys(DomainMap).map((key) => {
                             if (key === 'domains' && stats?.domains === undefined) return null;
@@ -142,7 +132,7 @@ const Layout: React.FC<{
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
@@ -156,21 +146,21 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faSignInAlt} />}
                             display='Sessions'
                             value={stats?.sessions}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faStream} />}
                             display='ACEs'
                             value={stats?.acls}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={stats?.relationships}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>
@@ -182,7 +172,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Group Completeness'
                             value={stats?.local_group_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
 
@@ -190,7 +180,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Session Completeness'
                             value={stats?.session_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
                     </TableBody>

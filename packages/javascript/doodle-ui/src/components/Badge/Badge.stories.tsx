@@ -102,7 +102,19 @@ Badges are best used sparingly and should remain **short, scannable, and non-int
         },
         color: {
             control: 'select',
-            options: ['primary', 'secondary', 'grey', 'red', 'orange', 'green', 'blue'],
+            options: [
+                'primary',
+                'secondary',
+                'grey',
+                'red',
+                'orange',
+                'green',
+                'blue',
+                'error',
+                'warning',
+                'success',
+                'disabled',
+            ],
             description: 'Color of the badge. Hex colors are deprecated — use a named color instead.',
             table: {
                 type: {

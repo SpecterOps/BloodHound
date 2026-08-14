@@ -44,7 +44,7 @@ const AssetGroupChangelogTable: FC<{
             <Box mt={1}>
                 <Grid container direction='row' justifyContent='flex-end' spacing={1}>
                     <Grid item>
-                        <Button variant='tertiary' size='small' onClick={onCancel}>
+                        <Button variant='secondary' size='small' onClick={onCancel}>
                             Cancel
                         </Button>
                     </Grid>

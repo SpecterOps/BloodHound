@@ -62,6 +62,22 @@ export const useAzureDataQualityStatsQuery = (id: string) => {
     });
 };
 
+export const useOpenGraphDataQualityStatsQuery = (id: string) => {
+    return useQuery({
+        queryKey: ['open-graph-data-quality-stats', id],
+        queryFn: ({ signal }) => {
+            return apiClient
+                .getOpenGraphQualityStats(id, {
+                    signal,
+                })
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Open Graph quality stats');
+                    return response.data;
+                });
+        },
+    });
+};
+
 export const useActiveDirectoryPlatformsDataQualityHistoryQuery = () => {
     return useQuery('active-directory-platform-data-quality-history', ({ signal }) =>
         apiClient
@@ -82,6 +98,21 @@ export const useActiveDirectoryPlatformsDataQualityStatsQuery = () => {
             return response.data;
         })
     );
+};
+
+export const useOpenGraphPlatformsDataQualityStatsQuery = (platformKindId?: number) => {
+    return useQuery({
+        queryKey: ['open-graph-platform-data-quality-stats', platformKindId],
+        queryFn: ({ signal }) =>
+            apiClient
+                .getOpenGraphPlatformQualityStats(platformKindId, {
+                    signal,
+                })
+                .then((response) => {
+                    if (!response.data) throw new Error('Unable to retrieve Open Graph platform quality stats');
+                    return response.data;
+                }),
+    });
 };
 
 export const useAzurePlatformsDataQualityHistoryQuery = () => {

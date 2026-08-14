@@ -18,7 +18,7 @@ import { Alert, CircularProgress } from '@mui/material';
 import {
     Button,
     Card,
-    Checkbox,
+    CheckboxWithLabel,
     DialogActions,
     DialogClose,
     DialogTitle,
@@ -84,7 +84,7 @@ const CreateUserForm: React.FC<{
                             disabled={props.isLoading}
                             role='button'
                             type='button'
-                            variant='tertiary'>
+                            variant='secondary'>
                             Close
                         </Button>
                     </DialogClose>
@@ -202,10 +202,9 @@ const CreateUserFormInner: React.FC<{
                                                 value={String(selectedRoleId)}>
                                                 <FormControl>
                                                     <SelectTrigger
-                                                        className='bg-transparent'
                                                         data-testid='create-user-dialog_select_role'
                                                         id='role'
-                                                        variant='underlined'>
+                                                        variant='outlined'>
                                                         <SelectValue placeholder={field.value} />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -252,6 +251,7 @@ const CreateUserFormInner: React.FC<{
                                                     {...field}
                                                     type='email'
                                                     id='emailAddress'
+                                                    variant='outlined'
                                                     placeholder='user@domain.com'
                                                 />
                                             </FormControl>
@@ -289,7 +289,12 @@ const CreateUserFormInner: React.FC<{
                                                 Principal Name{' '}
                                             </FormLabel>
                                             <FormControl>
-                                                <Input {...field} id='principal' placeholder='Principal Name' />
+                                                <Input
+                                                    {...field}
+                                                    id='principal'
+                                                    variant='outlined'
+                                                    placeholder='Principal Name'
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -325,7 +330,12 @@ const CreateUserFormInner: React.FC<{
                                                     First Name
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} id='firstName' placeholder='First Name' />
+                                                    <Input
+                                                        {...field}
+                                                        id='firstName'
+                                                        variant='outlined'
+                                                        placeholder='First Name'
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -362,7 +372,12 @@ const CreateUserFormInner: React.FC<{
                                                     Last Name
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} id='lastName' placeholder='Last Name' />
+                                                    <Input
+                                                        {...field}
+                                                        id='lastName'
+                                                        variant='outlined'
+                                                        placeholder='Last Name'
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -380,10 +395,9 @@ const CreateUserFormInner: React.FC<{
                                         <Select onValueChange={setAuthenticationMethod} value={authenticationMethod}>
                                             <FormControl className='mt-2'>
                                                 <SelectTrigger
-                                                    className='bg-transparent'
                                                     data-testid='create-user-dialog_select_authentication-method'
                                                     id='authenticationMethod'
-                                                    variant='underlined'>
+                                                    variant='outlined'>
                                                     <SelectValue placeholder={authenticationMethod} />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -430,6 +444,7 @@ const CreateUserFormInner: React.FC<{
                                                             <Input
                                                                 {...field}
                                                                 id='secret'
+                                                                variant='outlined'
                                                                 type='password'
                                                                 placeholder='Initial Password'
                                                             />
@@ -448,17 +463,13 @@ const CreateUserFormInner: React.FC<{
                                                     <div className='flex flex-row items-center'>
                                                         <FormItem className='flex flex-row my-3'>
                                                             <FormControl>
-                                                                <Checkbox
+                                                                <CheckboxWithLabel
+                                                                    label='Force Password Reset?'
                                                                     id='needsPasswordReset'
                                                                     checked={field.value}
                                                                     onCheckedChange={field.onChange}
                                                                 />
                                                             </FormControl>
-                                                            <FormLabel
-                                                                htmlFor='needsPasswordReset'
-                                                                className='pl-2 font-medium !text-sm'>
-                                                                Force Password Reset?
-                                                            </FormLabel>
                                                         </FormItem>
                                                     </div>
                                                 )}
@@ -524,7 +535,7 @@ const CreateUserFormInner: React.FC<{
                                 <Button
                                     type='button'
                                     disabled={isLoading}
-                                    variant='tertiary'
+                                    variant='secondary'
                                     data-testid='create-user-dialog_button-cancel'>
                                     Cancel
                                 </Button>

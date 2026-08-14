@@ -19,22 +19,23 @@ package v2
 import (
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_SetNodeProperties(t *testing.T) {
 	tests := []struct {
-		name     string
-		nodes    []*graph.Node
-		expected model.EnvironmentSelectors
+		name                    string
+		nodes                   []*graph.Node
+		kindToSchemaEnvironment model.EnvironmentKindsToEnvironment
+		expected                model.EnvironmentSelectors
 	}{
 		{
 			name: "basic case",
@@ -52,10 +53,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "active-directory",
-					Name:      "Node1",
-					ObjectID:  "1",
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "active-directory"},
+					Name:                  "Node1",
+					ObjectID:              "1",
+					Collected:             false,
 				},
 			},
 		},
@@ -75,10 +76,10 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "azure",
-					Name:      "Node2",
-					ObjectID:  "2",
-					Collected: true,
+					EnvironmentProperties: model.EnvironmentProperties{Type: "azure"},
+					Name:                  "Node2",
+					ObjectID:              "2",
+					Collected:             true,
 				},
 			},
 		},
@@ -93,10 +94,47 @@ func Test_SetNodeProperties(t *testing.T) {
 			},
 			expected: model.EnvironmentSelectors{
 				{
-					Type:      "",
-					Name:      graphschema.DefaultMissingName,
-					ObjectID:  graphschema.DefaultMissingObjectId,
-					Collected: false,
+					EnvironmentProperties: model.EnvironmentProperties{},
+					Name:                  graphschema.DefaultMissingName,
+					ObjectID:              graphschema.DefaultMissingObjectId,
+					Collected:             false,
+				},
+			},
+		},
+		{
+			name: "opengraph environment kind name and display name",
+			nodes: []*graph.Node{
+				{
+					ID: 3,
+					Properties: &graph.Properties{
+						Map: map[string]any{
+							common.ObjectID.String():  "3",
+							common.Name.String():      "Node3",
+							common.Collected.String(): true,
+						},
+					},
+					Kinds: graph.Kinds{graph.StringKind("dogpark_LargeDogArea")},
+				},
+			},
+			kindToSchemaEnvironment: model.EnvironmentKindsToEnvironment{
+				"dogpark_LargeDogArea": model.SchemaEnvironment{
+					SchemaExtensionDisplayName: "Dog Park Management System",
+					EnvironmentKindId:          101,
+					EnvironmentKindName:        "dogpark_LargeDogArea",
+					EnvironmentKindDisplayName: "Large Dog Area",
+				},
+			},
+			expected: model.EnvironmentSelectors{
+				{
+					EnvironmentProperties: model.EnvironmentProperties{
+						Type:            "Dog Park Management System",
+						KindId:          null.Int32From(101),
+						KindName:        null.StringFrom("dogpark_LargeDogArea"),
+						KindDisplayName: null.StringFrom("Large Dog Area"),
+					},
+					Name:      "Node3",
+					ObjectID:  "3",
+					Collected: true,
 				},
 			},
 		},
@@ -104,7 +142,7 @@ func Test_SetNodeProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := BuildEnvironmentSelectors(tt.nodes, map[string]string{})
+			got := BuildEnvironmentSelectors(tt.nodes, tt.kindToSchemaEnvironment)
 			assert.Equal(t, tt.expected, got, tt.name)
 		})
 	}
@@ -122,7 +160,7 @@ func Test_filterAndFormatSearchResults(t *testing.T) {
 		}
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
@@ -147,7 +185,7 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
@@ -169,7 +207,7 @@ func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 		}
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("CustomKind", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("CustomKind", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, nil, primaryDisplayKinds)
 
@@ -205,7 +243,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments(t *testing.T) {
 
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, []string{"54321"}, primaryDisplayKinds)
 
@@ -246,7 +284,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsEmpty(t *testing.T) {
 
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, []string{}, primaryDisplayKinds)
 
@@ -280,7 +318,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_domainSIDFail(t *testi
 		input               = []*graph.Node{&inputNodeProp1, &inputNodeProp2, &inputNodeProp3}
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	result := filterAndFormatSearchResults(input, []string{"54321"}, primaryDisplayKinds)
 	require.Len(t, result, 0)
@@ -314,7 +352,7 @@ func Test_filterAndFormatSearchResults_filterEnvironments_tenantIDFail(t *testin
 
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	result := filterAndFormatSearchResults(input, []string{"azure12345"}, primaryDisplayKinds)
 	require.Len(t, result, 0)
@@ -348,7 +386,7 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 
 		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 	)
-	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome)
+	primaryDisplayKinds.Add("Person", "person-half-dress", "ff91af", graphschema.DisplayNodeTypeFontAwesome, false)
 
 	actual := filterAndFormatSearchResults(input, []string{"og-12345"}, primaryDisplayKinds)
 

@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen, waitFor } from '@testing-library/react';
+import { AppNameProvider } from '../providers/AppNameProvider';
 import { render } from '../test-utils';
-import PageWithTitle, { AppNameProvider } from './PageWithTitle';
+import PageWithTitle from './PageWithTitle';
 
 describe('PageWithTitle', () => {
     it('sets the document title using the default app name', async () => {
@@ -42,5 +43,23 @@ describe('PageWithTitle', () => {
     it('renders the title as a visible h1 heading', () => {
         render(<PageWithTitle title='Bloodhound Page' />);
         expect(screen.getByRole('heading', { level: 1, name: 'Bloodhound Page' })).toBeInTheDocument();
+    });
+
+    it('uses an xl max width and gutters by default', () => {
+        render(<PageWithTitle data-testid='page-with-title' />);
+
+        const page = screen.getByTestId('page-with-title');
+
+        expect(page).toHaveClass('MuiContainer-maxWidthXl');
+        expect(page).not.toHaveClass('MuiContainer-disableGutters');
+    });
+
+    it('removes the max width but preserves gutters when fullWidth is enabled', () => {
+        render(<PageWithTitle data-testid='page-with-title' fullWidth />);
+
+        const page = screen.getByTestId('page-with-title');
+
+        expect(page).not.toHaveClass('MuiContainer-maxWidthXl');
+        expect(page).not.toHaveClass('MuiContainer-disableGutters');
     });
 });

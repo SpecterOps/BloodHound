@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable, ScrollArea } from 'doodle-ui';
+import { DataTable } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
@@ -24,14 +24,14 @@ import TableControls from './TableControls';
 import {
     DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     ExploreTableProps,
-    MungedTableRowWithId,
+    MungedTableRowWithGraphId,
     createColumnStateFromKeys,
     defaultColumns,
     getExploreTableData,
 } from './explore-table-utils';
 import useExploreTableRowsAndColumns from './useExploreTableRowsAndColumns';
 
-const MemoDataTable = memo(DataTable<MungedTableRowWithId, any>);
+const MemoDataTable = memo(DataTable<MungedTableRowWithGraphId, any>);
 
 type DataTableProps = React.ComponentProps<typeof MemoDataTable>;
 
@@ -53,7 +53,7 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
 };
 
 const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.bhGraphId,
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -117,9 +117,9 @@ const ExploreTable = ({
     );
 
     const handleRowClick = useCallback(
-        (row: MungedTableRowWithId) => {
-            if (row.id !== selectedItem) {
-                setSelectedItem(row.id);
+        (row: MungedTableRowWithGraphId) => {
+            if (row.bhGraphId !== selectedItem) {
+                setSelectedItem(row.bhGraphId);
             } else {
                 clearSelectedItem();
             }
@@ -203,31 +203,30 @@ const ExploreTable = ({
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <ScrollArea>
-                    <MemoDataTable
-                        TableHeaderProps={tableHeaderProps}
-                        TableHeadProps={tableHeadProps}
-                        TableProps={tableProps}
-                        TableCellProps={tableCellProps}
-                        columnPinning={columnPinning}
-                        setColumnPinning={handleSetColumnPinning}
-                        onRowClick={handleRowClick}
-                        selectedRow={selectedItem || undefined}
-                        data={sortedFilteredRows}
-                        columns={tableColumns as DataTableProps['columns']}
-                        tableOptions={tableOptions}
-                        virtualizationOptions={virtualizationOptions}
-                        columnSizing={columnSizing}
-                        onColumnSizingChange={setColumnSizing}
-                        columnOrder={columnOrder}
-                        onColumnOrderChange={(newOrder) => {
-                            setColumnOrder(newOrder);
-                        }}
-                        growLastColumn
-                        enableResizing
-                        enableDragAndDrop
-                    />
-                </ScrollArea>
+                <MemoDataTable
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columnPinning={columnPinning}
+                    setColumnPinning={handleSetColumnPinning}
+                    onRowClick={handleRowClick}
+                    selectedRow={selectedItem || undefined}
+                    data={sortedFilteredRows}
+                    columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={tableOptions}
+                    virtualizationOptions={virtualizationOptions}
+                    columnSizing={columnSizing}
+                    onColumnSizingChange={setColumnSizing}
+                    columnOrder={columnOrder}
+                    onColumnOrderChange={(newOrder) => {
+                        setColumnOrder(newOrder);
+                    }}
+                    className='overflow-auto h-full'
+                    growLastColumn
+                    enableResizing
+                    enableDragAndDrop
+                />
             </div>
         </div>
     );

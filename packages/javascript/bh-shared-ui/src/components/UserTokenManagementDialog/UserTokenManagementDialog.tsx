@@ -27,7 +27,7 @@ import {
     TableHead,
     TableRow,
 } from '@mui/material';
-import { Button, Typography } from 'doodle-ui';
+import { Button, TextButton, Typography } from 'doodle-ui';
 import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
@@ -155,9 +155,7 @@ const UserTokenManagementDialog: React.FC<{
                                 </TableCell>
                             )}
                             <TableCell>
-                                <Button variant={'text'} size='small' onClick={() => openRevokeTokenDialog(row)}>
-                                    Revoke
-                                </Button>
+                                <TextButton onClick={() => openRevokeTokenDialog(row)}>Revoke</TextButton>
                             </TableCell>
                         </TableRow>
                     );
@@ -201,7 +199,7 @@ const UserTokenManagementDialog: React.FC<{
                 </DialogContent>
                 <DialogActions>
                     <Button
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={onClose}
                         data-testid='user-token-management-dialog_button-close'>
                         Close

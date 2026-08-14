@@ -22,8 +22,8 @@ import { EdgeInfoItems, useEdgeInfoItems } from '../../../hooks/useExploreGraph/
 import VirtualizedNodeList, { NormalizedNodeItem } from '../../VirtualizedNodeList';
 
 type ACLInheritanceListProps = {
-    sourceDBId: number;
-    targetDBId: number;
+    sourceDBId: number | undefined;
+    targetDBId: number | undefined;
     edgeName: string;
     inheritanceHash: string;
 };

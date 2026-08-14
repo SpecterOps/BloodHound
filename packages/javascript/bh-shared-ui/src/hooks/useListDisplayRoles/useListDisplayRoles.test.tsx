@@ -27,7 +27,7 @@ const MockRoles: Role[] = [
         permissions: [
             {
                 authority: 'graphdb',
-                name: 'Ingest',
+                name: 'IngestManage',
                 id: 30,
             },
         ],
@@ -123,7 +123,7 @@ const MockRoles: Role[] = [
         permissions: [
             {
                 authority: 'graphdb',
-                name: 'Ingest',
+                name: 'IngestManage',
                 id: 30,
             },
             {
@@ -205,7 +205,7 @@ const MockRoles: Role[] = [
         permissions: [
             {
                 authority: 'graphdb',
-                name: 'Ingest',
+                name: 'IngestManage',
                 id: 30,
             },
             {

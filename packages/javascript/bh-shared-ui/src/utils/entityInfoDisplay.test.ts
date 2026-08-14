@@ -20,7 +20,6 @@ import {
     AzureKindProperties,
     CommonKindProperties,
 } from '../graphSchema';
-import { SelectedNode } from '../types';
 import {
     AD_NEVER_VALUE,
     AD_UNKNOWN_VALUE,
@@ -157,17 +156,34 @@ describe('validating a node property against the shared generated schema', () =>
 });
 
 describe('Evaluating the entity display name from a given entity', () => {
-    it('should handle an undefined or null entity', () => {
-        expect(getEntityName(null)).toBe(NoEntitySelectedHeader);
+    it('should handle an undefined entity', () => {
         expect(getEntityName(undefined)).toBe(NoEntitySelectedHeader);
     });
     it('should handle an entity that has an empty name property', () => {
-        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: '' })).toBe('Name not found');
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { name: '' },
+            })
+        ).toBe('Name not found');
     });
     it('should handle an entity that has no name property', () => {
-        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User } as SelectedNode)).toBe('Name not found');
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: {},
+            })
+        ).toBe('Name not found');
     });
     it('should handle the well formed entities', () => {
-        expect(getEntityName({ id: '1', type: ActiveDirectoryNodeKind.User, name: 'foo' })).toBe('foo');
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { name: 'foo' },
+            })
+        ).toBe('foo');
     });
 });

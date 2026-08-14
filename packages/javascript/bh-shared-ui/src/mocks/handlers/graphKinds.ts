@@ -31,3 +31,8 @@ export const mockKindsHandler = (nodeKinds?: string[], edgeKinds?: string[]) =>
 
         return res(ctx.json({ data: createGraphKinds(nodeKinds, edgeKinds) }));
     });
+
+export const mockSourceKindsHandler = () =>
+    rest.get('/api/v2/graphs/source-kinds', (_req, res, ctx) => {
+        return res(ctx.json({ data: { kinds: [] } }));
+    });

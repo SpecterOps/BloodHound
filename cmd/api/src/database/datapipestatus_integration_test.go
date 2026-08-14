@@ -77,3 +77,19 @@ func TestDatabase_UpdateLastAnalysisCompleteTime(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, status.LastCompleteAnalysisAt.IsZero())
 }
+
+func TestDatabase_SetLastGraphOptimizeTime(t *testing.T) {
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	status, err := testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.True(t, status.LastCompleteOptimizeAt.IsZero())
+
+	err = testSuite.BHDatabase.SetLastGraphOptimizeTime(testSuite.Context)
+	require.NoError(t, err)
+
+	status, err = testSuite.BHDatabase.GetDatapipeStatus(testSuite.Context)
+	require.NoError(t, err)
+	require.False(t, status.LastCompleteOptimizeAt.IsZero())
+}

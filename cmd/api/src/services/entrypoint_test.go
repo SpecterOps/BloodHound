@@ -25,9 +25,12 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func runtimeDependencyTestConfig(t *testing.T) config.Configuration {
@@ -66,4 +69,51 @@ func TestCreateRuntimeDependenciesInitializesDefaultFileServices(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, fileService)
 	}
+}
+
+func TestPreMigrationDaemonsResolvesRetainedFileService(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns error when retained file service is missing", func(t *testing.T) {
+		t.Parallel()
+
+		var (
+			mockCtrl        = gomock.NewController(t)
+			mockFileService = storagemocks.NewMockFileService(mockCtrl)
+			connections     = bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]{}
+		)
+
+		fileServiceResolver, err := storageService.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
+			storage.FileServiceIngest: mockFileService,
+		})
+		require.NoError(t, err)
+
+		_, err = services.PreMigrationDaemons(context.Background(), config.Configuration{}, connections, bootstrap.RuntimeDependencies{
+			FileServiceResolver: fileServiceResolver,
+		})
+
+		require.ErrorContains(t, err, "error resolving FileServiceRetained")
+	})
+
+	t.Run("creates daemon when retained file service resolves", func(t *testing.T) {
+		t.Parallel()
+
+		var (
+			mockCtrl            = gomock.NewController(t)
+			mockRetainedService = storagemocks.NewMockFileService(mockCtrl)
+			connections         = bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]{}
+		)
+
+		fileServiceResolver, err := storageService.NewFileServiceResolver(map[storage.FileServiceName]storage.FileService{
+			storage.FileServiceRetained: mockRetainedService,
+		})
+		require.NoError(t, err)
+
+		daemonInstances, err := services.PreMigrationDaemons(context.Background(), config.Configuration{}, connections, bootstrap.RuntimeDependencies{
+			FileServiceResolver: fileServiceResolver,
+		})
+
+		require.NoError(t, err)
+		require.Len(t, daemonInstances, 1)
+	})
 }

@@ -65,6 +65,7 @@ type UnifiedNode struct {
 
 // UnifiedEdge represents a single path segment in a graph containing a minimal set of attributes for graph rendering
 type UnifiedEdge struct {
+	ID         string         `json:"id"`
 	Source     string         `json:"source"`
 	Target     string         `json:"target"`
 	Label      string         `json:"label"`
@@ -115,6 +116,7 @@ func FromDAWGSRelationship(includeProperties bool) func(*graph.Relationship) Uni
 		}
 
 		return UnifiedEdge{
+			ID:         rel.ID.String(),
 			Source:     rel.StartID.String(),
 			Target:     rel.EndID.String(),
 			Kind:       rel.Kind.String(),

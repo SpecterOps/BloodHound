@@ -37,7 +37,7 @@ import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import { RulesLink } from '../../fragments';
-import { getErrorMessage, handleError } from '../utils';
+import { getErrorMessage, handleError, SEEDS_ARE_REQUIRED } from '../utils';
 import BasicInfo from './BasicInfo';
 import RuleFormContext from './RuleFormContext';
 import SeedSelection from './SeedSelection';
@@ -89,7 +89,9 @@ const parseAutoCertifyValue = (stringValue: string | undefined): AssetGroupTagSe
 const initialState: RuleFormState = {
     ruleType: SeedTypeObjectId,
     seeds: [],
+    prevSeeds: [],
     selectedObjects: [],
+    prevSelectedObjects: [],
     autoCertify: AssetGroupTagSelectorAutoCertifyDisabled,
     cypherQueryYieldsNoResults: false,
     staleCypherPreview: false,
@@ -129,7 +131,24 @@ const reducer = (state: RuleFormState, action: Action): RuleFormState => {
         case 'set-selected-objects':
             return { ...state, selectedObjects: action.nodes };
         case 'set-rule-type':
-            return { ...state, ruleType: action.ruleType, seeds: [], selectedObjects: [] };
+            return {
+                ...state,
+                ruleType: action.ruleType,
+                /**
+                 * Writing a cypher query (or even finding the right object id) is work that a user doesn't want to lose.
+                 * Therefore, as we toggle between ObjectId and Cypher rule type, we hold onto that work in prevSeeds
+                 * (and always hydrate this work from prevSeeds if it exists).
+                 * Tthis only meet expectations because we have exactly 2 rule types.
+                 * when we introduce a third rule type, simple toggling will be insufficient
+                 * and we will need to store all 3 seed types explicitly.
+                 * That's because we reuse seeds state for _both_ rule types,
+                 * even though we store `selectedObjects` separately
+                 */
+                seeds: state.prevSeeds,
+                prevSeeds: state.seeds,
+                selectedObjects: state.prevSelectedObjects,
+                prevSelectedObjects: state.selectedObjects,
+            };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
         case 'set-cypher-no-results-validation-state':
@@ -159,6 +178,10 @@ const RuleForm: FC = () => {
     const patchRuleMutation = usePatchRule(tagId);
     const createRuleMutation = useCreateRule(tagId);
 
+    const setObjectIdError = useCallback(() => {
+        form.setError('seeds', { message: 'Please add at least one object to this Rule.' });
+    }, [form]);
+
     const handlePatchRule = useCallback(async () => {
         try {
             if (!tagId || !ruleId) throw new Error(`Missing required entity IDs; tagId: ${tagId}, ruleId: ${ruleId}`);
@@ -166,6 +189,10 @@ const RuleForm: FC = () => {
             const diffedValues = diffValues(ruleQuery.data, { ...form.getValues(), seeds });
 
             const stalePreviewErrorMessage = getErrorMessage('seeds are required', 'updating', 'rule', ruleType);
+
+            if (ruleType === SeedTypeObjectId && seeds.length === 0) {
+                setObjectIdError();
+            }
 
             if (isEmpty(diffedValues)) {
                 const errorMessage = staleCypherPreview ? stalePreviewErrorMessage : 'No changes to rule detected';
@@ -216,6 +243,7 @@ const RuleForm: FC = () => {
         form,
         seeds,
         staleCypherPreview,
+        setObjectIdError,
     ]);
 
     const handleCreateRule = useCallback(async () => {
@@ -235,10 +263,16 @@ const RuleForm: FC = () => {
             });
 
             navigate(tagDetailsLink(tagId));
-        } catch (error) {
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.errors?.[0]?.message;
+            const missingObjectError = ruleType === SeedTypeObjectId && errorMessage === SEEDS_ARE_REQUIRED;
+
+            if (missingObjectError) {
+                setObjectIdError();
+            }
             handleError(error, 'creating', 'rule', addNotification, { ruleType });
         }
-    }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink]);
+    }, [tagId, ruleType, form, seeds, createRuleMutation, addNotification, navigate, tagDetailsLink, setObjectIdError]);
 
     const createOrUpdateRule = useCallback(() => {
         if (isUpdate) {
