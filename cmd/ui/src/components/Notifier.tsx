@@ -13,12 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, SvgIcon } from '@mui/material';
 import { NotificationSnackbar } from 'bh-shared-ui';
 import { SnackbarKey, useSnackbar } from 'notistack';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { removeSnackbar } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -39,24 +36,6 @@ const Notifier: React.FC = () => {
         displayed = [...displayed.filter((key) => id !== key)];
     };
 
-    const clickSnackbarDismiss = useCallback(
-        (key: string) => {
-            closeSnackbar(key);
-        },
-        [closeSnackbar]
-    );
-
-    const action = useCallback(
-        (key: string) => (
-            <IconButton size='small' color='inherit' onClick={() => clickSnackbarDismiss(key)}>
-                <SvgIcon>
-                    <FontAwesomeIcon icon={faTimes} />
-                </SvgIcon>
-            </IconButton>
-        ),
-        [clickSnackbarDismiss]
-    );
-
     useEffect(() => {
         notifications.forEach(({ key, message, options = {}, dismissed = false }) => {
             if (dismissed) {
@@ -65,11 +44,6 @@ const Notifier: React.FC = () => {
             }
 
             if (displayed.includes(key)) return;
-
-            options = {
-                ...options,
-                action: action(key),
-            };
 
             enqueueSnackbar(message, {
                 key,
@@ -91,7 +65,7 @@ const Notifier: React.FC = () => {
             // keep track of snackbars that we've displayed
             storeDisplayed(key);
         });
-    }, [notifications, closeSnackbar, enqueueSnackbar, dispatch, action]);
+    }, [notifications, closeSnackbar, enqueueSnackbar, dispatch]);
 
     return null;
 };
