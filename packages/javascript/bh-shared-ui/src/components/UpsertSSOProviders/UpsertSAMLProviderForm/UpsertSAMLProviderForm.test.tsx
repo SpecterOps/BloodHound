@@ -33,7 +33,7 @@ describe('UpsertSAMLProviderForm', () => {
         const testOnSubmit = vi.fn();
         render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
-        expect(screen.getByLabelText('SAML Provider Name')).toBeInTheDocument();
+        expect(screen.getByLabelText(/^SAML Provider Name/)).toBeInTheDocument();
 
         expect(screen.getByLabelText('Choose File')).toBeInTheDocument();
 
@@ -69,6 +69,8 @@ describe('UpsertSAMLProviderForm', () => {
 
         await waitFor(() => expect(screen.getByText('Metadata is required')).toBeInTheDocument());
 
+        expect(screen.getByLabelText(/^SAML Provider Name/)).toHaveFocus();
+
         expect(testOnSubmit).not.toHaveBeenCalled();
     });
 
@@ -80,12 +82,22 @@ describe('UpsertSAMLProviderForm', () => {
         const validMetadata = new File([], 'test-metadata.xml');
         render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} roles={testRoles} />);
 
-        await user.type(screen.getByLabelText('SAML Provider Name'), validProviderName);
+        await user.type(screen.getByLabelText(/^SAML Provider Name/), validProviderName);
 
         await user.upload(screen.getByLabelText('Choose File'), validMetadata);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         await waitFor(() => expect(testOnSubmit).toHaveBeenCalled());
+    });
+
+    it('should focus the metadata control when metadata is the first invalid field', async () => {
+        const user = userEvent.setup();
+        render(<UpsertSAMLProviderForm onClose={vi.fn()} onSubmit={vi.fn()} />);
+
+        await user.type(screen.getByLabelText(/^SAML Provider Name/), 'test-provider-name');
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Choose File' })).toHaveFocus());
     });
 });

@@ -74,7 +74,7 @@ const UpsertOIDCProviderForm: FC<{
     };
 
     return (
-        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' noValidate onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -88,9 +88,10 @@ const UpsertOIDCProviderForm: FC<{
                                     message: 'OIDC Provider Name must be alphanumeric.',
                                 },
                             }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
+                                    inputRef={ref}
                                     id='name'
                                     variant='standard'
                                     required
@@ -110,9 +111,10 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='client_id'
                             rules={{ required: 'Client ID is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
+                                    inputRef={ref}
                                     id='clientId'
                                     variant='standard'
                                     fullWidth
@@ -130,9 +132,10 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='issuer'
                             rules={{ required: 'Issuer is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
+                                    inputRef={ref}
                                     id='issuer'
                                     variant='standard'
                                     fullWidth

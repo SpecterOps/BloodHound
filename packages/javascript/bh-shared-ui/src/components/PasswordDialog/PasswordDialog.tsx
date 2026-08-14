@@ -109,7 +109,7 @@ const PasswordDialog: React.FC<{
                 'data-testid': 'password-dialog',
             }}>
             <DialogTitle>{'Change Password'}</DialogTitle>
-            <form autoComplete='off' onSubmit={handleSubmit(handleOnSave)}>
+            <form autoComplete='off' noValidate onSubmit={handleSubmit(handleOnSave)}>
                 <DialogContent>
                     <Grid container spacing={2}>
                         {!!errors.password && (
@@ -128,9 +128,10 @@ const PasswordDialog: React.FC<{
                                     rules={{
                                         required: 'Current password is required',
                                     }}
-                                    render={({ field }) => (
+                                    render={({ field: { ref, ...field } }) => (
                                         <TextField
                                             {...field}
+                                            inputRef={ref}
                                             variant='standard'
                                             id='currentPassword'
                                             label='Current Password'
@@ -156,9 +157,10 @@ const PasswordDialog: React.FC<{
                                         getValues('currentPassword') !== value ||
                                         'New password must not match current password',
                                 }}
-                                render={({ field }) => (
+                                render={({ field: { ref, ...field } }) => (
                                     <TextField
                                         {...field}
+                                        inputRef={ref}
                                         variant='standard'
                                         id='password'
                                         label='New Password'
@@ -180,9 +182,10 @@ const PasswordDialog: React.FC<{
                                     required: 'Confirmation password is required',
                                     validate: (value) => getValues('password') === value || 'Password does not match',
                                 }}
-                                render={({ field }) => (
+                                render={({ field: { ref, ...field } }) => (
                                     <TextField
                                         {...field}
+                                        inputRef={ref}
                                         variant='standard'
                                         id='confirmPassword'
                                         label='New Password Confirmation'
