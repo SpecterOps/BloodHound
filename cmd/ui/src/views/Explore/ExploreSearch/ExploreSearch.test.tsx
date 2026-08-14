@@ -320,7 +320,7 @@ describe('ExploreSearch handling of cypher query responses', () => {
         mockCypherEndpoint(singleNodeGraphResponse);
         const { screen } = await setupCypherSearch();
 
-        expect(await screen.findByTestId('cypher-search-section').not.toBeInTheDocument());
+        expect((await screen.findByTestId('cypher-search-section')).not.toBeInTheDocument());
     });
 
     it('clears the selected item and closes the search widget when the query returns multiple nodes', async () => {
@@ -328,6 +328,6 @@ describe('ExploreSearch handling of cypher query responses', () => {
         const { screen } = await setupCypherSearch('&selectedItem=999');
 
         expect(window.location.search).not.toContain('selectedItem=');
-        expect(await screen.findByTestId('cypher-search-section').not.toBeInTheDocument());
+        expect((await screen.findByTestId('cypher-search-section')).not.toBeInTheDocument());
     });
 });
