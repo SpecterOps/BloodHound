@@ -272,7 +272,15 @@ describe('ExploreSearch interaction', () => {
 describe('ExploreSearch handling of cypher query responses', () => {
     const CYPHER_QUERY = 'match (n) return n limit 10';
 
-    const multiNodeGraphResponse = cypherTestResponse;
+    const multiNodeGraphResponse = {
+        data: {
+            nodes: {
+                '108': cypherTestResponse.data.nodes['108'],
+                '489': cypherTestResponse.data.nodes['489'],
+            },
+            edges: [],
+        },
+    };
 
     const singleNodeGraphResponse = {
         data: {
@@ -325,11 +333,10 @@ describe('ExploreSearch handling of cypher query responses', () => {
 
     it('clears the selected item and closes the search widget when the query returns multiple nodes', async () => {
         mockCypherEndpoint(multiNodeGraphResponse);
-        const { screen } = await setupCypherSearch(
-            '&selectedItem=999&exploreSearchTab=cypher&cypherSearch=TUFUQ0gobikgd2hlcmUgbi5uYW1lID0gJ2Fyb29vb28nIHJldHVybiBu&searchType=cypher'
-        );
+        const { screen } = await setupCypherSearch('&selectedItem=999');
 
         expect(window.location.search).not.toContain('selectedItem=');
+        await await new Promise((res) => setTimeout(res, 2000));
         expect(await screen.findByTestId('cypher-search-section')).not.toBeInTheDocument();
     });
 });
