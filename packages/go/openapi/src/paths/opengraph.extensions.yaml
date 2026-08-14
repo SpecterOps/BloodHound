@@ -50,7 +50,7 @@ put:
                       title: "Overview"
                       position: 1
                       markdown:
-                        content: "This is an overview panel for Node Kind 1"
+                        content: "This is an overview panel for **{{ .Properties.name | upper }}** (node {{ .NodeID }})"
                     details:
                       title: "Additional Details"
                       position: 2
@@ -75,7 +75,7 @@ put:
                       title: "Abuse Info"
                       position: 1
                       markdown:
-                        content: "Information about how this relationship can be abused"
+                        content: "Information about how the {{ .Kind.Name }} relationship from {{ .Source.Properties.name }} to {{ .Target.Properties.name }} can be abused"
               environments:
                 - environment_kind: OGE_Environment_Kind
                   source_kind: OGExtension
