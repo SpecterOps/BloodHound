@@ -116,7 +116,7 @@ const SearchCurrentNodes: FC<{
     return (
         <div ref={containerRef}>
             <div className={cn('bg-neutral-2 shadow-outer-1', className)}>
-                <div className={cn('overflow-auto max-h-80', { 'mb-4': items.length === 0 })}>
+                <div className={cn('overflow-auto max-h-80')}>
                     <ul
                         data-testid={'current-results-list'}
                         {...getMenuProps({
@@ -134,7 +134,7 @@ const SearchCurrentNodes: FC<{
                         }
                         {items.length === 0 && inputValue && (
                             <li
-                                className='text-sm opacity-70'
+                                className='text-sm opacity-70 mb-2'
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,

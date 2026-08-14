@@ -13,30 +13,29 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Badge } from 'doodle-ui';
+import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import React, { HTMLProps } from 'react';
-import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
-import { SelectedNode } from '../../types';
+import { usePrimaryKind } from '../../hooks';
 import { EntityInfoDataTableProps, NoEntitySelectedMessage, cn, getEntityName } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
+import { RoleBasedFilterBadge } from '../RoleBasedFilterBadge';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
+type EntityTable = React.FC<EntityInfoDataTableProps>;
+
 export type EntityTables = {
     sectionProps: EntityInfoDataTableProps;
-    TableComponent: React.FC<EntityInfoDataTableProps>;
+    TableComponent: EntityTable;
 }[];
 
 export interface EntityInfoPanelProps {
-    DataTable: React.FC<EntityInfoDataTableProps>;
-    selectedNode?: SelectedNode | null;
+    DataTable: EntityTable;
+    selectedNode?: NodeDetails | NodeDetailsWithInfo;
     className?: HTMLProps<HTMLDivElement>['className'];
     additionalTables?: EntityTables;
     priorityTables?: EntityTables;
     showPlaceholderMessage?: boolean;
-    showFilteringBanner?: boolean;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
@@ -46,10 +45,8 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     priorityTables,
     DataTable,
     showPlaceholderMessage = false,
-    showFilteringBanner = false,
 }) => {
-    const isRoleBasedFiltering = useRoleBasedFiltering();
-
+    const primaryKind = usePrimaryKind(selectedNode?.kinds ?? []);
     return (
         <div
             className={cn(
@@ -57,28 +54,17 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                 className
             )}
             data-testid='explore_entity-information-panel'>
-            {showFilteringBanner && isRoleBasedFiltering && (
-                <Badge
-                    data-testid='explore_entity-information-panel-role-based-filtering-badge'
-                    variant='fill'
-                    className='px-2 py-1'
-                    color='primary'
-                    icon={<FontAwesomeIcon icon={faEyeSlash} className='ml-1 mr-3' />}
-                    label='Role-based access filtering applied'
-                />
-            )}
+            <RoleBasedFilterBadge />
             <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
-                <Header name={getEntityName(selectedNode)} nodeType={selectedNode?.type} />
+                <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
             </div>
             <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}
-                        id={selectedNode.id}
-                        nodeType={selectedNode.type}
-                        databaseId={selectedNode.graphId}
                         priorityTables={priorityTables}
                         additionalTables={additionalTables}
+                        selectedNode={selectedNode}
                     />
                 ) : (
                     <p className='text-sm'>

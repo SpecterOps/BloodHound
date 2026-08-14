@@ -221,7 +221,7 @@ const PasswordDialog: React.FC<{
                 <DialogActions>
                     <Button
                         type='button'
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={onClose}
                         data-testid='password-dialog_button-close'>
                         Cancel

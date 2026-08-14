@@ -51,6 +51,7 @@ import (
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 )
@@ -85,7 +86,7 @@ func ConnectDatabases(ctx context.Context, cfg config.Configuration) (bootstrap.
 // are necessary for the application.
 func CreateRuntimeDependencies(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch]) (bootstrap.RuntimeDependencies, error) {
 	dependencies := bootstrap.RuntimeDependencies{}
-	if fileServices, err := storageService.NewDefaultFileServices(cfg); err != nil {
+	if fileServices, err := storageService.NewDefaultFileServices(ctx, cfg); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file services: %w", err)
 	} else if fileServiceResolver, err := storageService.NewFileServiceResolver(fileServices); err != nil {
 		return dependencies, fmt.Errorf("failed to initialize file service resolver: %w", err)
@@ -180,10 +181,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", "", "", "", "", ""))
 			authenticator          = api.NewAuthenticator(cfg, connections.RDMS, api.NewAuthExtensions(cfg, connections.RDMS))
 			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS, connections.Graph)
+			alertPublisher         = alerts.NewAlertEventPublisher()
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
 		modules.Register(modules.Deps{
 			Router: &routerInst,
@@ -192,6 +194,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
 			},
+			DogTags: dogtagsService,
 		})
 
 		// Set neo4j batch and flush sizes

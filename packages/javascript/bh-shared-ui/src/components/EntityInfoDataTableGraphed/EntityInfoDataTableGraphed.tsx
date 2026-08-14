@@ -13,35 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { PaginatedResponse } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
 import { useExploreParams } from '../../hooks';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints, getEntityQueryCount } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
-
-function getCount<T>(
-    queryData: Array<PromiseFulfilledResult<PaginatedResponse<T>>> | PaginatedResponse<T> | undefined,
-    countLabel: string | undefined
-): number | undefined {
-    if (Array.isArray(queryData)) {
-        const fulfilledData = queryData.filter((result) => result.status === 'fulfilled').map((result) => result.value);
-
-        if (countLabel !== undefined) {
-            const labeledSection = fulfilledData.find((sectionData: any) => sectionData?.countLabel === countLabel);
-            return labeledSection?.count;
-        } else {
-            return fulfilledData.reduce((acc, val) => {
-                const sectionCount = val?.count ?? 0;
-                return acc + sectionCount;
-            }, 0);
-        }
-    } else if (queryData) {
-        return queryData?.count ?? 0;
-    }
-}
 
 export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     id,
@@ -102,7 +80,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const handleOnChange = (isOpen: boolean) => {
+    const handleChange = (isOpen: boolean) => {
         if (isOpen) handleSetGraph();
         else removeExpandedPanelSectionParams();
     };
@@ -122,11 +100,11 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const handleOnClick = (item: SelectedNode) => {
+    const handleClick = (item: SelectedNode) => {
         setNodeSearchParams(item);
     };
 
-    const count = getCount(countQuery.data, countLabel);
+    const count = getEntityQueryCount(countQuery.data, countLabel);
 
     return (
         <EntityInfoCollapsibleSection
@@ -136,12 +114,13 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
-            onChange={handleOnChange}>
+            onChange={handleChange}>
             {endpoint && (
                 <InfiniteScrollingTable
+                    key={id}
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
-                    onClick={handleOnClick}
+                    onClick={handleClick}
                 />
             )}
             {sections &&

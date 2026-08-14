@@ -119,7 +119,7 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 		err              error
 	)
 
-	driverName, err := tools.LookupGraphDriver(ctx, cfg)
+	driverName, err := tools.ResolveGraphDriver(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,7 @@ import {
     GLYPH_SCALE,
     GetIconInfo,
     IconDictionary,
+    REL_ID_PREFIX,
     TagGlyphs,
     Theme,
     getGlyphFromKinds,
@@ -239,7 +240,7 @@ const initGraphEdges = (
                 label: edge.label,
                 groupPosition: 0,
                 groupSize: 1,
-                exploreGraphId: edge.exploreGraphId || key,
+                exploreGraphId: key,
                 forceLabel: true,
                 ...themedOptions.labels,
             };
@@ -265,7 +266,7 @@ const initGraphEdges = (
                 edgeParams.groupSize = groupSize;
             }
 
-            graph.addEdgeWithKey(key, edge.source, edge.target, edgeParams);
+            graph.addEdgeWithKey(`${REL_ID_PREFIX}${edge.id}`, edge.source, edge.target, edgeParams);
         }
     }
 };

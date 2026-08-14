@@ -138,7 +138,7 @@ type GraphMigration interface {
 // display metadata from Postgres and write backfilled custom_node_kinds entries. It is intended to
 // be satisfied by database.Database
 type schemalessNodeKindBackfillData interface {
-	GetCustomNodeKinds(ctx context.Context, filters model.Filters) ([]model.CustomNodeKind, error)
+	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
 	GetGraphSchemaNodeKinds(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaNodeKinds, int, error)
 	CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error)
 }

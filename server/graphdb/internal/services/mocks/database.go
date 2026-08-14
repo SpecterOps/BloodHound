@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
+	"github.com/specterops/dawgs/graph"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -51,6 +52,89 @@ type MockDatabase_Expecter struct {
 
 func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 	return &MockDatabase_Expecter{mock: &_m.Mock}
+}
+
+// FetchNodesByObjectIDsAndKinds provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error) {
+	var tmpRet mock.Arguments
+	if len(objectIDs) > 0 {
+		tmpRet = _mock.Called(ctx, kinds, objectIDs)
+	} else {
+		tmpRet = _mock.Called(ctx, kinds)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for FetchNodesByObjectIDsAndKinds")
+	}
+
+	var r0 graph.NodeSet
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, graph.Kinds, ...string) (graph.NodeSet, error)); ok {
+		return returnFunc(ctx, kinds, objectIDs...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, graph.Kinds, ...string) graph.NodeSet); ok {
+		r0 = returnFunc(ctx, kinds, objectIDs...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(graph.NodeSet)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, graph.Kinds, ...string) error); ok {
+		r1 = returnFunc(ctx, kinds, objectIDs...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_FetchNodesByObjectIDsAndKinds_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FetchNodesByObjectIDsAndKinds'
+type MockDatabase_FetchNodesByObjectIDsAndKinds_Call struct {
+	*mock.Call
+}
+
+// FetchNodesByObjectIDsAndKinds is a helper method to define mock.On call
+//   - ctx context.Context
+//   - kinds graph.Kinds
+//   - objectIDs ...string
+func (_e *MockDatabase_Expecter) FetchNodesByObjectIDsAndKinds(ctx interface{}, kinds interface{}, objectIDs ...interface{}) *MockDatabase_FetchNodesByObjectIDsAndKinds_Call {
+	return &MockDatabase_FetchNodesByObjectIDsAndKinds_Call{Call: _e.mock.On("FetchNodesByObjectIDsAndKinds",
+		append([]interface{}{ctx, kinds}, objectIDs...)...)}
+}
+
+func (_c *MockDatabase_FetchNodesByObjectIDsAndKinds_Call) Run(run func(ctx context.Context, kinds graph.Kinds, objectIDs ...string)) *MockDatabase_FetchNodesByObjectIDsAndKinds_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 graph.Kinds
+		if args[1] != nil {
+			arg1 = args[1].(graph.Kinds)
+		}
+		var arg2 []string
+		var variadicArgs []string
+		if len(args) > 2 {
+			variadicArgs = args[2].([]string)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_FetchNodesByObjectIDsAndKinds_Call) Return(nodeSet graph.NodeSet, err error) *MockDatabase_FetchNodesByObjectIDsAndKinds_Call {
+	_c.Call.Return(nodeSet, err)
+	return _c
+}
+
+func (_c *MockDatabase_FetchNodesByObjectIDsAndKinds_Call) RunAndReturn(run func(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)) *MockDatabase_FetchNodesByObjectIDsAndKinds_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // GetKindByName provides a mock function for the type MockDatabase
@@ -115,6 +199,74 @@ func (_c *MockDatabase_GetKindByName_Call) Return(kind services.Kind, err error)
 }
 
 func (_c *MockDatabase_GetKindByName_Call) RunAndReturn(run func(ctx context.Context, name string) (services.Kind, error)) *MockDatabase_GetKindByName_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetKindInfos provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetKindInfos(ctx context.Context, kindName string) ([]services.KindInfo, error) {
+	ret := _mock.Called(ctx, kindName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetKindInfos")
+	}
+
+	var r0 []services.KindInfo
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]services.KindInfo, error)); ok {
+		return returnFunc(ctx, kindName)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []services.KindInfo); ok {
+		r0 = returnFunc(ctx, kindName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.KindInfo)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, kindName)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetKindInfos_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetKindInfos'
+type MockDatabase_GetKindInfos_Call struct {
+	*mock.Call
+}
+
+// GetKindInfos is a helper method to define mock.On call
+//   - ctx context.Context
+//   - kindName string
+func (_e *MockDatabase_Expecter) GetKindInfos(ctx interface{}, kindName interface{}) *MockDatabase_GetKindInfos_Call {
+	return &MockDatabase_GetKindInfos_Call{Call: _e.mock.On("GetKindInfos", ctx, kindName)}
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) Run(run func(ctx context.Context, kindName string)) *MockDatabase_GetKindInfos_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) Return(kindInfos []services.KindInfo, err error) *MockDatabase_GetKindInfos_Call {
+	_c.Call.Return(kindInfos, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetKindInfos_Call) RunAndReturn(run func(ctx context.Context, kindName string) ([]services.KindInfo, error)) *MockDatabase_GetKindInfos_Call {
 	_c.Call.Return(run)
 	return _c
 }

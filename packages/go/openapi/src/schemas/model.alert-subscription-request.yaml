@@ -30,6 +30,6 @@ properties:
   event_type:
     type: string
   version:
-    type: string
+    type: integer
   disabled:
     type: boolean

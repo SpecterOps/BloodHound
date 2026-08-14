@@ -89,6 +89,8 @@ const SeedSelection: FC<{
 
     const firstSeed = seeds.values().next().value;
 
+    const seedError = control.getFieldState('seeds')?.error?.message;
+
     return (
         <>
             <div
@@ -143,7 +145,7 @@ const SeedSelection: FC<{
                     </CardContent>
                 </Card>
                 {ruleType === SeedTypeObjectId ? (
-                    <ObjectSelect />
+                    <ObjectSelect errorMessage={seedError} />
                 ) : (
                     <PrivilegeZonesCypherEditor
                         onChange={setCypherQueryForExploreUrl}
@@ -154,7 +156,7 @@ const SeedSelection: FC<{
             </div>
             <div>
                 <SeedSelectionPreview exploreUrl={exploreUrl} seeds={seeds} ruleType={ruleType} />
-                <div className='flex justify-end gap-2 mt-6'>
+                <div className='flex justify-end gap-4 mt-6'>
                     <DeleteRuleButton
                         ruleId={ruleId}
                         ruleData={ruleQuery.data}
@@ -164,11 +166,11 @@ const SeedSelection: FC<{
                     />
                     <Button
                         data-testid='privilege-zones_save_rule-form_cancel-button'
-                        variant={'secondary'}
+                        variant='secondary'
                         onClick={() => navigate(-1)}>
                         Cancel
                     </Button>
-                    <Button data-testid='privilege-zones_save_rule-form_save-button' variant='secondary' type='submit'>
+                    <Button data-testid='privilege-zones_save_rule-form_save-button' variant='primary' type='submit'>
                         {ruleId === '' ? 'Create Rule' : 'Save Edits'}
                     </Button>
                 </div>

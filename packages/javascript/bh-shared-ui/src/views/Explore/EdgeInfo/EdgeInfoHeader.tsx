@@ -28,7 +28,7 @@ export interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
-    const { clearSelectedItem, selectedItem, selectedItemType } = useExploreSelectedItem();
+    const { clearSelectedItem, isHidden } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -36,8 +36,6 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
             expandedPanelSections: [],
         });
     };
-
-    const hiddenEdge = selectedItem?.includes('HIDDEN') && selectedItemType === 'edge';
 
     return (
         <div className='flex justify-between items-center text-sm font-bold'>
@@ -49,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
 
-            {hiddenEdge && <HiddenEntityIcon />}
+            {isHidden && <HiddenEntityIcon />}
 
             <h2 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
                 {name}

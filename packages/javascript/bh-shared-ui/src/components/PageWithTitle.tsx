@@ -16,16 +16,10 @@
 
 import { Box, Container, ContainerProps } from '@mui/material';
 import { Typography } from 'doodle-ui';
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
-
-const AppNameContext = createContext('BloodHound Enterprise');
-
-export const AppNameProvider: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => (
-    <AppNameContext.Provider value={name}>{children}</AppNameContext.Provider>
-);
-
-export const useAppName = () => useContext(AppNameContext);
+import { useAppName } from '../providers/AppNameProvider';
+import { cn } from '../utils';
 
 type PageWithTitleProps = ContainerProps<
     'div',
@@ -37,10 +31,17 @@ type PageWithTitleProps = ContainerProps<
     }
 >;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, fullWidth, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({
+    title,
+    pageDescription,
+    children,
+    fullWidth,
+    className,
+    ...rest
+}) => {
     const appName = useAppName();
     return (
-        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className='pt-4 px-0 xl:px-6'>
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={cn('pt-4', className)}>
             {title && (
                 <Helmet>
                     <title>

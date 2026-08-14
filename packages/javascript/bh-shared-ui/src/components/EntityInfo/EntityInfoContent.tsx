@@ -13,20 +13,29 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box } from '@mui/material';
 import React from 'react';
+import { usePrimaryKind } from '../../hooks';
+import { isBuiltInKind } from '../../utils';
 import { EntityInfoContentProps } from '../../utils/content';
-import EntityInfoDataTableList from './EntityInfoDataTableList';
+import EntityInfoList from './EntityInfoDataTableList';
 import EntityInfoDataTablePriorityList from './EntityInfoDataTablePriorityList';
 import EntityObjectInformation from './EntityObjectInformation';
+import { KindInfoItems } from './KindInfoItems';
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
+    const primaryKind = usePrimaryKind(props.selectedNode.kinds);
+
     return (
-        <Box>
+        <div>
             <EntityInfoDataTablePriorityList priorityTables={props.priorityTables} />
-            <EntityObjectInformation {...props} />
-            <EntityInfoDataTableList {...props} />
-        </Box>
+            <EntityObjectInformation selectedNode={props.selectedNode} />
+            {/* we have decided to initially omit showing KindInfoItems for built in kinds even if `KindInfo` is available */}
+            {isBuiltInKind(primaryKind) ? (
+                <EntityInfoList {...props} />
+            ) : (
+                <KindInfoItems items={props.selectedNode.info} />
+            )}
+        </div>
     );
 };
 

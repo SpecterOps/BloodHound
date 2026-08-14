@@ -17,14 +17,58 @@
 type: object
 description: |
   Describes a single alert event type registered with the system along with the
-  payload schema versions supported for that type. Used by clients to populate
-  selectors when configuring alert subscriptions.
+  payload data versions supported for that type. Used by clients to populate
+  selectors when configuring alert subscriptions, document expected payload
+  shapes, and fire type-specific test probes.
 properties:
   type:
     type: string
-    description: Event type identifier.
+    description: |
+      Event type identifier. A concrete dotted leaf, e.g.
+      `client.status.offline`; interior segments never carry events.
+  namespace:
+    type: string
+    description: First segment of the type identifier, e.g. `client`.
+  category:
+    type: string
+    nullable: true
+    description: |
+      Second segment of the type identifier, e.g. `error`. `null` for
+      two-segment types such as `client.created`.
+  name:
+    type: string
+    description: Human-readable name, e.g. `Client Offline`.
+  description:
+    type: string
+  severity:
+    type: string
+    enum:
+      - info
+      - warning
+      - critical
   versions:
     type: array
-    description: Payload schema versions supported for this event type.
+    description: Payload data versions supported for this event type.
     items:
-      type: string
+      type: object
+      properties:
+        data_version:
+          type: integer
+          description: Payload data version. Bare integer; rendering such as `v1` is presentation-only.
+        data_example:
+          type: object
+          description: |
+            Example instance of the event `data` payload for this version.
+            Not a JSON Schema and not the delivery envelope.
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        deprecated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Timestamp at which this data version was deprecated. `null` while
+            the version is current. Deprecation does not invalidate existing
+            subscription pins.
