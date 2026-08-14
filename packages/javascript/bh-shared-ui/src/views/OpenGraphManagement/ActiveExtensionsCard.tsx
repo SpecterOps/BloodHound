@@ -17,17 +17,7 @@
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { type ColumnDef } from '@tanstack/react-table';
-import {
-    Card,
-    CardTitle,
-    createColumnHelper,
-    DataTable,
-    IconButton,
-    TableCell,
-    TableRow,
-    Tooltip,
-    Typography,
-} from 'doodle-ui';
+import { Card, CardTitle, createColumnHelper, DataTable, TableCell, TableRow, Tooltip, Typography } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { useState } from 'react';
 import { SearchInput } from '../../components';
@@ -111,7 +101,7 @@ export const ActiveExtensionsCard = () => {
             id: 'namespace',
             size: 240,
             header: () => (
-                <div className='flex items-center gap-0.25'>
+                <div className='flex items-center gap-2'>
                     <span>Namespace</span>
                     <Tooltip
                         contentProps={{
@@ -129,12 +119,13 @@ export const ActiveExtensionsCard = () => {
                                 </Typography>
                             </>
                         }>
-                        <IconButton
-                            className='bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
+                        <FontAwesomeIcon
+                            tabIndex={0}
+                            className='rounded-[50%] bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
                             aria-label='Namespace information'
-                            size={14}>
-                            <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                        </IconButton>
+                            icon={faInfoCircle}
+                            size='sm'
+                        />
                     </Tooltip>
                 </div>
             ),
