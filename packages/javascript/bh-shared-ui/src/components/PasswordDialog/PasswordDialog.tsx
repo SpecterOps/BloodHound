@@ -135,6 +135,7 @@ const PasswordDialog: React.FC<{
                                             id='currentPassword'
                                             label='Current Password'
                                             type='password'
+                                            required
                                             fullWidth
                                             error={!!errors.currentPassword}
                                             helperText={errors.currentPassword?.message}
@@ -162,6 +163,7 @@ const PasswordDialog: React.FC<{
                                         id='password'
                                         label='New Password'
                                         type='password'
+                                        required
                                         fullWidth
                                         error={!!errors.password}
                                         helperText={errors.password?.message}
@@ -185,6 +187,7 @@ const PasswordDialog: React.FC<{
                                         id='confirmPassword'
                                         label='New Password Confirmation'
                                         type='password'
+                                        required
                                         fullWidth
                                         error={!!errors.confirmPassword}
                                         helperText={errors.confirmPassword?.message}

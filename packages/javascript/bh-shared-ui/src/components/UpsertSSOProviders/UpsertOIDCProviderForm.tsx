@@ -91,8 +91,9 @@ const UpsertOIDCProviderForm: FC<{
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    id={'name'}
+                                    id='name'
                                     variant='standard'
+                                    required
                                     fullWidth
                                     name='name'
                                     label='OIDC Provider Name'
@@ -112,9 +113,10 @@ const UpsertOIDCProviderForm: FC<{
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    id={'clientId'}
+                                    id='clientId'
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='clientId'
                                     label='Client ID'
                                     error={!!errors.client_id}
@@ -131,10 +133,11 @@ const UpsertOIDCProviderForm: FC<{
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    id={'issuer'}
+                                    id='issuer'
                                     variant='standard'
                                     fullWidth
                                     name='issuer'
+                                    required
                                     label='Issuer'
                                     error={!!errors.issuer}
                                     helperText={errors.issuer?.message || 'OIDC Issuer'}

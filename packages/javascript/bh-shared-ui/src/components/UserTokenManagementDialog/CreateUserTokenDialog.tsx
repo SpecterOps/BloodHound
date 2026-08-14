@@ -55,16 +55,17 @@ const CreateUserTokenDialog: React.FC<{
                 <DialogContent>
                     <Grid container spacing={1}>
                         <Controller
-                            name={'token_name'}
+                            name='token_name'
                             control={control}
-                            defaultValue={''}
+                            defaultValue=''
                             rules={{ required: 'Token name is required' }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
                                     variant='standard'
-                                    label={'Token Name'}
+                                    label='Token Name'
                                     fullWidth
+                                    required
                                     error={!!errors.token_name}
                                     helperText={errors.token_name?.message}
                                     data-testid='create-user-token-dialog_input-token-name'

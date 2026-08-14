@@ -99,6 +99,7 @@ const UpsertSAMLProviderForm: FC<{
                                     id={'name'}
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='name'
                                     label='SAML Provider Name'
                                     error={!!errors.name}
