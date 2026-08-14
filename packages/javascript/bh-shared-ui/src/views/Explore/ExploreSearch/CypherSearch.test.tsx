@@ -252,7 +252,7 @@ describe('CypherSearch', () => {
             await waitFor(() => expect(screen.getByRole('button', { name: /run cypher query/i })).not.toBeDisabled());
 
             expect(mockClearSelectedItem).not.toHaveBeenCalled();
-            expect(mockOnQuerySuccess).not.toHaveBeenCalled();
+            expect(mockOnQuerySuccess).toHaveBeenCalledTimes(1);
         });
 
         it('calls mockOnQuerySuccess when search returns one node, entity info panel remains open', async () => {
