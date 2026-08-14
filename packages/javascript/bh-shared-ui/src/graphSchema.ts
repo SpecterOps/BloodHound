@@ -513,6 +513,8 @@ export enum ActiveDirectoryKindProperties {
     AdminSDHolderProtected = 'adminsdholderprotected',
     ServicePrincipalNames = 'serviceprincipalnames',
     ServerReference = 'serverreference',
+    SiteObject = 'siteobject',
+    ObjectClass = 'objectclass',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
 }
@@ -796,6 +798,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Service Principal Names';
         case ActiveDirectoryKindProperties.ServerReference:
             return 'Server Reference';
+        case ActiveDirectoryKindProperties.SiteObject:
+            return 'Site Object';
+        case ActiveDirectoryKindProperties.ObjectClass:
+            return 'Object Class';
         case ActiveDirectoryKindProperties.GPOStatusRaw:
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:

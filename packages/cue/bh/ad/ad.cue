@@ -1030,6 +1030,20 @@ ServerReference: types.#StringEnum & {
 	representation: "serverreference"
 }
 
+SiteObject: types.#StringEnum & {
+	symbol:         "SiteObject"
+	schema:         "ad"
+	name:           "Site Object"
+	representation: "siteobject"
+}
+
+ObjectClass: types.#StringEnum & {
+	symbol:         "ObjectClass"
+	schema:         "ad"
+	name:           "Object Class"
+	representation: "objectclass"
+}
+
 GPOStatusRaw: types.#StringEnum & {
 	symbol:         "GPOStatusRaw"
 	schema:         "ad"
@@ -1184,6 +1198,8 @@ Properties: [
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
 	ServerReference,
+	SiteObject,
+	ObjectClass,
 	GPOStatusRaw,
 	GPOStatus,
 ]
