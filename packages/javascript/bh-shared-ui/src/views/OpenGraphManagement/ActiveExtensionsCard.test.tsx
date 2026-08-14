@@ -221,6 +221,7 @@ describe('ActiveExtensionsCard', () => {
 
         await screen.findByText('Active Directory');
 
+        // With 3 extensions: TABLE_HEADER_HEIGHT (52) + TABLE_CELL_HEIGHT (57) * 3 = 223px
         expect(screen.getByTestId('active-extensions-table-container')).toHaveStyle({ height: '223px' });
         expect(screen.getByTestId('active-extensions-table-container').firstElementChild).toHaveClass('h-full');
         expect(document.querySelector('div.overflow-auto')).not.toBeInTheDocument();
