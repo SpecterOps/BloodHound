@@ -109,29 +109,29 @@ func TestParseDefaultPeriodRealWorldExamples(t *testing.T) {
 
 func TestCalculateLastFiscalQuarter(t *testing.T) {
 	tests := []struct {
-		name              string
-		fiscalStartMonth  int
-		referenceTime     string // YYYY-MM-DD format
-		expectedStart     string // YYYY-MM-DD format
-		expectedEnd       string // YYYY-MM-DD 23:59:59 format
+		name             string
+		fiscalStartMonth int
+		referenceTime    string // YYYY-MM-DD format
+		expectedStart    string // YYYY-MM-DD format
+		expectedEnd      string // YYYY-MM-DD 23:59:59 format
 	}{
 		{
 			name:             "January FY, reference in Q2 (April)",
-			fiscalStartMonth: 1,  // January
+			fiscalStartMonth: 1, // January
 			referenceTime:    "2026-04-15",
 			expectedStart:    "2026-01-01 00:00:00",
 			expectedEnd:      "2026-03-31 23:59:59",
 		},
 		{
 			name:             "January FY, reference at end of Q3 (September 30)",
-			fiscalStartMonth: 1,  // January FY: Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec
+			fiscalStartMonth: 1, // January FY: Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec
 			referenceTime:    "2026-09-30",
 			expectedStart:    "2026-07-01 00:00:00", // monthsIntoFY=8, (8-1)/3=2 (Q3), return Q3
 			expectedEnd:      "2026-09-30 23:59:59",
 		},
 		{
 			name:             "February FY, reference at end of Q2 (July 31)",
-			fiscalStartMonth: 2,  // February FY: Q1=Feb-Apr, Q2=May-Jul, Q3=Aug-Oct, Q4=Nov-Jan
+			fiscalStartMonth: 2, // February FY: Q1=Feb-Apr, Q2=May-Jul, Q3=Aug-Oct, Q4=Nov-Jan
 			referenceTime:    "2026-07-31",
 			expectedStart:    "2026-05-01 00:00:00", // monthsIntoFY=5, (5-1)/3=1 (Q2), return Q2
 			expectedEnd:      "2026-07-31 23:59:59",
@@ -152,13 +152,13 @@ func TestCalculateLastFiscalQuarter(t *testing.T) {
 		},
 		{
 			name:             "January FY, reference early in Q1 (January 15)",
-			fiscalStartMonth: 1,  // January
+			fiscalStartMonth: 1, // January
 			referenceTime:    "2026-01-15",
 			// Note: monthsIntoFY=0, (0-1)/3=-1 should return Q4 of prev FY (Oct-Dec 2025)
 			// but current implementation returns Q1. This may be intentional to avoid
 			// returning incomplete quarter data at the start of the fiscal year.
-			expectedStart:    "2026-01-01 00:00:00",
-			expectedEnd:      "2026-03-31 23:59:59",
+			expectedStart: "2026-01-01 00:00:00",
+			expectedEnd:   "2026-03-31 23:59:59",
 		},
 	}
 
