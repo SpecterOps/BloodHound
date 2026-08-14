@@ -43,14 +43,14 @@ interface NotificationProviderProps {
 
 type SnackVariant = 'default' | 'error' | 'info' | 'warning' | 'success';
 
-interface MyCustomSnackProps {
+interface NotificationSnackbarProps {
     id: string | number;
     message: string | React.ReactNode;
     variant: SnackVariant | null | undefined;
     title?: string;
 }
 
-export const MyCustomSnack = React.forwardRef<HTMLDivElement, MyCustomSnackProps>(
+export const NotificationSnackbar = React.forwardRef<HTMLDivElement, NotificationSnackbarProps>(
     ({ id, message, variant, title }, ref) => {
         const { closeSnackbar } = useSnackbar();
         return (
@@ -63,7 +63,7 @@ export const MyCustomSnack = React.forwardRef<HTMLDivElement, MyCustomSnackProps
     }
 );
 
-MyCustomSnack.displayName = 'MyCustomSnack';
+NotificationSnackbar.displayName = 'NotificationSnackbar';
 
 const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     const [notifications, dispatch] = useReducer(notificationsReducer, []);

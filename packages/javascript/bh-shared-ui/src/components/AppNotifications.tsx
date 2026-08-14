@@ -16,7 +16,7 @@
 
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
-import { MyCustomSnack, useNotifications } from '../providers';
+import { NotificationSnackbar, useNotifications } from '../providers';
 
 let displayedNotifications: string[] = [];
 
@@ -42,7 +42,12 @@ const AppNotifications = () => {
                     key,
                     ...snackbarOptions,
                     content: (id, snackMessage) => (
-                        <MyCustomSnack id={id} message={snackMessage} variant={snackbarOptions.variant} title={title} />
+                        <NotificationSnackbar
+                            id={id}
+                            message={snackMessage}
+                            variant={snackbarOptions.variant}
+                            title={title}
+                        />
                     ),
                     onClose: (event, reason, id) => {
                         if (options.onClose) {
