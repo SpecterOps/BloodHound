@@ -336,7 +336,6 @@ describe('ExploreSearch handling of cypher query responses', () => {
         const { screen } = await setupCypherSearch('&selectedItem=999');
 
         expect(window.location.search).not.toContain('selectedItem=');
-        await await new Promise((res) => setTimeout(res, 2000));
-        expect(await screen.findByTestId('cypher-search-section')).not.toBeInTheDocument();
+        expect(await screen.findByTestId('cypher-search-section')).not.toBeVisible();
     });
 });
