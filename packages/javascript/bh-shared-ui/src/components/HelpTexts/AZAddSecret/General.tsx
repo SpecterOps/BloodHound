@@ -27,9 +27,11 @@ const General: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 When a principal has been granted "Cloud App Admin" or "App Admin" against the tenant, that principal
-                gains the ability to add new secrets to all Service Principals and App Registrations. Additionally, a
+                gains the ability to add new secrets to all Service Principals* and App Registrations. Additionally, a
                 principal that has been granted "Cloud App Admin" or "App Admin" against, or explicit ownership of a
-                Service Principal or App Registration gains the ability to add secrets to that particular object.
+                Service Principal* or App Registration gains the ability to add secrets to that particular object.
+
+                * Secrets can only be added to the Service Principal if it is not protected by the "App instance property lock" configuration in the corresponding App Registration.
             </Typography>
         </>
     );
