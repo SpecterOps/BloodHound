@@ -533,6 +533,46 @@ func TestSearchByNameOrObjectID_UseRawObjectID_StartsWith_NameCasing(t *testing.
 	})
 }
 
+func TestPrivilegeZoneSearchWithNormalizedName(t *testing.T) {
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		zoneKind   = graph.StringKind("PZ_PrivilegeZone")
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+		_, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:        "TIER ZERO",
+			common.DisplayName: "Tier Zero",
+			common.ObjectID:    "pz:1",
+		}), zoneKind)
+		return err
+	})
+	require.NoError(t, err)
+
+	t.Run("Explore search finds mixed-case fuzzy term", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "Tier Ze", 0, 10, false)
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		require.True(t, results[0].Kinds.ContainsOneOf(zoneKind))
+	})
+
+	t.Run("pathfinding search finds mixed-case exact term", func(t *testing.T) {
+		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, true, false, "Tier Zero", queries.SearchTypeExact)
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		require.True(t, results.Slice()[0].Kinds.ContainsOneOf(zoneKind))
+	})
+
+	t.Run("pathfinding search finds mixed-case fuzzy term", func(t *testing.T) {
+		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, true, false, "Tier Ze", queries.SearchTypeFuzzy)
+		require.NoError(t, err)
+		require.Len(t, results, 1)
+		require.True(t, results.Slice()[0].Kinds.ContainsOneOf(zoneKind))
+	})
+}
+
 func TestGetEntityResults(t *testing.T) {
 	dbInst := integration.SetupDB(t)
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())

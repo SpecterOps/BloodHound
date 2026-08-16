@@ -195,6 +195,31 @@ func Test_filterAndFormatSearchResults_default(t *testing.T) {
 	require.Equal(t, expectedDistinguishedName, actual[0].DistinguishedName)
 }
 
+func Test_filterAndFormatSearchResults_PrivilegeZonesUseStandardName(t *testing.T) {
+	t.Parallel()
+
+	for _, kind := range []graph.Kind{
+		graph.StringKind("PZ_PrivilegeZone"),
+		graph.StringKind("PZ_PrivilegeZoneEnvironment"),
+	} {
+		t.Run(kind.String(), func(t *testing.T) {
+			node := &graph.Node{
+				Kinds: graph.Kinds{kind},
+				Properties: graph.AsProperties(map[string]any{
+					common.Name.String():        "TIER ZERO IN PHANTOM.CORP",
+					common.DisplayName.String(): "Tier Zero in PHANTOM.CORP",
+					common.ObjectID.String():    "pz:test",
+				}),
+			}
+
+			results := filterAndFormatSearchResults([]*graph.Node{node}, nil, nil)
+
+			require.Len(t, results, 1)
+			require.Equal(t, "TIER ZERO IN PHANTOM.CORP", results[0].Name)
+		})
+	}
+}
+
 func Test_filterAndFormatSearchResults_includeOpenGraphNodes(t *testing.T) {
 	var (
 		customKind     = "CustomKind"
@@ -392,6 +417,27 @@ func Test_filterAndFormatSearchResults_filterEnvironmentsOG(t *testing.T) {
 
 	require.Len(t, actual, 1)
 	require.Equal(t, "objectid3", actual[0].ObjectID)
+}
+
+func TestFilterAndFormatSearchResultsPrivilegeZoneEnvironmentETAC(t *testing.T) {
+	t.Parallel()
+
+	node := &graph.Node{
+		ID:    4,
+		Kinds: graph.Kinds{graph.StringKind("PZ_PrivilegeZoneEnvironment")},
+		Properties: graph.AsProperties(map[string]any{
+			common.ObjectID.String():     "pze:1:allowed",
+			common.Name.String():         "TIER ZERO IN ALLOWED",
+			graphschema.EnvironmentIDKey: "allowed-environment",
+		}),
+	}
+
+	allowed := filterAndFormatSearchResults([]*graph.Node{node}, []string{"allowed-environment"}, nil)
+	denied := filterAndFormatSearchResults([]*graph.Node{node}, []string{"other-environment"}, nil)
+
+	require.Len(t, allowed, 1)
+	assert.Equal(t, "pze:1:allowed", allowed[0].ObjectID)
+	assert.Empty(t, denied)
 }
 
 func Test_getSearchableNodeKinds(t *testing.T) {

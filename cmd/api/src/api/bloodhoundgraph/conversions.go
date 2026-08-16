@@ -69,13 +69,24 @@ func RelationshipToBloodHoundGraph(rel *graph.Relationship) BloodHoundGraphLink 
 			Data:  relProperties,
 		},
 		Label: &BloodHoundGraphLinkLabel{
-			Text: rel.Kind.String(),
+			Text: relationshipDisplayName(rel.Kind.String()),
 		},
 		End2: &BloodHoundGraphLinkEnd{
 			Arrow: true,
 		},
 		ID1: rel.StartID.String(),
 		ID2: rel.EndID.String(),
+	}
+}
+
+func relationshipDisplayName(kind string) string {
+	switch kind {
+	case "PZ_InZone":
+		return "In Zone"
+	case "PZ_PartOfZone":
+		return "Part Of Zone"
+	default:
+		return kind
 	}
 }
 
