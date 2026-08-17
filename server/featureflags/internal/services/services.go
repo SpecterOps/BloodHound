@@ -24,14 +24,21 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 // Feature-flag keys referenced by BHE feature slices. These mirror the keys
 // defined in cmd/api/src/model/appcfg but are redeclared here so consumers do
 // not need to import the appcfg package.
 const (
-	FeatureOpenHoundSupport = "openhound_support"
-	FeatureAlerts           = "alerts"
+	FeatureOpenHoundSupport         = "openhound_support"
+	FeatureAlerts                   = "alerts"
+	FeatureFindingsPrioritizationV0 = appcfg.FeatureFindingsPrioritizationV0
+)
+
+// Request source values used by the feature flags slice.
+const (
+	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
@@ -73,19 +80,27 @@ type Database interface {
 	SetFlag(ctx context.Context, featureFlag FeatureFlag) error
 }
 
+type AnalysisRequestSubmitter interface {
+	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
+}
+
 // Service implements feature-flag use cases on top of a Database implementation.
 type Service struct {
-	db Database
+	db                Database
+	analysisRequester AnalysisRequestSubmitter
 }
 
 // NewService constructs a Service from the supplied Database port. The
 // PostgreSQL implementation (Store) lives alongside in sql.go so callers obtain
 // a ready-to-use service without taking on a storage-layer dependency directly.
-func NewService(db Database) *Service {
+func NewService(db Database, analysisRequester AnalysisRequestSubmitter) *Service {
 	if db == nil {
 		panic("feature-flag: service requires a non-nil Database")
 	}
-	return &Service{db: db}
+	if analysisRequester == nil {
+		panic("feature-flag: service requires a non-nil AnalysisRequestSubmitter")
+	}
+	return &Service{db: db, analysisRequester: analysisRequester}
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
@@ -123,6 +138,18 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	if err := s.db.SetFlag(ctx, flag); err != nil {
 		return flag, err
+	}
+
+	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
+		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
+			flag.Enabled = !flag.Enabled
+
+			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {
+				return flag, errors.Join(err, rollbackErr)
+			}
+
+			return flag, err
+		}
 	}
 
 	return flag, nil

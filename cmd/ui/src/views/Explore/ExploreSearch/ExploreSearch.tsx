@@ -107,6 +107,12 @@ const ExploreSearch: React.FC = () => {
             if (!pathfindingSearchState.destinationSelectedItem) {
                 params.secondarySearch = null;
             }
+            if (!pathfindingSearchState.nodes[2]?.selectedItem) {
+                params.tertiarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[3]?.selectedItem) {
+                params.quaternarySearch = null;
+            }
         }
         if (tab === 'cypher') {
             if (!cypherSearchState.cypherQuery) {
@@ -165,7 +171,7 @@ const ExploreSearch: React.FC = () => {
                 <IconButton
                     aria-label='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
-                    className='rounded-none'
+                    className='rounded-sm'
                     onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
