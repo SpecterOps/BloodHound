@@ -111,12 +111,15 @@ const server = setupServer(
     })
 );
 
-beforeAll(() => server.listen());
-beforeEach(() => {
-    mockCodemirrorLayoutMethods();
+beforeAll(() => {
+    server.listen();
     const style = document.createElement('style');
     style.innerHTML = '.hidden { display: none; }';
     document.head.appendChild(style);
+});
+
+beforeEach(() => {
+    mockCodemirrorLayoutMethods();
 
     serverState = setInitialServerState();
 });
