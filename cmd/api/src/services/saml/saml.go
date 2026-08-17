@@ -17,7 +17,11 @@
 package saml
 
 import (
+	"encoding/base64"
+	"encoding/xml"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/crewjam/saml"
 )
@@ -27,10 +31,16 @@ import (
 // Service serves as a lightweight wrapper around the SAML package.
 type Service interface {
 	MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error)
-	ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error)
+	ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error)
 }
 
 type Client struct{}
+
+type ValidatedResponse struct {
+	Assertion            *saml.Assertion
+	ResponseID           string
+	ResponseIssueInstant time.Time
+}
 
 // MakeAuthenticationRequest abstracts creating an SAML authentication request using
 // the HTTP-Redirect binding. It returns a URL that we will redirect the user to in order to start the auth process.
@@ -38,9 +48,32 @@ func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider,
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)
 }
 
-// ParseResponse abstracts the handling/validation of the IDP response.
-// The purpose is to extract the SAML IDP response received in req, resolves
-// artifacts when necessary, validates it, and returns the verified assertion.
-func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error) {
-	return serviceProvider.ParseResponse(req, possibleRequestIDs)
+// ParseResponse abstracts the handling/validation of the IdP response. // TODO
+// The purpose is to extract the SAML IdP response received in req, resolves
+// artifacts when necessary, validates it, and returns the verified assertion and response.
+func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error) {
+	var (
+		fullResponse ValidatedResponse
+		samlResponse saml.Response
+	)
+
+	assertion, err := serviceProvider.ParseResponse(req, possibleRequestIDs)
+	if err != nil {
+		return nil, err
+	}
+	rawXMLSAMLResponse, err := base64.StdEncoding.DecodeString(req.PostForm.Get("SAMLResponse"))
+	if err != nil {
+		return nil, fmt.Errorf("saml: failed to decode SAMLResponse: %w", err)
+	}
+	if err := xml.Unmarshal(rawXMLSAMLResponse, &samlResponse); err != nil {
+		return nil, fmt.Errorf("saml: failed to unmarshal SAML response: %w", err)
+	}
+
+	fullResponse = ValidatedResponse{
+		Assertion:            assertion,
+		ResponseID:           samlResponse.ID,
+		ResponseIssueInstant: samlResponse.IssueInstant,
+	}
+
+	return &fullResponse, nil
 }

@@ -488,7 +488,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		)
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
-	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
+	} else if validatedResponse, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):
@@ -509,7 +509,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		}
 		// SAML credentials issue scenario (authentication failed)
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response: Failed to parse ACS response %s", err.Error()))
-	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
+	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(validatedResponse.Assertion); err != nil {
 		slog.WarnContext(
 			request.Context(),
 			"[SAML] Failed to lookup user for SAML provider",
@@ -520,7 +520,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db, s.DogTags); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, validatedResponse.Assertion, s.db, s.DogTags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(
 					request.Context(),

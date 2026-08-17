@@ -1,0 +1,58 @@
+package database
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
+
+	"gorm.io/gorm"
+)
+
+const (
+	samlConsumedIdentifiersTableName = "saml_consumed_identifiers"
+)
+
+// SAMLConsumedData defines the methods for persisting and deleting SAML identifiers consumed during login,
+// stored in the saml_consumed_identifiers table
+type SAMLConsumedData interface {
+	CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) error
+	//SweepSAMLConsumedIdentifiers(ctx context.Context) error
+}
+
+// CreateSAMLConsumedIdentifiers inserts the SAMLResponse and assertion from a single SAML login so they cannot be replayed.
+// Both identifiers are inserted together or not at all. If either identifier has already been consumed, it returns
+// ErrSAMLIdentifierAlreadyConsumed and no records are written.
+func (s *BloodhoundDB) CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string,
+	expiresAt time.Time) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Exec(fmt.Sprintf(`INSERT INTO %s
+			(sso_provider_id, idp_issuer, identifier_type, identifier, expires_at)
+			VALUES
+				(?, ?, 'response', ?, ?),
+				(?, ?, 'assertion', ?, ?)
+			ON CONFLICT DO NOTHING`, samlConsumedIdentifiersTableName),
+			ssoProviderID, idpIssuer, responseID, expiresAt,
+			ssoProviderID, idpIssuer, assertionID, expiresAt,
+		)
+
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 2 {
+			slog.WarnContext(
+				ctx,
+				"SAMLResponse or assertion already consumed (possible replay)",
+				slog.Int("sso_provider_id", int(ssoProviderID)),
+				slog.String("idp_issuer", idpIssuer),
+			)
+			return ErrSAMLIdentifierAlreadyConsumed
+		}
+		return nil
+	})
+}
+
+// SweepSAMLConsumedIdentifiers deletes all SAMLResponse and Assertion identifiers that have already expired
+//func (s *BloodhoundDB) SweepSAMLConsumedIdentifiers(ctx context.Context) error {
+//	return s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(xyz).Error
+//}
