@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogClose,
@@ -24,6 +23,8 @@ import {
     DialogPortal,
     DialogTitle,
     DialogTrigger,
+    IconButton,
+    TextButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import isEqual from 'lodash/isEqual';
@@ -93,9 +94,13 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
     return (
         <Dialog onOpenChange={undoChanges}>
             <DialogTrigger asChild>
-                <Button data-testid='file_ingest_log-open_filter_dialog' variant='icon'>
-                    <AppIcon.FilterOutline size={22} />
-                </Button>
+                <IconButton
+                    aria-label='Open file ingest filters'
+                    variant='secondary'
+                    size={24}
+                    data-testid='file_ingest_log-open_filter_dialog'>
+                    <AppIcon.FilterOutline />
+                </IconButton>
             </DialogTrigger>
 
             <DialogPortal>
@@ -105,9 +110,9 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     }}>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
-                        <Button variant='text' className='font-normal p-0 h-fit' onClick={clearFilters}>
+                        <TextButton fontColor='primary' className='font-bold p-0 h-fit text-sm' onClick={clearFilters}>
                             Clear All
-                        </Button>
+                        </TextButton>
                     </DialogTitle>
 
                     <VisuallyHidden asChild>
@@ -132,26 +137,21 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <UserMinimalSelect user={filters.state.user_id} onSelect={selectUser} />
                     </DialogDescription>
 
-                    <DialogActions>
+                    <DialogActions className='text-sm gap-4'>
                         <DialogClose asChild>
-                            <Button
-                                className='pr-0'
-                                data-testid='file_ingest_log-filter_dialog_close'
-                                type='button'
-                                variant='text'>
+                            <TextButton data-testid='file_ingest_log-filter_dialog_close' type='button'>
                                 Cancel
-                            </Button>
+                            </TextButton>
                         </DialogClose>
                         <DialogClose asChild>
-                            <Button
-                                className='text-primary'
+                            <TextButton
                                 data-testid='file_ingest_log-filter_dialog_confirm'
+                                fontColor='primary'
                                 disabled={isConfirmDisabled}
                                 onClick={updateAndConfirm}
-                                type='submit'
-                                variant='text'>
+                                type='submit'>
                                 Confirm
-                            </Button>
+                            </TextButton>
                         </DialogClose>
                     </DialogActions>
                 </DialogContent>

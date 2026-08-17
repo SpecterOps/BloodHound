@@ -173,7 +173,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 <SimpleEnvironmentSelector
                                     selected={selectedEnvironment || globalEnvironment || { type: null, id: null }}
                                     errorMessage={domainSelectorErrorMessage}
-                                    variant={'primary'}
+                                    variant='primary'
                                     onSelect={handleSelect}
                                 />
                             </Grid>

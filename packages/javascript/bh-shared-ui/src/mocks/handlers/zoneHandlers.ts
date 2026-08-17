@@ -69,6 +69,14 @@ const zoneHandlers = [
         );
     }),
 
+    rest.get('/api/v2/nodes/:id', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
+            })
+        );
+    }),
+
     rest.get('/api/v2/config', async (_, res, ctx) => {
         return res(
             ctx.json({

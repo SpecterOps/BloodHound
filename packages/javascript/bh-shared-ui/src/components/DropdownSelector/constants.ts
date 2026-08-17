@@ -13,12 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 export const triggerStyles =
-    'max-w-56 text-sm text-contrast rounded-md bg-transparent hover:bg-primary hover:text-white border shadow-outer-0 hover:border-transparent border-neutral-light-5 group';
+    'items-center max-w-56 text-sm text-main rounded-md bg-transparent hover:bg-secondary hover:text-common-white border shadow-outer-0 hover:border-transparent focus-visible:border-transparent border-dropdown-trigger-border group';
 
-export const popoverContentStyles = 'flex flex-col p-0 rounded-md border border-neutral-5 bg-neutral-1';
+export const popoverContentStyles =
+    'flex flex-col p-0 rounded-md border border-dropdown-popover-border bg-dropdown-popover-fill';
 
+// TODO optionStyles is nested but used globally in RulesAccordion, ObjectsAccordion, Zone and Label Selector BED-6572
 export const optionStyles =
-    'px-4 py-1 rounded-none w-full justify-normal hover:no-underline hover:bg-neutral-4 disabled:bg-neutral-4';
+    'has-[svg]:px-4 px-4 truncate rounded-none w-full justify-normal text-main hover:no-underline hover:bg-dropdown-option-hover-fill disabled:bg-dropdown-option-disabled-fill group';
 
-export const tooltipStyles = 'max-w-80 border-0 dark:bg-neutral-4 dark:text-white';
+export const tooltipStyles = 'max-w-80 border-0 dark:bg-dropdown-tooltip-fill text-main dark:text-contrast';

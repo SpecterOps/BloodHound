@@ -97,16 +97,16 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
             </DialogContent>
             <DialogActions>
                 <Button
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={onCancel}
                     data-testid='early-access-features-warning-dialog_button-close'>
-                    {'Take me back'}
+                    Take me back
                 </Button>
                 <Button
                     variant='primary'
                     onClick={onConfirm}
                     data-testid='early-access-features-warning-dialog_button-confirm'>
-                    {'I understand, show me the new stuff!'}
+                    I understand, show me the new stuff!
                 </Button>
             </DialogActions>
         </Dialog>

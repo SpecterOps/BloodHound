@@ -264,6 +264,23 @@ func assertColumnExists(t *testing.T, db *gorm.DB, tableName string, columnName 
 	assert.Truef(t, columnExists, "column %s.%s should exist", tableName, columnName)
 }
 
+func assertColumnDoesNotExist(t *testing.T, db *gorm.DB, tableName string, columnName string) {
+	t.Helper()
+
+	var columnExists bool
+	err := db.Raw(`
+		SELECT EXISTS(
+			SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema = current_schema()
+			  AND table_name = ?
+			  AND column_name = ?
+		)
+	`, tableName, columnName).Scan(&columnExists).Error
+	require.NoError(t, err)
+	assert.Falsef(t, columnExists, "column %s.%s should not exist", tableName, columnName)
+}
+
 func assertConstraintExists(t *testing.T, db *gorm.DB, constraintName string) {
 	t.Helper()
 
@@ -366,6 +383,59 @@ func TestMigrator_RunMigrations(t *testing.T) {
 	assertTableState(t, db, "goose_db_version", true)
 	assertGooseVersionsMatch(t, db, expectedVersions)
 }
+
+func TestMigrator_HasPendingMigrations(t *testing.T) {
+	testCases := []struct {
+		name                         string
+		prepareDatabase              func(t *testing.T, testContext gooseTestContext)
+		expectedHasPendingMigrations bool
+	}{
+		{
+			name:                         "NoMigrationTables",
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "LegacyMigrationTableExists",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				require.NoError(t, testContext.migrator.CreateMigrationSchema())
+			},
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "GooseMigrationsPartiallyApplied",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				migrationVersions := discoverGooseVersions(t)
+				require.Greater(t, len(migrationVersions), 1)
+
+				_, err := testContext.migrator.GooseProvider.UpTo(testContext.ctx, migrationVersions[0])
+				require.NoError(t, err)
+			},
+			expectedHasPendingMigrations: true,
+		},
+		{
+			name: "GooseMigrationsFullyApplied",
+			prepareDatabase: func(t *testing.T, testContext gooseTestContext) {
+				require.NoError(t, testContext.migrator.ExecuteGooseMigrations(testContext.ctx))
+			},
+			expectedHasPendingMigrations: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testContext := setupGooseTestContext(t)
+
+			if testCase.prepareDatabase != nil {
+				testCase.prepareDatabase(t, testContext)
+			}
+
+			hasPendingMigrations, err := testContext.migrator.HasPendingMigrations(testContext.ctx)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expectedHasPendingMigrations, hasPendingMigrations)
+		})
+	}
+}
+
 func TestMigrator_ExecuteGooseMigrations(t *testing.T) {
 
 	testCases := []gooseTestCase{
@@ -449,4 +519,74 @@ func TestMigrator_ExecuteGooseMigrations(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestMigration_UpsertKindFromCustomNodeKind verifies the logic of migration 20260526065858
+func TestMigration_UpsertKindFromCustomNodeKind(t *testing.T) {
+	const (
+		// Version 1 is the baseline init migration; it creates kind and custom_node_kinds.
+		previousMigrationVersion int64 = 1
+		targetMigrationVersion   int64 = 20260526065858
+	)
+
+	testContext := setupGooseTestContext(t)
+
+	// Run the baseline init so that kind and custom_node_kinds both exist.
+	_, err := testContext.migrator.GooseProvider.UpTo(testContext.ctx, previousMigrationVersion)
+	require.NoError(t, err)
+
+	// create a pre existing kind to verify the on conflict logic
+	require.NoError(t, testContext.gormDB.Exec(`INSERT INTO kind (name) VALUES ('PreExistingKind') ON CONFLICT (name) DO NOTHING`).Error)
+
+	// create three custom_node_kinds rows to verify the data transformation and filtering logic
+	require.NoError(t, testContext.gormDB.Exec(`
+		INSERT INTO custom_node_kinds (kind_name, config) VALUES
+			('PreExistingKind',  '{}'),
+			('BrandNewKind',     '{}'),
+			('Tag_ShouldDelete', '{}')
+	`).Error)
+
+	// read the kind_id sequence before the migration so we can assert it only
+	// advanced by the number of genuinely new kinds.
+	var kindSeqBefore int64
+	require.NoError(t, testContext.gormDB.Raw(`SELECT last_value FROM kind_id_seq`).Scan(&kindSeqBefore).Error)
+
+	// Execute the target migration.
+	_, err = testContext.migrator.GooseProvider.UpTo(testContext.ctx, targetMigrationVersion)
+	require.NoError(t, err)
+
+	// kind_id must be present, kind_name must be gone.
+	assertColumnExists(t, testContext.gormDB, "custom_node_kinds", "kind_id")
+	assertColumnDoesNotExist(t, testContext.gormDB, "custom_node_kinds", "kind_name")
+	assertConstraintExists(t, testContext.gormDB, "fk_custom_node_kinds_kind_id")
+	assertConstraintExists(t, testContext.gormDB, "custom_node_kinds_kind_id_key")
+
+	// Tag_-prefixed rows must have been deleted.
+	var tagCount int
+	require.NoError(t, testContext.gormDB.Raw(`
+		SELECT COUNT(*) FROM custom_node_kinds cnk
+		JOIN kind k ON k.id = cnk.kind_id
+		WHERE k.name LIKE 'Tag_%'
+	`).Scan(&tagCount).Error)
+	assert.Equal(t, 0, tagCount, "Tag_-prefixed kinds should have been deleted")
+
+	// two rows should survive (PreExistingKind and BrandNewKind).
+	var rowCount int
+	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM custom_node_kinds`).Scan(&rowCount).Error)
+	assert.Equal(t, 2, rowCount, "expected exactly two surviving custom_node_kinds rows")
+
+	// BrandNewKind should exist in the kind table
+	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM kind WHERE name = 'BrandNewKind'`).Scan(&rowCount).Error)
+	assert.Equal(t, 1, rowCount, "BrandNewKind should have been upserted into the kind table")
+
+	// The kind sequence must have advanced by exactly 1 (BrandNewKind only).
+	// PreExistingKind was already in kind and Tag_ShouldDelete was deleted before
+	// the insert, so neither should have consumed a sequence value.
+	var kindSeqAfter int64
+	require.NoError(t, testContext.gormDB.Raw(`SELECT last_value FROM kind_id_seq`).Scan(&kindSeqAfter).Error)
+	assert.Equal(t, kindSeqBefore+1, kindSeqAfter, "kind sequence should only advance for genuinely new kinds")
+
+	// Every surviving row should have a non-null kind_id.
+	require.NoError(t, testContext.gormDB.Raw(`SELECT COUNT(*) FROM custom_node_kinds WHERE kind_id IS NULL`).Scan(&rowCount).Error)
+	assert.Equal(t, 0, rowCount, "every custom_node_kinds row should have a kind_id after the migration")
 }

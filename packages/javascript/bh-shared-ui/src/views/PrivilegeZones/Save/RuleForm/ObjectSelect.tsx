@@ -17,7 +17,6 @@
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Button,
     Card,
     CardContent,
     CardDescription,
@@ -26,15 +25,16 @@ import {
     TableBody,
     TableCell,
     TableRow,
+    TextButton,
     Tooltip,
 } from 'doodle-ui';
-import { FC, useState } from 'react';
+import { useState } from 'react';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
 import { SearchValue } from '../../../Explore';
 import { useRuleFormContext } from './RuleFormContext';
 
-const ObjectSelect: FC = () => {
+const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
     const { selectedObjects, dispatch } = useRuleFormContext();
     const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -61,6 +61,7 @@ const ObjectSelect: FC = () => {
                 <div className='flex content-center mb-3'>
                     <div className='w-full my-2'>
                         <ExploreSearchCombobox
+                            errorMessage={errorMessage}
                             labelText='Search Objects To Add'
                             inputValue={searchTerm}
                             selectedItem={null}
@@ -76,12 +77,11 @@ const ObjectSelect: FC = () => {
                             {selectedObjects.map((node, index) => (
                                 <TableRow key={node.objectid + index} className='p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
-                                        <Button
-                                            variant={'text'}
+                                        <TextButton
                                             onClick={() => handleDeleteNode(node)}
                                             aria-label={`Remove ${node.name || node.objectid}`}>
                                             <FontAwesomeIcon icon={faTrashCan} />
-                                        </Button>
+                                        </TextButton>
                                     </TableCell>
                                     <TableCell className='text-center w-[60px]'>
                                         <NodeIcon nodeType={node.type || ''} />

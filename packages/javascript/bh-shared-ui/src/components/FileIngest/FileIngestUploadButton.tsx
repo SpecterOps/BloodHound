@@ -21,7 +21,7 @@ import { Permission } from '../../utils';
 export const FileIngestUploadButton = () => {
     const { setShowFileIngestDialog } = useFileUploadDialogContext();
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST);
+    const hasPermission = checkPermission(Permission.GRAPH_DB_INGEST_MANAGE);
     const toggleFileUploadDialog = () => setShowFileIngestDialog((prev) => !prev);
 
     return (

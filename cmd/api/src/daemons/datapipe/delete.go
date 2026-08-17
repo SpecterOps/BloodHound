@@ -22,7 +22,9 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -30,126 +32,226 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+// graphWiper is implemented by graph database drivers (currently PostgreSQL) that support a fast, bulk truncate-based
+// wipe of all graph data. The retain delegate runs within the same transaction as the wipe so survivor nodes can be
+// recreated atomically.
+type graphWiper interface {
+	WipeGraph(ctx context.Context, retain graph.TransactionDelegate) error
+}
+
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds) error {
-	slog.InfoContext(
+	defer measure.ContextLogAndMeasure(
 		ctx,
+		slog.LevelInfo,
 		"DeleteCollectedGraphData",
 		slog.Bool("delete_all_data", deleteRequest.DeleteAllGraph),
 		slog.Bool("delete_sourceless_data", deleteRequest.DeleteSourcelessGraph),
 		slog.String("delete_source_kinds", strings.Join(deleteRequest.DeleteSourceKinds, ",")),
 		slog.String("delete_relationships", strings.Join(deleteRequest.DeleteRelationships, ",")),
-	)
+	)()
+
+	// On backends that support a bulk wipe (PostgreSQL), a full graph deletion truncates every node and edge partition
+	// in a single transaction rather than streaming and deleting each node row-by-row. This also clears all edges, so
+	// any requested relationship deletions are subsumed by the wipe. Backends without this capability (Neo4j) fall
+	// through to the row-by-row path below.
+	if deleteRequest.DeleteAllGraph {
+		if wiper, isWiper := graph.AsDriver[graphWiper](graphDB); isWiper {
+			return wipeAllGraphData(ctx, graphDB, wiper)
+		}
+	}
 
 	if deleteRequest.DeleteAllGraph || deleteRequest.DeleteSourcelessGraph || len(deleteRequest.DeleteSourceKinds) > 0 {
-		nodeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
-			Parent:     ctx,
-			DB:         graphDB,
-			NumReaders: 1,
-			NumWriters: 1,
-		})
-
 		deleteSourceKinds := make(graph.Kinds, len(deleteRequest.DeleteSourceKinds))
 		for i, sourceKind := range deleteRequest.DeleteSourceKinds {
 			deleteSourceKinds[i] = graph.StringKind(sourceKind)
 		}
 
-		nodeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
-			var (
-				nodeQuery graph.NodeQuery
-				filters   []graph.Criteria
-			)
-
-			// Always exclude MigrationData
-			migrationFilter := query.Not(query.Kind(query.Node(), common.MigrationData))
-
-			if !deleteRequest.DeleteAllGraph {
-				if deleteRequest.DeleteSourcelessGraph {
-					filters = append(filters,
-						query.Not(query.KindIn(query.Node(), sourceKinds...)),
-					)
-				}
-
-				if len(deleteSourceKinds) > 0 {
-					filters = append(filters,
-						query.KindIn(query.Node(), deleteSourceKinds...),
-					)
-				}
+		// On backends that support it, push the node deletes server-side as set-based deletes over the kind index
+		// instead of streaming every node ID through the application and deleting row-by-row.
+		if deleter, hasCapability := graph.AsDriver[nodesByKindDeleter](graphDB); hasCapability {
+			if err := deleteNodesByKindsSetBased(ctx, deleter, deleteRequest, sourceKinds, deleteSourceKinds); err != nil {
+				return fmt.Errorf("error deleting graph nodes: %w", err)
 			}
-
-			if len(filters) > 0 {
-				nodeQuery = tx.Nodes().Filter(
-					query.And(
-						migrationFilter,
-						query.Or(filters...),
-					),
-				)
-			} else {
-				nodeQuery = tx.Nodes().Filter(migrationFilter)
-			}
-
-			return nodeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-				channels.PipeAll(ctx, cursor.Chan(), outC)
-				return cursor.Error()
-			})
-		})
-
-		nodeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-			for {
-				if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-					if err := batch.DeleteNode(nextID); err != nil {
-						return err
-					}
-				} else {
-					break
-				}
-			}
-
-			return nil
-		})
-
-		if err := nodeOperation.Done(); err != nil {
+		} else if err := deleteNodesByOperation(ctx, graphDB, deleteRequest, sourceKinds, deleteSourceKinds); err != nil {
 			return fmt.Errorf("error deleting graph nodes: %w", err)
 		}
 	}
 
 	if len(deleteRequest.DeleteRelationships) > 0 {
-		edgeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
-			Parent:     ctx,
-			DB:         graphDB,
-			NumReaders: 1,
-			NumWriters: 1,
-		})
-
 		deleteRelationshipKinds := make(graph.Kinds, len(deleteRequest.DeleteRelationships))
 		for i, relationshipKind := range deleteRequest.DeleteRelationships {
 			deleteRelationshipKinds[i] = graph.StringKind(relationshipKind)
 		}
 
-		edgeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
-			edgeQuery := tx.Relationships().Filter(query.KindIn(query.Relationship(), deleteRelationshipKinds...))
+		// On backends that support it, push the relationship deletes server-side as a set-based delete over the
+		// edge kind index instead of streaming every relationship ID through the application and deleting row-by-row.
+		if deleter, hasCapability := graph.AsDriver[relationshipsByKindDeleter](graphDB); hasCapability {
+			if err := deleter.DeleteRelationshipsByKinds(ctx, deleteRelationshipKinds); err != nil {
+				return fmt.Errorf("error deleting graph edges: %w", err)
+			}
+		} else if err := deleteRelationshipsByOperation(ctx, graphDB, deleteRelationshipKinds); err != nil {
+			return fmt.Errorf("error deleting graph edges: %w", err)
+		}
+	}
 
-			return edgeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
-				channels.PipeAll(ctx, cursor.Chan(), outC)
-				return cursor.Error()
-			})
-		})
+	return nil
+}
 
-		edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
-			for {
-				if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
-					if err := batch.DeleteRelationship(nextID); err != nil {
-						return err
-					}
-				} else {
-					break
-				}
+// wipeAllGraphData performs a full graph wipe via the backend's bulk truncate path. The MigrationData node records the
+// graph schema version and must survive the wipe, otherwise the migration system would re-initialize the database on the
+// next startup. Its version is read before the wipe and the node is recreated within the same transaction as the
+// truncate, so the wipe and recreate are atomic.
+func wipeAllGraphData(ctx context.Context, graphDB graph.Database, wiper graphWiper) error {
+	migrationData, err := migrations.GetMigrationData(ctx, graphDB)
+	if err != nil {
+		return fmt.Errorf("reading migration data prior to graph wipe: %w", err)
+	}
+
+	return wiper.WipeGraph(ctx, func(tx graph.Transaction) error {
+		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
+			"Major": migrationData.Major,
+			"Minor": migrationData.Minor,
+			"Patch": migrationData.Patch,
+		}), common.MigrationData); err != nil {
+			return fmt.Errorf("recreating migration data after graph wipe: %w", err)
+		}
+
+		return nil
+	})
+}
+
+// nodesByKindDeleter is implemented by graph drivers that can perform server-side, set-based node deletes filtered
+// by kind. A node is deleted when its kinds overlap includeAny (or, when includeAny is empty, for every node) and
+// do not overlap excludeAny.
+type nodesByKindDeleter interface {
+	DeleteNodesByKinds(ctx context.Context, includeAny graph.Kinds, excludeAny graph.Kinds) error
+}
+
+// deleteNodesByKindsSetBased translates the deletion request into one or more set-based node deletes. MigrationData
+// is always preserved. The DeleteSourcelessGraph and DeleteSourceKinds cases are unioned by issuing a delete for
+// each, mirroring the OR of filters used by the streaming path.
+func deleteNodesByKindsSetBased(ctx context.Context, deleter nodesByKindDeleter, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds, deleteSourceKinds graph.Kinds) error {
+	excludeMigration := graph.Kinds{common.MigrationData}
+
+	if deleteRequest.DeleteAllGraph {
+		return deleter.DeleteNodesByKinds(ctx, nil, excludeMigration)
+	}
+
+	if len(deleteSourceKinds) > 0 {
+		if err := deleter.DeleteNodesByKinds(ctx, deleteSourceKinds, excludeMigration); err != nil {
+			return err
+		}
+	}
+
+	if deleteRequest.DeleteSourcelessGraph {
+		excludeSourceless := append(graph.Kinds{common.MigrationData}, sourceKinds...)
+		if err := deleter.DeleteNodesByKinds(ctx, nil, excludeSourceless); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deleteNodesByOperation is the backend-agnostic fallback that streams matching node IDs through the application and
+// deletes them row-by-row. It is used for drivers that do not implement nodesByKindDeleter.
+func deleteNodesByOperation(ctx context.Context, graphDB graph.Database, deleteRequest model.AnalysisRequest, sourceKinds graph.Kinds, deleteSourceKinds graph.Kinds) error {
+	nodeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
+		Parent:     ctx,
+		DB:         graphDB,
+		NumReaders: 1,
+		NumWriters: 1,
+	})
+
+	nodeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
+		var (
+			nodeQuery graph.NodeQuery
+			filters   []graph.Criteria
+		)
+
+		// Always exclude MigrationData
+		migrationFilter := query.Not(query.Kind(query.Node(), common.MigrationData))
+
+		if !deleteRequest.DeleteAllGraph {
+			if deleteRequest.DeleteSourcelessGraph {
+				filters = append(filters,
+					query.Not(query.KindIn(query.Node(), sourceKinds...)),
+				)
 			}
 
-			return nil
-		})
+			if len(deleteSourceKinds) > 0 {
+				filters = append(filters,
+					query.KindIn(query.Node(), deleteSourceKinds...),
+				)
+			}
+		}
 
-		if err := edgeOperation.Done(); err != nil {
-			return fmt.Errorf("error deleting graph edges: %w", err)
+		if len(filters) > 0 {
+			nodeQuery = tx.Nodes().Filter(
+				query.And(
+					migrationFilter,
+					query.Or(filters...),
+				),
+			)
+		} else {
+			nodeQuery = tx.Nodes().Filter(migrationFilter)
+		}
+
+		return nodeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+			channels.PipeAll(ctx, cursor.Chan(), outC)
+			return cursor.Error()
+		})
+	})
+
+	nodeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
+		return drainAndDelete(ctx, inC, batch.DeleteNode)
+	})
+
+	return nodeOperation.Done()
+}
+
+// relationshipsByKindDeleter is implemented by graph drivers that can perform server-side, set-based relationship
+// deletes filtered by kind.
+type relationshipsByKindDeleter interface {
+	DeleteRelationshipsByKinds(ctx context.Context, kinds graph.Kinds) error
+}
+
+// deleteRelationshipsByOperation is the backend-agnostic fallback that streams matching relationship IDs through the
+// application and deletes them row-by-row. It is used for drivers that do not implement relationshipsByKindDeleter.
+func deleteRelationshipsByOperation(ctx context.Context, graphDB graph.Database, deleteRelationshipKinds graph.Kinds) error {
+	edgeOperation := ops.StartNewOperation[graph.ID](ops.OperationContext{
+		Parent:     ctx,
+		DB:         graphDB,
+		NumReaders: 1,
+		NumWriters: 1,
+	})
+
+	edgeOperation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- graph.ID) error {
+		edgeQuery := tx.Relationships().Filter(query.KindIn(query.Relationship(), deleteRelationshipKinds...))
+
+		return edgeQuery.FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+			channels.PipeAll(ctx, cursor.Chan(), outC)
+			return cursor.Error()
+		})
+	})
+
+	edgeOperation.SubmitWriter(func(ctx context.Context, batch graph.Batch, inC <-chan graph.ID) error {
+		return drainAndDelete(ctx, inC, batch.DeleteRelationship)
+	})
+
+	return edgeOperation.Done()
+}
+
+// drainAndDelete receives IDs from inC until the channel is drained, invoking deleteByID for each ID and returning the
+// first error encountered. It preserves the channels.Receive termination semantics used by the operation writers.
+func drainAndDelete(ctx context.Context, inC <-chan graph.ID, deleteByID func(graph.ID) error) error {
+	for {
+		if nextID, hasNextID := channels.Receive(ctx, inC); hasNextID {
+			if err := deleteByID(nextID); err != nil {
+				return err
+			}
+		} else {
+			break
 		}
 	}
 

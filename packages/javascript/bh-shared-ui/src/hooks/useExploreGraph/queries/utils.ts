@@ -81,6 +81,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
             const edge = item as StyledGraphEdge;
             const lastSeen = getLastSeenValue(edge);
             result.edges.push({
+                id: edge.id,
                 impactPercent: edge.data ? edge.data.composite_risk_impact_percent : undefined,
                 source: edge.id1,
                 target: edge.id2,

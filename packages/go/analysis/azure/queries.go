@@ -788,31 +788,160 @@ func FetchKeyVaultReaderCounts(tx graph.Transaction, keyVault *graph.Node) (KeyV
 	return keyVaultReaders, nil
 }
 
-func EntityDescendentsTraversal(root *graph.Node, _ ...graph.Kind) ops.TraversalPlan {
-	return ops.TraversalPlan{
-		Root:        root,
-		Direction:   graph.DirectionOutbound,
-		BranchQuery: FilterContains,
+// directRelationshipKinds maps each valid AZContains start node kind to the set of valid end node kinds
+// where it is a single hop relationship as opposed to a path of multiple relationships.
+// This is derived directly from the ingestion logic in bhce/packages/go/ein/azure.go.
+var directRelationshipKinds = map[graph.Kind]graph.Kinds{
+	azure.Tenant: {
+		azure.App,
+		azure.Device,
+		azure.Group,
+		azure.Role,
+		azure.ServicePrincipal,
+		azure.Subscription,
+		azure.User,
+	},
+	azure.Subscription: {
+		azure.ResourceGroup,
+	},
+	azure.ResourceGroup: {
+		azure.VMScaleSet,
+		azure.FunctionApp,
+		azure.KeyVault,
+		azure.LogicApp,
+		azure.VM,
+		azure.ManagedCluster,
+		azure.ContainerRegistry,
+		azure.WebApp,
+		azure.AutomationAccount,
+	},
+}
+
+// isDirectDescendent reports whether targetKind is a valid direct AZContains child of sourceKind,
+// according to the containsValidEndKinds mapping derived from the Azure ingestion logic.
+func isDirectDescendent(sourceKind, targetKind graph.Kind) bool {
+	if validEndKinds, ok := directRelationshipKinds[sourceKind]; ok && validEndKinds.ContainsOneOf(targetKind) {
+		return true
 	}
+	return false
 }
 
-func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (graph.PathSet, error) {
-	return ops.TraverseIntermediaryPaths(tx, EntityDescendentsTraversal(root, descendentKinds...), func(node *graph.Node) bool {
-		return node.Kinds.ContainsOneOf(descendentKinds...)
-	})
+// nodeAzureTenantID returns the Azure tenant ID for a node. For Tenant nodes the tenant ID is
+// stored in the common.ObjectID property; for all other Azure nodes it is stored in azure.TenantID.
+func nodeAzureTenantID(node *graph.Node) (string, error) {
+	if node.Kinds.ContainsOneOf(azure.Tenant) {
+		return node.Properties.Get(common.ObjectID.String()).String()
+	}
+
+	return node.Properties.Get(azure.TenantID.String()).String()
 }
 
-func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (graph.NodeSet, error) {
-	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKinds...); err != nil {
+// FetchDirectDescendentPaths fetches the direct AZContains relationships from the root node
+func FetchDirectDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
+	return ops.FetchPathSet(tx.Relationships().Filter(query.And(
+		query.Equals(query.StartID(), root.ID),
+		query.Kind(query.Relationship(), azure.Contains),
+		query.KindIn(query.End(), descendentKind...),
+	)))
+}
+
+// FetchDirectEntityDescendents fetches the set of nodes of descendentKind that are direct AZContains
+// children of root, excluding root itself.
+func FetchDirectEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKind graph.Kind) (graph.NodeSet, error) {
+	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKind); err != nil {
 		return nil, err
 	} else {
 		nodes := paths.AllNodes()
 		nodes.Remove(root.ID)
-		return nodes.ContainingNodeKinds(descendentKinds...), nil
+		return nodes, nil
 	}
 }
 
-func FetchEntityDescendentCounts(tx graph.Transaction, root *graph.Node, skip, limit int, descendentKinds ...graph.Kind) (Descendents, error) {
+// FetchDescendentKindByTenantID fetches the set of nodes matching descendentKind that reside within
+// the same Azure tenant as root, determined by comparing the azure.TenantID property against root's
+// tenant ID.
+func FetchDescendentKindByTenantID(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.NodeSet, error) {
+	if tenantID, err := nodeAzureTenantID(root); err != nil {
+		return nil, err
+	} else if nodes, err := ops.FetchNodeSet(tx.Nodes().Filter(query.And(
+		query.KindIn(query.Node(), descendentKind...),
+		query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
+	))); err != nil {
+		return nil, err
+	} else {
+		return nodes, nil
+	}
+}
+
+// FetchEntityDescendentPaths fetches paths from each terminal node of descendentKind (within the
+// same Azure tenant as root) back up to root via azure.Contains relationships. Each traversal
+// halts upon reaching root, and only paths that successfully reach root are included in the result.
+func FetchEntityDescendentPaths(tx graph.Transaction, root *graph.Node, descendentKind ...graph.Kind) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+
+	terminalNodes, err := FetchDescendentKindByTenantID(tx, root, descendentKind...)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, terminalNode := range terminalNodes {
+		reachedRoot := false
+		if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      terminalNode,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.Kind(query.Relationship(), azure.Contains)
+			},
+			ExpansionFilter: func(segment *graph.PathSegment) bool {
+				if segment.Node.ID == root.ID {
+					reachedRoot = true
+					return false
+				}
+				return true
+			},
+		}); err != nil {
+			return nil, err
+		} else {
+			if reachedRoot {
+				pathSet.AddPathSet(paths)
+			}
+		}
+	}
+
+	return pathSet, nil
+}
+
+func FetchEntityDescendents(tx graph.Transaction, root *graph.Node, descendentKind graph.Kind) (graph.NodeSet, error) {
+	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKind); err != nil {
+		return nil, err
+	} else {
+		nodes := paths.AllNodes()
+		nodes.Remove(root.ID)
+		return nodes.ContainingNodeKinds(descendentKind), nil
+	}
+}
+
+// FetchDirectDescendentCounts returns the per-kind counts of nodes that are direct AZContains
+// children of root, keyed by kind string and excluding root itself.
+func FetchDirectDescendentCounts(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (Descendents, error) {
+	if paths, err := FetchDirectDescendentPaths(tx, root, descendentKinds...); err != nil {
+		return Descendents{}, err
+	} else {
+		details := Descendents{
+			DescendentCounts: map[string]int{},
+		}
+		kindSet := paths.AllNodes().KindSet()
+		kindSet.RemoveNode(root.ID)
+
+		for _, kind := range descendentKinds {
+			details.DescendentCounts[kind.String()] = int(kindSet.Count(kind))
+		}
+
+		return details, nil
+	}
+}
+
+func FetchEntityDescendentCounts(tx graph.Transaction, root *graph.Node, descendentKinds ...graph.Kind) (Descendents, error) {
 	if paths, err := FetchEntityDescendentPaths(tx, root, descendentKinds...); err != nil {
 		return Descendents{}, err
 	} else {

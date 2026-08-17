@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/** Value maybe be null or undefined; Typically used when value is expected but not yet available */
+export type Nullable<T> = T | null | undefined;
+
 /** Exclusive OR (XOR) type utility. */
 export type XOR<T, U> =
     | (T & { [K in Exclude<keyof U, keyof T>]?: never })

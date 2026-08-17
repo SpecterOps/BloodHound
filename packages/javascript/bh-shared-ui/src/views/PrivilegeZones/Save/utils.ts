@@ -17,16 +17,19 @@
 import { isAxiosError, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
+export const SEEDS_ARE_REQUIRED = 'seeds are required';
+export const NAME_MUST_BE_UNIQUE = 'name must be unique';
+
 export const getErrorMessage = (apiMessage: string, action: string, entity: string, ruleType?: SeedTypes) => {
     // RULE_TYPE_LABEL - "Object ID" or "Cypher"
     const RULE_TYPE_LABEL = ruleType ? SeedTypesMap[ruleType] : 'Cypher';
     const UPDATE_OR_CREATE_ACTION = action === 'creating' || action === 'updating';
 
     switch (apiMessage) {
-        case 'name must be unique':
+        case NAME_MUST_BE_UNIQUE:
             return `Error ${action} ${entity}: ${entity} names must be unique. Please provide a unique name for your new ${entity} and try again.`;
 
-        case 'seeds are required': {
+        case SEEDS_ARE_REQUIRED: {
             if (ruleType === SeedTypeObjectId && UPDATE_OR_CREATE_ACTION) {
                 return `To save a ${entity} using ${RULE_TYPE_LABEL}, add at least one object using the field below.`;
             }

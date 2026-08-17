@@ -29,16 +29,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
 type ListPermissionsResponse struct {
 	Permissions model.Permissions `json:"permissions"`
-}
-
-type ListRolesResponse struct {
-	Roles model.Roles `json:"roles"`
 }
 
 type ListUsersResponse struct {
@@ -118,6 +115,7 @@ type Resources struct {
 	FileServiceResolver        storage.FileServiceResolver
 	OpenGraphSchemaService     OpenGraphSchemaService
 	DogTags                    dogtags.Service
+	AlertPublisher             alerts.Publisher
 }
 
 func NewResources(
@@ -133,6 +131,7 @@ func NewResources(
 	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService OpenGraphSchemaService,
+	alertPublisher alerts.Publisher,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -149,5 +148,6 @@ func NewResources(
 		FileServiceResolver:        fileServiceResolver,
 		DogTags:                    dogtagsService,
 		OpenGraphSchemaService:     openGraphSchemaService,
+		AlertPublisher:             alertPublisher,
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { act, render, screen } from '../../test-utils';
+import { act, render, screen, waitFor } from '../../test-utils';
 import { allSections } from '../../utils';
 import { EntityInfoDataTableGraphed } from './EntityInfoDataTableGraphed';
 
@@ -115,6 +115,13 @@ const handlers: Array<RequestHandler> = [
             })
         );
     }),
+    rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
 ];
 
 const server = setupServer(...handlers);
@@ -131,7 +138,7 @@ describe('EntityInfoDataTableGraphed', () => {
             expect(sum).not.toBeNull();
         });
 
-        it('displays ! icon when one of the Affected Object calls fail', async () => {
+        it('sums the remaining sections when one of the Affected Object calls fails', async () => {
             console.error = vi.fn();
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
@@ -141,9 +148,10 @@ describe('EntityInfoDataTableGraphed', () => {
 
             render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
 
-            const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
+            const sum = await screen.findByText('5,056');
+            expect(sum).not.toBeNull();
 
-            expect(errorIcon).not.toBeNull();
+            expect(screen.queryByTestId('ErrorOutlineIcon')).toBeNull();
         });
 
         it('displays 0 when a given sections returns empty, and sums the rest of the sections correctly', async () => {
@@ -165,6 +173,39 @@ describe('EntityInfoDataTableGraphed', () => {
 
             const zero = await screen.findByText('0');
             expect(zero.textContent).toBe('0');
+        });
+    });
+
+    describe('clicking a node navigates using the node objectId', () => {
+        it('sets primarySearch to the node objectId when an item is clicked', async () => {
+            const user = userEvent.setup();
+
+            // adGpoSections[1] is "Inbound Object Control" with queryType 'gpo-inbound_object_control'
+            // It renders an InfiniteScrollingTable directly (no nested sections)
+            const section = allSections[ActiveDirectoryNodeKind.GPO]!(objectId)[1];
+
+            server.use(
+                rest.get(`api/v2/gpos/${objectId}/controllers`, (_req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            count: 1,
+                            data: [{ objectID: 'clicked-object-id', name: 'Clicked Node', label: 'User' }],
+                            limit: 128,
+                            skip: 0,
+                        })
+                    );
+                })
+            );
+
+            const url = `?expandedPanelSections=${encodeURIComponent(section.label)}`;
+            render(<EntityInfoDataTableGraphed {...section} />, { route: url });
+
+            await user.click(await screen.findByTestId('entity-row'));
+
+            await waitFor(() => {
+                expect(window.location.search).toContain('primarySearch=clicked-object-id');
+                expect(window.location.search).toContain('searchType=node');
+            });
         });
     });
 

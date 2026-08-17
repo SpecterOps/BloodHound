@@ -17,7 +17,7 @@ import { useQuery } from 'react-query';
 import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
 import { useExploreParams } from '../../hooks';
 import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints, getEntityQueryCount } from '../../utils';
 import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
 import InfiniteScrollingTable from '../InfiniteScrollingTable';
 
@@ -35,13 +35,13 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
     const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
 
     const countQuery = useQuery(
-        ['relatedCount', label, id],
+        ['relatedCount', label, id, sections],
         () => {
             if (endpoint) {
                 return endpoint({ id, skip: 0, limit: 128 });
             }
             if (sections)
-                return Promise.all(
+                return Promise.allSettled(
                     sections.map((section: EntityInfoDataTableProps) => {
                         const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
                         return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
@@ -80,7 +80,7 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const handleOnChange = (isOpen: boolean) => {
+    const handleChange = (isOpen: boolean) => {
         if (isOpen) handleSetGraph();
         else removeExpandedPanelSectionParams();
     };
@@ -100,25 +100,11 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const handleOnClick = (item: SelectedNode) => {
+    const handleClick = (item: SelectedNode) => {
         setNodeSearchParams(item);
     };
 
-    let count: number | undefined;
-    if (Array.isArray(countQuery.data)) {
-        if (countLabel !== undefined) {
-            countQuery.data.forEach((sectionData: any) => {
-                if (sectionData.countLabel === countLabel) count = sectionData.count;
-            });
-        } else {
-            count = countQuery.data.reduce((acc, val) => {
-                const count = val?.count ?? 0;
-                return acc + count;
-            }, 0);
-        }
-    } else if (countQuery.data) {
-        count = countQuery.data?.count ?? 0;
-    }
+    const count = getEntityQueryCount(countQuery.data, countLabel);
 
     return (
         <EntityInfoCollapsibleSection
@@ -128,12 +114,13 @@ export const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
             isLoading={countQuery.isLoading}
             isError={countQuery.isError}
             error={countQuery.error}
-            onChange={handleOnChange}>
+            onChange={handleChange}>
             {endpoint && (
                 <InfiniteScrollingTable
+                    key={id}
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
-                    onClick={handleOnClick}
+                    onClick={handleClick}
                 />
             )}
             {sections &&
