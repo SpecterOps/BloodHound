@@ -327,7 +327,7 @@ describe('ExploreSearch handling of cypher query responses', () => {
 
         expect(await screen.findByRole('button', { name: /run cypher query/i })).not.toBeDisabled();
 
-        expect(await screen.findByTestId('cypher-search-section')).toBeInTheDocument();
+        expect(await screen.findByTestId('cypher-search-section')).toBeVisible();
         expect(window.location.search).not.toContain('selectedItem=');
     });
 
@@ -335,7 +335,7 @@ describe('ExploreSearch handling of cypher query responses', () => {
         mockCypherEndpoint(singleNodeGraphResponse);
         const { screen } = await setupCypherSearch();
 
-        expect(await screen.findByTestId('cypher-search-section')).not.toBeInTheDocument();
+        expect(await screen.findByTestId('cypher-search-section')).not.toBeVisible();
     });
 
     it('clears the selected item and closes the search widget when the query returns multiple nodes', async () => {
