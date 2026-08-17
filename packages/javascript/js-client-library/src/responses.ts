@@ -429,7 +429,7 @@ export type Extension = {
 
 export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
 
-export type FindingTypeResponse = BasicResponse<{ finding: string; title: string }>;
+export type FindingTypeResponse = BasicResponse<{ finding: string; title: string }[]>;
 
 export type FindingSchema = {
     id: number;
