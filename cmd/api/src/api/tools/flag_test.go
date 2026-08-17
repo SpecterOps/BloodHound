@@ -93,7 +93,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: analysis request failure returns database error response",
+			name: "Error: analysis request failure returns database error response and rollsback ff",
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
@@ -110,6 +110,12 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 					},
 				)
 				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(errors.New("request analysis failed"))
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.False(t, updatedFeatureFlag.Enabled, "expected persisted feature flag to be rolled back after analysis request failure")
+						return nil
+					},
+				)
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()
