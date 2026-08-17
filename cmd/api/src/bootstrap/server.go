@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -69,7 +70,16 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 		return nil
 	}
 
-	return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
+	// Only create the default admin if specified in the config
+	// This should be enabled by default for local dev environments
+	if cfg.DefaultAdmin.Enabled {
+		slog.InfoContext(ctx, "Default admin enabled, creating admin account using default credentials")
+		return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
+	} else {
+		slog.InfoContext(ctx, "Default admin disabled")
+	}
+
+	return nil
 }
 
 func PopulateExtensionData(ctx context.Context, db database.Database) error {
@@ -121,7 +131,7 @@ func CreateDefaultAdmin(ctx context.Context, cfg config.Configuration, db databa
 		needsLog       bool
 	)
 
-	//Populate any missing fields of the admin configuration using our defaults
+	// Populate any missing fields of the admin configuration using our defaults
 	if populatedConfig, needsLogInner, err := FillAndPopulateDefaultAdminInfo(cfg.DefaultAdmin, defaultAdminFunction); err != nil {
 		return fmt.Errorf("error while populating default admin info: %w", err)
 	} else {
