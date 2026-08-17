@@ -123,6 +123,36 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: rollback failure returns database error response",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				featureFlag := appcfg.FeatureFlag{
+					Key:     appcfg.FeatureFindingsPrioritizationV0,
+					Enabled: false,
+				}
+
+				mock.database.EXPECT().GetFlag(gomock.Any(), int32(1)).Return(featureFlag, nil)
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.True(t, updatedFeatureFlag.Enabled, "expected persisted feature flag to be enabled")
+						return nil
+					},
+				)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(errors.New("request analysis failed"))
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.False(t, updatedFeatureFlag.Enabled, "expected rollback to restore the original disabled state")
+						return errors.New("rollback failed")
+					},
+				)
+			},
+			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
+				t.Helper()
+				assert.Equal(t, http.StatusInternalServerError, response.Code)
+			},
+		},
+		{
 			name: "Success: enabling findings prioritization requests analysis and returns enabled response",
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()

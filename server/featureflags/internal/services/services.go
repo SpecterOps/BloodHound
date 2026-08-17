@@ -142,6 +142,12 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
 		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
+			flag.Enabled = !flag.Enabled
+
+			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {
+				return flag, errors.Join(err, rollbackErr)
+			}
+
 			return flag, err
 		}
 	}

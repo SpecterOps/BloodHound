@@ -195,6 +195,7 @@ func TestService_ToggleFlag(t *testing.T) {
 		ctx                = context.Background()
 		unexpectedErr      = errors.New("connection refused")
 		setFlagErr         = errors.New("set flag failed")
+		rollbackErr        = errors.New("rollback set flag failed")
 		requestAnalysisErr = errors.New("request analysis failed")
 		updatableFlag      = services.FeatureFlag{
 			ID:            7,
@@ -217,10 +218,11 @@ func TestService_ToggleFlag(t *testing.T) {
 	)
 
 	type testCase struct {
-		name       string
-		featureID  int32
-		setupMocks func(databaseMock *mocks.MockDatabase)
-		assert     func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error)
+		name                 string
+		featureID            int32
+		analysisRequesterErr error
+		setupMocks           func(databaseMock *mocks.MockDatabase)
+		assert               func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error)
 	}
 
 	toggledUpdatableFlag := updatableFlag
@@ -309,16 +311,34 @@ func TestService_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name:      "propagates errors from SubmitAnalysisRequest",
-			featureID: findingsPrioritizationFlag.ID,
+			name:                 "propagates errors from SubmitAnalysisRequest",
+			featureID:            findingsPrioritizationFlag.ID,
+			analysisRequesterErr: requestAnalysisErr,
 			setupMocks: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
 				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 			},
 			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, requestAnalysisErr)
 				assert.True(t, analysisRequester.called)
-				assert.Equal(t, enabledFindingsPrioritizationFlag, got)
+				assert.Equal(t, findingsPrioritizationFlag, got)
+			},
+		},
+		{
+			name:                 "propagates rollback errors from SubmitAnalysisRequest failure",
+			featureID:            findingsPrioritizationFlag.ID,
+			analysisRequesterErr: requestAnalysisErr,
+			setupMocks: func(databaseMock *mocks.MockDatabase) {
+				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(rollbackErr)
+			},
+			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+				assert.ErrorIs(t, err, requestAnalysisErr)
+				assert.ErrorIs(t, err, rollbackErr)
+				assert.True(t, analysisRequester.called)
+				assert.Equal(t, findingsPrioritizationFlag, got)
 			},
 		},
 	}
@@ -329,12 +349,9 @@ func TestService_ToggleFlag(t *testing.T) {
 
 			var (
 				databaseMock      = mocks.NewMockDatabase(t)
-				analysisRequester = &stubAnalysisRequestSubmitter{err: requestAnalysisErr}
+				analysisRequester = &stubAnalysisRequestSubmitter{err: testCase.analysisRequesterErr}
 				svc               = services.NewService(databaseMock, analysisRequester)
 			)
-			if testCase.name != "propagates errors from SubmitAnalysisRequest" {
-				analysisRequester.err = nil
-			}
 
 			testCase.setupMocks(databaseMock)
 
