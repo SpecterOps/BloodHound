@@ -114,6 +114,10 @@ const server = setupServer(
 beforeAll(() => server.listen());
 beforeEach(() => {
     mockCodemirrorLayoutMethods();
+    const style = document.createElement('style');
+    style.innerHTML = '.hidden { display: none; }';
+    document.head.appendChild(style);
+
     serverState = setInitialServerState();
 });
 afterEach(() => server.resetHandlers());
