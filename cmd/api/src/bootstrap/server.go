@@ -73,7 +73,7 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 	// Only create the default admin if specified in the config
 	// This should be enabled by default for local dev environments
 	if cfg.DefaultAdmin.Enabled {
-		slog.InfoContext(ctx, "Default admin enabled, creating admin account using default credentials")
+		slog.InfoContext(ctx, "Default admin enabled, creating admin account")
 		return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
 	} else {
 		slog.InfoContext(ctx, "Default admin disabled")
