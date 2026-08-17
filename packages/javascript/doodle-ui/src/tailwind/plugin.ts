@@ -153,7 +153,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Textarea
             '--textarea-fill': common.white,
-            '--textarea-border-default': palette.neutral.light[400],
+            '--textarea-border-default': palette.grey[700],
             '--textarea-border-hover': light.secondary.main,
 
             // // Components/RadioGroup
@@ -399,9 +399,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-outlined-border-hover': dark.secondary.main,
 
             // // Components/Textarea
-            '--textarea-fill': palette.neutral.dark[700],
-            '--textarea-border-default': palette.neutral.dark[700],
-            '--textarea-border-hover': secondaryVariant2,
+            '--textarea-fill': common.dark,
+            '--textarea-border-default': dark.input.border,
+            '--textarea-border-hover': dark.secondary.main,
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],

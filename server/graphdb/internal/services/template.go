@@ -24,8 +24,8 @@ import (
 	"log/slog"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/safetemplate"
 )
 
 // NodeContext is the template representation of a node.
@@ -65,38 +65,6 @@ type kindInfoContent struct {
 	} `json:"markdown"`
 }
 
-// we don't support these template functions
-var unsupportedFns = []string{
-	"bcrypt",
-	"htpasswd",
-	"genPrivateKey",
-	"derivePassword",
-	"buildCustomCert",
-	"genCA",
-	"genCAWithKey",
-	"genSelfSignedCert",
-	"genSignedCert",
-	"genSignedCertWithKey",
-	"encryptAES",
-	"decryptAES",
-	"regexMatch",
-	"regexFindAll",
-	"regexFind",
-	"regexReplaceAll",
-	"regexReplaceAllLiteral",
-	"regexSplit",
-	"mustRegexMatch",
-	"mustRegexFindAll",
-	"mustRegexFind",
-	"mustRegexReplaceAll",
-	"mustRegexReplaceAllLiteral",
-	"mustRegexSplit",
-	"urlParse",
-	"urlJoin",
-	"randInt",
-	"ago",
-}
-
 func renderKindInfoMarkdown(content json.RawMessage, context any) (string, error) {
 	var contentView kindInfoContent
 
@@ -104,13 +72,8 @@ func renderKindInfoMarkdown(content json.RawMessage, context any) (string, error
 		return "", fmt.Errorf("unmarshalling markdown content: %w", err)
 	}
 
-	functions := sprig.HermeticTxtFuncMap()
-	for _, functionName := range unsupportedFns {
-		delete(functions, functionName)
-	}
-
 	parsedTemplate, err := template.New("kind-info-markdown").
-		Funcs(functions).
+		Funcs(safetemplate.FuncMap()).
 		Parse(contentView.Markdown.Content)
 	if err != nil {
 		return contentView.Markdown.Content, fmt.Errorf("parsing markdown template: %w", err)

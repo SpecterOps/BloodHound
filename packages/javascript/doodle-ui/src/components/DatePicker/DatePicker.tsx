@@ -44,14 +44,14 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     {InputElement ? (
                         <InputElement
                             {...props}
-                            className={cn('bg-neutral-light-1 dark:bg-neutral-dark-1 peer', props.className)}
+                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
                             ref={ref}
                         />
                     ) : (
                         <Input
                             variant='outlined'
                             {...props}
-                            className={cn('bg-neutral-light-1 dark:bg-neutral-dark-1 peer', props.className)}
+                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
                         />
                     )}
                     <PopoverTrigger asChild>
