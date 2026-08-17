@@ -54,9 +54,18 @@ type fakeAuditService struct {
 	// cancellation.
 	successCtxErr error
 	failureCtxErr error
+
+	// intentDeadlineSet/intentCtxErr capture whether the intent write received a
+	// bounded context (a deadline was set) and ctx.Err() at the time the intent
+	// write was invoked, so tests can assert the write is bounded and that request
+	// cancellation still propagates.
+	intentDeadlineSet bool
+	intentCtxErr      error
 }
 
-func (s *fakeAuditService) Intent(_ context.Context, entry audit.Entry) (uuid.UUID, error) {
+func (s *fakeAuditService) Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error) {
+	_, s.intentDeadlineSet = ctx.Deadline()
+	s.intentCtxErr = ctx.Err()
 	s.intentEntries = append(s.intentEntries, entry)
 	return s.commitID, s.intentErr
 }
@@ -131,6 +140,44 @@ func TestAuditMiddleware_MutatingSuccess(t *testing.T) {
 	require.Equal(t, testActorName, entry.ActorName)
 	require.Equal(t, testActorMail, entry.ActorEmail)
 	require.Equal(t, testRequestID, entry.RequestID)
+}
+
+func TestAuditMiddleware_IntentWriteIsBounded(t *testing.T) {
+	var (
+		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		router   = newAuditTestRouter(fake, http.StatusOK)
+		recorder = httptest.NewRecorder()
+	)
+
+	router.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
+
+	// The intent write must be bounded so a slow/unavailable database cannot block
+	// the request goroutine indefinitely before the handler runs.
+	require.Len(t, fake.intentEntries, 1)
+	require.True(t, fake.intentDeadlineSet, "intent write must receive a context with a deadline")
+}
+
+func TestAuditMiddleware_IntentWriteRespectsRequestCancellation(t *testing.T) {
+	var (
+		fake            = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		router          = newAuditTestRouter(fake, http.StatusOK)
+		recorder        = httptest.NewRecorder()
+		baseCtx, cancel = context.WithCancel(context.Background())
+	)
+
+	// Cancel before the request runs to simulate a client disconnecting before the
+	// handler is reached.
+	cancel()
+
+	request := httptest.NewRequest(http.MethodPost, "/api/v2/things/abc", nil)
+	request = request.WithContext(bhctx.Set(baseCtx, &bhctx.Context{RequestID: testRequestID}))
+
+	router.ServeHTTP(recorder, request)
+
+	// The intent context is derived from the request context, so request
+	// cancellation still propagates to the intent write.
+	require.Len(t, fake.intentEntries, 1)
+	require.ErrorIs(t, fake.intentCtxErr, context.Canceled)
 }
 
 func TestAuditMiddleware_MutatingFailure(t *testing.T) {

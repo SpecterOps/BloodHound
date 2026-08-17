@@ -17,8 +17,10 @@
 package middleware
 
 import (
+	"bufio"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -95,6 +97,43 @@ func (s *responseRecorder) Write(buffer []byte) (int, error) {
 func (s *responseRecorder) WriteHeader(statusCode int) {
 	s.statusCode = statusCode
 	s.delegate.WriteHeader(statusCode)
+}
+
+// Flush forwards to the delegate when it supports http.Flusher so that streaming
+// responses (e.g. server-sent events) continue to flush through the recorder.
+func (s *responseRecorder) Flush() {
+	if flusher, ok := s.delegate.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+// ReadFrom forwards to the delegate when it supports io.ReaderFrom so that
+// zero-copy file serving (http.ServeContent/sendfile) is preserved through the
+// recorder. It falls back to a plain copy otherwise, tracking bytes written and
+// defaulting the status code exactly as Write does.
+func (s *responseRecorder) ReadFrom(source io.Reader) (int64, error) {
+	if s.statusCode == 0 {
+		s.statusCode = http.StatusOK
+	}
+
+	if readerFrom, ok := s.delegate.(io.ReaderFrom); ok {
+		written, err := readerFrom.ReadFrom(source)
+		s.bytesWritten += written
+		return written, err
+	}
+
+	written, err := io.Copy(s.delegate, source)
+	s.bytesWritten += written
+	return written, err
+}
+
+// Hijack forwards to the delegate when it supports http.Hijacker so that
+// connection upgrades (e.g. websockets) still work through the recorder.
+func (s *responseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := s.delegate.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, http.ErrNotSupported
 }
 
 func getSignedRequestDate(request *http.Request) (string, bool) {

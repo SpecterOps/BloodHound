@@ -61,6 +61,15 @@ func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, excludedR
 	}
 }
 
+// auditIntentWriteTimeout bounds the fail-closed intent write so a slow or
+// unavailable database cannot block the request goroutine indefinitely before the
+// handler runs. Because the intent write is fail-closed, exceeding this deadline
+// rejects the request with a 500 rather than hanging: under sustained database
+// pressure the audit table becomes a bounded availability dependency for audited
+// endpoints (the request fails fast) instead of an unbounded one (requests pile
+// up waiting on the write).
+const auditIntentWriteTimeout = 5 * time.Second
+
 // auditOutcomeWriteTimeout bounds the best-effort success/failure write so a slow
 // or unavailable database cannot block the request goroutine indefinitely after
 // the handler has already returned.
@@ -81,13 +90,22 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 		return
 	}
 
+	// The intent write is bounded by auditIntentWriteTimeout. The context is
+	// derived from the request context so a client disconnecting before the
+	// handler runs still cancels the write, while the timeout guarantees an upper
+	// bound even when the request context has no deadline of its own.
+	intentCtx, cancelIntent := context.WithTimeout(ctx, auditIntentWriteTimeout)
+	defer cancelIntent()
+
 	var (
 		recorder      = &responseRecorder{delegate: response}
 		entry         = buildAuditEntry(request, routeTemplate)
-		commitID, err = auditService.Intent(ctx, entry)
+		commitID, err = auditService.Intent(intentCtx, entry)
 	)
 	// A failed intent write rejects the request: without a durable intent row
-	// the action would run unaudited, so the handler is never invoked.
+	// the action would run unaudited, so the handler is never invoked. This is
+	// fail-closed, so an intent write that exceeds auditIntentWriteTimeout also
+	// rejects the request rather than proceeding unaudited.
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to write audit intent row", attr.Error(err))
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "audit log intent could not be recorded", request), response)

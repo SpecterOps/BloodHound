@@ -20,7 +20,6 @@ package migration_test
 import (
 	"testing"
 
-	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -62,28 +61,23 @@ func isRangePartitioned(t *testing.T, db *gorm.DB, tableName string) bool {
 	return partitioned
 }
 
-// TestMigrator_AuditLogPartitioning validates the batched, restart-safe audit_logs
-// partitioning migration (20260707000001): it seeds the legacy audit_logs table
-// across the backfill batch boundary, runs the partitioning migration, and asserts
-// the data was moved into the correct partitions, the table is now
-// range-partitioned, the id sequence advanced past the copied rows, and re-running
-// the migration is a no-op.
+// TestMigrator_AuditLogPartitioning validates the batched, single-idempotent-pass
+// audit_logs partitioning migration (20260707000001): it seeds the legacy
+// audit_logs table across the backfill batch boundary, runs the partitioning
+// migration, and asserts the data was moved into the correct partitions, the table
+// is now range-partitioned, the id sequence advanced past the copied rows, and
+// re-running the migration is a no-op. The migration is not restart-resumable (the
+// backfill is one transaction with no committed partial progress); it is instead
+// re-run-safe, converging from the start on any failure via idempotency.
 func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	testContext := setupGooseTestContext(t)
 
-	provider, err := goose.NewProvider(
-		goose.DialectPostgres,
-		testContext.migrator.SqlDB,
-		testContext.migrator.GooseFS,
-		goose.WithAllowOutofOrder(true),
-	)
-	require.NoError(t, err)
-
+	provider := testContext.migrator.GooseProvider
 	db := testContext.gormDB
 
 	// Migrate up to just before the partitioning migration. This leaves the
 	// original, non-partitioned audit_logs table from the init baseline in place.
-	_, err = provider.UpTo(testContext.ctx, versionBeforeAuditPartitioning)
+	_, err := provider.UpTo(testContext.ctx, versionBeforeAuditPartitioning)
 	require.NoError(t, err)
 
 	require.False(t, isRangePartitioned(t, db, "audit_logs"),
@@ -153,11 +147,13 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 		scalarInt64(t, db, `SELECT last_value FROM audit_logs_id_seq`),
 		"audit_logs_id_seq should be advanced to the max copied id")
 
-	// Re-running the migration must be a safe no-op: the version is already applied,
-	// so Provider.Up reports no pending migrations.
-	results, err := provider.Up(testContext.ctx)
+	// Re-running the partitioning migration must be a safe no-op: its version is
+	// already applied, so migrating up to it again applies nothing. Targeting the
+	// version explicitly (rather than Up) keeps this assertion scoped to the
+	// partitioning migration and unaffected by any later migrations in the tree.
+	results, err := provider.UpTo(testContext.ctx, auditPartitioningVersion)
 	require.NoError(t, err)
-	assert.Empty(t, results, "no migrations should be pending after a completed run")
+	assert.Empty(t, results, "re-running the partitioning migration should apply nothing")
 
 	// Data is unchanged after the re-run.
 	assert.Equal(t, totalSeeded, scalarInt64(t, db, `SELECT count(*) FROM audit_logs`),
