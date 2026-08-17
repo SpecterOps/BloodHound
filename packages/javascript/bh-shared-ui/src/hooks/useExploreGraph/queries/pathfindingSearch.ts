@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { GraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
@@ -26,14 +27,47 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
+const mergeGraphResponses = (responses: GraphResponse[]): GraphResponse => {
+    return responses.reduce((merged, response) => ({
+        data: {
+            nodes: { ...merged.data.nodes, ...response.data.nodes },
+            edges: [...merged.data.edges, ...response.data.edges],
+        },
+    }));
+};
+
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { searchType, primarySearch, secondarySearch, pathFilters } = paramOptions;
+    const { searchType, primarySearch, secondarySearch, tertiarySearch, quaternarySearch, pathFilters } = paramOptions;
 
     if (!primarySearch || !searchType || !secondarySearch || areFiltersEmpty(pathFilters)) {
         return { enabled: false };
     }
 
     const filter = pathFilters?.length ? createPathFilterString(pathFilters) : undefined;
+
+    // Build ordered list of waypoints
+    const waypoints = [primarySearch, secondarySearch, tertiarySearch, quaternarySearch].filter(Boolean) as string[];
+
+    // Multi-leg pathfinding: fire parallel shortest-path queries for each consecutive pair and merge results
+    if (waypoints.length > 2) {
+        return {
+            ...sharedGraphQueryOptions,
+            queryKey: [ExploreGraphQueryKey, searchType, ...waypoints, filter],
+            queryFn: async ({ signal }) => {
+                const legs = [];
+                for (let i = 0; i < waypoints.length - 1; i++) {
+                    legs.push(
+                        apiClient
+                            .getShortestPathV2(waypoints[i], waypoints[i + 1], filter, { signal })
+                            .then((res) => res.data as GraphResponse)
+                    );
+                }
+                const results = await Promise.all(legs);
+                return mergeGraphResponses(results);
+            },
+            enabled: waypoints.length > 2,
+        };
+    }
 
     return {
         ...sharedGraphQueryOptions,

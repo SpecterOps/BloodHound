@@ -25,10 +25,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/safetemplate"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -59,6 +61,7 @@ var (
 	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
 	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 0")
 	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
+	ErrInvalidKindInfoTemplate = errors.New("invalid kind info markdown template")
 )
 
 func ErrIsGraphSchemaDuplicateError(err error) bool {
@@ -118,11 +121,19 @@ func (s *ReservedKindError) Error() string {
 }
 
 // validateKindInfoContent verifies that entity panel content matches the expected
-// JSON structure: {"markdown":{"content":"..."}}. It validates structure only; it does
-// not sanitize or inspect the markdown for unsafe HTML (see BED-8764).
+// JSON structure: {"markdown":{"content":"..."}} and that the markdown content is a
+// parseable Go template using the same utility functions registered by the read
+// path renderer. It does not sanitize or inspect the markdown for unsafe HTML
+// (see BED-8764).
 func validateKindInfoContent(content json.RawMessage) error {
-	_, err := KindInfoInput{Content: content}.MarkdownContent()
-	return err
+	if content, err := (KindInfoInput{Content: content}).MarkdownContent(); err != nil {
+		return err
+	} else if _, err := template.New("kind-info-markdown").
+		Funcs(safetemplate.FuncMap()).
+		Parse(content); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidKindInfoTemplate, err)
+	}
+	return nil
 }
 
 // MarkdownContent extracts the inner markdown content string from the KindInfoInput's
