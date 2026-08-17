@@ -242,3 +242,18 @@ export const Empty: Story = {
     },
     render: renderMultiSelect,
 };
+
+export const Variants: Story = {
+    args: {
+        options: itemOptions,
+        value: itemOptions.map((option) => option.value),
+        onValueChange: () => {},
+        selectAllLabel: 'All Items',
+    },
+    render: (args) => (
+        <div className='flex w-60 flex-col gap-4'>
+            <MultiSelect {...args} variant='outlined' />
+            <MultiSelect {...args} variant='filled' />
+        </div>
+    ),
+};
