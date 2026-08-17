@@ -100,6 +100,13 @@ export default {
                 'neutral-800': 'var(--neutral-800)',
                 'neutral-900': 'var(--neutral-900)',
 
+                // elevation: 'var(--elevation-0)',
+                'elevation-1': 'var(--elevation-1)',
+                'elevation-2': 'var(--elevation-2)',
+                'elevation-3': 'var(--elevation-3)',
+                'elevation-4': 'var(--elevation-4)',
+                'elevation-5': 'var(--elevation-5)',
+
                 'status-error-main': 'var(--status-error-main)',
                 'status-error-text': 'var(--status-error-text)',
                 'status-error-fill': 'var(--status-error-fill)',

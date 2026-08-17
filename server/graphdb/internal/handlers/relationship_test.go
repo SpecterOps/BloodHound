@@ -18,6 +18,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,6 +67,7 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 					Position:           1,
 					RelationshipKindID: &kindID,
 					Content:            json.RawMessage(`{"markdown":{"content":"relationship markdown"}}`),
+					RenderedMarkdown:   markdown,
 				},
 			},
 		}
@@ -164,6 +166,38 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 			},
 		},
 		{
+			name:  "returns 500 when the source node cannot be fetched",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, errors.New("source node unavailable"))
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:  "returns 500 when the target node cannot be fetched",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, errors.New("target node unavailable"))
+			},
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:  "returns 403 when the source node is forbidden",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, services.ErrNodeAccessDenied)
+			},
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:  "returns 403 when the target node is forbidden",
+			rawID: "1234567890",
+			setupMock: func(graphDBMock *mocks.MockGraphDB) {
+				graphDBMock.EXPECT().GetRelationship(mock.Anything, relationshipID, false).Return(services.Relationship{}, services.ErrNodeAccessDenied)
+			},
+			wantStatus: http.StatusForbidden,
+		},
+		{
 			name:       "returns 400 when the id is malformed",
 			rawID:      "not-a-number",
 			wantStatus: http.StatusBadRequest,
@@ -187,11 +221,10 @@ func TestHandlers_GetRelationshipByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				graphDBMock    = mocks.NewMockGraphDB(t)
-				authorizerMock = mocks.NewMockNodeAuthorizer(t)
-				handlerSet     = handlers.NewHandlersContainer(graphDBMock, authorizerMock)
-				recorder       = httptest.NewRecorder()
-				request        = newRequestWithID(t, tt.rawID, tt.rawQuery)
+				graphDBMock = mocks.NewMockGraphDB(t)
+				handlerSet  = handlers.NewHandlersContainer(graphDBMock)
+				recorder    = httptest.NewRecorder()
+				request     = newRequestWithID(t, tt.rawID, tt.rawQuery)
 			)
 
 			if tt.setupMock != nil {

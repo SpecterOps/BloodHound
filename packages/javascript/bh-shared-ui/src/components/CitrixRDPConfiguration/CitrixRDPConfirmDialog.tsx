@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {
-    Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    TextButton,
     VisuallyHidden,
 } from 'doodle-ui';
 import { FC } from 'react';
@@ -60,13 +60,11 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
                         Select <b>Confirm</b> to proceed. Changes will be reflected upon completion of next analysis.
                         Select <b>Cancel</b> to return to previous configuration.
                     </p>
-                    <DialogActions>
-                        <Button variant={'text'} onClick={onCancel}>
-                            Cancel
-                        </Button>
-                        <Button variant={'text'} fontColor={'primary'} onClick={onConfirm}>
+                    <DialogActions className='gap-4'>
+                        <TextButton onClick={onCancel}>Cancel</TextButton>
+                        <TextButton fontColor='primary' onClick={onConfirm}>
                             Confirm
-                        </Button>
+                        </TextButton>
                     </DialogActions>
                 </DialogContent>
             </DialogPortal>

@@ -16,10 +16,11 @@
 
 import { faCaretRight, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from 'doodle-ui';
+import { Accordion, AccordionContent, AccordionItem, IconButton, Skeleton, TextButton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagSelector, CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { useEffect, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
+import { optionStyles } from '../../..';
 import { SortableHeader } from '../../../components/ColumnHeaders';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import { useRuleInfo, useRulesInfiniteQuery } from '../../../hooks/useAssetGroupTags';
@@ -80,7 +81,7 @@ export const RulesAccordion: React.FC = () => {
 
     return (
         <div>
-            <div className='flex justify-between pl-4 pr-12 border-b border-neutral-3'>
+            <div className='flex justify-between items-center pl-4 py-2 pr-12 border-b border-neutral-3'>
                 <span className='text-lg font-bold'>Rules</span>
                 <span>
                     <span className='font-bold'>Total Rules:</span> {selectedTag.counts[RulesKey].toLocaleString()}
@@ -91,15 +92,14 @@ export const RulesAccordion: React.FC = () => {
                     'bg-neutral-4': !ruleId,
                 })}>
                 {selectedTag.id && <SelectedHighlight itemId={selectedTag.id} type='tag' />}
-                <Button
-                    variant='text'
-                    className='w-full block text-left'
+                <TextButton
+                    className={cn(optionStyles, 'block text-left h-10 px-1')}
                     onClick={() => {
                         setSelectedDetailsTab(TagTabValue);
                         navigate(tagDetailsLink(tagId));
                     }}>
-                    <span className='pl-6 text-base text-contrast ml-2 truncate'>All Rules</span>
-                </Button>
+                    <span className='pl-6 text-base ml-2'>All Rules</span>
+                </TextButton>
                 {!ruleId && <SelectedCaretRight />}
             </div>
             <Accordion
@@ -208,12 +208,9 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='rule' />
-                    <Button
-                        variant='text'
-                        className='w-full block text-left truncate'
-                        onClick={() => handleClick(item.id)}>
-                        <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
-                    </Button>
+                    <TextButton className={cn(optionStyles, 'px-1')} onClick={() => handleClick(item.id)}>
+                        <span className='pl-8 text-base ml-3.5'>{item.name}</span>
+                    </TextButton>
                     {isSelected && <SelectedCaretRight />}
                 </div>
             </Tooltip>
@@ -227,21 +224,21 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             data-testid={`privilege-zones_details_${filterKey}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
-                <div className='w-full flex items-center gap-2'>
-                    <Button
-                        className='w-6 max-xl:px-2 max-lg:px-6'
-                        variant='text'
+                <div className='w-full flex items-center h-10'>
+                    <IconButton
+                        className='mx-2 rounded-none'
+                        aria-label={isOpen ? 'Collapse' : 'Expand'}
                         disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === filterKey ? '' : filterKey));
                         }}>
                         <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
-                    </Button>
-                    <div className='flex-1 items-center gap'>
+                    </IconButton>
+                    <div className='flex items-center gap-2'>
                         <SortableHeader
                             title={filterLabels[filterKey]}
-                            disable={isAccordionDisabled}
+                            disable={!isOpen || isAccordionDisabled}
                             onSort={() => {
                                 setSortOrder((sortOrder) =>
                                     sortOrder === SortOrderAscending ? SortOrderDescending : SortOrderAscending
@@ -250,15 +247,17 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn({ 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base rounded-none', {
                                     '[&>svg]:hidden': !isOpen || isAccordionDisabled,
                                     'opacity-50': isAccordionDisabled,
+                                    'disabled:!text-text-main disabled:!opacity-100 disabled:dark:!text-common-white disabled:dark:!opacity-100':
+                                        !isOpen && !isAccordionDisabled,
                                 }),
                             }}
                         />
                     </div>
                 </div>
-                <span className='pr-12 max-xl:pr-4 max-lg:pr-12 flex-none'>
+                <span className='mr-12 max-xl:pr-4 max-lg:pr-12 flex-none'>
                     <span className='font-bold'>
                         Total <span className='capitalize'>{filterKey.split('_')[0]}</span>:{' '}
                     </span>

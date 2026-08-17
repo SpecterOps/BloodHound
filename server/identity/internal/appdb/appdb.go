@@ -34,6 +34,8 @@ const (
 	tableRolesPermissions = "roles_permissions"
 )
 
+var validRoleColumns = []string{"id", "name", "description", "created_at", "updated_at"}
+
 type queryExecer interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
@@ -99,7 +101,7 @@ func (s *Store) GetRole(ctx context.Context, id int32) (services.Role, error) {
 		err      error
 	)
 
-	roleSB.Select("*").From(tableRoles).Where(roleSB.Equal("id", id)).Limit(1)
+	roleSB.Select(validRoleColumns...).From(tableRoles).Where(roleSB.Equal("id", id)).Limit(1)
 	roleQuery, roleArgs := roleSB.Build()
 
 	roleRows, err = s.db.Query(ctx, roleQuery, roleArgs...)
@@ -290,7 +292,7 @@ func (s *Store) ListRoles(ctx context.Context, queryFilters params.Filters, sort
 		err               error
 	)
 
-	roleSB.Select("*").From(tableRoles)
+	roleSB.Select(validRoleColumns...).From(tableRoles)
 
 	if err = applyRoleFilters(roleSB, queryFilters); err != nil {
 		return nil, err
@@ -339,7 +341,7 @@ func (s *Store) ListRoles(ctx context.Context, queryFilters params.Filters, sort
 
 func (s *Store) GetPermission(ctx context.Context, id int) (services.Permission, error) {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
-	sb.Select("*")
+	sb.Select("id", "authority", "name", "created_at", "updated_at")
 	sb.From(tablePermissions)
 	sb.Where(sb.Equal("id", id))
 	sb.Limit(1)

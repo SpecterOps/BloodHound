@@ -16,10 +16,11 @@
 
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Accordion, AccordionContent, AccordionItem, Button, Skeleton, Tooltip } from 'doodle-ui';
+import { Accordion, AccordionContent, AccordionItem, IconButton, Skeleton, TextButton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useState } from 'react';
 import { SortableHeader } from '../../../components/ColumnHeaders';
+import { optionStyles } from '../../../components/DropdownSelector/constants';
 import { InfiniteQueryFixedList, InfiniteQueryFixedListProps } from '../../../components/InfiniteQueryFixedList';
 import NodeIcon from '../../../components/NodeIcon';
 import { useRuleMembersInfiniteQuery, useTagMembersInfiniteQuery } from '../../../hooks/useAssetGroupTags';
@@ -50,7 +51,7 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
 
     return (
         <div>
-            <div className='flex justify-between pl-4 pr-12 border-b border-neutral-3'>
+            <div className='flex justify-between items-center pl-4 py-2 pr-12 border-b border-neutral-3'>
                 <span className='text-lg font-bold'>Objects</span>
                 <span>
                     <span className='font-bold'>Total Objects:</span> {totalCount.toLocaleString()}
@@ -132,14 +133,13 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                     })}
                     style={style}>
                     <SelectedHighlight itemId={item.id} type='member' />
-                    <Button
-                        variant='text'
-                        className='w-full block text-left truncate'
+                    <TextButton
+                        className={cn(optionStyles, 'block text-left h-10 px-1 truncate')}
                         onClick={() => {
                             onObjectClick(item);
                         }}>
-                        <span className='pl-6 text-base text-contrast ml-2'>{item.name}</span>
-                    </Button>
+                        <span className='pl-8 text-base ml-3.5'>{item.name}</span>
+                    </TextButton>
                 </div>
             </Tooltip>
         );
@@ -152,17 +152,17 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
             className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
-                <div className='w-full flex items-center'>
-                    <Button
-                        className='w-6'
-                        variant='text'
+                <div className='w-full flex items-center gap-2 h-10'>
+                    <IconButton
+                        className='my-1.5 ml-2 rounded-none'
+                        aria-label={isOpen ? 'Collapse' : 'Expand'}
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
                             onOpen((prev) => (prev === kind ? '' : kind));
                         }}>
-                        <FontAwesomeIcon icon={faChevronUp} size='sm' className='font-bold' />
-                    </Button>
-                    <div className='flex flex-1 items-center gap-2'>
+                        <FontAwesomeIcon icon={faChevronUp} size='sm' />
+                    </IconButton>
+                    <div className='flex items-center gap-2'>
                         <NodeIcon nodeType={kind} />
                         <SortableHeader
                             title={kind}
@@ -170,16 +170,18 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                                 setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                             }}
                             sortOrder={sortOrder}
+                            disable={!isOpen}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base', {
+                                button: cn('font-bold text-base rounded-none', {
+                                    'disabled:!text-text-main disabled:!opacity-100': !isOpen,
                                     '[&>svg]:hidden': !isOpen,
                                 }),
                             }}
                         />
                     </div>
                 </div>
-                <span className='mr-12'>{count.toLocaleString()}</span>
+                <span className='mr-12 max-xl:pr-4 max-lg:pr-12 flex-none'>{count.toLocaleString()}</span>
             </div>
             <AccordionContent className='bg-neutral-2 p-0'>
                 <div className='border-neutral-5'>

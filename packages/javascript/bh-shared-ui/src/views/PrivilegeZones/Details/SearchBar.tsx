@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverAnchor, PopoverContent } from 'doodle-ui';
+import { Input, Popover, PopoverAnchor, PopoverContent, TextButton } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
@@ -152,9 +152,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                 'bg-secondary text-neutral-1 dark:bg-secondary-variant-2':
                                                                     highlightedIndex === globalIndex,
                                                             })}>
-                                                            <Button
-                                                                className='overflow-hidden justify-start w-full no-underline'
-                                                                variant='text'>
+                                                            <TextButton className='overflow-hidden justify-start w-full no-underline'>
                                                                 <span
                                                                     className={cn('truncate', {
                                                                         'text-neutral-1':
@@ -162,7 +160,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                     })}>
                                                                     {item.name}
                                                                 </span>
-                                                            </Button>
+                                                            </TextButton>
                                                         </li>
                                                     );
                                                 })}

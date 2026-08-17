@@ -20,6 +20,7 @@ go 1.26.5
 require (
 	cuelang.org/go v0.17.0
 	github.com/Masterminds/semver/v3 v3.4.0
+	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/RoaringBitmap/roaring/v2 v2.19.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.20
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.6.21
@@ -70,6 +71,8 @@ require (
 )
 
 require (
+	dario.cat/mergo v1.0.2 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.25 // indirect
