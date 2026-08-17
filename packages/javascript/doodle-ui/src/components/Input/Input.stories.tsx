@@ -90,7 +90,7 @@ export const WithLabel: Story = {
 };
 
 /**
- * Use a text element below the input field to provide additional instructions
+ * Use the helperText prop to provide additional instructions
  * or information to users.
  */
 export const WithHelperText: Story = {

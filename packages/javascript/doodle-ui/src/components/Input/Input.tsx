@@ -17,6 +17,7 @@ import { cva, VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { Label } from '../Label';
 import { cn } from '../utils';
+import { Typography } from '../Typography';
 
 export const InputVariants = cva(
     'flex h-10 w-full text-base text-main placeholder:text-input-placeholder-text disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main file:cursor-pointer',
@@ -58,8 +59,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             error = false,
             helperText,
             errorMessage,
-            type,
             variant,
+            intent,
             className,
             fieldClassName,
             labelClassName,
@@ -74,7 +75,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ) => {
         // need ID for fields with labels so screen readers have correct accessible name
         const generatedId = React.useId();
-        const isComposed = label !== undefined && label !== null;
+        const isComposed = !!label;
         const inputId = isComposed ? id ?? generatedId : id;
         // generate IDs for supporting text and combine them with any caller-provided IDs so assistive technology can describe the input.
         const helperTextId = `${inputId}-helper-text`;
@@ -92,11 +93,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 {...props}
                 ref={ref}
                 id={inputId}
-                type={type}
                 required={required}
-                className={cn(InputVariants({ variant, className }))}
+                className={cn(InputVariants({ variant, intent }), className)}
                 aria-describedby={isComposed ? describedBy || undefined : ariaDescribedBy}
-                aria-invalid={isComposed && error ? true : ariaInvalid}
+                aria-invalid={!!(isComposed && error) || ariaInvalid}
                 aria-errormessage={isComposed && error && errorMessage ? errorMessageId : ariaErrorMessage}
             />
         );
@@ -119,14 +119,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 </Label>
                 {input}
                 {helperText && (
-                    <p id={helperTextId} className={cn('text-sm text-main', helperTextClassName)}>
+                    <Typography id={helperTextId} className={cn('text-sm text-main', helperTextClassName)}>
                         {helperText}
-                    </p>
+                    </Typography>
                 )}
                 {error && errorMessage && (
-                    <p id={errorMessageId} role='alert' className={cn('text-error text-sm', errorMessageClassName)}>
+                    <Typography
+                        id={errorMessageId}
+                        role='alert'
+                        className={cn('text-error text-sm', errorMessageClassName)}>
                         {errorMessage}
-                    </p>
+                    </Typography>
                 )}
             </div>
         );
