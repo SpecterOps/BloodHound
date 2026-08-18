@@ -27,6 +27,7 @@ import {
     lightPalette,
     reactRouterFutureFlags,
     setRootClass,
+    themeZIndex,
     themedComponents,
     typography,
     useKeybindings,
@@ -132,6 +133,7 @@ const App: React.FC = () => {
     let theme = createTheme({
         palette,
         typography,
+        zIndex: themeZIndex,
     });
 
     // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api
