@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { cva, VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { Label } from '../Label';
 import { cn } from '../utils';
+import { Typography } from '../Typography';
 
 export const InputVariants = cva(
     'flex h-10 w-full text-base text-main placeholder:text-input-placeholder-text disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main file:cursor-pointer',
@@ -37,11 +39,103 @@ export const InputVariants = cva(
     }
 );
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof InputVariants> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof InputVariants> {
+    label?: React.ReactNode;
+    error?: boolean;
+    helperText?: React.ReactNode;
+    errorMessage?: React.ReactNode;
+    fieldClassName?: string;
+    labelClassName?: string;
+    helperTextClassName?: string;
+    errorMessageClassName?: string;
+}
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, variant, ...props }, ref) => {
-    return <input type={type} className={cn(InputVariants({ variant, className }))} ref={ref} {...props} />;
-});
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+    (
+        {
+            id,
+            label,
+            required = false,
+            error = false,
+            helperText,
+            errorMessage,
+            variant,
+            intent,
+            placeholder,
+            className,
+            fieldClassName,
+            labelClassName,
+            helperTextClassName,
+            errorMessageClassName,
+            'aria-describedby': ariaDescribedBy,
+            'aria-invalid': ariaInvalid,
+            'aria-errormessage': ariaErrorMessage,
+            ...props
+        },
+        ref
+    ) => {
+        // need ID for fields with labels so screen readers have correct accessible name
+        const generatedId = React.useId();
+        const isComposed = !!label;
+        const inputId = isComposed ? id ?? generatedId : id;
+        // generate IDs for supporting text and combine them with any caller-provided IDs so assistive technology can describe the input.
+        const helperTextId = `${inputId}-helper-text`;
+        const errorMessageId = `${inputId}-error-message`;
+        const describedBy = [
+            ariaDescribedBy,
+            helperText ? helperTextId : undefined,
+            error && errorMessage ? errorMessageId : undefined,
+        ]
+            .filter(Boolean)
+            .join(' ');
+
+        const input = (
+            <input
+                {...props}
+                ref={ref}
+                id={inputId}
+                required={required}
+                placeholder={required && !isComposed && placeholder ? `${placeholder} *` : placeholder}
+                className={cn(InputVariants({ variant, intent }), className)}
+                aria-describedby={isComposed ? describedBy || undefined : ariaDescribedBy}
+                aria-invalid={!!(isComposed && error) || ariaInvalid}
+                aria-errormessage={isComposed && error && errorMessage ? errorMessageId : ariaErrorMessage}
+            />
+        );
+
+        if (!isComposed) {
+            return input;
+        }
+
+        return (
+            <div className={cn('grid gap-1.5', fieldClassName)}>
+                <Label htmlFor={inputId} className={labelClassName}>
+                    {label}{' '}
+                    {required && (
+                        <span aria-hidden='true' className='text-status-error-main'>
+                            *
+                        </span>
+                    )}
+                </Label>
+                {input}
+                {helperText && (
+                    <Typography variant='body2' id={helperTextId} className={cn('text-main', helperTextClassName)}>
+                        {helperText}
+                    </Typography>
+                )}
+                {error && errorMessage && (
+                    <Typography
+                        variant='body2'
+                        id={errorMessageId}
+                        role='alert'
+                        className={cn('text-error', errorMessageClassName)}>
+                        {errorMessage}
+                    </Typography>
+                )}
+            </div>
+        );
+    }
+);
 Input.displayName = 'Input';
 
 export { Input };
