@@ -48,18 +48,17 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
-export const Optional: Story = {
-    args: {
-        label: 'Display name',
-        variant: 'outlined',
-    },
-};
-
 export const Required: Story = {
     args: {
         label: 'Email address',
         required: true,
         variant: 'outlined',
+    },
+};
+
+export const RequiredWithoutLabel: Story = {
+    args: {
+        required: true,
     },
 };
 

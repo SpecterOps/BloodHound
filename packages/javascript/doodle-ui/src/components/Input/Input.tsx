@@ -61,6 +61,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             errorMessage,
             variant,
             intent,
+            placeholder,
             className,
             fieldClassName,
             labelClassName,
@@ -94,6 +95,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 ref={ref}
                 id={inputId}
                 required={required}
+                placeholder={required && !isComposed && placeholder ? `${placeholder} *` : placeholder}
                 className={cn(InputVariants({ variant, intent }), className)}
                 aria-describedby={isComposed ? describedBy || undefined : ariaDescribedBy}
                 aria-invalid={!!(isComposed && error) || ariaInvalid}
@@ -109,25 +111,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <div className={cn('grid gap-1.5', fieldClassName)}>
                 <Label htmlFor={inputId} className={labelClassName}>
                     {label}{' '}
-                    {required ? (
+                    {required && (
                         <span aria-hidden='true' className='text-status-error-main'>
                             *
                         </span>
-                    ) : (
-                        <span>(Optional)</span>
                     )}
                 </Label>
                 {input}
                 {helperText && (
-                    <Typography id={helperTextId} className={cn('text-sm text-main', helperTextClassName)}>
+                    <Typography variant='body2' id={helperTextId} className={cn('text-main', helperTextClassName)}>
                         {helperText}
                     </Typography>
                 )}
                 {error && errorMessage && (
                     <Typography
+                        variant='body2'
                         id={errorMessageId}
                         role='alert'
-                        className={cn('text-error text-sm', errorMessageClassName)}>
+                        className={cn('text-error', errorMessageClassName)}>
                         {errorMessage}
                     </Typography>
                 )}
