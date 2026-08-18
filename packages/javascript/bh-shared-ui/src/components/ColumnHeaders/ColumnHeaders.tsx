@@ -35,7 +35,7 @@ export const BaseColumnHeader: React.FC<BaseColumnHeader> = (props) => {
         'text-right': textAlign === 'right',
     };
 
-    return <div className={cn('font-semibold text-base -mb-1', textAlignment, className)}>{title}</div>;
+    return <div className={cn('font-semibold text-base text-text-main -mb-1', textAlignment, className)}>{title}</div>;
 };
 
 interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -68,7 +68,10 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                         <TextButton
                             disabled={disable}
                             aria-label={`Sort by ${title}`}
-                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            className={cn(
+                                'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
+                                buttonClass
+                            )}
                             onClick={onSort}
                             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
                             tabIndex={0}>
@@ -77,13 +80,17 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
                             {tooltipText && (
                                 <>
+                                    {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
+                                    {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
                                     <span
                                         className='flex items-center'
                                         role='img'
                                         aria-label='More information in tooltip'
+                                        tabIndex={0}
                                         data-testid='column-header_tooltip-trigger-icon'>
-                                        <FontAwesomeIcon className='m-1' size='sm' icon={faInfoCircle} />
+                                        <FontAwesomeIcon size='sm' icon={faInfoCircle} />
                                     </span>
+                                    {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                                     <span className='flex items-center'>
                                         <IconComponent size={12} />
                                     </span>

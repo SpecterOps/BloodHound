@@ -36,7 +36,7 @@ const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'text-center',
+    className: 'py-4 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
