@@ -21,7 +21,7 @@ DECLARE
     -- Keep created_by as BloodHound for system-selector behavior and use updated_by to scope rollback ownership.
     migration_marker CONSTANT text := 'migration:20260615130000_v9_add_tier_zero_site_server_selector';
     selector_name CONSTANT text := 'Domain Controller Site Servers';
-    selector_description CONSTANT text := E'Active Directory Site Server objects that reference domain controllers are Tier Zero because control over the Site Server object may impact a domain controller and therefore the domain.';
+    selector_description CONSTANT text := E'An Active Directory Site Server object represents a computer associated with an Active Directory Site. When the referenced computer is a Domain Controller, a malicious Group Policy Object linked to the Site could compromise the Domain Controller and, consequently, its domain. Therefore, Site Server objects that reference Domain Controllers are classified as Tier Zero.';
     selector_cypher CONSTANT text := E'MATCH (n:SiteServer)-[:ServerIs]->(:Computer)-[:DCFor]->(:Domain)\nRETURN n;';
     resolved_selector_id integer;
     resolved_tier_zero_tag_id integer;

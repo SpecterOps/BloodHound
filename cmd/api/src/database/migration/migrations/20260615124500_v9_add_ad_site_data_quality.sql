@@ -29,7 +29,7 @@ DECLARE
     -- Keep created_by as BloodHound for system-selector behavior and use updated_by to scope rollback ownership.
     migration_marker CONSTANT text := 'migration:20260615124500_v9_add_ad_site_data_quality';
     selector_name CONSTANT text := 'Sites';
-    selector_description CONSTANT text := E'Control over an Active Directory site may allow users to compromise all assets associated with the site through the application of Group Policy Objects. Since AD Sites contain at least a Domain Controller as a Site Server, this results in the potential compromise of at least one domain in the forest. Therefore, Active Directory Site objects are Tier Zero.';
+    selector_description CONSTANT text := E'Control over an Active Directory site may allow a user to compromise all assets associated with that site through the application of Group Policy Objects. Because every AD site contains at least one Domain Controller as a Site Server, compromising a site could lead to the compromise of at least one domain in the forest. Therefore, Active Directory Site objects are classified as Tier Zero.';
     selector_cypher CONSTANT text := E'MATCH (n:Site) \nRETURN n;';
     resolved_selector_id integer;
     resolved_tier_zero_tag_id integer;
