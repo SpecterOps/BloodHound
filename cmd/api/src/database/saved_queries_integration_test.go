@@ -102,12 +102,10 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 			},
 			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
 				t.Helper()
-				assert.True(t, data.created.SchemaExtensionID.Valid)
-				assert.Equal(t, data.extID, data.created.SchemaExtensionID.Int32)
+				assert.Equal(t, data.extID, data.created.SchemaExtensionID)
 				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
 				require.NoError(t, err)
-				assert.True(t, fetched.SchemaExtensionID.Valid)
-				assert.Equal(t, data.extID, fetched.SchemaExtensionID.Int32)
+				assert.Equal(t, data.extID, fetched.SchemaExtensionID)
 			},
 		},
 		{
@@ -120,10 +118,10 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 			},
 			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
 				t.Helper()
-				assert.False(t, data.created.SchemaExtensionID.Valid)
+				assert.Zero(t, data.created.SchemaExtensionID)
 				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
 				require.NoError(t, err)
-				assert.False(t, fetched.SchemaExtensionID.Valid)
+				assert.Zero(t, fetched.SchemaExtensionID)
 			},
 		},
 		{

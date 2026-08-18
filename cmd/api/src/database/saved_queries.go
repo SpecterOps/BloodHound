@@ -24,7 +24,6 @@ import (
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -104,14 +103,24 @@ func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, n
 		Name:              name,
 		Query:             query,
 		Description:       description,
-		SchemaExtensionID: null.NewInt32(schemaExtensionID, schemaExtensionID != 0),
+		SchemaExtensionID: schemaExtensionID,
 	}
 
-	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))
+	tx := s.db.WithContext(ctx)
+	if schemaExtensionID == 0 {
+		tx = tx.Omit("schema_extension_id")
+	}
+
+	return savedQuery, CheckError(tx.Create(&savedQuery))
 }
 
 func (s *BloodhoundDB) UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error) {
-	return savedQuery, CheckError(s.db.WithContext(ctx).Save(&savedQuery))
+	tx := s.db.WithContext(ctx)
+	if savedQuery.SchemaExtensionID == 0 {
+		tx = tx.Omit("schema_extension_id")
+	}
+
+	return savedQuery, CheckError(tx.Save(&savedQuery))
 }
 
 func (s *BloodhoundDB) DeleteSavedQuery(ctx context.Context, savedQueryID int64) error {
