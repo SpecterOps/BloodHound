@@ -122,7 +122,7 @@ WHERE selector_id IN (
     AND value = E'MATCH (n:Site) \nRETURN n;';
 
 DELETE FROM asset_group_tag_selectors
-WHERE name = 'Sites'
+    WHERE name = 'Sites' AND `is_default` = true,
     AND created_by = 'BloodHound'
     AND updated_by = 'migration:20260615124500_v9_add_ad_site_data_quality';
 
