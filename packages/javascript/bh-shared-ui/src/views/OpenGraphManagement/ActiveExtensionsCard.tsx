@@ -44,9 +44,10 @@ const TruncatedCell = ({ className = '', value }: { className?: string; value: s
             contentProps={{
                 align: 'start',
                 'aria-hidden': true,
-                className: 'min-[600px]:hidden dark:bg-neutral-5 dark:text-white border-neutral-300',
+                // If we ever move to Tailwind v4, hiding the tooltip would probably be better off as a container query.
+                className: 'min-[900px]:hidden dark:bg-neutral-5 dark:text-white border-neutral-300',
             }}>
-            <div className={`${className} line-clamp-2 break-words leading-5`}>{value}</div>
+            <div className={`line-clamp-2 break-words leading-5 ${className}`}>{value}</div>
         </Tooltip>
     );
 };

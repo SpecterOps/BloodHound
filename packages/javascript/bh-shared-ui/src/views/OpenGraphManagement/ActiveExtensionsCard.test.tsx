@@ -230,7 +230,7 @@ describe('ActiveExtensionsCard', () => {
         expect(screen.getByText('Active Directory')).toHaveClass('line-clamp-2', 'leading-5');
     });
 
-    it('hides truncated text tooltips at 600px and above', async () => {
+    it('hides truncated text tooltips at 900px and above', async () => {
         const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
@@ -238,7 +238,7 @@ describe('ActiveExtensionsCard', () => {
 
         await waitFor(() => {
             const tooltip = document.querySelector('[aria-hidden="true"].TooltipContent');
-            expect(tooltip).toHaveClass('min-[600px]:hidden');
+            expect(tooltip).toHaveClass('min-[900px]:hidden');
             expect(tooltip).toHaveAttribute('aria-hidden', 'true');
         });
     });
