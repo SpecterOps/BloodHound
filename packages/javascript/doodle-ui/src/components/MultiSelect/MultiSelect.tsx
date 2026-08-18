@@ -47,13 +47,13 @@ const MultiSelectTriggerVariants = cva(
         'enabled:hover:bg-secondary enabled:hover:text-text-contrast',
         'data-[state=open]:bg-primary data-[state=open]:text-text-contrast',
         'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill',
+        'aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-text-main',
     ],
     {
         variants: {
             variant: {
                 outlined:
-                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-text-main [&>svg]:text-text-main data-[placeholder]:text-input-placeholder-text data-[placeholder]:data-[state=open]:text-text-contrast [&:enabled:hover>svg]:text-text-contrast [&[data-state=open]>svg]:text-text-contrast',
+                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-text-main [&:enabled:hover>svg]:text-text-contrast [&[data-state=open]>svg]:text-text-contrast',
                 filled: 'bg-primary text-text-contrast',
             },
         },
@@ -319,8 +319,7 @@ const MultiSelect = ({
                     open={open}
                     disabled={disabled}
                     aria-invalid={error || undefined}
-                    className={className}
-                    data-placeholder={value.length === 0 ? '' : undefined}>
+                    className={className}>
                     {triggerText}
                 </MultiSelectTrigger>
             </PopoverTrigger>

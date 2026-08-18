@@ -32,7 +32,7 @@ const meta = {
             control: 'radio',
             options: ['outlined', 'filled'],
             description:
-                'Controls the collapsed trigger appearance. Use outlined when All items are selected as the default state, example: Findings Table Filters',
+                'Controls the closed trigger button appearance. Use outlined when "All items" are selected as the default state, example: Findings Table Filters',
         },
     },
     args: {},
@@ -251,6 +251,16 @@ export const Empty: Story = {
 };
 
 export const Variants: Story = {
+    parameters: {
+        controls: {
+            exclude: ['variant'],
+        },
+        docs: {
+            description: {
+                story: 'Both triggers have all options selected. Use outlined when the all Items selection is the default state and filled to show an updated selection.',
+            },
+        },
+    },
     args: {
         options: itemOptions,
         value: itemOptions.map((option) => option.value),
