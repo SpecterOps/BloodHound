@@ -101,8 +101,13 @@ describe('ExploreSearchCombobox', () => {
         expect(options).toHaveLength(testSearchResults.data.length);
         for (let i = 0; i < testSearchResults.data.length; i++) {
             expect(options[i]).toHaveTextContent(testSearchResults.data[i].name);
-            within(options[i]).getByTitle(testSearchResults.data[i].type);
         }
+
+        await user.keyboard('{ArrowDown}');
+
+        expect(options[0]).toHaveClass('bg-secondary', 'text-common-white');
+        expect(within(options[0]).getByTitle(testSearchResults.data[0].type)).toHaveClass('text-common-dark');
+        expect(within(options[0]).getByTitle(testSearchResults.data[0].type)).not.toHaveClass('text-inherit');
     });
 
     it('when a search result is clicked it calls `handleNodeSelected`', async () => {

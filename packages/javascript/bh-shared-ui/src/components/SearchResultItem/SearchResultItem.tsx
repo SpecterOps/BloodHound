@@ -58,15 +58,7 @@ const SearchResultItem: FC<{
                             display: 'flex',
                             alignItems: 'center',
                         }}>
-                        <NodeIcon
-                            nodeType={item.kind}
-                            className={cn(
-                                'group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
-                                {
-                                    'text-inherit': highlightedIndex === index,
-                                }
-                            )}
-                        />
+                        <NodeIcon nodeType={item.kind} />
                         <Box
                             style={{
                                 flexGrow: 1,
