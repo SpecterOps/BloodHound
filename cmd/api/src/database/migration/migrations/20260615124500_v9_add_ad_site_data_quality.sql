@@ -50,7 +50,7 @@ BEGIN
     SELECT MIN(selectors.id), COUNT(*)
     INTO resolved_selector_id, selector_count
     FROM asset_group_tag_selectors selectors
-    WHERE selectors.name = selector_name;
+    WHERE selectors.name = selector_name AND is_default = true;
 
     IF selector_count = 0 THEN
         INSERT INTO asset_group_tag_selectors (
