@@ -48,8 +48,8 @@ export const useCustomNodeKinds = (
     return useQuery({
         queryKey: ['getCustomNodeKinds'],
         queryFn: ({ signal }) => getCustomNodeKinds({ signal }),
-        staleTime: 2 * (60 * 1000),
-        cacheTime: 5 * (60 * 1000),
+        staleTime: Infinity,
+        cacheTime: Infinity,
         ...queryOptions,
     });
 };
