@@ -24,8 +24,10 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 )
@@ -48,7 +50,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", ""); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", 0); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
@@ -65,5 +67,92 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 		t.Fatalf("Failed to list filtered saved queries: %v", err)
 	} else if count != 3 {
 		t.Fatalf("Expected 3 saved queries to be returned, received %d", count)
+	}
+}
+
+func TestSavedQueries_SchemaExtensionID(t *testing.T) {
+
+	type testSetupData struct {
+		created model.SavedQuery
+		extID   int32
+	}
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData
+		assert   func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData)
+		teardown func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData)
+	}
+
+	var (
+		testCtx       = context.Background()
+		userUUID, err = uuid.NewV4()
+	)
+	require.NoError(t, err)
+
+	tests := []testCase{
+		{
+			name: "success_-_extension_linked_query_persists_schema_extension_id",
+			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+				t.Helper()
+				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "SavedQueryExt", "Saved Query Ext", "v1.0.0", "sqext_ns")
+				require.NoError(t, err)
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "ext_query", "MATCH (n) RETURN n", "desc", ext.ID)
+				require.NoError(t, err)
+				return testSetupData{created: created, extID: ext.ID}
+			},
+			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+				t.Helper()
+				assert.True(t, data.created.SchemaExtensionID.Valid)
+				assert.Equal(t, data.extID, data.created.SchemaExtensionID.Int32)
+				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				require.NoError(t, err)
+				assert.True(t, fetched.SchemaExtensionID.Valid)
+				assert.Equal(t, data.extID, fetched.SchemaExtensionID.Int32)
+			},
+		},
+		{
+			name: "success_-_zero_schema_extension_id_persists_as_null",
+			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+				t.Helper()
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "user_query", "MATCH (n) RETURN n", "desc", 0)
+				require.NoError(t, err)
+				return testSetupData{created: created}
+			},
+			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+				t.Helper()
+				assert.False(t, data.created.SchemaExtensionID.Valid)
+				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				require.NoError(t, err)
+				assert.False(t, fetched.SchemaExtensionID.Valid)
+			},
+		},
+		{
+			name: "success_-_deleting_extension_cascades_to_saved_query",
+			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+				t.Helper()
+				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "CascadeExt", "Cascade Ext", "v1.0.0", "cascade_ns")
+				require.NoError(t, err)
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "cascade_query", "MATCH (n) RETURN n", "desc", ext.ID)
+				require.NoError(t, err)
+				return testSetupData{created: created, extID: ext.ID}
+			},
+			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+				t.Helper()
+				require.NoError(t, dbInst.DeleteGraphSchemaExtension(ctx, data.extID))
+				_, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				assert.ErrorIs(t, err, database.ErrNotFound)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dbInst := integration.SetupDB(t)
+			data := tc.setup(t, testCtx, dbInst)
+			if tc.teardown != nil {
+				defer tc.teardown(t, testCtx, dbInst, data)
+			}
+			tc.assert(t, testCtx, dbInst, data)
+		})
 	}
 }

@@ -40,7 +40,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 	)
 
 	t.Run("Creates saved query permission to public", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "TESTING", "Example")
+		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "TESTING", "Example", 0)
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -56,7 +56,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 	})
 
 	t.Run("Creates saved query permission to public while deleting previous user's shared query permission", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query2", "TESTING2", "Example2")
+		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query2", "TESTING2", "Example2", 0)
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -93,7 +93,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 		user4   = createUser(t, dbInst, user4Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	// Share with Users 2 and 3 and ensure its not shared with user 4
@@ -163,7 +163,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 
 	unknownUUID, _ := uuid.NewV4()
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID, unknownUUID)
@@ -195,7 +195,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -219,7 +219,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
@@ -243,7 +243,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -269,7 +269,7 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 	)
 
 	t.Run("Deletes saved query permissions for user(s)", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID, user3.ID)
@@ -312,7 +312,7 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 	})
 
 	t.Run("Deletes saved query permissions given no provided users", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query2", "TESTING2", "Example2")
+		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query2", "TESTING2", "Example2", 0)
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -345,7 +345,7 @@ func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
 		dbInst, user1 = initAndCreateUser(t)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -362,7 +362,7 @@ func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
 		dbInst, user1 = initAndCreateUser(t)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", 0)
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
@@ -391,7 +391,7 @@ func TestSavedQueriesPermissions_GetSavedQueryPermissions(t *testing.T) {
 		}}
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Test Description")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Test Description", 0)
 	require.NoError(t, err)
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
