@@ -425,6 +425,11 @@ export const typography: Partial<Theme['typography']> = {
     },
 };
 
+// Temporary until MUI dialogs migrate to doodle-ui, to fix z-index issue with the side nav bar.
+export const themeZIndex: ThemeOptions['zIndex'] = {
+    modal: 1410,
+};
+
 export const defaultPortalContainer = {
     // Defaults all MUI components that leverage the Modal construct to portal to a child of the applicationContainer element.
     // If not for this, any tailwind based components in a portal and outside the applicationContainer will not respect the current theme.

@@ -80,6 +80,7 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    FindingTypeResponse,
     GetAlertAttemptsResponse,
     GetAlertEventTypesResponse,
     GetAlertResponse,
@@ -590,6 +591,9 @@ class BHEAPIClient {
      */
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
+
+    getAllFindingTypes = (options?: RequestOptions) =>
+        this.baseClient.get<FindingTypeResponse>(`/api/v2/attack-paths/finding-types`, options);
 
     getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
         this.baseClient.get<FindingSchemaResponse>(

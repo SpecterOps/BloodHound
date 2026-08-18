@@ -22,7 +22,6 @@ import {
     CardTitle,
     createColumnHelper,
     DataTable,
-    IconButton,
     TableCell,
     TableRow,
     TooltipContent,
@@ -103,11 +102,16 @@ export const ActiveExtensionsCard = () => {
                     <span>Namespace</span>
                     <TooltipRoot>
                         <TooltipTrigger asChild>
-                            <IconButton
-                                className='bg-transparent border-none p-0 cursor-default has-[svg]:p-0.5 hover:text-main dark:hover:text-main'
-                                aria-label='Namespace information'>
-                                <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                            </IconButton>
+                            {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
+                            {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
+                            <span
+                                aria-label='Namespace information'
+                                className='flex items-center'
+                                role='img'
+                                tabIndex={0}>
+                                <FontAwesomeIcon icon={faInfoCircle} />
+                            </span>
+                            {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                         </TooltipTrigger>
                         <TooltipPortal>
                             <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>

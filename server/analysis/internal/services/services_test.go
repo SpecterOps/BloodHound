@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	"github.com/specterops/bloodhound/server/analysis/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -82,7 +83,7 @@ func TestService_GetRequest(t *testing.T) {
 	}
 }
 
-func TestService_CreateRequest(t *testing.T) {
+func TestService_CreateAnalysisRequest(t *testing.T) {
 	var (
 		ctx         = context.Background()
 		requester   = "test-user"
@@ -144,6 +145,48 @@ func TestService_CreateRequest(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantCreated, gotCreated)
 				assert.Equal(t, tt.wantResult, current)
+			}
+		})
+	}
+}
+
+func TestService_SubmitAnalysisRequest(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		requester     = "test-user"
+		analysisMode  = model.AnalysisModeFull
+		unexpectedErr = errors.New("db unavailable")
+	)
+
+	tests := []struct {
+		name    string
+		dbErr   error
+		wantErr error
+	}{
+		{
+			name: "returns nil on success",
+		},
+		{
+			name:    "propagates database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().UpsertAnalysisRequest(ctx, requester, analysisMode).Return(tt.dbErr)
+
+			err := svc.SubmitAnalysisRequest(ctx, requester, analysisMode)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
