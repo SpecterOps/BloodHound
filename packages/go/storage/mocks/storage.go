@@ -146,6 +146,20 @@ func (mr *MockStorageMockRecorder) Move(ctx, srcName, dstName, options any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockStorage)(nil).Move), ctx, srcName, dstName, options)
 }
 
+// PruneEmptyParents mocks base method.
+func (m *MockStorage) PruneEmptyParents(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PruneEmptyParents", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PruneEmptyParents indicates an expected call of PruneEmptyParents.
+func (mr *MockStorageMockRecorder) PruneEmptyParents(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PruneEmptyParents", reflect.TypeOf((*MockStorage)(nil).PruneEmptyParents), ctx, name)
+}
+
 // Put mocks base method.
 func (m *MockStorage) Put(ctx context.Context, name string, reader io.Reader, options storage.WriteOptions) error {
 	m.ctrl.T.Helper()

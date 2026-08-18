@@ -83,6 +83,10 @@ type Storage interface {
 	// Delete removes a file.
 	Delete(ctx context.Context, name string) error
 
+	// PruneEmptyParents removes empty parent directories after deleting a file.
+	// Storage backends without physical directories may implement this as a no-op.
+	PruneEmptyParents(ctx context.Context, name string) error
+
 	// Exists checks whether a file exists.
 	Exists(ctx context.Context, name string) (bool, error)
 
@@ -189,11 +193,7 @@ func (s *StorageFileService) DeleteFileWithOptions(ctx context.Context, name str
 	}
 
 	if options.PruneEmptyParents {
-		if storageBackend, supportsPruning := s.Storage.(interface {
-			PruneEmptyParents(ctx context.Context, name string) error
-		}); supportsPruning {
-			return storageBackend.PruneEmptyParents(ctx, name)
-		}
+		return s.Storage.PruneEmptyParents(ctx, name)
 	}
 
 	return nil
