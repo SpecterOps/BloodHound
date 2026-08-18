@@ -27,11 +27,11 @@ const Abuse: FC = () => (
     <Typography variant='body2' component='div'>
         <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
             <li>
-                Read the managed domain's current <code>filteredSync</code> and <code>syncScope</code> values. If{' '}
-                <code>filteredSync=Enabled</code>, add an Entra security group of which the attacker-controlled user is
-                a direct member to the filter, as described for ManageEntraDSSyncFilter. If{' '}
-                <code>filteredSync=Disabled</code> but <code>syncScope=CloudOnly</code>, change <code>syncScope</code>{' '}
-                to <code>All</code> with the ARM PUT workflow described for AZManageEntraDS.
+                Read the managed domain's current synchronization settings. If the controlled user originated
+                on-premises and <code>syncScope=CloudOnly</code>, first change <code>syncScope</code> to{' '}
+                <code>All</code> using the ARM PUT workflow described by the AZManageEntraDS edge. If{' '}
+                <code>filteredSync=Enabled</code>, then add an Entra security group containing the controlled user as a
+                direct member to the filter, as described by the ManageEntraDSSyncFilter edge.
             </li>
             <li>
                 Wait for the controlled user to synchronize to Entra DS. Poll for its Entra object ID in{' '}
