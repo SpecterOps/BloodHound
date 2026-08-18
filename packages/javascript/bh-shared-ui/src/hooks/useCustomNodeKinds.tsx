@@ -19,6 +19,10 @@ import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient, DEFAULT_ICON_BACKGROUND_COLOR, GenericQueryOptions, IconDictionary } from '../utils';
 
+export const customNodeKindsKeys = {
+    all: ['getCustomNodeKinds'],
+};
+
 export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconDictionary> =>
     apiClient.getCustomNodeKinds(options).then((res) => {
         const customIcons: IconDictionary = {};
@@ -46,7 +50,7 @@ export const useCustomNodeKinds = (
     queryOptions?: GenericQueryOptions<IconDictionary>
 ): UseQueryResult<IconDictionary> => {
     return useQuery({
-        queryKey: ['getCustomNodeKinds'],
+        queryKey: customNodeKindsKeys.all,
         queryFn: ({ signal }) => getCustomNodeKinds({ signal }),
         staleTime: Infinity,
         cacheTime: Infinity,
