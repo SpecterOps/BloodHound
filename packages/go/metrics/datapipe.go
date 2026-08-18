@@ -36,9 +36,6 @@ const (
 )
 
 var (
-	// datapipeStatus reports the current state of the datapipe. Exactly one
-	// status series is set to 1 after the datapipe publishes a known status;
-	// all other known status series are set to 0.
 	datapipeStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: model.Namespace,
