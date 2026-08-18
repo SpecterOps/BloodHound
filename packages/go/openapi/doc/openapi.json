@@ -7408,7 +7408,11 @@
                                     "properties": {
                                       "content": {
                                         "type": "string",
-                                        "description": "Markdown content for the kindinfo object."
+                                        "description": "Rendered markdown content, or the original unexecuted template string when rendering fails."
+                                      },
+                                      "template_error": {
+                                        "type": "string",
+                                        "description": "Template parsing or execution error, when the markdown template could not be rendered for the requested node."
                                       }
                                     }
                                   }
@@ -7873,7 +7877,7 @@
                             "title": "Overview",
                             "position": 1,
                             "markdown": {
-                              "content": "This is an overview panel for Node Kind 1"
+                              "content": "This is an overview panel for **{{ .Properties.name | upper }}** (node {{ .NodeID }})"
                             }
                           },
                           "details": {
@@ -7910,7 +7914,7 @@
                             "title": "Abuse Info",
                             "position": 1,
                             "markdown": {
-                              "content": "Information about how this relationship can be abused"
+                              "content": "Information about how the {{ .Kind.Name }} relationship from {{ .Source.Properties.name }} to {{ .Target.Properties.name }} can be abused"
                             }
                           }
                         }
@@ -8227,6 +8231,192 @@
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/node-kinds/{node_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "node_kind_id",
+          "description": "Node Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetNodeKind",
+        "summary": "Get Node Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph node kind by its id, including its entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.node-kind-response"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "node_kind_id": 42,
+                    "name": "User",
+                    "display_name": "User",
+                    "description": "a user node kind",
+                    "is_display_kind": true,
+                    "icon": "user",
+                    "color": "#FFFFFF",
+                    "info": {
+                      "overview": {
+                        "title": "Overview",
+                        "position": 1,
+                        "markdown": {
+                          "content": "This is an overview panel for the node kind"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/relationship-kinds/{relationship_kind_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "relationship_kind_id",
+          "description": "Relationship Kind ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetRelationshipKind",
+        "summary": "Get Relationship Kind",
+        "description": "**Experimental** - Retrieves the details of a single OpenGraph relationship kind by its id, including its extension metadata and entity-panel info map keyed by info key.\n",
+        "tags": [
+          "OpenGraph (Experimental)",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.relationship-kind-response"
+                    }
+                  }
+                },
+                "examples": {
+                  "With info": {
+                    "summary": "Relationship kind with entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 42,
+                        "name": "MemberOf",
+                        "description": "a membership relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {
+                          "overview": {
+                            "title": "Overview",
+                            "position": 0,
+                            "markdown": {
+                              "content": "This relationship represents group membership."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Without info": {
+                    "summary": "Relationship kind without entity-panel info",
+                    "value": {
+                      "data": {
+                        "relationship_kind_id": 43,
+                        "name": "HasSession",
+                        "description": "a session relationship",
+                        "is_traversable": true,
+                        "extension": {
+                          "extension_id": 7,
+                          "name": "Active Directory",
+                          "display_name": "Active Directory",
+                          "namespace": "AD",
+                          "version": "v0.0.1"
+                        },
+                        "info": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -14558,6 +14748,10 @@
                           "type": "string",
                           "format": "date-time"
                         },
+                        "last_complete_optimize_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
                         "next_scheduled_analysis_at": {
                           "type": "string",
                           "format": "date-time",
@@ -16773,303 +16967,6 @@
         }
       }
     },
-    "/api/v2/clients/{client_id}/management": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        },
-        {
-          "name": "client_id",
-          "description": "Client ID",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      ],
-      "post": {
-        "operationId": "QueueClientManagementOperation",
-        "summary": "Queues a management operation",
-        "description": "Endpoint for users to queue a management operation for a client.\n",
-        "tags": [
-          "Clients",
-          "Enterprise"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/model.client-management-operation-queue-request"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.client-management-operation"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.client-management-operation"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/clients/management/available": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "get": {
-        "summary": "Get available management operations",
-        "description": "Endpoint for clients to get next available management operations.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
-        "tags": [
-          "Clients",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/model.client-management-operation"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/clients/management/start": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "post": {
-        "operationId": "StartClientManagementOperation",
-        "summary": "Notifies the API of a management operation start",
-        "description": "Endpoint for clients to start a management operation and mark the start time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
-        "tags": [
-          "Clients",
-          "Enterprise"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/model.client-management-operation-start-request"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.client-management-operation"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/api.error-wrapper"
-                },
-                "example": {
-                  "http_status": 409,
-                  "timestamp": "2026-07-01T13:44:43.247Z",
-                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "errors": [
-                    {
-                      "context": "",
-                      "message": "invalid management operation status transition"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/clients/management/end": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "post": {
-        "operationId": "EndClientManagementOperation",
-        "summary": "Notifies the API of a management operation ending",
-        "description": "Endpoint for clients to end a management operation and mark the completed time.\n\nNote: caller must be a client. For users, this endpoint will return a 403 as\nthey are not expected or allowed to call this endpoint.\n",
-        "tags": [
-          "Clients",
-          "Enterprise"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/model.client-management-operation-end-request"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.client-management-operation"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/api.error-wrapper"
-                },
-                "example": {
-                  "http_status": 409,
-                  "timestamp": "2026-07-01T13:44:43.247Z",
-                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "errors": [
-                    {
-                      "context": "",
-                      "message": "invalid management operation status transition"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
     "/api/v2/tasks/available": {
       "parameters": [
         {
@@ -18423,6 +18320,110 @@
         }
       }
     },
+    "/api/v2/attack-paths/finding-types": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAttackPathFindingTypes",
+        "summary": "List attack path finding types",
+        "description": "Returns distinct attack path finding types available to the caller.\nResults are always returned in ascending order by `title`.\n",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environment_id",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments.\nResults are scoped to the caller's Environment access.\n",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "Filter by asset group tag identifier. Supported predicates are `eq` and `neq`.\n",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "finding": {
+                            "type": "string",
+                            "description": "Finding name."
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Finding title."
+                          }
+                        },
+                        "required": [
+                          "finding",
+                          "title"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                },
+                "examples": {
+                  "Finding types": {
+                    "value": {
+                      "data": [
+                        {
+                          "finding": "Kerberoasting",
+                          "title": "Kerberoastable User Accounts"
+                        },
+                        {
+                          "finding": "T0WriteOwner",
+                          "title": "Write Owner"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/attack-paths": {
       "parameters": [
         {
@@ -18516,7 +18517,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`zone_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -18585,20 +18586,7 @@
           },
           {
             "name": "asset_group_tag_id",
-            "description": "Filter by one or more asset group tag identifiers. Repeat the parameter to include multiple asset group tags — results are the union of all specified values.\nCannot be combined with the `zone_id` filter.\n",
-            "in": "query",
-            "style": "form",
-            "explode": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer"
-              }
-            }
-          },
-          {
-            "name": "zone_id",
-            "description": "Filter by a single zone identifier. Cannot be combined with `asset_group_tag_id`.",
+            "description": "Filter by asset group tag identifier.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -18702,7 +18690,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,ZoneID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
                   }
                 }
               },
@@ -18758,9 +18746,9 @@
                                 "type": "string",
                                 "description": "Human-readable environment display name resolved from the graph. Falls back to environment_id when unavailable."
                               },
-                              "zone_id": {
+                              "asset_group_tag_id": {
                                 "type": "integer",
-                                "description": "Zone identifier (asset group tag id)."
+                                "description": "Asset group tag identifier."
                               },
                               "zone_name": {
                                 "type": "string",
@@ -18797,7 +18785,8 @@
                                   "active",
                                   "accepted",
                                   "remediated",
-                                  "deprecated"
+                                  "deprecated",
+                                  "orphaned"
                                 ]
                               },
                               "first_seen": {
@@ -18833,7 +18822,7 @@
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
-                          "zone_id": 1,
+                          "asset_group_tag_id": 1,
                           "zone_name": "Tier Zero",
                           "source_principal_id": "RPATTON@CORP1.LAB.HOME-LABS.LOL",
                           "source_principal_kind": "User",
@@ -18853,7 +18842,7 @@
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
-                          "zone_id": 1,
+                          "asset_group_tag_id": 1,
                           "zone_name": "Tier Zero",
                           "source_principal_id": "",
                           "source_principal_kind": "",
@@ -21612,6 +21601,11 @@
             "readOnly": true,
             "description": "OpenGraph environment kind ID for custom environments"
           },
+          "environment_kind_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "OpenGraph environment kind name for custom environments"
+          },
           "environment_kind_display_name": {
             "type": "string",
             "readOnly": true,
@@ -22610,15 +22604,12 @@
           },
           "position": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0
           }
         }
       },
-      "model.kind-info-type-markdown": {
+      "model.kind-info-markdown": {
         "type": "object",
-        "required": [
-          "markdown"
-        ],
         "properties": {
           "markdown": {
             "type": "object",
@@ -22627,11 +22618,29 @@
             ],
             "properties": {
               "content": {
-                "type": "string"
+                "type": "string",
+                "description": "Rendered markdown content, or the original unexecuted template string when rendering fails."
+              },
+              "template_error": {
+                "type": "string",
+                "description": "Template parsing or execution error, when the markdown template could not be rendered for the requested entity."
               }
             }
           }
         }
+      },
+      "model.kind-info-type-markdown": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.kind-info-markdown"
+          },
+          {
+            "type": "object",
+            "required": [
+              "markdown"
+            ]
+          }
+        ]
       },
       "model.kind-info-content": {
         "type": "object",
@@ -22895,39 +22904,16 @@
       },
       "model.graph-extension.kind-info-definition": {
         "type": "object",
-        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier, and each property value\nmust be a valid KindInfo object with title, position, and content.\n",
-        "propertyNames": {
-          "pattern": "^[a-z0-9_-]{1,128}$",
-          "description": "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
-        },
+        "description": "A map of named info panels used in extension definitions.\nEach property key is a stable panel identifier and must match the pattern\n`^[a-z0-9_-]{1,128}$` (lowercase alphanumeric characters, hyphens, and underscores only).\nEach property value must be a valid KindInfo object with title, position, and content.\n",
         "additionalProperties": {
-          "type": "object",
-          "required": [
-            "title",
-            "position"
-          ],
-          "properties": {
-            "title": {
-              "type": "string",
-              "example": "Entity Panel Section"
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/model.kind-info-base"
             },
-            "position": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "markdown": {
-              "type": "object",
-              "required": [
-                "content"
-              ],
-              "properties": {
-                "content": {
-                  "type": "string",
-                  "example": "This is markdown content for the info panel"
-                }
-              }
+            {
+              "$ref": "#/components/schemas/model.kind-info-markdown"
             }
-          }
+          ]
         }
       },
       "model.graph-extension.payload": {
@@ -23100,6 +23086,101 @@
           },
           "is_builtin": {
             "type": "boolean"
+          }
+        }
+      },
+      "model.extension-details": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "extension_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 7
+          },
+          "name": {
+            "type": "string",
+            "example": "AD"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "Active Directory"
+          },
+          "namespace": {
+            "type": "string",
+            "example": "AD"
+          },
+          "version": {
+            "type": "string",
+            "example": "v1"
+          }
+        }
+      },
+      "model.node-kind-response": {
+        "type": "object",
+        "properties": {
+          "node_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "User"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "User"
+          },
+          "description": {
+            "type": "string",
+            "example": "a user node kind"
+          },
+          "is_display_kind": {
+            "type": "boolean",
+            "example": true
+          },
+          "icon": {
+            "type": "string",
+            "example": "user"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FFFFFF"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          }
+        }
+      },
+      "model.relationship-kind-response": {
+        "type": "object",
+        "properties": {
+          "relationship_kind_id": {
+            "type": "integer",
+            "format": "int32",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "MemberOf"
+          },
+          "description": {
+            "type": "string",
+            "example": "a membership relationship"
+          },
+          "is_traversable": {
+            "type": "boolean",
+            "example": true
+          },
+          "info": {
+            "$ref": "#/components/schemas/model.graph-extension.kind-info-definition"
+          },
+          "extension": {
+            "$ref": "#/components/schemas/model.extension-details"
           }
         }
       },
@@ -23638,7 +23719,11 @@
         "enum": [
           "idle",
           "ingesting",
-          "analyzing"
+          "analyzing",
+          "purging",
+          "pruning",
+          "starting",
+          "optimizing"
         ]
       },
       "model.components.base-ad-entity": {
@@ -23826,118 +23911,6 @@
           }
         ]
       },
-      "enum.client-management-operation-type": {
-        "type": "string",
-        "enum": [
-          "support_bundle"
-        ]
-      },
-      "enum.client-management-operation-status": {
-        "type": "string",
-        "enum": [
-          "queued",
-          "running",
-          "succeeded",
-          "failed",
-          "canceled"
-        ]
-      },
-      "model.client-management-operation": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.uuid"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "client_id": {
-                "type": "string",
-                "format": "uuid",
-                "readOnly": true
-              },
-              "artifact_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
-              },
-              "type": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/enum.client-management-operation-type"
-                  }
-                ]
-              },
-              "status": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/enum.client-management-operation-status"
-                  }
-                ]
-              },
-              "requested_by_user_id": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.uuid"
-                  }
-                ]
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              },
-              "started_at": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.time.response"
-                  }
-                ]
-              },
-              "completed_at": {
-                "readOnly": true,
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/null.time.response"
-                  }
-                ]
-              },
-              "execution_time": {
-                "type": "string",
-                "format": "date-time",
-                "readOnly": true
-              }
-            }
-          }
-        ]
-      },
-      "model.client-support-bundle-summary": {
-        "type": "object",
-        "properties": {
-          "current": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/model.client-management-operation"
-              }
-            ]
-          },
-          "last_finished": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/model.client-management-operation"
-              }
-            ]
-          }
-        }
-      },
       "model.client-display": {
         "allOf": [
           {
@@ -24003,66 +23976,10 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
-              },
-              "support_bundle_summary": {
-                "$ref": "#/components/schemas/model.client-support-bundle-summary"
               }
             }
           }
         ]
-      },
-      "model.client-management-operation-queue-request": {
-        "type": "object",
-        "required": [
-          "operation_type",
-          "execution_time"
-        ],
-        "properties": {
-          "operation_type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/enum.client-management-operation-type"
-              }
-            ]
-          },
-          "execution_time": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "model.client-management-operation-start-request": {
-        "type": "object",
-        "required": [
-          "operation_id"
-        ],
-        "properties": {
-          "operation_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "model.client-management-operation-end-request": {
-        "type": "object",
-        "required": [
-          "operation_id",
-          "status"
-        ],
-        "properties": {
-          "operation_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "succeeded",
-              "failed",
-              "canceled"
-            ]
-          }
-        }
       },
       "enum.risk-acceptance": {
         "type": "string",

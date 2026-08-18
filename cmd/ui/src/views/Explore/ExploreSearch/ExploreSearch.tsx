@@ -17,40 +17,28 @@
 import { faChevronDown, faChevronUp, faCode, faDirections, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import {
     CypherSearch,
     ExploreQueryParams,
     ExploreSearchTab,
-    Icon,
     MappedStringLiteral,
     NodeSearch,
     PathfindingSearch,
     cn,
     encodeCypherQuery,
+    isGraphResponse,
     useCypherSearch,
     useExploreParams,
+    useExploreSelectedItem,
     useNodeSearch,
     usePathfindingFilters,
     usePathfindingSearch,
 } from 'bh-shared-ui';
+import { IconButton } from 'doodle-ui';
+import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import React, { useState } from 'react';
 import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
 import { useAppDispatch, useAppSelector } from 'src/store';
-
-const useStyles = makeStyles((theme) => ({
-    menuButton: {
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
-        height: '35px',
-    },
-    icon: {
-        height: '40px',
-        boxSizing: 'border-box',
-        padding: theme.spacing(2),
-    },
-}));
 
 const tabMap = {
     node: 0,
@@ -80,9 +68,8 @@ const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
 
 const ExploreSearch: React.FC = () => {
     /* Hooks */
-    const classes = useStyles();
-
-    const { exploreSearchTab, setExploreParams } = useExploreParams();
+    const { cypherSearch, exploreSearchTab, setExploreParams } = useExploreParams();
+    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
 
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
@@ -123,6 +110,12 @@ const ExploreSearch: React.FC = () => {
             }
             if (!pathfindingSearchState.destinationSelectedItem) {
                 params.secondarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[2]?.selectedItem) {
+                params.tertiarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[3]?.selectedItem) {
+                params.quaternarySearch = null;
             }
         }
         if (tab === 'cypher') {
@@ -174,20 +167,39 @@ const ExploreSearch: React.FC = () => {
         dispatch(setTimeoutSetting(disableTimeout));
     };
 
+    const handleQuerySuccess: (data: GraphResponse | FlatGraphResponse) => void = (data) => {
+        if (isGraphResponse(data)) {
+            const returnedNodes = Object.keys(data.data.nodes || {});
+
+            const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
+            const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
+
+            if (returnedNodes.length > 1) {
+                clearSelectedItem();
+            } else if (returnedNodes.length === 1) {
+                setSelectedItem(returnedNodes[0]);
+            }
+
+            if (shouldCloseMenu) {
+                setShowSearchWidget(false);
+            }
+        }
+    };
+
     return (
         <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
             <div
-                className='h-10 w-full flex gap-1 rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 pl-1 w-full flex gap-1 items-center rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
-                <Icon
-                    tip='Toggle search widget'
+                <IconButton
+                    aria-label='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
-                    className={classes.icon}
+                    className='rounded-sm'
                     onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
                     <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} />
-                </Icon>
+                </IconButton>
                 <Tabs
                     variant='fullWidth'
                     value={tabMap[activeTab]}
@@ -231,7 +243,7 @@ const ExploreSearch: React.FC = () => {
                             setAutoRun={handleAutoRunChange}
                             disableQueryLimit={disableTimeout}
                             setDisableQueryLimit={handleDisableTimeoutChange}
-                            onExploreMenuCollapse={() => setShowSearchWidget(false)}
+                            onQuerySuccess={handleQuerySuccess}
                         />,
                         /* eslint-enable react/jsx-key */
                     ]}

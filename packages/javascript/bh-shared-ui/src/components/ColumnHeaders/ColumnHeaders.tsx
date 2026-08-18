@@ -16,7 +16,7 @@
 
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { TextButton, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
 import { SortOrder } from '../../types';
 import { adaptClickHandlerToKeyDown, cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
@@ -35,7 +35,7 @@ export const BaseColumnHeader: React.FC<BaseColumnHeader> = (props) => {
         'text-right': textAlign === 'right',
     };
 
-    return <div className={cn('font-semibold text-base -mb-1', textAlignment, className)}>{title}</div>;
+    return <div className={cn('font-semibold text-base text-text-main -mb-1', textAlignment, className)}>{title}</div>;
 };
 
 interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -65,26 +65,32 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
             <TooltipRoot>
                 <TooltipTrigger asChild>
                     <div {...rest} data-testid='column-header_sort-button' className={containerClass}>
-                        <Button
+                        <TextButton
                             disabled={disable}
                             aria-label={`Sort by ${title}`}
-                            className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
+                            className={cn(
+                                'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
+                                buttonClass
+                            )}
                             onClick={onSort}
                             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
-                            tabIndex={0}
-                            variant={'text'}>
+                            tabIndex={0}>
                             {title}
                             {/* SortIcon stays inside the button when no tooltip to avoid affecting other header style layouts - example on the ObjectsAccordion used on Attack Paths and PZ Zone builder pages */}
-                            {!tooltipText && <IconComponent size={12} className={cn('absolute -right-5 m-1')} />}
+                            {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
                             {tooltipText && (
                                 <>
+                                    {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
+                                    {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
                                     <span
                                         className='flex items-center'
                                         role='img'
                                         aria-label='More information in tooltip'
+                                        tabIndex={0}
                                         data-testid='column-header_tooltip-trigger-icon'>
-                                        <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
+                                        <FontAwesomeIcon size='sm' icon={faInfoCircle} />
                                     </span>
+                                    {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                                     <span className='flex items-center'>
                                         <IconComponent size={12} />
                                     </span>
@@ -97,7 +103,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                                     </TooltipPortal>
                                 </>
                             )}
-                        </Button>
+                        </TextButton>
                     </div>
                 </TooltipTrigger>
             </TooltipRoot>

@@ -47,6 +47,10 @@ type Pipeline interface {
 	IngestTasks(context.Context) error
 	// Analyze provides a way to analyze and enhance graph data, including post processing
 	Analyze(context.Context) error
+	// Optimize vacuums dead tuples from the graph database after analysis
+	Optimize(context.Context) error
+	// OptimizeOnBoot vacuums dead tuples from the graph database on startup
+	OptimizeOnBoot(context.Context) error
 }
 
 type Daemon struct {
@@ -80,6 +84,8 @@ func (s *Daemon) Start(ctx context.Context) {
 
 	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.OptimizeOnBoot)
+
 	for {
 		select {
 		case <-pruningTicker.C:
@@ -91,6 +97,8 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusIngesting, s.pipeline.IngestTasks)
 
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusAnalyzing, s.pipeline.Analyze)
+
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.Optimize)
 
 			datapipeLoopTimer.Reset(s.tickInterval)
 

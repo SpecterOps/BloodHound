@@ -4,6 +4,9 @@
 # Codex
 .codex
 
+# Augment
+.augment
+
 # Temporary backup files
 *.bak
 
@@ -467,3 +470,4 @@ go-test-results.json
 # Playwright generated
 cmd/ui/playwright
 
+.claude/

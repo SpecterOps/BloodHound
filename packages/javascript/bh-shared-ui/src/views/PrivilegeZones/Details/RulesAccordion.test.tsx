@@ -19,6 +19,7 @@ import { setupServer } from 'msw/node';
 import * as useAssetGroupTags from '../../../hooks/useAssetGroupTags';
 import { zoneHandlers } from '../../../mocks';
 import { render, screen, waitFor, within } from '../../../test-utils';
+import { disabledStylesOverride } from './constants';
 import { RulesAccordion } from './RulesAccordion';
 
 const mockNavigate = vi.fn();
@@ -133,6 +134,17 @@ describe('RulesAccordion', () => {
             expect.objectContaining({ sortOrder: 'asc', environments: ['env-1'], isDefault: false, disabled: false }),
             true
         );
+    });
+
+    it('disables sortable headers only while their accordions are closed', () => {
+        render(<RulesAccordion />);
+
+        const customRulesSortButton = screen.getByRole('button', { name: 'Sort by Custom Rules' });
+        const defaultRulesSortButton = screen.getByRole('button', { name: 'Sort by Default Rules' });
+
+        expect(customRulesSortButton).toBeEnabled();
+        expect(defaultRulesSortButton).toBeDisabled();
+        expect(defaultRulesSortButton).toHaveClass(...disabledStylesOverride.split(' '));
     });
 
     it('navigates to rule details when clicking a rule row', async () => {

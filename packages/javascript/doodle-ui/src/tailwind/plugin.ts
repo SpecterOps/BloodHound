@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { PluginCreator } from 'tailwindcss/types/config';
-import { common, dark, light, palette, text } from './colors';
+import { common, dark, elevation, light, palette, text } from './colors';
 
 const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
-const focusRingOffsetWidth = '1px';
+const focusRingOffsetWidth = '2px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -92,11 +92,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.light[0],
-            // '--elevation-1': elevation.light[1],
-            // '--elevation-2': elevation.light[2],
-            // '--elevation-3': elevation.light[3],
-            // '--elevation-4': elevation.light[4],
-            // '--elevation-5': elevation.light[5],
+            '--elevation-1': elevation.light[1],
+            '--elevation-2': elevation.light[2],
+            '--elevation-3': elevation.light[3],
+            '--elevation-4': elevation.light[4],
+            '--elevation-5': elevation.light[5],
 
             // STATUS
             '--status-error-main': light.status.error.main,
@@ -126,6 +126,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Button
             '--secondary-btn-fill': palette.neutral.light[300],
             '--secondary-btn-active-fill': palette.neutral.light[400],
+            // TODO remove
             '--tertiary-btn-border': palette.neutral.light[400],
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
@@ -133,24 +134,26 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-fill': common.white,
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': palette.neutral.light[100],
-            '--checkbox-border': common.black,
+            '--checkbox-border': palette.grey[700],
+            '--checkbox-hover': light.secondary.main,
             '--checkbox-unchecked-fill': common.white,
             '--checkbox-fill': common.dark,
             '--checkbox-check': common.white,
 
             // // Components/Input
             // '--input-label': common.dark,
-            // '--input-fill': elevation.light[1],
+            '--input-fill': common.white,
             '--input-fill-disabled': palette.neutral.light[100],
             '--input-border-default': palette.grey[700],
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
-
-            // '--input-placeholder-text': text.placeholder,
+            '--input-placeholder-text': text.placeholder,
+            '--input-outlined-border-default': palette.grey[700],
+            '--input-outlined-border-hover': light.secondary.main,
 
             // // Components/Textarea
             '--textarea-fill': common.white,
-            '--textarea-border-default': palette.neutral.light[400],
+            '--textarea-border-default': palette.grey[700],
             '--textarea-border-hover': light.secondary.main,
 
             // // Components/RadioGroup
@@ -318,7 +321,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-main': common.white,
             '--text-light': text.dark,
             '--text-contrast': common.dark,
-            '--text-disabled': common.disabled,
+            '--text-disabled': dark.text.disabled,
+
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
@@ -334,11 +338,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
-            // '--elevation-1': elevation.dark[1],
-            // '--elevation-2': elevation.dark[2],
-            // '--elevation-3': elevation.dark[3],
-            // '--elevation-4': elevation.dark[4],
-            // '--elevation-5': elevation.dark[5],
+            '--elevation-1': elevation.dark[1],
+            '--elevation-2': elevation.dark[2],
+            '--elevation-3': elevation.dark[3],
+            '--elevation-4': elevation.dark[4],
+            '--elevation-5': elevation.dark[5],
 
             // STATUS
             '--status-error-main': dark.status.error.main,
@@ -375,25 +379,29 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-fill': common.dark,
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': palette.neutral.dark[400],
-            '--checkbox-border': common.white,
+            '--checkbox-border': dark.input.border,
+            '--checkbox-hover': dark.badge.secondary.outline,
             '--checkbox-unchecked-fill': common.dark,
             '--checkbox-fill': common.white,
             '--checkbox-check': common.dark,
 
             // // Components/Input
             // '--input-label': common.white,
-            // '--input-fill': elevation.dark[1],
+            '--input-fill': palette.neutral.dark[50],
             '--input-fill-disabled': palette.neutral.dark[400],
-            '--input-border-default': dark.input.border,
+            '--input-border-default': palette.neutral.light[400],
+            '--input-border-focus': secondaryVariant2,
             // '--input-border-hover': dark.secondary.main,
             '--input-border-disabled': palette.neutral.dark[900],
 
-            // '--input-placeholder-text': dark.input.placeholder,
+            '--input-placeholder-text': dark.input.placeholder,
+            '--input-outlined-border-default': dark.input.border,
+            '--input-outlined-border-hover': dark.secondary.main,
 
             // // Components/Textarea
-            '--textarea-fill': palette.neutral.dark[700],
-            '--textarea-border-default': palette.neutral.dark[700],
-            '--textarea-border-hover': secondaryVariant2,
+            '--textarea-fill': common.dark,
+            '--textarea-border-default': dark.input.border,
+            '--textarea-border-hover': dark.secondary.main,
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
@@ -406,11 +414,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-trigger-fill': palette.neutral.dark[400],
-            '--select-trigger-placeholder-text': palette.neutral.dark[700],
+            '--select-trigger-placeholder-text': dark.input.placeholder,
             '--select-trigger-outlined-fill': palette.neutral.dark[50],
             '--select-border-default': palette.neutral.light[400],
             '--select-border-focus': secondaryVariant2,
-            '--select-content-border': palette.neutral.light[400],
+            '--select-content-border': palette.neutral.light[900],
             '--select-content-fill': palette.neutral.dark[400],
             '--select-item-checked-text': secondaryVariant2,
             '--select-separator-fill': palette.neutral.light[200],
@@ -418,7 +426,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-popover-border': palette.neutral.dark[700],
             '--dropdown-popover-fill': common.dark,
             '--dropdown-option-hover-fill': palette.neutral.dark[600],
-            '--dropdown-option-disabled-fill': palette.neutral.dark[600],
+            '--dropdown-option-disabled-fill': palette.neutral.dark[700],
             '--dropdown-tooltip-fill': palette.neutral.dark[600],
             '--switch-fill': common.white,
             '--switch-disabled-fill': common.disabled,
@@ -512,12 +520,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         '.focus-ring': {
             outline: 'var(--focus-ring-width) solid var(--focus-ring)',
             'outline-offset': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-width': 'var(--focus-ring-offset-width)',
-            '--tw-ring-offset-color': 'var(--focus-ring-offset)',
-            '--tw-ring-color': 'var(--focus-ring)',
-            '--tw-ring-offset-shadow': '0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
-            '--tw-ring-shadow':
-                '0 0 0 calc(var(--focus-ring-width) + var(--tw-ring-offset-width)) var(--tw-ring-color)',
             'box-shadow': 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
         },
         '.focus-ring-inset': {

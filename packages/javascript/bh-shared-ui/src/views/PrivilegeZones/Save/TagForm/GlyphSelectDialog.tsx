@@ -27,7 +27,9 @@ import {
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    IconButton,
     Input,
+    TextButton,
     Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useState } from 'react';
@@ -45,19 +47,24 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
     iconName,
     onClick,
 }) => (
-    <Button
-        variant={'text'}
-        className={clsx(['relative', !iconName && 'invisible'])}
-        onClick={() => {
-            iconName && onClick(iconName);
-        }}>
-        <Card className='flex items-center justify-center h-24 w-24'>
-            <CardContent className='first:pt-0'>
-                {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
-            </CardContent>
-        </Card>
-        <p className='absolute -bottom-16'>{iconName}</p>
-    </Button>
+    <div className='flex h-36 w-40 flex-col items-center justify-start'>
+        <TextButton
+            aria-label={`${iconName}-glyph`}
+            className={clsx(
+                ['relative', !iconName && 'invisible'],
+                'flex size-24 shrink-0 flex-col justify-center !p-0 focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
+            )}
+            onClick={() => {
+                iconName && onClick(iconName);
+            }}>
+            <Card className='flex items-center justify-center h-24 w-24'>
+                <CardContent className='first:pt-0'>
+                    {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
+                </CardContent>
+            </Card>
+        </TextButton>
+        <p className='mt-4 h-5 w-full whitespace-nowrap text-center'>{iconName}</p>
+    </div>
 );
 
 const Row = ({
@@ -92,7 +99,7 @@ export const VirtualizedIconList = ({
             itemData={{ filteredList, onClick }}
             itemSize={64 * 3}
             innerElementType={InnerElement}
-            width={'100%'}
+            width='100%'
             className='rounded-md bg-neutral-3'
             initialScrollOffset={0}>
             {Row}
@@ -143,14 +150,16 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
+                                    // TODO BED-6062
                                     <Tooltip
-                                        tooltip={'Clear selection'}
+                                        tooltip='Clear selection'
                                         contentProps={{
                                             className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
                                         }}>
-                                        <Button
-                                            variant={'text'}
+                                        <IconButton
+                                            aria-label='Clear selection'
                                             onClick={handleClear}
+                                            className='focus-visible:rounded-sm'
                                             aria-describedby='Clear selection'>
                                             <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
                                                 <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
@@ -158,14 +167,20 @@ const GlyphSelectDialog: React.FC<{
                                                     <FontAwesomeIcon icon={selectedIcon} size='2xl' />
                                                 </CardContent>
                                             </Card>
-                                        </Button>
+                                        </IconButton>
                                     </Tooltip>
                                 )}
                             </div>
 
-                            <span className='flex items-center w-64 self-end'>
-                                <AppIcon.MagnifyingGlass className='-mr-4' />
-                                <Input placeholder='Search' onChange={handleChange} autoFocus className='pl-8' />
+                            <span className='relative flex items-center w-64 self-end'>
+                                <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
+                                <Input
+                                    placeholder='Search'
+                                    variant='outlined'
+                                    onChange={handleChange}
+                                    autoFocus
+                                    className='pl-8'
+                                />
                             </span>
                         </div>
 

@@ -17,7 +17,7 @@ import { Button, ButtonProps } from 'doodle-ui';
 import { forwardRef, type FC } from 'react';
 import { cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
-import { dropdownIconStateStyles, selectorIconStyles, triggerStyles } from './constants';
+import { triggerStyles } from './constants';
 
 export type DropdownTriggerContentsProps = ButtonProps & {
     open: boolean;
@@ -55,10 +55,10 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                 variant={variant ?? 'transparent'}
                 className={cn(
                     'uppercase group',
-                    buttonPrimary && `w-full text-sm ${dropdownIconStateStyles}`,
                     {
                         [triggerStyles]: !buttonPrimary,
-                        'bg-primary text-common-white dark:text-common-dark border-transparent': open,
+                        // TODO remove when new color tokens are merged in - color token experiment
+                        'bg-primary dark:bg-primary-variant text-contrast text-white dark:text-black border-0': open,
                     },
                     className,
                     buttonProps?.className
@@ -82,7 +82,7 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                                 'justify-self-end': buttonPrimary,
                                 hidden: readOnly,
                             })}>
-                            <AppIcon.CaretDown className={selectorIconStyles} size={12} />
+                            <AppIcon.CaretDown size={12} />
                         </span>
                     )}
                 </span>

@@ -28,7 +28,7 @@ export interface HeaderProps {
     name: string;
     nodeType?: EntityKinds | string;
 }
-
+// TODO - refactor in BED-6062
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
@@ -45,11 +45,11 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     };
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold'>
+        <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='box-border text-contrast px-4'
+                className='box-border text-contrast'
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
@@ -62,10 +62,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 </h6>
             </Tooltip>
             {selectedItem && (
-                <Icon
-                    className='h-10 box-border p-4 text-contrast'
-                    onClick={clearSelectedItem}
-                    tip='Clear selected item'>
+                <Icon className='box-border text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
                     <FontAwesomeIcon icon={faRemove} />
                 </Icon>
             )}

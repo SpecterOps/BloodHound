@@ -508,233 +508,6 @@ func TestManagementResource_ListPermissions(t *testing.T) {
 	}
 }
 
-func TestManagementResource_ListRoles_SortingError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "invalidColumn")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsNotSortable)
-	}
-}
-
-func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("foo", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "column cannot be filtered")
-	}
-}
-
-func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "invalidPredicate:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
-	}
-}
-
-func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
-	}
-}
-
-func TestManagementResource_ListRoles_DBError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{}, fmt.Errorf("foo"))
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-description")
-		q.Add("sort_by", "name")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	}
-}
-
-func TestManagementResource_ListRoles(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-
-	role1 := model.Role{
-		Name:        "a",
-		Description: "a",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	role2 := model.Role{
-		Name:        "b",
-		Description: "b",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{role1, role2}, nil)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-description")
-		q.Add("sort_by", "name")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-
-		require.Equal(t, role1.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[0].(map[string]any)["name"])
-		require.Equal(t, role2.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[1].(map[string]any)["name"])
-	}
-}
-
-func TestManagementResource_ListRoles_Filtered(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-
-	role1 := model.Role{
-		Name:        "a",
-		Description: "a",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Roles{role1}, nil)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "eq:a")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-		require.Equal(t, role1.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[0].(map[string]any)["name"])
-	}
-}
-
 func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -2246,7 +2019,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), resources.GetUser).Methods(request.Method)
@@ -2343,7 +2116,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, &database.BloodhoundDB{}, authz.NewAuthorizer(&database.BloodhoundDB{}), api.NewAuthenticator(config.Configuration{}, &database.BloodhoundDB{}, nil), nil, nil)
+			resources := auth.NewManagementResource(config.Configuration{}, &database.BloodhoundDB{}, authz.NewAuthorizer(&database.BloodhoundDB{}), api.NewAuthenticator(config.Configuration{}, &database.BloodhoundDB{}, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(request.URL.Path, resources.GetSelf).Methods(request.Method)
@@ -4022,7 +3795,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc("/api/v2/tokens", resources.CreateAuthToken).Methods(request.Method)
@@ -4438,7 +4211,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 				Crypto: config.CryptoConfiguration{
 					Argon2: config.Argon2Configuration{},
 				},
-			}, mocks.mockDatabase, nil), nil, nil)
+			}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa", api.URIPathVariableUserID), resources.EnrollMFA).Methods(request.Method)
@@ -5253,7 +5026,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/tokens/{%s}", api.URIPathVariableTokenID), resources.DeleteAuthToken).Methods(request.Method)

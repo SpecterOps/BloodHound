@@ -102,12 +102,16 @@ export const ActiveExtensionsCard = () => {
                     <span>Namespace</span>
                     <TooltipRoot>
                         <TooltipTrigger asChild>
-                            <button
-                                type='button'
-                                className='bg-transparent border-none p-0 cursor-default'
-                                aria-label='Namespace information'>
-                                <FontAwesomeIcon icon={faInfoCircle} size='sm' />
-                            </button>
+                            {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
+                            {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
+                            <span
+                                aria-label='Namespace information'
+                                className='flex items-center'
+                                role='img'
+                                tabIndex={0}>
+                                <FontAwesomeIcon icon={faInfoCircle} />
+                            </span>
+                            {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                         </TooltipTrigger>
                         <TooltipPortal>
                             <TooltipContent className='max-w-96 dark:bg-neutral-5 border-0'>
@@ -161,7 +165,7 @@ export const ActiveExtensionsCard = () => {
 
     return (
         <Card className='flex flex-col gap-4 overflow-hidden'>
-            <header className='flex justify-between pt-6 px-6 gap-3'>
+            <header className='flex justify-between items-center pt-6 px-6 gap-3'>
                 <CardTitle className='text-base'>Active Extensions</CardTitle>
                 <SearchInput
                     className='self-start w-80'

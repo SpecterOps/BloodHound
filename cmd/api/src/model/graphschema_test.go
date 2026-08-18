@@ -1152,6 +1152,51 @@ func TestKindInfo_Validation(t *testing.T) {
 			wantErr: ErrInvalidKindInfoContent,
 		},
 		{
+			name: "success_-_valid_markdown_template_with_utility_function",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ .Properties.name | upper }}"}}`)}},
+				}},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "error_-_markdown_template_syntax_error_unclosed_action",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ .Properties.name "}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
+			name: "error_-_markdown_template_unsupported_function",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{
+					Name: "AD_Node",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ regexMatch \"a\" \"a\" }}"}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
+			name: "error_-_markdown_template_syntax_error_in_relationship_kind",
+			input: GraphExtensionInput{
+				ExtensionInput: baseExtensionInput(),
+				NodeKindsInput: NodesInput{{Name: "AD_Node"}},
+				RelationshipKindsInput: RelationshipsInput{{
+					Name: "AD_Edge",
+					Info: KindInfoInputs{{InfoKey: "test", Title: "Title", Position: 1, Content: json.RawMessage(`{"markdown":{"content":"{{ end }}"}}`)}},
+				}},
+			},
+			wantErr: ErrInvalidKindInfoTemplate,
+		},
+		{
 			name: "error_-_duplicate_info_key",
 			input: GraphExtensionInput{
 				ExtensionInput: baseExtensionInput(),
@@ -1511,6 +1556,38 @@ func Test_parseInfoPayload(t *testing.T) {
 				} else {
 					assert.NotNil(t, got)
 				}
+			}
+		})
+	}
+}
+
+func TestKindInfoInput_MarkdownContent(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		content     json.RawMessage
+		wantContent string
+		wantErr     error
+	}{
+		{name: "success_-_valid_markdown_content", content: json.RawMessage(`{"markdown":{"content":"# Hello"}}`), wantContent: "# Hello", wantErr: nil},
+		{name: "error_-_missing_content", content: json.RawMessage(`{"markdown":{}}`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+		{name: "error_-_unknown_field", content: json.RawMessage(`{"markdown":{"content":"x"},"extra":"y"}`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+		{name: "error_-_not_an_object", content: json.RawMessage(`"just a string"`), wantContent: "", wantErr: ErrInvalidKindInfoContent},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			kindInfoInput := KindInfoInput{Content: testCase.content}
+
+			got, err := kindInfoInput.MarkdownContent()
+			if testCase.wantErr != nil {
+				assert.ErrorIs(t, err, testCase.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.wantContent, got)
 			}
 		})
 	}

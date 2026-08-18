@@ -22,9 +22,11 @@ import (
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 const tableSchemaNodeKinds = "schema_node_kinds"
@@ -119,4 +121,26 @@ func (s *Store) GetNodeKindsByNames(ctx context.Context, names []string) ([]serv
 	}
 
 	return kinds, nil
+}
+
+// FetchNodesByObjectIDsAndKinds returns the set of graph nodes matching any of the supplied
+// kinds whose object id is contained in objectIDs.
+func (s *Store) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, s.graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(
+			func() graph.Criteria {
+				return query.And(
+					query.KindIn(query.Node(), kinds...),
+					query.In(query.NodeProperty(common.ObjectID.String()), objectIDs),
+				)
+			}),
+		); err != nil {
+			return err
+		} else {
+			nodes = fetchedNodes
+			return nil
+		}
+	})
 }

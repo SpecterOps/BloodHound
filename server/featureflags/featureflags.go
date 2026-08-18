@@ -25,6 +25,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
 	"github.com/specterops/bloodhound/server/featureflags/internal/routes"
@@ -42,9 +43,10 @@ type FeatureFlagRequestAdapter interface {
 
 func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter {
 	var (
-		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		store             = appdb.NewStore(pool)
+		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
+		svc               = services.NewService(store, analysisRequester)
+		handlerSet        = handlers.NewHandlersContainer(svc)
 	)
 
 	return handlerSet
@@ -52,9 +54,10 @@ func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter 
 
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
-		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		store             = appdb.NewStore(pool)
+		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
+		svc               = services.NewService(store, analysisRequester)
+		handlerSet        = handlers.NewHandlersContainer(svc)
 	)
 
 	routes.Register(routerInst, handlerSet)
