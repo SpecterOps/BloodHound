@@ -27,7 +27,14 @@ const meta = {
     },
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
-    argTypes: {},
+    argTypes: {
+        variant: {
+            control: 'radio',
+            options: ['outlined', 'filled'],
+            description:
+                'Controls the collapsed trigger appearance. Use outlined when All items are selected as the default state, example: Findings Table Filters',
+        },
+    },
     args: {},
 } satisfies Meta<typeof MultiSelect>;
 
