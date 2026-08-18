@@ -29,12 +29,15 @@ import { setupServer } from 'msw/node';
 import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
 
+const sigmaChartMockState = vi.hoisted(() => ({ props: undefined as { snapToGridEnabled?: boolean } | undefined }));
+
 // Mock sigma here to avoid rendering conflicts in jsdom
 vi.mock('src/components/SigmaChart', async () => {
     const { forwardRef, useImperativeHandle } = await import('react');
 
     return {
-        default: forwardRef((_props, ref) => {
+        default: forwardRef((props: { snapToGridEnabled?: boolean }, ref) => {
+            sigmaChartMockState.props = props;
             useImperativeHandle(ref, () => ({
                 runStandardLayout: vi.fn(),
                 runSequentialLayout: vi.fn(),
@@ -181,7 +184,10 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    sigmaChartMockState.props = undefined;
+});
 afterAll(() => server.close());
 
 describe('GraphView', () => {
@@ -189,6 +195,35 @@ describe('GraphView', () => {
         render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
         const container = screen.getByTestId('explore');
         expect(container).toBeInTheDocument();
+    });
+
+    describe('Snap to grid', () => {
+        it('starts disabled and communicates its selected state to Sigma', async () => {
+            const user = userEvent.setup();
+            render(<GraphView />, { route: `/explore?searchType=node` });
+
+            const snapButton = await screen.findByRole('button', { name: 'Snap to grid' });
+            expect(snapButton).toHaveAttribute('aria-pressed', 'false');
+            expect(sigmaChartMockState.props?.snapToGridEnabled).toBe(false);
+
+            await user.click(snapButton);
+
+            expect(snapButton).toHaveAttribute('aria-pressed', 'true');
+            expect(snapButton).toHaveClass('!bg-primary', '!text-white');
+            expect(sigmaChartMockState.props?.snapToGridEnabled).toBe(true);
+
+            await user.keyboard('{Enter}');
+
+            expect(snapButton).toHaveAttribute('aria-pressed', 'false');
+            expect(sigmaChartMockState.props?.snapToGridEnabled).toBe(false);
+        });
+
+        it('hides the control while table view is displayed', async () => {
+            render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
+
+            expect(await screen.findByRole('table')).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Snap to grid' })).not.toBeInTheDocument();
+        });
     });
 
     it('displays an error message', async () => {

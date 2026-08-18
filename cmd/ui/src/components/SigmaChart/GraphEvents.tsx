@@ -16,24 +16,36 @@
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { useTheme } from 'bh-shared-ui';
+import { MultiDirectedGraph } from 'graphology';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
+import {
+    forwardRef,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
+import { animateNodes } from 'sigma/utils/animate';
 import {
     DRAG_THRESHOLD,
-    MOUSE_BUTTON_PRIMARY,
     getDistanceBetween,
     getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
     getNodeOffset,
     graphToFramedGraph,
+    MOUSE_BUTTON_PRIMARY,
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
+import { getOccupiedGridPoints, snapPositionsToGrid, snapPositionToGrid } from 'src/views/Explore/snapToGrid';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
@@ -51,6 +63,7 @@ interface GraphEventProps {
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
+    snapToGridEnabled?: boolean;
 }
 
 /** Meta info about the currently dragged node */
@@ -72,6 +85,9 @@ type DragMetadata = {
 
     /** Node's original position, for determining how far it's been dragged. */
     origin: Coordinates | null;
+
+    /** Grid cells occupied by every node except the one being dragged. */
+    occupiedGridPoints: Set<string>;
 };
 
 const DEFAULT_DRAGGED_META = {
@@ -79,6 +95,21 @@ const DEFAULT_DRAGGED_META = {
     cancelNextClick: false,
     offset: null,
     origin: null,
+    occupiedGridPoints: new Set<string>(),
+};
+
+const getGraphPositions = (graph: MultiDirectedGraph<Attributes, Attributes, Attributes>) =>
+    Object.fromEntries(
+        graph.nodes().map((id) => {
+            const { x, y } = graph.getNodeAttributes(id);
+            return [id, { x, y }];
+        })
+    );
+
+const snapGraphPositions = (graph: MultiDirectedGraph<Attributes, Attributes, Attributes>) => {
+    const snappedPositions = snapPositionsToGrid(getGraphPositions(graph));
+
+    graph.updateEachNodeAttributes((id, attributes) => ({ ...attributes, ...snappedPositions[id] }));
 };
 
 export const GraphEvents = forwardRef(function GraphEvents(
@@ -89,6 +120,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         onRightClickNode,
         showNodeLabels = true,
         showEdgeLabels = true,
+        snapToGridEnabled = false,
     }: GraphEventProps,
     ref
 ) {
@@ -106,6 +138,22 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
     const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
+    const cancelSnapAnimationRef = useRef<(() => void) | null>(null);
+    const dragResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const dragGenerationRef = useRef(0);
+
+    const cancelSnapAnimation = useCallback(() => {
+        cancelSnapAnimationRef.current?.();
+        cancelSnapAnimationRef.current = null;
+    }, []);
+
+    useEffect(
+        () => () => {
+            cancelSnapAnimation();
+            if (dragResetTimeoutRef.current) clearTimeout(dragResetTimeoutRef.current);
+        },
+        [cancelSnapAnimation]
+    );
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
@@ -135,15 +183,27 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
 
             runSequentialLayout: () => {
+                cancelSnapAnimation();
                 sequentialLayout(graph);
+                if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
             runStandardLayout: () => {
+                cancelSnapAnimation();
                 standardLayout(graph);
+                if (snapToGridEnabled) snapGraphPositions(graph);
                 resetCamera(sigma);
             },
         };
-    }, [sigma, graph]);
+    }, [sigma, graph, snapToGridEnabled, cancelSnapAnimation]);
+
+    useEffect(() => {
+        cancelSnapAnimation();
+        if (!snapToGridEnabled) return;
+
+        snapGraphPositions(graph);
+        sigma.refresh();
+    }, [graph, sigma, snapToGridEnabled, cancelSnapAnimation]);
 
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
@@ -200,19 +260,52 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             downNode: (event) => {
                 if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    cancelSnapAnimation();
+                    if (dragResetTimeoutRef.current) {
+                        clearTimeout(dragResetTimeoutRef.current);
+                        dragResetTimeoutRef.current = null;
+                    }
+                    dragGenerationRef.current += 1;
+
                     const node = graph.getNodeAttributes(event.node);
                     setDraggedMeta({
                         cancelNextClick: false,
                         id: event.node,
                         offset: getNodeOffset(node, sigma.viewportToGraph(event.event)),
                         origin: { x: node.x, y: node.y },
+                        occupiedGridPoints: snapToGridEnabled
+                            ? getOccupiedGridPoints(getGraphPositions(graph), new Set([event.node]))
+                            : new Set(),
                     });
                 }
             },
             mouseup: () => {
-                if (draggedNode) {
+                if (draggedMeta.id) {
+                    if (snapToGridEnabled) {
+                        const { x, y } = graph.getNodeAttributes(draggedMeta.id);
+                        const snappedPosition = snapPositionToGrid({ x, y }, draggedMeta.occupiedGridPoints);
+                        const animationTarget: Record<string, Record<string, number>> = {
+                            [draggedMeta.id]: { x: snappedPosition.x, y: snappedPosition.y },
+                        };
+
+                        cancelSnapAnimationRef.current = animateNodes(
+                            graph,
+                            animationTarget,
+                            { duration: 100, easing: 'quadraticOut' },
+                            () => {
+                                cancelSnapAnimationRef.current = null;
+                            }
+                        );
+                    }
+
                     // Timeout prevents state update race conditions between this an mousemovebody.
-                    setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
+                    const releasedGeneration = dragGenerationRef.current;
+                    dragResetTimeoutRef.current = setTimeout(() => {
+                        if (dragGenerationRef.current === releasedGeneration) {
+                            setDraggedMeta(DEFAULT_DRAGGED_META);
+                        }
+                        dragResetTimeoutRef.current = null;
+                    }, 10);
                 }
             },
             mousemovebody: (event) => {
@@ -267,6 +360,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             clickStage: () => onClickStage?.(),
         });
     }, [
+        cancelSnapAnimation,
         draggedMeta,
         draggedMeta.id,
         draggedMeta.offset,
@@ -278,6 +372,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         registerEvents,
         sigma,
         sigmaContainer,
+        snapToGridEnabled,
     ]);
 
     const isHighlightedItemInGraph = useMemo(
