@@ -217,28 +217,42 @@ describe('ActiveExtensionsCard', () => {
         });
     });
 
-    it('applies correct dynamic height based on filtered data', async () => {
-        const { container } = render(<ActiveExtensionsCard />);
+    it('sets the table height from the number of fixed-height rows', async () => {
+        render(<ActiveExtensionsCard />);
 
         await screen.findByText('Active Directory');
 
-        const tableContainer = container.querySelector('div[style*="min-height"]');
-        expect(tableContainer).toBeInTheDocument();
         // With 3 extensions: TABLE_HEADER_HEIGHT (52) + TABLE_CELL_HEIGHT (57) * 3 = 223px
-        expect(tableContainer).toHaveStyle({ minHeight: '223px' });
+        expect(screen.getByTestId('active-extensions-table-container')).toHaveStyle({ height: '223px' });
+        expect(screen.getByTestId('active-extensions-table-container').firstElementChild).toHaveClass('h-full');
+        expect(document.querySelector('div.overflow-auto')).not.toBeInTheDocument();
+        expect(document.querySelector('table')).toHaveClass('table-fixed');
+        expect(screen.getByText('Active Directory')).toHaveClass('line-clamp-2', 'leading-5');
     });
 
-    it('applies empty state height when no results', async () => {
+    it('hides truncated text tooltips at 900px and above', async () => {
+        const user = userEvent.setup();
+        render(<ActiveExtensionsCard />);
+
+        await user.hover(await screen.findByText('Active Directory'));
+
+        await waitFor(() => {
+            const tooltip = document.querySelector('[aria-hidden="true"].TooltipContent');
+            expect(tooltip).toHaveClass('min-[900px]:hidden');
+            expect(tooltip).toHaveAttribute('aria-hidden', 'true');
+        });
+    });
+
+    it('sets a consistent height for the empty state', async () => {
         server.use(
             rest.get(`/api/v2/extensions`, (_req, res, ctx) => res.once(ctx.json({ data: { extensions: [] } })))
         );
 
-        const { container } = render(<ActiveExtensionsCard />);
+        render(<ActiveExtensionsCard />);
 
         await screen.findByText(NO_DATA_MESSAGE);
 
-        const tableContainer = container.querySelector('div[style*="min-height"]');
-        expect(tableContainer).toBeInTheDocument();
+        expect(screen.getByTestId('active-extensions-table-container')).toHaveStyle({ height: '166px' });
     });
 
     it('opens confirmation dialog when delete button is clicked', async () => {
