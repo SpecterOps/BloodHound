@@ -24,13 +24,14 @@ import (
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type SavedQueriesData interface {
 	GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error)
 	ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error)
-	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error)
+	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string, schemaExtensionID int32) (model.SavedQuery, error)
 	UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error)
 	DeleteSavedQuery(ctx context.Context, savedQueryID int64) error
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int64) (bool, error)
@@ -97,12 +98,13 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	return queries, int(count), CheckError(result)
 }
 
-func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string) (model.SavedQuery, error) {
+func (s *BloodhoundDB) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string, schemaExtensionID int32) (model.SavedQuery, error) {
 	savedQuery := model.SavedQuery{
-		UserID:      userID.String(),
-		Name:        name,
-		Query:       query,
-		Description: description,
+		UserID:            userID.String(),
+		Name:              name,
+		Query:             query,
+		Description:       description,
+		SchemaExtensionID: null.NewInt32(schemaExtensionID, schemaExtensionID != 0),
 	}
 
 	return savedQuery, CheckError(s.db.WithContext(ctx).Create(&savedQuery))

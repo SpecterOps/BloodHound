@@ -18,14 +18,16 @@ package model
 
 import (
 	"errors"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
 type SavedQuery struct {
-	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
-	Name        string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
-	Query       string `json:"query"`
-	Description string `json:"description"`
-
+	UserID            string     `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
+	Name              string     `json:"name" gorm:"index:,unique,composite:compositeIndex"`
+	Query             string     `json:"query"`
+	Description       string     `json:"description"`
+	SchemaExtensionID null.Int32 `json:"-" gorm:"column:schema_extension_id;index:,unique,composite:compositeIndex"`
 	BigSerial
 }
 
