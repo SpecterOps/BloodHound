@@ -69,7 +69,7 @@ BEGIN
             selector_name,
             selector_description,
             true,
-            false,
+            true,
             2
         )
         RETURNING id INTO resolved_selector_id;
