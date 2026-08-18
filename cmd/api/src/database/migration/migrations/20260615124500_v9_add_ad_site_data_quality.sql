@@ -26,8 +26,6 @@ ALTER TABLE ad_data_quality_stats ADD COLUMN IF NOT EXISTS sitesubnets BIGINT DE
 -- +goose StatementBegin
 DO $$
 DECLARE
-    -- Keep created_by as BloodHound for system-selector behavior and use updated_by to scope rollback ownership.
-    migration_marker CONSTANT text := 'migration:20260615124500_v9_add_ad_site_data_quality';
     selector_name CONSTANT text := 'Sites';
     selector_description CONSTANT text := E'Control over an Active Directory site may allow a user to compromise all assets associated with that site through the application of Group Policy Objects. Because every AD site contains at least one Domain Controller as a Site Server, compromising a site could lead to the compromise of at least one domain in the forest. Therefore, Active Directory Site objects are classified as Tier Zero.';
     selector_cypher CONSTANT text := E'MATCH (n:Site) \nRETURN n;';
@@ -50,7 +48,8 @@ BEGIN
     SELECT MIN(selectors.id), COUNT(*)
     INTO resolved_selector_id, selector_count
     FROM asset_group_tag_selectors selectors
-    WHERE selectors.name = selector_name AND is_default = true;
+    WHERE selectors.name = selector_name
+        AND selectors.is_default = true;
 
     IF selector_count = 0 THEN
         INSERT INTO asset_group_tag_selectors (
@@ -71,7 +70,7 @@ BEGIN
             current_timestamp,
             'BloodHound',
             current_timestamp,
-            'Bloodhound',
+            'BloodHound',
             NULL,
             NULL,
             selector_name,
@@ -110,21 +109,11 @@ $$;
 -- +goose StatementEnd
 
 -- +goose Down
-DELETE FROM asset_group_tag_selector_seeds
-WHERE selector_id IN (
-    SELECT id
-    FROM asset_group_tag_selectors
-    WHERE name = 'Sites'
-        AND created_by = 'BloodHound'
-        AND updated_by = 'migration:20260615124500_v9_add_ad_site_data_quality'
-)
-    AND type = 2
-    AND value = E'MATCH (n:Site) \nRETURN n;';
-
 DELETE FROM asset_group_tag_selectors
-    WHERE name = 'Sites' AND `is_default` = true,
+WHERE name = 'Sites'
+    AND is_default = true
     AND created_by = 'BloodHound'
-    AND updated_by = 'migration:20260615124500_v9_add_ad_site_data_quality';
+    AND updated_by = 'BloodHound';
 
 ALTER TABLE ad_data_quality_stats DROP COLUMN IF EXISTS sitesubnets;
 ALTER TABLE ad_data_quality_stats DROP COLUMN IF EXISTS siteservers;

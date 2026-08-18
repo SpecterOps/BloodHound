@@ -18,8 +18,6 @@
 -- +goose StatementBegin
 DO $$
 DECLARE
-    -- Keep created_by as BloodHound for system-selector behavior and use updated_by to scope rollback ownership.
-    migration_marker CONSTANT text := 'migration:20260615130000_v9_add_tier_zero_site_server_selector';
     selector_name CONSTANT text := 'Domain Controller Site Servers';
     selector_description CONSTANT text := E'An Active Directory Site Server object represents a computer associated with an Active Directory Site. When the referenced computer is a Domain Controller, a malicious Group Policy Object linked to the Site could compromise the Domain Controller and, consequently, its domain. Therefore, Site Server objects that reference Domain Controllers are classified as Tier Zero.';
     selector_cypher CONSTANT text := E'MATCH (n:SiteServer)-[:ServerIs]->(:Computer)-[:DCFor]->(:Domain)\nRETURN n;';
@@ -42,7 +40,8 @@ BEGIN
     SELECT MIN(selectors.id), COUNT(*)
     INTO resolved_selector_id, selector_count
     FROM asset_group_tag_selectors selectors
-    WHERE selectors.name = selector_name;
+    WHERE selectors.name = selector_name
+        AND selectors.is_default = true;
 
     IF selector_count = 0 THEN
         INSERT INTO asset_group_tag_selectors (
@@ -63,7 +62,7 @@ BEGIN
             current_timestamp,
             'BloodHound',
             current_timestamp,
-            migration_marker,
+            'BloodHound',
             NULL,
             NULL,
             selector_name,
@@ -85,7 +84,7 @@ BEGIN
             AND selectors.is_default = true
             AND selectors.disabled_at IS NULL
             AND selectors.disabled_by IS NULL
-            AND selectors.allow_disable = false
+            AND selectors.allow_disable = true
             AND selectors.auto_certify = 2
             AND EXISTS (
                 SELECT 1
@@ -102,18 +101,8 @@ $$;
 -- +goose StatementEnd
 
 -- +goose Down
-DELETE FROM asset_group_tag_selector_seeds
-WHERE selector_id IN (
-    SELECT id
-    FROM asset_group_tag_selectors
-    WHERE name = 'Domain Controller Site Servers'
-        AND created_by = 'BloodHound'
-        AND updated_by = 'migration:20260615130000_v9_add_tier_zero_site_server_selector'
-)
-    AND type = 2
-    AND value = E'MATCH (n:SiteServer)-[:ServerIs]->(:Computer)-[:DCFor]->(:Domain)\nRETURN n;';
-
 DELETE FROM asset_group_tag_selectors
 WHERE name = 'Domain Controller Site Servers'
+    AND is_default = true
     AND created_by = 'BloodHound'
-    AND updated_by = 'migration:20260615130000_v9_add_tier_zero_site_server_selector';
+    AND updated_by = 'BloodHound';
