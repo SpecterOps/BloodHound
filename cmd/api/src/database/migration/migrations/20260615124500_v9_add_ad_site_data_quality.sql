@@ -71,7 +71,7 @@ BEGIN
             current_timestamp,
             'BloodHound',
             current_timestamp,
-            migration_marker,
+            'Bloodhound',
             NULL,
             NULL,
             selector_name,
