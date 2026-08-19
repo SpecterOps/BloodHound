@@ -753,8 +753,8 @@ export interface Subscription {
     channel_id: string;
     event_type: string;
     version: number;
-    created_at: ISO_DATE_STRING;
-    disabled_at: ISO_DATE_STRING;
+    created_at: ISO_DATE_STRING | null;
+    disabled_at: ISO_DATE_STRING | null;
     disabled_by: string;
 }
 export interface Notification {
@@ -765,8 +765,8 @@ export interface Notification {
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: ISO_DATE_STRING;
-    disabled_by: string;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
     subscriptions: Subscription[];
 }
 
