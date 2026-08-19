@@ -16,7 +16,6 @@
 
 allOf:
   - $ref: './model.asset-group-tags-selector-base.yaml'
-  - type: object
-    properties:
-      disabled:
-        type: boolean
+required:
+  - name
+  - seeds
