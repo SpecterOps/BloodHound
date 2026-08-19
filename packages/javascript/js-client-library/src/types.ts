@@ -754,14 +754,8 @@ export interface Subscription {
     event_type: string;
     version: number;
     created_at: ISO_DATE_STRING;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    disabled_at: ISO_DATE_STRING;
+    disabled_by: string;
 }
 export interface Notification {
     id: string;
@@ -771,14 +765,8 @@ export interface Notification {
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    disabled_at: ISO_DATE_STRING;
+    disabled_by: string;
     subscriptions: Subscription[];
 }
 
