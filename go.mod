@@ -52,7 +52,7 @@ require (
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/chow v0.1.2-0.20260504211605-e256102241f0
+	github.com/specterops/chow v0.1.2-0.20260819191917-95768c258797
 	github.com/specterops/dawgs v0.7.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2

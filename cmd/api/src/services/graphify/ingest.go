@@ -370,7 +370,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
-		} else if parsedData.LegacyMetadata.Version >= 5 {
+		} else if parsedData.OriginalMetadata.Version >= 5 {
 			return decodeBasicData(batch, decoder, convertComputerData)
 		} else {
 			return nil
