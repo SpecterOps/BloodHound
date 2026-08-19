@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,10 +26,13 @@ import (
 
 const (
 	samlConsumedIdentifiersTableName = "saml_consumed_identifiers"
+	// these must match the saml_identifier_type enum in the saml_consumed_identifiers migration.
+	samlIdentifierTypeResponse  = "response"
+	samlIdentifierTypeAssertion = "assertion"
 )
 
 // SAMLConsumedData defines the methods for persisting and deleting SAML identifiers consumed during login,
-// stored in the saml_consumed_identifiers table
+// stored in the saml_consumed_identifiers table.
 type SAMLConsumedData interface {
 	CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) error
 	//SweepSAMLConsumedIdentifiers(ctx context.Context) error
@@ -44,11 +47,11 @@ func (s *BloodhoundDB) CreateSAMLConsumedIdentifiers(ctx context.Context, ssoPro
 		result := tx.Exec(fmt.Sprintf(`INSERT INTO %s
 			(sso_provider_id, idp_issuer, identifier_type, identifier, expires_at)
 			VALUES
-				(?, ?, 'response', ?, ?),
-				(?, ?, 'assertion', ?, ?)
+				(?, ?, ?, ?, ?),
+				(?, ?, ?, ?, ?)
 			ON CONFLICT DO NOTHING`, samlConsumedIdentifiersTableName),
-			ssoProviderID, idpIssuer, responseID, expiresAt,
-			ssoProviderID, idpIssuer, assertionID, expiresAt,
+			ssoProviderID, idpIssuer, samlIdentifierTypeResponse, responseID, expiresAt,
+			ssoProviderID, idpIssuer, samlIdentifierTypeAssertion, assertionID, expiresAt,
 		)
 
 		if result.Error != nil {
