@@ -19,14 +19,19 @@ on:
   push:
     branches:
       - main
-
+  # Testing Allure Report Generation
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
   call-run-ui-unit-tests:
     uses: ./.github/workflows/run-ui-tests.yml
   generate-allure-report:
-    if: github.head_ref == 'BED-9374'
     needs:
       - call-run-go-unit-tests
       - call-run-ui-unit-tests
@@ -66,7 +71,7 @@ jobs:
           allure_results: allure-results
 
       - name: Deploy report to Github Pages
-        if: success()
+        if: always()
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e #v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
