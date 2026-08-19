@@ -149,7 +149,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to attach files", request), response)
 	} else if ingestFileService, err := s.FileServiceResolver.Resolve(storage.FileServiceIngest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unable to resolve file service for working directories", request), response)
-	} else if ingestTaskParams, report, err := upload.SaveIngestFile(request.Context(), ingestFileService, request, s.IngestSchema, ingestJob.ID); err != nil && (len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0) {
+	} else if ingestTaskParams, report, err := upload.SaveIngestFile(request.Context(), ingestFileService, request, s.IngestSchema, ingestJob.ID); err != nil {
 		var errDetails = []api.ErrorDetails{{Message: "Error saving ingest file. File failed schema validation."}}
 
 		for _, criticalErr := range report.CriticalErrors {
