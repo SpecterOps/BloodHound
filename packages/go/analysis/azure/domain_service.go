@@ -26,7 +26,7 @@ import (
 func DomainServiceEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (DomainServiceDetails, error) {
 	var details DomainServiceDetails
 
-	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	transactionErr := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
@@ -37,6 +37,8 @@ func DomainServiceEntityDetails(ctx context.Context, db graph.Database, primaryD
 			return err
 		}
 	})
+
+	return details, transactionErr
 }
 
 func PopulateDomainServiceEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details DomainServiceDetails) (DomainServiceDetails, error) {
