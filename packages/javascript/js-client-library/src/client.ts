@@ -2844,7 +2844,7 @@ class BHEAPIClient {
 
     /* alerts */
     createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
-        return this.baseClient.post<BasicResponse<CreateAlertResponse>>('/api/v2/alerts', payload, options);
+        return this.baseClient.post<CreateAlertResponse>('/api/v2/alerts', payload, options);
     };
 
     getAlerts = (
