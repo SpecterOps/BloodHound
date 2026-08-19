@@ -22,6 +22,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // RequestedAnalysisType identifies the category of work an analysis request represents.
@@ -61,6 +63,7 @@ type Database interface {
 	GetAnalysisRequest(ctx context.Context) (RequestedAnalysis, error)
 	CreateAnalysisRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error)
 	DeleteAnalysisRequest(ctx context.Context) error
+	UpsertAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
 // Service implements the analysis use cases on top of a Database implementation.
@@ -84,6 +87,12 @@ func (s *Service) GetRequest(ctx context.Context) (RequestedAnalysis, error) {
 // (true) or a request was already pending (false).
 func (s *Service) CreateRequest(ctx context.Context, requestedBy string) (RequestedAnalysis, bool, error) {
 	return s.db.CreateAnalysisRequest(ctx, requestedBy)
+}
+
+// SubmitAnalysisRequest creates or updates the pending analysis request.
+// Callers must resolve any feature-flag-driven analysis mode behavior before calling this method.
+func (s *Service) SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
+	return s.db.UpsertAnalysisRequest(ctx, requestedBy, analysisMode)
 }
 
 func (s *Service) CancelAnalysisRequest(ctx context.Context) error {

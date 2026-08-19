@@ -20,9 +20,7 @@ import { cn } from '../utils';
 
 const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
-    'hover:underline',
     'focus:outline-none focus-visible:focus-ring',
-    'active:no-underline',
     'disabled:text-[#616161] dark:disabled:text-[#A6A6A6] disabled:pointer-events-none disabled:opacity-50',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
@@ -186,7 +184,7 @@ const defaultIconButtonClasses = [
 export const IconButtonVariants = cva(
     [
         ...buttonBaseClasses,
-        'inline-grid h-fit min-h-8 aspect-square box-border',
+        'inline-grid h-fit aspect-square box-border',
         'shrink-0 place-items-center align-middle rounded-full border-0 p-2',
         '[&>svg]:h-[var(--icon-button-icon-size)]',
         '[&>svg]:w-[var(--icon-button-icon-size)]',

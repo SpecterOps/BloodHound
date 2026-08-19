@@ -13,15 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-export * from './asset-group-tags/members';
-export * from './asset-group-tags/history';
-export * from './asset-group-tags/labels';
-export * from './asset-group-tags/search';
-export * from './asset-group-tags/selectors';
-export * from './asset-group-tags/tag';
-export * from './asset-group-tags/zone-details';
-export * from './bloodhound-users/mfa';
-export * from './bloodhound-users/secret';
-export * from './graphs/cypher';
-export * from './tokens/index';
+export const disabledStylesOverride = 'disabled:!text-text-main disabled:dark:!text-common-white disabled:!opacity-100';
