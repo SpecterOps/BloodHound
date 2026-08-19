@@ -22,11 +22,13 @@ package modules
 import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/extensions"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
@@ -47,10 +49,18 @@ type Deps struct {
 	AlertPublisher      alerts.Publisher
 }
 
+// Services carries handles that the startup entrypoint needs to keep after
+// module registration. The audit Maintainer is handed to the GC daemon so it
+// can manage the audit_logs range partitions.
+type Services struct {
+	AuditMaintainer audit.Maintainer
+}
+
 // Register wires up all feature modules with the provided infrastructure.
 // Each feature module builds its own store → service → handler chain and
-// attaches its routes to the shared router.
-func Register(deps Deps) {
+// attaches its routes to the shared router. It returns the Services the
+// entrypoint must retain after registration.
+func Register(deps Deps) Services {
 	if deps.Router == nil {
 		panic("modules: Register requires a non-nil Router")
 	}
@@ -77,4 +87,15 @@ func Register(deps Deps) {
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
+
+	// Audit middleware records the intent/success/failure lifecycle of every
+	// request. It is attached post-routing so the authenticated actor set by the
+	// auth middleware is available on the request context. The health check
+	// route carries no audit value and is excluded. The Maintainer is returned
+	// so the entrypoint can hand it to the GC daemon to manage the audit_logs
+	// partitions.
+	auditService, auditMaintainer := audit.Register(deps.Pool)
+	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditService, deps.Router.MuxRouter(), "/health"))
+
+	return Services{AuditMaintainer: auditMaintainer}
 }

@@ -112,6 +112,28 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 		return
 	}
 
+	// Record the audited action as a failure if the handler panics. This defer is
+	// registered before next.ServeHTTP so it traps a panic from the handler (or any
+	// inner middleware) that would otherwise skip the outcome write below, leaving
+	// the intent row with no matching success/failure. It writes the failure row
+	// and then re-panics so the outer PanicHandler still logs the panic and aborts
+	// the request.
+	defer func() {
+		if recovery := recover(); recovery != nil {
+			// The handler goroutine is unwinding, so use a context detached from the
+			// request's cancellation and bounded by auditOutcomeWriteTimeout, mirroring
+			// the normal outcome write below.
+			panicCtx, cancelPanic := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
+			defer cancelPanic()
+
+			if failureErr := auditService.Failure(panicCtx, commitID, entry); failureErr != nil {
+				slog.ErrorContext(panicCtx, "Failed to write audit failure row after handler panic", attr.Error(failureErr))
+			}
+
+			panic(recovery)
+		}
+	}()
+
 	next.ServeHTTP(recorder, request)
 
 	// The success/failure write is best-effort but must survive the client

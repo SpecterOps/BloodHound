@@ -318,6 +318,38 @@ func TestAuditMiddleware_OutcomeWriteSurvivesRequestCancellation(t *testing.T) {
 	require.NoError(t, fake.successCtxErr)
 }
 
+func TestAuditMiddleware_HandlerPanicRecordsFailure(t *testing.T) {
+	var (
+		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		router   = mux.NewRouter()
+		recorder = httptest.NewRecorder()
+	)
+
+	router.Use(middleware.AuditMiddleware(fake, router))
+	router.HandleFunc(testRoute, func(_ http.ResponseWriter, _ *http.Request) {
+		panic("handler boom")
+	})
+
+	// The middleware must re-panic so the outer PanicHandler can handle the panic;
+	// without a PanicHandler in this test router the panic propagates out of
+	// ServeHTTP unchanged.
+	require.PanicsWithValue(t, "handler boom", func() {
+		router.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
+	})
+
+	// A panicking handler still produces an intent row and a matching failure row
+	// rather than leaving the intent dangling with no outcome. No success row is
+	// written.
+	require.Len(t, fake.intentEntries, 1)
+	require.Len(t, fake.failureCommits, 1)
+	require.Empty(t, fake.successCommits)
+	require.Equal(t, fake.commitID, fake.failureCommits[0])
+
+	// The panic-path failure write uses a context detached from the request's
+	// cancellation, so it is not cancelled.
+	require.NoError(t, fake.failureCtxErr)
+}
+
 func TestAuditMiddleware_UnauthenticatedActorEmpty(t *testing.T) {
 	var (
 		fake     = &fakeAuditService{}
