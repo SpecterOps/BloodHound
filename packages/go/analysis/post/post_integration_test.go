@@ -64,26 +64,6 @@ func TestDeleteTransitEdges(t *testing.T) {
 			"name":     "azure_user",
 			"objectid": "4321",
 		}), azure.Entity, azure.User)
-
-		adGroup = testCtx.NewNode(graph.AsProperties(map[string]any{
-			"name":     "domain_users",
-			"objectid": "S-1-5-21-1-2-3-513",
-		}), ad.Entity, ad.Group)
-
-		domainService = testCtx.NewNode(graph.AsProperties(map[string]any{
-			"name":     "managed_domain",
-			"objectid": "5678",
-		}), azure.Entity, azure.EntraDS)
-
-		adDomain = testCtx.NewNode(graph.AsProperties(map[string]any{
-			"name":     "managed.example",
-			"objectid": "S-1-5-21-1-2-3",
-		}), ad.Entity, ad.Domain)
-
-		azureServicePrincipal = testCtx.NewNode(graph.AsProperties(map[string]any{
-			"name":     "domain_controller_services",
-			"objectid": "8765",
-		}), azure.Entity, azure.ServicePrincipal)
 	)
 
 	// In order to validate that DeleteTransitEdges and the updated PostProcessedRelationships for both AD and Azure are correct, we need to simulate
@@ -94,11 +74,6 @@ func TestDeleteTransitEdges(t *testing.T) {
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
 	// in bhce/cmd/api/src/analysis/azure/post.go.
 	testCtx.NewRelationship(adUser, azureUser, azure.SyncedToEntraUser)
-	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToEntraDSUser)
-	testCtx.NewRelationship(azureUser, domainService, azure.ManageEntraDS)
-	testCtx.NewRelationship(domainService, adDomain, azure.EntraDSFor)
-	testCtx.NewRelationship(azureUser, adGroup, azure.ManageEntraDSSync)
-	testCtx.NewRelationship(azureServicePrincipal, adGroup, azure.ManageEntraDSSyncFilter)
 	testCtx.NewRelationship(azureUser, adUser, ad.SyncedToADUser)
 
 	// The way post-processing operates is that all edges created during post-processing are deleted before each analysis run. This helps keep the graph consistent
@@ -116,16 +91,6 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 		// This must be true which would mean that the above created SyncedToEntraUser was correctly deleted by the DeleteTransitEdges call
 		require.Equal(t, int64(0), numEdges)
-
-		numEdges, err = tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToEntraDSUser)).Count()
-		require.Nil(t, err)
-		require.Equal(t, int64(0), numEdges)
-
-		for _, relationshipKind := range []graph.Kind{azure.ManageEntraDS, azure.EntraDSFor, azure.ManageEntraDSSync, azure.ManageEntraDSSyncFilter} {
-			numEdges, err = tx.Relationships().Filter(query.Kind(query.Relationship(), relationshipKind)).Count()
-			require.Nil(t, err)
-			require.Equal(t, int64(0), numEdges)
-		}
 
 		return nil
 	})

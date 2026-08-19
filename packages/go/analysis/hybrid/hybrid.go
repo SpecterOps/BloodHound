@@ -42,6 +42,15 @@ const (
 	entraDSSyncScopeAll            = "ALL"
 )
 
+var entraDSPostProcessedEdges = graph.Kinds{
+	azure.SyncedToEntraDSUser,
+	azure.SyncedToEntraDSGroup,
+	azure.AddEntraDSGroupMember,
+	azure.EntraDSFor,
+	azure.ManageEntraDSSync,
+	azure.ManageEntraDSSyncFilter,
+}
+
 func fetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
 	var nodeSet graph.NodeSet
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -60,7 +69,7 @@ func fetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error)
 	}
 }
 
-func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+func PostHybrid(ctx context.Context, db graph.Database, entraDomainServicesEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -70,10 +79,18 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		attr.Scope("process"),
 	)()
 
+	emptyStats := post.NewAtomicPostProcessingStats()
+	tracker, err := post.FetchTracker(ctx, db, entraDSPostProcessedEdges)
+	if err != nil {
+		return &emptyStats, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "Entra DS Hybrid Attack Paths Post Processing", db, tracker)
+
 	// Fetch all Azure tenants first
 	tenants, err := fetchTenants(ctx, db)
 	if err != nil {
-		emptyStats := post.NewAtomicPostProcessingStats()
+		sink.Done()
 		return &emptyStats, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
@@ -105,8 +122,10 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			} else {
 				// Loop through each Entra user in this tenant
 				for _, tenantUser := range tenantUsers {
-					if err := addNodeToObjectIDMap(entraDSUserAADObjectIDMap, tenantUser); err != nil {
-						return err
+					if entraDomainServicesEnabled {
+						if err := addNodeToObjectIDMap(entraDSUserAADObjectIDMap, tenantUser); err != nil {
+							return err
+						}
 					}
 
 					// Check to see if the Entra user has an on prem sync property set
@@ -121,16 +140,18 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 				}
 			}
 
-			if tenantGroups, err := fetchEntraGroups(tx, tenant); err != nil {
-				return err
-			} else {
-				for _, tenantGroup := range tenantGroups {
-					if err := addNodeToObjectIDMap(entraDSGroupAADObjectIDMap, tenantGroup); err != nil {
-						return err
-					}
+			if entraDomainServicesEnabled {
+				if tenantGroups, err := fetchEntraGroups(tx, tenant); err != nil {
+					return err
+				} else {
+					for _, tenantGroup := range tenantGroups {
+						if err := addNodeToObjectIDMap(entraDSGroupAADObjectIDMap, tenantGroup); err != nil {
+							return err
+						}
 
-					if err := addEntraDSAdminGroupTenant(entraDSAdminGroupTenantMap, tenantGroup); err != nil {
-						return err
+						if err := addEntraDSAdminGroupTenant(entraDSAdminGroupTenantMap, tenantGroup); err != nil {
+							return err
+						}
 					}
 				}
 			}
@@ -153,145 +174,80 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 					}
 				}
 
-				if err := addSyncedToEntraDSEdges(syncedToEntraDSUserEdgeMap, adUser, entraDSUserAADObjectIDMap); err != nil {
+				if entraDomainServicesEnabled {
+					if err := addSyncedToEntraDSEdges(syncedToEntraDSUserEdgeMap, adUser, entraDSUserAADObjectIDMap); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		if entraDomainServicesEnabled {
+			adGroups, err := fetchADGroups(tx)
+			if err != nil {
+				return err
+			}
+
+			for _, adGroup := range adGroups {
+				if err := addSyncedToEntraDSEdges(syncedToEntraDSGroupEdgeMap, adGroup, entraDSGroupAADObjectIDMap); err != nil {
+					return err
+				}
+			}
+
+			// Now that we know which AZ users and AZ groups are synced to Entra Domain Services, compute the
+			// AddEntraDSGroupMember edges (an Entra DS-synced AZUser that can add or remove members from an Entra DS-synced AZGroup)
+			if err := addAddEntraDSGroupMemberEdges(tx, syncedToEntraDSUserEdgeMap, syncedToEntraDSGroupEdgeMap, addEntraDSGroupMemberEdgeMap); err != nil {
+				return fmt.Errorf("adding Entra DS group membership relationships: %w", err)
+			}
+
+			// A qualified AZManageEntraDS principal controls the broad synchronization boundary. The Domain Controller
+			// Services service principal can only add users through filtered group scope when the related managed domain is
+			// currently configured for filtered synchronization across all users.
+			if err := addManageEntraDSSyncEdges(tx, adGroups, entraDSAdminGroupTenantMap, syncedToEntraDSGroupEdgeMap, entraDSForEdgeMap, manageEntraDSSyncEdgeMap, manageEntraDSSyncFilterEdgeMap); err != nil {
+				if !errors.Is(err, graph.ErrNoResultsFound) {
+					return fmt.Errorf("adding Entra DS synchronization relationships: %w", err)
+				}
+
+				// The synchronization-control relationships depend on optional evidence from both graph platforms. Missing
+				// evidence must fail closed for those relationships without suppressing the independently supported identity
+				// correlation and group-control relationships assembled above.
+				slog.WarnContext(ctx, "Skipping incomplete Entra DS synchronization correlation", attr.Error(err))
+			}
+
+			for kind, edgeMap := range map[graph.Kind]map[graph.ID][]graph.ID{
+				azure.SyncedToEntraDSUser:     reverseRelationshipMap(syncedToEntraDSUserEdgeMap),
+				azure.SyncedToEntraDSGroup:    reverseRelationshipMap(syncedToEntraDSGroupEdgeMap),
+				azure.AddEntraDSGroupMember:   addEntraDSGroupMemberEdgeMap,
+				azure.EntraDSFor:              entraDSForEdgeMap,
+				azure.ManageEntraDSSync:       manageEntraDSSyncEdgeMap,
+				azure.ManageEntraDSSyncFilter: manageEntraDSSyncFilterEdgeMap,
+			} {
+				if err := submitMappedRelationships(ctx, sink, edgeMap, kind); err != nil {
 					return err
 				}
 			}
 		}
 
-		adGroups, err := fetchADGroups(tx)
-		if err != nil {
-			return err
-		}
-
-		for _, adGroup := range adGroups {
-			if err := addSyncedToEntraDSEdges(syncedToEntraDSGroupEdgeMap, adGroup, entraDSGroupAADObjectIDMap); err != nil {
-				return err
-			}
-		}
-
-		// Now that we know which AZ users and AZ groups are synced to Entra Domain Services, compute the
-		// AddEntraDSGroupMember edges (an Entra DS-synced AZUser that can add or remove members from an Entra DS-synced AZGroup)
-		if err := addAddEntraDSGroupMemberEdges(tx, syncedToEntraDSUserEdgeMap, syncedToEntraDSGroupEdgeMap, addEntraDSGroupMemberEdgeMap); err != nil {
-			return fmt.Errorf("adding Entra DS group membership relationships: %w", err)
-		}
-
-		// A qualified AZManageEntraDS principal controls the broad synchronization boundary. The Domain Controller
-		// Services service principal can only add users through filtered group scope when the related managed domain is
-		// currently configured for filtered synchronization across all users.
-		if err := addManageEntraDSSyncEdges(tx, adGroups, entraDSAdminGroupTenantMap, syncedToEntraDSGroupEdgeMap, entraDSForEdgeMap, manageEntraDSSyncEdgeMap, manageEntraDSSyncFilterEdgeMap); err != nil {
-			if !errors.Is(err, graph.ErrNoResultsFound) {
-				return fmt.Errorf("adding Entra DS synchronization relationships: %w", err)
-			}
-
-			// The synchronization-control relationships depend on optional evidence from both graph platforms. Missing
-			// evidence must fail closed for those relationships without suppressing the independently supported identity
-			// correlation and group-control relationships assembled above.
-			slog.WarnContext(ctx, "Skipping incomplete Entra DS synchronization correlation", attr.Error(err))
-		}
-
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			for azUser, adUser := range entraToADMap {
-				SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
+				syncedToEntraUserRelationship := post.EnsureRelationshipJob{
 					FromID: adUser,
 					ToID:   azUser,
 					Kind:   azure.SyncedToEntraUser,
 				}
 
-				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
+				if !channels.Submit(ctx, outC, syncedToEntraUserRelationship) {
 					return nil
 				}
 
-				SyncedToADUserRelationship := post.EnsureRelationshipJob{
+				syncedToADUserRelationship := post.EnsureRelationshipJob{
 					FromID: azUser,
 					ToID:   adUser,
 					Kind:   adSchema.SyncedToADUser,
 				}
 
-				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
+				if !channels.Submit(ctx, outC, syncedToADUserRelationship) {
 					return nil
-				}
-			}
-
-			for adNode, azNodes := range syncedToEntraDSUserEdgeMap {
-				for _, azNode := range azNodes {
-					syncedToEntraDSUserRelationship := post.EnsureRelationshipJob{
-						FromID: azNode,
-						ToID:   adNode,
-						Kind:   azure.SyncedToEntraDSUser,
-					}
-
-					if !channels.Submit(ctx, outC, syncedToEntraDSUserRelationship) {
-						return nil
-					}
-				}
-			}
-
-			for adNode, azNodes := range syncedToEntraDSGroupEdgeMap {
-				for _, azNode := range azNodes {
-					syncedToEntraDSGroupRelationship := post.EnsureRelationshipJob{
-						FromID: azNode,
-						ToID:   adNode,
-						Kind:   azure.SyncedToEntraDSGroup,
-					}
-
-					if !channels.Submit(ctx, outC, syncedToEntraDSGroupRelationship) {
-						return nil
-					}
-				}
-			}
-
-			for azUser, adGroups := range addEntraDSGroupMemberEdgeMap {
-				for _, adGroup := range adGroups {
-					addEntraDSGroupMemberRelationship := post.EnsureRelationshipJob{
-						FromID: azUser,
-						ToID:   adGroup,
-						Kind:   azure.AddEntraDSGroupMember,
-					}
-
-					if !channels.Submit(ctx, outC, addEntraDSGroupMemberRelationship) {
-						return nil
-					}
-				}
-			}
-
-			for domainService, domains := range entraDSForEdgeMap {
-				for _, domain := range domains {
-					if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-						FromID: domainService,
-						ToID:   domain,
-						Kind:   azure.EntraDSFor,
-					}) {
-						return nil
-					}
-				}
-			}
-
-			for sourceNode, domainUserGroups := range manageEntraDSSyncEdgeMap {
-				for _, domainUserGroup := range domainUserGroups {
-					manageEntraDSSyncRelationship := post.EnsureRelationshipJob{
-						FromID: sourceNode,
-						ToID:   domainUserGroup,
-						Kind:   azure.ManageEntraDSSync,
-					}
-
-					if !channels.Submit(ctx, outC, manageEntraDSSyncRelationship) {
-						return nil
-					}
-				}
-			}
-
-			for sourceNode, domainUserGroups := range manageEntraDSSyncFilterEdgeMap {
-				for _, domainUserGroup := range domainUserGroups {
-					manageEntraDSSyncFilterRelationship := post.EnsureRelationshipJob{
-						FromID: sourceNode,
-						ToID:   domainUserGroup,
-						Kind:   azure.ManageEntraDSSyncFilter,
-					}
-
-					if !channels.Submit(ctx, outC, manageEntraDSSyncFilterRelationship) {
-						return nil
-					}
 				}
 			}
 
@@ -303,26 +259,60 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		return nil
 	})
 
-	// Close the operation even when the read phase failed so in-flight workers cannot leak. Keep the read and write
+	// Close both writers even when the read phase failed so in-flight workers cannot leak. Keep the read and write
 	// failures distinct; formatting a nil operation error with %w obscures the actual cause.
-	if opErr := operation.Done(); opErr != nil {
+	opErr := operation.Done()
+	sink.Done()
+
+	aggregateStats := post.NewAtomicPostProcessingStats()
+	aggregateStats.Merge(&operation.Stats)
+	aggregateStats.Merge(sink.Stats())
+
+	if opErr != nil {
 		if err != nil {
-			return &operation.Stats, fmt.Errorf("marking hybrid operation as done: %w; read error: %v", opErr, err)
+			return &aggregateStats, fmt.Errorf("marking hybrid operation as done: %w; read error: %v", opErr, err)
 		}
 
-		return &operation.Stats, fmt.Errorf("marking hybrid operation as done: %w", opErr)
+		return &aggregateStats, fmt.Errorf("marking hybrid operation as done: %w", opErr)
 	} else if err != nil {
-		return &operation.Stats, fmt.Errorf("reading hybrid relationship inputs: %w", err)
+		return &aggregateStats, fmt.Errorf("reading hybrid relationship inputs: %w", err)
 	}
 
-	return &operation.Stats, nil
+	return &aggregateStats, nil
+}
+
+func reverseRelationshipMap(edgeMap map[graph.ID][]graph.ID) map[graph.ID][]graph.ID {
+	reversedEdgeMap := make(map[graph.ID][]graph.ID)
+	for sourceNodeID, targetNodeIDs := range edgeMap {
+		for _, targetNodeID := range targetNodeIDs {
+			reversedEdgeMap[targetNodeID] = append(reversedEdgeMap[targetNodeID], sourceNodeID)
+		}
+	}
+
+	return reversedEdgeMap
+}
+
+func submitMappedRelationships(ctx context.Context, sink *post.FilteredRelationshipSink, edgeMap map[graph.ID][]graph.ID, kind graph.Kind) error {
+	for sourceNodeID, targetNodeIDs := range edgeMap {
+		for _, targetNodeID := range targetNodeIDs {
+			if !sink.Submit(ctx, post.EnsureRelationshipJob{
+				FromID: sourceNodeID,
+				ToID:   targetNodeID,
+				Kind:   kind,
+			}) {
+				return fmt.Errorf("submitting %s relationship", kind)
+			}
+		}
+	}
+
+	return nil
 }
 
 func addNodeToObjectIDMap(nodeObjectIDMap map[string][]graph.ID, node *graph.Node) error {
-	if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
+	if objectID, hasObjectID, err := normalizedNodeProperty(node, common.ObjectID.String()); err != nil {
 		return err
-	} else if normalizedObjectID := normalizeObjectID(objectID); len(normalizedObjectID) != 0 {
-		nodeObjectIDMap[normalizedObjectID] = append(nodeObjectIDMap[normalizedObjectID], node.ID)
+	} else if hasObjectID {
+		nodeObjectIDMap[objectID] = append(nodeObjectIDMap[objectID], node.ID)
 	}
 
 	return nil
@@ -341,14 +331,14 @@ func addSyncedToEntraDSEdges(edgeMap map[graph.ID][]graph.ID, adNode *graph.Node
 }
 
 func addEntraDSAdminGroupTenant(entraDSAdminGroupTenantMap map[graph.ID]string, group *graph.Node) error {
-	if name, err := group.Properties.Get(common.Name.String()).String(); err != nil {
+	if name, hasName, err := normalizedNodeProperty(group, common.Name.String()); err != nil {
 		return err
-	} else if !strings.HasPrefix(strings.ToUpper(strings.TrimSpace(name)), entraDSAdminGroupNamePrefix) {
+	} else if !hasName || !strings.HasPrefix(name, entraDSAdminGroupNamePrefix) {
 		return nil
-	} else if tenantID, err := group.Properties.Get(azure.TenantID.String()).String(); err != nil {
+	} else if tenantID, hasTenantID, err := normalizedNodeProperty(group, azure.TenantID.String()); err != nil {
 		return err
-	} else if normalizedTenantID := normalizeObjectID(tenantID); len(normalizedTenantID) != 0 {
-		entraDSAdminGroupTenantMap[group.ID] = normalizedTenantID
+	} else if hasTenantID {
+		entraDSAdminGroupTenantMap[group.ID] = tenantID
 	}
 
 	return nil
@@ -645,10 +635,17 @@ func addAddEntraDSGroupMemberEdges(tx graph.Transaction, syncedToEntraDSUserEdge
 		return nil
 	}
 
-	// Fetch all AZAddMembers / AZOwns relationships. Filtering the end node against azGroupToADGroups below naturally
-	// restricts these to relationships that target an Entra DS-synced AZGroup.
+	azGroupIDs := make([]graph.ID, 0, len(azGroupToADGroups))
+	for azGroupID := range azGroupToADGroups {
+		azGroupIDs = append(azGroupIDs, azGroupID)
+	}
+
+	// Fetch only AZAddMembers / AZOwns relationships that target an Entra DS-synced AZGroup.
 	memberAddEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-		return query.KindIn(query.Relationship(), azure.AddMembers, azure.Owns)
+		return query.And(
+			query.KindIn(query.Relationship(), azure.AddMembers, azure.Owns),
+			query.InIDs(query.EndID(), azGroupIDs...),
+		)
 	}))
 	if err != nil {
 		return err

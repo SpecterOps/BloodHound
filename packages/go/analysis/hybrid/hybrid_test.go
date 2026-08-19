@@ -20,6 +20,11 @@ import (
 	"testing"
 
 	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAADObjectIDPropertyMatchesCollectorContract(t *testing.T) {
@@ -42,6 +47,101 @@ func TestNormalizeObjectID(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if actual := normalizeObjectID(testCase.input); actual != testCase.expected {
 				t.Fatalf("expected normalized object ID %q, got %q", testCase.expected, actual)
+			}
+		})
+	}
+}
+
+func TestReverseRelationshipMap(t *testing.T) {
+	actual := reverseRelationshipMap(map[graph.ID][]graph.ID{
+		1: {10, 11},
+		2: {11},
+	})
+
+	assert.Equal(t, map[graph.ID][]graph.ID{
+		10: {1},
+		11: {1, 2},
+	}, actual)
+}
+
+func TestAddNodeToObjectIDMap(t *testing.T) {
+	for name, testCase := range map[string]struct {
+		value          any
+		setProperty    bool
+		expectError    bool
+		expectedObject string
+	}{
+		"missing":    {},
+		"empty":      {setProperty: true, value: "  "},
+		"normalized": {setProperty: true, value: " object-id ", expectedObject: "OBJECT-ID"},
+		"wrong type": {setProperty: true, value: true, expectError: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			properties := graph.NewProperties()
+			if testCase.setProperty {
+				properties.Set(common.ObjectID.String(), testCase.value)
+			}
+
+			node := &graph.Node{ID: 1, Properties: properties}
+			objectIDMap := make(map[string][]graph.ID)
+			err := addNodeToObjectIDMap(objectIDMap, node)
+
+			if testCase.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			if testCase.expectedObject == "" {
+				assert.Empty(t, objectIDMap)
+			} else {
+				assert.Equal(t, []graph.ID{node.ID}, objectIDMap[testCase.expectedObject])
+			}
+		})
+	}
+}
+
+func TestAddEntraDSAdminGroupTenant(t *testing.T) {
+	for name, testCase := range map[string]struct {
+		nameValue      any
+		tenantValue    any
+		setName        bool
+		setTenant      bool
+		expectError    bool
+		expectedTenant string
+	}{
+		"missing name":      {},
+		"empty name":        {setName: true, nameValue: "  "},
+		"unrelated group":   {setName: true, nameValue: "OTHER GROUP", setTenant: true, tenantValue: "tenant-id"},
+		"missing tenant":    {setName: true, nameValue: "AAD DC ADMINISTRATORS@EXAMPLE.COM"},
+		"empty tenant":      {setName: true, nameValue: "AAD DC ADMINISTRATORS@EXAMPLE.COM", setTenant: true, tenantValue: "  "},
+		"normalized valid":  {setName: true, nameValue: " aad dc administrators@example.com ", setTenant: true, tenantValue: " tenant-id ", expectedTenant: "TENANT-ID"},
+		"wrong name type":   {setName: true, nameValue: true, expectError: true},
+		"wrong tenant type": {setName: true, nameValue: "AAD DC ADMINISTRATORS@EXAMPLE.COM", setTenant: true, tenantValue: true, expectError: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			properties := graph.NewProperties()
+			if testCase.setName {
+				properties.Set(common.Name.String(), testCase.nameValue)
+			}
+			if testCase.setTenant {
+				properties.Set(azure.TenantID.String(), testCase.tenantValue)
+			}
+
+			node := &graph.Node{ID: 1, Properties: properties}
+			tenantMap := make(map[graph.ID]string)
+			err := addEntraDSAdminGroupTenant(tenantMap, node)
+
+			if testCase.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			if testCase.expectedTenant == "" {
+				assert.Empty(t, tenantMap)
+			} else {
+				assert.Equal(t, testCase.expectedTenant, tenantMap[node.ID])
 			}
 		})
 	}

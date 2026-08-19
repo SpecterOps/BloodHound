@@ -32,6 +32,9 @@ func TestEntraDSRelationshipTraversability(t *testing.T) {
 	}{
 		{kind: azure.EntraDSContributor, traversable: false, control: false},
 		{kind: azure.ManageEntraDS, traversable: true, control: true},
+		{kind: azure.SyncedToEntraDSUser, traversable: true, control: false},
+		{kind: azure.SyncedToEntraDSGroup, traversable: false, control: false},
+		{kind: azure.AddEntraDSGroupMember, traversable: true, control: false},
 		{kind: azure.EntraDSFor, traversable: false, control: false},
 		{kind: azure.ManageEntraDSSync, traversable: true, control: false},
 		{kind: azure.ManageEntraDSSyncFilter, traversable: true, control: false},

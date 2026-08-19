@@ -1236,7 +1236,7 @@ func TestManageEntraDSRequiresARMAndBothDirectoryRoles(t *testing.T) {
 		NewRelationship(t, &suite, principal, groupsAdminRole, graphAzure.HasRole)
 	}
 
-	_, err := azure.ManageEntraDS(context.Background(), suite.GraphDB)
+	_, err := azure.ManageEntraDS(context.Background(), suite.GraphDB, true)
 	require.NoError(t, err)
 
 	var manageEdges []*graph.Relationship

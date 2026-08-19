@@ -587,7 +587,7 @@ func PathfindingRelationships() []graph.Kind {
 	return []graph.Kind{AvereContributor, Contributor, ManageEntraDS, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToEntraUser, SyncedToEntraDSUser, AddEntraDSGroupMember, ManageEntraDSSync, ManageEntraDSSyncFilter, AZRoleEligible, AZRoleApprover, Contains, AZAuthenticatesTo}
 }
 func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{ExecuteCommand, ManageEntraDS, SyncedToEntraUser, SyncedToEntraDSUser, SyncedToEntraDSGroup, AddEntraDSGroupMember, EntraDSFor, ManageEntraDSSync, ManageEntraDSSyncFilter, AZRoleApprover}
+	return []graph.Kind{ExecuteCommand, SyncedToEntraUser, AZRoleApprover}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, EntraDS, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount, FederatedIdentityCredential}

@@ -18,6 +18,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -28,8 +29,11 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
+
+var manageEntraDSPostProcessedEdges = graph.Kinds{
+	azschema.ManageEntraDS,
+}
 
 func GetManageEntraDSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	finalPaths := graph.NewPathSet()
@@ -245,7 +249,7 @@ func getManageEntraDSRoleComposition(tx graph.Transaction, tenantScopedNode, sou
 // Directory roles are scoped by their tenantid property; tenant-to-role AZContains is not required.
 // The source ARM assignment may be direct, inherited through AZContains, or effective through nested
 // AZMemberOf membership.
-func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+func ManageEntraDS(ctx context.Context, db graph.Database, enabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -255,15 +259,25 @@ func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProc
 		attr.Scope("process"),
 	)()
 
-	tenants, err := FetchTenants(ctx, db)
+	tracker, err := post.FetchTracker(ctx, db, manageEntraDSPostProcessedEdges)
 	if err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	}
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "AZManageEntraDS Post Processing")
+	sink := post.NewFilteredRelationshipSink(ctx, "AZManageEntraDS Post Processing", db, tracker)
+	defer sink.Done()
+
+	if !enabled {
+		return sink.Stats(), nil
+	}
+
+	tenants, err := FetchTenants(ctx, db)
+	if err != nil {
+		return sink.Stats(), err
+	}
+
 	for _, tenant := range tenants {
-		tenant := tenant
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			applicationAdministrators, err := getManageEntraDSRolePrincipals(tx, tenant, azschema.ApplicationAdministratorRole)
 			if err != nil {
 				return err
@@ -286,12 +300,12 @@ func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProc
 
 				for _, controller := range controllers {
 					if applicationAdministrators.ContainsID(controller.ID) && groupsAdministrators.ContainsID(controller.ID) {
-						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+						if !sink.Submit(ctx, post.EnsureRelationshipJob{
 							FromID: controller.ID,
 							ToID:   domainService.ID,
 							Kind:   azschema.ManageEntraDS,
 						}) {
-							return nil
+							return fmt.Errorf("submitting AZManageEntraDS relationship")
 						}
 					}
 				}
@@ -299,12 +313,11 @@ func ManageEntraDS(ctx context.Context, db graph.Database) (*post.AtomicPostProc
 
 			return nil
 		}); err != nil {
-			_ = operation.Done()
-			return &operation.Stats, err
+			return sink.Stats(), err
 		}
 	}
 
-	return &operation.Stats, operation.Done()
+	return sink.Stats(), nil
 }
 
 func effectiveEntraDSResourceControllers(tx graph.Transaction, domainService *graph.Node) (graph.NodeSet, error) {

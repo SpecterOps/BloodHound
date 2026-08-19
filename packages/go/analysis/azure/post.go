@@ -1068,7 +1068,7 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database, useRawObjec
 	}
 }
 
-func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, useRawObjectIDs, entraDomainServicesEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -1103,16 +1103,16 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 		return &aggregateStats, err
 	} else if addOwnerStats, err := CreateAZAddOwnerEdge(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if entraDSContributorStats, err := ManageEntraDS(ctx, db); err != nil {
+	} else if manageEntraDSStats, err := ManageEntraDS(ctx, db, entraDomainServicesEnabled); err != nil {
 		return &aggregateStats, err
-	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
+	} else if hybridStats, err := hybrid.PostHybrid(ctx, db, entraDomainServicesEnabled); err != nil {
 		return &aggregateStats, err
 	} else if pimRolesStats, err := CreateAZRoleApproverEdge(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(addOwnerStats)
-		aggregateStats.Merge(entraDSContributorStats)
+		aggregateStats.Merge(manageEntraDSStats)
 		aggregateStats.Merge(hybridStats)
 		aggregateStats.Merge(pimRolesStats)
 

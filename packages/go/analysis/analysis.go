@@ -311,7 +311,11 @@ func adPostProcessingOperation(run analysisPipelineRun) (pipelineStepStatus, []e
 func azurePostProcessingOperation(run analysisPipelineRun) (pipelineStepStatus, []error) {
 	var collectedErrors []error
 
-	if stats, err := azureAnalysis.Post(run.ctx, run.graphDB, appcfg.GetUseRawObjectIDsEnabled(run.ctx, run.db)); err != nil {
+	if entraDomainServicesFlag, err := run.db.GetFlagByKey(run.ctx, appcfg.FeatureEntraDomainServices); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving Microsoft Entra Domain Services feature flag: %w", err))
+		run.analysisErrs.azurePost = true
+		return pipelineStepStatusFailed, collectedErrors
+	} else if stats, err := azureAnalysis.Post(run.ctx, run.graphDB, appcfg.GetUseRawObjectIDsEnabled(run.ctx, run.db), entraDomainServicesFlag.Enabled); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during azure post: %w", err))
 		run.analysisErrs.azurePost = true
 		return pipelineStepStatusFailed, collectedErrors

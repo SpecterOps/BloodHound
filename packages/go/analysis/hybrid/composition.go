@@ -151,7 +151,9 @@ func GetManageEntraDSSyncEdgeComposition(ctx context.Context, db graph.Database,
 						return segment.Node.ID == targetGroup.ID
 					},
 				})
-				if err != nil {
+				if errors.Is(err, graph.ErrNoResultsFound) {
+					continue
+				} else if err != nil {
 					return err
 				} else if containmentPaths.Len() == 0 {
 					continue

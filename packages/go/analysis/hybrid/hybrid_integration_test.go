@@ -51,7 +51,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -76,7 +76,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -100,7 +100,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -124,7 +124,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -149,7 +149,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -173,7 +173,7 @@ func TestHybridAttackPaths(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				operation := post.NewPostRelationshipOperation(context.Background(), db, "Hybrid Attack Path Post Process Test")
 
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, false); err != nil {
 					t.Fatalf("failed post processing for hybrid attack paths: %v", err)
 				}
 				operation.Done()
@@ -236,7 +236,7 @@ func TestSyncedToEntraDSEdges(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for Entra DS sync edges: %v", err)
 				}
 
@@ -276,7 +276,7 @@ func TestSyncedToEntraDSEdges(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for Entra DS sync edges: %v", err)
 				}
 
@@ -342,12 +342,14 @@ func TestAddEntraDSGroupMemberEdge(t *testing.T) {
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				azUser, _, _, adGroup := setupEntraDSGroupMemberHarness(t, testContext, azure.AddMembers, true, true)
+				unsyncedGroup := testContext.NewAzureGroup("Unsynced Group", integration.RandomObjectID(t), integration.RandomObjectID(t))
+				testContext.NewRelationship(azUser, unsyncedGroup, azure.AddMembers)
 				azUserObjectID = getObjectID(t, azUser)
 				adGroupObjectID = getObjectID(t, adGroup)
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 				}
 				verifyAddEntraDSGroupMemberEdge(t, db, azUserObjectID, adGroupObjectID, true)
@@ -367,7 +369,7 @@ func TestAddEntraDSGroupMemberEdge(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 				}
 				verifyAddEntraDSGroupMemberEdge(t, db, azUserObjectID, adGroupObjectID, true)
@@ -385,7 +387,7 @@ func TestAddEntraDSGroupMemberEdge(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 				}
 				verifyAddEntraDSGroupMemberEdge(t, db, "", "", false)
@@ -403,7 +405,7 @@ func TestAddEntraDSGroupMemberEdge(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 				}
 				verifyAddEntraDSGroupMemberEdge(t, db, "", "", false)
@@ -421,7 +423,7 @@ func TestAddEntraDSGroupMemberEdge(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				if _, err := PostHybrid(context.Background(), db); err != nil {
+				if _, err := PostHybrid(context.Background(), db, true); err != nil {
 					t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 				}
 				verifyAddEntraDSGroupMemberEdge(t, db, "", "", false)
@@ -440,31 +442,63 @@ func TestGetAddEntraDSGroupMemberEdgeComposition(t *testing.T) {
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
-			if _, err := PostHybrid(context.Background(), db); err != nil {
+			if _, err := PostHybrid(context.Background(), db, true); err != nil {
 				t.Fatalf("failed post processing for AddEntraDSGroupMember edge: %v", err)
 			}
 
 			// Grab the created AddEntraDSGroupMember edge and reconstruct its composition
-			var edge *graph.Relationship
-			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-				edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			var edges []*graph.Relationship
+			err := db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				var err error
+				edges, err = ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), azure.AddEntraDSGroupMember)
 				}))
-				assert.Nil(t, err)
-				assert.Len(t, edges, 1)
-				edge = edges[0]
-				return nil
+				return err
 			})
+			require.NoError(t, err)
+			require.Len(t, edges, 1)
 
-			composition, err := GetAddEntraDSGroupMemberEdgeComposition(context.Background(), db, edge)
-			assert.Nil(t, err)
+			composition, err := GetAddEntraDSGroupMemberEdgeComposition(context.Background(), db, edges[0])
+			require.NoError(t, err)
 
 			nodes := composition.AllNodes()
+			require.NotZero(t, composition.Len())
 			// The composition should include every object involved in the three composing paths
 			assert.True(t, nodes.Contains(azUser), "composition should contain the AZUser")
 			assert.True(t, nodes.Contains(adUser), "composition should contain the synced on-prem User")
 			assert.True(t, nodes.Contains(azGroup), "composition should contain the AZGroup")
 			assert.True(t, nodes.Contains(adGroup), "composition should contain the synced on-prem Group")
+		},
+	)
+}
+
+func TestPostHybridIgnoresIncompleteEntraNodes(t *testing.T) {
+	var (
+		testContext                     = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		azUserObjectID, adGroupObjectID string
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			azUser, _, _, adGroup := setupEntraDSGroupMemberHarness(t, testContext, azure.AddMembers, true, true)
+			azUserObjectID = getObjectID(t, azUser)
+			adGroupObjectID = getObjectID(t, adGroup)
+
+			tenant := testContext.NewAzureTenant(integration.RandomObjectID(t))
+			incompleteUser := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name: "Incomplete User",
+			}), azure.Entity, azure.User)
+			incompleteGroup := testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+				common.Name: entraDSAdminGroupNamePrefix + "EXAMPLE.COM",
+			}), azure.Entity, azure.Group)
+			testContext.NewRelationship(tenant, incompleteUser, azure.Contains)
+			testContext.NewRelationship(tenant, incompleteGroup, azure.Contains)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, err := PostHybrid(context.Background(), db, true)
+			require.NoError(t, err)
+			verifyAddEntraDSGroupMemberEdge(t, db, azUserObjectID, adGroupObjectID, true)
 		},
 	)
 }
@@ -609,7 +643,7 @@ func TestManageEntraDSSyncEdges(t *testing.T) {
 					return nil
 				},
 				func(harness integration.HarnessDetails, db graph.Database) {
-					_, err := PostHybrid(context.Background(), db)
+					_, err := PostHybrid(context.Background(), db, true)
 					require.NoError(t, err)
 					verifyManageEntraDSSyncEdges(t, db, syncHarness, testCase.expectCorrelation, testCase.expectManageSync, testCase.expectManageFilter)
 				},
@@ -632,7 +666,7 @@ func TestManageEntraDSSyncEdges(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				_, err := PostHybrid(context.Background(), db)
+				_, err := PostHybrid(context.Background(), db, true)
 				require.NoError(t, err)
 				verifyManageEntraDSSyncEdges(t, db, syncHarness, false, false, false)
 			},
@@ -654,7 +688,7 @@ func TestManageEntraDSSyncEdges(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				_, err := PostHybrid(context.Background(), db)
+				_, err := PostHybrid(context.Background(), db, true)
 				require.NoError(t, err)
 				verifyManageEntraDSSyncEdges(t, db, syncHarness, true, true, true)
 			},
@@ -712,7 +746,7 @@ func TestGetManageEntraDSSyncEdgeComposition(t *testing.T) {
 			return nil
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
-			_, err := PostHybrid(context.Background(), db)
+			_, err := PostHybrid(context.Background(), db, true)
 			require.NoError(t, err)
 
 			unrelatedDomainService = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
@@ -749,6 +783,29 @@ func TestGetManageEntraDSSyncEdgeComposition(t *testing.T) {
 			assert.False(t, nodes.Contains(syncHarness.adAdminGroup))
 			assert.False(t, nodes.Contains(unrelatedDomainService))
 			assert.False(t, nodes.Contains(unrelatedDomain))
+		},
+	)
+}
+
+func TestGetManageEntraDSSyncEdgeCompositionWithoutContainment(t *testing.T) {
+	var (
+		testContext = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		edge        *graph.Relationship
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			options := validManageEntraDSSyncOptions()
+			options.containDomainUsers = false
+			syncHarness := setupManageEntraDSSyncHarness(t, testContext, options)
+			testContext.NewRelationship(syncHarness.domainService, syncHarness.domain, azure.EntraDSFor)
+			edge = testContext.NewRelationship(syncHarness.manager, syncHarness.domainUsers, azure.ManageEntraDSSync)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			composition, err := GetManageEntraDSSyncEdgeComposition(context.Background(), db, edge)
+			require.NoError(t, err)
+			assert.Zero(t, composition.Len())
 		},
 	)
 }
@@ -908,16 +965,21 @@ func verifyManageEntraDSSyncEdges(t *testing.T, db graph.Database, syncHarness m
 // (AZAddMembers / AZOwns) between them. When syncUser/syncGroup are true, matching on-prem AD User/Group nodes are
 // created (via ad.AADObjectID) so the corresponding SyncedToEntraDS edges are produced by PostHybrid. Pass an empty
 // kind as controlKind to omit the control edge entirely. Returns the AZUser, on-prem User, AZGroup, on-prem Group.
-func setupEntraDSGroupMemberHarness(t *testing.T, testContext *integration.GraphTestContext, controlKind graph.Kind, syncUser, syncGroup bool) (azUser, adUser, azGroup, adGroup *graph.Node) {
+func setupEntraDSGroupMemberHarness(t *testing.T, testContext *integration.GraphTestContext, controlKind graph.Kind, syncUser, syncGroup bool) (*graph.Node, *graph.Node, *graph.Node, *graph.Node) {
 	t.Helper()
+
+	var (
+		adUser  *graph.Node
+		adGroup *graph.Node
+	)
 
 	tenantID := integration.RandomObjectID(t)
 	tenant := testContext.NewAzureTenant(tenantID)
 
 	azUserObjectID := integration.RandomObjectID(t)
 	azGroupObjectID := integration.RandomObjectID(t)
-	azUser = testContext.NewAzureUser("AZ User", "azuser@specter.dev", "", azUserObjectID, "", tenantID, false)
-	azGroup = testContext.NewAzureGroup("AZ Group", azGroupObjectID, tenantID)
+	azUser := testContext.NewAzureUser("AZ User", "azuser@specter.dev", "", azUserObjectID, "", tenantID, false)
+	azGroup := testContext.NewAzureGroup("AZ Group", azGroupObjectID, tenantID)
 	testContext.NewRelationship(tenant, azUser, azure.Contains)
 	testContext.NewRelationship(tenant, azGroup, azure.Contains)
 

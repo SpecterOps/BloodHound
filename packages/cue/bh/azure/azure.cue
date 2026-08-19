@@ -1209,13 +1209,6 @@ EdgeCompositionRelationships: [
 
 PostProcessedRelationships: [
 	ExecuteCommand,
-	ManageEntraDS,
 	SyncedToEntraUser,
-	SyncedToEntraDSUser,
-	SyncedToEntraDSGroup,
-	AddEntraDSGroupMember,
-	EntraDSFor,
-	ManageEntraDSSync,
-	ManageEntraDSSyncFilter,
 	AZRoleApprover,
 ]

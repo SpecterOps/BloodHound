@@ -51,6 +51,7 @@ const (
 	FeatureArtifactExpirationCleanup    = "artifact_expiration_cleanup"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
 	FeatureUseRawObjectID               = "use_raw_object_id"
+	FeatureEntraDomainServices          = "entra_domain_services"
 	FeatureOpenGraphDataQuality         = "opengraph_data_quality"
 	FeatureFindingsPrioritizationV0     = "findings_prioritization_v0"
 )
