@@ -27,6 +27,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -275,6 +276,27 @@ func (s *LocalStore) Delete(ctx context.Context, name string) error {
 		return err
 	}
 	return syncDir(s.root, path.Dir(name))
+}
+
+// PruneEmptyParents removes empty directories between name and the storage
+// root. It stops at the first non-empty directory and never removes the root.
+func (s *LocalStore) PruneEmptyParents(ctx context.Context, name string) error {
+	for parentDirectory := path.Dir(name); parentDirectory != "." && parentDirectory != "/"; parentDirectory = path.Dir(parentDirectory) {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := s.root.Remove(parentDirectory); err != nil {
+			if errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOTEMPTY) || errors.Is(err, syscall.EEXIST) {
+				return nil
+			}
+			return err
+		}
+		if err := syncDir(s.root, path.Dir(parentDirectory)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *LocalStore) List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
