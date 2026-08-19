@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '../Button';
+import { Card, CardContent, CardFooter, CardHeader } from '../Card';
+import { Input } from '../Input';
+import { Link } from '../Link';
 import { Typography } from './Typography';
 import { tagOptions, Variant, variantMapping } from './utils';
 
@@ -92,18 +96,94 @@ export const TypographyComponent: Story = {
 export const Variants: Story = {
     args: {},
     render: () => {
-        const shortText = 'Heading';
-        const longText =
-            'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur unde suscipit, quam beatae rerum inventore consectetur, neque doloribus, cupiditate numquam dignissimos laborum fugiat deleniti? Eum quasi quidem quibusdam.';
-
-        const headings = Object.keys(variantMapping).map((variant, i) => {
-            return (
-                <Typography variant={variant as Variant} className='mb-4' key={variant}>
-                    {variant}. {i < 6 ? shortText : longText}
-                </Typography>
-            );
-        });
-
-        return <div>{headings}</div>;
+        return (
+            <div className='w-[32rem] max-w-full space-y-4'>
+                {Object.keys(variantMapping).map((variant) => (
+                    <Typography variant={variant as Variant} key={variant}>
+                        {variant}. The quick brown fox jumps over the lazy dog.
+                    </Typography>
+                ))}
+            </div>
+        );
     },
+};
+
+export const MultilineAndLongText: Story = {
+    args: {},
+    render: () => (
+        <div className='w-80 max-w-full space-y-4'>
+            <Typography variant='h2'>
+                A compact heading that wraps cleanly across multiple lines without clipping
+            </Typography>
+            <Typography variant='body1'>
+                Body1 remains comfortable for longer explanatory content. This deliberately long string verifies
+                wrapping, line boxes, descenders, and spacing when the viewport or browser zoom reduces available width.
+            </Typography>
+            <Typography variant='body2'>
+                Body2 supports dense product interfaces while preserving its existing size and line height across
+                several lines of supporting information.
+            </Typography>
+            <Typography variant='caption'>
+                Caption: extraordinarily-long-unbroken-identifier-for-overflow-validation.example
+            </Typography>
+        </div>
+    ),
+};
+
+export const DenseList: Story = {
+    args: {},
+    render: () => (
+        <div className='w-[36rem] max-w-full divide-y divide-neutral-400 rounded border border-neutral-400'>
+            {['Domain Admins', 'Enterprise Admins', 'Remote Desktop Users', 'Backup Operators'].map((name, index) => (
+                <div className='grid grid-cols-[1fr_auto] gap-4 p-3' key={name}>
+                    <div>
+                        <Typography variant='subtitle2'>{name}</Typography>
+                        <Typography variant='body2'>Active Directory group · Tier {index % 2}</Typography>
+                    </div>
+                    <Typography variant='caption'>{12 + index * 7} members</Typography>
+                </div>
+            ))}
+        </div>
+    ),
+};
+
+export const CardComposition: Story = {
+    args: {},
+    render: () => (
+        <Card className='w-[28rem] max-w-full'>
+            <CardHeader>
+                <Typography variant='h3'>Review attack-path exposure</Typography>
+                <Typography variant='subtitle2'>Updated a few seconds ago</Typography>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+                <Typography variant='body1'>
+                    Prioritize the paths that give principals control of your most critical assets.
+                </Typography>
+                <Typography variant='body2'>
+                    Learn how exposure is calculated in the{' '}
+                    <Link href='https://bloodhound.specterops.io/' className='inline-flex'>
+                        BloodHound documentation
+                    </Link>
+                    .
+                </Typography>
+                <div>
+                    <Typography id='typography-card-filter-label' variant='caption' component='span'>
+                        Filter by asset name
+                    </Typography>
+                    <Input
+                        id='typography-card-filter'
+                        aria-labelledby='typography-card-filter-label'
+                        className='mt-1'
+                        placeholder='Search assets'
+                    />
+                </div>
+            </CardContent>
+            <CardFooter className='gap-2'>
+                <Button size='small'>Review paths</Button>
+                <Button size='small' variant='secondary'>
+                    Dismiss
+                </Button>
+            </CardFooter>
+        </Card>
+    ),
 };
