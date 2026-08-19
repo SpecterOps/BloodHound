@@ -19,13 +19,6 @@ on:
   push:
     branches:
       - main
-  # Testing Allure Report Generation
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
