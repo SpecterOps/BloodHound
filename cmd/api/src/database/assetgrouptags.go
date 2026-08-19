@@ -48,7 +48,7 @@ type AssetGroupTagData interface {
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
-	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	CreateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
@@ -57,6 +57,43 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, sort model.Sort, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagSelectorsByExtensionId(ctx context.Context, extensionId int32) (model.AssetGroupTagSelectors, error)
+}
+
+// The create/update paths share the same selector unique constraints; keep their error mapping in one place.
+func checkAssetGroupTagSelectorMutationError(result *gorm.DB) error {
+	if result.Error == nil {
+		return nil
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
+		// Prefer structured Postgres fields when available. The switch maps exact constraint names.
+		switch pgErr.ConstraintName {
+		case "asset_group_tag_selectors_unique_name_asset_group_tag":
+			return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
+		case "idx_asset_group_tag_selectors_rule_key":
+			return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorRuleKey, result.Error)
+		}
+	}
+
+	// Fall back to the existing string-match style that only have formatted errors.
+	if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"asset_group_tag_selectors_unique_name_asset_group_tag\"") {
+		return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
+	} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"idx_asset_group_tag_selectors_rule_key\"") {
+		return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorRuleKey, result.Error)
+	}
+
+	return CheckError(result)
+}
+
+func assetGroupHistoryActorFromUser(user model.User) (string, string) {
+	// OpenGraph management is a system actor, not a UUID-backed user.
+	if user.PrincipalName == model.AssetGroupActorOpenGraphExtensionManagement {
+		return model.AssetGroupActorOpenGraphExtensionManagement, ""
+	}
+
+	return user.ID.String(), user.EmailAddress.ValueOrZero()
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -82,43 +119,39 @@ func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed
 	return seeds, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	var (
-		userIdStr = user.ID.String()
-		selector  = model.AssetGroupTagSelector{
-			AssetGroupTagId: assetGroupTagId,
-			CreatedBy:       userIdStr,
-			UpdatedBy:       userIdStr,
-			Name:            name,
-			Description:     description,
-			IsDefault:       isDefault,
-			AllowDisable:    allowDisable,
-			AutoCertify:     autoCertify,
-		}
-
-		auditEntry = model.AuditEntry{
+		actorId, emailAddress = assetGroupHistoryActorFromUser(user)
+		seeds                 = selector.Seeds
+		auditEntry            = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupTagSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
 
+	selector.CreatedBy = actorId
+	selector.UpdatedBy = actorId
+
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 		if result := tx.Raw(fmt.Sprintf(`
-			INSERT INTO %s (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
-			VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?)
-			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify`,
+				INSERT INTO %s (
+					asset_group_tag_id, extension_id, rule_key, created_at, created_by, updated_at, updated_by,
+					disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify
+				)
+				VALUES (?, ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?)
+				RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+					disabled_at, disabled_by, name, description, is_default, allow_disable,
+					auto_certify, rule_key, extension_id`,
 			selector.TableName()),
-			assetGroupTagId, userIdStr, userIdStr, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
-			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
-				return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
-			}
-			return CheckError(result)
+			selector.AssetGroupTagId, selector.ExtensionId, selector.RuleKey, selector.CreatedBy, selector.UpdatedBy,
+			selector.DisabledAt, selector.DisabledBy, selector.Name, selector.Description, selector.IsDefault, selector.AllowDisable, selector.AutoCertify).Scan(&selector); result.Error != nil {
+			return checkAssetGroupTagSelectorMutationError(result)
 		} else {
 			var err error
 			if selector.Seeds, err = insertSelectorSeeds(tx, selector.ID, seeds); err != nil {
 				return err
-			} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, null.String{}, null.String{}); err != nil {
+			} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, actorId, emailAddress, selector.Name, model.AssetGroupHistoryActionCreateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
@@ -139,7 +172,9 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+				disabled_at, disabled_by, name, description, is_default, allow_disable,
+				auto_certify, rule_key, extension_id
 			FROM %s WHERE id = ?`,
 			selector.TableName()),
 			assetGroupTagSelectorId).First(&selector); result.Error != nil {
@@ -170,7 +205,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, actorId,
 			WHERE id = ?`,
 			selector.TableName()),
 			actorId, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify, selector.ID); result.Error != nil {
-			return CheckError(result)
+			return checkAssetGroupTagSelectorMutationError(result)
 		} else {
 			if selector.Seeds != nil {
 				// delete old seeds and re-insert the new ones
@@ -194,7 +229,8 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, actorId,
 
 func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error {
 	var (
-		auditEntry = model.AuditEntry{
+		actorId, emailAddress = assetGroupHistoryActorFromUser(user)
+		auditEntry            = model.AuditEntry{
 			Action: model.AuditLogActionDeleteAssetGroupTagSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
@@ -204,7 +240,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user mod
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, selector.TableName()), selector.ID); result.Error != nil {
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, actorId, emailAddress, selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 			return err
 		}
 		return nil
@@ -213,6 +249,59 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user mod
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context, extensionId int32, input model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+	var (
+		selector = model.AssetGroupTagSelector{
+			Name:         input.Name,
+			Description:  input.Description,
+			AutoCertify:  input.AutoCertify,
+			IsDefault:    input.IsDefault,
+			AllowDisable: input.AllowDisable,
+			RuleKey:      null.StringFrom(strings.TrimSpace(input.RuleKey.String)),
+			DisabledAt:   input.DisabledAt,
+			DisabledBy:   input.DisabledBy,
+			UpdatedBy:    model.AssetGroupActorOpenGraphExtensionManagement,
+			Seeds:        input.Seeds,
+		}
+	)
+
+	auditEntry := model.AuditEntry{
+		Action: model.AuditLogActionUpdateAssetGroupTagSelector,
+		Model:  &selector,
+	}
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
+		if result := tx.Raw(fmt.Sprintf(`
+			UPDATE %s
+			SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?,
+				auto_certify = ?, is_default = ?, allow_disable = ?
+			WHERE rule_key = ? AND extension_id = ?
+			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+				disabled_at, disabled_by, name, description, is_default, allow_disable,
+				auto_certify, rule_key, extension_id`,
+			selector.TableName()),
+			selector.UpdatedBy, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy,
+			selector.AutoCertify, selector.IsDefault, selector.AllowDisable, selector.RuleKey, extensionId).Scan(&selector); result.Error != nil {
+			return checkAssetGroupTagSelectorMutationError(result)
+		} else if result.RowsAffected == 0 {
+			return ErrNotFound
+		} else if result := tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID); result.Error != nil {
+			return CheckError(result)
+		} else if seeds, err := insertSelectorSeeds(tx, selector.ID, input.Seeds); err != nil {
+			return err
+		} else {
+			selector.Seeds = seeds
+		}
+
+		return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorOpenGraphExtensionManagement, "", selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{})
+	}); err != nil {
+		return model.AssetGroupTagSelector{}, err
+	}
+
+	return selector, nil
 }
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
@@ -613,7 +702,10 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagIdFilteredAndPaginated(ctx 
 	var (
 		baseSqlStr = fmt.Sprintf(`
 			WITH selectors AS (
-				SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
+				SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+					disabled_at, disabled_by, name, description, is_default, allow_disable,
+					auto_certify, rule_key, extension_id
+				FROM %s WHERE asset_group_tag_id = ?%s
 			), seeds AS (
 				SELECT selector_id, type, value FROM %s %s
 			)`,
@@ -670,7 +762,10 @@ func (s *BloodhoundDB) GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Cont
 
 	sqlStr := fmt.Sprintf(`
 		WITH selectors AS (
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE created_at = updated_at AND created_at < '2025-05-28' AND is_default = false
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+				disabled_at, disabled_by, name, description, is_default, allow_disable,
+				auto_certify, rule_key, extension_id
+			FROM %s WHERE created_at = updated_at AND created_at < '2025-05-28' AND is_default = false
 		), seeds AS (
 			SELECT selector_id, type, value FROM %s WHERE type = 1
 		)
@@ -1351,7 +1446,10 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter 
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s %s ORDER BY name ASC, asset_group_tag_id ASC, id ASC %s",
+			`SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
+				disabled_at, disabled_by, name, description, is_default, allow_disable,
+				auto_certify, rule_key, extension_id
+			FROM %s %s ORDER BY name ASC, asset_group_tag_id ASC, id ASC %s`,
 			model.AssetGroupTagSelector{}.TableName(),
 			sqlFilter.SQLString,
 			limitStr,
@@ -1362,6 +1460,10 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter 
 	}
 
 	return selectors, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectorsByExtensionId(ctx context.Context, extensionId int32) (model.AssetGroupTagSelectors, error) {
+	return s.GetAssetGroupTagSelectors(ctx, model.SQLFilter{SQLString: "extension_id = ?", Params: []any{extensionId}}, 0)
 }
 
 func (s *BloodhoundDB) GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(ctx context.Context, nodeIds ...int) ([]model.AssetGroupSelectorNodeExpanded, error) {
