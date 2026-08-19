@@ -413,19 +413,10 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 	ingest.DataTypeOpenGraph: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData, registerSourceKind registrationFn) error {
 		sourceKind := graph.EmptyKind
 
-		// decode metadata, if present
-		if decoder, err := CreateIngestDecoder(reader, "metadata", 1); err != nil {
-			if !errors.Is(err, ErrDataTagNotFound) {
-				return err
-			}
+		if !parsedData.OpengraphData.MetadataFound {
 			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
 		} else {
-			var meta ein.GenericMetadata
-			if err := decoder.Decode(&meta); err != nil {
-				return fmt.Errorf("failed to parse opengraph metadata tag: %w", err)
-			}
-
-			sourceKind = graph.StringKind(meta.SourceKind)
+			sourceKind = graph.StringKind(parsedData.OpengraphData.Metadata.SourceKind)
 			if err := registerSourceKind(sourceKind); err != nil {
 				return fmt.Errorf("failed to register sourceKind: %w", err)
 			}
