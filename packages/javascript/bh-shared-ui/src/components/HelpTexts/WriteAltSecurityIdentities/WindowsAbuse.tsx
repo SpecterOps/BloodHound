@@ -22,10 +22,8 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2' component='div'>
-                <p className='my-4'>
-                    The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
-                </p>
+            <Typography variant='body2' className='my-4'>
+                The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
             </Typography>
             <AdcsEsc14ScenarioAWindows />
         </>

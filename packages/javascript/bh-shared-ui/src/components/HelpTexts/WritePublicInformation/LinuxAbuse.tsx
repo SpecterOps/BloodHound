@@ -22,11 +22,11 @@ import { EdgeInfoProps } from '../index';
 const LinuxAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body2' component='div'>
-                <p className='my-4'>
+            <div>
+                <Typography variant='body2'>
                     The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
-                </p>
-                <p className='my-4'>
+                </Typography>
+                <Typography variant='body2' className='my-4'>
                     Alternatively, the write access to the SPN enable a targeted Kerberoasting attack against user
                     accounts with a weak password. See the{' '}
                     <Link
@@ -36,8 +36,8 @@ const LinuxAbuse: FC<EdgeInfoProps> = () => {
                         WriteSPN
                     </Link>{' '}
                     edge for more details.
-                </p>
-            </Typography>
+                </Typography>
+            </div>
             <AdcsEsc14ScenarioALinux />
         </>
     );
