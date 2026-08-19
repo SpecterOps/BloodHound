@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	bhceSAML "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -2594,7 +2595,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, &saml.InvalidResponseError{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{}, &saml.InvalidResponseError{
 					PrivateErr: errors.New("error"),
 				})
 			},
@@ -2635,7 +2636,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, errors.New("error"))
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2674,7 +2675,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2713,19 +2717,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, nil)
 			},
@@ -2770,19 +2777,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -2851,19 +2861,23 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(
+					gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -2939,19 +2953,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -3020,19 +3037,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -3129,29 +3149,32 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleAdministrator}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
-							}},
-						},
-							{
-								FriendlyName: "role",
-								Name:         model.MicrosoftClaimsRole,
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
 								NameFormat:   model.ObjectIDAttributeNameFormat,
 								Values: []saml.AttributeValue{{
 									Type:  model.XMLTypeString,
-									Value: auth.RoleAdministrator,
+									Value: "username",
 								}},
 							},
-						},
-					}},
-				}, nil)
+								{
+									FriendlyName: "role",
+									Name:         model.MicrosoftClaimsRole,
+									NameFormat:   model.ObjectIDAttributeNameFormat,
+									Values: []saml.AttributeValue{{
+										Type:  model.XMLTypeString,
+										Value: auth.RoleAdministrator,
+									}},
+								},
+							},
+						}},
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
@@ -3231,29 +3254,32 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleUser}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
-							}},
-						},
-							{
-								FriendlyName: "role",
-								Name:         model.MicrosoftClaimsRole,
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
 								NameFormat:   model.ObjectIDAttributeNameFormat,
 								Values: []saml.AttributeValue{{
 									Type:  model.XMLTypeString,
-									Value: auth.RoleUser,
+									Value: "username",
 								}},
 							},
-						},
-					}},
-				}, nil)
+								{
+									FriendlyName: "role",
+									Name:         model.MicrosoftClaimsRole,
+									NameFormat:   model.ObjectIDAttributeNameFormat,
+									Values: []saml.AttributeValue{{
+										Type:  model.XMLTypeString,
+										Value: auth.RoleUser,
+									}},
+								},
+							},
+						}},
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
