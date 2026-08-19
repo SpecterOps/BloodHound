@@ -909,6 +909,97 @@ func TestLocalStore_Delete(t *testing.T) {
 	}
 }
 
+func TestStorageFileService_DeleteFileWithOptions_PrunesEmptyParents(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                  = context.Background()
+		rootPath, localStore = newTestLocalStore(t)
+		fileService          = storage.NewFileService(localStore)
+	)
+
+	require.NoError(t, fileService.WriteFile(ctx, "artifact/combined/temp-file", []byte("temp"), storage.WriteOptions{}))
+	require.NoError(t, fileService.DeleteFileWithOptions(ctx, "artifact/combined/temp-file", storage.DeleteOptions{PruneEmptyParents: true}))
+
+	_, err := os.Stat(filepath.Join(rootPath, "artifact"))
+	require.ErrorIs(t, err, fs.ErrNotExist)
+	rootInfo, err := os.Stat(rootPath)
+	require.NoError(t, err)
+	require.True(t, rootInfo.IsDir())
+}
+
+func TestStorageFileService_DeleteFileWithOptions_PrunesEmptyParentsWhenFileIsMissing(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                  = context.Background()
+		rootPath, localStore = newTestLocalStore(t)
+		fileService          = storage.NewFileService(localStore)
+	)
+
+	require.NoError(t, os.MkdirAll(filepath.Join(rootPath, "artifact", "combined"), 0o750))
+	require.NoError(t, fileService.DeleteFileWithOptions(ctx, "artifact/combined/missing-file", storage.DeleteOptions{PruneEmptyParents: true}))
+
+	_, err := os.Stat(filepath.Join(rootPath, "artifact"))
+	require.ErrorIs(t, err, fs.ErrNotExist)
+	rootInfo, err := os.Stat(rootPath)
+	require.NoError(t, err)
+	require.True(t, rootInfo.IsDir())
+}
+
+func TestStorageFileService_DeleteFileWithOptions_PreservesEmptyParentWhenPruningDisabled(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                  = context.Background()
+		rootPath, localStore = newTestLocalStore(t)
+		fileService          = storage.NewFileService(localStore)
+	)
+
+	require.NoError(t, fileService.WriteFile(ctx, "artifact/combined/temp-file", []byte("temp"), storage.WriteOptions{}))
+	require.NoError(t, fileService.DeleteFileWithOptions(ctx, "artifact/combined/temp-file", storage.DeleteOptions{}))
+
+	parentInfo, err := os.Stat(filepath.Join(rootPath, "artifact", "combined"))
+	require.NoError(t, err)
+	require.True(t, parentInfo.IsDir())
+}
+
+func TestStorageFileService_DeleteFile_PreservesEmptyParent(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                  = context.Background()
+		rootPath, localStore = newTestLocalStore(t)
+		fileService          = storage.NewFileService(localStore)
+	)
+
+	require.NoError(t, fileService.WriteFile(ctx, "artifact/combined/temp-file", []byte("temp"), storage.WriteOptions{}))
+	require.NoError(t, fileService.DeleteFile(ctx, "artifact/combined/temp-file"))
+
+	parentInfo, err := os.Stat(filepath.Join(rootPath, "artifact", "combined"))
+	require.NoError(t, err)
+	require.True(t, parentInfo.IsDir())
+}
+
+func TestStorageFileService_DeleteFileWithOptions_PreservesNonEmptyParent(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx                  = context.Background()
+		rootPath, localStore = newTestLocalStore(t)
+		fileService          = storage.NewFileService(localStore)
+	)
+
+	require.NoError(t, fileService.WriteFile(ctx, "artifact/combined/temp-file", []byte("temp"), storage.WriteOptions{}))
+	require.NoError(t, fileService.WriteFile(ctx, "artifact/keep-file", []byte("keep"), storage.WriteOptions{}))
+	require.NoError(t, fileService.DeleteFileWithOptions(ctx, "artifact/combined/temp-file", storage.DeleteOptions{PruneEmptyParents: true}))
+
+	_, err := os.Stat(filepath.Join(rootPath, "artifact", "combined"))
+	require.ErrorIs(t, err, fs.ErrNotExist)
+	_, err = os.Stat(filepath.Join(rootPath, "artifact", "keep-file"))
+	require.NoError(t, err)
+}
+
 func TestLocalStore_List(t *testing.T) {
 	t.Parallel()
 
