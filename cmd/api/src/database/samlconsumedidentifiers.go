@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 package database
 
 import (
@@ -35,7 +36,6 @@ const (
 // stored in the saml_consumed_identifiers table.
 type SAMLConsumedData interface {
 	CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) error
-	//SweepSAMLConsumedIdentifiers(ctx context.Context) error
 }
 
 // CreateSAMLConsumedIdentifiers inserts the SAMLResponse and assertion from a single SAML login so they cannot be replayed.
@@ -69,8 +69,3 @@ func (s *BloodhoundDB) CreateSAMLConsumedIdentifiers(ctx context.Context, ssoPro
 		return nil
 	})
 }
-
-// SweepSAMLConsumedIdentifiers deletes all SAMLResponse and Assertion identifiers that have already expired
-//func (s *BloodhoundDB) SweepSAMLConsumedIdentifiers(ctx context.Context) error {
-//	return s.db.WithContext(ctx).Where("expires_at < NOW()").Delete(xyz).Error
-//}
