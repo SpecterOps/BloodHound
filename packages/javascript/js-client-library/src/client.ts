@@ -539,7 +539,7 @@ class BHEAPIClient {
         }
 
         if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
-        if (typeof findingId === 'number') params.append('id', findingId);
+        if (typeof findingId === 'number') params.append('id', `eq:${findingId}`);
 
         if (typeof filterAccepted === 'boolean') params.append('Accepted', `eq:${filterAccepted}`);
 
