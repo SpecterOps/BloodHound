@@ -159,3 +159,68 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	assert.Equal(t, totalSeeded, scalarInt64(t, db, `SELECT count(*) FROM audit_logs`),
 		"row count must be unchanged after re-running migrations")
 }
+
+// TestMigrator_AuditLogPartitioning_EmptyTableAdvancedSequence guards against id
+// reuse when the partitioning migration runs against an empty audit_logs table
+// whose sequence has already issued ids (rows were inserted and later deleted).
+// The migration must be forward-only: it must not rewind audit_logs_id_seq, so the
+// next insert cannot reuse an id that was previously handed out.
+func TestMigrator_AuditLogPartitioning_EmptyTableAdvancedSequence(t *testing.T) {
+	testContext := setupGooseTestContext(t)
+
+	provider := testContext.migrator.GooseProvider
+	db := testContext.gormDB
+
+	// Migrate up to just before the partitioning migration, leaving the original,
+	// non-partitioned audit_logs table in place.
+	_, err := provider.UpTo(testContext.ctx, versionBeforeAuditPartitioning)
+	require.NoError(t, err)
+
+	require.False(t, isRangePartitioned(t, db, "audit_logs"),
+		"audit_logs should not be partitioned before the migration")
+
+	// Issue ids by inserting rows, then delete them so the table is empty while the
+	// sequence has advanced past the ids it already handed out.
+	require.NoError(t, db.Exec(`
+		INSERT INTO audit_logs (created_at, action, actor_id, actor_name, status)
+		SELECT
+			'2025-06-15T00:00:00Z'::timestamptz,
+			'seed_action',
+			'actor-' || g,
+			'Seed Actor',
+			'success'
+		FROM generate_series(1, 5) AS g
+	`).Error)
+
+	advancedSeq := scalarInt64(t, db, `SELECT last_value FROM audit_logs_id_seq`)
+	require.Equal(t, int64(5), advancedSeq,
+		"sanity: sequence should have issued ids 1..5")
+
+	require.NoError(t, db.Exec(`DELETE FROM audit_logs`).Error)
+	require.Equal(t, int64(0), scalarInt64(t, db, `SELECT count(*) FROM audit_logs`),
+		"sanity: audit_logs should be empty before the migration")
+
+	// Run the partitioning migration against the now-empty table.
+	_, err = provider.UpTo(testContext.ctx, auditPartitioningVersion)
+	require.NoError(t, err)
+
+	assert.True(t, isRangePartitioned(t, db, "audit_logs"),
+		"audit_logs should be range-partitioned after the migration")
+
+	// The sequence must not have been rewound; its position is preserved so the
+	// next insert cannot reuse a previously issued id.
+	assert.Equal(t, advancedSeq,
+		scalarInt64(t, db, `SELECT last_value FROM audit_logs_id_seq`),
+		"audit_logs_id_seq must not be rewound on an empty table")
+
+	// The next inserted row must receive an id beyond the previously issued range,
+	// confirming no id reuse.
+	var nextID int64
+	require.NoError(t, db.Raw(`
+		INSERT INTO audit_logs (created_at, action, actor_id, actor_name, status)
+		VALUES ('2025-06-15T00:00:00Z'::timestamptz, 'post_action', 'actor-post', 'Post Actor', 'success')
+		RETURNING id
+	`).Scan(&nextID).Error)
+	assert.Greater(t, nextID, advancedSeq,
+		"the first insert after migration must not reuse a previously issued id")
+}

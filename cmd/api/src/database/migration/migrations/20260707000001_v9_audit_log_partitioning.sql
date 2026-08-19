@@ -199,16 +199,17 @@ BEGIN
     -- audit_logs_old. If a non-owner role is ever granted access out-of-band, copy
     -- its grants onto the swapped-in table here.
 
-    -- Advance the sequence past the largest copied id so the next insert does not
-    -- collide with a backfilled row. When the source is empty (fresh install), pass
-    -- is_called = false so the sequence still yields 1 on the first nextval,
-    -- preserving the original START WITH 1 behavior; a two-arg setval(seq, 1) would
-    -- instead mark 1 as consumed and start ids at 2.
-    PERFORM setval(
-        'audit_logs_id_seq',
-        COALESCE((SELECT MAX(id) FROM audit_logs), 1),
-        (SELECT MAX(id) FROM audit_logs) IS NOT NULL
-    );
+    -- Advance the sequence forward-only: bump it to MAX(id) when a backfilled row is
+    -- ahead of it, otherwise leave it alone. Never rewind, so a previously issued id
+    -- can't be reused (e.g. empty table with an already-advanced sequence).
+    DECLARE
+        max_id    bigint := (SELECT MAX(id) FROM audit_logs);
+        seq_value bigint := (SELECT last_value FROM audit_logs_id_seq);
+    BEGIN
+        IF max_id IS NOT NULL AND max_id > seq_value THEN
+            PERFORM setval('audit_logs_id_seq', max_id, true);
+        END IF;
+    END;
 END $$;
 -- +goose StatementEnd
 
