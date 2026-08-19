@@ -200,8 +200,15 @@ BEGIN
     -- its grants onto the swapped-in table here.
 
     -- Advance the sequence past the largest copied id so the next insert does not
-    -- collide with a backfilled row.
-    PERFORM setval('audit_logs_id_seq', COALESCE((SELECT MAX(id) FROM audit_logs), 1));
+    -- collide with a backfilled row. When the source is empty (fresh install), pass
+    -- is_called = false so the sequence still yields 1 on the first nextval,
+    -- preserving the original START WITH 1 behavior; a two-arg setval(seq, 1) would
+    -- instead mark 1 as consumed and start ids at 2.
+    PERFORM setval(
+        'audit_logs_id_seq',
+        COALESCE((SELECT MAX(id) FROM audit_logs), 1),
+        (SELECT MAX(id) FROM audit_logs) IS NOT NULL
+    );
 END $$;
 -- +goose StatementEnd
 
