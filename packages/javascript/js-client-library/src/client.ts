@@ -815,7 +815,7 @@ class BHEAPIClient {
             responseType: 'blob',
         });
 
-    getSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
+    requestSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.post<SupportBundleDownloadURLResponse>(
             `/api/v2/clients/${clientId}/artifacts/${artifactId}/download-url`,
             undefined,
