@@ -48,6 +48,7 @@ const (
 	FeatureOpenHoundSupport             = "openhound_support"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
+	FeatureArtifactExpirationCleanup    = "artifact_expiration_cleanup"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
 	FeatureUseRawObjectID               = "use_raw_object_id"
 	FeatureOpenGraphDataQuality         = "opengraph_data_quality"
