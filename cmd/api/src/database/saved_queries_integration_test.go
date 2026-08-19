@@ -50,7 +50,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", 0); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", nil); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
@@ -74,7 +74,7 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 
 	type testSetupData struct {
 		created model.SavedQuery
-		extID   int32
+		extID   *int32
 	}
 	type testCase struct {
 		name     string
@@ -96,9 +96,9 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 				t.Helper()
 				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "SavedQueryExt", "Saved Query Ext", "v1.0.0", "sqext_ns")
 				require.NoError(t, err)
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "ext_query", "MATCH (n) RETURN n", "desc", ext.ID)
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "ext_query", "MATCH (n) RETURN n", "desc", &ext.ID)
 				require.NoError(t, err)
-				return testSetupData{created: created, extID: ext.ID}
+				return testSetupData{created: created, extID: &ext.ID}
 			},
 			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
 				t.Helper()
@@ -112,16 +112,16 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 			name: "success_-_zero_schema_extension_id_persists_as_null",
 			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
 				t.Helper()
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "user_query", "MATCH (n) RETURN n", "desc", 0)
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "user_query", "MATCH (n) RETURN n", "desc", nil)
 				require.NoError(t, err)
 				return testSetupData{created: created}
 			},
 			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
 				t.Helper()
-				assert.Zero(t, data.created.SchemaExtensionID)
+				assert.Nil(t, data.created.SchemaExtensionID)
 				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
 				require.NoError(t, err)
-				assert.Zero(t, fetched.SchemaExtensionID)
+				assert.Nil(t, fetched.SchemaExtensionID)
 			},
 		},
 		{
@@ -130,13 +130,13 @@ func TestSavedQueries_SchemaExtensionID(t *testing.T) {
 				t.Helper()
 				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "CascadeExt", "Cascade Ext", "v1.0.0", "cascade_ns")
 				require.NoError(t, err)
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "cascade_query", "MATCH (n) RETURN n", "desc", ext.ID)
+				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "cascade_query", "MATCH (n) RETURN n", "desc", &ext.ID)
 				require.NoError(t, err)
-				return testSetupData{created: created, extID: ext.ID}
+				return testSetupData{created: created, extID: &ext.ID}
 			},
 			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
 				t.Helper()
-				require.NoError(t, dbInst.DeleteGraphSchemaExtension(ctx, data.extID))
+				require.NoError(t, dbInst.DeleteGraphSchemaExtension(ctx, *data.extID))
 				_, err := dbInst.GetSavedQuery(ctx, data.created.ID)
 				assert.ErrorIs(t, err, database.ErrNotFound)
 			},

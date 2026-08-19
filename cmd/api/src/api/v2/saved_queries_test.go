@@ -232,7 +232,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], int32(0)).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -275,7 +275,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], int32(0)).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], gomock.Any()).Return(model.SavedQuery{
 		UserID:      userId.String(),
 		Name:        fmt.Sprintf("%v", payload["name"]),
 		Query:       fmt.Sprintf("%v", payload["query"]),
