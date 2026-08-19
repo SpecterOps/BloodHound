@@ -28,7 +28,6 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	bhIngest "github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -370,7 +369,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 	ingest.DataTypeComputer: func(batch *IngestContext, reader io.ReadSeeker, parsedData payload.ParsedData) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
-		} else if parsedData.OriginalMetadata.Version >= 5 {
+		} else if parsedData.OriginalData.Metadata.Version >= 5 {
 			return decodeBasicData(batch, decoder, convertComputerData)
 		} else {
 			return nil
@@ -416,7 +415,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 
 		// decode metadata, if present
 		if decoder, err := CreateIngestDecoder(reader, "metadata", 1); err != nil {
-			if !errors.Is(err, bhIngest.ErrDataTagNotFound) {
+			if !errors.Is(err, ErrDataTagNotFound) {
 				return err
 			}
 			slog.Debug("No metadata found in opengraph payload; continuing to nodes")
@@ -434,7 +433,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 
 		// decode nodes, if present
 		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
-			if !errors.Is(err, bhIngest.ErrDataTagNotFound) {
+			if !errors.Is(err, ErrDataTagNotFound) {
 				return err
 			}
 			slog.Debug("No nodes found in opengraph payload; continuing to edges")
@@ -446,7 +445,7 @@ var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
 
 		// decode edges, if present
 		if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
-			if !errors.Is(err, bhIngest.ErrDataTagNotFound) {
+			if !errors.Is(err, ErrDataTagNotFound) {
 				return err
 			}
 			slog.Debug("No edges found in opengraph payload")
