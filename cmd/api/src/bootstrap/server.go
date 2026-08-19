@@ -74,9 +74,15 @@ func MigrateDB(ctx context.Context, cfg config.Configuration, db database.Databa
 	// This should be enabled by default for local dev environments
 	if cfg.DefaultAdmin.Enabled {
 		slog.InfoContext(ctx, "Default admin enabled, creating admin account")
-		return CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc)
+		if err := CreateDefaultAdmin(ctx, cfg, db, defaultAdminFunc); err != nil {
+			return fmt.Errorf("error creating default admin: %w", err)
+		}
 	} else {
 		slog.InfoContext(ctx, "Default admin disabled")
+	}
+
+	if _, err := db.CreateInstallation(ctx); err != nil {
+		return fmt.Errorf("error creating new installation: %w", err)
 	}
 
 	return nil

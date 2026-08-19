@@ -159,6 +159,7 @@ func TestMigrateDB(t *testing.T) {
 
 			mockDb.EXPECT().Migrate(gomock.Any()).Return(nil).Times(1)
 			mockDb.EXPECT().HasInstallation(gomock.Any()).Return(false, nil).Times(1)
+			mockDb.EXPECT().CreateInstallation(gomock.Any()).Return(model.Installation{}, nil).Times(1)
 
 			tt.mocks(mockDb)
 
