@@ -32,10 +32,8 @@ import (
 	"github.com/specterops/bloodhound/server/audit"
 )
 
-// AuditService is the narrow port the audit middleware depends on. It is
-// satisfied by *audit.Service. Writes are synchronous: a failed intent write
-// causes the middleware to reject the underlying request, while result
-// (success/failure) writes are best-effort and only logged on error.
+// AuditService is the narrow port the audit middleware depends on, satisfied by
+// *audit.Service.
 type AuditService interface {
 	Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
 	Success(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
@@ -44,10 +42,8 @@ type AuditService interface {
 
 // AuditMiddleware records the intent/success/failure lifecycle of every API
 // request. It writes an intent row before the handler runs and a success or
-// failure row afterward based on the response status. If the intent write fails
-// the request is rejected with a 500 and the handler never runs. muxRouter is
-// used to resolve the bounded route template for the audited action. Route
-// templates listed in excludedRoutes (e.g. /health) are not audited.
+// failure row afterward based on the response status; a failed intent write
+// rejects the request with a 500. Route templates in excludedRoutes are skipped.
 func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, excludedRoutes ...string) mux.MiddlewareFunc {
 	exclusions := make(map[string]bool, len(excludedRoutes))
 	for _, route := range excludedRoutes {
@@ -62,17 +58,10 @@ func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, excludedR
 }
 
 // auditIntentWriteTimeout bounds the fail-closed intent write so a slow or
-// unavailable database cannot block the request goroutine indefinitely before the
-// handler runs. Because the intent write is fail-closed, exceeding this deadline
-// rejects the request with a 500 rather than hanging: under sustained database
-// pressure the audit table becomes a bounded availability dependency for audited
-// endpoints (the request fails fast) instead of an unbounded one (requests pile
-// up waiting on the write).
+// unavailable database rejects the request fast rather than blocking it.
 const auditIntentWriteTimeout = 5 * time.Second
 
-// auditOutcomeWriteTimeout bounds the best-effort success/failure write so a slow
-// or unavailable database cannot block the request goroutine indefinitely after
-// the handler has already returned.
+// auditOutcomeWriteTimeout bounds the best-effort success/failure write.
 const auditOutcomeWriteTimeout = 30 * time.Second
 
 func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRoutes map[string]bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
@@ -81,19 +70,14 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 		routeTemplate = routeTemplateFor(muxRouter, request)
 	)
 
-	// Skip routes we cannot name (routeTemplate == unmatchedRouteLabel) and
-	// explicitly excluded routes such as /health: they carry no audit value and
-	// auditing them would place a synchronous, fail-closed write in front of
-	// high-volume traffic.
+	// Skip routes we cannot name and explicitly excluded routes such as /health.
 	if routeTemplate == unmatchedRouteLabel || excludedRoutes[routeTemplate] {
 		next.ServeHTTP(response, request)
 		return
 	}
 
-	// The intent write is bounded by auditIntentWriteTimeout. The context is
-	// derived from the request context so a client disconnecting before the
-	// handler runs still cancels the write, while the timeout guarantees an upper
-	// bound even when the request context has no deadline of its own.
+	// Derived from the request context so a client disconnect cancels the write,
+	// with a timeout that bounds it even when the request context has no deadline.
 	intentCtx, cancelIntent := context.WithTimeout(ctx, auditIntentWriteTimeout)
 	defer cancelIntent()
 
@@ -102,27 +86,18 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 		entry         = buildAuditEntry(request, routeTemplate)
 		commitID, err = auditService.Intent(intentCtx, entry)
 	)
-	// A failed intent write rejects the request: without a durable intent row
-	// the action would run unaudited, so the handler is never invoked. This is
-	// fail-closed, so an intent write that exceeds auditIntentWriteTimeout also
-	// rejects the request rather than proceeding unaudited.
+	// Fail closed: without a durable intent row the handler is never invoked.
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to write audit intent row", attr.Error(err))
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "audit log intent could not be recorded", request), response)
 		return
 	}
 
-	// Record the audited action as a failure if the handler panics. This defer is
-	// registered before next.ServeHTTP so it traps a panic from the handler (or any
-	// inner middleware) that would otherwise skip the outcome write below, leaving
-	// the intent row with no matching success/failure. It writes the failure row
-	// and then re-panics so the outer PanicHandler still logs the panic and aborts
-	// the request.
+	// Trap a handler panic so the intent row still gets a matching failure row,
+	// then re-panic so the outer PanicHandler logs and aborts the request.
 	defer func() {
 		if recovery := recover(); recovery != nil {
-			// The handler goroutine is unwinding, so use a context detached from the
-			// request's cancellation and bounded by auditOutcomeWriteTimeout, mirroring
-			// the normal outcome write below.
+			// The handler goroutine is unwinding, so detach from request cancellation.
 			panicCtx, cancelPanic := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
 			defer cancelPanic()
 
@@ -136,9 +111,8 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 
 	next.ServeHTTP(recorder, request)
 
-	// The success/failure write is best-effort but must survive the client
-	// disconnecting after the handler runs, so it uses a context detached from the
-	// request's cancellation, bounded by auditOutcomeWriteTimeout.
+	// Best-effort but must survive a client disconnect, so detach from request
+	// cancellation.
 	outcomeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
 	defer cancel()
 
@@ -151,15 +125,12 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 	}
 }
 
-// anonymousActorName is used as the actor name for unauthenticated requests so
-// that the audit record is attributed to an explicit anonymous actor (tracked by
-// source IP) rather than being dropped.
+// anonymousActorName is the actor name for unauthenticated requests, keeping
+// them attributed (by source IP) rather than dropped.
 const anonymousActorName = "anonymous"
 
 // buildAuditEntry assembles the audit Entry from the request context, resolving
-// the actor from the authenticated user when present and falling back to an
-// anonymous actor attributed to the source IP when the request is
-// unauthenticated.
+// the actor from the authenticated user or falling back to an anonymous actor.
 func buildAuditEntry(request *http.Request, routeTemplate string) audit.Entry {
 	var (
 		bhCtx = bhctx.FromRequest(request)

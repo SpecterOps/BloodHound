@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package audit is the wireup module for the audit feature. It is the single
-// place where the audit store and service are composed; the layered
-// sub-packages themselves remain unaware of each other. Consumers (middleware,
-// the module registry, the GC daemon) depend on this public package rather than
-// the internal sub-packages.
+// Package audit is the wireup module for the audit feature: the single place
+// where the store and service are composed. Consumers depend on this public
+// package rather than the internal sub-packages.
 package audit
 
 import (
@@ -28,22 +26,18 @@ import (
 )
 
 // Entry is the domain input callers hand to the audit service for a single
-// audited action. It is re-exported from the internal services package so
-// consumers depend only on this public package.
+// audited action.
 type Entry = services.Entry
 
 // Service records the intent/success/failure lifecycle of an audited action.
 type Service = services.Service
 
-// Maintainer manages the lifecycle of the audit_logs range partitions. The GC
-// daemon depends on this port to pre-create upcoming partitions and drop
-// partitions older than the configured retention window.
+// Maintainer manages the lifecycle of the audit_logs range partitions, used by
+// the GC daemon to pre-create upcoming partitions and drop expired ones.
 type Maintainer = services.Maintainer
 
-// Register composes the audit store and service against the provided PostgreSQL
-// connection pool. It returns the Service used to record audit entries and the
-// Maintainer used by the GC daemon to manage audit partitions. The concrete
-// Store satisfies both ports.
+// Register composes the audit store and service against the provided connection
+// pool, returning the Service and the Maintainer (both satisfied by the Store).
 func Register(pool *pgxpool.Pool) (*Service, Maintainer) {
 	var (
 		store   = appdb.NewStore(pool)

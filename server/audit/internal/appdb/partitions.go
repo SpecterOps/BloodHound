@@ -32,10 +32,8 @@ const (
 var earliestPartitionMonth = time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 // PreCreateNextPartition ensures the partition for the month AFTER asOf exists.
-// Partition names and range bounds mirror the migration exactly
-// (audit_logs_YYYY_MM, FROM first-of-month TO first-of-next-month). The DDL is
-// safe from injection because every value is derived from a time.Time, never
-// from external input.
+// Names and bounds mirror the migration; the DDL is injection-safe because every
+// value derives from a time.Time.
 func (s *Store) PreCreateNextPartition(ctx context.Context, asOf time.Time) error {
 	var (
 		next = firstOfMonth(asOf).AddDate(0, 1, 0)
@@ -54,11 +52,9 @@ func (s *Store) PreCreateNextPartition(ctx context.Context, asOf time.Time) erro
 	return nil
 }
 
-// DropExpiredPartitions drops every monthly partition whose entire range is
-// older than the retention window. The cutoff is the first day of the month
-// retentionMonths before asOf; any partition for a month strictly before the
-// cutoff is fully expired. Drops are idempotent (DROP TABLE IF EXISTS) so a name
-// that no longer exists is a no-op, and the default partition is never touched.
+// DropExpiredPartitions drops every monthly partition whose entire range is older
+// than the retention window (retentionMonths before asOf). Drops are idempotent
+// and the default partition is never touched.
 func (s *Store) DropExpiredPartitions(ctx context.Context, asOf time.Time, retentionMonths int) error {
 	var (
 		cutoff = firstOfMonth(asOf).AddDate(0, -retentionMonths, 0)
