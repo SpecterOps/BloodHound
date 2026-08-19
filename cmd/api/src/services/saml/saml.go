@@ -36,10 +36,18 @@ type Service interface {
 
 type Client struct{}
 
+// ValidatedResponse represents a successfully parsed and validated SAML login: the verified assertion
+// and the SAMLResponse's own ID and IssueInstant
 type ValidatedResponse struct {
 	Assertion            *saml.Assertion
 	ResponseID           string
 	ResponseIssueInstant time.Time
+}
+
+type assertionCounter struct {
+	XMLName             xml.Name
+	Assertions          []struct{} `xml:"urn:oasis:names:tc:SAML:2.0:assertion Assertion"`
+	EncryptedAssertions []struct{} `xml:"urn:oasis:names:tc:SAML:2.0:assertion EncryptedAssertion"`
 }
 
 // MakeAuthenticationRequest abstracts creating an SAML authentication request using
@@ -48,13 +56,13 @@ func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider,
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)
 }
 
-// ParseResponse abstracts the handling/validation of the IdP response. // TODO
-// The purpose is to extract the SAML IdP response received in req, resolves
-// artifacts when necessary, validates it, and returns the verified assertion and response.
+// ParseResponse wraps the parsing and validation of the IdP's SAMLResponse in req and returns the verified assertion
+// together with the SAMLResponse's own details in a ValidatedResponse.
 func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error) {
 	var (
 		fullResponse ValidatedResponse
 		samlResponse saml.Response
+		issuer       string
 	)
 
 	assertion, err := serviceProvider.ParseResponse(req, possibleRequestIDs)
@@ -66,7 +74,29 @@ func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.R
 		return nil, fmt.Errorf("saml: failed to decode SAMLResponse: %w", err)
 	}
 	if err := xml.Unmarshal(rawXMLSAMLResponse, &samlResponse); err != nil {
-		return nil, fmt.Errorf("saml: failed to unmarshal SAML response: %w", err)
+		return nil, fmt.Errorf("saml: failed to unmarshal SAMLResponse: %w", err)
+	}
+	if samlResponse.Issuer != nil {
+		issuer = samlResponse.Issuer.Value
+	}
+
+	// It is rare but possible for a SAMLResponse to have more than one signed assertion (with an unsigned SAMLResponse);
+	// crewjam validates them all, but returns only the first. Since discarded assertions are replayable,
+	// reject a SAMLResponse with multiple assertions
+	if assertionCount, err := countAssertions(rawXMLSAMLResponse); err != nil {
+		return nil, fmt.Errorf("saml: failed to count assertions: %w", err)
+	} else if assertionCount > 1 {
+		return nil, fmt.Errorf("saml: SAMLResponse contains multiple assertions (issuer: %q)", issuer)
+	}
+
+	if samlResponse.ID == "" {
+		return nil, fmt.Errorf("saml: SAMLResponse ID is empty (issuer: %q)", issuer)
+	}
+	if assertion == nil {
+		return nil, fmt.Errorf("saml: assertion is nil (issuer: %q)", issuer)
+	}
+	if assertion.ID == "" {
+		return nil, fmt.Errorf("saml: assertion ID is empty (issuer: %q)", issuer)
 	}
 
 	fullResponse = ValidatedResponse{
@@ -76,4 +106,31 @@ func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.R
 	}
 
 	return &fullResponse, nil
+}
+
+// countAssertions returns how many SAML assertions (plaintext plus encrypted, in the SAML assertion namespace)
+// appear in the raw response XML.
+func countAssertions(rawResponseXML []byte) (int, error) {
+	var counter assertionCounter
+	if err := xml.Unmarshal(rawResponseXML, &counter); err != nil {
+		return 0, err
+	}
+
+	return len(counter.Assertions) + len(counter.EncryptedAssertions), nil
+}
+
+// CalculateSAMLTimeExpiry returns the time when a consumed SAML identifier (SAMLResponse or assertion) can be safely deleted,
+// since by then any replay attempt would be rejected as expired. It uses whichever identifier's IssueInstant is most recent
+// plus the allowed delay (crewjam's MaxIssueDelay).
+func CalculateSAMLTimeExpiry(responseIssueInstant, assertionIssueInstant time.Time) time.Time {
+	var (
+		responseExpiration  = responseIssueInstant.Add(saml.MaxIssueDelay)
+		assertionExpiration = assertionIssueInstant.Add(saml.MaxIssueDelay)
+		latest              = responseExpiration
+	)
+
+	if assertionExpiration.After(latest) {
+		latest = assertionExpiration
+	}
+	return latest
 }
