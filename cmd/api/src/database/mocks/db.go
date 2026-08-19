@@ -597,7 +597,7 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueries(ctx, savedQueries any) *g
 }
 
 // CreateSavedQuery mocks base method.
-func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string, schemaExtensionID int32) (model.SavedQuery, error) {
+func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string, schemaExtensionID *int32) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSavedQuery", ctx, userID, name, query, description, schemaExtensionID)
 	ret0, _ := ret[0].(model.SavedQuery)
