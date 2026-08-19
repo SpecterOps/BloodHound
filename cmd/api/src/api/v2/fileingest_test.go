@@ -623,7 +623,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: error saving ingest file unrecognized top level tag - Bad Request",
+			name: "Error: error saving ingest file with no valid payload tags - Bad Request",
 			buildRequest: func() *http.Request {
 				data := map[string]any{"name": "example", "value": 123}
 				jsonBytes, err := json.Marshal(data)
@@ -650,7 +650,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			fileServiceOvrd: newLocalTempFileService(t),
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"unrecognized top level tag: name"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"no valid payload tags found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
