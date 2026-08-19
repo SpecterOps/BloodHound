@@ -704,7 +704,7 @@ export type SourceKind = {
 export interface AlertParams {
     skip?: number;
     limit?: number;
-    sort_by?: string;
+    sort_by?: AlertsSortBy;
     type?: WebhookType;
     created_at?: string;
     delivered?: string | boolean;
@@ -790,8 +790,8 @@ export interface AlertAttemptsParams {
     sort_by?: AlertAttemptsSortBy;
     alert_id?: string;
     channel_id?: string;
-    event_id: string;
-    succeeded: boolean;
+    event_id?: string;
+    succeeded?: boolean;
     created_at?: ISO_DATE_STRING;
 }
 

@@ -2850,7 +2850,7 @@ class BHEAPIClient {
     getAlerts = (
         skip?: number,
         limit?: number,
-        sort_by?: types.WebhookSortBy,
+        sort_by?: types.AlertsSortBy,
         name?: string,
         options?: RequestOptions
     ) =>
