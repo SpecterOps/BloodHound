@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	ingestModel "github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/storage"
@@ -217,7 +216,7 @@ func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Requ
 }
 
 func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), ingestModel.AllowedFileUploadTypes, http.StatusOK, response)
+	api.WriteBasicResponse(request.Context(), upload.AllowedFileUploadTypes(), http.StatusOK, response)
 }
 
 func IsValidContentTypeForUpload(header http.Header) bool {
@@ -227,7 +226,7 @@ func IsValidContentTypeForUpload(header http.Header) bool {
 	} else if parsed, _, err := mime.ParseMediaType(rawValue); err != nil {
 		return false
 	} else {
-		return slices.Contains(ingestModel.AllowedFileUploadTypes, parsed)
+		return slices.Contains(upload.AllowedFileUploadTypes(), parsed)
 	}
 }
 

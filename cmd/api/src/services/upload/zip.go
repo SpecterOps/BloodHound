@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +18,17 @@ package upload
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
 )
 
-var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
+var (
+	ZipMagicBytes     = []byte{0x50, 0x4b, 0x03, 0x04}
+	ErrInvalidZipFile = errors.New("failed to find zip file header")
+)
 
 // ReadZippedFile - Util Function to help read zipped files
 func ReadZippedFile(zf *zip.File) ([]byte, error) {
@@ -48,11 +51,11 @@ func ValidateZipFile(reader io.Reader) error {
 	if readBytes, err := reader.Read(bytes); err != nil {
 		return err
 	} else if readBytes < 4 {
-		return ingest.ErrInvalidZipFile
+		return ErrInvalidZipFile
 	} else {
 		for i := 0; i < 4; i++ {
 			if bytes[i] != ZipMagicBytes[i] {
-				return ingest.ErrInvalidZipFile
+				return ErrInvalidZipFile
 			}
 		}
 

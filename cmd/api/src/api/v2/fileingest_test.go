@@ -42,8 +42,8 @@ import (
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	storageServiceMocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
@@ -465,7 +465,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 }
 
 func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
-	bytes, err := json.Marshal(ingest.AllowedFileUploadTypes)
+	bytes, err := json.Marshal(upload.AllowedFileUploadTypes())
 	if err != nil {
 		t.Fatalf("Error marshalling obj: %v", err)
 	}

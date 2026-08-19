@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
@@ -44,7 +43,7 @@ var ErrInvalidJSON = errors.New("file is not valid json")
 // Implementations are responsible for validating the input stream,
 // while simultaneously copying it to the destination for persistence.
 // This abstraction supports format-agnostic payloads (e.g., JSON, ZIP).
-type FileValidator func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error)
+type FileValidator func(src io.Reader, dst io.Writer) error
 
 func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, ingestSchema payload.Schema, jobID int64) (IngestTaskParams, payload.ValidationReport, error) {
 	var (
@@ -57,15 +56,12 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 	switch {
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		fileType = model.FileTypeJson
-		validationFn = func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
-			var err error
-			if report, err = WriteAndValidateJSON(src, dst, ingestSchema); err != nil {
-				return ingest.OriginalMetadata{}, err
-			}
-
-			return ingest.OriginalMetadata{}, nil
+		validationFn = func(src io.Reader, dst io.Writer) error {
+			var validationErr error
+			report, validationErr = WriteAndValidateJSON(src, dst, ingestSchema)
+			return validationErr
 		}
-	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), AllowedZipFileUploadTypes()...):
 		fileType = model.FileTypeZip
 		validationFn = WriteAndValidateZip
 	default:
@@ -83,9 +79,9 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 	}
 }
 
-func WriteAndValidateZip(fileData io.Reader, destination io.Writer) (ingest.OriginalMetadata, error) {
+func WriteAndValidateZip(fileData io.Reader, destination io.Writer) error {
 	teeReader := io.TeeReader(fileData, destination)
-	return ingest.OriginalMetadata{}, ValidateZipFile(teeReader)
+	return ValidateZipFile(teeReader)
 }
 
 func WriteAndValidateJSON(fileData io.Reader, destination io.Writer, ingestSchema payload.Schema) (payload.ValidationReport, error) {
@@ -145,7 +141,7 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 	// validationFunc reads from the request body and writes the validated output to pw.
 	// WriteTempFile reads from pr and persists that validated output.
 	go func() {
-		_, err := validationFunc(fileData, pw)
+		err := validationFunc(fileData, pw)
 		_ = pw.CloseWithError(err)
 		validationErrCh <- err
 	}()

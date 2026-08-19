@@ -28,7 +28,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
 	"github.com/specterops/chow/pkg/payload"
@@ -40,18 +39,47 @@ import (
 func buildValidator(t *testing.T, expectedContent string, validationErr error) FileValidator {
 	t.Helper()
 
-	return func(src io.Reader, dst io.Writer) (ingest.OriginalMetadata, error) {
+	return func(src io.Reader, dst io.Writer) error {
 		teeReader := io.TeeReader(src, dst)
 		content, err := io.ReadAll(teeReader)
 		if err != nil {
-			return ingest.OriginalMetadata{}, err
+			return err
 		}
 		if string(content) != expectedContent {
-			return ingest.OriginalMetadata{}, fmt.Errorf("expected content %q, got %q", expectedContent, string(content))
+			return fmt.Errorf("expected content %q, got %q", expectedContent, string(content))
 		}
 
-		return ingest.OriginalMetadata{}, validationErr
+		return validationErr
 	}
+}
+
+func TestAllowedFileUploadTypes(t *testing.T) {
+	expected := []string{
+		"application/json",
+		"application/zip",
+		"application/x-zip-compressed",
+		"application/zip-compressed",
+	}
+
+	actual := AllowedFileUploadTypes()
+	require.Equal(t, expected, actual)
+
+	actual[0] = "mutated"
+	require.Equal(t, expected, AllowedFileUploadTypes())
+}
+
+func TestAllowedZipFileUploadTypes(t *testing.T) {
+	expected := []string{
+		"application/zip",
+		"application/x-zip-compressed",
+		"application/zip-compressed",
+	}
+
+	actual := AllowedZipFileUploadTypes()
+	require.Equal(t, expected, actual)
+
+	actual[0] = "mutated"
+	require.Equal(t, expected, AllowedZipFileUploadTypes())
 }
 
 func TestWriteAndValidateZip(t *testing.T) {
@@ -62,7 +90,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(func() { _ = file.Close() })
 
-		_, err = WriteAndValidateZip(file, &writer)
+		err = WriteAndValidateZip(file, &writer)
 		require.NoError(t, err)
 		require.NotEmpty(t, writer.Bytes())
 	})
@@ -71,8 +99,8 @@ func TestWriteAndValidateZip(t *testing.T) {
 		var writer bytes.Buffer
 		badZip := strings.NewReader("123123")
 
-		_, err := WriteAndValidateZip(badZip, &writer)
-		assert.ErrorIs(t, err, ingest.ErrInvalidZipFile)
+		err := WriteAndValidateZip(badZip, &writer)
+		assert.ErrorIs(t, err, ErrInvalidZipFile)
 	})
 }
 
