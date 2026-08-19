@@ -20,6 +20,8 @@ import { render, screen, waitFor } from '../../../test-utils';
 import { Roles } from '../../../utils/roles';
 import UpsertSAMLProviderForm from './UpsertSAMLProviderForm';
 
+const SAMLProviderName = /^SAML Provider Name/;
+
 const testRoles = [
     { id: 1, name: Roles.READ_ONLY },
     { id: 2, name: Roles.POWER_USER },
@@ -33,7 +35,7 @@ describe('UpsertSAMLProviderForm', () => {
         const testOnSubmit = vi.fn();
         render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} />);
 
-        expect(screen.getByLabelText(/^SAML Provider Name/)).toBeInTheDocument();
+        expect(screen.getByLabelText(SAMLProviderName)).toBeInTheDocument();
 
         expect(screen.getByLabelText('Choose File')).toBeInTheDocument();
 
@@ -69,7 +71,7 @@ describe('UpsertSAMLProviderForm', () => {
 
         await waitFor(() => expect(screen.getByText('Metadata is required')).toBeInTheDocument());
 
-        expect(screen.getByLabelText(/^SAML Provider Name/)).toHaveFocus();
+        expect(screen.getByLabelText(SAMLProviderName)).toHaveFocus();
 
         expect(testOnSubmit).not.toHaveBeenCalled();
     });
@@ -82,7 +84,7 @@ describe('UpsertSAMLProviderForm', () => {
         const validMetadata = new File([], 'test-metadata.xml');
         render(<UpsertSAMLProviderForm onClose={testOnClose} onSubmit={testOnSubmit} roles={testRoles} />);
 
-        await user.type(screen.getByLabelText(/^SAML Provider Name/), validProviderName);
+        await user.type(screen.getByLabelText(SAMLProviderName), validProviderName);
 
         await user.upload(screen.getByLabelText('Choose File'), validMetadata);
 
@@ -95,7 +97,7 @@ describe('UpsertSAMLProviderForm', () => {
         const user = userEvent.setup();
         render(<UpsertSAMLProviderForm onClose={vi.fn()} onSubmit={vi.fn()} />);
 
-        await user.type(screen.getByLabelText(/^SAML Provider Name/), 'test-provider-name');
+        await user.type(screen.getByLabelText(SAMLProviderName), 'test-provider-name');
         await user.click(screen.getByRole('button', { name: 'Submit' }));
 
         await waitFor(() => expect(screen.getByRole('button', { name: 'Choose File' })).toHaveFocus());
