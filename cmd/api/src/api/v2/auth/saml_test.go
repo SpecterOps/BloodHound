@@ -1348,10 +1348,10 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 					SAMLProvider: &model.SAMLProvider{},
 				}, nil)
 			}, expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
+			responseCode:   http.StatusBadRequest,
+			responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+		},
 		},
 		{
 			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
@@ -3286,6 +3286,90 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
+		{
+			name: "Error: CreateSAMLConsumedIdentifiers replay detected - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(database.ErrSAMLIdentifierAlreadyConsumed)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+SSO+response"}},
+			},
+		},
+		{
+			name: "Error: CreateSAMLConsumedIdentifiers DB failure - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Your+SSO+connection+failed%2C+please+try+again"}},
 			},
 		},
 	}
