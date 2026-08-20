@@ -2,11 +2,14 @@
 
 ## Overview
 
-[`UpsertOpenGraphExtension`](upsert_schema_extension.go) is the database-layer entry point for the schema extension upload API.
-It performs a **true idempotent upsert**: every entity in the uploaded payload is reconciled
-against what already exists in the database. Row IDs are preserved across uploads — nothing is
-deleted and recreated when the name or comparable matches. Stale rows (present in the database but absent from
-the new payload) are deleted. The entire operation runs inside a single transaction.
+[`UpsertOpenGraphExtension`](upsert_schema_extension.go) is the database-layer entry point for the schema
+extension upload API. It performs a **true idempotent upsert**, reconciling every entity in the
+uploaded payload against the current database state within a single transaction:
+
+- **Matched rows** keep their IDs — a row is updated in place when its match key matches an entry
+  in the payload; it is never deleted and recreated.
+- **New rows** (in the payload but not the database) are created.
+- **Stale rows** (in the database but not the payload) are deleted.
 
 The HTTP handler and service layer are not involved in reconciliation. They perform validation and
 call `UpsertOpenGraphExtension`, which returns `(bool, error)` — `true` if the extension already
@@ -53,9 +56,17 @@ type reconcileConfig[TInput any, TExisting any, K comparable] struct {
 }
 ```
 
-Each config is constructed by a factory method on `BloodhoundDB`. Factories accept `extensionId`
-(or `environmentId` for principal kinds) as a parameter and close over it in the `create`
-callback, so `reconcile` itself has no knowledge of the parent scope.
+Each config is constructed by a factory method on `BloodhoundDB`. Every factory accepts its
+parent identifier(s) as parameters and closes over them in the `create` callback, so `reconcile`
+itself has no knowledge of the parent scope. The identifiers each nested entity requires are:
+
+- **Node kinds** — `extensionId`
+- **Relationship kinds** — `extensionId`
+- **Kind info** — the parent `kindID` plus exactly one of `nodeKindID` / `relationshipKindID`
+  (the other is nil)
+- **Environments** — `extensionId`
+- **Principal kinds** — `environmentId`
+- **Findings** — `extensionId`
 
 Model types require no interface methods — key extraction is entirely handled by the
 `getInputKey` / `getExistingKey` closures.
@@ -68,7 +79,7 @@ The orchestrator opens a transaction and processes each entity type in sequence 
 `if/else if` chain. Each step fetches existing rows for that entity type, then calls `reconcile`
 with the corresponding config factory.
 
-```
+```text
 BEGIN TRANSACTION
 │
 ├─ findOrCreateExtension
@@ -259,9 +270,7 @@ Add a factory method on `BloodhoundDB` that returns
 - `update` copies mutable fields onto the existing row (preserving its `ID`) before writing;
 - `delete` removes the row by `ID`.
 
-**Choosing the key `K`:** use the string `name` when rows carry mutable fields that must survive
-across uploads. Use an identity key (e.g. `int32` ID) when the row has no mutable fields — in that
-case a match is an identity match and `update` is a no-op, as with [Principal Kinds](#principal-kinds).
++**Choosing the key `K`:** use the stable unique identity carried by both the input and existing row. Use `name` only when the entity defines `name` as that identity. Use another stable external key when available. Use a database ID only when the uploaded input carries that same ID. If no stable identity exists, define one before adding the entity.
 
 ### 4. Add one step to the orchestrator chain
 
