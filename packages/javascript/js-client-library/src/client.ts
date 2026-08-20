@@ -521,7 +521,6 @@ class BHEAPIClient {
         filterAccepted?: boolean,
         sortBy?: string | string[],
         assetGroupTagId?: number,
-        findingId?: string,
         options?: RequestOptions
     ) => {
         const params = new URLSearchParams();
@@ -529,7 +528,6 @@ class BHEAPIClient {
 
         params.append('skip', skip.toString());
         params.append('limit', limit.toString());
-
         if (sortBy) {
             if (typeof sortBy === 'string') {
                 params.append('sort_by', sortBy);
@@ -539,7 +537,6 @@ class BHEAPIClient {
         }
 
         if (typeof assetGroupTagId === 'number') params.append('asset_group_tag_id', assetGroupTagId.toString());
-        if (typeof findingId === 'number') params.append('id', `eq:${findingId}`);
 
         if (typeof filterAccepted === 'boolean') params.append('Accepted', `eq:${filterAccepted}`);
 
