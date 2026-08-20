@@ -166,6 +166,21 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByObjectIDsAndKinds", reflect.TypeOf((*MockGraph)(nil).FetchNodesByObjectIDsAndKinds), varargs...)
 }
 
+// GetADEntityDetails mocks base method.
+func (m *MockGraph) GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetADEntityDetails", ctx, objectID, entityType)
+	ret0, _ := ret[0].(*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetADEntityDetails indicates an expected call of GetADEntityDetails.
+func (mr *MockGraphMockRecorder) GetADEntityDetails(ctx, objectID, entityType any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityDetails", reflect.TypeOf((*MockGraph)(nil).GetADEntityDetails), ctx, objectID, entityType)
+}
+
 // GetADEntityQueryResult mocks base method.
 func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
@@ -240,21 +255,6 @@ func (m *MockGraph) GetAssetGroupNodes(ctx context.Context, assetGroupTag string
 func (mr *MockGraphMockRecorder) GetAssetGroupNodes(ctx, assetGroupTag, isSystemGroup any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupNodes", reflect.TypeOf((*MockGraph)(nil).GetAssetGroupNodes), ctx, assetGroupTag, isSystemGroup)
-}
-
-// GetComputerEntityDetails mocks base method.
-func (m *MockGraph) GetComputerEntityDetails(ctx context.Context, objectID string) (*graph.Node, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetComputerEntityDetails", ctx, objectID)
-	ret0, _ := ret[0].(*graph.Node)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetComputerEntityDetails indicates an expected call of GetComputerEntityDetails.
-func (mr *MockGraphMockRecorder) GetComputerEntityDetails(ctx, objectID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComputerEntityDetails", reflect.TypeOf((*MockGraph)(nil).GetComputerEntityDetails), ctx, objectID)
 }
 
 // GetEntityByObjectId mocks base method.
@@ -359,21 +359,6 @@ func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx, primaryDisplayKin
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, primaryDisplayKinds, kind}, additionalFilters...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryNodeKindCounts", reflect.TypeOf((*MockGraph)(nil).GetPrimaryNodeKindCounts), varargs...)
-}
-
-// GetSiteServerEntityDetails mocks base method.
-func (m *MockGraph) GetSiteServerEntityDetails(ctx context.Context, objectID string) (*graph.Node, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSiteServerEntityDetails", ctx, objectID)
-	ret0, _ := ret[0].(*graph.Node)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSiteServerEntityDetails indicates an expected call of GetSiteServerEntityDetails.
-func (mr *MockGraphMockRecorder) GetSiteServerEntityDetails(ctx, objectID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSiteServerEntityDetails", reflect.TypeOf((*MockGraph)(nil).GetSiteServerEntityDetails), ctx, objectID)
 }
 
 // PrepareCypherQuery mocks base method.

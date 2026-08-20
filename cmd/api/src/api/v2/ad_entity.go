@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -85,7 +84,7 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
-	} else if node, err := s.getADEntityInfoNode(request.Context(), objectId, entityType); err != nil {
+	} else if node, err := s.GraphQuery.GetADEntityDetails(request.Context(), objectId, entityType); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "node not found", request), response)
 		} else {
@@ -101,17 +100,6 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 
 		results := map[string]any{"props": node.Properties.Map, "kinds": node.Kinds.Strings()}
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
-	}
-}
-
-func (s *Resources) getADEntityInfoNode(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
-	switch entityType {
-	case ad.Computer:
-		return s.GraphQuery.GetComputerEntityDetails(ctx, objectID)
-	case ad.SiteServer:
-		return s.GraphQuery.GetSiteServerEntityDetails(ctx, objectID)
-	default:
-		return s.GraphQuery.GetEntityByObjectId(ctx, objectID, entityType)
 	}
 }
 
