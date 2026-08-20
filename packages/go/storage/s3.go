@@ -29,6 +29,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -513,7 +514,6 @@ func (s *Store) Copy(ctx context.Context, srcName, dstName string, options Write
 	}
 
 	return s.copyMultipart(ctx, srcKey, dstKey, sourceSize, options)
-
 }
 
 func (s *Store) Move(ctx context.Context, srcPath, dstPath string, options WriteOptions) error {
@@ -521,4 +521,25 @@ func (s *Store) Move(ctx context.Context, srcPath, dstPath string, options Write
 		return err
 	}
 	return s.Delete(ctx, srcPath)
+}
+
+// GetPresignedURL validates key and generates url, but doesn't confirm that artifact is still present in
+// s3. If artifact has been deleted the subsequent GET to presignedGetReq.URL will return 404 NoSuchKey.
+func (s *Store) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	key, err := s.key(name)
+	if err != nil {
+		return "", err
+	}
+
+	presignClient := s3.NewPresignClient(s.client)
+
+	presignedGetReq, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	}, s3.WithPresignExpires(ttl))
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned GET URL: %w", err)
+	}
+
+	return presignedGetReq.URL, nil
 }
