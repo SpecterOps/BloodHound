@@ -28,6 +28,7 @@ import { useEnvironmentIdList } from '../../../hooks/useEnvironmentIdList';
 import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
+import { disabledStylesOverride } from './constants';
 import { SelectedHighlight } from './SelectedHighlight';
 
 export interface ObjectsAccordionProps {
@@ -61,7 +62,7 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
                 type='single'
                 collapsible
                 value={openAccordion}
-                className='w-full min-w-0 rounded-none bg-neutral-2'
+                className='w-full min-w-0 rounded-sm bg-neutral-2'
                 data-testid='privilege-zones_details_objects-accordion'>
                 {Object.entries(kindCounts)
                     .sort((a, b) => a[0].localeCompare(b[0]))
@@ -154,7 +155,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2 h-10'>
                     <IconButton
-                        className='my-1.5 ml-2 rounded-none'
+                        className='my-1.5 ml-2 rounded-sm'
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {
@@ -173,10 +174,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                             disable={!isOpen}
                             classes={{
                                 container: cn('flex-1', { 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base rounded-none', {
-                                    'disabled:!text-text-main disabled:!opacity-100': !isOpen,
-                                    '[&>svg]:hidden': !isOpen,
-                                }),
+                                button: cn(!isOpen && disabledStylesOverride),
                             }}
                         />
                     </div>

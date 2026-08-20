@@ -32,6 +32,7 @@ const meta = {
         type: 'email',
         placeholder: 'email@example.com',
         disabled: false,
+        variant: 'outlined',
     },
     parameters: {
         layout: 'centered',
@@ -47,11 +48,27 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
-export const Outlined: Story = { args: { variant: 'outlined' } };
+export const Required: Story = {
+    args: {
+        label: 'Email address',
+        required: true,
+        variant: 'outlined',
+    },
+};
+
+export const RequiredWithoutLabel: Story = {
+    args: {
+        required: true,
+    },
+};
 
 export const Error: Story = {
     args: {
-        'aria-invalid': true,
+        defaultValue: 'not-an-email',
+        error: true,
+        errorMessage: 'Enter a valid email address.',
+        label: 'Email address',
+        required: true,
         variant: 'outlined',
     },
 };
@@ -64,33 +81,25 @@ export const Disabled: Story = {
     args: { disabled: true, variant: 'outlined' },
 };
 
-/**
- * Use the `Label` component to includes a clear, descriptive label above or
- * alongside the input area to guide users.
- */
 export const WithLabel: Story = {
-    render: (args) => (
-        <div className='grid items-center gap-1.5'>
-            <Label htmlFor='email'>Email</Label>
-            <Input {...args} id='email' />
-        </div>
-    ),
+    args: {
+        id: 'email',
+        label: 'Email',
+    },
 };
 
 /**
- * Use a text element below the input field to provide additional instructions
+ * Use the helperText prop to provide additional instructions
  * or information to users.
  */
 export const WithHelperText: Story = {
-    render: (args) => (
-        <div className='grid items-center gap-1.5'>
-            <Label htmlFor='email-2'>Email</Label>
-            <Input {...args} id='email-2' />
-            <p className='text-sm text-neutral-dark-1 dark:text-neutral-light-1 opacity-50'>
-                Enter your email address.
-            </p>
-        </div>
-    ),
+    args: {
+        id: 'email-2',
+        label: 'Email',
+        helperText: 'Enter your email address.',
+        required: true,
+        variant: 'outlined',
+    },
 };
 
 /**

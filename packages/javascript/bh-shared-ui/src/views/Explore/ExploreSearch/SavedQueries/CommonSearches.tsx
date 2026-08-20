@@ -183,9 +183,9 @@ const CommonSearches = ({
                     aria-expanded={showCommonQueries}
                     aria-controls='common-queries-panel'
                     onClick={onToggleCommonQueries}
-                    className='flex justify-start items-center w-full rounded-none'
+                    className='flex justify-start items-center w-full rounded-sm'
                     data-testid='common-queries-toggle'>
-                    <FontAwesomeIcon className='p-2 text-sm' icon={showCommonQueries ? faChevronDown : faChevronUp} />
+                    <FontAwesomeIcon className='px-1 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
                     <span className='font-semibold text-lg py-0.5'>Saved Queries</span>
                 </TextButton>
             </div>
