@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -57,7 +58,7 @@ type IngestFileData struct {
 	UserDataErrs []string
 }
 
-func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) (payload.ValidationReport, error) {
 	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, scratchPath, err := OpenScratchReadSeeker(ctx, tempDirectory, fileService, fileData.Path)
@@ -68,7 +69,7 @@ func processSingleFile(ctx context.Context, fileService storage.FileService, tem
 			slog.String("filepath", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return payload.ValidationReport{}, err
 	}
 
 	defer func() {
@@ -101,17 +102,18 @@ func processSingleFile(ctx context.Context, fileService storage.FileService, tem
 		}
 	}()
 
-	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+	report, err := ReadFileForIngest(ingestContext, file, readOpts)
+	if err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error reading ingest file",
 			slog.String("storage_path", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return report, err
 	}
 
-	return nil
+	return report, nil
 }
 
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
@@ -137,13 +139,22 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 					continue
 				}
 
-				if err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
+				if report, err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError
 					)
 
-					if errors.As(err, &graphifyError) {
+					switch {
+					case len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0:
+						for _, criticalErr := range report.CriticalErrors {
+							fileData[i].Errors = append(fileData[i].Errors, criticalErr.Message)
+						}
+						for _, valErr := range report.ValidationErrors {
+							fileData[i].Errors = append(fileData[i].Errors, valErr.Error())
+						}
+						errs.Add(err)
+					case errors.As(err, &graphifyError):
 						for _, graphifyErr := range graphifyError.Errors {
 							if ok := errors.As(graphifyErr, &resolutionErr); ok {
 								// Resolution errors are data quality issues. They are surfaced to the user via
@@ -154,7 +165,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 								errs.Add(graphifyErr)
 							}
 						}
-					} else {
+					default:
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 						errs.Add(err)
 					}
