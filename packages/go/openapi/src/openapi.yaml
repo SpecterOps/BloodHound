@@ -809,8 +809,8 @@ paths:
     $ref: './paths/alerts.alerts.id.yaml'
   /api/v2/alert-attempts:
     $ref: './paths/alerts.alert-attempts.yaml'
-#  /api/v2/alert-attempts/retry:
-#    $ref: './paths/alerts.alert-attempts.retry.yaml'
+  /api/v2/alert-attempts/retry:
+    $ref: './paths/alerts.alert-attempts.retry.yaml'
 
   # graph schema findings
   #/api/v2/extensions-findings:
