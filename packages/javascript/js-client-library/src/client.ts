@@ -2806,13 +2806,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (
-        skip?: number,
-        limit?: number,
-        sort_by?: types.WebhookSortBy,
-        name?: string,
-        options?: RequestOptions
-    ) =>
+    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams, options?: RequestOptions) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {

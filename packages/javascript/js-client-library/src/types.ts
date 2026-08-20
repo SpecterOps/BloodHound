@@ -662,6 +662,13 @@ export type WebhookSortBy =
     | '-last_error'
     | '-attempts';
 
+export interface GetWebhooksParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: WebhookSortBy;
+    name?: string;
+}
+
 export type AlertsSortBy = 'name' | 'created_at' | 'updated_at' | '-name' | '-created_at' | '-updated_at';
 
 export interface WebhookParams {
