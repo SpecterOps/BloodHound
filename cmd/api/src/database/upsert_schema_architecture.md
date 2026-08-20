@@ -259,6 +259,14 @@ On `BloodhoundDB`, add the four operations the config will delegate to:
 Add each new method to the `Database` interface in [`db.go`](db.go) and regenerate the mock
 (`MockDatabase` in `mocks/db.go`) via `just prepare-for-codereview`.
 
+**Schema migration — cascade constraints are required.** In the same migration that creates the
+new table, every foreign key pointing at a parent that the pipeline can delete (the parent's own
+row, or any 1:1 dependent row from step 6) MUST declare `ON DELETE CASCADE`. Reconciliation
+deletes stale parents by ID and relies on the database to remove their dependents; if the
+constraint is missing, deleting a stale parent leaves the paired row orphaned. If you are attaching
+to an existing table, verify the constraint already exists and add a migration to introduce it if
+it does not.
+
 ### 3. Write the config factory
 
 Add a factory method on `BloodhoundDB` that returns
@@ -303,8 +311,9 @@ callbacks rather than adding another top-level step — mirror [Kind Info](#kind
 
 If the new entity owns exactly one dependent row keyed by its ID (a 1:1 relationship), manage it
 directly inside the callbacks instead of through `reconcile` — mirror
-[Remediations](#remediations). Rely on `ON DELETE CASCADE` so the dependent row follows its
-parent's lifecycle.
+[Remediations](#remediations). The dependent row follows its parent's lifecycle via
+`ON DELETE CASCADE`, so its foreign key **must** declare that constraint in the schema migration
+(see step 2). Without it, deleting a stale parent orphans the dependent row.
 
 ### 7. Foreign-key resolution
 
@@ -316,7 +325,10 @@ earlier in the chain (see step 4).
 
 Add unit tests for the new callbacks and an integration test that exercises the full
 create → update → delete diff for the entity through `UpsertOpenGraphExtension`, asserting that
-row IDs are preserved across a re-upload and that stale rows are deleted.
+row IDs are preserved across a re-upload and that stale rows are deleted. If the entity owns child
+or 1:1 dependent rows, the integration test MUST also assert that deleting a stale parent removes
+its dependents — verifying the `ON DELETE CASCADE` constraint from step 2 and guarding against
+orphaned rows.
 
 ---
 
