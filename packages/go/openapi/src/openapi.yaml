@@ -193,6 +193,7 @@ x-tagGroups:
       - Events (Schedules)
       - Attack Paths
       - Risk Posture
+      - Asset Scores
       - Meta Entities
       - Alerts
 paths:
@@ -783,6 +784,10 @@ paths:
     $ref: './paths/risk-posture.posture-stats.yaml'
   /api/v2/posture-history/{data_type}:
     $ref: './paths/risk-posture.posture-history.data-type.yaml'
+
+  # asset scores
+  /api/v2/asset-scores/zone-protected-asset-score:
+    $ref: './paths/asset-scores.zone-protected-asset-score.yaml'
 
   # meta entity
   /api/v2/meta/{object_id}:
