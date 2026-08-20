@@ -78,7 +78,7 @@ export const AdcsEsc14ScenarioALinux: FC = () => (
             PKI provider used in the target environment.
         </Typography>
 
-        <Typography variant='body1'> Execution </Typography>
+        <Typography variant='body1' className='font-medium'>Execution</Typography>
 
         <Typography variant='body2'>
             Obtain a certificate meeting the above requirements for example by dumping a certificate from a computer, or
