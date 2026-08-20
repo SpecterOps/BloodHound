@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { mockSourceKindsHandler } from '../../mocks';
-import { fireEvent, render, screen, waitFor } from '../../test-utils';
+import { act, fireEvent, render, screen, waitFor } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import EntityObjectInformation from './EntityObjectInformation';
 
@@ -66,27 +66,14 @@ describe('EntityObjectInformation', () => {
         const computerName = 'COMPUTER.TEST.LOCAL';
         const siteServerObjectID = 'site-server-object-id';
 
-        server.use(
-            rest.get(`/api/v2/siteservers/${siteServerObjectID}`, (_req, res, ctx) =>
-                res(
-                    ctx.json({
-                        data: {
-                            kinds: [ActiveDirectoryNodeKind.SiteServer],
-                            props: {
-                                objectid: siteServerObjectID,
-                                serverreferencecomputer: computerObjectID,
-                                serverreferencecomputername: computerName,
-                            },
-                        },
-                    })
-                )
-            )
-        );
-
         const selectedNode: NodeDetails = {
             node_id: 3,
             kinds: [{ name: ActiveDirectoryNodeKind.SiteServer, node_kind_id: 1 }],
-            properties: { objectid: siteServerObjectID },
+            properties: {
+                objectid: siteServerObjectID,
+                serverreferencecomputer: computerObjectID,
+                serverreferencecomputername: computerName,
+            },
         };
 
         render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
@@ -105,27 +92,14 @@ describe('EntityObjectInformation', () => {
         const siteServerName = 'SITE-SERVER.TEST.LOCAL';
         const siteServerObjectID = 'site-server-object-id';
 
-        server.use(
-            rest.get(`/api/v2/computers/${computerObjectID}`, (_req, res, ctx) =>
-                res(
-                    ctx.json({
-                        data: {
-                            kinds: [ActiveDirectoryNodeKind.Computer],
-                            props: {
-                                objectid: computerObjectID,
-                                siteservernode: siteServerObjectID,
-                                siteservernodename: siteServerName,
-                            },
-                        },
-                    })
-                )
-            )
-        );
-
         const selectedNode: NodeDetails = {
             node_id: 4,
             kinds: [{ name: ActiveDirectoryNodeKind.Computer, node_kind_id: 1 }],
-            properties: { objectid: computerObjectID },
+            properties: {
+                objectid: computerObjectID,
+                siteservernode: siteServerObjectID,
+                siteservernodename: siteServerName,
+            },
         };
 
         render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
@@ -160,7 +134,8 @@ describe('EntityObjectInformation', () => {
 
         render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
 
-        await waitFor(() => expect(requestSpy).toHaveBeenCalledTimes(1));
+        await act(async () => new Promise((resolve) => setTimeout(resolve, 50)));
+        expect(requestSpy).not.toHaveBeenCalled();
         expect(screen.queryByText('Referenced Computer:')).not.toBeInTheDocument();
     });
 

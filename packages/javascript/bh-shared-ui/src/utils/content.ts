@@ -1076,8 +1076,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             queryType: 'site-linked_sitesubnets',
         },
     ],
-    [ActiveDirectoryNodeKind.SiteServer]: () => [],
-    [ActiveDirectoryNodeKind.SiteSubnet]: () => [],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
         {
             id,

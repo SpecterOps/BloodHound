@@ -15,11 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
-import { useQuery } from 'react-query';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
 import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
-import { EntityField, entityInformationEndpoints, formatObjectInfoFields } from '../../utils';
+import { EntityField, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
 import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
@@ -27,12 +25,6 @@ import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectI
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const sectionLabel = 'Object Information';
-const serverIsPropertiesQueryKey = 'server-is-properties';
-
-type ServerIsEntityKind = ActiveDirectoryNodeKind.Computer | ActiveDirectoryNodeKind.SiteServer;
-
-const isServerIsEntityKind = (kind?: string): kind is ServerIsEntityKind =>
-    kind === ActiveDirectoryNodeKind.Computer || kind === ActiveDirectoryNodeKind.SiteServer;
 
 interface EntityObjectInformationProps {
     selectedNode: NodeDetails | NodeDetailsWithInfo;
@@ -45,25 +37,6 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
 
     const kindNames = kindObjectsToKindNames(selectedNode.kinds);
     const primaryKind = usePrimaryKind(kindNames);
-    const serverIsEntityKind = isServerIsEntityKind(primaryKind) ? primaryKind : undefined;
-    const objectID =
-        typeof selectedNode.properties.objectid === 'string' ? selectedNode.properties.objectid : undefined;
-
-    const { data: serverIsProperties } = useQuery<Record<string, any>>({
-        queryKey: [serverIsPropertiesQueryKey, serverIsEntityKind, objectID],
-        queryFn: ({ signal }) => {
-            if (!serverIsEntityKind || !objectID) return {};
-
-            return entityInformationEndpoints[serverIsEntityKind](objectID, { signal }).then(
-                (response) => response.data.data.props
-            );
-        },
-        enabled: !!serverIsEntityKind && !!objectID,
-        retry: false,
-        refetchOnWindowFocus: false,
-    });
-
-    const properties = { ...selectedNode.properties, ...serverIsProperties };
 
     const tagsQuery = useTagsQuery();
     const zoneName = getZoneNameFromKinds(tagsQuery?.data, kindNames);
@@ -78,7 +51,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
         setIsObjectInfoPanelOpen(!isObjectInfoPanelOpen);
     };
 
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(properties);
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(selectedNode.properties);
 
     const handleSourceNodeSelected = (sourceNode: SearchValue) => {
         setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
@@ -88,7 +61,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields
-                    properties={properties}
+                    properties={selectedNode.properties}
                     handleSourceNodeSelected={handleSourceNodeSelected}
                     nodeType={primaryKind}
                     zone={zoneName}
