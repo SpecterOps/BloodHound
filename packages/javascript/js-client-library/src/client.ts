@@ -2872,9 +2872,7 @@ class BHEAPIClient {
         });
 
     getAlert = (alertId: string, options?: RequestOptions) =>
-        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, {
-            ...options,
-        });
+        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, options);
 
     updateAlert = (alertId: string, payload: UpdateAlertRequest, options?: RequestOptions) =>
         this.baseClient.patch<GetAlertResponse>(`api/v2/alerts/${alertId}`, payload, options);
@@ -2883,13 +2881,7 @@ class BHEAPIClient {
         this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
 
     getAlertAttempts = (
-        skip?: number,
-        limit?: number,
-        sort_by?: types.AlertAttemptsSortBy,
-        alert_id?: string,
-        channel_id?: string,
-        event_id?: string,
-        succeeded?: boolean,
+        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams,
         options?: RequestOptions
     ) =>
         this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
