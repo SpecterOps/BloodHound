@@ -20474,6 +20474,96 @@
         }
       }
     },
+    "/api/v2/alert-webhooks/{alert_webhook_id}/test": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.alert-webhook-id"
+        }
+      ],
+      "post": {
+        "operationId": "TestAlertWebhook",
+        "summary": "Test Alert Webhook",
+        "description": "Synchronously dispatches a mock payload for the given `event_type` to the\nwebhook's target URL using the current HMAC secret. No `alert_attempts`\nrow is persisted. The handler returns `200` for both successful and failed\nupstream deliveries; the `status_code` and `error` fields in the response\nbody surface the upstream outcome.\n",
+        "tags": [
+          "Alerts",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Request body for dispatching a mock payload to an alert webhook.",
+                "required": [
+                  "event_type",
+                  "version"
+                ],
+                "properties": {
+                  "event_type": {
+                    "type": "string",
+                    "description": "The alert event type to mock in the dispatched payload. The server builds\na representative payload for the given type using the webhook's current\nHMAC secret.\n"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "Payload data version for the supplied `event_type`. Must be one of\nthe data versions advertised for that type by\n`GET /api/v2/alert-event-types`.\n"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Result of dispatching a mock payload to an alert webhook. The handler returns\nthis body with a `200` status code on both successful and failed upstream\ndeliveries; the `status_code` and `error` fields surface the upstream outcome.\n",
+                      "properties": {
+                        "status_code": {
+                          "type": "integer",
+                          "description": "HTTP status code returned by the webhook target.",
+                          "nullable": true
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/null.string.response"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/alert-events": {
       "parameters": [
         {
@@ -21186,6 +21276,92 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/alert-attempts/retry": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "RetryAlertAttempt",
+        "summary": "Retry Alert Attempt",
+        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded.\n",
+        "tags": [
+          "Alerts",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Request body for manually re-queueing an alert delivery attempt. The supplied\ncomposite key identifies the row to retry; the handler is a no-op when the\nattempt has already succeeded (`succeeded_at IS NOT NULL`).\n",
+                "required": [
+                  "alert_id",
+                  "channel_id",
+                  "event_id"
+                ],
+                "properties": {
+                  "alert_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "event_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "alert_attempt": {
+                          "$ref": "#/components/schemas/model.alert-attempt"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
