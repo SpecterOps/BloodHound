@@ -1,0 +1,47 @@
+// Copyright 2024 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { Box, Link } from '@mui/material';
+import React, { FC } from 'react';
+
+const References: FC = () => {
+    const references = [
+        {
+            label: 'How objects and credentials are synchronized in a Microsoft Entra Domain Services managed domain',
+            link: 'https://learn.microsoft.com/en-us/entra/identity/domain-services/synchronization',
+        },
+        {
+            label: 'MITRE ATT&CK T1098.007: Account Manipulation - Additional Local or Domain Groups',
+            link: 'https://attack.mitre.org/techniques/T1098/007/',
+        },
+    ];
+    return (
+        <Box className='overflow-x-auto'>
+            {references.map((reference) => {
+                return (
+                    <React.Fragment key={reference.link}>
+                        <Link target='_blank' rel='noopener noreferrer' href={reference.link}>
+                            {reference.label}
+                        </Link>
+                        <br />
+                    </React.Fragment>
+                );
+            })}
+        </Box>
+    );
+};
+
+export default References;

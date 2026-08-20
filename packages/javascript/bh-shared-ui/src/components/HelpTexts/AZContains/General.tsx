@@ -21,7 +21,7 @@ const General: FC = () => {
     return (
         <Typography variant='body2'>
             This indicates that the parent object contains the child object, such as a resource group containing a
-            virtual machine, or a tenant "containing" a subscription.
+            virtual machine or Microsoft Entra Domain Services managed domain, or a tenant "containing" a subscription.
         </Typography>
     );
 };

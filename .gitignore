@@ -4,6 +4,9 @@
 # Codex
 .codex
 
+# Claude
+.claude/settings.local.json
+
 # Augment
 .augment
 
@@ -262,6 +265,9 @@ fabric.properties
 
 # Test binary, built with `go test -c`
 *.test
+
+# Repository-local Go build cache overrides
+.gocache/
 
 # Golang workspace sum files
 go.work.sum

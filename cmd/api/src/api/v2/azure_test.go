@@ -1121,6 +1121,36 @@ func TestResources_GetAZEntityInformation(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: entityTypeDomainServices",
+			args: args{
+				entityType: "domain-services",
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeDomainServices",
+			args: args{
+				entityType: "domain-services",
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.DomainServiceDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0},
+				err: nil,
+			},
+		},
+		{
 			name: "Error: unknown azure entity",
 			args: args{
 				entityType: "unknown",

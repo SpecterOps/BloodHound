@@ -56,6 +56,7 @@ type Azure struct {
 	ControlRelationshipKinds         []StringEnum
 	ExecutionPrivilegeKinds          []StringEnum
 	PathfindingRelationships         []StringEnum
+	EdgeCompositionRelationships     []StringEnum
 	PostProcessedRelationships       []StringEnum
 }
 

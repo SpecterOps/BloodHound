@@ -14,18 +14,47 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook } from '@testing-library/react';
 import { RelationshipDetailsWithInfo } from 'js-client-library';
+import { renderHook } from '../../test-utils';
+import { apiClient } from '../../utils/api';
 import { ExploreQueryParams } from '../useExploreParams';
-import { exploreGraphQueryFactory, useUserSettings } from './useExploreGraph';
+import { exploreGraphQueryFactory, useExploreGraph, useUserSettings } from './useExploreGraph';
 
 const mockUseTimeoutLimitConfiguration = vi.fn();
+const mockUseGraphItem = vi.hoisted(() => vi.fn());
 
 vi.mock('../useConfiguration', () => ({
     useTimeoutLimitConfiguration: () => mockUseTimeoutLimitConfiguration(),
 }));
 
+vi.mock('../useGraphItem', () => ({
+    isRelationshipResponse: (data: Record<string, unknown>) => 'relationship_id' in data,
+    useGraphItem: mockUseGraphItem,
+}));
+
 describe('useExploreGraph', () => {
+    it('does not run a composition query with previous relationship data', () => {
+        mockUseGraphItem.mockReturnValue({
+            data: {
+                relationship_id: 99,
+                kind: { relationship_kind_id: 1, name: 'ManageEntraDSSync' },
+                source_node_id: 1,
+                target_node_id: 2,
+                properties: {},
+            },
+            isPreviousData: true,
+        });
+        const getEdgeCompositionSpy = vi.spyOn(apiClient, 'getEdgeComposition');
+
+        const { result } = renderHook(() => useExploreGraph(), {
+            route: '/?searchType=composition&relationshipQueryItemId=rel_99',
+        });
+
+        expect(result.current.isFetching).toBe(false);
+        expect(getEdgeCompositionSpy).not.toHaveBeenCalled();
+        getEdgeCompositionSpy.mockRestore();
+    });
+
     describe('exploreGraphQueryFactory', () => {
         it('returns {enabled: false} if there is not a match on the switch statement', () => {
             const paramOptions = {

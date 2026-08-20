@@ -68,6 +68,7 @@ const (
 	entityTypeServicePrincipals            = "service-principals"
 	entityTypeRoles                        = "roles"
 	entityTypeFunctionApps                 = "function-apps"
+	entityTypeDomainServices               = "domain-services"
 	entityTypeFederatedIdentityCredentials = "federated-identity-credentials"
 )
 
@@ -444,6 +445,8 @@ func GetAZEntityInformation(ctx context.Context, db database.Database, graphDb g
 		return azure.RoleEntityDetails(ctx, graphDb, primaryDisplayKinds, objectID, hydrateCounts)
 	case entityTypeFunctionApps:
 		return azure.FunctionAppEntityDetails(ctx, graphDb, primaryDisplayKinds, objectID, hydrateCounts)
+	case entityTypeDomainServices:
+		return azure.DomainServiceEntityDetails(ctx, graphDb, primaryDisplayKinds, objectID, hydrateCounts)
 	case entityTypeFederatedIdentityCredentials:
 		return azure.FederatedIdentityCredentialEntityDetails(ctx, graphDb, primaryDisplayKinds, objectID, hydrateCounts)
 	default:
@@ -554,6 +557,9 @@ func azEntityParamToKind(entityType string) (graph.Kind, error) {
 
 	case entityTypeFunctionApps:
 		return azure_schema.FunctionApp, nil
+
+	case entityTypeDomainServices:
+		return azure_schema.EntraDS, nil
 
 	case entityTypeFederatedIdentityCredentials:
 		return azure_schema.FederatedIdentityCredential, nil

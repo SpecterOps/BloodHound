@@ -208,6 +208,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.AZRole]: 'fa-window-restore',
     [GraphNodeTypes.AZDevice]: 'fa-desktop',
     [GraphNodeTypes.AZFunctionApp]: 'fa-bolt',
+    [GraphNodeTypes.AZEntraDS]: 'fa-server',
     [GraphNodeTypes.AZGroup]: 'fa-users',
     [GraphNodeTypes.AZKeyVault]: 'fa-lock',
     [GraphNodeTypes.AZManagementGroup]: 'fa-cube',

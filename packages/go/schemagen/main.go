@@ -59,10 +59,15 @@ func GenerateGolang(projectRoot string, rootSchema Schema) error {
 }
 
 func GenerateSharedTypeScript(projectRoot string, rootSchema Schema) error {
-	root := tsgen.NewFile("graph_schema", filepath.Join(projectRoot, "packages/javascript/bh-shared-ui/src/graphSchema.ts"))
+	var (
+		root                         = tsgen.NewFile("graph_schema", filepath.Join(projectRoot, "packages/javascript/bh-shared-ui/src/graphSchema.ts"))
+		edgeCompositionRelationships = append([]model.StringEnum{}, rootSchema.ActiveDirectory.EdgeCompositionRelationships...)
+	)
+	edgeCompositionRelationships = append(edgeCompositionRelationships, rootSchema.Azure.EdgeCompositionRelationships...)
 
 	generator.GenerateTypeScriptActiveDirectory(root, rootSchema.ActiveDirectory)
 	generator.GenerateTypeScriptAzure(root, rootSchema.Azure)
+	generator.GenerateTypeScriptArray(root, "EdgeCompositionRelationships", edgeCompositionRelationships)
 	generator.GenerateTypeScriptCommon(root, rootSchema.Common)
 
 	return root.Write(os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
@@ -85,13 +90,17 @@ func GenerateSQL(projectRoot string, rootSchema Schema) error {
 }
 
 func main() {
-	cfgBuilder := generator.NewConfigBuilder("/schemas")
-
 	if projectRoot, err := generator.FindGolangWorkspaceRoot(); err != nil {
 		slog.Error("Error finding project root", attr.Error(err))
 		os.Exit(1)
 	} else {
 		slog.Info("Found project root", slog.String("project_root", projectRoot))
+		overlayVolumeRoot := string(filepath.Separator)
+		if volumeName := filepath.VolumeName(projectRoot); volumeName != "" {
+			overlayVolumeRoot = volumeName + string(filepath.Separator)
+		}
+		overlayRoot := filepath.Join(overlayVolumeRoot, "schemas")
+		cfgBuilder := generator.NewConfigBuilder(overlayRoot)
 
 		if err := cfgBuilder.OverlayPath(filepath.Join(projectRoot, "packages/cue")); err != nil {
 			slog.Error("Failed to read overlay path", attr.Error(err))
@@ -100,7 +109,7 @@ func main() {
 
 		cfg := cfgBuilder.Build()
 
-		if bhInstance, err := cfg.Value("/schemas/bh/bh.cue"); err != nil {
+		if bhInstance, err := cfg.Value(filepath.Join(overlayRoot, "bh", "bh.cue")); err != nil {
 			slog.Error("Failed to load cue schema", slog.String("err", errors.Details(err, nil)))
 			os.Exit(1)
 		} else {

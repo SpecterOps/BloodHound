@@ -21,9 +21,9 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                This role can be used to grant yourself or another principal any privilege you want against Automation
-                Accounts, VMs, Key Vaults, and Resource Groups. For example, you can make yourself an administrator of
-                an Azure Subscription by assigning the Owner role at the Subscription scope.
+                This role can be used to grant yourself or another principal an abusable role against Automation
+                Accounts, VMs, Key Vaults, Resource Groups, and Microsoft Entra Domain Services resources. For example,
+                you can assign yourself the Owner or Contributor role at the target resource scope.
             </Typography>
 
             <Typography variant='body2'>
