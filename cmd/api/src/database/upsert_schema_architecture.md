@@ -17,6 +17,38 @@ existed, `false` if it was newly created.
 
 ---
 
+## Why This Design
+
+A single upload describes a complete schema extension: its node kinds, relationship kinds, their
+kind info, environments, principal kinds, findings, and remediations. Those live in several
+different tables — some introduced for OpenGraph, some pre-existing and shared with other features.
+`UpsertOpenGraphExtension` deliberately absorbs the responsibility of managing all of them behind
+one endpoint. That concentration is intentional, and it buys a few properties that are hard to get
+any other way:
+
+- **One transaction, one consistent outcome.** Because every table is written inside the same
+  transaction, a partially-applied schema is impossible. Either the whole extension — across all of
+  its tables — lands, or nothing does and the previous state is untouched. Splitting the work across
+  per-table endpoints would reintroduce the interleaving and partial-failure problems this design
+  exists to avoid.
+- **The payload is the source of truth.** Clients upload the full desired state and let the server
+  diff it, rather than issuing their own create/update/delete calls per table. Re-uploading the same
+  document is a no-op, and the client never has to know which rows already exist or in what order
+  the tables must be touched.
+- **Ordering and foreign keys are handled centrally.** Cross-table dependencies (e.g. findings
+  referencing environments, kind info hanging off a kind) require a specific reconciliation order.
+  Owning every table in one place lets the orchestrator enforce that order and resolve foreign keys
+  itself, instead of pushing that coupling onto callers.
+
+The tradeoff is that this one endpoint accumulates broad responsibility over many new and
+pre-existing tables, so changes here have wide reach. The generic [`reconcile`](reconcile.go)
+primitive and the per-entity `reconcileConfig` factories exist to keep that surface manageable:
+each table's specifics stay isolated in its own config, and the orchestrator stays a thin,
+ordered chain. The [Adding a New Entity](#adding-a-new-entity-to-the-reconciliation-pipeline)
+guide is the contract for extending this endpoint without eroding those guarantees.
+
+---
+
 ## The `reconcile` Algorithm
 
 [`reconcile`](reconcile.go) is a generic set-differencing function defined in `reconcile.go`. It is the
