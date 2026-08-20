@@ -28,11 +28,13 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 var ErrIsDirectory = errors.New("is a directory")
+var ErrPresignedURLUnsupported = errors.New("presigned url unsupported by storage backend")
 
 // ctxReader wraps an io.Reader so that context cancellation is observed between
 // reads. io.Copy calls Read in a loop and each call checks ctx.Err() before delegating.
@@ -463,4 +465,8 @@ func (s *LocalStore) Move(ctx context.Context, srcName, dstName string, options 
 		return err
 	}
 	return s.moveSyncDir(srcDir, dstDir)
+}
+
+func (s *LocalStore) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	return "", ErrPresignedURLUnsupported
 }
