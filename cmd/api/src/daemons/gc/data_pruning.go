@@ -18,22 +18,35 @@ package gc
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/server/audit"
 )
+
+// defaultAuditRetentionMonths bounds how many months of audit_logs partitions
+// are retained. Partitions whose entire range is older than this window are
+// dropped. TODO(audit retention): source this from appcfg once the
+// retention_months parameter lands (Step I) instead of the constant.
+const defaultAuditRetentionMonths = 3
 
 // Daemon holds data relevant to the data daemon
 type Daemon struct {
-	exitC chan struct{}
-	db    database.Database
+	exitC           chan struct{}
+	db              database.Database
+	auditMaintainer audit.Maintainer
 }
 
-// NewDataPruningDaemon creates a new data pruning daemon
-func NewDataPruningDaemon(db database.Database) *Daemon {
+// NewDataPruningDaemon creates a new data pruning daemon. auditMaintainer manages
+// the audit_logs range partitions and may be nil, in which case partition
+// maintenance is skipped.
+func NewDataPruningDaemon(db database.Database, auditMaintainer audit.Maintainer) *Daemon {
 	return &Daemon{
-		exitC: make(chan struct{}),
-		db:    db,
+		exitC:           make(chan struct{}),
+		db:              db,
+		auditMaintainer: auditMaintainer,
 	}
 }
 
@@ -49,9 +62,10 @@ func (s *Daemon) Start(ctx context.Context) {
 	defer close(s.exitC)
 	defer ticker.Stop()
 
-	// prune sessions and collections once when the daemon starts up
+	// prune sessions and collections and maintain audit partitions once when the daemon starts up
 	s.db.SweepSessions(ctx)
 	s.db.SweepAssetGroupCollections(ctx)
+	s.sweepAuditPartitions(ctx)
 
 	// thereafter, prune conditionally once a day
 	for {
@@ -59,10 +73,29 @@ func (s *Daemon) Start(ctx context.Context) {
 		case <-ticker.C:
 			s.db.SweepSessions(ctx)
 			s.db.SweepAssetGroupCollections(ctx)
+			s.sweepAuditPartitions(ctx)
 
 		case <-s.exitC:
 			return
 		}
+	}
+}
+
+// sweepAuditPartitions pre-creates the upcoming audit_logs partition and drops
+// partitions older than the retention window. Failures are logged and do not
+// stop the daemon; the next tick retries. It is a no-op when no maintainer is
+// configured.
+func (s *Daemon) sweepAuditPartitions(ctx context.Context) {
+	if s.auditMaintainer == nil {
+		return
+	}
+
+	now := time.Now().UTC()
+	if err := s.auditMaintainer.PreCreateNextPartition(ctx, now); err != nil {
+		slog.ErrorContext(ctx, "Failed to pre-create next audit partition", attr.Error(err))
+	}
+	if err := s.auditMaintainer.DropExpiredPartitions(ctx, now, defaultAuditRetentionMonths); err != nil {
+		slog.ErrorContext(ctx, "Failed to drop expired audit partitions", attr.Error(err))
 	}
 }
 
