@@ -16,4 +16,4 @@
 
 export * from './hooks';
 export * from './model';
-export { default as NotificationsProvider } from './NotificationsProvider';
+export { NotificationSnackbar, default as NotificationsProvider } from './NotificationsProvider';
