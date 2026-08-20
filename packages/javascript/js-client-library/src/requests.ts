@@ -16,6 +16,7 @@
 
 import { AxiosRequestConfig } from 'axios';
 import {
+    AlertsSortBy,
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
@@ -357,6 +358,13 @@ export interface CreateAlertRequest {
 export interface GetAlertRequest {
     id: string;
 }
+
+export type GetAlertsParams = {
+    skip?: number;
+    limit?: number;
+    sort_by?: AlertsSortBy;
+    name?: string;
+};
 
 export interface UpdateAlertRequest {
     name?: string;
