@@ -48,6 +48,10 @@ func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
 		return fmt.Errorf("failed to register ingest metrics: %w", err)
 	}
 
+	if err := metrics.RegisterDatapipeMetrics(registerer); err != nil {
+		return fmt.Errorf("failed to register datapipe metrics: %w", err)
+	}
+
 	if err := metrics.RegisterOptimizeStorageMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register graph storage optimization metrics: %w", err)
 	}
