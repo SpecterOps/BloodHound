@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './asset-group-tags/members';
+export * from './asset-group-tags/history';
 export * from './asset-group-tags/labels';
 export * from './asset-group-tags/search';
 export * from './asset-group-tags/selectors';

@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
@@ -58,9 +57,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build test report
-        # Pinning a specific sha v1.13
-        # https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use#using-third-party-actions
-        uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
+        uses: simple-elf/allure-report-action@385367cde61ac68c2568a117f7579f7f148dc459 # ratchet:simple-elf/allure-report-action@v1.15
         with:
           gh_pages: gh-pages
           allure_history: allure-history

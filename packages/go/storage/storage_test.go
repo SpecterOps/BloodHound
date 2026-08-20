@@ -411,6 +411,87 @@ func TestStorageFileService_DeleteFile(t *testing.T) {
 	}
 }
 
+func TestStorageFileService_DeleteFileWithOptions(t *testing.T) {
+	t.Parallel()
+
+	var (
+		errDelete = errors.New("delete failed")
+		errPrune  = errors.New("prune failed")
+	)
+
+	type expected struct {
+		errIs error
+	}
+
+	type testData struct {
+		name              string
+		options           storage.DeleteOptions
+		deleteErr         error
+		pruneEmptyParents bool
+		pruneErr          error
+		expected          expected
+	}
+
+	tests := []testData{
+		{
+			name: "deletes file without pruning when disabled",
+		},
+		{
+			name:              "deletes file and prunes empty parents when enabled",
+			options:           storage.DeleteOptions{PruneEmptyParents: true},
+			pruneEmptyParents: true,
+		},
+		{
+			name:      "returns delete error without pruning",
+			options:   storage.DeleteOptions{PruneEmptyParents: true},
+			deleteErr: errDelete,
+			expected: expected{
+				errIs: errDelete,
+			},
+		},
+		{
+			name:              "returns pruning error",
+			options:           storage.DeleteOptions{PruneEmptyParents: true},
+			pruneEmptyParents: true,
+			pruneErr:          errPrune,
+			expected: expected{
+				errIs: errPrune,
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				ctx         = context.Background()
+				mockStorage = mocks.NewMockStorage(gomock.NewController(t))
+				fileService = storage.NewFileService(mockStorage)
+			)
+
+			deleteCall := mockStorage.EXPECT().
+				Delete(ctx, "file.json").
+				Return(testCase.deleteErr)
+
+			if testCase.pruneEmptyParents {
+				pruneCall := mockStorage.EXPECT().
+					PruneEmptyParents(ctx, "file.json").
+					Return(testCase.pruneErr)
+				gomock.InOrder(deleteCall, pruneCall)
+			}
+
+			err := fileService.DeleteFileWithOptions(ctx, "file.json", testCase.options)
+
+			if testCase.expected.errIs != nil {
+				require.ErrorIs(t, err, testCase.expected.errIs)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestStorageFileService_WriteTempFile(t *testing.T) {
 	t.Parallel()
 
