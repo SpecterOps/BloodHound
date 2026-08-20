@@ -90,10 +90,8 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 
 	for decoder.More() {
 		if token, err := decoder.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return fmt.Errorf("error reading token: %w", err)
+			v.reportCritical(0, fmt.Sprintf("error decoding graph object: %s", err))
+			return v.report()
 		} else {
 			key, ok := token.(string)
 			if !ok {
