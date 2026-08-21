@@ -189,7 +189,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -232,7 +232,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -275,7 +275,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"], gomock.Any()).Return(model.SavedQuery{
 		UserID:      userId.String(),
 		Name:        fmt.Sprintf("%v", payload["name"]),
 		Query:       fmt.Sprintf("%v", payload["query"]),
