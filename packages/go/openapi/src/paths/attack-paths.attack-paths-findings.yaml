@@ -28,7 +28,7 @@ get:
     - name: sort_by
       description: |
         Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,
-        `asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.
+        `asset_group_tag_id`, `prioritization_score`, `prioritization_rank`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.
       in: query
       schema:
         $ref: "./../schemas/api.params.query.sort-by.yaml"
@@ -77,6 +77,16 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: prioritization_score
+      description: Filter by prioritization score.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.integer.yaml"
+    - name: prioritization_rank
+      description: Filter by prioritization rank.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.integer.yaml"
     - name: zone_name
       description: Filter by zone name (e.g. "Tier Zero").
       in: query
@@ -140,9 +150,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen
-                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,PrioritizationScore,PrioritizationRank,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen
+                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,2100,21,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,1200,48,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
         application/json:
           schema:
             allOf:
@@ -180,6 +190,16 @@ get:
                         asset_group_tag_id:
                           type: integer
                           description: Asset group tag identifier.
+                        prioritization_score:
+                          type: integer
+                          format: int64
+                          nullable: true
+                          description: Prioritization score for the finding.
+                        prioritization_rank:
+                          type: integer
+                          format: int64
+                          nullable: true
+                          description: Prioritization rank for the finding.
                         zone_name:
                           type: string
                           description: Human-readable zone name. Empty when the finding is not tied to a named zone.
@@ -229,6 +249,8 @@ get:
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     asset_group_tag_id: 1
+                    prioritization_score: 2100
+                    prioritization_rank: 21
                     zone_name: "Tier Zero"
                     source_principal_id: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
                     source_principal_kind: "User"
@@ -247,6 +269,8 @@ get:
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     asset_group_tag_id: 1
+                    prioritization_score: 1200
+                    prioritization_rank: 48
                     zone_name: "Tier Zero"
                     source_principal_id: ""
                     source_principal_kind: ""
