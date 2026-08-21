@@ -41,6 +41,7 @@ import (
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 
@@ -2278,8 +2279,9 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
-		responseCode   int
-		responseHeader http.Header
+		responseCode     int
+		responseHeader   http.Header
+		validateResponse func(t *testing.T, header http.Header)
 	}
 	type testData struct {
 		name         string
@@ -2411,8 +2413,19 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 				mock.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
 			},
 			expected: expected{
-				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"?SAMLRequest=fMuxqsJAEIXhVwnT3%2BtoORghYBPQRsXCbgkDBpKZdc8s%2BPiSVFbCXxw4fHukecrS1XjaRV9VEc17ngyyHC3VYuIJI8TSrJAY5NqdT7L7Z0mAlhjd6Ivk3yYXDx98oqY%2FtkTNXQtGt2X2QNXeEMmiJWbe%2Fq3dmGXtQZvDJwAA%2F%2F8%3D&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=y1tzz0uKcHIGTzUzyfo6wkJKJ7%2FLhD7vH6mmCV7W0eKlL58z6w3M%2BWCoGaBtXldzx4tSTB2RWEqCpYTw9gM%2BjoA9dBPLlzBxN0Sz97XxzgA9chdd4gTXyjcMHntNmsRqkrzcnLJmKJppL3LhIjmxt%2BDhya8MU0URHiZWGj%2BYxjFr0PQm5wOHHSjZH8J51r9lYPth4vO76XlYI64WefD1eH3RhRtskXC%2F7FQJ1KHpE6X1cbWjrGsPT7TdojDA8dJvV0nf9VUiO0CSgWFpIq%2BZZoYJDqsUiwvX0iR6z%2F3K4oNsbgp9NQ1lJD57tuNQVBx3YYvA6R52FQ64hSb2LjtpRQ%3D%3D"}},
+				responseCode: http.StatusFound,
+				validateResponse: func(t *testing.T, header http.Header) {
+					location := header.Get("Location")
+					require.NotEmpty(t, location)
+
+					locationURL, err := url.Parse(location)
+					require.Nil(t, err)
+
+					query := locationURL.Query()
+					assert.NotEmpty(t, query.Get("SAMLRequest"))
+					assert.Equal(t, "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", query.Get("SigAlg"))
+					assert.NotEmpty(t, query.Get("Signature"))
+				},
 			},
 		},
 		{
@@ -2479,7 +2492,11 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			status, header, _ := test.ProcessResponse(t, response)
 
 			assert.Equal(t, testCase.expected.responseCode, status)
-			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.validateResponse != nil {
+				testCase.expected.validateResponse(t, header)
+			} else {
+				assert.Equal(t, testCase.expected.responseHeader, header)
+			}
 		})
 	}
 }
