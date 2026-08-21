@@ -150,9 +150,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,PrioritizationScore,PrioritizationRank,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen
-                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,2100,21,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,1200,48,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,PrioritizationScore,PrioritizationRank
+                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,2100,21
+                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,1200,48
         application/json:
           schema:
             allOf:
@@ -190,16 +190,6 @@ get:
                         asset_group_tag_id:
                           type: integer
                           description: Asset group tag identifier.
-                        prioritization_score:
-                          type: integer
-                          format: int64
-                          nullable: true
-                          description: Prioritization score for the finding.
-                        prioritization_rank:
-                          type: integer
-                          format: int64
-                          nullable: true
-                          description: Prioritization rank for the finding.
                         zone_name:
                           type: string
                           description: Human-readable zone name. Empty when the finding is not tied to a named zone.
@@ -233,6 +223,16 @@ get:
                           type: string
                           format: date-time
                           description: Timestamp of last update.
+                        prioritization_score:
+                          type: integer
+                          format: int64
+                          nullable: true
+                          description: Prioritization score for the finding.
+                        prioritization_rank:
+                          type: integer
+                          format: int64
+                          nullable: true
+                          description: Prioritization rank for the finding.
           examples:
             Mixed findings (relationship and list):
               summary: Unified response with both finding types
@@ -249,8 +249,6 @@ get:
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     asset_group_tag_id: 1
-                    prioritization_score: 2100
-                    prioritization_rank: 21
                     zone_name: "Tier Zero"
                     source_principal_id: "RPATTON@CORP1.LAB.HOME-LABS.LOL"
                     source_principal_kind: "User"
@@ -261,6 +259,8 @@ get:
                     status: "active"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
+                    prioritization_score: 2100
+                    prioritization_rank: 21
                   - severity: "high"
                     finding: "Kerberoasting"
                     title: "Kerberoastable User Accounts"
@@ -269,8 +269,6 @@ get:
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
                     asset_group_tag_id: 1
-                    prioritization_score: 1200
-                    prioritization_rank: 48
                     zone_name: "Tier Zero"
                     source_principal_id: ""
                     source_principal_kind: ""
@@ -281,6 +279,8 @@ get:
                     status: "accepted"
                     first_seen: "2026-04-11T00:30:18.491666Z"
                     last_seen: "2026-04-14T16:57:35.675609Z"
+                    prioritization_score: 1200
+                    prioritization_rank: 48
     400:
       $ref: "./../responses/bad-request.yaml"
     401:

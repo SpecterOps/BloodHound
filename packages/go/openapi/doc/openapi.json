@@ -14851,7 +14851,7 @@
       "put": {
         "operationId": "StartAnalysis",
         "summary": "Start analysis",
-        "description": "Submits an analysis request attributed to the authenticated user. The\nendpoint is idempotent — at most one analysis request can be pending at a\ntime. Always returns 202 Accepted with no response body.\n",
+        "description": "Submits an analysis request attributed to the authenticated user. The\nendpoint is idempotent \u2014 at most one analysis request can be pending at a\ntime. Always returns 202 Accepted with no response body.\n",
         "tags": [
           "Datapipe",
           "Community",
@@ -18517,7 +18517,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `prioritization_score`, `prioritization_rank`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -18565,7 +18565,7 @@
           },
           {
             "name": "environment_id",
-            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.\n",
+            "description": "Filter by one or more environment identifiers. Repeat the parameter to include multiple environments \u2014 results are the union of all specified values.\n",
             "in": "query",
             "style": "form",
             "explode": true,
@@ -18590,6 +18590,22 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "prioritization_score",
+            "description": "Filter by prioritization score.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "prioritization_rank",
+            "description": "Filter by prioritization rank.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
             }
           },
           {
@@ -18690,7 +18706,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z\n"
+                    "value": "Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,PrioritizationScore,PrioritizationRank\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,2100,21\nhigh,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,1200,48\n"
                   }
                 }
               },
@@ -18798,6 +18814,18 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
+                              },
+                              "prioritization_score": {
+                                "type": "integer",
+                                "format": "int64",
+                                "nullable": true,
+                                "description": "Prioritization score for the finding."
+                              },
+                              "prioritization_rank": {
+                                "type": "integer",
+                                "format": "int64",
+                                "nullable": true,
+                                "description": "Prioritization rank for the finding."
                               }
                             }
                           }
@@ -18832,7 +18860,9 @@
                           "target_principal_name": "Domain Admin",
                           "status": "active",
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "prioritization_score": 2100,
+                          "prioritization_rank": 21
                         },
                         {
                           "severity": "high",
@@ -18852,7 +18882,9 @@
                           "target_principal_name": "Backup Admin",
                           "status": "accepted",
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "prioritization_score": 1200,
+                          "prioritization_rank": 48
                         }
                       ]
                     }
@@ -25663,7 +25695,7 @@
       },
       "model.alert-webhook": {
         "type": "object",
-        "description": "Alert webhook resource — a joined view of the `alert_channels`, `alert_webhooks`\nfor a single webhook destination. The HMAC secret value is never included in this view;\nit is only returned at create or rotate time.\n",
+        "description": "Alert webhook resource \u2014 a joined view of the `alert_channels`, `alert_webhooks`\nfor a single webhook destination. The HMAC secret value is never included in this view;\nit is only returned at create or rotate time.\n",
         "properties": {
           "id": {
             "type": "string",
@@ -25833,7 +25865,7 @@
       },
       "model.alert": {
         "type": "object",
-        "description": "Alert resource — a named, user-managed rule with an embedded set of\nsubscriptions that bind it to channels (e.g. webhooks) for specific event types.\n",
+        "description": "Alert resource \u2014 a named, user-managed rule with an embedded set of\nsubscriptions that bind it to channels (e.g. webhooks) for specific event types.\n",
         "properties": {
           "id": {
             "type": "string",
