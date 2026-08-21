@@ -215,8 +215,15 @@ const MultiSelect = ({
         }
     };
 
-    const triggerVariant: MultiSelectVariant =
-        variant ?? (value.length === 0 && !disabled && !error ? 'outlined' : 'filled');
+    let triggerVariant: MultiSelectVariant;
+
+    if (variant !== undefined) {
+        triggerVariant = variant;
+    } else if (value.length === 0 && !disabled && !error) {
+        triggerVariant = 'outlined';
+    } else {
+        triggerVariant = 'filled';
+    }
 
     const handleSelect = (selectedValue: string) => {
         const isSelected = value.includes(selectedValue);
