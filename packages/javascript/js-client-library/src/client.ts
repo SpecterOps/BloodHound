@@ -2806,7 +2806,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams, options?: RequestOptions) =>
+    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams = {}, options?: RequestOptions) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2875,7 +2875,7 @@ class BHEAPIClient {
         this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
 
     getAlertAttempts = (
-        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams,
+        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams = {},
         options?: RequestOptions
     ) =>
         this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
