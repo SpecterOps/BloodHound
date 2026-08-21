@@ -57,7 +57,7 @@ func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, e
 	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
 		errorCategoryLabel = cypherQueryErrorTypeMemory
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
-	} else if errors.Is(err, ops.ErrQueryExecutionFailed) {
+	} else if errors.Is(err, ops.ErrGraphQueryExecutionFailed) {
 		errorCategoryLabel = cypherQueryErrorTypeExecute
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else {
