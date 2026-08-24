@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -46,12 +46,12 @@ type GraphifyService struct {
 	graphdb             graph.Database
 	endpointResolver    *endpoint.Resolver
 	cfg                 config.Configuration
-	schema              upload.IngestSchema
+	schema              payload.Schema
 	fileServiceResolver storage.FileServiceResolver
 	changeManager       ChangeManager
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, fileServiceResolver storage.FileServiceResolver, changeManager ChangeManager) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema payload.Schema, fileServiceResolver storage.FileServiceResolver, changeManager ChangeManager) GraphifyService {
 	return GraphifyService{
 		ctx:                 ctx,
 		db:                  db,

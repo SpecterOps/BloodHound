@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
+	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -51,14 +51,14 @@ type BHCEPipeline struct {
 	cache               cache.Cache
 	cfg                 config.Configuration
 	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        upload.IngestSchema
+	ingestSchema        payload.Schema
 	fileServiceResolver storageService.FileServiceResolver
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema payload.Schema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,

@@ -183,7 +183,6 @@ func ExtractIngestFiles(ctx context.Context, scratchDirectory string, fileServic
 
 		fileData = append(fileData, processedFileData)
 	}
-
 	if err := fileService.DeleteFile(ctx, storedFileName); err != nil {
 		slog.ErrorContext(
 			ctx,

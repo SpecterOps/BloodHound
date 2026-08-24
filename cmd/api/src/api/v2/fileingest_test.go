@@ -42,8 +42,8 @@ import (
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	storageServiceMocks "github.com/specterops/bloodhound/cmd/api/src/services/storage/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
@@ -465,7 +465,7 @@ func TestResources_EndIngestJob(t *testing.T) {
 }
 
 func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
-	bytes, err := json.Marshal(ingest.AllowedFileUploadTypes)
+	bytes, err := json.Marshal(upload.AllowedFileUploadTypes())
 	if err != nil {
 		t.Fatalf("Error marshalling obj: %v", err)
 	}
@@ -571,7 +571,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: error saving ingest file fileupload.ErrInvalidJSON - Internal Server Error",
+			name: "Error: error saving ingest file invalid JSON - Bad Request",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -594,7 +594,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			fileServiceOvrd: newLocalTempFileService(t),
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: file is not valid json"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"failed to enter json object"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -623,9 +623,9 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: error saving ingest file - Internal Server Error",
+			name: "Error: error saving ingest file with no valid payload tags - Bad Request",
 			buildRequest: func() *http.Request {
-				data := map[string]interface{}{"name": "example", "value": 123}
+				data := map[string]any{"name": "example", "value": 123}
 				jsonBytes, err := json.Marshal(data)
 				if err != nil {
 					t.Fatalf("error marshalling json necessary for test %v", err)
@@ -649,8 +649,8 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			// Use a real LocalStore for the same reason as the ErrInvalidJSON case above.
 			fileServiceOvrd: newLocalTempFileService(t),
 			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: no valid meta tag or data tag found"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file. File failed schema validation."},{"context":"","message":"no valid payload tags found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
