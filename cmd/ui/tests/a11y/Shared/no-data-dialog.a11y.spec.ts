@@ -14,23 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { hideBySelector, test } from 'bh-playwright-testing';
 import { installGraphHasNoDataStub } from 'bh-playwright-testing/stubs';
-import { expectNoAccessibilityViolations, test } from '../fixtures';
 
 test.describe('No Data Available dialog accessibility', () => {
-    test('upload dialog has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('upload dialog has no detectable WCAG A/AA violations', async ({ page, goAndWaitFor, checkA11y }) => {
         await installGraphHasNoDataStub(page);
 
-        await page.goto('/ui/explore');
-
         // Wait for the dialog to render before proceeding.
-        await page
-            .getByRole('heading', { name: 'Upload Data to Start Mapping Your Environment' })
-            .waitFor({ state: 'visible' });
+        await goAndWaitFor(
+            '/ui/explore',
+            page.getByRole('heading', { name: 'Upload Data to Start Mapping Your Environment' })
+        );
+
+        await hideBySelector(page, '#content-wrapper');
 
         // Scope the scan to the dialog (rendered as `role="dialog"` by MUI) so violations from
         // the rest of the Explore page don't bleed into this test's signal.
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });

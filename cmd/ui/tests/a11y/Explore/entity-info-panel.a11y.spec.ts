@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Page } from '@playwright/test';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector, test } from 'bh-playwright-testing';
 
 const SEARCH_TERM = 'test';
 const OBJECT_ID = 'playwright-gpo-1';
@@ -139,7 +139,7 @@ const selectMockedGPO = async (page: Page) => {
 };
 
 test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () => {
-    test('With a relationship section expanded', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With a relationship section expanded', async ({ page, checkA11y }) => {
         await mockCommonRoutes(page);
 
         await page.route(`**/api/v2/gpos/${OBJECT_ID}/*`, async (route) => {
@@ -172,11 +172,14 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
 
         await infoPanel.getByText('RELATED_USER_0@PLAYWRIGHT.LOCAL').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, '[data-testid="explore_search-container"]');
+        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
+        await hideBySelector(page, '.ReactQueryDevtools');
+
+        await checkA11y();
     });
 
-    test('With disabled sections', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With disabled sections', async ({ page, checkA11y }) => {
         await mockCommonRoutes(page);
 
         await page.route(`**/api/v2/gpos/${OBJECT_ID}/*`, async (route) => {
@@ -207,14 +210,16 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
         const infoPanel = page.getByTestId('explore_entity-information-panel');
         await infoPanel.waitFor({ state: 'visible' });
         await infoPanel.getByTestId('entity-object-information-skeleton').waitFor({ state: 'detached' });
-
         await infoPanel.getByRole('button', { name: /Inbound Object Control/ }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, '[data-testid="explore_search-container"]');
+        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
+        await hideBySelector(page, '.ReactQueryDevtools');
+
+        await checkA11y();
     });
 
-    test('With selectable items section', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With selectable items section', async ({ page, checkA11y }) => {
         await mockCommonRoutes(page);
 
         await page.route(`**/api/v2/gpos/${OBJECT_ID}/*`, async (route) => {
@@ -296,7 +301,10 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
 
         await infoPanel.getByText(SELECTABLE_OU_NAME).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, '[data-testid="explore_search-container"]');
+        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
+        await hideBySelector(page, '.ReactQueryDevtools');
+
+        await checkA11y();
     });
 });
