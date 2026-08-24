@@ -18673,6 +18673,14 @@
             }
           },
           {
+            "name": "is_cross_platform",
+            "description": "Filter findings by whether source and target principals belong to different platforms.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {

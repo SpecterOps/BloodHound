@@ -127,6 +127,11 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: is_cross_platform
+      description: Filter findings by whether source and target principals belong to different platforms.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.boolean.yaml"
     - $ref: "./../parameters/query.skip.yaml"
     - $ref: "./../parameters/query.limit.yaml"
   responses:
