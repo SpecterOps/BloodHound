@@ -183,24 +183,35 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 }
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
-		slog.ErrorContext(
-			ctx,
-			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
-			attr.Error(err),
-		)
+	var (
+		enterpriseCAIDs = cardinality.NewBitmap64()
+		domains         []*graph.Node
+	)
+
+	if fetchedDomains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain))); err != nil && !graph.IsErrNotFound(err) {
+		return fmt.Errorf("failed fetching domains for GoldenCert host validation: %w", err)
 	} else {
-		for _, computer := range hostCAServiceComputers {
-			for _, domain := range certChains.Domains.Slice() {
-				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-					FromID: computer.ID,
-					ToID:   graph.ID(domain),
-					Kind:   ad.GoldenCert,
-				})
+		domains = fetchedDomains
+	}
+
+	enterpriseCAIDs.Add(certChains.EnterpriseCA.ID.Uint64())
+	qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAIDs, indexDomainsBySID(domains))
+	if err != nil {
+		return fmt.Errorf("failed fetching qualifying hosts for GoldenCert: %w", err)
+	}
+
+	for _, hostPath := range qualifyingHostPaths[certChains.EnterpriseCA.ID] {
+		for _, domain := range certChains.Domains.Slice() {
+			if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+				FromID: hostPath.Root().ID,
+				ToID:   graph.ID(domain),
+				Kind:   ad.GoldenCert,
+			}) {
+				return fmt.Errorf("context timed out while creating GoldenCert edge")
 			}
 		}
 	}
+
 	return nil
 }
 
