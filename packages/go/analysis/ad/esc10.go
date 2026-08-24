@@ -392,7 +392,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9APath2Pattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsCAEnrollmentPathPattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
