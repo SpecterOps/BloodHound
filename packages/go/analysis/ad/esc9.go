@@ -356,7 +356,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 }
 
 func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(
 			1, 1,
 			query.And(
@@ -395,19 +395,7 @@ func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func adcsESC9APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.PatternContinuation {
@@ -444,7 +432,7 @@ func adcsESC9APath3Pattern() traversal.PatternContinuation {
 }
 
 func adcsESC9bPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(
 			1, 1,
 			query.And(
@@ -480,19 +468,7 @@ func adcsESC9bPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func adcsESC9bPath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.PatternContinuation {

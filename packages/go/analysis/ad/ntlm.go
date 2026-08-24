@@ -328,7 +328,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 }
 
 func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -340,19 +340,7 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 			query.Equals(query.EndProperty(ad.HasVulnerableEndpoint.String()), true),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {

@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
 )
 
@@ -203,6 +204,28 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	return nil
 }
 
+func enterpriseCAChainPattern(pattern traversal.PatternContinuation, rootCAForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.RootCAFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, rootCAForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(criteria...))
+}
+
+func enterpriseCAChainToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCAChainPattern(pattern, query.Equals(query.EndID(), domainID))
+}
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {

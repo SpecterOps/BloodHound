@@ -739,7 +739,7 @@ func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuati
 
 // This traversal goes from principal -> domain via a cert template that has an inbound edge(s) corresponding to whatever `priveleges` are provided
 func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainID graph.ID, enrollAndNTAuthECAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -754,20 +754,7 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), graph.DuplexToGraphIDs(enrollAndNTAuthECAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainID),
-			))
+		)), domainID)
 }
 
 func certTemplateWithEnrollmentRightsTraversal(certTemplates cardinality.Duplex[uint64], criteria graph.Criteria) traversal.PatternContinuation {

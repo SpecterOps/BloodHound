@@ -90,7 +90,7 @@ func isCertTemplateValidForEsc1(ctx context.Context, ct *graph.Node) bool {
 }
 
 func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -116,19 +116,7 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
