@@ -418,7 +418,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--select-trigger-outlined-fill': palette.neutral.dark[50],
             '--select-border-default': palette.neutral.light[400],
             '--select-border-focus': secondaryVariant2,
-            '--select-content-border': palette.neutral.dark[400],
+            '--select-content-border': palette.neutral.light[900],
             '--select-content-fill': palette.neutral.dark[400],
             '--select-item-checked-text': secondaryVariant2,
             '--select-separator-fill': palette.neutral.light[200],
