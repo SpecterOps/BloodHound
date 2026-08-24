@@ -316,7 +316,7 @@ func EnrollOnBehalfOfVersionTwo(cache *ADCSCache, versionTwoCertTemplates, publi
 						slog.Uint64("cert_template_id", uint64(certTemplateTwo.ID)),
 						attr.Error(err),
 					)
-				} else if authorizedSignatures < 1 {
+				} else if authorizedSignatures != 1 {
 					continue
 				} else if applicationPolicies, err := certTemplateTwo.Properties.Get(ad.ApplicationPolicies.String()).StringSlice(); err != nil {
 					slog.Error(
@@ -412,33 +412,35 @@ func isStartCertTemplateValidESC3(template *graph.Node) bool {
 			)
 		}
 		return false
-	}
-
-	if schemaVersion == 1 {
+	} else if schemaVersion == 1 {
 		return true
+	} else if schemaVersion <= 1 {
+		slog.Warn(
+			"Got cert template with an invalid schema version",
+			slog.Int("node_id", int(template.ID)),
+			slog.Float64("schema_version", schemaVersion),
+		)
+		return false
 	}
 
-	if schemaVersion > 1 {
-		authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64()
-		if err != nil {
-			if errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.Warn(
-					"Node missing authorizedsignatures for certtemplate",
-					slog.Int("node_id", int(template.ID)),
-					attr.Error(err),
-				)
-			} else {
-				slog.Error(
-					"Error getting authorizedsignatures for certtemplate",
-					slog.Int("node_id", int(template.ID)),
-					attr.Error(err),
-				)
-			}
+	if authorizedSignatures, err := template.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		if errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.Warn(
+				"Node missing authorizedsignatures for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
+		} else {
+			slog.Error(
+				"Error getting authorizedsignatures for certtemplate",
+				slog.Int("node_id", int(template.ID)),
+				attr.Error(err),
+			)
 		}
-		return authorizedSignatures <= 0
+		return false
+	} else {
+		return authorizedSignatures == 0
 	}
-
-	return false
 }
 
 func isEndCertTemplateValidESC3(template *graph.Node) bool {
@@ -474,9 +476,9 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 		return false
 	} else if reqManagerApproval {
 		return false
-	} else {
-		return true
 	}
+
+	return true
 }
 
 func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
@@ -485,7 +487,10 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		WHERE x.objectid = "S-1-5-21-83094068-830424655-2031507174-500"
 		AND d.objectid = "S-1-5-21-83094068-830424655-2031507174"
 		AND ct1.requiresmanagerapproval = false
-		AND (ct1.schemaversion = 1 OR ct1.authorizedsignatures = 0)
+		AND (
+			ct1.schemaversion = 1
+			OR ct1.authorizedsignatures = 0
+		)
 		AND (
 			x:Group
 			OR x:Computer
@@ -836,14 +841,12 @@ func ADCSESC3Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[ui
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
 			query.Kind(query.End(), ad.CertTemplate),
-			query.And(
-				query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
-				query.Or(
-					query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
-					query.And(
-						query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
-						query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
-					),
+			query.Equals(query.EndProperty(ad.RequiresManagerApproval.String()), false),
+			query.Or(
+				query.Equals(query.EndProperty(ad.SchemaVersion.String()), 1),
+				query.And(
+					query.GreaterThan(query.EndProperty(ad.SchemaVersion.String()), 1),
+					query.Equals(query.EndProperty(ad.AuthorizedSignatures.String()), 0),
 				),
 			),
 		)).

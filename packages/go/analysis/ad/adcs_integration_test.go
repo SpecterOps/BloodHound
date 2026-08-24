@@ -425,6 +425,11 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				ToID:   harness.EnrollOnBehalfOfHarness2.CertTemplate23.ID,
 				Kind:   ad.EnrollOnBehalfOf,
 			})
+			require.NotContains(t, resultsV2, post.EnsureRelationshipJob{
+				FromID: harness.EnrollOnBehalfOfHarness2.CertTemplate21.ID,
+				ToID:   harness.EnrollOnBehalfOfHarness2.CertTemplate25.ID,
+				Kind:   ad.EnrollOnBehalfOf,
+			})
 		})
 	})
 
@@ -881,6 +886,85 @@ func TestADCSESC3(t *testing.T) {
 						)
 					}).First()
 					require.True(t, graph.IsErrNotFound(err))
+				}
+
+				return nil
+			})
+			require.NoError(t, err)
+		})
+	})
+
+	t.Run("ADCSESC3AuthorizedSignatures", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ESC3AuthorizedSignaturesHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+			var (
+				ctx       = context.Background()
+				operation = post.NewPostRelationshipOperation(ctx, db, "ADCS Post Process Test - ESC3 authorized signatures")
+			)
+
+			localGroupData, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			for _, certChains := range cache.GetECAHostedChainedDomains() {
+				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+					return adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache)
+				})
+			}
+
+			require.NoError(t, operation.Done())
+
+			err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+				edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+					return query.Kind(query.Relationship(), ad.ADCSESC3)
+				}))
+				require.NoError(t, err)
+				require.Len(t, edges, 5)
+
+				testCases := []struct {
+					name      string
+					principal *graph.Node
+					valid     bool
+				}{
+					{name: "CT1 signatures zero and schema-one CT2 signatures unrestricted", principal: harness.ESC3AuthorizedSignaturesHarness.ValidSchemaVersionOneUser, valid: true},
+					{name: "schema-one CT1 signatures unrestricted", principal: harness.ESC3AuthorizedSignaturesHarness.ValidCT1SchemaVersionOneUser, valid: true},
+					{name: "schema-two CT1 signatures negative one", principal: harness.ESC3AuthorizedSignaturesHarness.InvalidCT1NegativeSignaturesUser},
+					{name: "CT1 signatures zero and schema-two CT2 signatures one", principal: harness.ESC3AuthorizedSignaturesHarness.ValidSchemaVersionTwoUser, valid: true},
+					{name: "CT2 schema and signatures trusted after EnrollOnBehalfOf", principal: harness.ESC3AuthorizedSignaturesHarness.TrustedCT2ZeroSignaturesUser, valid: true},
+					{name: "CT2 multiple signatures trusted after EnrollOnBehalfOf", principal: harness.ESC3AuthorizedSignaturesHarness.TrustedCT2MultipleSignaturesUser, valid: true},
+				}
+
+				for _, testCase := range testCases {
+					edge, err := tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Relationship(), ad.ADCSESC3),
+							query.Equals(query.StartID(), testCase.principal.ID),
+							query.Equals(query.EndID(), harness.ESC3AuthorizedSignaturesHarness.Domain.ID),
+						)
+					}).First()
+
+					if testCase.valid {
+						require.NoError(t, err, testCase.name)
+					} else {
+						require.True(t, graph.IsErrNotFound(err), testCase.name)
+						edge = graph.NewRelationship(
+							0,
+							testCase.principal.ID,
+							harness.ESC3AuthorizedSignaturesHarness.Domain.ID,
+							graph.NewProperties(),
+							ad.ADCSESC3,
+						)
+					}
+
+					composition, err := adAnalysis.GetADCSESC3EdgeComposition(ctx, db, edge)
+					require.NoError(t, err, testCase.name)
+					if testCase.valid {
+						require.NotEmpty(t, composition, testCase.name)
+					} else {
+						require.Empty(t, composition, testCase.name)
+					}
 				}
 
 				return nil
