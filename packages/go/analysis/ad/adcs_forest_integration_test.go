@@ -56,6 +56,65 @@ func linkEnterpriseCAToDomain(testCtx *integration.GraphTestContext, enterpriseC
 	testCtx.NewRelationship(enterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
 }
 
+func TestADCSPKIHierarchyRequiresRootedCAChain(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	var (
+		domainSID = integration.RandomDomainSID()
+
+		validEnterpriseCAID               graph.ID
+		directRootCAForEnterpriseCAID     graph.ID
+		invalidIntermediateEnterpriseCAID graph.ID
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domain := testContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
+			rootCA := testContext.NewActiveDirectoryRootCA("RootCA", domainSID)
+			ntAuthStore := testContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSID)
+			intermediateEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("IntermediateEnterpriseCA", domainSID)
+			intermediateAIACA := testContext.NewActiveDirectoryAIACA("IntermediateAIACA", domainSID, "intermediate", []string{"intermediate"})
+			validEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("ValidEnterpriseCA", domainSID)
+			directRootCAForEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("DirectRootCAForEnterpriseCA", domainSID)
+			invalidIntermediateEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("InvalidIntermediateEnterpriseCA", domainSID)
+			invalidIntermediate := testContext.NewActiveDirectoryUser("InvalidIntermediate", domainSID)
+
+			testContext.NewRelationship(rootCA, domain, ad.RootCAFor)
+			testContext.NewRelationship(ntAuthStore, domain, ad.NTAuthStoreFor)
+
+			testContext.NewRelationship(validEnterpriseCA, intermediateAIACA, ad.IssuedSignedBy)
+			testContext.NewRelationship(intermediateAIACA, intermediateEnterpriseCA, ad.EnterpriseCAFor)
+			testContext.NewRelationship(intermediateEnterpriseCA, rootCA, ad.IssuedSignedBy)
+			testContext.NewRelationship(validEnterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
+
+			testContext.NewRelationship(directRootCAForEnterpriseCA, domain, ad.RootCAFor)
+			testContext.NewRelationship(directRootCAForEnterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
+
+			testContext.NewRelationship(invalidIntermediateEnterpriseCA, invalidIntermediate, ad.IssuedSignedBy)
+			testContext.NewRelationship(invalidIntermediate, rootCA, ad.EnterpriseCAFor)
+			testContext.NewRelationship(invalidIntermediateEnterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
+
+			addEnabledHostingComputer(testContext, "ValidHost", domainSID, validEnterpriseCA)
+			addEnabledHostingComputer(testContext, "DirectRootCAForHost", domainSID, directRootCAForEnterpriseCA)
+			addEnabledHostingComputer(testContext, "InvalidIntermediateHost", domainSID, invalidIntermediateEnterpriseCA)
+
+			validEnterpriseCAID = validEnterpriseCA.ID
+			directRootCAForEnterpriseCAID = directRootCAForEnterpriseCA.ID
+			invalidIntermediateEnterpriseCAID = invalidIntermediateEnterpriseCA.ID
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			chainedDomains := cache.GetECAHostedChainedDomains()
+			require.Contains(t, chainedDomains, validEnterpriseCAID.Uint64())
+			assert.NotContains(t, chainedDomains, directRootCAForEnterpriseCAID.Uint64())
+			assert.NotContains(t, chainedDomains, invalidIntermediateEnterpriseCAID.Uint64())
+		},
+	)
+}
+
 // TestADCSForestScoping_UsesHostForestECAAndKeepsCrossForestDomain models
 // shared ADCS across two forests: one computer hosts the CA service for an
 // EnterpriseCA in its own forest and for a copied EnterpriseCA in another forest.

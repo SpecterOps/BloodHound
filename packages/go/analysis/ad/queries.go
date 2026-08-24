@@ -1723,10 +1723,19 @@ func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA,
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
 		},
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
+			if segment.Edge.Kind.Is(ad.RootCAFor) {
+				return segment.Depth() >= 2 &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.RootCA) &&
+					segment.Node.Kinds.ContainsOneOf(ad.Domain) &&
+					segment.Node.ID == domain.ID
+			}
+
+			return segment.Edge.Kind.Is(ad.IssuedSignedBy, ad.EnterpriseCAFor) &&
+				segment.Trunk.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA) &&
+				segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA, ad.RootCA)
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.ID == domain.ID
+			return segment.Depth() >= 2 && segment.Node.ID == domain.ID
 		},
 	})
 }
@@ -1807,6 +1816,14 @@ func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.RootCAFor) && segment.Node.Kinds.ContainsOneOf(ad.RootCA)
+			}
+
+			return segment.Edge.Kind.Is(ad.IssuedSignedBy, ad.EnterpriseCAFor) &&
+				segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA)
 		},
 	}, func(node *graph.Node) bool {
 		return node.Kinds.ContainsOneOf(ad.EnterpriseCA)
