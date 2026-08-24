@@ -357,15 +357,7 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 }
 
 func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
-		query.Kind(query.Relationship(), ad.MemberOf),
-		query.Kind(query.End(), ad.Group),
-	)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		)), domainID)
+	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
 }
 
 func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {

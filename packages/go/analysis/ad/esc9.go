@@ -306,7 +306,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9APath2Pattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsCAEnrollmentPathPattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
@@ -424,19 +424,6 @@ func adcsESC9aPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		)), domainID)
 }
 
-func adcsESC9APath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
-		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.MemberOf),
-			query.Kind(query.End(), ad.Group),
-		)).
-		Outbound(query.And(
-			query.Kind(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.End(), caNodes...),
-		)), domainId)
-}
-
 func adcsESC9APath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
@@ -488,19 +475,6 @@ func adcsESC9bPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 		)), domainID)
-}
-
-func adcsESC9bPath2Pattern(caNodes []graph.ID, domainId graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
-		OutboundWithDepth(0, 0, query.And(
-			query.Kind(query.Relationship(), ad.MemberOf),
-			query.Kind(query.End(), ad.Group),
-		)).
-		Outbound(query.And(
-			query.Kind(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.End(), caNodes...),
-		)), domainId)
 }
 
 func adcsESC9bPath3Pattern() traversal.PatternContinuation {
@@ -619,7 +593,7 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9bPath2Pattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsCAEnrollmentPathPattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})

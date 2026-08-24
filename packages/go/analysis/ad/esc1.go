@@ -120,15 +120,7 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 }
 
 func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
-		query.Kind(query.Relationship(), ad.MemberOf),
-		query.Kind(query.End(), ad.Group),
-	)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		)), domainID)
+	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
 }
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {

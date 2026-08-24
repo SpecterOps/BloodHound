@@ -270,6 +270,19 @@ func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContin
 	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
 }
 
+func adcsCAEnrollmentPathPattern(enterpriseCAs []graph.ID, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.Kind(query.Relationship(), ad.Enroll),
+			query.Kind(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), enterpriseCAs...),
+		)), domainID)
+}
+
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
