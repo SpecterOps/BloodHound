@@ -1747,8 +1747,22 @@ func FetchEnterpriseCAsTrustedForAuthPathToDomain(tx graph.Transaction, enterpri
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.TrustedForNTAuth) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) &&
+					segment.Node.Kinds.ContainsOneOf(ad.NTAuthStore)
+			} else if segment.Depth() == 2 {
+				return segment.Edge.Kind.Is(ad.NTAuthStoreFor) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.NTAuthStore) &&
+					segment.Node.Kinds.ContainsOneOf(ad.Domain) &&
+					segment.Node.ID == domain.ID
+			}
+
+			return false
+		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.ID == domain.ID
+			return segment.Depth() == 2 && segment.Node.ID == domain.ID
 		},
 	})
 }
@@ -1763,25 +1777,29 @@ func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node
 }
 
 func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
-	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
 		Root:      domain,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 		},
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			depth := segment.Depth()
-			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
-				return false
-			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
-				return false
-			} else {
-				return true
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.NTAuthStoreFor) &&
+					segment.Node.Kinds.ContainsOneOf(ad.NTAuthStore)
+			} else if segment.Depth() == 2 {
+				return segment.Edge.Kind.Is(ad.TrustedForNTAuth) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.NTAuthStore) &&
+					segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 			}
+
+			return false
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			return segment.Depth() == 2 && segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 		},
+	}, func(node *graph.Node) bool {
+		return node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 	})
 }
 

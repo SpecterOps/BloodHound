@@ -714,7 +714,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 }
 
 func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -724,17 +724,7 @@ func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuati
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-				query.Kind(query.End(), ad.NTAuthStore),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-				query.Equals(query.EndID(), domainId),
-			))
+			)), domainId)
 }
 
 // This traversal goes from principal -> domain via a cert template that has an inbound edge(s) corresponding to whatever `priveleges` are provided

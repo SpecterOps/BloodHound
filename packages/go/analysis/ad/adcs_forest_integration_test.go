@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -111,6 +112,90 @@ func TestADCSPKIHierarchyRequiresRootedCAChain(t *testing.T) {
 			require.Contains(t, chainedDomains, validEnterpriseCAID.Uint64())
 			assert.NotContains(t, chainedDomains, directRootCAForEnterpriseCAID.Uint64())
 			assert.NotContains(t, chainedDomains, invalidIntermediateEnterpriseCAID.Uint64())
+		},
+	)
+}
+
+func TestADCSNTAuthStoreChainRequiresExactPattern(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	var (
+		domainSID = integration.RandomDomainSID()
+
+		domain                             *graph.Node
+		validEnterpriseCA                  *graph.Node
+		directEnterpriseCA                 *graph.Node
+		invalidIntermediateEnterpriseCA    *graph.Node
+		additionalIntermediateEnterpriseCA *graph.Node
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domain = testContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
+			rootCA := testContext.NewActiveDirectoryRootCA("RootCA", domainSID)
+			validNTAuthStore := testContext.NewActiveDirectoryNTAuthStore("ValidNTAuthStore", domainSID)
+			invalidIntermediate := testContext.NewActiveDirectoryUser("InvalidIntermediate", domainSID)
+			firstNTAuthStore := testContext.NewActiveDirectoryNTAuthStore("FirstNTAuthStore", domainSID)
+			secondNTAuthStore := testContext.NewActiveDirectoryNTAuthStore("SecondNTAuthStore", domainSID)
+
+			validEnterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("ValidEnterpriseCA", domainSID)
+			directEnterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("DirectEnterpriseCA", domainSID)
+			invalidIntermediateEnterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("InvalidIntermediateEnterpriseCA", domainSID)
+			additionalIntermediateEnterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("AdditionalIntermediateEnterpriseCA", domainSID)
+
+			testContext.NewRelationship(rootCA, domain, ad.RootCAFor)
+			for _, enterpriseCA := range []*graph.Node{
+				validEnterpriseCA,
+				directEnterpriseCA,
+				invalidIntermediateEnterpriseCA,
+				additionalIntermediateEnterpriseCA,
+			} {
+				testContext.NewRelationship(enterpriseCA, rootCA, ad.IssuedSignedBy)
+			}
+			addEnabledHostingComputer(testContext, "ValidHost", domainSID, validEnterpriseCA)
+			addEnabledHostingComputer(testContext, "DirectHost", domainSID, directEnterpriseCA)
+			addEnabledHostingComputer(testContext, "InvalidIntermediateHost", domainSID, invalidIntermediateEnterpriseCA)
+			addEnabledHostingComputer(testContext, "AdditionalIntermediateHost", domainSID, additionalIntermediateEnterpriseCA)
+
+			testContext.NewRelationship(validEnterpriseCA, validNTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(validNTAuthStore, domain, ad.NTAuthStoreFor)
+
+			testContext.NewRelationship(directEnterpriseCA, domain, ad.NTAuthStoreFor)
+
+			testContext.NewRelationship(invalidIntermediateEnterpriseCA, invalidIntermediate, ad.TrustedForNTAuth)
+			testContext.NewRelationship(invalidIntermediate, domain, ad.NTAuthStoreFor)
+
+			testContext.NewRelationship(additionalIntermediateEnterpriseCA, firstNTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(firstNTAuthStore, secondNTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(secondNTAuthStore, domain, ad.NTAuthStoreFor)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			chainedDomains := cache.GetECAHostedChainedDomains()
+			require.Contains(t, chainedDomains, validEnterpriseCA.ID.Uint64())
+			assert.NotContains(t, chainedDomains, directEnterpriseCA.ID.Uint64())
+			assert.NotContains(t, chainedDomains, invalidIntermediateEnterpriseCA.ID.Uint64())
+			assert.NotContains(t, chainedDomains, additionalIntermediateEnterpriseCA.ID.Uint64())
+
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				paths, err := adAnalysis.FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, validEnterpriseCA, domain)
+				require.NoError(t, err)
+				require.Len(t, paths, 1)
+
+				for _, enterpriseCA := range []*graph.Node{
+					directEnterpriseCA,
+					invalidIntermediateEnterpriseCA,
+					additionalIntermediateEnterpriseCA,
+				} {
+					paths, err := adAnalysis.FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, enterpriseCA, domain)
+					require.NoError(t, err)
+					assert.Empty(t, paths)
+				}
+				return nil
+			}))
 		},
 	)
 }

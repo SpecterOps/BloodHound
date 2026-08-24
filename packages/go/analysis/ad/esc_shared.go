@@ -216,16 +216,36 @@ func enterpriseCAChainPattern(pattern traversal.PatternContinuation, rootCAForCr
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
 			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
 		)).
-		Outbound(query.And(
+		OutboundWithDepth(1, 1, query.And(
 			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
 			query.Kind(query.End(), ad.RootCA),
 		)).
-		Outbound(query.And(criteria...))
+		OutboundWithDepth(1, 1, query.And(criteria...))
 }
 
 func enterpriseCAChainToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
 	return enterpriseCAChainPattern(pattern, query.Equals(query.EndID(), domainID))
 }
+
+func enterpriseCATrustedForNTAuthPattern(pattern traversal.PatternContinuation, ntAuthStoreForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.NTAuthStoreFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, ntAuthStoreForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(1, 1, query.And(
+			query.Kind(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		OutboundWithDepth(1, 1, query.And(criteria...))
+}
+
+func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
+}
+
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
