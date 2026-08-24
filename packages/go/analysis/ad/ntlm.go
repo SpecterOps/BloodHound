@@ -215,12 +215,13 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
-		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		path2EnterpriseCAs = cardinality.NewBitmap64()
-		lock               = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		candidateSegments       = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		path2EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		lock                    = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -315,17 +316,26 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 	// Intersect the CAs and take only those seen in both paths
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
-	// Render paths from the segments
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
+	// Render paths only for CAs with an exact qualifying host.
 	path1EnterpriseCAs.Each(func(value uint64) bool {
+		hostPaths, hasQualifyingHost := hostPathsByEnterpriseCA[graph.ID(value)]
+		if !hasQualifyingHost {
+			return true
+		}
+
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}
+		paths.AddPathSet(hostPaths)
 
 		return true
 	})
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, path1EnterpriseCAs); err != nil {
-		return nil, err
-	}
 
 	return paths, nil
 }

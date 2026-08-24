@@ -204,44 +204,12 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	return nil
 }
 
-func addHostsCAServicePathsToComposition(ctx context.Context, db graph.Database, composition *graph.PathSet, enterpriseCAs cardinality.Duplex[uint64]) error {
-	if composition.Len() == 0 {
-		return nil
-	} else if enterpriseCAs.Cardinality() == 0 {
-		*composition = graph.PathSet{}
-		return nil
-	}
-
-	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if hostingPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Kind(query.Start(), ad.Computer),
-			query.Kind(query.Relationship(), ad.HostsCAService),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		))); graph.IsErrNotFound(err) {
-			*composition = graph.PathSet{}
-			return nil
-		} else if err != nil {
-			return err
-		} else if hostingPaths.Len() == 0 {
-			*composition = graph.PathSet{}
-			return nil
-		} else {
-			composition.AddPathSet(hostingPaths)
-			return nil
-		}
-	})
-}
-
 // fetchQualifyingEnterpriseCAHostPaths returns only HostsCAService paths whose
 // computer satisfies the same enabled and forest-scoping rules used by ADCS
 // edge creation. Results are keyed by the exact Enterprise CA they host so a
 // qualifying host for one CA cannot validate a different CA candidate.
 func fetchQualifyingEnterpriseCAHostPaths(ctx context.Context, db graph.Database, enterpriseCAs cardinality.Duplex[uint64]) (map[graph.ID]graph.PathSet, error) {
-	var (
-		hostPathsByEnterpriseCA     = make(map[graph.ID]graph.PathSet)
-		resolvedEnterpriseCAs       = make(map[graph.ID]bool)
-		forestDomainsByEnterpriseCA = make(map[graph.ID]cardinality.Duplex[uint64])
-	)
+	var hostPathsByEnterpriseCA = make(map[graph.ID]graph.PathSet)
 
 	if enterpriseCAs.Cardinality() == 0 {
 		return hostPathsByEnterpriseCA, nil
@@ -249,53 +217,12 @@ func fetchQualifyingEnterpriseCAHostPaths(ctx context.Context, db graph.Database
 
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		domains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain)))
-		if err != nil {
-			return err
-		}
-		domainsBySID := indexDomainsBySID(domains)
-
-		hostingPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Kind(query.Start(), ad.Computer),
-			query.Kind(query.Relationship(), ad.HostsCAService),
-			query.Kind(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		)))
-		if graph.IsErrNotFound(err) {
-			return nil
-		} else if err != nil {
+		if err != nil && !graph.IsErrNotFound(err) {
 			return err
 		}
 
-		for _, hostingPath := range hostingPaths {
-			var forestDomains cardinality.Duplex[uint64]
-			enterpriseCA := hostingPath.Terminal()
-
-			if resolvedEnterpriseCAs[enterpriseCA.ID] {
-				forestDomains = forestDomainsByEnterpriseCA[enterpriseCA.ID]
-			} else {
-				forestDomains, err = resolveEnterpriseCAForest(tx, enterpriseCA, domainsBySID)
-				if err != nil {
-					slog.WarnContext(
-						ctx,
-						"Error resolving forest for enterprise ca while composing ADCS edge",
-						slog.Uint64("enterprise_ca", uint64(enterpriseCA.ID)),
-						attr.Error(err),
-					)
-					forestDomains = nil
-				}
-
-				resolvedEnterpriseCAs[enterpriseCA.ID] = true
-				forestDomainsByEnterpriseCA[enterpriseCA.ID] = forestDomains
-			}
-
-			if enterpriseCAHostIsEligible(hostingPath.Root(), forestDomains, domainsBySID) {
-				paths := hostPathsByEnterpriseCA[enterpriseCA.ID]
-				paths.AddPath(hostingPath)
-				hostPathsByEnterpriseCA[enterpriseCA.ID] = paths
-			}
-		}
-
-		return nil
+		hostPathsByEnterpriseCA, err = fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAs, indexDomainsBySID(domains))
+		return err
 	})
 
 	return hostPathsByEnterpriseCA, err

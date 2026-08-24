@@ -45,8 +45,9 @@ func FetchADCSPrereqs(db graph.Database) (*adAnalysis.LocalGroupData, *adAnalysi
 			return nil, nil, err
 		} else if certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
 			return nil, nil, err
+		} else if err := cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates); err != nil {
+			return nil, nil, err
 		} else {
-			cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 			return localGroupData, cache, nil
 		}
 	}
@@ -1837,7 +1838,86 @@ func TestADCSESC6b(t *testing.T) {
 	})
 }
 
+type esc10CompositionHarness struct {
+	attacker        *graph.Node
+	domain          *graph.Node
+	enterpriseCA    *graph.Node
+	hostingComputer *graph.Node
+}
+
+func setupESC10CompositionHarness(graphTestContext *integration.GraphTestContext) esc10CompositionHarness {
+	var (
+		domainSID    = integration.RandomDomainSID()
+		domain       = graphTestContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
+		rootCA       = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSID)
+		authStore    = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSID)
+		enterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSID)
+		certTemplate = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate", domainSID, integration.CertTemplateData{
+			ApplicationPolicies:           []string{},
+			AuthorizedSignatures:          0,
+			EffectiveEKUs:                 []string{},
+			EnrolleeSuppliesSubject:       false,
+			RequiresManagerApproval:       false,
+			SchemaVersion:                 1,
+			SchannelAuthenticationEnabled: true,
+			SubjectAltRequireUPN:          true,
+		})
+		domainController = graphTestContext.NewActiveDirectoryComputer("Domain Controller", domainSID)
+		hostingComputer  = graphTestContext.NewActiveDirectoryComputer("EnterpriseCA host", domainSID)
+		attacker         = graphTestContext.NewActiveDirectoryGroup("Attacker", domainSID)
+		victim           = graphTestContext.NewActiveDirectoryUser("Victim", domainSID)
+	)
+
+	domainController.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
+	hostingComputer.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(domainController)
+	graphTestContext.UpdateNode(hostingComputer)
+
+	graphTestContext.NewRelationship(rootCA, domain, ad.RootCAFor)
+	graphTestContext.NewRelationship(enterpriseCA, rootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(authStore, domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(enterpriseCA, authStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(domainController, domain, ad.DCFor)
+	graphTestContext.NewRelationship(hostingComputer, enterpriseCA, ad.HostsCAService)
+	graphTestContext.NewRelationship(certTemplate, enterpriseCA, ad.PublishedTo)
+	graphTestContext.NewRelationship(attacker, victim, ad.GenericAll)
+	graphTestContext.NewRelationship(victim, certTemplate, ad.Enroll)
+	graphTestContext.NewRelationship(victim, enterpriseCA, ad.Enroll)
+
+	return esc10CompositionHarness{
+		attacker:        attacker,
+		domain:          domain,
+		enterpriseCA:    enterpriseCA,
+		hostingComputer: hostingComputer,
+	}
+}
+
 func TestADCSESC10a(t *testing.T) {
+	t.Run("composition excludes shared paths when the exact CA host is disabled", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		var testHarness esc10CompositionHarness
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				testHarness = setupESC10CompositionHarness(testContext)
+				testHarness.hostingComputer.Properties.Set(common.Enabled.String(), false)
+				testContext.UpdateNode(testHarness.hostingComputer)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				composition, err := adAnalysis.GetADCSESC10EdgeComposition(t.Context(), db, graph.NewRelationship(
+					0,
+					testHarness.attacker.ID,
+					testHarness.domain.ID,
+					graph.NewProperties(),
+					ad.ADCSESC10a,
+				))
+				require.NoError(t, err)
+				require.Empty(t, composition)
+				require.False(t, composition.AllNodes().Contains(testHarness.enterpriseCA))
+			},
+		)
+	})
 	t.Run("ADCSESC10aPrincipalHarness", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
