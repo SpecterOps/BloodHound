@@ -36,9 +36,12 @@ import (
 
 func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	var (
-		results = cardinality.NewBitmap64()
-		eca2ID  = certChains.EnterpriseCA.ID
+		resultsByDomain = map[graph.ID]cardinality.Duplex[uint64]{}
+		eca2ID          = certChains.EnterpriseCA.ID
 	)
+	for _, domain := range certChains.Domains.Slice() {
+		resultsByDomain[graph.ID(domain)] = cardinality.NewBitmap64()
+	}
 
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2ID); len(publishedCertTemplates) == 0 {
 		return nil
@@ -86,52 +89,40 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 						)
 					} else if publishedECAs.Len() == 0 {
 						continue
-					} else if hasEnrollmentAgentRestrictions {
-						if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
-							slog.ErrorContext(
-								ctx,
-								"Error getting delegated agents for cert template",
-								slog.Uint64("cert_template_two_id", uint64(certTemplateTwo.ID)),
-								attr.Error(err),
-							)
-						} else {
-							for _, eca1 := range publishedECAs {
-								if !cache.enterpriseCAHasQualifyingHost(eca1.ID) {
-									continue
-								}
-
-								tempResults := CalculateCrossProductNodeSets(
-									localGroupData,
-									certTemplateEnrollersOne,
-									certTemplateEnrollersTwo,
-									cache.GetEnterpriseCAEnrollers(eca1.ID),
-									ecaEnrollersTwo,
-									NewCachedPrincipalSet(delegatedAgents.Slice()))
-
-								// Add principals to result set unless it's a user and DNS is required
-								if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
-									slog.ErrorContext(
-										ctx,
-										"Error filtering user dns results",
-										attr.Error(err),
-									)
-								} else {
-									results.Or(filteredResults)
-								}
+					} else {
+						var delegatedAgentSet CachedPrincipalSet
+						if hasEnrollmentAgentRestrictions {
+							if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
+								slog.ErrorContext(
+									ctx,
+									"Error getting delegated agents for cert template",
+									slog.Uint64("cert_template_two_id", uint64(certTemplateTwo.ID)),
+									attr.Error(err),
+								)
+								continue
+							} else if delegatedAgents.Len() == 0 {
+								continue
+							} else {
+								delegatedAgentSet = NewCachedPrincipalSet(delegatedAgents.Slice())
 							}
 						}
-					} else {
+
 						for _, eca1 := range publishedECAs {
 							if !cache.enterpriseCAHasQualifyingHost(eca1.ID) {
 								continue
 							}
 
-							tempResults := CalculateCrossProductNodeSets(
-								localGroupData,
+							principalSets := []CachedPrincipalSet{
 								certTemplateEnrollersOne,
 								certTemplateEnrollersTwo,
 								cache.GetEnterpriseCAEnrollers(eca1.ID),
-								ecaEnrollersTwo)
+								ecaEnrollersTwo,
+							}
+							if hasEnrollmentAgentRestrictions {
+								principalSets = append(principalSets, delegatedAgentSet)
+							}
+
+							tempResults := CalculateCrossProductNodeSets(localGroupData, principalSets...)
 
 							if filteredResults, err := filterUserDNSResults(tx, tempResults, certTemplateOne); err != nil {
 								slog.ErrorContext(
@@ -140,7 +131,11 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 									attr.Error(err),
 								)
 							} else {
-								results.Or(filteredResults)
+								for domainID, results := range resultsByDomain {
+									if cache.enterpriseCAHasChainedDomain(eca1.ID, domainID) {
+										results.Or(filteredResults)
+									}
+								}
 							}
 						}
 					}
@@ -149,16 +144,16 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 		}
 	}
 
-	results.Each(func(source uint64) bool {
-		for _, domain := range certChains.Domains.Slice() {
+	for domainID, results := range resultsByDomain {
+		results.Each(func(source uint64) bool {
 			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 				FromID: graph.ID(source),
-				ToID:   graph.ID(domain),
+				ToID:   domainID,
 				Kind:   ad.ADCSESC3,
 			})
-		}
-		return true
-	})
+			return true
+		})
+	}
 
 	return nil
 }
@@ -503,48 +498,8 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 }
 
 func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	/*
-		MATCH p1 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[:PublishedTo]->(eca1:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
-		WHERE x.objectid = "S-1-5-21-83094068-830424655-2031507174-500"
-		AND d.objectid = "S-1-5-21-83094068-830424655-2031507174"
-		AND ct1.requiresmanagerapproval = false
-		AND (
-			ct1.schemaversion = 1
-			OR ct1.authorizedsignatures = 0
-		)
-		AND (
-			x:Group
-			OR x:Computer
-			OR (
-			x:User
-			AND ct1.subjectaltrequiredns = false
-			AND ct1.subjectaltrequiredomaindns = false
-			)
-		)
-
-		MATCH p2 = (x)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[:PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
-		WHERE ct2.authenticationenabled = true
-		AND ct2.requiresmanagerapproval = false
-
-		MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
-
-		MATCH p4 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca1)
-
-		MATCH p5 = (x)-[:MemberOf*0..]->()-[:Enroll]->(eca2)
-
-		MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
-		MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
-
-		OPTIONAL MATCH p8 = (x)-[:MemberOf*0..]->()-[:DelegatedEnrollmentAgent]->(ct2)
-
-		WITH *
-		WHERE (
-			NOT eca2.hasenrollmentagentrestrictions = True
-			OR p8 IS NOT NULL
-		)
-
-		RETURN p1,p2,p3,p4,p5,p6,p7,p8
-	*/
+	// P1 and P2 bind their selected publishers to the ESC3 target domain through
+	// NTAuth. P6 and P7 verify their independent RootCA paths to that domain.
 	var (
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
@@ -847,7 +802,7 @@ func enterpriseCAHasEnrollmentAgentRestrictions(enterpriseCA *graph.Node) bool {
 	}
 }
 
-func ADCSESC3Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
+func ADCSESC3Path1Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
 	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
@@ -868,7 +823,7 @@ func ADCSESC3Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[ui
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)), domainId)
+		)), domainID)
 }
 
 func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates cardinality.Duplex[uint64]) traversal.PatternContinuation {

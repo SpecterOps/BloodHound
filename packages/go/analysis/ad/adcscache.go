@@ -625,6 +625,21 @@ func (s *ADCSCache) GetCertTemplateHasSpecialEnrollers(id graph.ID) bool {
 	return s.certTemplateHasSpecialEnrollers[id]
 }
 
+// enterpriseCAHasChainedDomain returns true when the Enterprise CA has both a
+// RootCAFor path and a TrustedForNTAuth path to the domain.
+func (s *ADCSCache) enterpriseCAHasChainedDomain(enterpriseCAID, domainID graph.ID) bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	rootCAEnterpriseCAs, hasRootCAPath := s.rootCAForChainValid[domainID]
+	ntAuthEnterpriseCAs, hasNTAuthPath := s.authStoreForChainValid[domainID]
+	if !hasRootCAPath || !hasNTAuthPath {
+		return false
+	}
+
+	return rootCAEnterpriseCAs.Contains(enterpriseCAID.Uint64()) && ntAuthEnterpriseCAs.Contains(enterpriseCAID.Uint64())
+}
+
 func (s *ADCSCache) GetEnterpriseCAHasSpecialEnrollers(id graph.ID) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

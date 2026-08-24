@@ -689,11 +689,11 @@ func TestADCSESC3(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching esc3 edges in integration test; %v", err)
 				} else {
-					assert.Equal(t, 3, len(results))
+					assert.Equal(t, 2, len(results))
 
 					require.True(t, results.Contains(harness.ESC3Harness1.Computer1))
 					require.True(t, results.Contains(harness.ESC3Harness1.Group2))
-					require.True(t, results.Contains(harness.ESC3Harness1.User1))
+					require.False(t, results.Contains(harness.ESC3Harness1.User1), "CT1's EnterpriseCA does not chain to the target domain RootCA")
 
 				}
 				return nil

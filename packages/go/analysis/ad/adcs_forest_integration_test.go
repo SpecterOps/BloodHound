@@ -204,6 +204,161 @@ func TestADCSNTAuthStoreChainRequiresExactPattern(t *testing.T) {
 	)
 }
 
+func TestADCSESC3SelectsPublishersForTargetDomain(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	var (
+		domainASID = integration.RandomDomainSID()
+		domainBSID = integration.RandomDomainSID()
+
+		domainA              *graph.Node
+		domainB              *graph.Node
+		domainAOnlyPrincipal *graph.Node
+		bothDomainsPrincipal *graph.Node
+		domainAPublisher     *graph.Node
+		domainBPublisher     *graph.Node
+		targetEnterpriseCA   *graph.Node
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domainA = testContext.NewActiveDirectoryDomain("DomainA", domainASID, false, true)
+			domainB = testContext.NewActiveDirectoryDomain("DomainB", domainBSID, false, true)
+			domainARootCA := testContext.NewActiveDirectoryRootCA("DomainARootCA", domainASID)
+			domainBRootCA := testContext.NewActiveDirectoryRootCA("DomainBRootCA", domainBSID)
+			domainANTAuthStore := testContext.NewActiveDirectoryNTAuthStore("DomainANTAuthStore", domainASID)
+			domainBNTAuthStore := testContext.NewActiveDirectoryNTAuthStore("DomainBNTAuthStore", domainBSID)
+			domainAPublisher = testContext.NewActiveDirectoryEnterpriseCA("DomainAPublisher", domainASID)
+			domainBPublisher = testContext.NewActiveDirectoryEnterpriseCA("DomainBPublisher", domainBSID)
+			targetEnterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("TargetEnterpriseCA", domainASID)
+
+			enrollmentAgentTemplate := testContext.NewActiveDirectoryCertTemplate("EnrollmentAgentTemplate", domainASID, integration.CertTemplateData{
+				RequiresManagerApproval: false,
+				SchemaVersion:           2,
+				AuthorizedSignatures:    0,
+				EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent},
+				ApplicationPolicies:     []string{},
+			})
+			targetTemplate := testContext.NewActiveDirectoryCertTemplate("TargetTemplate", domainASID, integration.CertTemplateData{
+				RequiresManagerApproval: false,
+				AuthenticationEnabled:   true,
+				SchemaVersion:           2,
+				AuthorizedSignatures:    1,
+				EffectiveEKUs:           []string{"1.3.6.1.5.5.7.3.2"},
+				ApplicationPolicies:     []string{adAnalysis.EkuCertRequestAgent},
+			})
+
+			domainAOnlyPrincipal = testContext.NewActiveDirectoryGroup("DomainAOnlyPrincipal", domainASID)
+			bothDomainsPrincipal = testContext.NewActiveDirectoryGroup("BothDomainsPrincipal", domainASID)
+
+			testContext.NewRelationship(domainARootCA, domainA, ad.RootCAFor)
+			testContext.NewRelationship(domainBRootCA, domainB, ad.RootCAFor)
+			testContext.NewRelationship(domainANTAuthStore, domainA, ad.NTAuthStoreFor)
+			testContext.NewRelationship(domainBNTAuthStore, domainB, ad.NTAuthStoreFor)
+
+			// The target CA is valid for both domains. Each CT1 publisher is valid
+			// for exactly one domain through both RootCA and NTAuth paths.
+			testContext.NewRelationship(targetEnterpriseCA, domainARootCA, ad.IssuedSignedBy)
+			testContext.NewRelationship(targetEnterpriseCA, domainBRootCA, ad.IssuedSignedBy)
+			testContext.NewRelationship(targetEnterpriseCA, domainANTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(targetEnterpriseCA, domainBNTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(domainAPublisher, domainARootCA, ad.IssuedSignedBy)
+			testContext.NewRelationship(domainAPublisher, domainANTAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(domainBPublisher, domainBRootCA, ad.IssuedSignedBy)
+			testContext.NewRelationship(domainBPublisher, domainBNTAuthStore, ad.TrustedForNTAuth)
+
+			testContext.NewRelationship(enrollmentAgentTemplate, domainAPublisher, ad.PublishedTo)
+			testContext.NewRelationship(enrollmentAgentTemplate, domainBPublisher, ad.PublishedTo)
+			testContext.NewRelationship(targetTemplate, targetEnterpriseCA, ad.PublishedTo)
+
+			for _, enrollmentTarget := range []*graph.Node{
+				enrollmentAgentTemplate,
+				targetTemplate,
+				domainAPublisher,
+				targetEnterpriseCA,
+			} {
+				testContext.NewRelationship(domainAOnlyPrincipal, enrollmentTarget, ad.Enroll)
+				testContext.NewRelationship(bothDomainsPrincipal, enrollmentTarget, ad.Enroll)
+			}
+			testContext.NewRelationship(bothDomainsPrincipal, domainBPublisher, ad.Enroll)
+
+			addEnabledHostingComputer(testContext, "DomainAPublisherHost", domainASID, domainAPublisher)
+			addEnabledHostingComputer(testContext, "DomainBPublisherHost", domainBSID, domainBPublisher)
+			addEnabledHostingComputer(testContext, "TargetEnterpriseCAHost", domainASID, targetEnterpriseCA)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			localGroupData, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			enrollOnBehalfOfOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance - EnrollOnBehalfOf")
+			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, enrollOnBehalfOfOperation))
+			require.NoError(t, enrollOnBehalfOfOperation.Done())
+
+			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance")
+			for _, certificateChains := range cache.GetECAHostedChainedDomains() {
+				certificateChains := certificateChains
+				require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+					return adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certificateChains, cache)
+				}))
+			}
+			require.NoError(t, edgeOperation.Done())
+
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				fetchEdge := func(principal, domain *graph.Node) (*graph.Relationship, error) {
+					return tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Relationship(), ad.ADCSESC3),
+							query.Equals(query.StartID(), principal.ID),
+							query.Equals(query.EndID(), domain.ID),
+						)
+					}).First()
+				}
+
+				domainAEdge, err := fetchEdge(domainAOnlyPrincipal, domainA)
+				require.NoError(t, err)
+				_, err = fetchEdge(domainAOnlyPrincipal, domainB)
+				require.True(t, graph.IsErrNotFound(err), "a CT1 publisher for domain A must not create an edge to domain B")
+
+				domainAComposition, err := adAnalysis.GetADCSESC3EdgeComposition(t.Context(), db, domainAEdge)
+				require.NoError(t, err)
+				require.NotEmpty(t, domainAComposition)
+				require.True(t, domainAComposition.AllNodes().Contains(domainAPublisher))
+				require.False(t, domainAComposition.AllNodes().Contains(domainBPublisher))
+
+				invalidDomainBComposition, err := adAnalysis.GetADCSESC3EdgeComposition(t.Context(), db, graph.NewRelationship(
+					0,
+					domainAOnlyPrincipal.ID,
+					domainB.ID,
+					graph.NewProperties(),
+					ad.ADCSESC3,
+				))
+				require.NoError(t, err)
+				require.Empty(t, invalidDomainBComposition)
+
+				for _, testCase := range []struct {
+					domain            *graph.Node
+					expectedPublisher *graph.Node
+					excludedPublisher *graph.Node
+				}{
+					{domain: domainA, expectedPublisher: domainAPublisher, excludedPublisher: domainBPublisher},
+					{domain: domainB, expectedPublisher: domainBPublisher, excludedPublisher: domainAPublisher},
+				} {
+					edge, err := fetchEdge(bothDomainsPrincipal, testCase.domain)
+					require.NoError(t, err)
+
+					composition, err := adAnalysis.GetADCSESC3EdgeComposition(t.Context(), db, edge)
+					require.NoError(t, err)
+					require.NotEmpty(t, composition)
+					require.True(t, composition.AllNodes().Contains(testCase.expectedPublisher))
+					require.False(t, composition.AllNodes().Contains(testCase.excludedPublisher))
+				}
+				return nil
+			}))
+		},
+	)
+}
+
 func TestADCSESC1CompositionScopesHostsToExactEnterpriseCA(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
