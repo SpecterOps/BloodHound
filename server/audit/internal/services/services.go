@@ -35,7 +35,19 @@ const (
 
 type Source string
 
-const SourceMiddleware Source = "middleware"
+const (
+	// SourceMiddleware marks rows written by the audit middleware/service.
+	SourceMiddleware Source = "middleware"
+	// SourceLegacy marks rows copied from the pre-partitioning audit_logs table by
+	// the partitioning migration; the service never writes this value.
+	SourceLegacy Source = "legacy"
+)
+
+// UnknownActorName is the actor name recorded for a completely unattributed
+// (unauthenticated) request, so the row is kept and attributed by source IP
+// rather than dropped. It is applied centrally in toRecord so individual callers
+// (the middleware today, handlers later) need not handle this edge case.
+const UnknownActorName = "unknown"
 
 // AuditRecord is the persistence-facing representation the Store writes.
 type AuditRecord struct {
@@ -77,7 +89,7 @@ type Database interface {
 // Maintainer is the port the GC daemon requires to manage audit partitions.
 // appdb.Store implements it.
 type Maintainer interface {
-	PreCreateNextPartition(ctx context.Context, asOf time.Time) error
+	CreateNextPartition(ctx context.Context, asOf time.Time) error
 	DropExpiredPartitions(ctx context.Context, asOf time.Time, retentionMonths int) error
 }
 
@@ -149,10 +161,18 @@ func (s *Service) Failure(ctx context.Context, commitID uuid.UUID, entry Entry) 
 }
 
 func (s *Service) toRecord(entry Entry, commitID uuid.UUID, status Status) AuditRecord {
+	var actorName = entry.ActorName
+
+	// Default a completely unattributed actor (an unauthenticated request) to the
+	// unknown marker here, so callers do not each have to handle this edge case.
+	if entry.ActorID == "" && entry.ActorName == "" && entry.ActorEmail == "" {
+		actorName = UnknownActorName
+	}
+
 	return AuditRecord{
 		Action:          entry.Action,
 		ActorID:         entry.ActorID,
-		ActorName:       entry.ActorName,
+		ActorName:       actorName,
 		ActorEmail:      entry.ActorEmail,
 		RequestID:       entry.RequestID,
 		SourceIPAddress: entry.SourceIPAddress,

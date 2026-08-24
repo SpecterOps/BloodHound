@@ -35,10 +35,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// fakeAuditService is a hand-rolled test double for the middleware.AuditService
+// mockAuditService is a hand-rolled mock of the middleware.AuditService
 // port. It records every call and can be configured to return errors so the
 // best-effort behavior of the middleware can be exercised.
-type fakeAuditService struct {
+type mockAuditService struct {
 	commitID uuid.UUID
 
 	intentErr  error
@@ -63,20 +63,20 @@ type fakeAuditService struct {
 	intentCtxErr      error
 }
 
-func (s *fakeAuditService) Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error) {
+func (s *mockAuditService) Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error) {
 	_, s.intentDeadlineSet = ctx.Deadline()
 	s.intentCtxErr = ctx.Err()
 	s.intentEntries = append(s.intentEntries, entry)
 	return s.commitID, s.intentErr
 }
 
-func (s *fakeAuditService) Success(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
+func (s *mockAuditService) Success(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
 	s.successCommits = append(s.successCommits, commitID)
 	s.successCtxErr = ctx.Err()
 	return s.successErr
 }
 
-func (s *fakeAuditService) Failure(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
+func (s *mockAuditService) Failure(ctx context.Context, commitID uuid.UUID, _ audit.Entry) error {
 	s.failureCommits = append(s.failureCommits, commitID)
 	s.failureCtxErr = ctx.Err()
 	return s.failureErr
@@ -88,6 +88,7 @@ const (
 	testActorName = "actor"
 	testActorMail = "actor@example.com"
 	testRequestID = "request-id"
+	testCommitID  = "11111111-1111-1111-1111-111111111111"
 )
 
 // newAuditTestRouter wires the AuditMiddleware onto a router with a single
@@ -95,7 +96,7 @@ const (
 // is used to drive requests through the middleware.
 func newAuditTestRouter(auditService middleware.AuditService, handlerStatus int) *mux.Router {
 	router := mux.NewRouter()
-	router.Use(middleware.AuditMiddleware(auditService, router))
+	router.Use(middleware.AuditMiddleware(auditService, router, nil))
 	router.HandleFunc(testRoute, func(response http.ResponseWriter, _ *http.Request) {
 		response.WriteHeader(handlerStatus)
 	})
@@ -119,33 +120,78 @@ func newAuditRequest(method string) *http.Request {
 	return request.WithContext(bhctx.Set(request.Context(), bhCtx))
 }
 
-func TestAuditMiddleware_MutatingSuccess(t *testing.T) {
-	var (
-		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
-		router   = newAuditTestRouter(fake, http.StatusOK)
-		recorder = httptest.NewRecorder()
-	)
+// TestAuditMiddleware_Outcomes covers the intent + result rows written for a
+// request that runs to completion: a 2xx handler produces a success row, a
+// >=400 handler produces a failure row, and reads (GET) are audited like any
+// other request.
+func TestAuditMiddleware_Outcomes(t *testing.T) {
+	tests := []struct {
+		name           string
+		method         string
+		handlerStatus  int
+		wantStatus     int
+		wantSuccessLen int
+		wantFailureLen int
+	}{
+		{
+			name:           "mutating success writes a success row",
+			method:         http.MethodPost,
+			handlerStatus:  http.StatusOK,
+			wantStatus:     http.StatusOK,
+			wantSuccessLen: 1,
+		},
+		{
+			name:           "mutating failure writes a failure row",
+			method:         http.MethodDelete,
+			handlerStatus:  http.StatusBadRequest,
+			wantStatus:     http.StatusBadRequest,
+			wantFailureLen: 1,
+		},
+		{
+			name:           "read is audited and writes a success row",
+			method:         http.MethodGet,
+			handlerStatus:  http.StatusOK,
+			wantStatus:     http.StatusOK,
+			wantSuccessLen: 1,
+		},
+	}
 
-	router.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mock     = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
+				router   = newAuditTestRouter(mock, tt.handlerStatus)
+				recorder = httptest.NewRecorder()
+			)
 
-	require.Equal(t, http.StatusOK, recorder.Code)
-	require.Len(t, fake.intentEntries, 1)
-	require.Len(t, fake.successCommits, 1)
-	require.Empty(t, fake.failureCommits)
-	require.Equal(t, fake.commitID, fake.successCommits[0])
+			router.ServeHTTP(recorder, newAuditRequest(tt.method))
 
-	entry := fake.intentEntries[0]
-	require.Equal(t, http.MethodPost+testRoute, entry.Action)
-	require.Equal(t, testActorID, entry.ActorID)
-	require.Equal(t, testActorName, entry.ActorName)
-	require.Equal(t, testActorMail, entry.ActorEmail)
-	require.Equal(t, testRequestID, entry.RequestID)
+			require.Equal(t, tt.wantStatus, recorder.Code)
+			require.Len(t, mock.intentEntries, 1)
+			require.Len(t, mock.successCommits, tt.wantSuccessLen)
+			require.Len(t, mock.failureCommits, tt.wantFailureLen)
+
+			entry := mock.intentEntries[0]
+			require.Equal(t, tt.method+testRoute, entry.Action)
+			require.Equal(t, testActorID, entry.ActorID)
+			require.Equal(t, testActorName, entry.ActorName)
+			require.Equal(t, testActorMail, entry.ActorEmail)
+			require.Equal(t, testRequestID, entry.RequestID)
+
+			if tt.wantSuccessLen == 1 {
+				require.Equal(t, mock.commitID, mock.successCommits[0])
+			}
+			if tt.wantFailureLen == 1 {
+				require.Equal(t, mock.commitID, mock.failureCommits[0])
+			}
+		})
+	}
 }
 
 func TestAuditMiddleware_IntentWriteIsBounded(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
-		router   = newAuditTestRouter(fake, http.StatusOK)
+		mock     = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
+		router   = newAuditTestRouter(mock, http.StatusOK)
 		recorder = httptest.NewRecorder()
 	)
 
@@ -153,14 +199,14 @@ func TestAuditMiddleware_IntentWriteIsBounded(t *testing.T) {
 
 	// The intent write must be bounded so a slow/unavailable database cannot block
 	// the request goroutine indefinitely before the handler runs.
-	require.Len(t, fake.intentEntries, 1)
-	require.True(t, fake.intentDeadlineSet, "intent write must receive a context with a deadline")
+	require.Len(t, mock.intentEntries, 1)
+	require.True(t, mock.intentDeadlineSet, "intent write must receive a context with a deadline")
 }
 
 func TestAuditMiddleware_IntentWriteRespectsRequestCancellation(t *testing.T) {
 	var (
-		fake            = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
-		router          = newAuditTestRouter(fake, http.StatusOK)
+		mock            = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
+		router          = newAuditTestRouter(mock, http.StatusOK)
 		recorder        = httptest.NewRecorder()
 		baseCtx, cancel = context.WithCancel(context.Background())
 	)
@@ -176,88 +222,48 @@ func TestAuditMiddleware_IntentWriteRespectsRequestCancellation(t *testing.T) {
 
 	// The intent context is derived from the request context, so request
 	// cancellation still propagates to the intent write.
-	require.Len(t, fake.intentEntries, 1)
-	require.ErrorIs(t, fake.intentCtxErr, context.Canceled)
-}
-
-func TestAuditMiddleware_MutatingFailure(t *testing.T) {
-	var (
-		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
-		router   = newAuditTestRouter(fake, http.StatusBadRequest)
-		recorder = httptest.NewRecorder()
-	)
-
-	router.ServeHTTP(recorder, newAuditRequest(http.MethodDelete))
-
-	require.Equal(t, http.StatusBadRequest, recorder.Code)
-	require.Len(t, fake.intentEntries, 1)
-	require.Len(t, fake.failureCommits, 1)
-	require.Empty(t, fake.successCommits)
-	require.Equal(t, fake.commitID, fake.failureCommits[0])
+	require.Len(t, mock.intentEntries, 1)
+	require.ErrorIs(t, mock.intentCtxErr, context.Canceled)
 }
 
 var errAudit = errors.New("audit write failed")
 
-func TestAuditMiddleware_NonMutatingAudited(t *testing.T) {
-	var (
-		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
-		router   = newAuditTestRouter(fake, http.StatusOK)
-		recorder = httptest.NewRecorder()
-	)
-
-	router.ServeHTTP(recorder, newAuditRequest(http.MethodGet))
-
-	// Reads are audited like any other request: a GET produces an intent row
-	// before the handler runs and a success row afterward.
-	require.Equal(t, http.StatusOK, recorder.Code)
-	require.Len(t, fake.intentEntries, 1)
-	require.Len(t, fake.successCommits, 1)
-	require.Empty(t, fake.failureCommits)
-	require.Equal(t, fake.commitID, fake.successCommits[0])
-
-	entry := fake.intentEntries[0]
-	require.Equal(t, http.MethodGet+testRoute, entry.Action)
-}
-
+// TestAuditMiddleware_IntentErrorFailsRequest verifies the fail-closed behavior:
+// a failed intent write rejects the request with a 500 and the handler never
+// runs, for both writes and reads.
 func TestAuditMiddleware_IntentErrorFailsRequest(t *testing.T) {
-	var (
-		fake     = &fakeAuditService{intentErr: errAudit}
-		router   = newAuditTestRouter(fake, http.StatusOK)
-		recorder = httptest.NewRecorder()
-	)
+	tests := []struct {
+		name   string
+		method string
+	}{
+		{name: "mutating request fails closed", method: http.MethodPost},
+		{name: "read request fails closed", method: http.MethodGet},
+	}
 
-	router.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mock     = &mockAuditService{intentErr: errAudit}
+				router   = newAuditTestRouter(mock, http.StatusOK)
+				recorder = httptest.NewRecorder()
+			)
 
-	// A failed intent write rejects the request with a 500; the handler never
-	// runs (so the 200 it would set is not observed) and no result row is
-	// written because the audited action did not proceed.
-	require.Equal(t, http.StatusInternalServerError, recorder.Code)
-	require.Len(t, fake.intentEntries, 1)
-	require.Empty(t, fake.successCommits)
-	require.Empty(t, fake.failureCommits)
-}
+			router.ServeHTTP(recorder, newAuditRequest(tt.method))
 
-func TestAuditMiddleware_IntentErrorFailsReadRequest(t *testing.T) {
-	var (
-		fake     = &fakeAuditService{intentErr: errAudit}
-		router   = newAuditTestRouter(fake, http.StatusOK)
-		recorder = httptest.NewRecorder()
-	)
-
-	router.ServeHTTP(recorder, newAuditRequest(http.MethodGet))
-
-	// Fail-closed applies to reads too: a failed intent write on a GET rejects
-	// the request with a 500 and the handler never runs.
-	require.Equal(t, http.StatusInternalServerError, recorder.Code)
-	require.Len(t, fake.intentEntries, 1)
-	require.Empty(t, fake.successCommits)
-	require.Empty(t, fake.failureCommits)
+			// The handler never runs (so the 200 it would set is not observed)
+			// and no result row is written because the action did not proceed.
+			require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			require.Len(t, mock.intentEntries, 1)
+			require.Empty(t, mock.successCommits)
+			require.Empty(t, mock.failureCommits)
+		})
+	}
 }
 
 func TestAuditMiddleware_ResultErrorSwallowed(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{successErr: errAudit, failureErr: errAudit}
-		router   = newAuditTestRouter(fake, http.StatusCreated)
+		mock     = &mockAuditService{successErr: errAudit, failureErr: errAudit}
+		router   = newAuditTestRouter(mock, http.StatusCreated)
 		recorder = httptest.NewRecorder()
 	)
 
@@ -266,17 +272,17 @@ func TestAuditMiddleware_ResultErrorSwallowed(t *testing.T) {
 	// A failing result write is logged and swallowed; the underlying request
 	// completes normally.
 	require.Equal(t, http.StatusCreated, recorder.Code)
-	require.Len(t, fake.successCommits, 1)
+	require.Len(t, mock.successCommits, 1)
 }
 
 func TestAuditMiddleware_ExcludedRouteNotAudited(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{}
+		mock     = &mockAuditService{}
 		router   = mux.NewRouter()
 		recorder = httptest.NewRecorder()
 		request  = httptest.NewRequest(http.MethodGet, "/health", nil)
 	)
-	router.Use(middleware.AuditMiddleware(fake, router, "/health"))
+	router.Use(middleware.AuditMiddleware(mock, router, func(routeTemplate string) bool { return routeTemplate == "/health" }))
 	router.HandleFunc("/health", func(response http.ResponseWriter, _ *http.Request) {
 		response.WriteHeader(http.StatusOK)
 	})
@@ -286,21 +292,21 @@ func TestAuditMiddleware_ExcludedRouteNotAudited(t *testing.T) {
 
 	// An excluded route runs its handler normally but produces no audit rows.
 	require.Equal(t, http.StatusOK, recorder.Code)
-	require.Empty(t, fake.intentEntries)
-	require.Empty(t, fake.successCommits)
-	require.Empty(t, fake.failureCommits)
+	require.Empty(t, mock.intentEntries)
+	require.Empty(t, mock.successCommits)
+	require.Empty(t, mock.failureCommits)
 }
 
 func TestAuditMiddleware_OutcomeWriteSurvivesRequestCancellation(t *testing.T) {
 	var (
-		fake            = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		mock            = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
 		router          = mux.NewRouter()
 		recorder        = httptest.NewRecorder()
 		baseCtx, cancel = context.WithCancel(context.Background())
 	)
 	defer cancel()
 
-	router.Use(middleware.AuditMiddleware(fake, router))
+	router.Use(middleware.AuditMiddleware(mock, router, nil))
 	router.HandleFunc(testRoute, func(response http.ResponseWriter, _ *http.Request) {
 		// Simulate the client disconnecting while the handler runs.
 		cancel()
@@ -314,18 +320,18 @@ func TestAuditMiddleware_OutcomeWriteSurvivesRequestCancellation(t *testing.T) {
 
 	// The outcome write still happens and is handed a context that is not
 	// cancelled even though the request's context was cancelled mid-handler.
-	require.Len(t, fake.successCommits, 1)
-	require.NoError(t, fake.successCtxErr)
+	require.Len(t, mock.successCommits, 1)
+	require.NoError(t, mock.successCtxErr)
 }
 
 func TestAuditMiddleware_HandlerPanicRecordsFailure(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{commitID: uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")}
+		mock     = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
 		router   = mux.NewRouter()
 		recorder = httptest.NewRecorder()
 	)
 
-	router.Use(middleware.AuditMiddleware(fake, router))
+	router.Use(middleware.AuditMiddleware(mock, router, nil))
 	router.HandleFunc(testRoute, func(_ http.ResponseWriter, _ *http.Request) {
 		panic("handler boom")
 	})
@@ -340,20 +346,20 @@ func TestAuditMiddleware_HandlerPanicRecordsFailure(t *testing.T) {
 	// A panicking handler still produces an intent row and a matching failure row
 	// rather than leaving the intent dangling with no outcome. No success row is
 	// written.
-	require.Len(t, fake.intentEntries, 1)
-	require.Len(t, fake.failureCommits, 1)
-	require.Empty(t, fake.successCommits)
-	require.Equal(t, fake.commitID, fake.failureCommits[0])
+	require.Len(t, mock.intentEntries, 1)
+	require.Len(t, mock.failureCommits, 1)
+	require.Empty(t, mock.successCommits)
+	require.Equal(t, mock.commitID, mock.failureCommits[0])
 
 	// The panic-path failure write uses a context detached from the request's
 	// cancellation, so it is not cancelled.
-	require.NoError(t, fake.failureCtxErr)
+	require.NoError(t, mock.failureCtxErr)
 }
 
 func TestAuditMiddleware_UnauthenticatedActorEmpty(t *testing.T) {
 	var (
-		fake     = &fakeAuditService{}
-		router   = newAuditTestRouter(fake, http.StatusOK)
+		mock     = &mockAuditService{}
+		router   = newAuditTestRouter(mock, http.StatusOK)
 		recorder = httptest.NewRecorder()
 		request  = httptest.NewRequest(http.MethodPost, "/api/v2/things/abc", nil)
 	)
@@ -361,10 +367,10 @@ func TestAuditMiddleware_UnauthenticatedActorEmpty(t *testing.T) {
 
 	router.ServeHTTP(recorder, request)
 
-	require.Len(t, fake.intentEntries, 1)
-	entry := fake.intentEntries[0]
+	require.Len(t, mock.intentEntries, 1)
+	entry := mock.intentEntries[0]
 	require.Empty(t, entry.ActorID)
-	require.Equal(t, "anonymous", entry.ActorName)
+	require.Empty(t, entry.ActorName, "middleware leaves the actor empty; the service applies the unknown default")
 	require.Empty(t, entry.ActorEmail)
 	require.Equal(t, testRequestID, entry.RequestID)
 }

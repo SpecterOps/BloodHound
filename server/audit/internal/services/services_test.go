@@ -54,103 +54,168 @@ func captureInsert(db *mocks.MockDatabase, captured *services.AuditRecord, retur
 		Once()
 }
 
-func TestService_Intent_WritesIntentRowAndReturnsCommitID(t *testing.T) {
-	var (
-		db       = mocks.NewMockDatabase(t)
-		service  = services.NewService(db)
-		captured services.AuditRecord
-		entry    = sampleEntry()
-	)
-	captureInsert(db, &captured, nil)
+func TestService_Intent(t *testing.T) {
+	var sentinel = errors.New("insert failed")
 
-	commitID, err := service.Intent(context.Background(), entry)
-	require.NoError(t, err)
-	assert.NotEqual(t, uuid.UUID{}, commitID, "a commit id should be generated")
+	tests := []struct {
+		name    string
+		dbErr   error
+		wantErr error
+	}{
+		{
+			name: "writes an intent row and returns the generated commit id",
+		},
+		{
+			// The current contract returns the generated id even on insert
+			// failure so callers can correlate a failed intent if needed.
+			name:    "propagates insert errors while still returning a commit id",
+			dbErr:   sentinel,
+			wantErr: sentinel,
+		},
+	}
 
-	assert.Equal(t, services.StatusIntent, captured.Status)
-	assert.Equal(t, commitID, captured.CommitID, "written row must carry the returned commit id")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+				captured     services.AuditRecord
+				entry        = sampleEntry()
+			)
+			captureInsert(databaseMock, &captured, tt.dbErr)
 
-	// Field mapping (toRecord) is exercised through the captured record.
-	assert.Equal(t, entry.Action, captured.Action)
-	assert.Equal(t, entry.ActorID, captured.ActorID)
-	assert.Equal(t, entry.ActorName, captured.ActorName)
-	assert.Equal(t, entry.ActorEmail, captured.ActorEmail)
-	assert.Equal(t, entry.RequestID, captured.RequestID)
-	assert.Equal(t, entry.SourceIPAddress, captured.SourceIPAddress)
-	assert.Equal(t, map[string]any{"key": "value"}, captured.Fields)
-	assert.Equal(t, services.SourceMiddleware, captured.Source, "source is always middleware")
+			commitID, err := svc.Intent(context.Background(), entry)
+			assert.NotEqual(t, uuid.UUID{}, commitID, "a commit id should always be generated")
+
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, services.StatusIntent, captured.Status)
+			assert.Equal(t, commitID, captured.CommitID, "written row must carry the returned commit id")
+
+			// Field mapping (toRecord) is exercised through the captured record.
+			assert.Equal(t, entry.Action, captured.Action)
+			assert.Equal(t, entry.ActorID, captured.ActorID)
+			assert.Equal(t, entry.ActorName, captured.ActorName)
+			assert.Equal(t, entry.ActorEmail, captured.ActorEmail)
+			assert.Equal(t, entry.RequestID, captured.RequestID)
+			assert.Equal(t, entry.SourceIPAddress, captured.SourceIPAddress)
+			assert.Equal(t, map[string]any{"key": "value"}, captured.Fields)
+			assert.Equal(t, services.SourceMiddleware, captured.Source, "source is always middleware")
+		})
+	}
 }
 
-func TestService_Success_WritesSuccessRowWithProvidedCommitID(t *testing.T) {
-	var (
-		db       = mocks.NewMockDatabase(t)
-		service  = services.NewService(db)
-		captured services.AuditRecord
-		commitID = uuid.Must(uuid.NewV4())
-	)
-	captureInsert(db, &captured, nil)
+func TestService_Outcome(t *testing.T) {
+	var sentinel = errors.New("insert failed")
 
-	require.NoError(t, service.Success(context.Background(), commitID, sampleEntry()))
-	assert.Equal(t, services.StatusSuccess, captured.Status)
-	assert.Equal(t, commitID, captured.CommitID)
-	assert.Equal(t, services.SourceMiddleware, captured.Source)
+	tests := []struct {
+		name       string
+		call       func(svc *services.Service, commitID uuid.UUID) error
+		dbErr      error
+		wantStatus services.Status
+		wantErr    error
+	}{
+		{
+			name: "success writes a success row with the provided commit id",
+			call: func(svc *services.Service, commitID uuid.UUID) error {
+				return svc.Success(context.Background(), commitID, sampleEntry())
+			},
+			wantStatus: services.StatusSuccess,
+		},
+		{
+			name: "failure writes a failure row with the provided commit id",
+			call: func(svc *services.Service, commitID uuid.UUID) error {
+				return svc.Failure(context.Background(), commitID, sampleEntry())
+			},
+			wantStatus: services.StatusFailure,
+		},
+		{
+			name: "success propagates insert errors",
+			call: func(svc *services.Service, commitID uuid.UUID) error {
+				return svc.Success(context.Background(), commitID, sampleEntry())
+			},
+			dbErr:   sentinel,
+			wantErr: sentinel,
+		},
+		{
+			name: "failure propagates insert errors",
+			call: func(svc *services.Service, commitID uuid.UUID) error {
+				return svc.Failure(context.Background(), commitID, sampleEntry())
+			},
+			dbErr:   sentinel,
+			wantErr: sentinel,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+				captured     services.AuditRecord
+				commitID     = uuid.Must(uuid.NewV4())
+			)
+			captureInsert(databaseMock, &captured, tt.dbErr)
+
+			err := tt.call(svc, commitID)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantStatus, captured.Status)
+			assert.Equal(t, commitID, captured.CommitID)
+			assert.Equal(t, services.SourceMiddleware, captured.Source)
+		})
+	}
 }
 
-func TestService_Failure_WritesFailureRowWithProvidedCommitID(t *testing.T) {
-	var (
-		db       = mocks.NewMockDatabase(t)
-		service  = services.NewService(db)
-		captured services.AuditRecord
-		commitID = uuid.Must(uuid.NewV4())
-	)
-	captureInsert(db, &captured, nil)
+// TestService_DefaultsUnknownActor verifies the service supplies the unknown
+// actor name when an entry carries no actor identity, centralizing the
+// unauthenticated edge case so callers do not each have to handle it.
+func TestService_DefaultsUnknownActor(t *testing.T) {
+	tests := []struct {
+		name          string
+		mutate        func(entry *services.Entry)
+		wantActorName string
+	}{
+		{
+			name: "unattributed entry defaults to the unknown actor",
+			mutate: func(entry *services.Entry) {
+				entry.ActorID = ""
+				entry.ActorName = ""
+				entry.ActorEmail = ""
+			},
+			wantActorName: services.UnknownActorName,
+		},
+		{
+			name:          "attributed entry keeps its actor name",
+			mutate:        func(_ *services.Entry) {},
+			wantActorName: "actor-name",
+		},
+	}
 
-	require.NoError(t, service.Failure(context.Background(), commitID, sampleEntry()))
-	assert.Equal(t, services.StatusFailure, captured.Status)
-	assert.Equal(t, commitID, captured.CommitID)
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+				captured     services.AuditRecord
+				entry        = sampleEntry()
+			)
+			tt.mutate(&entry)
+			captureInsert(databaseMock, &captured, nil)
 
-func TestService_Intent_PropagatesInsertErrorAndReturnsCommitID(t *testing.T) {
-	var (
-		sentinel = errors.New("insert failed")
-		db       = mocks.NewMockDatabase(t)
-		service  = services.NewService(db)
-		captured services.AuditRecord
-	)
-	captureInsert(db, &captured, sentinel)
-
-	commitID, err := service.Intent(context.Background(), sampleEntry())
-	require.ErrorIs(t, err, sentinel)
-	// The current contract returns the generated id even on insert failure so
-	// callers can correlate a failed intent if needed.
-	assert.NotEqual(t, uuid.UUID{}, commitID)
-}
-
-func TestService_SuccessAndFailure_PropagateInsertError(t *testing.T) {
-	var (
-		sentinel = errors.New("insert failed")
-		commitID = uuid.Must(uuid.NewV4())
-	)
-
-	t.Run("success", func(t *testing.T) {
-		var (
-			db       = mocks.NewMockDatabase(t)
-			service  = services.NewService(db)
-			captured services.AuditRecord
-		)
-		captureInsert(db, &captured, sentinel)
-		require.ErrorIs(t, service.Success(context.Background(), commitID, sampleEntry()), sentinel)
-	})
-
-	t.Run("failure", func(t *testing.T) {
-		var (
-			db       = mocks.NewMockDatabase(t)
-			service  = services.NewService(db)
-			captured services.AuditRecord
-		)
-		captureInsert(db, &captured, sentinel)
-		require.ErrorIs(t, service.Failure(context.Background(), commitID, sampleEntry()), sentinel)
-	})
+			_, err := svc.Intent(context.Background(), entry)
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantActorName, captured.ActorName)
+		})
+	}
 }
 
 // TestService_RedactsSensitiveFields exercises redactSensitiveFields indirectly
@@ -158,7 +223,7 @@ func TestService_SuccessAndFailure_PropagateInsertError(t *testing.T) {
 func TestService_RedactsSensitiveFields(t *testing.T) {
 	const redacted = "[REDACTED]"
 
-	var cases = []struct {
+	tests := []struct {
 		name     string
 		fields   map[string]any
 		expected map[string]any
@@ -210,20 +275,20 @@ func TestService_RedactsSensitiveFields(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			var (
-				db       = mocks.NewMockDatabase(t)
-				service  = services.NewService(db)
-				captured services.AuditRecord
-				entry    = sampleEntry()
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+				captured     services.AuditRecord
+				entry        = sampleEntry()
 			)
-			entry.Fields = tc.fields
-			captureInsert(db, &captured, nil)
+			entry.Fields = tt.fields
+			captureInsert(databaseMock, &captured, nil)
 
-			_, err := service.Intent(context.Background(), entry)
+			_, err := svc.Intent(context.Background(), entry)
 			require.NoError(t, err)
-			assert.Equal(t, tc.expected, captured.Fields)
+			assert.Equal(t, tt.expected, captured.Fields)
 		})
 	}
 }

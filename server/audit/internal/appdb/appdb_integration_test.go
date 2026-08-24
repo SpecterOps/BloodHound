@@ -83,81 +83,85 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func TestStore_InsertAuditLog_PersistsRow(t *testing.T) {
-	var (
-		ctx         = context.Background()
-		store, pool = setupStore(t)
-		commitID    = uuid.Must(uuid.NewV4())
-		record      = services.AuditRecord{
-			Action:          "POST /api/v2/roles/{role_id}",
-			ActorID:         "actor-id",
-			ActorName:       "actor-name",
-			ActorEmail:      "actor@example.com",
-			RequestID:       "req-1",
-			SourceIPAddress: "10.0.0.1",
-			Status:          services.StatusSuccess,
-			CommitID:        commitID,
-			Fields:          map[string]any{"key": "value"},
-			Source:          services.SourceMiddleware,
-		}
-	)
+func TestStore_InsertAuditLog(t *testing.T) {
+	ctx := context.Background()
 
-	require.NoError(t, store.InsertAuditLog(ctx, record))
+	// A fully-populated record persists all columns and routes to a concrete
+	// monthly child partition rather than the parent table.
+	t.Run("persists a row into a monthly partition", func(t *testing.T) {
+		var (
+			store, pool = setupStore(t)
+			commitID    = uuid.Must(uuid.NewV4())
+			record      = services.AuditRecord{
+				Action:          "POST /api/v2/roles/{role_id}",
+				ActorID:         "actor-id",
+				ActorName:       "actor-name",
+				ActorEmail:      "actor@example.com",
+				RequestID:       "req-1",
+				SourceIPAddress: "10.0.0.1",
+				Status:          services.StatusSuccess,
+				CommitID:        commitID,
+				Fields:          map[string]any{"key": "value"},
+				Source:          services.SourceMiddleware,
+			}
+		)
 
-	var (
-		action, status, source string
-		gotCommitID            string
-		fields                 map[string]any
-		partition              string
-	)
-	require.NoError(t, pool.QueryRow(ctx,
-		`SELECT action, status, source, commit_id, fields, tableoid::regclass::text
-		 FROM audit_logs WHERE commit_id = $1`, commitID.String(),
-	).Scan(&action, &status, &source, &gotCommitID, &fields, &partition))
+		require.NoError(t, store.InsertAuditLog(ctx, record))
 
-	assert.Equal(t, record.Action, action)
-	assert.Equal(t, string(services.StatusSuccess), status)
-	assert.Equal(t, string(services.SourceMiddleware), source)
-	assert.Equal(t, commitID.String(), gotCommitID)
-	assert.Equal(t, map[string]any{"key": "value"}, fields)
-	// The row must land in a concrete monthly partition, not the parent name.
-	assert.True(t, strings.HasPrefix(partition, "audit_logs_"), "row should route to a child partition, got %q", partition)
-	assert.NotEqual(t, "audit_logs", partition)
-}
+		var (
+			action, status, source string
+			gotCommitID            string
+			fields                 map[string]any
+			partition              string
+		)
+		require.NoError(t, pool.QueryRow(ctx,
+			`SELECT action, status, source, commit_id, fields, tableoid::regclass::text
+			 FROM audit_logs WHERE commit_id = $1`, commitID.String(),
+		).Scan(&action, &status, &source, &gotCommitID, &fields, &partition))
 
-func TestStore_InsertAuditLog_EmptyFieldsStoredAsNull(t *testing.T) {
-	var (
-		ctx         = context.Background()
-		store, pool = setupStore(t)
-		commitID    = uuid.Must(uuid.NewV4())
-	)
-
-	require.NoError(t, store.InsertAuditLog(ctx, services.AuditRecord{
-		Action:   "GET /x",
-		Status:   services.StatusIntent,
-		CommitID: commitID,
-		Source:   services.SourceMiddleware,
-	}))
-
-	var fieldsIsNull bool
-	require.NoError(t, pool.QueryRow(ctx,
-		`SELECT fields IS NULL FROM audit_logs WHERE commit_id = $1`, commitID.String(),
-	).Scan(&fieldsIsNull))
-	assert.True(t, fieldsIsNull, "empty fields should persist as SQL NULL, not jsonb 'null'")
-}
-
-func TestStore_InsertAuditLog_InvalidStatusMapsToSentinel(t *testing.T) {
-	var (
-		ctx      = context.Background()
-		store, _ = setupStore(t)
-	)
-
-	err := store.InsertAuditLog(ctx, services.AuditRecord{
-		Action:   "GET /x",
-		Status:   services.Status("bogus"), // violates the status CHECK constraint
-		CommitID: uuid.Must(uuid.NewV4()),
-		Source:   services.SourceMiddleware,
+		assert.Equal(t, record.Action, action)
+		assert.Equal(t, string(services.StatusSuccess), status)
+		assert.Equal(t, string(services.SourceMiddleware), source)
+		assert.Equal(t, commitID.String(), gotCommitID)
+		assert.Equal(t, map[string]any{"key": "value"}, fields)
+		// The row must land in a concrete monthly partition, not the parent name.
+		assert.True(t, strings.HasPrefix(partition, "audit_logs_"), "row should route to a child partition, got %q", partition)
+		assert.NotEqual(t, "audit_logs", partition)
 	})
-	require.Error(t, err)
-	assert.ErrorIs(t, err, services.ErrInvalidAuditRecord)
+
+	// An entry with no fields persists as SQL NULL rather than jsonb 'null'.
+	t.Run("empty fields are stored as SQL NULL", func(t *testing.T) {
+		var (
+			store, pool = setupStore(t)
+			commitID    = uuid.Must(uuid.NewV4())
+		)
+
+		require.NoError(t, store.InsertAuditLog(ctx, services.AuditRecord{
+			Action:   "GET /x",
+			Status:   services.StatusIntent,
+			CommitID: commitID,
+			Source:   services.SourceMiddleware,
+		}))
+
+		var fieldsIsNull bool
+		require.NoError(t, pool.QueryRow(ctx,
+			`SELECT fields IS NULL FROM audit_logs WHERE commit_id = $1`, commitID.String(),
+		).Scan(&fieldsIsNull))
+		assert.True(t, fieldsIsNull, "empty fields should persist as SQL NULL, not jsonb 'null'")
+	})
+
+	// A status outside the audit_log_status enum is mapped to the sentinel error
+	// so callers can distinguish invalid records from transient failures.
+	t.Run("invalid status maps to the sentinel error", func(t *testing.T) {
+		store, _ := setupStore(t)
+
+		err := store.InsertAuditLog(ctx, services.AuditRecord{
+			Action:   "GET /x",
+			Status:   services.Status("bogus"), // not a valid audit_log_status enum value
+			CommitID: uuid.Must(uuid.NewV4()),
+			Source:   services.SourceMiddleware,
+		})
+		require.Error(t, err)
+		assert.ErrorIs(t, err, services.ErrInvalidAuditRecord)
+	})
 }

@@ -46,6 +46,24 @@
 -- window, run this out-of-band with DisableMigrations set rather than at pod
 -- startup.
 
+-- Phase 0: status/source enum types. Replaces the previous VARCHAR + CHECK on
+-- status and the free-form VARCHAR source with dedicated enums (easier to maintain
+-- than inline constraints). Created idempotently because CREATE TYPE has no IF NOT
+-- EXISTS, and left in place on a completed re-run since the swapped-in audit_logs
+-- depends on them. Source values: 'middleware' (written by the audit service) and
+-- 'legacy' (assigned to rows copied from the pre-partitioning table).
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_status') THEN
+        CREATE TYPE audit_log_status AS ENUM ('intent', 'success', 'failure');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_source') THEN
+        CREATE TYPE audit_log_source AS ENUM ('middleware', 'legacy');
+    END IF;
+END $$;
+-- +goose StatementEnd
+
 -- Phase 1: staging table. Rebuilt from empty on every run (no-resume contract):
 -- drop any leftover audit_logs_partitioned from a prior interrupted run, then
 -- create it fresh. Skipped once a prior run already swapped the partitioned table
@@ -70,13 +88,13 @@ BEGIN
         action              TEXT NOT NULL,
         actor_id            TEXT,
         actor_name          TEXT,
-        actor_email         VARCHAR(330) DEFAULT NULL::character varying,
+        actor_email         TEXT DEFAULT NULL,
         request_id          TEXT,
         source_ip_address   TEXT,
-        status              VARCHAR(15) DEFAULT 'intent' CHECK (status IN ('intent', 'success', 'failure')),
+        status              audit_log_status DEFAULT 'intent',
         commit_id           TEXT,
         fields              JSONB,
-        source              VARCHAR(20) DEFAULT 'middleware',
+        source              audit_log_source DEFAULT 'middleware',
         PRIMARY KEY (id, created_at)
     ) PARTITION BY RANGE (created_at);
 END $$;
@@ -90,7 +108,7 @@ END $$;
 DO $$
 DECLARE
     start_date    DATE := '2024-01-01';
-    end_date      DATE := '2026-08-01';
+    end_date      DATE := '2026-09-01';
     current_month DATE;
 BEGIN
     IF to_regclass('audit_logs_partitioned') IS NULL THEN
@@ -148,7 +166,7 @@ BEGIN
             actor_email,
             request_id,
             source_ip_address,
-            status,
+            status::audit_log_status,
             commit_id,
             fields,
             'legacy'
@@ -240,6 +258,12 @@ DROP TABLE IF EXISTS audit_logs CASCADE;
 DROP TABLE IF EXISTS audit_logs_partitioned CASCADE;
 DROP TABLE IF EXISTS audit_logs_old CASCADE;
 
+-- Drop the enums introduced by the Up now that no table references them; the
+-- restored audit_logs below goes back to the original VARCHAR + CHECK definition
+-- (and had no source column).
+DROP TYPE IF EXISTS audit_log_status;
+DROP TYPE IF EXISTS audit_log_source;
+
 CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -253,7 +277,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     action              TEXT NOT NULL,
     actor_id            TEXT,
     actor_name          TEXT,
-    actor_email         VARCHAR(330) DEFAULT NULL::character varying,
+    actor_email         TEXT DEFAULT NULL,
     request_id          TEXT,
     source_ip_address   TEXT,
     status              VARCHAR(15) DEFAULT 'intent' CHECK (status IN ('intent', 'success', 'failure')),

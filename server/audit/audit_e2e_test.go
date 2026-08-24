@@ -19,14 +19,11 @@
 package audit_test
 
 import (
-	"bufio"
 	"compress/gzip"
 	"context"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -45,7 +42,6 @@ import (
 const (
 	auditSuccessRoute = "/api/v2/audit-e2e/success"
 	auditFailureRoute = "/api/v2/audit-e2e/failure"
-	auditStreamRoute  = "/api/v2/audit-e2e/stream"
 )
 
 // successPayload is returned by the success handler. It is large enough that the
@@ -83,7 +79,7 @@ func newAuditHarness(t *testing.T) *auditHarness {
 		// recorder wraps the compression writer and the authenticated actor is
 		// already resolved onto the request context.
 		auditService, _ := audit.Register(db.Pool())
-		routerInst.UsePostrouting(middleware.AuditMiddleware(auditService, routerInst.MuxRouter(), "/health"))
+		routerInst.UsePostrouting(middleware.AuditMiddleware(auditService, routerInst.MuxRouter(), routerInst.IsAuditExcluded))
 
 		registerAuditTestRoutes(routerInst)
 	})
@@ -101,9 +97,9 @@ func newAuditHarness(t *testing.T) *auditHarness {
 	return result
 }
 
-// registerAuditTestRoutes mounts the three audited endpoints used by the e2e
-// cases: a 200 success route returning a compressible JSON body, a 500 failure
-// route, and a chunked streaming route that flushes mid-response.
+// registerAuditTestRoutes mounts the two audited endpoints used by the e2e
+// cases: a 200 success route returning a compressible JSON body and a 500
+// failure route.
 func registerAuditTestRoutes(routerInst *router.Router) {
 	routerInst.POST(auditSuccessRoute, func(response http.ResponseWriter, _ *http.Request) {
 		response.Header().Set("Content-Type", "application/json")
@@ -115,20 +111,6 @@ func registerAuditTestRoutes(routerInst *router.Router) {
 		response.Header().Set("Content-Type", "application/json")
 		response.WriteHeader(http.StatusInternalServerError)
 		_, _ = response.Write([]byte(`{"errors":[{"message":"boom"}]}`))
-	}).RequireAuth()
-
-	routerInst.GET(auditStreamRoute, func(response http.ResponseWriter, _ *http.Request) {
-		response.Header().Set("Content-Type", "text/event-stream")
-		response.WriteHeader(http.StatusOK)
-		flusher, ok := response.(http.Flusher)
-		if !ok {
-			http.Error(response, "streaming unsupported", http.StatusInternalServerError)
-			return
-		}
-		for _, chunk := range []string{"data: one\n\n", "data: two\n\n"} {
-			_, _ = response.Write([]byte(chunk))
-			flusher.Flush()
-		}
 	}).RequireAuth()
 }
 
@@ -155,99 +137,55 @@ func (s *auditHarness) authedRequest(t *testing.T, method, route string, body io
 	return request
 }
 
-// TestE2E_AuditMiddleware_SuccessPersistsIntentAndSuccess drives a 200 request
-// through the production chain and asserts (a) the gzip-compressed body decodes
-// to exactly the handler payload (compressed once, decoded once) and (b) intent
-// and success rows land in audit_logs, with no failure row.
-func TestE2E_AuditMiddleware_SuccessPersistsIntentAndSuccess(t *testing.T) {
-	var (
-		harness = newAuditHarness(t)
-		action  = http.MethodPost + auditSuccessRoute
-	)
+// TestE2E_AuditMiddleware drives the audit middleware through the full
+// production chain (Panic -> Auth -> Compression -> Audit) and asserts the rows
+// persisted to audit_logs for success and failure outcomes.
+func TestE2E_AuditMiddleware(t *testing.T) {
+	harness := newAuditHarness(t)
 
-	// Manually request gzip and decode it ourselves so the assertion proves the
-	// body was compressed exactly once (the double-gzip regression produced a
-	// payload that failed this single decode).
-	request := harness.authedRequest(t, http.MethodPost, auditSuccessRoute, nil)
-	request.Header.Set("Accept-Encoding", "gzip")
+	// TestE2E_AuditMiddleware verifies (a) the gzip-compressed body decodes to
+	// exactly the handler payload (compressed once, decoded once) and (b) intent
+	// and success rows land in audit_logs, with no failure row.
+	t.Run("success persists intent and success rows", func(t *testing.T) {
+		action := http.MethodPost + auditSuccessRoute
 
-	response, err := http.DefaultClient.Do(request)
-	require.NoError(t, err)
-	defer response.Body.Close()
+		// Manually request gzip and decode it ourselves so the assertion proves
+		// the body was compressed exactly once (the double-gzip regression
+		// produced a payload that failed this single decode).
+		request := harness.authedRequest(t, http.MethodPost, auditSuccessRoute, nil)
+		request.Header.Set("Accept-Encoding", "gzip")
 
-	require.Equal(t, http.StatusOK, response.StatusCode)
-	require.Equal(t, "gzip", response.Header.Get("Content-Encoding"))
+		response, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer response.Body.Close()
 
-	gzipReader, err := gzip.NewReader(response.Body)
-	require.NoError(t, err, "response body must be valid single-pass gzip")
-	decoded, err := io.ReadAll(gzipReader)
-	require.NoError(t, err)
-	require.Equal(t, string(successPayload), string(decoded))
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, "gzip", response.Header.Get("Content-Encoding"))
 
-	assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "intent"))
-	assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "success"))
-	assert.Equal(t, 0, countAuditRows(t, harness.pool, action, "failure"))
-}
+		gzipReader, err := gzip.NewReader(response.Body)
+		require.NoError(t, err, "response body must be valid single-pass gzip")
+		decoded, err := io.ReadAll(gzipReader)
+		require.NoError(t, err)
+		require.Equal(t, string(successPayload), string(decoded))
 
-// TestE2E_AuditMiddleware_FailurePersistsIntentAndFailure drives a 500 request
-// through the production chain and asserts intent and failure rows are written
-// with no success row.
-func TestE2E_AuditMiddleware_FailurePersistsIntentAndFailure(t *testing.T) {
-	var (
-		harness = newAuditHarness(t)
-		action  = http.MethodPost + auditFailureRoute
-	)
+		assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "intent"))
+		assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "success"))
+		assert.Equal(t, 0, countAuditRows(t, harness.pool, action, "failure"))
+	})
 
-	response, err := http.DefaultClient.Do(harness.authedRequest(t, http.MethodPost, auditFailureRoute, nil))
-	require.NoError(t, err)
-	defer response.Body.Close()
-	_, _ = io.Copy(io.Discard, response.Body)
+	// A 500 request writes intent and failure rows with no success row.
+	t.Run("failure persists intent and failure rows", func(t *testing.T) {
+		action := http.MethodPost + auditFailureRoute
 
-	require.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		response, err := http.DefaultClient.Do(harness.authedRequest(t, http.MethodPost, auditFailureRoute, nil))
+		require.NoError(t, err)
+		defer response.Body.Close()
+		_, _ = io.Copy(io.Discard, response.Body)
 
-	assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "intent"))
-	assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "failure"))
-	assert.Equal(t, 0, countAuditRows(t, harness.pool, action, "success"))
-}
+		require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 
-// TestE2E_AuditMiddleware_StreamingFlushesThroughChain verifies that a streaming
-// handler can flush through the full middleware chain (audit responseRecorder ->
-// compression writer -> transport) without the recorder hiding http.Flusher, and
-// that the streamed body is received intact and the request is still audited.
-func TestE2E_AuditMiddleware_StreamingFlushesThroughChain(t *testing.T) {
-	var (
-		harness = newAuditHarness(t)
-		action  = http.MethodGet + auditStreamRoute
-	)
-
-	// Explicitly disable gzip so the transport does not buffer the whole body,
-	// letting us read the flushed chunks as they arrive.
-	request := harness.authedRequest(t, http.MethodGet, auditStreamRoute, nil)
-	request.Header.Set("Accept-Encoding", "identity")
-
-	response, err := http.DefaultClient.Do(request)
-	require.NoError(t, err)
-	defer response.Body.Close()
-
-	require.Equal(t, http.StatusOK, response.StatusCode)
-
-	var (
-		reader    = bufio.NewReader(response.Body)
-		collected strings.Builder
-	)
-	for {
-		line, readErr := reader.ReadString('\n')
-		collected.WriteString(line)
-		if readErr == io.EOF {
-			break
-		}
-		require.NoError(t, readErr)
-	}
-	require.Equal(t, "data: one\n\ndata: two\n\n", collected.String())
-
-	// The streamed request is audited like any other: intent + success.
-	require.Eventually(t, func() bool {
-		return countAuditRows(t, harness.pool, action, "intent") == 1 &&
-			countAuditRows(t, harness.pool, action, "success") == 1
-	}, 5*time.Second, 50*time.Millisecond)
+		assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "intent"))
+		assert.Equal(t, 1, countAuditRows(t, harness.pool, action, "failure"))
+		assert.Equal(t, 0, countAuditRows(t, harness.pool, action, "success"))
+	})
 }

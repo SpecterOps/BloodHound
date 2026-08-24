@@ -90,12 +90,13 @@ func Register(deps Deps) Services {
 
 	// Audit middleware records the intent/success/failure lifecycle of every
 	// request. It is attached post-routing so the authenticated actor set by the
-	// auth middleware is available on the request context. The health check
-	// route carries no audit value and is excluded. The Maintainer is returned
-	// so the entrypoint can hand it to the GC daemon to manage the audit_logs
-	// partitions.
+	// auth middleware is available on the request context. Routes opt out of
+	// auditing at their own registration site via Route.ExcludeFromAudit (e.g. the
+	// health check), which the middleware consults through IsAuditExcluded so no
+	// route strings are hardcoded here. The Maintainer is returned so the
+	// entrypoint can hand it to the GC daemon to manage the audit_logs partitions.
 	auditService, auditMaintainer := audit.Register(deps.Pool)
-	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditService, deps.Router.MuxRouter(), "/health"))
+	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditService, deps.Router.MuxRouter(), deps.Router.IsAuditExcluded))
 
 	return Services{AuditMaintainer: auditMaintainer}
 }

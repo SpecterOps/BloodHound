@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	tableAuditLogs             = "audit_logs"
-	errorCodeNotNullConstraint = "23502"
-	errorCodeCheckConstraint   = "23514"
+	tableAuditLogs                     = "audit_logs"
+	errorCodeNotNullConstraint         = "23502"
+	errorCodeInvalidTextRepresentation = "22P02"
 )
 
 // pgxQuerier is the minimal pgx surface the audit Store relies on. It is
@@ -93,7 +93,7 @@ func mapError(err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
-		case errorCodeNotNullConstraint, errorCodeCheckConstraint:
+		case errorCodeNotNullConstraint, errorCodeInvalidTextRepresentation:
 			return fmt.Errorf("%w: %s", services.ErrInvalidAuditRecord, pgErr.Message)
 		}
 	}

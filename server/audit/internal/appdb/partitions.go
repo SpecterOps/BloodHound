@@ -31,10 +31,10 @@ const (
 // bounds the drop scan so we never loop unbounded looking for old partitions.
 var earliestPartitionMonth = time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-// PreCreateNextPartition ensures the partition for the month AFTER asOf exists.
+// CreateNextPartition ensures the partition for the month AFTER asOf exists.
 // Names and bounds mirror the migration; the DDL is injection-safe because every
 // value derives from a time.Time.
-func (s *Store) PreCreateNextPartition(ctx context.Context, asOf time.Time) error {
+func (s *Store) CreateNextPartition(ctx context.Context, asOf time.Time) error {
 	var (
 		next = firstOfMonth(asOf).AddDate(0, 1, 0)
 		name = partitionName(next)
@@ -62,6 +62,12 @@ func (s *Store) DropExpiredPartitions(ctx context.Context, asOf time.Time, reten
 		name   string
 		err    error
 	)
+	// A future asOf would slide the cutoff forward and drop partitions still
+	// holding live data. The only legitimate value is ~now, so reject it rather
+	// than risk destructive data loss.
+	if asOf.After(time.Now().UTC()) {
+		return fmt.Errorf("dropping audit partitions: asOf %s is in the future", asOf.UTC().Format(time.RFC3339))
+	}
 	for month.Before(cutoff) {
 		name = partitionName(month)
 		if _, err = s.db.Exec(ctx, fmt.Sprintf(`DROP TABLE IF EXISTS %s`, name)); err != nil {

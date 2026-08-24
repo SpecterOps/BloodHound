@@ -43,16 +43,16 @@ type AuditService interface {
 // AuditMiddleware records the intent/success/failure lifecycle of every API
 // request. It writes an intent row before the handler runs and a success or
 // failure row afterward based on the response status; a failed intent write
-// rejects the request with a 500. Route templates in excludedRoutes are skipped.
-func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, excludedRoutes ...string) mux.MiddlewareFunc {
-	exclusions := make(map[string]bool, len(excludedRoutes))
-	for _, route := range excludedRoutes {
-		exclusions[route] = true
+// rejects the request with a 500. Route templates for which isExcluded returns
+// true are skipped; a nil isExcluded audits every matched route.
+func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool) mux.MiddlewareFunc {
+	if isExcluded == nil {
+		isExcluded = func(string) bool { return false }
 	}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			auditHandler(auditService, muxRouter, exclusions, next, response, request)
+			auditHandler(auditService, muxRouter, isExcluded, next, response, request)
 		})
 	}
 }
@@ -64,14 +64,14 @@ const auditIntentWriteTimeout = 5 * time.Second
 // auditOutcomeWriteTimeout bounds the best-effort success/failure write.
 const auditOutcomeWriteTimeout = 30 * time.Second
 
-func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRoutes map[string]bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
+func auditHandler(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx           = request.Context()
 		routeTemplate = routeTemplateFor(muxRouter, request)
 	)
 
-	// Skip routes we cannot name and explicitly excluded routes such as /health.
-	if routeTemplate == unmatchedRouteLabel || excludedRoutes[routeTemplate] {
+	// Skip routes we cannot name and routes opted out at registration (e.g. /health).
+	if routeTemplate == unmatchedRouteLabel || isExcluded(routeTemplate) {
 		next.ServeHTTP(response, request)
 		return
 	}
@@ -125,12 +125,10 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, excludedRout
 	}
 }
 
-// anonymousActorName is the actor name for unauthenticated requests, keeping
-// them attributed (by source IP) rather than dropped.
-const anonymousActorName = "anonymous"
-
 // buildAuditEntry assembles the audit Entry from the request context, resolving
-// the actor from the authenticated user or falling back to an anonymous actor.
+// the actor from the authenticated user. An unauthenticated request leaves the
+// actor fields empty (attributed by source IP); the audit service applies the
+// unknown-actor default centrally.
 func buildAuditEntry(request *http.Request, routeTemplate string) audit.Entry {
 	var (
 		bhCtx = bhctx.FromRequest(request)
@@ -146,8 +144,6 @@ func buildAuditEntry(request *http.Request, routeTemplate string) audit.Entry {
 		entry.ActorID = user.ID.String()
 		entry.ActorName = user.PrincipalName
 		entry.ActorEmail = user.EmailAddress.ValueOrZero()
-	} else {
-		entry.ActorName = anonymousActorName
 	}
 
 	return entry

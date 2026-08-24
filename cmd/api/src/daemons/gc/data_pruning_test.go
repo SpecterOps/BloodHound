@@ -37,7 +37,7 @@ type fakeAuditMaintainer struct {
 	retentionMonths int
 }
 
-func (s *fakeAuditMaintainer) PreCreateNextPartition(_ context.Context, _ time.Time) error {
+func (s *fakeAuditMaintainer) CreateNextPartition(_ context.Context, _ time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.preCreateCalls++
@@ -91,7 +91,7 @@ func TestGC_Start(t *testing.T) {
 	go func() {
 		// simulate the daemon running for 1 second and then quitting
 		time.Sleep(1 * time.Second)
-		daemon.exitC <- struct{}{}
+		require.NoError(t, daemon.Stop(context.Background()))
 	}()
 
 	daemon.Start(context.Background())
