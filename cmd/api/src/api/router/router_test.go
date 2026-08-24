@@ -61,8 +61,10 @@ func TestRouter_ExcludeFromAudit(t *testing.T) {
 			wantExcluded: false,
 		},
 		{
-			name:         "ExcludeFromAudit composes with other route builders",
-			register:     func(routerInst *router.Router) { routerInst.POST("/test/chained", noopHandler).RequireAuth().ExcludeFromAudit() },
+			name: "ExcludeFromAudit composes with other route builders",
+			register: func(routerInst *router.Router) {
+				routerInst.POST("/test/chained", noopHandler).RequireAuth().ExcludeFromAudit()
+			},
 			template:     "/test/chained",
 			wantExcluded: true,
 		},

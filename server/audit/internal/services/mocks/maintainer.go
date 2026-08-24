@@ -53,6 +53,63 @@ func (_m *MockMaintainer) EXPECT() *MockMaintainer_Expecter {
 	return &MockMaintainer_Expecter{mock: &_m.Mock}
 }
 
+// CreateNextPartition provides a mock function for the type MockMaintainer
+func (_mock *MockMaintainer) CreateNextPartition(ctx context.Context, asOf time.Time) error {
+	ret := _mock.Called(ctx, asOf)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateNextPartition")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) error); ok {
+		r0 = returnFunc(ctx, asOf)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockMaintainer_CreateNextPartition_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateNextPartition'
+type MockMaintainer_CreateNextPartition_Call struct {
+	*mock.Call
+}
+
+// CreateNextPartition is a helper method to define mock.On call
+//   - ctx context.Context
+//   - asOf time.Time
+func (_e *MockMaintainer_Expecter) CreateNextPartition(ctx interface{}, asOf interface{}) *MockMaintainer_CreateNextPartition_Call {
+	return &MockMaintainer_CreateNextPartition_Call{Call: _e.mock.On("CreateNextPartition", ctx, asOf)}
+}
+
+func (_c *MockMaintainer_CreateNextPartition_Call) Run(run func(ctx context.Context, asOf time.Time)) *MockMaintainer_CreateNextPartition_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 time.Time
+		if args[1] != nil {
+			arg1 = args[1].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockMaintainer_CreateNextPartition_Call) Return(err error) *MockMaintainer_CreateNextPartition_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockMaintainer_CreateNextPartition_Call) RunAndReturn(run func(ctx context.Context, asOf time.Time) error) *MockMaintainer_CreateNextPartition_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DropExpiredPartitions provides a mock function for the type MockMaintainer
 func (_mock *MockMaintainer) DropExpiredPartitions(ctx context.Context, asOf time.Time, retentionMonths int) error {
 	ret := _mock.Called(ctx, asOf, retentionMonths)
@@ -112,63 +169,6 @@ func (_c *MockMaintainer_DropExpiredPartitions_Call) Return(err error) *MockMain
 }
 
 func (_c *MockMaintainer_DropExpiredPartitions_Call) RunAndReturn(run func(ctx context.Context, asOf time.Time, retentionMonths int) error) *MockMaintainer_DropExpiredPartitions_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// PreCreateNextPartition provides a mock function for the type MockMaintainer
-func (_mock *MockMaintainer) PreCreateNextPartition(ctx context.Context, asOf time.Time) error {
-	ret := _mock.Called(ctx, asOf)
-
-	if len(ret) == 0 {
-		panic("no return value specified for PreCreateNextPartition")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time) error); ok {
-		r0 = returnFunc(ctx, asOf)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockMaintainer_PreCreateNextPartition_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PreCreateNextPartition'
-type MockMaintainer_PreCreateNextPartition_Call struct {
-	*mock.Call
-}
-
-// PreCreateNextPartition is a helper method to define mock.On call
-//   - ctx context.Context
-//   - asOf time.Time
-func (_e *MockMaintainer_Expecter) PreCreateNextPartition(ctx interface{}, asOf interface{}) *MockMaintainer_PreCreateNextPartition_Call {
-	return &MockMaintainer_PreCreateNextPartition_Call{Call: _e.mock.On("PreCreateNextPartition", ctx, asOf)}
-}
-
-func (_c *MockMaintainer_PreCreateNextPartition_Call) Run(run func(ctx context.Context, asOf time.Time)) *MockMaintainer_PreCreateNextPartition_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 time.Time
-		if args[1] != nil {
-			arg1 = args[1].(time.Time)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockMaintainer_PreCreateNextPartition_Call) Return(err error) *MockMaintainer_PreCreateNextPartition_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockMaintainer_PreCreateNextPartition_Call) RunAndReturn(run func(ctx context.Context, asOf time.Time) error) *MockMaintainer_PreCreateNextPartition_Call {
 	_c.Call.Return(run)
 	return _c
 }
