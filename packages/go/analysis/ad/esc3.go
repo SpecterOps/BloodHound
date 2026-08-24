@@ -19,7 +19,6 @@ package ad
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"slices"
 	"sync"
@@ -43,18 +42,8 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(eca2ID); len(publishedCertTemplates) == 0 {
 		return nil
-	} else if collected, err := certChains.EnterpriseCA.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
-		return fmt.Errorf("error getting enrollmentagentcollected for eca2 %d: %w", eca2ID, err)
 	} else {
-		// Assuming no enrollement agent restrictions if not collected
-		eARestrictions := false
-		if collected {
-			if hasRestrictions, err := certChains.EnterpriseCA.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-				return fmt.Errorf("error getting hasenrollmentagentrestrictions for ca %d: %w", eca2ID, err)
-			} else {
-				eARestrictions = hasRestrictions
-			}
-		}
+		hasEnrollmentAgentRestrictions := enterpriseCAHasEnrollmentAgentRestrictions(certChains.EnterpriseCA)
 
 		for _, certTemplateTwo := range publishedCertTemplates {
 			if !isEndCertTemplateValidESC3(certTemplateTwo) {
@@ -97,7 +86,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 						)
 					} else if publishedECAs.Len() == 0 {
 						continue
-					} else if eARestrictions {
+					} else if hasEnrollmentAgentRestrictions {
 						if delegatedAgents, err := fetchFirstDegreeNodes(tx, certTemplateTwo, ad.DelegatedEnrollmentAgent); err != nil {
 							slog.ErrorContext(
 								ctx,
@@ -771,32 +760,15 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 					continue
 				}
 
-				if collected, err := eca2.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"Error getting enrollmentagentcollected for eca2",
-						slog.Uint64("eca2_id", uint64(eca2.ID)),
-						attr.Error(err),
-					)
-				} else if collected {
-					if hasRestrictions, err := eca2.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
-						slog.ErrorContext(
-							ctx,
-							"Error getting hasenrollmentagentrestrictions for ca",
-							slog.Uint64("eca2_id", uint64(eca2.ID)),
-							attr.Error(err),
-						)
-					} else if hasRestrictions {
+				if enterpriseCAHasEnrollmentAgentRestrictions(eca2) {
+					// Verify p8 path exists.
+					p8segments, ok := path8CandidateSegments[ct2.ID]
+					if !ok {
+						continue
+					}
 
-						// Verify p8 path exist
-						p8segments, ok := path8CandidateSegments[ct2.ID]
-						if !ok {
-							continue
-						}
-
-						for _, p8 := range p8segments {
-							paths.AddPath(p8.Path())
-						}
+					for _, p8 := range p8segments {
+						paths.AddPath(p8.Path())
 					}
 				}
 
@@ -831,6 +803,16 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	})
 
 	return paths, nil
+}
+
+func enterpriseCAHasEnrollmentAgentRestrictions(enterpriseCA *graph.Node) bool {
+	if collected, err := enterpriseCA.Properties.Get(ad.EnrollmentAgentRestrictionsCollected.String()).Bool(); err != nil || !collected {
+		return false
+	} else if hasRestrictions, err := enterpriseCA.Properties.Get(ad.HasEnrollmentAgentRestrictions.String()).Bool(); err != nil {
+		return false
+	} else {
+		return hasRestrictions
+	}
 }
 
 func ADCSESC3Path1Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {

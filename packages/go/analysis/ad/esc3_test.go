@@ -118,3 +118,34 @@ func TestIsStartCertTemplateValidESC3(t *testing.T) {
 		})
 	}
 }
+
+func TestEnterpriseCAHasEnrollmentAgentRestrictions(t *testing.T) {
+	testCases := []struct {
+		name            string
+		collected       any
+		hasRestrictions any
+		expected        bool
+	}{
+		{name: "properties absent"},
+		{name: "not collected", collected: false, hasRestrictions: true},
+		{name: "collected and unrestricted", collected: true, hasRestrictions: false},
+		{name: "collected with missing restriction property", collected: true},
+		{name: "collected with malformed restriction property", collected: true, hasRestrictions: "true"},
+		{name: "collected with restrictions", collected: true, hasRestrictions: true, expected: true},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			properties := graph.NewProperties()
+			if testCase.collected != nil {
+				properties.Set(adSchema.EnrollmentAgentRestrictionsCollected.String(), testCase.collected)
+			}
+			if testCase.hasRestrictions != nil {
+				properties.Set(adSchema.HasEnrollmentAgentRestrictions.String(), testCase.hasRestrictions)
+			}
+
+			enterpriseCA := graph.NewNode(1, properties, adSchema.EnterpriseCA)
+			require.Equal(t, testCase.expected, enterpriseCAHasEnrollmentAgentRestrictions(enterpriseCA))
+		})
+	}
+}

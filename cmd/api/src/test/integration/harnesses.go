@@ -2254,9 +2254,6 @@ func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 	c.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 
-	s.EnterpriseCA1.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
-	c.UpdateNode(s.EnterpriseCA1)
-
 	addHostingComputer(c, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
 }
 
@@ -2446,7 +2443,7 @@ func (s *ESC3AuthorizedSignaturesHarness) Setup(graphTestContext *GraphTestConte
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 
-	s.EnterpriseCA.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
+	s.EnterpriseCA.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA)
 
 	addHostingComputer(graphTestContext, "AuthorizedSignaturesEnterpriseCA host", domainSID, s.EnterpriseCA)
