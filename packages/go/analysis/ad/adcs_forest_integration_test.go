@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -343,6 +344,94 @@ func TestADCSESC1CompositionScopesHostsToExactEnterpriseCA(t *testing.T) {
 				})
 			}
 			require.True(t, validHostPathFound)
+		},
+	)
+}
+
+func TestGoldenCertCreationAndCompositionUseOnlyQualifyingHosts(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	var (
+		domainSID         = integration.RandomDomainSID()
+		foreignDomainSID  = integration.RandomDomainSID()
+		unknownDomainSID  = integration.RandomDomainSID()
+		domain            *graph.Node
+		enterpriseCA      *graph.Node
+		validHost         *graph.Node
+		disabledHost      *graph.Node
+		crossForestHost   *graph.Node
+		unknownDomainHost *graph.Node
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domain = testContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
+			testContext.NewActiveDirectoryDomain("ForeignDomain", foreignDomainSID, false, true)
+			rootCA := testContext.NewActiveDirectoryRootCA("RootCA", domainSID)
+			enterpriseCA = testContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSID)
+
+			testContext.NewRelationship(enterpriseCA, rootCA, ad.IssuedSignedBy)
+			linkEnterpriseCAToDomain(testContext, enterpriseCA, rootCA, domain, domainSID)
+
+			validHost = addEnabledHostingComputer(testContext, "ValidHost", domainSID, enterpriseCA)
+			disabledHost = testContext.NewActiveDirectoryComputer("DisabledHost", domainSID)
+			disabledHost.Properties.Set(common.Enabled.String(), false)
+			testContext.UpdateNode(disabledHost)
+			testContext.NewRelationship(disabledHost, enterpriseCA, ad.HostsCAService)
+			crossForestHost = addEnabledHostingComputer(testContext, "CrossForestHost", foreignDomainSID, enterpriseCA)
+			unknownDomainHost = addEnabledHostingComputer(testContext, "UnknownDomainHost", unknownDomainSID, enterpriseCA)
+
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			chainedDomains := cache.GetECAHostedChainedDomains()
+			require.Contains(t, chainedDomains, enterpriseCA.ID.Uint64())
+
+			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "GoldenCert exact host scoping")
+			require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+				return adAnalysis.PostGoldenCert(ctx, tx, outC, chainedDomains[enterpriseCA.ID.Uint64()])
+			}))
+			require.NoError(t, edgeOperation.Done())
+
+			var goldenCertEdge *graph.Relationship
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				edges, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
+					query.Kind(query.Relationship(), ad.GoldenCert),
+					query.Equals(query.EndID(), domain.ID),
+				)))
+				if err != nil {
+					return err
+				}
+
+				require.Len(t, edges, 1)
+				goldenCertEdge = edges[0]
+				assert.Equal(t, validHost.ID, goldenCertEdge.StartID)
+				return nil
+			}))
+
+			composition, err := adAnalysis.GetEdgeCompositionPath(t.Context(), db, goldenCertEdge)
+			require.NoError(t, err)
+			require.NotEmpty(t, composition)
+			require.True(t, composition.AllNodes().Contains(validHost))
+			for _, invalidHost := range []*graph.Node{disabledHost, crossForestHost, unknownDomainHost} {
+				require.False(t, composition.AllNodes().Contains(invalidHost))
+			}
+
+			var qualifyingHostPathFound bool
+			for _, path := range composition.Paths() {
+				path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+					if relationship.Kind.Is(ad.HostsCAService) {
+						require.Equal(t, validHost.ID, start.ID)
+						require.Equal(t, enterpriseCA.ID, end.ID)
+						qualifyingHostPathFound = true
+					}
+					return true
+				})
+			}
+			require.True(t, qualifyingHostPathFound)
 		},
 	)
 }

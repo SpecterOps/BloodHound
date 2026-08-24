@@ -259,45 +259,66 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 }
 
 func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
-	finalPaths := graph.NewPathSet()
+	var (
+		finalPaths             = graph.NewPathSet()
+		candidateEnterpriseCAs = cardinality.NewBitmap64()
+		domains                []*graph.Node
+	)
+
 	//Grab the start node (computer) as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
+	} else if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
+		query.Equals(query.StartID(), startNode.ID),
+		query.Kind(query.End(), ad.EnterpriseCA),
+		query.Kind(query.Relationship(), ad.HostsCAService),
+	))); graph.IsErrNotFound(err) {
+		return finalPaths, nil
+	} else if err != nil {
+		return finalPaths, err
 	} else {
-		//Find hosted enterprise CA
-		if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Equals(query.StartID(), startNode.ID),
-			query.KindIn(query.End(), ad.EnterpriseCA),
-			query.KindIn(query.Relationship(), ad.HostsCAService),
-		))); err != nil {
-			slog.Error(
-				"Error getting hostscaservice edge to enterprise ca for computer",
-				slog.Uint64("start_node_id", uint64(startNode.ID)),
-				attr.Error(err),
-			)
+		for _, ecaPath := range ecaPaths {
+			candidateEnterpriseCAs.Add(ecaPath.Terminal().ID.Uint64())
+		}
+
+		if fetchedDomains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain))); err != nil && !graph.IsErrNotFound(err) {
+			return finalPaths, err
 		} else {
-			for _, ecaPath := range ecaPaths {
-				eca := ecaPath.Terminal()
-				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+			domains = fetchedDomains
+		}
+
+		qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, candidateEnterpriseCAs, indexDomainsBySID(domains))
+		if err != nil {
+			return finalPaths, err
+		}
+
+		for _, enterpriseCAHostPaths := range qualifyingHostPaths {
+			for _, qualifyingHostPath := range enterpriseCAHostPaths {
+				if qualifyingHostPath.Root().ID != startNode.ID {
+					continue
+				}
+				enterpriseCA := qualifyingHostPath.Terminal()
+
+				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
 					slog.Error(
 						"Error getting enterprise ca path to domain",
-						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("enterprise_ca", uint64(enterpriseCA.ID)),
 						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
 						attr.Error(err),
 					)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
-				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
 					slog.Error(
 						"Error getting enterprise ca path to domain via trusted for auth",
-						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("enterprise_ca", uint64(enterpriseCA.ID)),
 						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
 						attr.Error(err),
 					)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {
-					finalPaths.AddPath(ecaPath)
+					finalPaths.AddPath(qualifyingHostPath)
 					finalPaths.AddPathSet(chainToRootCAPaths)
 					finalPaths.AddPathSet(trustedForAuthPaths)
 				}
