@@ -323,6 +323,9 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 		return true
 	})
+	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, path1EnterpriseCAs); err != nil {
+		return nil, err
+	}
 
 	return paths, nil
 }

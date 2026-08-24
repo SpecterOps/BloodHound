@@ -207,6 +207,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path4CandidateSegments = map[graph.ID][]*graph.PathSegment{}
 		path2EnterpriseCAs     = cardinality.NewBitmap64()
+		finalEnterpriseCAs     = cardinality.NewBitmap64()
 		lock                   = &sync.Mutex{}
 	)
 
@@ -365,6 +366,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					//Merge all our paths together
 					paths.AddPath(p1.Path())
 					paths.AddPath(p2.Path())
+					finalEnterpriseCAs.Add(path1NodeIndex.Uint64())
 					for _, p3 := range p3segments {
 						paths.AddPath(p3.Path())
 					}
@@ -374,6 +376,9 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				}
 			}
 		}
+	}
+	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
+		return nil, err
 	}
 
 	return paths, nil
