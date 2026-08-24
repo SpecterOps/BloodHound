@@ -31,7 +31,28 @@ const (
 	tableAuditLogs                     = "audit_logs"
 	errorCodeNotNullConstraint         = "23502"
 	errorCodeInvalidTextRepresentation = "22P02"
+
+	colCreatedAt       = "created_at"
+	colAction          = "action"
+	colActorID         = "actor_id"
+	colActorName       = "actor_name"
+	colActorEmail      = "actor_email"
+	colRequestID       = "request_id"
+	colSourceIPAddress = "source_ip_address"
+	colStatus          = "status"
+	colCommitID        = "commit_id"
+	colFields          = "fields"
+	colSource          = "source"
 )
+
+// auditLogInsertColumns is the ordered column list written by InsertAuditLog. The
+// order must match the InsertAuditLog Values call.
+func auditLogInsertColumns() []string {
+	return []string{
+		colCreatedAt, colAction, colActorID, colActorName, colActorEmail,
+		colRequestID, colSourceIPAddress, colStatus, colCommitID, colFields, colSource,
+	}
+}
 
 // pgxQuerier is the minimal pgx surface the audit Store relies on. It is
 // satisfied by both *pgxpool.Pool and pgx.Tx.
@@ -67,10 +88,7 @@ func (s *Store) InsertAuditLog(ctx context.Context, record services.AuditRecord)
 		fieldsArg = nil
 	}
 	insertBuilder.InsertInto(tableAuditLogs)
-	insertBuilder.Cols(
-		"created_at", "action", "actor_id", "actor_name", "actor_email",
-		"request_id", "source_ip_address", "status", "commit_id", "fields", "source",
-	)
+	insertBuilder.Cols(auditLogInsertColumns()...)
 	insertBuilder.Values(
 		time.Now().UTC(),
 		record.Action,
