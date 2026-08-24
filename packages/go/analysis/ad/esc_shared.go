@@ -246,6 +246,27 @@ func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContin
 	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
 }
 
+func addHostsCAServicePathsToComposition(ctx context.Context, db graph.Database, composition *graph.PathSet, enterpriseCAs cardinality.Duplex[uint64]) error {
+	if composition.Len() == 0 || enterpriseCAs.Cardinality() == 0 {
+		return nil
+	}
+
+	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if hostingPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
+			query.Kind(query.Start(), ad.Computer),
+			query.Kind(query.Relationship(), ad.HostsCAService),
+			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
+		))); graph.IsErrNotFound(err) {
+			return nil
+		} else if err != nil {
+			return err
+		} else {
+			composition.AddPathSet(hostingPaths)
+			return nil
+		}
+	})
+}
+
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {

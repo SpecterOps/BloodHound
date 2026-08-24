@@ -709,6 +709,9 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				return true
 			})
 	}
+	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalECAs); err != nil {
+		return nil, err
+	}
 
 	return paths, nil
 }

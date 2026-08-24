@@ -308,6 +308,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		path3CandidateSegments = []*graph.PathSegment{}
 		p2canodes              = make([]graph.ID, 0)
 		nodeMap                = map[graph.ID]*graph.Node{}
+		finalEnterpriseCAs     = cardinality.NewBitmap64()
 		lock                   = &sync.Mutex{}
 	)
 
@@ -425,6 +426,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				continue
 			} else {
 				paths.AddPath(p1path.Path())
+				finalEnterpriseCAs.Add(caNode.ID.Uint64())
 				for _, p2 := range p2segments {
 					paths.AddPath(p2.Path())
 				}
@@ -436,6 +438,9 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		for _, p3 := range path3CandidateSegments {
 			paths.AddPath(p3.Path())
 		}
+	}
+	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
+		return nil, err
 	}
 
 	return paths, nil
