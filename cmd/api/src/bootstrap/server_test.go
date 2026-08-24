@@ -17,13 +17,20 @@
 package bootstrap_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestFillAndPopulateDefaultAdminInfo(t *testing.T) {
@@ -105,4 +112,71 @@ func requireDirectoryExists(t *testing.T, path string) {
 	info, err := os.Stat(path)
 	require.NoError(t, err)
 	require.True(t, info.IsDir())
+}
+
+func TestMigrateDB(t *testing.T) {
+	tests := []struct {
+		name  string
+		cfg   config.DefaultAdminConfiguration
+		mocks func(mockDb *mocks.MockDatabase)
+	}{
+		{
+			name: "Success - default admin created when enabled in config",
+			cfg: config.DefaultAdminConfiguration{
+				Enabled:  true,
+				Password: "SFdzJoW2GT7Fn68aEieKn7S1S2DLdXnw",
+			},
+			mocks: func(mockDb *mocks.MockDatabase) {
+				mockDb.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
+					{
+						Name:        auth.RoleAdministrator,
+						Description: "Admin For Testing",
+						Permissions: model.Permissions{},
+						Serial:      model.Serial{},
+					},
+				}, nil)
+				mockDb.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{}, database.ErrNotFound)
+				mockDb.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{}, nil)
+				mockDb.EXPECT().InitializeSecretAuth(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Installation{}, nil).Times(1)
+			},
+		},
+		{
+			name: "Success - default admin not created when disabled in config",
+			cfg: config.DefaultAdminConfiguration{
+				Enabled: false,
+			},
+			mocks: func(mockDb *mocks.MockDatabase) {
+				mockDb.EXPECT().InitializeSecretAuth(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Installation{}, nil).Times(0)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			mockDb := mocks.NewMockDatabase(mockCtrl)
+			defer mockCtrl.Finish()
+
+			mockDb.EXPECT().Migrate(gomock.Any()).Return(nil).Times(1)
+			mockDb.EXPECT().HasInstallation(gomock.Any()).Return(false, nil).Times(1)
+			mockDb.EXPECT().CreateInstallation(gomock.Any()).Return(model.Installation{}, nil).Times(1)
+
+			tt.mocks(mockDb)
+
+			err := bootstrap.MigrateDB(context.Background(), config.Configuration{
+				Crypto: config.CryptoConfiguration{
+					Argon2: config.Argon2Configuration{
+						MemoryKibibytes: 16,
+						NumIterations:   2,
+						NumThreads:      1,
+					},
+				},
+				DefaultAdmin: tt.cfg,
+			}, mockDb, func() (config.DefaultAdminConfiguration, error) {
+				return config.DefaultAdminConfiguration{}, nil
+			})
+
+			require.NoError(t, err)
+		})
+	}
 }
