@@ -428,6 +428,10 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 			return nil, err
 		}
 	}
+	if len(path3CandidateSegments) == 0 {
+		return paths, nil
+	}
+
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
 			// First ECA in the path

@@ -178,6 +178,14 @@ func TestManagedServiceAccountDNSCompositions(t *testing.T) {
 		require.True(t, composition.AllNodes().Contains(smsaUser), edgeKind.String())
 	}
 
+	enterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), false)
+	UpdateNode(t, &suite, enterpriseCA)
+
+	for _, edge := range managedServiceAccountEdges {
+		composition, err := adAnalysis.GetADCSESC6EdgeComposition(suite.Context, suite.GraphDB, edge)
+		require.NoError(t, err)
+		require.Empty(t, composition)
+	}
 }
 
 func TestPostADCSESC13_ManagedServiceAccountDNSRequirements(t *testing.T) {

@@ -1839,10 +1839,11 @@ func TestADCSESC6b(t *testing.T) {
 }
 
 type esc10CompositionHarness struct {
-	attacker        *graph.Node
-	domain          *graph.Node
-	enterpriseCA    *graph.Node
-	hostingComputer *graph.Node
+	attacker         *graph.Node
+	domain           *graph.Node
+	domainController *graph.Node
+	enterpriseCA     *graph.Node
+	hostingComputer  *graph.Node
 }
 
 func setupESC10CompositionHarness(graphTestContext *integration.GraphTestContext) esc10CompositionHarness {
@@ -1885,14 +1886,40 @@ func setupESC10CompositionHarness(graphTestContext *integration.GraphTestContext
 	graphTestContext.NewRelationship(victim, enterpriseCA, ad.Enroll)
 
 	return esc10CompositionHarness{
-		attacker:        attacker,
-		domain:          domain,
-		enterpriseCA:    enterpriseCA,
-		hostingComputer: hostingComputer,
+		attacker:         attacker,
+		domain:           domain,
+		domainController: domainController,
+		enterpriseCA:     enterpriseCA,
+		hostingComputer:  hostingComputer,
 	}
 }
 
 func TestADCSESC10a(t *testing.T) {
+	t.Run("composition requires a qualifying domain controller path", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		var testHarness esc10CompositionHarness
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				testHarness = setupESC10CompositionHarness(testContext)
+				testHarness.domainController.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "-1")
+				testContext.UpdateNode(testHarness.domainController)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				composition, err := adAnalysis.GetADCSESC10EdgeComposition(t.Context(), db, graph.NewRelationship(
+					0,
+					testHarness.attacker.ID,
+					testHarness.domain.ID,
+					graph.NewProperties(),
+					ad.ADCSESC10a,
+				))
+				require.NoError(t, err)
+				require.Empty(t, composition)
+			},
+		)
+	})
+
 	t.Run("composition excludes shared paths when the exact CA host is disabled", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		var testHarness esc10CompositionHarness

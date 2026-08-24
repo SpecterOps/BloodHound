@@ -294,6 +294,9 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		}); err != nil {
 			return nil, err
 		}
+		if len(path2Segments) == 0 {
+			return paths, nil
+		}
 	}
 
 	// P3
@@ -389,6 +392,7 @@ func ADCSESC6Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
 				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
+				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabledCollected.String()), true),
 			)), domainId)
 }
 
