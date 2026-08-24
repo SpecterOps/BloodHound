@@ -414,23 +414,16 @@ func adcsESC13Path1Pattern() traversal.PatternContinuation {
 }
 
 func adcsESC13Path2Pattern(caNodes, domains []graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCATrustedForNTAuthPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
 		Outbound(query.And(
 			query.Kind(query.Relationship(), ad.Enroll),
+			query.Kind(query.End(), ad.EnterpriseCA),
 			query.InIDs(query.End(), caNodes...),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.InIDs(query.End(), domains...),
-		))
+		)), query.InIDs(query.End(), domains...))
 }
 
 func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {
