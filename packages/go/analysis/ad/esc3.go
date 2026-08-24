@@ -107,7 +107,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 							)
 						} else {
 							for _, eca1 := range publishedECAs {
-								if !cache.EnterpriseCAHasQualifyingHost(eca1.ID) {
+								if !cache.enterpriseCAHasQualifyingHost(eca1.ID) {
 									continue
 								}
 
@@ -133,7 +133,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
-							if !cache.EnterpriseCAHasQualifyingHost(eca1.ID) {
+							if !cache.enterpriseCAHasQualifyingHost(eca1.ID) {
 								continue
 							}
 

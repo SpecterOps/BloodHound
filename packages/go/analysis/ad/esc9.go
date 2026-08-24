@@ -215,16 +215,18 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode *graph.Node
 		endNode   *graph.Node
 
-		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths                  = graph.PathSet{}
-		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		victimCANodes          = map[graph.ID][]graph.ID{}
-		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path3CandidateSegments = []*graph.PathSegment{}
-		p2canodes              = make([]graph.ID, 0)
-		nodeMap                = map[graph.ID]*graph.Node{}
-		finalEnterpriseCAs     = cardinality.NewBitmap64()
-		lock                   = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		path1CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		victimCANodes           = map[graph.ID][]graph.ID{}
+		path2CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments  = []*graph.PathSegment{}
+		p2canodes               = make([]graph.ID, 0)
+		nodeMap                 = map[graph.ID]*graph.Node{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		finalEnterpriseCAs      = cardinality.NewBitmap64()
+		lock                    = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -276,6 +278,7 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			path1CandidateSegments[victimNode.ID] = append(path1CandidateSegments[victimNode.ID], terminal)
 			nodeMap[victimNode.ID] = victimNode
 			victimCANodes[victimNode.ID] = append(victimCANodes[victimNode.ID], caNode.ID)
+			path1EnterpriseCAs.Add(caNode.ID.Uint64())
 			lock.Unlock()
 
 			return nil
@@ -284,10 +287,26 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
 	for victim, p1CANodes := range victimCANodes {
+		qualifyingP1CANodes := make([]graph.ID, 0, len(p1CANodes))
+		for _, enterpriseCAID := range p1CANodes {
+			if _, hasQualifyingHost := hostPathsByEnterpriseCA[enterpriseCAID]; hasQualifyingHost {
+				qualifyingP1CANodes = append(qualifyingP1CANodes, enterpriseCAID)
+			}
+		}
+		if len(qualifyingP1CANodes) == 0 {
+			continue
+		}
+
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9APath2Pattern(p1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsESC9APath2Pattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
@@ -323,7 +342,6 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			return nil, err
 		}
 	}
-
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
 			// First ECA in the path
@@ -336,7 +354,9 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return true
 			})
 
-			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
+			if _, hasQualifyingHost := hostPathsByEnterpriseCA[caNode.ID]; !hasQualifyingHost {
+				continue
+			} else if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
 				continue
 			} else {
 				paths.AddPath(p1path.Path())
@@ -353,9 +373,10 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			paths.AddPath(p3.Path())
 		}
 	}
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
-		return nil, err
-	}
+	finalEnterpriseCAs.Each(func(enterpriseCAID uint64) bool {
+		paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(enterpriseCAID)])
+		return true
+	})
 
 	return paths, nil
 }
@@ -522,16 +543,18 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode *graph.Node
 		endNode   *graph.Node
 
-		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths                  = graph.PathSet{}
-		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		victimCANodes          = map[graph.ID][]graph.ID{}
-		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
-		path3CandidateSegments = []*graph.PathSegment{}
-		p2canodes              = make([]graph.ID, 0)
-		nodeMap                = map[graph.ID]*graph.Node{}
-		finalEnterpriseCAs     = cardinality.NewBitmap64()
-		lock                   = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		path1CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		victimCANodes           = map[graph.ID][]graph.ID{}
+		path2CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments  = []*graph.PathSegment{}
+		p2canodes               = make([]graph.ID, 0)
+		nodeMap                 = map[graph.ID]*graph.Node{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		finalEnterpriseCAs      = cardinality.NewBitmap64()
+		lock                    = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -568,6 +591,7 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			path1CandidateSegments[victimNode.ID] = append(path1CandidateSegments[victimNode.ID], terminal)
 			nodeMap[victimNode.ID] = victimNode
 			victimCANodes[victimNode.ID] = append(victimCANodes[victimNode.ID], caNode.ID)
+			path1EnterpriseCAs.Add(caNode.ID.Uint64())
 			lock.Unlock()
 
 			return nil
@@ -576,10 +600,26 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		return nil, err
 	}
 
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
 	for victim, p1CANodes := range victimCANodes {
+		qualifyingP1CANodes := make([]graph.ID, 0, len(p1CANodes))
+		for _, enterpriseCAID := range p1CANodes {
+			if _, hasQualifyingHost := hostPathsByEnterpriseCA[enterpriseCAID]; hasQualifyingHost {
+				qualifyingP1CANodes = append(qualifyingP1CANodes, enterpriseCAID)
+			}
+		}
+		if len(qualifyingP1CANodes) == 0 {
+			continue
+		}
+
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: nodeMap[victim],
-			Driver: adcsESC9bPath2Pattern(p1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
+			Driver: adcsESC9bPath2Pattern(qualifyingP1CANodes, edge.EndID).Do(func(terminal *graph.PathSegment) error {
 				caNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 				})
@@ -615,7 +655,6 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			return nil, err
 		}
 	}
-
 	for _, p1paths := range path1CandidateSegments {
 		for _, p1path := range p1paths {
 			// First ECA in the path
@@ -628,7 +667,9 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 				return true
 			})
 
-			if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
+			if _, hasQualifyingHost := hostPathsByEnterpriseCA[caNode.ID]; !hasQualifyingHost {
+				continue
+			} else if p2segments, ok := path2CandidateSegments[caNode.ID]; !ok {
 				continue
 			} else {
 				paths.AddPath(p1path.Path())
@@ -645,9 +686,10 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			paths.AddPath(p3.Path())
 		}
 	}
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
-		return nil, err
-	}
+	finalEnterpriseCAs.Each(func(enterpriseCAID uint64) bool {
+		paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(enterpriseCAID)])
+		return true
+	})
 
 	return paths, nil
 }

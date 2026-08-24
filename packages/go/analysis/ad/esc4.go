@@ -534,9 +534,10 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		enrollAndNTAuthECAs cardinality.Duplex[uint64]
-		domainID            = edge.EndID
-		paths               = graph.PathSet{}
+		enrollAndNTAuthECAs     cardinality.Duplex[uint64]
+		domainID                = edge.EndID
+		paths                   = graph.PathSet{}
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
 		finalECAs                  = cardinality.NewBitmap64()
@@ -572,6 +573,20 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	} else {
 		enrollAndNTAuthECASegments = paths
 		enrollAndNTAuthECAs = ecaIDs
+	}
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, enrollAndNTAuthECAs); err != nil {
+		return nil, err
+	} else {
+		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
+		for enterpriseCAID := range qualifyingHostPaths {
+			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
+		}
+
+		enrollAndNTAuthECAs.And(qualifyingEnterpriseCAs)
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+	if enrollAndNTAuthECAs.Cardinality() == 0 {
+		return paths, nil
 	}
 
 	// p1, p2
@@ -706,11 +721,9 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				for _, segment := range enrollAndNTAuthECASegments[graph.ID(value)] {
 					paths.AddPath(segment.Path())
 				}
+				paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(value)])
 				return true
 			})
-	}
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalECAs); err != nil {
-		return nil, err
 	}
 
 	return paths, nil

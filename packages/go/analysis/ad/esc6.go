@@ -201,13 +201,14 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		lock               = &sync.Mutex{}
-		paths              = graph.PathSet{}
-		path1Segments      = map[graph.ID][]*graph.PathSegment{}
-		path2Segments      = []*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		finalEnterpriseCAs = cardinality.NewBitmap64()
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		lock                    = &sync.Mutex{}
+		paths                   = graph.PathSet{}
+		path1Segments           = map[graph.ID][]*graph.PathSegment{}
+		path2Segments           = []*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		finalEnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -258,6 +259,20 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 			}); err != nil {
 			return nil, err
 		}
+	}
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
+		for enterpriseCAID := range qualifyingHostPaths {
+			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
+		}
+
+		path1EnterpriseCAs.And(qualifyingEnterpriseCAs)
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+	if path1EnterpriseCAs.Cardinality() == 0 {
+		return paths, nil
 	}
 
 	// P2
@@ -320,15 +335,13 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 			for _, segment := range path1Segments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
+			paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(value)])
 			return true
 		})
 
 		for _, segment := range path2Segments {
 			paths.AddPath(segment.Path())
 		}
-	}
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
-		return nil, err
 	}
 
 	return paths, nil

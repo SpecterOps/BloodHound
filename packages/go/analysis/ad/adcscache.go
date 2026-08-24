@@ -127,19 +127,17 @@ type ADCSCache struct {
 	domains                   []*graph.Node
 
 	// To discourage direct access without getting a read lock, these are private
-	chainedDomainsByEnterpriseCA    map[uint64]*EnterpriseCAChainedDomains  // chainedDomainsByEnterpriseCA maps each Enterprise CA node ID to the domains reachable from it through a valid certificate chain (RootCAFor ∩ TrustedForNTAuth).
-	certTemplateHasSpecialEnrollers map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on templates
-	enterpriseCAHasSpecialEnrollers map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
-	certTemplateEnrollers           map[graph.ID]CachedPrincipalSet         // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
-	certTemplateControllers         map[graph.ID]CachedPrincipalSet         // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
-	enterpriseCAEnrollers           map[graph.ID]CachedPrincipalSet         // principals that have enrollment rights on an enterprise ca via `enroll` edge
-	publishedTemplateCache          map[graph.ID][]*graph.Node              // cert templates that are published to an enterprise ca (needs property access)
-	authUsersByDomain               map[graph.ID]graph.ID                   // domain node ID → Authenticated Users group node ID
-	ecasWithHostingComputers        cardinality.Duplex[uint64]              // enterprise CAs with at least one hosting computer where the computer is enabled
-	authStoreForChainValid          map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
-	rootCAForChainValid             map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
-	hasHostingComputer              map[graph.ID]bool
-	hasInForestHostingComputer      map[graph.ID]bool // enterprise CA ID -> whether the CA has an enabled hosting computer inside its own forest
+	chainedDomainsByEnterpriseCA     map[uint64]*EnterpriseCAChainedDomains  // chainedDomainsByEnterpriseCA maps each Enterprise CA node ID to the domains reachable from it through a valid certificate chain (RootCAFor ∩ TrustedForNTAuth).
+	certTemplateHasSpecialEnrollers  map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on templates
+	enterpriseCAHasSpecialEnrollers  map[graph.ID]bool                       // whether Auth. Users or Everyone has enrollment rights on enterprise CAs
+	certTemplateEnrollers            map[graph.ID]CachedPrincipalSet         // principals that have enrollment on a cert template via `enroll`, `generic all`, `all extended rights` edges
+	certTemplateControllers          map[graph.ID]CachedPrincipalSet         // principals that have privileges on a cert template via `owner`, `generic all`, `write dacl`, `write owner` edges
+	enterpriseCAEnrollers            map[graph.ID]CachedPrincipalSet         // principals that have enrollment rights on an enterprise ca via `enroll` edge
+	publishedTemplateCache           map[graph.ID][]*graph.Node              // cert templates that are published to an enterprise ca (needs property access)
+	authUsersByDomain                map[graph.ID]graph.ID                   // domain node ID → Authenticated Users group node ID
+	enterpriseCAsWithQualifyingHosts cardinality.Duplex[uint64]              // enterprise CAs with at least one enabled and, when resolvable, in-forest hosting computer
+	authStoreForChainValid           map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
+	rootCAForChainValid              map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
 
 	// ESC4-specific caches: principals with specific rights on cert templates, pre-computed to avoid per-ECA DB queries
 	certTemplateGenericWriters              map[graph.ID]CachedPrincipalSet         // principals with GenericWrite on a cert template
@@ -159,14 +157,12 @@ func NewADCSCache() *ADCSCache {
 		enterpriseCAHasSpecialEnrollers:         make(map[graph.ID]bool),
 		authStoreForChainValid:                  make(map[graph.ID]cardinality.Duplex[uint64]),
 		rootCAForChainValid:                     make(map[graph.ID]cardinality.Duplex[uint64]),
-		hasHostingComputer:                      make(map[graph.ID]bool),
-		hasInForestHostingComputer:              make(map[graph.ID]bool),
 		certTemplateEnrollers:                   make(map[graph.ID]CachedPrincipalSet),
 		certTemplateControllers:                 make(map[graph.ID]CachedPrincipalSet),
 		enterpriseCAEnrollers:                   make(map[graph.ID]CachedPrincipalSet),
 		publishedTemplateCache:                  make(map[graph.ID][]*graph.Node),
 		authUsersByDomain:                       make(map[graph.ID]graph.ID),
-		ecasWithHostingComputers:                cardinality.NewBitmap64(),
+		enterpriseCAsWithQualifyingHosts:        cardinality.NewBitmap64(),
 		hasUPNCertMappingInForest:               cardinality.NewBitmap64(),
 		certTemplateGenericWriters:              make(map[graph.ID]CachedPrincipalSet),
 		certTemplateEnrollOrAllExtendedRighters: make(map[graph.ID]CachedPrincipalSet),
@@ -289,6 +285,20 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			attr.Scope("routine"),
 		)
 
+		enterpriseCAIDs := cardinality.NewBitmap64()
+		for _, enterpriseCA := range s.enterpriseCertAuthorities {
+			enterpriseCAIDs.Add(enterpriseCA.ID.Uint64())
+		}
+
+		s.enterpriseCAsWithQualifyingHosts = cardinality.NewBitmap64()
+		if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAIDs, domainsBySID); err != nil {
+			return fmt.Errorf("failed fetching qualifying hosting computers for enterprise CAs: %w", err)
+		} else {
+			for enterpriseCAID := range qualifyingHostPaths {
+				s.enterpriseCAsWithQualifyingHosts.Add(enterpriseCAID.Uint64())
+			}
+		}
+
 		for _, eca := range s.enterpriseCertAuthorities {
 			if enterpriseCAEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
 				slog.ErrorContext(
@@ -322,63 +332,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				)
 			} else {
 				s.publishedTemplateCache[eca.ID] = publishedTemplates.Slice()
-			}
-
-			if hostingComputers, err := fetchFirstDegreeNodes(tx, eca, ad.HostsCAService); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Error fetching hosting computers for enterprise ca",
-					slog.Uint64("enterprise_ca", uint64(eca.ID)),
-					attr.Error(err),
-				)
-			} else {
-				// Resolve the CA's own forest; fall back to forest-agnostic behavior
-				// when it can't be determined.
-				forestDomains, err := resolveEnterpriseCAForest(tx, eca, domainsBySID)
-				if err != nil {
-					slog.WarnContext(
-						ctx,
-						"Error resolving forest for enterprise ca",
-						slog.Uint64("enterprise_ca", uint64(eca.ID)),
-						attr.Error(err),
-					)
-				}
-
-				var (
-					hasHostingComputer = false
-					hostInForest       = false
-				)
-
-				for _, computer := range hostingComputers.Slice() {
-					if !enterpriseCAHostIsEligible(computer, nil, domainsBySID) {
-						continue
-					}
-
-					hasHostingComputer = true
-
-					// Only count a host that lives in the CA's forest; a shared CA can
-					// be linked to a computer in another forest.
-					if forestDomains != nil {
-						if computerSID, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil || computerSID == "" {
-							// Without a domainsid we can't place the host in a forest, so it
-							// won't count as in-forest. Log it: if this is the CA's only host
-							// the CA is dropped, and the silent skip would be hard to diagnose.
-							slog.WarnContext(
-								ctx,
-								"Hosting computer is missing a domainsid; cannot determine whether it is in the CA's forest",
-								slog.Uint64("computer", uint64(computer.ID)),
-								slog.Uint64("enterprise_ca", uint64(eca.ID)),
-							)
-						} else if enterpriseCAHostIsEligible(computer, forestDomains, domainsBySID) {
-							hostInForest = true
-						}
-					}
-				}
-
-				s.hasHostingComputer[eca.ID] = hasHostingComputer
-				if forestDomains != nil {
-					s.hasInForestHostingComputer[eca.ID] = hostInForest
-				}
 			}
 		}
 
@@ -527,8 +480,9 @@ func enterpriseCAHostIsEligible(computer *graph.Node, forestDomains cardinality.
 
 // resolveEnterpriseCAForest returns the domain IDs in the CA's forest (the
 // SameForestTrust closure of the CA's domain, resolved from its domainsid). It
-// returns a nil set when the forest can't be resolved, so callers fall back to
-// forest-agnostic behavior rather than dropping the CA.
+// returns a nil set only when collected metadata can't identify the forest, so
+// callers fall back to forest-agnostic behavior rather than dropping the CA.
+// Database and traversal failures are returned to the caller.
 func resolveEnterpriseCAForest(tx graph.Transaction, eca *graph.Node, domainsBySID map[string]*graph.Node) (cardinality.Duplex[uint64], error) {
 	domainSID, err := eca.Properties.Get(ad.DomainSID.String()).String()
 	if err != nil || domainSID == "" {
@@ -553,21 +507,82 @@ func resolveEnterpriseCAForest(tx graph.Transaction, eca *graph.Node, domainsByS
 	return forestDomains, nil
 }
 
-func (s *ADCSCache) enterpriseCAHasQualifyingHost(enterpriseCAID graph.ID) bool {
-	if hasInForestHostingComputer, forestKnown := s.hasInForestHostingComputer[enterpriseCAID]; forestKnown {
-		return hasInForestHostingComputer
+// fetchQualifyingEnterpriseCAHostPathsForTransaction returns only the
+// HostsCAService paths whose computer is enabled and, when the Enterprise CA's
+// forest can be resolved, belongs to that forest. Results are keyed by the
+// exact Enterprise CA so one CA's host cannot qualify another CA.
+func fetchQualifyingEnterpriseCAHostPathsForTransaction(tx graph.Transaction, enterpriseCAs cardinality.Duplex[uint64], domainsBySID map[string]*graph.Node) (map[graph.ID]graph.PathSet, error) {
+	var hostPathsByEnterpriseCA = make(map[graph.ID]graph.PathSet)
+
+	if enterpriseCAs.Cardinality() == 0 {
+		return hostPathsByEnterpriseCA, nil
 	}
 
-	return s.hasHostingComputer[enterpriseCAID]
+	hostingPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
+		query.Kind(query.Start(), ad.Computer),
+		query.Kind(query.Relationship(), ad.HostsCAService),
+		query.Kind(query.End(), ad.EnterpriseCA),
+		query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
+	)))
+	if graph.IsErrNotFound(err) {
+		return hostPathsByEnterpriseCA, nil
+	} else if err != nil {
+		return hostPathsByEnterpriseCA, err
+	}
+
+	return qualifyEnterpriseCAHostPaths(hostingPaths, domainsBySID, func(enterpriseCA *graph.Node) (cardinality.Duplex[uint64], error) {
+		return resolveEnterpriseCAForest(tx, enterpriseCA, domainsBySID)
+	})
 }
 
-// EnterpriseCAHasQualifyingHost returns whether an Enterprise CA has an enabled
+// qualifyEnterpriseCAHostPaths filters materialized HostsCAService paths using
+// a forest resolver. Forest resolution is cached per CA and errors are returned
+// so an operational failure cannot activate the unresolved-forest fallback.
+func qualifyEnterpriseCAHostPaths(hostingPaths graph.PathSet, domainsBySID map[string]*graph.Node, resolveForest func(*graph.Node) (cardinality.Duplex[uint64], error)) (map[graph.ID]graph.PathSet, error) {
+	var (
+		hostPathsByEnterpriseCA     = make(map[graph.ID]graph.PathSet)
+		resolvedEnterpriseCAs       = make(map[graph.ID]bool)
+		forestDomainsByEnterpriseCA = make(map[graph.ID]cardinality.Duplex[uint64])
+	)
+
+	for _, hostingPath := range hostingPaths {
+		var forestDomains cardinality.Duplex[uint64]
+		enterpriseCA := hostingPath.Terminal()
+
+		if resolvedEnterpriseCAs[enterpriseCA.ID] {
+			forestDomains = forestDomainsByEnterpriseCA[enterpriseCA.ID]
+		} else {
+			var err error
+			forestDomains, err = resolveForest(enterpriseCA)
+			if err != nil {
+				return nil, fmt.Errorf("failed resolving forest for enterprise CA %d: %w", enterpriseCA.ID, err)
+			}
+
+			resolvedEnterpriseCAs[enterpriseCA.ID] = true
+			forestDomainsByEnterpriseCA[enterpriseCA.ID] = forestDomains
+		}
+
+		if enterpriseCAHostIsEligible(hostingPath.Root(), forestDomains, domainsBySID) {
+			paths := hostPathsByEnterpriseCA[enterpriseCA.ID]
+			paths.AddPath(hostingPath)
+			hostPathsByEnterpriseCA[enterpriseCA.ID] = paths
+		}
+	}
+
+	return hostPathsByEnterpriseCA, nil
+}
+
+func (s *ADCSCache) enterpriseCAHasQualifyingHostLocked(enterpriseCAID graph.ID) bool {
+	return s.enterpriseCAsWithQualifyingHosts.Contains(enterpriseCAID.Uint64())
+}
+
+// enterpriseCAHasQualifyingHost returns whether an Enterprise CA has an enabled
 // hosting computer and, when the CA's forest is known, that host is in-forest.
-func (s *ADCSCache) EnterpriseCAHasQualifyingHost(enterpriseCAID graph.ID) bool {
+func (s *ADCSCache) enterpriseCAHasQualifyingHost(enterpriseCAID graph.ID) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	return s.enterpriseCAHasQualifyingHost(enterpriseCAID)
+	return s.enterpriseCAHasQualifyingHostLocked(enterpriseCAID)
 }
 
 func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
@@ -581,7 +596,7 @@ func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChained
 
 		// Require an enabled hosting computer; when the forest is known, require it
 		// in-forest. Drops CAs whose only host was matched across a forest boundary.
-		if !s.enterpriseCAHasQualifyingHost(innerEnterpriseCA.ID) {
+		if !s.enterpriseCAHasQualifyingHostLocked(innerEnterpriseCA.ID) {
 			continue
 		}
 
