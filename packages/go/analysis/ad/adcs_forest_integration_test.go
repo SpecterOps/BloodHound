@@ -348,6 +348,107 @@ func TestADCSESC1CompositionScopesHostsToExactEnterpriseCA(t *testing.T) {
 	)
 }
 
+func TestEnrollOnBehalfOfRequiresSharedHostedCAChains(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	var (
+		domainSID        = integration.RandomDomainSID()
+		otherDomainSID   = integration.RandomDomainSID()
+		validAgent       *graph.Node
+		noNTAuthAgent    *graph.Node
+		noHostAgent      *graph.Node
+		otherDomainAgent *graph.Node
+		target           *graph.Node
+	)
+
+	testContext.DatabaseTestWithSetup(
+		func(harness *integration.HarnessDetails) error {
+			domain := testContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
+			otherDomain := testContext.NewActiveDirectoryDomain("OtherDomain", otherDomainSID, false, true)
+			rootCA := testContext.NewActiveDirectoryRootCA("RootCA", domainSID)
+			otherRootCA := testContext.NewActiveDirectoryRootCA("OtherRootCA", otherDomainSID)
+			ntAuthStore := testContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSID)
+			otherNTAuthStore := testContext.NewActiveDirectoryNTAuthStore("OtherNTAuthStore", otherDomainSID)
+			validEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("ValidEnterpriseCA", domainSID)
+			noNTAuthEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("NoNTAuthEnterpriseCA", domainSID)
+			noHostEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("NoHostEnterpriseCA", domainSID)
+			otherDomainEnterpriseCA := testContext.NewActiveDirectoryEnterpriseCA("OtherDomainEnterpriseCA", otherDomainSID)
+
+			testContext.NewRelationship(rootCA, domain, ad.RootCAFor)
+			testContext.NewRelationship(otherRootCA, otherDomain, ad.RootCAFor)
+			testContext.NewRelationship(ntAuthStore, domain, ad.NTAuthStoreFor)
+			testContext.NewRelationship(otherNTAuthStore, otherDomain, ad.NTAuthStoreFor)
+
+			for _, enterpriseCA := range []*graph.Node{validEnterpriseCA, noNTAuthEnterpriseCA, noHostEnterpriseCA} {
+				testContext.NewRelationship(enterpriseCA, rootCA, ad.EnterpriseCAFor)
+			}
+			testContext.NewRelationship(otherDomainEnterpriseCA, otherRootCA, ad.EnterpriseCAFor)
+			testContext.NewRelationship(validEnterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(noHostEnterpriseCA, ntAuthStore, ad.TrustedForNTAuth)
+			testContext.NewRelationship(otherDomainEnterpriseCA, otherNTAuthStore, ad.TrustedForNTAuth)
+			addEnabledHostingComputer(testContext, "ValidHost", domainSID, validEnterpriseCA)
+			addEnabledHostingComputer(testContext, "NoNTAuthHost", domainSID, noNTAuthEnterpriseCA)
+			addEnabledHostingComputer(testContext, "OtherDomainHost", otherDomainSID, otherDomainEnterpriseCA)
+
+			newAgentTemplate := func(name string, templateDomainSID string) *graph.Node {
+				return testContext.NewActiveDirectoryCertTemplate(name, templateDomainSID, integration.CertTemplateData{
+					RequiresManagerApproval: false,
+					SchemaVersion:           2,
+					AuthorizedSignatures:    0,
+					EffectiveEKUs:           []string{adAnalysis.EkuCertRequestAgent},
+				})
+			}
+
+			validAgent = newAgentTemplate("ValidAgent", domainSID)
+			noNTAuthAgent = newAgentTemplate("NoNTAuthAgent", domainSID)
+			noHostAgent = newAgentTemplate("NoHostAgent", domainSID)
+			otherDomainAgent = newAgentTemplate("OtherDomainAgent", otherDomainSID)
+			target = testContext.NewActiveDirectoryCertTemplate("Target", domainSID, integration.CertTemplateData{
+				RequiresManagerApproval: false,
+				SchemaVersion:           2,
+				AuthorizedSignatures:    1,
+				ApplicationPolicies:     []string{adAnalysis.EkuCertRequestAgent},
+			})
+
+			testContext.NewRelationship(validAgent, validEnterpriseCA, ad.PublishedTo)
+			testContext.NewRelationship(target, validEnterpriseCA, ad.PublishedTo)
+			testContext.NewRelationship(noNTAuthAgent, noNTAuthEnterpriseCA, ad.PublishedTo)
+			testContext.NewRelationship(noHostAgent, noHostEnterpriseCA, ad.PublishedTo)
+			testContext.NewRelationship(otherDomainAgent, otherDomainEnterpriseCA, ad.PublishedTo)
+			return nil
+		},
+		func(harness integration.HarnessDetails, db graph.Database) {
+			_, cache, err := FetchADCSPrereqs(db)
+			require.NoError(t, err)
+
+			operation := post.NewPostRelationshipOperation(t.Context(), db, "EnrollOnBehalfOf shared hosted CA chains")
+			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, operation))
+			require.NoError(t, operation.Done())
+
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				for _, agentTemplate := range []*graph.Node{validAgent, noNTAuthAgent, noHostAgent, otherDomainAgent} {
+					edge, edgeErr := tx.Relationships().Filterf(func() graph.Criteria {
+						return query.And(
+							query.Kind(query.Relationship(), ad.EnrollOnBehalfOf),
+							query.Equals(query.StartID(), agentTemplate.ID),
+							query.Equals(query.EndID(), target.ID),
+						)
+					}).First()
+
+					if agentTemplate.ID == validAgent.ID {
+						require.NoError(t, edgeErr)
+						require.Equal(t, ad.EnrollOnBehalfOf, edge.Kind)
+					} else {
+						require.True(t, graph.IsErrNotFound(edgeErr))
+					}
+				}
+
+				return nil
+			}))
+		},
+	)
+}
+
 func TestGoldenCertCreationAndCompositionUseOnlyQualifyingHosts(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 

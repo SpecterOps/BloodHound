@@ -338,12 +338,6 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 			require.Nil(t, err)
 
-			enterpriseCAs, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
-			require.Nil(t, err)
-
-			cache := adAnalysis.NewADCSCache()
-			require.Nil(t, cache.BuildCache(context.Background(), db, enterpriseCAs, certTemplates))
-
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -357,7 +351,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				}
 			}
 
-			results := adAnalysis.EnrollOnBehalfOfVersionOne(cache, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
+			results := adAnalysis.EnrollOnBehalfOfVersionOne(v1Templates, certTemplates)
 
 			require.Len(t, results, 3)
 
@@ -379,7 +373,7 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				Kind:   ad.EnrollOnBehalfOf,
 			})
 
-			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(cache, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness1.Domain1.ID)
+			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(v2Templates, certTemplates)
 
 			require.Len(t, resultsV2, 0)
 		})
@@ -394,12 +388,6 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 			require.Nil(t, err)
 
-			enterpriseCAs, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA)
-			require.Nil(t, err)
-
-			cache := adAnalysis.NewADCSCache()
-			require.Nil(t, cache.BuildCache(context.Background(), db, enterpriseCAs, certTemplates))
-
 			v1Templates := make([]*graph.Node, 0)
 			v2Templates := make([]*graph.Node, 0)
 
@@ -413,11 +401,11 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 				}
 			}
 
-			results := adAnalysis.EnrollOnBehalfOfVersionOne(cache, v1Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
+			results := adAnalysis.EnrollOnBehalfOfVersionOne(v1Templates, certTemplates)
 
 			require.Len(t, results, 0)
 
-			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(cache, v2Templates, certTemplates, harness.EnrollOnBehalfOfHarness2.Domain2.ID)
+			resultsV2 := adAnalysis.EnrollOnBehalfOfVersionTwo(v2Templates, certTemplates)
 
 			require.Len(t, resultsV2, 1)
 			require.Contains(t, resultsV2, post.EnsureRelationshipJob{
@@ -455,18 +443,18 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 					return query.Kind(query.Relationship(), ad.EnrollOnBehalfOf)
 				})); err != nil {
 					t.Fatalf("error fetching EnrollOnBehalfOf edges in integration test; %v", err)
-				} else if endNodes, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+				} else if endNodes, err := ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
 					return query.Kind(query.Relationship(), ad.EnrollOnBehalfOf)
 				})); err != nil {
 					t.Fatalf("error fetching EnrollOnBehalfOf edges in integration test; %v", err)
 				} else {
-					require.Len(t, startNodes, 2)
+					require.Len(t, startNodes, 3)
 					require.True(t, startNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate11))
 					require.True(t, startNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate12))
+					require.True(t, startNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate13))
 
-					require.Len(t, endNodes, 2)
-					require.True(t, startNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate12))
-					require.True(t, startNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate12))
+					require.Len(t, endNodes, 1)
+					require.True(t, endNodes.Contains(harness.EnrollOnBehalfOfHarness3.CertTemplate12))
 				}
 
 				return nil

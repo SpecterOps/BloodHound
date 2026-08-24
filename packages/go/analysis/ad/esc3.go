@@ -164,12 +164,73 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 }
 
 func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
+	hostedChainedDomains := cache.GetECAHostedChainedDomains()
+
+	operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
+		submitRelationship := func(result post.EnsureRelationshipJob) bool {
+			if targets, ok := submittedTargetsBySource[result.FromID]; ok {
+				if _, ok := targets[result.ToID]; ok {
+					return true
+				}
+				targets[result.ToID] = struct{}{}
+			} else {
+				submittedTargetsBySource[result.FromID] = map[graph.ID]struct{}{result.ToID: {}}
+			}
+
+			return channels.Submit(ctx, outC, result)
+		}
+
+		for _, enrollmentAgentChains := range hostedChainedDomains {
+			enrollmentAgentTemplates := cache.GetPublishedTemplateCache(enrollmentAgentChains.EnterpriseCA.ID)
+			if len(enrollmentAgentTemplates) == 0 {
+				continue
+			}
+
+			for _, targetChains := range hostedChainedDomains {
+				if !enterpriseCAChainsShareDomain(enrollmentAgentChains, targetChains) {
+					continue
+				}
+
+				versionOneTemplates, versionTwoTemplates := splitCertTemplatesBySchemaVersion(cache.GetPublishedTemplateCache(targetChains.EnterpriseCA.ID))
+
+				for _, result := range EnrollOnBehalfOfVersionTwo(versionTwoTemplates, enrollmentAgentTemplates) {
+					if !submitRelationship(result) {
+						return nil
+					}
+				}
+
+				for _, result := range EnrollOnBehalfOfVersionOne(versionOneTemplates, enrollmentAgentTemplates) {
+					if !submitRelationship(result) {
+						return nil
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return nil
+}
+
+func enterpriseCAChainsShareDomain(first, second *EnterpriseCAChainedDomains) bool {
+	for _, domainID := range first.Domains.Slice() {
+		if second.Domains.Contains(domainID) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func splitCertTemplatesBySchemaVersion(certTemplates []*graph.Node) ([]*graph.Node, []*graph.Node) {
 	var (
 		versionOneTemplates = make([]*graph.Node, 0)
 		versionTwoTemplates = make([]*graph.Node, 0)
 	)
 
-	for _, certTemplate := range cache.GetCertTemplates() {
+	for _, certTemplate := range certTemplates {
 		if version, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
 				"Did not get schema version for cert template",
@@ -195,42 +256,16 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 		}
 	}
 
-	for eca, chains := range cache.GetChainedDomains() {
-		if publishedCertTemplates := cache.GetPublishedTemplateCache(graph.ID(eca)); len(publishedCertTemplates) == 0 {
-			continue
-		} else {
-			chains.Domains.Each(func(domain uint64) bool {
-
-				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					for _, result := range EnrollOnBehalfOfVersionTwo(cache, versionTwoTemplates, publishedCertTemplates, graph.ID(domain)) {
-						if !channels.Submit(ctx, outC, result) {
-							return nil
-						}
-					}
-					return nil
-				})
-
-				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					for _, result := range EnrollOnBehalfOfVersionOne(cache, versionOneTemplates, publishedCertTemplates, graph.ID(domain)) {
-						if !channels.Submit(ctx, outC, result) {
-							return nil
-						}
-					}
-					return nil
-				})
-
-				return true
-			})
-		}
-	}
-
-	return nil
+	return versionOneTemplates, versionTwoTemplates
 }
 
-func EnrollOnBehalfOfVersionOne(cache *ADCSCache, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainID graph.ID) []post.EnsureRelationshipJob {
+// EnrollOnBehalfOfVersionOne creates the schema-level compatibility relationships
+// between enrollment agent and schema version 1 certificate templates. Callers
+// must restrict both templates to publishers that share a qualifying domain.
+func EnrollOnBehalfOfVersionOne(versionOneCertTemplates, enrollmentAgentCertTemplates []*graph.Node) []post.EnsureRelationshipJob {
 	results := make([]post.EnsureRelationshipJob, 0)
 
-	for _, certTemplateOne := range publishedTemplates {
+	for _, certTemplateOne := range enrollmentAgentCertTemplates {
 		//prefilter as much as we can first
 		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
@@ -248,10 +283,6 @@ func EnrollOnBehalfOfVersionOne(cache *ADCSCache, versionOneCertTemplates []*gra
 			continue
 		} else {
 			for _, certTemplateTwo := range versionOneCertTemplates {
-				if !cache.CertTemplateLinksToDomain(certTemplateTwo.ID, domainID) {
-					continue
-				}
-
 				results = append(results, post.EnsureRelationshipJob{
 					FromID: certTemplateOne.ID,
 					ToID:   certTemplateTwo.ID,
@@ -264,9 +295,12 @@ func EnrollOnBehalfOfVersionOne(cache *ADCSCache, versionOneCertTemplates []*gra
 	return results
 }
 
-func EnrollOnBehalfOfVersionTwo(cache *ADCSCache, versionTwoCertTemplates, publishedTemplates []*graph.Node, domainID graph.ID) []post.EnsureRelationshipJob {
+// EnrollOnBehalfOfVersionTwo creates the schema-level compatibility relationships
+// between enrollment agent and schema version 2+ certificate templates. Callers
+// must restrict both templates to publishers that share a qualifying domain.
+func EnrollOnBehalfOfVersionTwo(versionTwoCertTemplates, enrollmentAgentCertTemplates []*graph.Node) []post.EnsureRelationshipJob {
 	results := make([]post.EnsureRelationshipJob, 0)
-	for _, certTemplateOne := range publishedTemplates {
+	for _, certTemplateOne := range enrollmentAgentCertTemplates {
 		if hasBadEku, err := certTemplateHasEku(certTemplateOne, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
 				"Did not get EffectiveEKUs for cert template",
@@ -314,8 +348,6 @@ func EnrollOnBehalfOfVersionTwo(cache *ADCSCache, versionTwoCertTemplates, publi
 						attr.Error(err),
 					)
 				} else if !slices.Contains(applicationPolicies, EkuCertRequestAgent) {
-					continue
-				} else if !cache.CertTemplateLinksToDomain(certTemplateTwo.ID, domainID) {
 					continue
 				} else {
 					results = append(results, post.EnsureRelationshipJob{
