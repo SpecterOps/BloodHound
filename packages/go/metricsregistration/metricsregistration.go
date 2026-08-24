@@ -24,6 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/metrics"
@@ -54,6 +55,10 @@ func RegisterBHCEMetrics(registerer prometheus.Registerer) error {
 
 	if err := metrics.RegisterOptimizeStorageMetrics(registerer); err != nil {
 		return fmt.Errorf("failed to register graph storage optimization metrics: %w", err)
+	}
+
+	if err := v2.RegisterApiEndpointMetrics(registerer); err != nil {
+		return fmt.Errorf("failed to register API endpoint internal metrics: %w", err)
 	}
 
 	return nil
