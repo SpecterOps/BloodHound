@@ -107,6 +107,10 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 							)
 						} else {
 							for _, eca1 := range publishedECAs {
+								if !cache.EnterpriseCAHasQualifyingHost(eca1.ID) {
+									continue
+								}
+
 								tempResults := CalculateCrossProductNodeSets(
 									localGroupData,
 									certTemplateEnrollersOne,
@@ -129,6 +133,10 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 						}
 					} else {
 						for _, eca1 := range publishedECAs {
+							if !cache.EnterpriseCAHasQualifyingHost(eca1.ID) {
+								continue
+							}
+
 							tempResults := CalculateCrossProductNodeSets(
 								localGroupData,
 								certTemplateEnrollersOne,
@@ -524,9 +532,10 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		lock                     = &sync.Mutex{}
 		path1CertTemplates       = cardinality.NewBitmap64()
 		path2CertTemplates       = cardinality.NewBitmap64()
-		finalEnterpriseCAs       = cardinality.NewBitmap64()
 		enterpriseCANodes        = cardinality.NewBitmap64()
 		enterpriseCASegments     = map[graph.ID][]*graph.PathSegment{}
+		finalEnterpriseCAs       = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA  map[graph.ID]graph.PathSet
 		path2CandidateTemplates  = cardinality.NewBitmap64()
 		enrollOnBehalfOfPaths    graph.PathSet
 	)
@@ -574,6 +583,22 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		}); err != nil {
 			return nil, err
 		}
+	}
+
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, enterpriseCANodes); err != nil {
+		return nil, err
+	} else {
+		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
+		for enterpriseCAID := range qualifyingHostPaths {
+			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
+		}
+
+		enterpriseCANodes.And(qualifyingEnterpriseCAs)
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
+	if enterpriseCANodes.Cardinality() == 0 {
+		return paths, nil
 	}
 
 	//Use the enterprise CA nodes we gathered to filter the first set of paths for P1
@@ -651,6 +676,10 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	//Manifest P6/P7 keyed to enterprise ca nodes
 	for ecaID := range enterpriseCASegments {
+		if !enterpriseCANodes.Contains(ecaID.Uint64()) {
+			continue
+		}
+
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if ecaNode, err := ops.FetchNode(tx, ecaID); err != nil {
 				return err
@@ -721,6 +750,11 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				eca2 := p2.Search(func(nextSegment *graph.PathSegment) bool {
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) && enterpriseCANodes.Contains(nextSegment.Node.ID.Uint64())
 				})
+				_, eca1HasQualifyingHost := hostPathsByEnterpriseCA[eca1.ID]
+				_, eca2HasQualifyingHost := hostPathsByEnterpriseCA[eca2.ID]
+				if !eca1HasQualifyingHost || !eca2HasQualifyingHost {
+					continue
+				}
 
 				// Verify P6 and P7 paths exists
 				p6segments, ok := path6_7CandidateSegments[eca1.ID]
@@ -780,13 +814,16 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				paths.AddPath(p3)
 				paths.AddPath(p1.Path())
 				paths.AddPath(p2.Path())
+				finalEnterpriseCAs.Add(eca1.ID.Uint64())
 				finalEnterpriseCAs.Add(eca2.ID.Uint64())
 			}
 		}
 	}
-	if err := addHostsCAServicePathsToComposition(ctx, db, &paths, finalEnterpriseCAs); err != nil {
-		return nil, err
-	}
+
+	finalEnterpriseCAs.Each(func(enterpriseCAID uint64) bool {
+		paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(enterpriseCAID)])
+		return true
+	})
 
 	return paths, nil
 }

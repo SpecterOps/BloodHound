@@ -278,14 +278,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		certTemplateMeasure()
 
-		// Index domains by SID so a CA or computer can be mapped to its forest via
-		// its domainsid. SIDs are upper-cased to match collected node identifiers.
-		domainsBySID := make(map[string]*graph.Node, len(s.domains))
-		for _, domain := range s.domains {
-			if sid, err := domain.Properties.Get(common.ObjectID.String()).String(); err == nil && sid != "" {
-				domainsBySID[strings.ToUpper(sid)] = domain
-			}
-		}
+		domainsBySID := indexDomainsBySID(s.domains)
 
 		ecaMeasure := measure.ContextMeasure(
 			ctx,
@@ -357,9 +350,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				)
 
 				for _, computer := range hostingComputers.Slice() {
-					if enabled, err := computer.Properties.Get(common.Enabled.String()).Bool(); err != nil {
-						continue
-					} else if !enabled {
+					if !enterpriseCAHostIsEligible(computer, nil, domainsBySID) {
 						continue
 					}
 
@@ -378,7 +369,7 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 								slog.Uint64("computer", uint64(computer.ID)),
 								slog.Uint64("enterprise_ca", uint64(eca.ID)),
 							)
-						} else if computerDomain, ok := domainsBySID[strings.ToUpper(computerSID)]; ok && forestDomains.Contains(computerDomain.ID.Uint64()) {
+						} else if enterpriseCAHostIsEligible(computer, forestDomains, domainsBySID) {
 							hostInForest = true
 						}
 					}
@@ -504,6 +495,36 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 	return err
 }
 
+func indexDomainsBySID(domains []*graph.Node) map[string]*graph.Node {
+	domainsBySID := make(map[string]*graph.Node, len(domains))
+
+	for _, domain := range domains {
+		if sid, err := domain.Properties.Get(common.ObjectID.String()).String(); err == nil && sid != "" {
+			domainsBySID[strings.ToUpper(sid)] = domain
+		}
+	}
+
+	return domainsBySID
+}
+
+// enterpriseCAHostIsEligible returns whether a host is enabled and, when the
+// Enterprise CA's forest is known, belongs to that forest.
+func enterpriseCAHostIsEligible(computer *graph.Node, forestDomains cardinality.Duplex[uint64], domainsBySID map[string]*graph.Node) bool {
+	if !computer.Kinds.ContainsOneOf(ad.Computer) {
+		return false
+	} else if enabled, err := computer.Properties.Get(common.Enabled.String()).Bool(); err != nil || !enabled {
+		return false
+	} else if forestDomains == nil {
+		return true
+	} else if computerSID, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil || computerSID == "" {
+		return false
+	} else if computerDomain, ok := domainsBySID[strings.ToUpper(computerSID)]; !ok {
+		return false
+	} else {
+		return forestDomains.Contains(computerDomain.ID.Uint64())
+	}
+}
+
 // resolveEnterpriseCAForest returns the domain IDs in the CA's forest (the
 // SameForestTrust closure of the CA's domain, resolved from its domainsid). It
 // returns a nil set when the forest can't be resolved, so callers fall back to
@@ -532,6 +553,23 @@ func resolveEnterpriseCAForest(tx graph.Transaction, eca *graph.Node, domainsByS
 	return forestDomains, nil
 }
 
+func (s *ADCSCache) enterpriseCAHasQualifyingHost(enterpriseCAID graph.ID) bool {
+	if hasInForestHostingComputer, forestKnown := s.hasInForestHostingComputer[enterpriseCAID]; forestKnown {
+		return hasInForestHostingComputer
+	}
+
+	return s.hasHostingComputer[enterpriseCAID]
+}
+
+// EnterpriseCAHasQualifyingHost returns whether an Enterprise CA has an enabled
+// hosting computer and, when the CA's forest is known, that host is in-forest.
+func (s *ADCSCache) EnterpriseCAHasQualifyingHost(enterpriseCAID graph.ID) bool {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.enterpriseCAHasQualifyingHost(enterpriseCAID)
+}
+
 func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChainedDomains {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -543,11 +581,7 @@ func (s *ADCSCache) GetECAHostedChainedDomains() map[uint64]*EnterpriseCAChained
 
 		// Require an enabled hosting computer; when the forest is known, require it
 		// in-forest. Drops CAs whose only host was matched across a forest boundary.
-		if hasInForestHostingComputer, forestKnown := s.hasInForestHostingComputer[innerEnterpriseCA.ID]; forestKnown {
-			if !hasInForestHostingComputer {
-				continue
-			}
-		} else if !s.hasHostingComputer[innerEnterpriseCA.ID] {
+		if !s.enterpriseCAHasQualifyingHost(innerEnterpriseCA.ID) {
 			continue
 		}
 
