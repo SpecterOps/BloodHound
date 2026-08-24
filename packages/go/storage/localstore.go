@@ -33,8 +33,10 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
-var ErrIsDirectory = errors.New("is a directory")
-var ErrPresignedURLUnsupported = errors.New("presigned url unsupported by storage backend")
+var (
+	ErrIsDirectory             = errors.New("is a directory")
+	ErrPresignedURLUnsupported = errors.New("presigned url unsupported by storage backend")
+)
 
 // ctxReader wraps an io.Reader so that context cancellation is observed between
 // reads. io.Copy calls Read in a loop and each call checks ctx.Err() before delegating.

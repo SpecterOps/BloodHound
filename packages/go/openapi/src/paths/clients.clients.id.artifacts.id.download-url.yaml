@@ -35,8 +35,8 @@ post:
   operationId: GetClientArtifactDownloadURL
   summary: Get a client artifact download URL
   description: |
-    Issues a URL that can be used to download an operation artifact associated
-    with the client with an http-only `client-artifact-download` cookie
+    Issues a presigned URL that can be used to download an operation artifact associated
+    with the client
   tags:
     - Clients
     - Enterprise
