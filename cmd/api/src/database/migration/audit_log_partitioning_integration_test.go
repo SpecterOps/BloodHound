@@ -147,6 +147,17 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 		scalarInt64(t, db, `SELECT last_value FROM audit_logs_id_seq`),
 		"audit_logs_id_seq should be advanced to the max copied id")
 
+	// The pre-migration table is retained aside as audit_logs_old (an unpartitioned
+	// recovery copy) rather than dropped in this migration; a follow-up migration
+	// drops it after a soak period. Its rows are preserved so the original data can
+	// be recovered during the soak, including any the retention GC later drops from
+	// the partitioned table.
+	assert.False(t, isRangePartitioned(t, db, "audit_logs_old"),
+		"audit_logs_old should be retained as the unpartitioned pre-migration copy")
+	assert.Equal(t, totalSeeded,
+		scalarInt64(t, db, `SELECT count(*) FROM audit_logs_old`),
+		"audit_logs_old should retain all pre-migration rows for the soak period")
+
 	// Re-running the partitioning migration must be a safe no-op: its version is
 	// already applied, so migrating up to it again applies nothing. Targeting the
 	// version explicitly (rather than Up) keeps this assertion scoped to the

@@ -26,7 +26,9 @@
 -- The work is: build the partitioned table under a staging name, backfill it in
 -- bounded id batches, verify the row counts, then swap it into place under the
 -- original audit_logs name so existing audit logging keeps working against a
--- single table.
+-- single table. The pre-migration table is renamed aside to audit_logs_old and
+-- intentionally retained as a recovery copy; a separate follow-up migration
+-- drops it after a soak period.
 --
 -- Note on resumability: the backfill is a single DO block and therefore runs as
 -- one transaction, so a pod restart mid-backfill rolls it back entirely -- there
@@ -69,6 +71,15 @@ END $$;
 -- create it fresh. Skipped once a prior run already swapped the partitioned table
 -- into place under the audit_logs name (detected by audit_logs being range
 -- partitioned), so there is nothing left to stage.
+--
+-- The DROP below targets the STAGING copy (audit_logs_partitioned), never the
+-- live audit_logs table, and can only run before the swap (the guard above
+-- RETURNs once audit_logs is range partitioned). At this point staging holds
+-- only a copy whose source of truth still lives in audit_logs, so rebuilding it
+-- from empty loses no data. It is a deliberate drop-and-rebuild rather than a
+-- CREATE TABLE IF NOT EXISTS: the backfill cannot commit per batch (see the
+-- header note), so a leftover staging table can only ever be partially filled;
+-- reusing it would risk swapping in an incomplete copy, so each run starts clean.
 -- +goose StatementBegin
 DO $$
 BEGIN
@@ -206,8 +217,11 @@ BEGIN
     -- column below to keep it from being dropped alongside audit_logs_old.
     EXECUTE 'ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE';
     -- Rename-aside swap: retain the original as audit_logs_old (not dropped) so the
-    -- swap stays reversible while indexes are built; a later step drops it once the
-    -- new table is verified.
+    -- pre-migration data survives as a recovery copy. This migration intentionally
+    -- does NOT drop audit_logs_old; it is retained for a soak period and dropped by
+    -- a separate follow-up migration once the partitioned table has been verified in
+    -- production. Keeping it also preserves audit rows that the retention GC would
+    -- otherwise drop from the new table during the soak window.
     EXECUTE 'ALTER TABLE audit_logs RENAME TO audit_logs_old';
     EXECUTE 'ALTER TABLE audit_logs_partitioned RENAME TO audit_logs';
     EXECUTE 'ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id';
@@ -241,19 +255,18 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source
 CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
 
--- Phase 6: drop the retained original now that the swapped-in table is verified
--- and indexed. IF EXISTS so a re-run after the drop (or a run that never created
--- it) is a no-op. The sequence was re-owned to the new audit_logs.id above, so
--- dropping audit_logs_old does not take the sequence with it.
-DROP TABLE IF EXISTS audit_logs_old;
+-- Note: audit_logs_old (the pre-migration table renamed aside in Phase 4) is
+-- intentionally NOT dropped here. It is retained as a recovery copy for a soak
+-- period and dropped by a separate follow-up migration once the partitioned
+-- audit_logs has been verified in production.
 
 -- +goose Down
 -- The Up block re-attaches audit_logs_id_seq to the partitioned audit_logs.id,
 -- so dropping the table with CASCADE also drops the owned sequence. Also drop the
 -- staging and rename-aside tables in case Down runs against a half-completed Up
--- (before the swap, or after the swap but before audit_logs_old is dropped).
--- Recreate the sequence before the table that references it, then re-own it to
--- the new column. Guards are idempotent because Down also runs NO TRANSACTION.
+-- (before the swap) or after a completed Up (which retains audit_logs_old for the
+-- soak). Recreate the sequence before the table that references it, then re-own it
+-- to the new column. Guards are idempotent because Down also runs NO TRANSACTION.
 DROP TABLE IF EXISTS audit_logs CASCADE;
 DROP TABLE IF EXISTS audit_logs_partitioned CASCADE;
 DROP TABLE IF EXISTS audit_logs_old CASCADE;
