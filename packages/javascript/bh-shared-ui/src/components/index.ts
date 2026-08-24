@@ -94,6 +94,7 @@ export * from './HighlightedText';
 export { default as HighlightedText } from './HighlightedText';
 export * from './Icon';
 export { default as Icon } from './Icon';
+export * from './InfiniteQueryFixedList';
 export * from './InfiniteScrollingTable';
 export { default as InfiniteScrollingTable } from './InfiniteScrollingTable';
 export * from './LabelWithCopy';
