@@ -26,6 +26,8 @@ export * from './CaretDown';
 export * from './CaretUp';
 export * from './CertStatus';
 export * from './Compass';
+export * from './CopyOutline';
+export * from './CopyPrinciple';
 export * from './DataAlert';
 export * from './Diamond';
 export * from './Disabled';
