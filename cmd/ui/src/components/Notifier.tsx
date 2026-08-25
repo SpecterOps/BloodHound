@@ -49,7 +49,12 @@ const Notifier: React.FC = () => {
                 key,
                 ...options,
                 content: (id, snackMessage) => (
-                    <NotificationSnackbar id={id} message={snackMessage} variant={options.variant} />
+                    <NotificationSnackbar
+                        id={id}
+                        message={snackMessage}
+                        variant={options.variant}
+                        title={options.title}
+                    />
                 ),
                 onClose: (event, reason, myKey) => {
                     if (options.onClose) {

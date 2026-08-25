@@ -29,8 +29,8 @@ interface NotificationProviderProps {
 
 interface NotificationSnackbarProps {
     id: string | number;
-    message: string | React.ReactNode;
-    variant: VariantType | null | undefined;
+    message: React.ReactNode;
+    variant?: VariantType | null;
     title?: string;
 }
 
@@ -38,7 +38,7 @@ export const NotificationSnackbar = React.forwardRef<HTMLDivElement, Notificatio
     ({ id, message, variant, title }, ref) => {
         const { closeSnackbar } = useSnackbar();
         return (
-            <SnackbarContent ref={ref} style={{ justifyContent: 'center' }}>
+            <SnackbarContent ref={ref} className='justify-center'>
                 <Alert variant={variant} title={title} onClose={() => closeSnackbar(id)}>
                     {message}
                 </Alert>
