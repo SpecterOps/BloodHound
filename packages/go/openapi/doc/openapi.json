@@ -19878,6 +19878,189 @@
         }
       }
     },
+    "/api/v2/asset-scores/zone-protected-asset-score": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetZoneProtectedAssetScore",
+        "summary": "Get zone protected asset score",
+        "description": "Gets a per-day series describing how much of a zone is free of open findings\nover the requested time range. For each day in the range, the score is the\nnumber of objects in the zone without an open finding divided by the total\nnumber of objects in the zone. Zones that attack path analysis does not run\nagainst yield an empty series.\n",
+        "tags": [
+          "Asset Scores",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "environments",
+            "description": "Environment IDs",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "description": "The asset group tag id of the zone requested",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "start",
+            "description": "Beginning datetime of range (inclusive) in RFC-3339 format; Defaults to current datetime minus 30 days",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end",
+            "description": "Ending datetime of range (exclusive) in RFC-3339 format; Defaults to current datetime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/api.response.time-window"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "environments": {
+                              "type": "array",
+                              "description": "The environment IDs the caller has access to out of those requested",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "asset_group_tag_id": {
+                              "type": "integer",
+                              "description": "The asset group tag id of the zone requested"
+                            },
+                            "data": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "date": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "readOnly": true
+                                  },
+                                  "exposed_count": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Number of objects in the zone holding an open finding",
+                                    "readOnly": true
+                                  },
+                                  "protected_count": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Number of objects in the zone without an open finding",
+                                    "readOnly": true
+                                  },
+                                  "total_count": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Total number of objects in the zone",
+                                    "readOnly": true
+                                  },
+                                  "value": {
+                                    "type": "number",
+                                    "format": "double",
+                                    "description": "The protected share of the zone, `protected_count` divided by `total_count`",
+                                    "readOnly": true
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "Zone protected asset score": {
+                    "value": {
+                      "data": {
+                        "start": "2026-08-01T00:00:00Z",
+                        "end": "2026-08-04T00:00:00Z",
+                        "environments": [
+                          "S-1-5-21-1004336348-1177238915-682003330"
+                        ],
+                        "asset_group_tag_id": 1,
+                        "data": [
+                          {
+                            "date": "2026-08-01T00:00:00Z",
+                            "exposed_count": 120,
+                            "protected_count": 880,
+                            "total_count": 1000,
+                            "value": 0.88
+                          },
+                          {
+                            "date": "2026-08-02T00:00:00Z",
+                            "exposed_count": 95,
+                            "protected_count": 905,
+                            "total_count": 1000,
+                            "value": 0.905
+                          },
+                          {
+                            "date": "2026-08-03T00:00:00Z",
+                            "exposed_count": 80,
+                            "protected_count": 922,
+                            "total_count": 1002,
+                            "value": 0.9201596806387226
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/meta/{object_id}": {
       "parameters": [
         {
@@ -20445,6 +20628,96 @@
                               "format": "date-time"
                             }
                           }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/alert-webhooks/{alert_webhook_id}/test": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.alert-webhook-id"
+        }
+      ],
+      "post": {
+        "operationId": "TestAlertWebhook",
+        "summary": "Test Alert Webhook",
+        "description": "Synchronously dispatches a mock payload for the given `event_type` to the\nwebhook's target URL using the current HMAC secret. No `alert_attempts`\nrow is persisted. The handler returns `200` for both successful and failed\nupstream deliveries; the `status_code` and `error` fields in the response\nbody surface the upstream outcome.\n",
+        "tags": [
+          "Alerts",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Request body for dispatching a mock payload to an alert webhook.",
+                "required": [
+                  "event_type",
+                  "version"
+                ],
+                "properties": {
+                  "event_type": {
+                    "type": "string",
+                    "description": "The alert event type to mock in the dispatched payload. The server builds\na representative payload for the given type using the webhook's current\nHMAC secret.\n"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "description": "Payload data version for the supplied `event_type`. Must be one of\nthe data versions advertised for that type by\n`GET /api/v2/alert-event-types`.\n"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Result of dispatching a mock payload to an alert webhook. The handler returns\nthis body with a `200` status code on both successful and failed upstream\ndeliveries; the `status_code` and `error` fields surface the upstream outcome.\n",
+                      "properties": {
+                        "status_code": {
+                          "type": "integer",
+                          "description": "HTTP status code returned by the webhook target.",
+                          "nullable": true
+                        },
+                        "error": {
+                          "$ref": "#/components/schemas/null.string.response"
                         }
                       }
                     }
@@ -21186,6 +21459,92 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/alert-attempts/retry": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "RetryAlertAttempt",
+        "summary": "Retry Alert Attempt",
+        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded.\n",
+        "tags": [
+          "Alerts",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Request body for manually re-queueing an alert delivery attempt. The supplied\ncomposite key identifies the row to retry; the handler is a no-op when the\nattempt has already succeeded (`succeeded_at IS NOT NULL`).\n",
+                "required": [
+                  "alert_id",
+                  "channel_id",
+                  "event_id"
+                ],
+                "properties": {
+                  "alert_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "event_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "alert_attempt": {
+                          "$ref": "#/components/schemas/model.alert-attempt"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -26289,6 +26648,7 @@
         "Events (Schedules)",
         "Attack Paths",
         "Risk Posture",
+        "Asset Scores",
         "Meta Entities",
         "Alerts"
       ]
