@@ -1348,17 +1348,21 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
+	t.Parallel()
 
 	type testSetupData struct {
 		extensionId   int32
+		extensionIds  []int32
 		expectedCount int
 		expected      map[string]model.AssetGroupTagSelector
+		db            *database.BloodhoundDB
 	}
 
 	type testCase struct {
-		name   string
-		setup  func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
-		assert func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error)
+		name     string
+		setup    func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
+		assert   func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error)
+		teardown func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData)
 	}
 
 	assertSelectors := func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error) {
@@ -1381,6 +1385,23 @@ func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
 			assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.UpdatedBy)
 			assert.NotZero(t, selector.ID)
 		}
+	}
+
+	teardownExtensions := func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+		t.Helper()
+		for _, extensionId := range setupData.extensionIds {
+			// ON DELETE CASCADE removes the extension's selectors
+			assert.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId))
+			selectors, err := testSuite.BHDatabase.GetAssetGroupTagSelectorsByExtensionId(testSuite.Context, extensionId)
+			assert.NoError(t, err)
+			assert.Empty(t, selectors)
+		}
+	}
+
+	assertError := func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error) {
+		t.Helper()
+		require.Error(t, err)
+		assert.Empty(t, selectors)
 	}
 
 	tests := []testCase{
@@ -1406,9 +1427,10 @@ func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
 					require.NoError(t, err)
 					expected[input.RuleKey.String] = input
 				}
-				return testSetupData{extensionId: extension.ID, expectedCount: 2, expected: expected}
+				return testSetupData{extensionId: extension.ID, extensionIds: []int32{extension.ID}, expectedCount: 2, expected: expected}
 			},
-			assert: assertSelectors,
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
 		},
 		{
 			name: "success_-_returns_only_selectors_for_requested_extension",
@@ -1447,11 +1469,13 @@ func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
 
 				return testSetupData{
 					extensionId:   targetExtension.ID,
+					extensionIds:  []int32{targetExtension.ID, otherExtension.ID},
 					expectedCount: 1,
 					expected:      map[string]model.AssetGroupTagSelector{targetInput.RuleKey.String: targetInput},
 				}
 			},
-			assert: assertSelectors,
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
 		},
 		{
 			name: "success_-_returns_empty_for_extension_with_no_selectors",
@@ -1459,19 +1483,37 @@ func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
 				t.Helper()
 				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_ext_no_selectors", "Test Ext No Selectors", "v1.0.0", "test_ext_ns")
 				require.NoError(t, err)
-				return testSetupData{extensionId: extension.ID, expectedCount: 0, expected: map[string]model.AssetGroupTagSelector{}}
+				return testSetupData{extensionId: extension.ID, extensionIds: []int32{extension.ID}, expectedCount: 0, expected: map[string]model.AssetGroupTagSelector{}}
 			},
-			assert: assertSelectors,
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
+		},
+		{
+			name: "error_-_returns_error_on_closed_connection",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				closedSuite := setupIntegrationTestSuite(t)
+				teardownIntegrationTestSuite(t, &closedSuite)
+				return testSetupData{db: closedSuite.BHDatabase}
+			},
+			assert: assertError,
 		},
 	}
 
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			testSuite := setupIntegrationTestSuite(t)
-			defer teardownIntegrationTestSuite(t, &testSuite)
-
 			setupData := testCase.setup(t, testSuite)
-			selectors, err := testSuite.BHDatabase.GetAssetGroupTagSelectorsByExtensionId(testSuite.Context, setupData.extensionId)
+			if testCase.teardown != nil {
+				defer testCase.teardown(t, testSuite, setupData)
+			}
+			queryDB := testSuite.BHDatabase
+			if setupData.db != nil {
+				queryDB = setupData.db
+			}
+			selectors, err := queryDB.GetAssetGroupTagSelectorsByExtensionId(testSuite.Context, setupData.extensionId)
 			testCase.assert(t, setupData, selectors, err)
 		})
 	}
