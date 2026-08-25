@@ -281,6 +281,11 @@ func (s *Store) Delete(ctx context.Context, name string) error {
 	return err
 }
 
+// PruneEmptyParents is a no-op because S3 object prefixes are not directories.
+func (s *Store) PruneEmptyParents(ctx context.Context, name string) error {
+	return nil
+}
+
 func isRootPath(name string) bool {
 	name = strings.TrimSpace(name)
 	return name == "" || name == "/"
