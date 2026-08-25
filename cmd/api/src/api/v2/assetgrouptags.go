@@ -60,8 +60,6 @@ const (
 
 	includeProperties = true
 	excludeProperties = false
-
-	assetGroupTagSelectorReadOnlyFieldError = "request contains read-only fields"
 )
 
 func maybeAddEnvironmentIdFilter(filters []graph.Criteria, environmentIds []string) []graph.Criteria {
@@ -218,7 +216,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if createSelectorRequest.hasReadOnlyFields() {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, assetGroupTagSelectorReadOnlyFieldError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
@@ -292,7 +290,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if selUpdateReq.hasReadOnlyFields() {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, assetGroupTagSelectorReadOnlyFieldError, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else {
 		// we can update DisabledAt on a default selector
 		if selUpdateReq.Disabled != nil {

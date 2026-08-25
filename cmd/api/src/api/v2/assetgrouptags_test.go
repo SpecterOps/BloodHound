@@ -590,6 +590,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorAssetGroupTagSelectorReadOnlyField)
 				},
 			},
 			{
@@ -614,6 +615,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, api.ErrorAssetGroupTagSelectorReadOnlyField)
 				},
 			},
 			{
