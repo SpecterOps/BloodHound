@@ -191,7 +191,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         initialState: defaultInitialState,
         columnResizeMode: 'onChange',
         enableColumnResizing: enableResizing,
-        getRowId: (row) => (row as Row<TData>)?.id,
         state: {
             ...(columnPinning && { columnPinning }),
             ...(columnSizing && { columnSizing }),
