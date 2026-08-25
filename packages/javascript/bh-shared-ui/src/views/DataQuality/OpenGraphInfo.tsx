@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
 
 const NoDataMessage: React.FC = () => (
     <div className='flex items-center justify-center h-[400px] bg-neutral-2'>
-        <span className='font-bold text-sm text-disabled leading-normal'>No data to display</span>
+        <span className='font-bold text-sm text-contrast leading-normal'>No data to display</span>
     </div>
 );
 
