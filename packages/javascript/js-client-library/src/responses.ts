@@ -449,6 +449,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
 export type UnifiedFinding = {
+    id: number;
     severity: string;
     finding: string;
     title: string;
