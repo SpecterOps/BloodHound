@@ -100,7 +100,8 @@ const enrichBuiltInNodeProperties = async (
         );
 
         return { ...node, properties: { ...node.properties, ...properties } };
-    } catch {
+    } catch (error) {
+        if (signal?.aborted) throw error;
         return node;
     }
 };
@@ -110,7 +111,7 @@ export const useGetNodeById = (id?: number) => {
         queryKey: ['getNodeById', id],
         queryFn: async ({ signal }) => {
             const node = await apiClient
-                .getNodeByID(id!, { params: { 'include-info': true } })
+                .getNodeByID(id!, { params: { 'include-info': true }, signal })
                 .then((res) => res.data.data);
 
             return enrichBuiltInNodeProperties(node, signal);
