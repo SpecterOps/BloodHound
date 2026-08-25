@@ -15,22 +15,127 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AxeBuilder from '@axe-core/playwright';
-import type { ElementHandle, Page, TestInfo } from '@playwright/test';
+import type { ElementHandle, Locator, Page, TestInfo } from '@playwright/test';
 import { expect, test as base } from '@playwright/test';
 import type { AxeResults, NodeResult, Result } from 'axe-core';
+import { installGraphHasDataStub } from './stubs/graphs/cypher';
 import type { TestOptions } from './themes';
 
 // Full list of supported tags here:
 // https://www.deque.com/axe/core-documentation/api-documentation/#axecore-tags
 export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] as const;
 
+/**
+ * Options for a single `checkA11y` scan. `include`/`exclude`/`disableRules` are applied to the
+ * underlying `AxeBuilder` only when provided; `attachmentNamePrefix`/`maxNodesPerViolation` are
+ * forwarded to `expectNoAccessibilityViolations` for report control.
+ */
+export type A11yScanOptions = {
+    /**
+     * Selector(s) to scope the scan to. Defaults to the `a11yDefaultInclude` option (unset in this
+     * package; consumers prime it in their Playwright config — e.g. `'#content-wrapper'`). Pass
+     * `null` to opt out of scoping entirely and scan the full page (e.g. a login screen).
+     */
+    include?: string | string[] | null;
+
+    /** Selector(s) to omit from the scan (e.g. a known-noisy third-party embed). */
+    exclude?: string | string[];
+
+    /** Axe rule ids to turn off for this scan. */
+    disableRules?: string | string[];
+
+    /**
+     * Namespaces the attachments (axe-results.json, screenshots, etc.) so multiple scans in one
+     * test don't overwrite each other in the report.
+     */
+    attachmentNamePrefix?: string;
+
+    /** Caps how many affected nodes per violation get a screenshot attachment. */
+    maxNodesPerViolation?: number;
+};
+
+// Wait state for `goAndWaitFor`, mirroring Playwright's `Locator.waitFor` `state` option.
+type WaitForState = 'attached' | 'detached' | 'visible' | 'hidden';
+
+// The element `goAndWaitFor` waits on: either a ready-made `Locator` (locators are lazy, so it's
+// safe to build one from `page` before navigating) or a factory that receives `page` — the factory
+// form lets a caller avoid destructuring `page` when the locator is the only reason they'd need it.
+type GoAndWaitForTarget = Locator | ((page: Page) => Locator);
+
+type GoAndWaitForOptions = {
+    /** Leave the global navigation drawer expanded instead of collapsing it after navigation. */
+    keepNavOpen?: boolean;
+    state?: WaitForState;
+    timeout?: number;
+};
+
 type AxeFixtures = {
     makeAxeBuilder: () => AxeBuilder;
+
+    /**
+     * Describe-scoped defaults for `checkA11y`, declared as a Playwright option so a block can set
+     * common values once via `test.use({ a11yDefaults: { include: '[role="dialog"]' } })`. Per-call
+     * options passed to `checkA11y` win over these.
+     */
+    a11yDefaults: A11yScanOptions;
+
+    /**
+     * App-wide default scan scope used by `checkA11y` when neither a per-call option nor
+     * `a11yDefaults` specifies `include`. Left `null` (full-page) here so the package makes no
+     * assumption about a consumer's DOM; prime it per app in the Playwright config `use` block
+     * (e.g. `a11yDefaultInclude: '#content-wrapper'`).
+     */
+    a11yDefaultInclude: string | string[] | null;
+
+    /**
+     * Accessible name of the button `goAndWaitFor` clicks to collapse the global navigation drawer.
+     * Prime it per app in the Playwright config `use` block; defaults to `'Toggle Navigation'`.
+     */
+    navToggleName: string;
+
+    /**
+     * When `true`, the `page` fixture installs the shared cypher "has data" stub so `useGraphHasData`
+     * resolves to "true" and the "No Data Available" upload dialog never settles open. Off by default
+     * so the package stays inert; prime it per app in the Playwright config `use` block.
+     */
+    installGraphDataStub: boolean;
+
+    /**
+     * Runs a scoped axe scan and asserts there are no violations. Merges per-call options over the
+     * describe-scoped `a11yDefaults`, falling back to the `a11yDefaultInclude` option for scope.
+     *
+     * @example
+     * ```
+     * test('empty', async ({ checkA11y }) => {
+     *     await checkA11y();                          // uses a11yDefaults / a11yDefaultInclude
+     * });
+     * test('dialog', async ({ checkA11y }) => {
+     *     await checkA11y({ include: '[role="dialog"]' });
+     * });
+     * ```
+     */
+    checkA11y: (options?: A11yScanOptions) => Promise<void>;
+
+    /**
+     * Navigates to `path`, collapses the global nav (unless `keepNavOpen`), then waits for `target`
+     * to reach `state` (default `visible`). Collapses the `page.goto(...)` + `locator.waitFor(...)`
+     * pair that opens most specs' `beforeEach`.
+     *
+     * @example
+     * ```
+     * test.beforeEach(async ({ goAndWaitFor, page }) => {
+     *     await goAndWaitFor('/ui/download-collectors', page.getByRole('button', { name: 'Download SharpHound' }));
+     * });
+     * ```
+     */
+    goAndWaitFor: (path: string, target: GoAndWaitForTarget, options?: GoAndWaitForOptions) => Promise<void>;
 };
 
 // Composed `test` that adds:
 //   - the `theme` worker-scoped option (consumed at config time via `TestOptions`)
 //   - a `makeAxeBuilder` fixture preconfigured with the shared WCAG tag set
+//   - `checkA11y` / `goAndWaitFor` helpers plus the options that parameterize them
+//   - a `page` fixture that optionally installs the shared cypher "has data" stub
 // Consumers that don't care about themes can ignore the option; it defaults to 'light'
 // and has no runtime side effects.
 export const test = base.extend<AxeFixtures, TestOptions>({
@@ -51,6 +156,10 @@ export const test = base.extend<AxeFixtures, TestOptions>({
         await use(context);
     },
     theme: ['light', { option: true, scope: 'worker' }],
+    a11yDefaults: [{}, { option: true }],
+    a11yDefaultInclude: [null, { option: true }],
+    navToggleName: ['Toggle Navigation', { option: true }],
+    installGraphDataStub: [false, { option: true }],
     makeAxeBuilder: async ({ page }, use, testInfo) => {
         testInfo.annotations.push({
             type: 'a11y-tags',
@@ -59,9 +168,75 @@ export const test = base.extend<AxeFixtures, TestOptions>({
 
         await use(() => new AxeBuilder({ page }).withTags([...WCAG_TAGS]));
     },
+    page: async ({ page, installGraphDataStub }, use) => {
+        // Install the shared cypher "has data" stub before navigation when the consuming app opts in
+        // (via the `installGraphDataStub` option). Individual tests can override the stub by
+        // registering their own `page.route` for the cypher endpoint — Playwright runs handlers in
+        // LIFO order, so a test-local handler wins for the cases it cares about.
+        if (installGraphDataStub) {
+            await installGraphHasDataStub(page);
+        }
+
+        await use(page);
+    },
+    checkA11y: async ({ page, makeAxeBuilder, a11yDefaults, a11yDefaultInclude }, use, testInfo) => {
+        await use(async (options = {}) => {
+            const {
+                include = a11yDefaultInclude,
+                exclude,
+                disableRules,
+                attachmentNamePrefix,
+                maxNodesPerViolation,
+            } = { ...a11yDefaults, ...options };
+
+            let builder = makeAxeBuilder();
+            // `include` may be `null` (explicit full-page scan), so guard on truthiness rather than
+            // `undefined` — the destructuring default only fills in an omitted value.
+            if (include) builder = builder.include(include);
+            if (exclude) builder = builder.exclude(exclude);
+            if (disableRules) builder = builder.disableRules(disableRules);
+
+            const results = await builder.analyze();
+            await expectNoAccessibilityViolations(testInfo, results, {
+                page,
+                attachmentNamePrefix,
+                maxNodesPerViolation,
+            });
+        });
+    },
+    goAndWaitFor: async ({ page, navToggleName }, use) => {
+        await use(async (path, target, options = {}) => {
+            await page.goto(path);
+
+            // Collapse the global navigation drawer by default so it doesn't overlap the content
+            // being scanned. Pass `keepNavOpen` to leave it expanded (e.g. nav-focused specs).
+            if (!options.keepNavOpen) {
+                const expandedNav = page.getByRole('button', { name: navToggleName, expanded: true });
+                // Best-effort: probe for the expanded toggle with a short timeout before clicking so
+                // an already-collapsed drawer or a page without the app shell doesn't burn the full
+                // click timeout. The brief wait still tolerates late hydration, and a missing toggle
+                // never fails navigation.
+                const navExpanded = await expandedNav
+                    .waitFor({ state: 'visible', timeout: 1000 })
+                    .then(() => true)
+                    .catch(() => false);
+                if (navExpanded) {
+                    await expandedNav.click({ timeout: 3000 }).catch(() => {});
+                }
+            }
+
+            const locator = typeof target === 'function' ? target(page) : target;
+            await locator.waitFor({ state: options.state ?? 'visible', timeout: options.timeout });
+        });
+    },
 });
 
 export { expect };
+
+// Combined Playwright options shape for a11y consumers. Pass to `defineConfig<A11yTestOptions>` so a
+// config's `use` block can set the theme matrix option plus the a11y fixture options below.
+export type A11yTestOptions = TestOptions &
+    Pick<AxeFixtures, 'a11yDefaults' | 'a11yDefaultInclude' | 'navToggleName' | 'installGraphDataStub'>;
 
 // Optional inputs that opt into per-node screenshot attachments. When `page` is provided,
 // each violation's affected nodes are screenshot via Playwright and attached alongside the
