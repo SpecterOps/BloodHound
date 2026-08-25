@@ -25,6 +25,7 @@ export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';
 export * from './CertStatus';
+export * from './Checkmark';
 export * from './Compass';
 export * from './CopyOutline';
 export * from './CopyPrinciple';

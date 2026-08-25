@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { BasePath, BaseSVG, BaseSVGProps } from 'doodle-ui/src/styleguide/components/AppIcons/utils';
 import React from 'react';
+import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
 export const CopyPrinciple: React.FC<BaseSVGProps> = (props) => {
     return (
