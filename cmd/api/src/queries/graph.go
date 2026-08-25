@@ -324,8 +324,8 @@ func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, obje
 	var nameAndObjectIDCriteria graph.Criteria
 	if useRawObjectID {
 		nameAndObjectIDCriteria = query.Or(
-			query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), nameTerm),
-			query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
+			query.IndexableCaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), nameTerm),
+			query.IndexableCaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
 		)
 	} else {
 		nameAndObjectIDCriteria = query.Or(
@@ -354,8 +354,8 @@ func createNodeStartsWithSearchGraphCriteria(kinds graph.Kinds, nameTerm string,
 	var nameAndObjectIDCriteria graph.Criteria
 	if useRawObjectID {
 		nameAndObjectIDCriteria = query.Or(
-			query.CaseInsensitiveStringStartsWith(query.NodeProperty(common.Name.String()), nameTerm),
-			query.CaseInsensitiveStringStartsWith(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
+			query.IndexableCaseInsensitiveStringStartsWith(query.NodeProperty(common.Name.String()), nameTerm),
+			query.IndexableCaseInsensitiveStringStartsWith(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
 		)
 	} else {
 		nameAndObjectIDCriteria = query.Or(

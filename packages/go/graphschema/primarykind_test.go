@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
@@ -146,5 +147,12 @@ func Test_PrimaryDisplayKinds_Add(t *testing.T) {
 			},
 			IsSourceKind: true,
 		}, primaryDisplayKinds[graph.StringKind("dogpark_Entity")])
+	})
+}
+
+func TestDefaultGraphIncludesObjectIDTextSearchIndex(t *testing.T) {
+	require.Contains(t, DefaultGraph().NodeIndexes, graph.Index{
+		Field: common.ObjectID.String(),
+		Type:  graph.TextSearchIndex,
 	})
 }

@@ -59,6 +59,10 @@ func CombinedGraphSchema(name string) graph.Graph {
 		}},
 		NodeIndexes: []graph.Index{
 			{
+				Field: common.ObjectID.String(),
+				Type:  graph.TextSearchIndex,
+			},
+			{
 				Field: common.Name.String(),
 				Type:  graph.TextSearchIndex,
 			},
