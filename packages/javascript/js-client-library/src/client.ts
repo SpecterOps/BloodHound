@@ -17,6 +17,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
+    CreateAlertRequest,
     CreateAssetGroupRequest,
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
@@ -37,6 +38,7 @@ import {
     PutUserAuthSecretRequest,
     QueryScope,
     RequestOptions,
+    UpdateAlertRequest,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
     UpdateAssetGroupTagRequest,
@@ -70,6 +72,7 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CreateAlertResponse,
     CreateAuthTokenResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
@@ -78,6 +81,10 @@ import {
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
     FindingTypeResponse,
+    GetAlertAttemptsResponse,
+    GetAlertEventTypesResponse,
+    GetAlertResponse,
+    GetAlertsResponse,
     GetClientResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -2799,13 +2806,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (
-        skip?: number,
-        limit?: number,
-        sort_by?: types.WebhookSortBy,
-        name?: string,
-        options?: RequestOptions
-    ) =>
+    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams = {}, options?: RequestOptions) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2834,6 +2835,63 @@ class BHEAPIClient {
 
     testWebhook = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+
+    /* alerts */
+    createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
+        return this.baseClient.post<CreateAlertResponse>('/api/v2/alerts', payload, options);
+    };
+
+    getAlerts = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.AlertsSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertsResponse>('/api/v2/alerts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                name: name ? `~eq:${name}` : undefined,
+            },
+            paramsSerializer: { indexes: null },
+        });
+
+    getAlertEventTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetAlertEventTypesResponse>('/api/v2/alert-event-types', {
+            ...options,
+        });
+
+    getAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, options);
+
+    updateAlert = (alertId: string, payload: UpdateAlertRequest, options?: RequestOptions) =>
+        this.baseClient.patch<GetAlertResponse>(`api/v2/alerts/${alertId}`, payload, options);
+
+    deleteAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
+
+    getAlertAttempts = (
+        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams = {},
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                alert_id: alert_id ? `eq:${alert_id}` : undefined,
+                channel_id: channel_id ? `eq:${channel_id}` : undefined,
+                event_id: event_id ? `eq:${event_id}` : undefined,
+                succeeded,
+            },
+            paramsSerializer: { indexes: null },
+        });
 }
 
 export default BHEAPIClient;

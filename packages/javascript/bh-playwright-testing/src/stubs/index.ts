@@ -23,5 +23,6 @@ export * from './asset-group-tags/tag';
 export * from './asset-group-tags/zone-details';
 export * from './bloodhound-users/mfa';
 export * from './bloodhound-users/secret';
+export * from './features/flags';
 export * from './graphs/cypher';
 export * from './tokens/index';
