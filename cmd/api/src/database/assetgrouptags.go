@@ -51,6 +51,7 @@ type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
 	UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
+	UpdateOpenGraphAssetGroupTagSelector(ctx context.Context, extensionId int32, input model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (model.AssetGroupTagCountsMap, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int) (model.AssetGroupTagSelectors, int, error)
@@ -67,7 +68,7 @@ func checkAssetGroupTagSelectorMutationError(result *gorm.DB) error {
 	}
 
 	var pgErr *pgconn.PgError
-	if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
+	if errors.As(result.Error, &pgErr) && pgErr.Code == PostgresUniqueViolationCode {
 		// Prefer structured Postgres fields when available. The switch maps exact constraint names.
 		switch pgErr.ConstraintName {
 		case "asset_group_tag_selectors_unique_name_asset_group_tag":
@@ -127,6 +128,8 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, user mod
 			Action: model.AuditLogActionCreateAssetGroupTagSelector,
 			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
 		}
+		sqlArgs  map[string]any
+		sqlQuery string
 	)
 
 	selector.CreatedBy = actorId
@@ -134,18 +137,35 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, user mod
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-		if result := tx.Raw(fmt.Sprintf(`
+		sqlArgs = map[string]any{
+			"allow_disable":      selector.AllowDisable,
+			"asset_group_tag_id": selector.AssetGroupTagId,
+			"auto_certify":       selector.AutoCertify,
+			"created_by":         selector.CreatedBy,
+			"description":        selector.Description,
+			"disabled_at":        selector.DisabledAt,
+			"disabled_by":        selector.DisabledBy,
+			"extension_id":       selector.ExtensionId,
+			"is_default":         selector.IsDefault,
+			"name":               selector.Name,
+			"rule_key":           selector.RuleKey,
+			"updated_by":         selector.UpdatedBy,
+		}
+		sqlQuery = fmt.Sprintf(`
 				INSERT INTO %s (
 					asset_group_tag_id, extension_id, rule_key, created_at, created_by, updated_at, updated_by,
 					disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify
 				)
-				VALUES (?, ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?)
+				VALUES (
+					@asset_group_tag_id, @extension_id, @rule_key, NOW(), @created_by, NOW(), @updated_by,
+					@disabled_at, @disabled_by, @name, @description, @is_default, @allow_disable, @auto_certify
+				)
 				RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
 					disabled_at, disabled_by, name, description, is_default, allow_disable,
 					auto_certify, rule_key, extension_id`,
-			selector.TableName()),
-			selector.AssetGroupTagId, selector.ExtensionId, selector.RuleKey, selector.CreatedBy, selector.UpdatedBy,
-			selector.DisabledAt, selector.DisabledBy, selector.Name, selector.Description, selector.IsDefault, selector.AllowDisable, selector.AutoCertify).Scan(&selector); result.Error != nil {
+			selector.TableName())
+
+		if result := tx.Raw(sqlQuery, sqlArgs).Scan(&selector); result.Error != nil {
 			return checkAssetGroupTagSelectorMutationError(result)
 		} else {
 			var err error
@@ -265,6 +285,8 @@ func (s *BloodhoundDB) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context,
 			UpdatedBy:    model.AssetGroupActorOpenGraphExtensionManagement,
 			Seeds:        input.Seeds,
 		}
+		sqlArgs  map[string]any
+		sqlQuery string
 	)
 
 	auditEntry := model.AuditEntry{
@@ -274,17 +296,30 @@ func (s *BloodhoundDB) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context,
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
-		if result := tx.Raw(fmt.Sprintf(`
+		sqlArgs = map[string]any{
+			"allow_disable": selector.AllowDisable,
+			"auto_certify":  selector.AutoCertify,
+			"description":   selector.Description,
+			"disabled_at":   selector.DisabledAt,
+			"disabled_by":   selector.DisabledBy,
+			"extension_id":  extensionId,
+			"is_default":    selector.IsDefault,
+			"name":          selector.Name,
+			"rule_key":      selector.RuleKey,
+			"updated_by":    selector.UpdatedBy,
+		}
+		sqlQuery = fmt.Sprintf(`
 			UPDATE %s
-			SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?,
-				auto_certify = ?, is_default = ?, allow_disable = ?
-			WHERE rule_key = ? AND extension_id = ?
+			SET updated_at = NOW(), updated_by = @updated_by, name = @name, description = @description,
+				disabled_at = @disabled_at, disabled_by = @disabled_by, auto_certify = @auto_certify,
+				is_default = @is_default, allow_disable = @allow_disable
+			WHERE rule_key = @rule_key AND extension_id = @extension_id
 			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by,
 				disabled_at, disabled_by, name, description, is_default, allow_disable,
 				auto_certify, rule_key, extension_id`,
-			selector.TableName()),
-			selector.UpdatedBy, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy,
-			selector.AutoCertify, selector.IsDefault, selector.AllowDisable, selector.RuleKey, extensionId).Scan(&selector); result.Error != nil {
+			selector.TableName())
+
+		if result := tx.Raw(sqlQuery, sqlArgs).Scan(&selector); result.Error != nil {
 			return checkAssetGroupTagSelectorMutationError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
@@ -558,7 +593,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 		); result.Error != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(result.Error, &pgErr) &&
-				pgErr.Code == "23505" && // unique_violation
+				pgErr.Code == PostgresUniqueViolationCode &&
 				pgErr.ConstraintName == "agl_name_unique_index" {
 				return fmt.Errorf("tag name must be unique: %w: %v", ErrDuplicateAGName, result.Error)
 			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"asset_group_tags_glyph_key\"") {

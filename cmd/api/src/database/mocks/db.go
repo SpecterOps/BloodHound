@@ -3537,6 +3537,21 @@ func (mr *MockDatabaseMockRecorder) UpdateOIDCProvider(ctx, ssoProvider any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOIDCProvider", reflect.TypeOf((*MockDatabase)(nil).UpdateOIDCProvider), ctx, ssoProvider)
 }
 
+// UpdateOpenGraphAssetGroupTagSelector mocks base method.
+func (m *MockDatabase) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context, extensionId int32, input model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOpenGraphAssetGroupTagSelector", ctx, extensionId, input)
+	ret0, _ := ret[0].(model.AssetGroupTagSelector)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateOpenGraphAssetGroupTagSelector indicates an expected call of UpdateOpenGraphAssetGroupTagSelector.
+func (mr *MockDatabaseMockRecorder) UpdateOpenGraphAssetGroupTagSelector(ctx, extensionId, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOpenGraphAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateOpenGraphAssetGroupTagSelector), ctx, extensionId, input)
+}
+
 // UpdateRemediation mocks base method.
 func (m *MockDatabase) UpdateRemediation(ctx context.Context, findingId int32, shortDescription, longDescription, shortRemediation, longRemediation string) (model.Remediation, error) {
 	m.ctrl.T.Helper()

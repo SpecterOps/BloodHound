@@ -91,7 +91,7 @@ type assetGroupTagSelectorRequest struct {
 	RuleKey     *string                          `json:"rule_key"`
 }
 
-func (s assetGroupTagSelectorRequest) hasReadOnlyFields() bool {
+func (s assetGroupTagSelectorRequest) hasExtensionOnlyFields() bool {
 	return s.ExtensionId != nil || s.RuleKey != nil
 }
 
@@ -215,7 +215,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if createSelectorRequest.hasReadOnlyFields() {
+	} else if createSelectorRequest.hasExtensionOnlyFields() {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
@@ -289,7 +289,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if selUpdateReq.hasReadOnlyFields() {
+	} else if selUpdateReq.hasExtensionOnlyFields() {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else {
 		// we can update DisabledAt on a default selector
