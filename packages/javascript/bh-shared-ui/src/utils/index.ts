@@ -33,6 +33,7 @@ export * from './luxon';
 export * from './number';
 export * from './numberFormatting';
 export * from './object';
+export * from './paginatedFetcher';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
