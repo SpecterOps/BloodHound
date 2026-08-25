@@ -74,7 +74,7 @@ post:
                     description: HTTP status code returned by the webhook target.
                     nullable: true
                   error:
-                    $ref: './../schemas/null.string.yaml'
+                    $ref: './../schemas/null.string.response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
