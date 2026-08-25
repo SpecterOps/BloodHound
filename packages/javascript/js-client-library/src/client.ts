@@ -55,6 +55,7 @@ import {
     UpdateUserQueryRequest,
     UpdateUserRequest,
     UpdateWebhookRequest,
+    WebhookTestRequest,
 } from './requests';
 import {
     ActiveDirectoryDataQualityResponse,
@@ -2833,8 +2834,8 @@ class BHEAPIClient {
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
-    testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+    testWebhook = (webhookId: string, payload: WebhookTestRequest, options?: RequestOptions) =>
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, payload, options);
 
     /* alerts */
     createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {

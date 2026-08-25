@@ -47,7 +47,6 @@ import {
     TimestampFields,
     Webhook,
     WebhookSecret,
-    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -483,7 +482,11 @@ export type CreateWebhookResponse = {
 export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
-export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code: number;
+    error: string;
+}>;
 
 // ---------------------------------------------------------------------------
 //  Alert - Events
