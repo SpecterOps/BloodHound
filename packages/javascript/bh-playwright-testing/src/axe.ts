@@ -212,9 +212,17 @@ export const test = base.extend<AxeFixtures, TestOptions>({
             // being scanned. Pass `keepNavOpen` to leave it expanded (e.g. nav-focused specs).
             if (!options.keepNavOpen) {
                 const expandedNav = page.getByRole('button', { name: navToggleName, expanded: true });
-                // Best-effort: click only when an expanded toggle is present, and don't fail
-                // navigation if the nav never mounts (e.g. a page without the app shell).
-                await expandedNav.click({ timeout: 3000 }).catch(() => {});
+                // Best-effort: probe for the expanded toggle with a short timeout before clicking so
+                // an already-collapsed drawer or a page without the app shell doesn't burn the full
+                // click timeout. The brief wait still tolerates late hydration, and a missing toggle
+                // never fails navigation.
+                const navExpanded = await expandedNav
+                    .waitFor({ state: 'visible', timeout: 1000 })
+                    .then(() => true)
+                    .catch(() => false);
+                if (navExpanded) {
+                    await expandedNav.click({ timeout: 3000 }).catch(() => {});
+                }
             }
 
             const locator = typeof target === 'function' ? target(page) : target;
@@ -227,12 +235,8 @@ export { expect };
 
 // Combined Playwright options shape for a11y consumers. Pass to `defineConfig<A11yTestOptions>` so a
 // config's `use` block can set the theme matrix option plus the a11y fixture options below.
-export type A11yTestOptions = TestOptions & {
-    a11yDefaults: A11yScanOptions;
-    a11yDefaultInclude: string | string[] | null;
-    navToggleName: string;
-    installGraphDataStub: boolean;
-};
+export type A11yTestOptions = TestOptions &
+    Pick<AxeFixtures, 'a11yDefaults' | 'a11yDefaultInclude' | 'navToggleName' | 'installGraphDataStub'>;
 
 // Optional inputs that opt into per-node screenshot attachments. When `page` is provided,
 // each violation's affected nodes are screenshot via Playwright and attached alongside the
