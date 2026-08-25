@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { NotificationSnackbar } from '../../components/NotificationSnackbar';
 import { render, screen } from '../../test-utils';
-import { NotificationSnackbar } from './NotificationsProvider';
 
 const closeSnackbarMock = vi.fn();
 

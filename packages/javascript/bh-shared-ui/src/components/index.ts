@@ -115,6 +115,7 @@ export * from './Navigation';
 export { default as NoDataDialog } from './NoDataDialog';
 export * from './NodeIcon';
 export { default as NodeIcon } from './NodeIcon';
+export * from './NotificationSnackbar';
 export * from './OneTimePasscodeForm';
 export { default as OneTimePasscodeForm } from './OneTimePasscodeForm';
 export { default as PageWithTitle } from './PageWithTitle';

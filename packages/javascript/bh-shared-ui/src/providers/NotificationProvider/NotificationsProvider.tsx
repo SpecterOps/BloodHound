@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert } from 'doodle-ui';
-import { SnackbarContent, SnackbarProvider, useSnackbar, VariantType } from 'notistack';
-import React, { createContext, Dispatch, ReactNode, useReducer } from 'react';
+import { SnackbarProvider } from 'notistack';
+import { createContext, Dispatch, ReactNode, useReducer } from 'react';
 import { NotificationAction } from './actions';
 import { Notification } from './model';
 import { notificationsReducer } from './reducer';
@@ -26,28 +25,6 @@ export const NotificationsDispatchContext = createContext<Dispatch<NotificationA
 interface NotificationProviderProps {
     children?: ReactNode;
 }
-
-interface NotificationSnackbarProps {
-    id: string | number;
-    message: React.ReactNode;
-    variant?: VariantType | null;
-    title?: string;
-}
-
-export const NotificationSnackbar = React.forwardRef<HTMLDivElement, NotificationSnackbarProps>(
-    ({ id, message, variant, title }, ref) => {
-        const { closeSnackbar } = useSnackbar();
-        return (
-            <SnackbarContent ref={ref} className='justify-center'>
-                <Alert variant={variant} title={title} onClose={() => closeSnackbar(id)}>
-                    {message}
-                </Alert>
-            </SnackbarContent>
-        );
-    }
-);
-
-NotificationSnackbar.displayName = 'NotificationSnackbar';
 
 const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     const [notifications, dispatch] = useReducer(notificationsReducer, []);

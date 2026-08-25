@@ -16,7 +16,8 @@
 
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
-import { NotificationSnackbar, useNotifications } from '../providers';
+import { useNotifications } from '../providers';
+import { NotificationSnackbar } from './NotificationSnackbar';
 
 let displayedNotifications: string[] = [];
 
