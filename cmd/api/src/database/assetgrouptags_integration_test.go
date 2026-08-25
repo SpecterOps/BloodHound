@@ -235,6 +235,28 @@ func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
 	require.Equal(t, extension.ID, updatedSelector.ExtensionId.Int32)
 	require.Equal(t, 1, updatedSelector.AssetGroupTagId)
 
+	input.Name = "test opengraph selector updated without seeds"
+	input.Seeds = nil
+
+	updatedSelector, err = dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
+	require.NoError(t, err)
+	require.Nil(t, updatedSelector.Seeds)
+
+	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, updatedSelector.ID)
+	require.NoError(t, err)
+	require.Len(t, readBackSelector.Seeds, 1)
+	require.Equal(t, "ObjectID5678", readBackSelector.Seeds[0].Value)
+
+	input.Seeds = []model.SelectorSeed{}
+
+	updatedSelector, err = dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
+	require.NoError(t, err)
+	require.Empty(t, updatedSelector.Seeds)
+
+	readBackSelector, err = dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, updatedSelector.ID)
+	require.NoError(t, err)
+	require.Empty(t, readBackSelector.Seeds)
+
 	err = dbInst.DeleteAssetGroupTagSelector(testCtx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, updatedSelector)
 	require.NoError(t, err)
 

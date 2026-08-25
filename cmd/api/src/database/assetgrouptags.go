@@ -323,12 +323,14 @@ func (s *BloodhoundDB) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context,
 			return checkAssetGroupTagSelectorMutationError(result)
 		} else if result.RowsAffected == 0 {
 			return ErrNotFound
-		} else if result := tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID); result.Error != nil {
-			return CheckError(result)
-		} else if seeds, err := insertSelectorSeeds(tx, selector.ID, input.Seeds); err != nil {
-			return err
-		} else {
-			selector.Seeds = seeds
+		} else if input.Seeds != nil {
+			if result := tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID); result.Error != nil {
+				return CheckError(result)
+			} else if seeds, err := insertSelectorSeeds(tx, selector.ID, input.Seeds); err != nil {
+				return err
+			} else {
+				selector.Seeds = seeds
+			}
 		}
 
 		return bhdb.CreateAssetGroupHistoryRecord(ctx, model.AssetGroupActorOpenGraphExtensionManagement, "", selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{})
