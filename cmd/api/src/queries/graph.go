@@ -143,6 +143,7 @@ type Graph interface {
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
+	GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
@@ -671,12 +672,7 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 		err  error
 	)
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err = tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
-				query.KindIn(query.Node(), kinds...),
-			)
-		}).First(); err != nil {
+		if node, err = getEntityByObjectID(tx, objectID, kinds...); err != nil {
 			return err
 		}
 
@@ -686,6 +682,26 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 	} else {
 		return node, nil
 	}
+}
+
+func (s *GraphQuery) GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
+	switch entityType {
+	case ad.Computer:
+		return adAnalysis.ComputerEntityDetails(ctx, s.Graph, objectID)
+	case ad.SiteServer:
+		return adAnalysis.SiteServerEntityDetails(ctx, s.Graph, objectID)
+	default:
+		return s.GetEntityByObjectId(ctx, objectID, entityType)
+	}
+}
+
+func getEntityByObjectID(tx graph.Transaction, objectID string, kinds ...graph.Kind) (*graph.Node, error) {
+	return tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
+			query.KindIn(query.Node(), kinds...),
+		)
+	}).First()
 }
 
 func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any {

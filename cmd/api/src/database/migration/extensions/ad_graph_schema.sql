@@ -27,7 +27,7 @@ BEGIN
 
 	RETURN kind_id;
 END $$ LANGUAGE plpgsql;
-	
+
 CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS SMALLINT AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
@@ -45,7 +45,7 @@ BEGIN
 
 	RETURN source_kind_id;
 END $$ LANGUAGE plpgsql;
-	
+
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_node_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_display_name TEXT, v_description TEXT, v_is_display_kind BOOLEAN, v_icon TEXT, v_icon_color TEXT) RETURNS void AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
@@ -171,6 +171,9 @@ BEGIN
 	PERFORM genscript_upsert_kind('NTAuthStore');
 	PERFORM genscript_upsert_kind('CertTemplate');
 	PERFORM genscript_upsert_kind('IssuancePolicy');
+	PERFORM genscript_upsert_kind('Site');
+	PERFORM genscript_upsert_kind('SiteServer');
+	PERFORM genscript_upsert_kind('SiteSubnet');
 
 	-- Insert Relationship Kinds
 	PERFORM genscript_upsert_kind('Owns');
@@ -184,6 +187,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AddMember');
 	PERFORM genscript_upsert_kind('HasSession');
 	PERFORM genscript_upsert_kind('Contains');
+	PERFORM genscript_upsert_kind('ServerIs');
 	PERFORM genscript_upsert_kind('GPLink');
 	PERFORM genscript_upsert_kind('AllowedToDelegate');
 	PERFORM genscript_upsert_kind('CoerceToTGT');
@@ -278,6 +282,9 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'NTAuthStore', 'NTAuthStore', '', true, 'store', '#D575F5');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'CertTemplate', 'CertTemplate', '', true, 'id-card', '#B153F3');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'IssuancePolicy', 'IssuancePolicy', '', true, 'clipboard-check', '#99B2DD');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Site', 'Site', '', true, 'map-signs', '#2DD4BF');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteServer', 'SiteServer', '', true, 'map-marker', '#60A5FA');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteSubnet', 'SiteSubnet', '', true, 'map', '#F59E0B');
 
 	-- Keep custom_node_kinds in sync with node kinds
 	PERFORM genscript_upsert_custom_node_kind('User', '{"icon": {"name": "user", "type": "font-awesome", "color": "#17E625"}}');
@@ -293,6 +300,9 @@ BEGIN
 	PERFORM genscript_upsert_custom_node_kind('NTAuthStore', '{"icon": {"name": "store", "type": "font-awesome", "color": "#D575F5"}}');
 	PERFORM genscript_upsert_custom_node_kind('CertTemplate', '{"icon": {"name": "id-card", "type": "font-awesome", "color": "#B153F3"}}');
 	PERFORM genscript_upsert_custom_node_kind('IssuancePolicy', '{"icon": {"name": "clipboard-check", "type": "font-awesome", "color": "#99B2DD"}}');
+	PERFORM genscript_upsert_custom_node_kind('Site', '{"icon": {"name": "map-signs", "type": "font-awesome", "color": "#2DD4BF"}}');
+	PERFORM genscript_upsert_custom_node_kind('SiteServer', '{"icon": {"name": "map-marker", "type": "font-awesome", "color": "#60A5FA"}}');
+	PERFORM genscript_upsert_custom_node_kind('SiteSubnet', '{"icon": {"name": "map", "type": "font-awesome", "color": "#F59E0B"}}');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
@@ -305,6 +315,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddMember', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasSession', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Contains', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ServerIs', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPLink', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AllowedToDelegate', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceToTGT', '', true);

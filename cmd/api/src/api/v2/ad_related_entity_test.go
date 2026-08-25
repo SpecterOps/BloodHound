@@ -569,6 +569,14 @@ func TestResources_ListADCSEscalations(t *testing.T) {
 		Run(setupCases(mockGraph, mockDB))
 }
 
+func TestResources_ListADSiteLinkedGPOs(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListADSiteLinkedGPOs).
+		Run(setupCases(mockGraph, mockDB))
+}
+
 func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 	t.Parallel()
 

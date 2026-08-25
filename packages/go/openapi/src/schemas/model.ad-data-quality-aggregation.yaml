@@ -43,6 +43,14 @@ allOf:
         type: integer
       certtemplates:
         type: integer
+      issuancepolicies:
+        type: integer
+      sites:
+        type: integer
+      siteservers:
+        type: integer
+      sitesubnets:
+        type: integer
       acls:
         type: integer
       sessions:
