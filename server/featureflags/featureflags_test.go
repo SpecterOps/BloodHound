@@ -32,40 +32,62 @@ import (
 )
 
 func TestNewFeatureFlagRequestAdapter(t *testing.T) {
-	t.Run("returns non-nil adapter", func(t *testing.T) {
-		pool := new(pgxpool.Pool)
-		adapter := featureflags.NewFeatureFlagRequestAdapter(pool)
+	tests := []struct {
+		name string
+		pool *pgxpool.Pool
+	}{
+		{
+			name: "returns non-nil adapter",
+			pool: new(pgxpool.Pool),
+		},
+	}
 
-		require.NotNil(t, adapter)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			adapter := featureflags.NewFeatureFlagRequestAdapter(tt.pool)
+
+			require.NotNil(t, adapter)
+		})
+	}
 }
 
 func TestRegister(t *testing.T) {
-	t.Run("successfully registers featureflags routes", func(t *testing.T) {
-		var (
-			cfg        = config.Configuration{}
-			authorizer = auth.NewAuthorizer(nil)
-			routerInst = router.NewRouter(cfg, authorizer, "")
-			pool       = new(pgxpool.Pool)
-		)
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+		pool       = new(pgxpool.Pool)
+		tests      = []struct {
+			name   string
+			method string
+			path   string
+		}{
+			{
+				name:   "registers the GET features route",
+				method: http.MethodGet,
+				path:   "/api/v2/features",
+			},
+			{
+				name:   "registers the PUT toggle route",
+				method: http.MethodPut,
+				path:   "/api/v2/features/1/toggle",
+			},
+		}
+	)
 
-		// Should not panic
-		require.NotPanics(t, func() {
-			featureflags.Register(&routerInst, pool)
-		})
-
-		// Verify routes are registered
-		var (
-			muxRouter = routerInst.MuxRouter()
-			match     mux.RouteMatch
-		)
-
-		// Test GET /api/v2/features route
-		getRequest := httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
-		assert.True(t, muxRouter.Match(getRequest, &match), "GET /api/v2/features route should be registered")
-
-		// Test PUT /api/v2/features/{feature_id}/toggle route
-		putRequest := httptest.NewRequest(http.MethodPut, "/api/v2/features/1/toggle", nil)
-		assert.True(t, muxRouter.Match(putRequest, &match), "PUT /api/v2/features/{feature_id}/toggle route should be registered")
+	// Should not panic
+	require.NotPanics(t, func() {
+		featureflags.Register(&routerInst, pool)
 	})
+
+	muxRouter := routerInst.MuxRouter()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var match mux.RouteMatch
+			request := httptest.NewRequest(tt.method, tt.path, nil)
+
+			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered", tt.method, tt.path)
+		})
+	}
 }

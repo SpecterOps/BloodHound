@@ -38,22 +38,35 @@ func TestRegister(t *testing.T) {
 		routerInst      = router.NewRouter(cfg, authorizer, "")
 		featureFlagMock = mocks.NewMockFeatureFlag(t)
 		handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
+		tests           = []struct {
+			name   string
+			method string
+			path   string
+		}{
+			{
+				name:   "registers the GET features route",
+				method: http.MethodGet,
+				path:   "/api/v2/features",
+			},
+			{
+				name:   "registers the PUT toggle route",
+				method: http.MethodPut,
+				path:   "/api/v2/features/1/toggle",
+			},
+		}
 	)
 
 	routes.Register(&routerInst, handlerSet)
 
 	muxRouter := routerInst.MuxRouter()
 
-	for _, tc := range []struct {
-		method string
-		path   string
-	}{
-		{http.MethodGet, "/api/v2/features"},
-		{http.MethodPut, "/api/v2/features/1/toggle"},
-	} {
-		req := httptest.NewRequest(tc.method, tc.path, nil)
-		var match mux.RouteMatch
-		assert.True(t, muxRouter.Match(req, &match), "%s %s route should be registered", tc.method, tc.path)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var match mux.RouteMatch
+			request := httptest.NewRequest(tt.method, tt.path, nil)
+
+			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered", tt.method, tt.path)
+		})
 	}
 }
 
@@ -68,28 +81,29 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		routerInst      = router.NewRouter(cfg, authorizer, "")
 		featureFlagMock = mocks.NewMockFeatureFlag(t)
 		handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
+		tests           = []struct {
+			method string
+			path   string
+		}{
+			{http.MethodGet, "/api/v2/features"},
+			{http.MethodPut, "/api/v2/features/1/toggle"},
+		}
 	)
 
 	routes.Register(&routerInst, handlerSet)
 	handler := routerInst.Handler()
 
-	for _, tc := range []struct {
-		method string
-		path   string
-	}{
-		{http.MethodGet, "/api/v2/features"},
-		{http.MethodPut, "/api/v2/features/1/toggle"},
-	} {
-		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
 			var (
-				request  = httptest.NewRequest(tc.method, tc.path, nil)
+				request  = httptest.NewRequest(tt.method, tt.path, nil)
 				recorder = httptest.NewRecorder()
 			)
 
 			handler.ServeHTTP(recorder, request)
 
 			assert.Equal(t, http.StatusUnauthorized, recorder.Code,
-				"unauthenticated %s %s must be rejected by middleware before reaching the handler", tc.method, tc.path)
+				"unauthenticated %s %s must be rejected by middleware before reaching the handler", tt.method, tt.path)
 		})
 	}
 }

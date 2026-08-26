@@ -65,33 +65,59 @@ func (s *stubAnalysisRequestSubmitter) SubmitAnalysisRequest(_ context.Context, 
 }
 
 func TestNewService(t *testing.T) {
-	mockDb := mocks.NewMockDatabase(t)
-	assert.NotNil(t, services.NewService(mockDb, &stubAnalysisRequestSubmitter{}))
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "returns a non-nil service",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDb := mocks.NewMockDatabase(t)
+			assert.NotNil(t, services.NewService(mockDb, &stubAnalysisRequestSubmitter{}))
+		})
+	}
 }
 
 func TestService_GetFlagByKey(t *testing.T) {
 	var (
-		ctx     = context.Background()
-		want    = services.FeatureFlag{ID: 7, Key: services.FeatureOpenHoundSupport, Enabled: true}
-		notFErr = services.ErrNotFound
+		ctx  = context.Background()
+		want = services.FeatureFlag{ID: 7, Key: services.FeatureOpenHoundSupport, Enabled: true}
 	)
 
-	t.Run("returns the flag from the database", func(t *testing.T) {
-		svc := services.NewService(fakeFlagDatabase{flag: want}, &stubAnalysisRequestSubmitter{})
+	tests := []struct {
+		name     string
+		db       fakeFlagDatabase
+		wantFlag services.FeatureFlag
+		wantErr  error
+	}{
+		{
+			name:     "returns the flag from the database",
+			db:       fakeFlagDatabase{flag: want},
+			wantFlag: want,
+		},
+		{
+			name:    "propagates the database error",
+			db:      fakeFlagDatabase{err: services.ErrNotFound},
+			wantErr: services.ErrNotFound,
+		},
+	}
 
-		got, err := svc.GetFlagByKey(ctx, services.FeatureOpenHoundSupport)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := services.NewService(tt.db, &stubAnalysisRequestSubmitter{})
 
-		require.NoError(t, err)
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("propagates the database error", func(t *testing.T) {
-		svc := services.NewService(fakeFlagDatabase{err: notFErr}, &stubAnalysisRequestSubmitter{})
-
-		_, err := svc.GetFlagByKey(ctx, services.FeatureOpenHoundSupport)
-
-		assert.ErrorIs(t, err, notFErr)
-	})
+			got, err := svc.GetFlagByKey(ctx, services.FeatureOpenHoundSupport)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantFlag, got)
+			}
+		})
+	}
 }
 
 func TestService_IsEnabled(t *testing.T) {
