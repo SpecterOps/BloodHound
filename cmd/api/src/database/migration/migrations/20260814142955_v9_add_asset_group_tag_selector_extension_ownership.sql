@@ -37,9 +37,28 @@ BEGIN
 END $$;
 -- +goose StatementEnd
 
--- index for looking up selectors by rule_key and ensuring uniqueness of rule_key
+-- require rule_key and extension_id to be populated together
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'asset_group_tag_selectors_rule_key_extension_id_check'
+    ) THEN
+        ALTER TABLE asset_group_tag_selectors
+            ADD CONSTRAINT asset_group_tag_selectors_rule_key_extension_id_check
+            CHECK (
+                (rule_key IS NULL AND extension_id IS NULL)
+                OR (rule_key IS NOT NULL AND extension_id IS NOT NULL)
+            );
+    END IF;
+END $$;
+-- +goose StatementEnd
+
+-- index for looking up selectors by rule_key and ensuring uniqueness of rule_key per extension
 CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_group_tag_selectors_rule_key
-    ON asset_group_tag_selectors (rule_key)
+    ON asset_group_tag_selectors (rule_key, extension_id)
     WHERE rule_key IS NOT NULL;
 
 -- index for looking up selectors by extension_id
@@ -52,5 +71,6 @@ DROP INDEX IF EXISTS idx_asset_group_tag_selectors_rule_key;
 
 ALTER TABLE asset_group_tag_selectors
     DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_extension_id_fkey,
+    DROP CONSTRAINT IF EXISTS asset_group_tag_selectors_rule_key_extension_id_check,
     DROP COLUMN IF EXISTS extension_id,
     DROP COLUMN IF EXISTS rule_key;

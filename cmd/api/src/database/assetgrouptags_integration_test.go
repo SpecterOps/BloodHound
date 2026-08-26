@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -41,6 +43,8 @@ import (
 type assetGroupTagSelectorCreator interface {
 	CreateAssetGroupTagSelector(context.Context, model.User, model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 }
+
+const assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint = "asset_group_tag_selectors_rule_key_extension_id_check"
 
 func createAssetGroupTagSelector(databaseInterface assetGroupTagSelectorCreator, ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed, ruleKey null.String) (model.AssetGroupTagSelector, error) {
 	return databaseInterface.CreateAssetGroupTagSelector(ctx, user, model.AssetGroupTagSelector{
@@ -61,6 +65,15 @@ func createOpenGraphSelectorForTest(databaseInterface assetGroupTagSelectorCreat
 	input.ExtensionId = null.Int32From(extensionId)
 
 	return databaseInterface.CreateAssetGroupTagSelector(ctx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, input)
+}
+
+func assertAssetGroupTagSelectorConstraintError(t *testing.T, err error, expectedConstraint string) {
+	t.Helper()
+
+	var pgErr *pgconn.PgError
+	require.Error(t, err)
+	require.True(t, errors.As(err, &pgErr), "expected wrapped *pgconn.PgError, got %T: %v", err, err)
+	assert.Equal(t, expectedConstraint, pgErr.ConstraintName)
 }
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
@@ -108,26 +121,39 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 func TestDatabase_CreateAssetGroupTagSelectorRuleKey(t *testing.T) {
 	t.Parallel()
 	var (
-		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
-		testCtx   = context.Background()
-		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
-		testSeeds = []model.SelectorSeed{
-			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx = context.Background()
+		input   = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test selector with rule key",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
 		}
 	)
 
-	selector, err := createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, "test selector with rule key", "test description", false, true, model.SelectorAutoCertifyMethodDisabled, testSeeds, null.StringFrom("test.rule"))
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_rule_key_extension", "Test Selector Rule Key Extension", "v1.0.0", "test_rk")
+	require.NoError(t, err)
+
+	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
 	require.NoError(t, err)
 	require.True(t, selector.RuleKey.Valid)
 	require.Equal(t, "test.rule", selector.RuleKey.String)
+	require.True(t, selector.ExtensionId.Valid)
+	require.Equal(t, extension.ID, selector.ExtensionId.Int32)
 
 	gotSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
 	require.NoError(t, err)
 	require.True(t, gotSelector.RuleKey.Valid)
 	require.Equal(t, "test.rule", gotSelector.RuleKey.String)
+	require.True(t, gotSelector.ExtensionId.Valid)
+	require.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
 }
 
-func TestDatabase_CreateAssetGroupTagSelectorDuplicateRuleKey(t *testing.T) {
+func TestDatabase_CreateAssetGroupTagSelectorRequiresRuleKeyAndExtensionIDTogether(t *testing.T) {
 	t.Parallel()
 	var (
 		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
@@ -138,13 +164,55 @@ func TestDatabase_CreateAssetGroupTagSelectorDuplicateRuleKey(t *testing.T) {
 		}
 	)
 
-	label, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "test label", "test label description", null.Int32{}, null.Bool{}, null.String{})
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_check_extension", "Test Selector Check Extension", "v1.0.0", "test_chk")
 	require.NoError(t, err)
 
-	_, err = createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, "test selector with rule key", "test description", false, true, model.SelectorAutoCertifyMethodDisabled, testSeeds, null.StringFrom("test.rule"))
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, "test selector with rule key only", "test description", false, true, model.SelectorAutoCertifyMethodDisabled, testSeeds, null.StringFrom("test.rule.only"))
+	assertAssetGroupTagSelectorConstraintError(t, err, assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, testActor, model.AssetGroupTagSelector{
+		AssetGroupTagId: 1,
+		ExtensionId:     null.Int32From(extension.ID),
+		Name:            "test selector with extension id only",
+		Description:     "test description",
+		AllowDisable:    true,
+		AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+		Seeds:           testSeeds,
+	})
+	assertAssetGroupTagSelectorConstraintError(t, err, assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint)
+}
+
+func TestDatabase_CreateAssetGroupTagSelectorRuleKeyIsUniquePerExtension(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx = context.Background()
+		input   = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test selector with rule key",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_unique_extension", "Test Selector Unique Extension", "v1.0.0", "test_unq")
+	require.NoError(t, err)
+	otherExtension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_unique_other_extension", "Test Selector Unique Other Extension", "v1.0.0", "test_unq_oth")
 	require.NoError(t, err)
 
-	_, err = createAssetGroupTagSelector(dbInst, testCtx, label.ID, testActor, "test selector with duplicate rule key", "test description", false, true, model.SelectorAutoCertifyMethodDisabled, testSeeds, null.StringFrom("test.rule"))
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
+	require.NoError(t, err)
+
+	input.Name = "test selector with same rule key in other extension"
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, otherExtension.ID, input)
+	require.NoError(t, err)
+
+	input.Name = "test selector with duplicate rule key in same extension"
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
 	require.ErrorIs(t, err, database.ErrDuplicateAGTagSelectorRuleKey)
 }
 
