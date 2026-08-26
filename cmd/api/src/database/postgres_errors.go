@@ -13,25 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
-import { TableCell, TableRow } from '../Table';
 
-interface NoDataFallbackProps {
-    fallback: string | React.ReactNode;
-    colSpan: number;
-}
+package database
 
-const NoDataFallback: React.FC<NoDataFallbackProps> = ({ fallback, colSpan }) => {
-    if (fallback) return fallback;
-
-    return (
-        <TableRow>
-            {/* tabIndex for screen reader support*/}
-            <TableCell colSpan={colSpan} className='h-24 text-center' tabIndex={0}>
-                No results.
-            </TableCell>
-        </TableRow>
-    );
-};
-
-export default NoDataFallback;
+const (
+	// PostgresUniqueViolationCode is the SQLSTATE code for unique constraint violations.
+	PostgresUniqueViolationCode = "23505"
+)

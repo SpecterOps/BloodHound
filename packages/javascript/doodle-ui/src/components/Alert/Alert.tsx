@@ -59,7 +59,7 @@ const Alert = forwardRef<
     <div ref={ref} role='alert' className={cn(alertVariants({ variant }), className)} {...props}>
         <div className='my-3 mr-2'>{iconMap[variant ?? 'default']}</div>
 
-        <div className='flex flex-col flex-grow py-2 gap-1'>
+        <div className='flex flex-col justify-center flex-grow py-2 gap-1'>
             {title && <h5 className={cn('text-base/6 font-medium tracking-tight')}>{title}</h5>}
             {children}
         </div>

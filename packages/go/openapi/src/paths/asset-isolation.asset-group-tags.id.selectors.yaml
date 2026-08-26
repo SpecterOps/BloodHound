@@ -156,12 +156,7 @@ post:
     content:
       application/json:
         schema:
-          allOf:
-            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
-            - type: object
-          required: 
-            - name
-            - seeds
+          $ref: './../schemas/model.asset-group-tags-selector-create-request.yaml'
 
   responses:
     201:
