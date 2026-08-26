@@ -192,6 +192,20 @@ export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> 
     data_type: string;
 };
 
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreResponse = TimeWindowedResponse<ZoneProtectedAssetScoreData[]> & {
+    environments: string[];
+    asset_group_tag_id: number;
+};
+
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
     last_complete_analysis_at: string;

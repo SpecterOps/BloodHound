@@ -17,6 +17,7 @@
 import { useSnackbar } from 'notistack';
 import { useEffect } from 'react';
 import { useNotifications } from '../providers';
+import { NotificationSnackbar } from './NotificationSnackbar';
 
 let displayedNotifications: string[] = [];
 
@@ -37,9 +38,18 @@ const AppNotifications = () => {
             if (dismissed) {
                 closeSnackbar(key);
             } else if (!displayedNotifications.includes(key)) {
+                const { title, ...snackbarOptions } = options;
                 enqueueSnackbar(message, {
                     key,
-                    ...options,
+                    ...snackbarOptions,
+                    content: (id, snackMessage) => (
+                        <NotificationSnackbar
+                            id={id}
+                            message={snackMessage}
+                            variant={snackbarOptions.variant}
+                            title={title}
+                        />
+                    ),
                     onClose: (event, reason, id) => {
                         if (options.onClose) {
                             options.onClose(event, reason, id);

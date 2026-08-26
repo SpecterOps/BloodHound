@@ -124,6 +124,7 @@ import {
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
+    ZoneProtectedAssetScoreResponse,
 } from './responses';
 import * as types from './types';
 
@@ -748,6 +749,13 @@ class BHEAPIClient {
     getPostureHistory = (dataType: string, options?: RequestOptions) =>
         this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             ...options,
+            paramsSerializer: { indexes: null },
+        });
+
+    getZoneProtectedAssetScore = (environments: string[], assetGroupTagId: number, options?: RequestOptions) =>
+        this.baseClient.get<ZoneProtectedAssetScoreResponse>('/api/v2/asset-scores/zone-protected-asset-score', {
+            ...options,
+            params: { ...options?.params, environments, asset_group_tag_id: assetGroupTagId },
             paramsSerializer: { indexes: null },
         });
 
