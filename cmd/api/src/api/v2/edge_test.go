@@ -27,6 +27,8 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -352,10 +354,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 	}
 
 	cases := []struct {
-		name      string
-		request   http.Request
-		expected  httpValues
-		testSetup func(t *testing.T, ctx context.Context, mocks mock)
+		name             string
+		request          http.Request
+		expected         httpValues
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
+		testSetup        func(t *testing.T, ctx context.Context, mocks mock)
 	}{
 		{
 			name: "No Parameters",
@@ -566,6 +570,34 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 		},
+		{
+			name: "Successful Request With ETAC Enabled",
+			request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=CoerceAndRelayNTLMToSMB&source_node=1&target_node=2",
+				},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "S-1-5-21-ALLOWED"},
+				},
+			},
+			expected: httpValues{
+				code:   http.StatusOK,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToSMB&source_node=1&target_node=2"}},
+				body:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
+				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			},
+		},
 	}
 
 	for _, testCase := range cases {
@@ -577,17 +609,19 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				mockGraph = graphmocks.NewMockDatabase(ctrl)
 				mockDb    = mocks.NewMockDatabase(ctrl)
 				resources = v2.Resources{
-					Graph: mockGraph,
-					DB:    mockDb,
+					Graph:   mockGraph,
+					DB:      mockDb,
+					DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
 				}
+				request = testCase.request.WithContext(setupUserCtx(testCase.user))
 			)
 
-			testCase.testSetup(t, testCase.request.Context(), mock{mockGraph: mockGraph, mockDb: mockDb})
+			testCase.testSetup(t, request.Context(), mock{mockGraph: mockGraph, mockDb: mockDb})
 
 			response := httptest.NewRecorder()
 
-			resources.GetEdgeRelayTargets(response, &testCase.request)
-			mux.NewRouter().ServeHTTP(response, &testCase.request)
+			resources.GetEdgeRelayTargets(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
 			actualCode, actualHeader, actualBody := test.ProcessResponse(t, response)
 
