@@ -774,6 +774,8 @@ func TestStore_GetPresignedURL(t *testing.T) {
 
 	query := parsedURL.Query()
 	require.Equal(t, "60", query.Get("X-Amz-Expires"))
+	require.Equal(t, "attachment", query.Get("response-content-disposition"))
+	require.Equal(t, presignedDownloadCacheControl, query.Get("response-cache-control"))
 	require.NotEmpty(t, query.Get("X-Amz-Credential"))
 	require.NotEmpty(t, query.Get("X-Amz-Signature"))
 }

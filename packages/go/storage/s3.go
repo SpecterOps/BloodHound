@@ -46,6 +46,8 @@ const (
 
 	defaultMultipartCopyCutoff   int64 = 128 * 1024 * 1024
 	defaultMultipartCopyPartSize int64 = 64 * 1024 * 1024
+
+	presignedDownloadCacheControl = "private, no-store, no-transform"
 )
 
 type Store struct {
@@ -534,8 +536,10 @@ func (s *Store) GetPresignedURL(ctx context.Context, name string, ttl time.Durat
 	presignClient := s3.NewPresignClient(s.client)
 
 	presignedGetReq, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
+		Bucket:                     aws.String(s.bucket),
+		Key:                        aws.String(key),
+		ResponseContentDisposition: aws.String("attachment"),
+		ResponseCacheControl:       aws.String(presignedDownloadCacheControl),
 	}, s3.WithPresignExpires(ttl))
 	if err != nil {
 		return "", fmt.Errorf("failed to generate presigned GET URL: %w", err)
