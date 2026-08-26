@@ -225,10 +225,10 @@ func Test_sortAndSliceResults_limit(t *testing.T) {
 	require.Equal(t, actual, expected)
 }
 
-// extractOrComparisons unwraps a `query.Or(...)` criteria (the first entry returned by
-// createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) into its two
-// underlying comparisons: the Name comparison and the ObjectID comparison, respectively.
-func extractOrComparisons(t *testing.T, criteria graph.Criteria) (*cypher.Comparison, *cypher.Comparison) {
+// extractOrCriteria unwraps a `query.Or(...)` criteria (the first entry returned by
+// createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) into its Name
+// and ObjectID criteria, respectively.
+func extractOrCriteria(t *testing.T, criteria graph.Criteria) (graph.Criteria, graph.Criteria) {
 	t.Helper()
 
 	parenthetical, ok := criteria.(*cypher.Parenthetical)
@@ -238,11 +238,19 @@ func extractOrComparisons(t *testing.T, criteria graph.Criteria) (*cypher.Compar
 	require.True(t, ok, "expected *cypher.Disjunction, got %T", parenthetical.Expression)
 	require.Len(t, disjunction.Expressions, 2)
 
-	nameComparison, ok := disjunction.Expressions[0].(*cypher.Comparison)
-	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[0])
+	return disjunction.Expressions[0], disjunction.Expressions[1]
+}
 
-	objectIDComparison, ok := disjunction.Expressions[1].(*cypher.Comparison)
-	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[1])
+func extractOrComparisons(t *testing.T, criteria graph.Criteria) (*cypher.Comparison, *cypher.Comparison) {
+	t.Helper()
+
+	nameCriteria, objectIDCriteria := extractOrCriteria(t, criteria)
+
+	nameComparison, ok := nameCriteria.(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", nameCriteria)
+
+	objectIDComparison, ok := objectIDCriteria.(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", objectIDCriteria)
 
 	return nameComparison, objectIDComparison
 }
@@ -264,26 +272,18 @@ func requireCaseSensitiveComparison(t *testing.T, comparison *cypher.Comparison,
 	require.Equal(t, term, parameter.Value)
 }
 
-// requireIndexableCaseInsensitiveComparison asserts that comparison uses Dawgs' explicit
-// indexable case-insensitive predicate wrapper.
-func requireIndexableCaseInsensitiveComparison(t *testing.T, comparison *cypher.Comparison, propertyName string, operator cypher.Operator, term string) {
+func requireIndexableCaseInsensitivePredicate(t *testing.T, criteria graph.Criteria, propertyName string, operator cypher.Operator, term string) {
 	t.Helper()
 
-	functionInvocation, ok := comparison.Left.(*cypher.FunctionInvocation)
-	require.True(t, ok, "expected *cypher.FunctionInvocation, got %T", comparison.Left)
-	require.Equal(t, cypher.IndexableCaseInsensitiveFunction, functionInvocation.Name)
-	require.Len(t, functionInvocation.Arguments, 1)
+	predicate, ok := criteria.(*cypher.IndexableCaseInsensitiveStringPredicate)
+	require.True(t, ok, "expected *cypher.IndexableCaseInsensitiveStringPredicate, got %T", criteria)
+	require.Equal(t, operator, predicate.Operator)
 
-	propertyLookup, ok := functionInvocation.Arguments[0].(*cypher.PropertyLookup)
-	require.True(t, ok, "expected *cypher.PropertyLookup, got %T", functionInvocation.Arguments[0])
+	propertyLookup, ok := predicate.Reference.(*cypher.PropertyLookup)
+	require.True(t, ok, "expected *cypher.PropertyLookup, got %T", predicate.Reference)
 	require.Equal(t, propertyName, propertyLookup.Symbol)
 
-	require.Len(t, comparison.Partials, 1)
-	require.Equal(t, operator, comparison.Partials[0].Operator)
-
-	parameter, ok := comparison.Partials[0].Right.(*cypher.Parameter)
-	require.True(t, ok, "expected *cypher.Parameter, got %T", comparison.Partials[0].Right)
-	require.Equal(t, strings.ToLower(term), parameter.Value)
+	require.Equal(t, strings.ToLower(term), predicate.Value.Value)
 }
 
 // requireNotEqualsExclusion asserts that criteria is a `query.Not(query.Equals(n.<propertyName>, <term>))`
@@ -325,9 +325,9 @@ func TestCreateFuzzyNodeSearchGraphCriteria_Search(t *testing.T) {
 		filters := createFuzzyNodeSearchGraphCriteria(nil, nameTerm, objectIDTerm, false, true)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireIndexableCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorContains, nameTerm)
-		requireIndexableCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
+		nameCriteria, objectIDCriteria := extractOrCriteria(t, filters[0])
+		requireIndexableCaseInsensitivePredicate(t, nameCriteria, common.Name.String(), cypher.OperatorContains, nameTerm)
+		requireIndexableCaseInsensitivePredicate(t, objectIDCriteria, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
 
 		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
@@ -371,9 +371,9 @@ func TestCreateNodeStartsWithSearchGraphCriteria_Search(t *testing.T) {
 		filters := createNodeStartsWithSearchGraphCriteria(nil, nameTerm, objectIDTerm, true)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireIndexableCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
-		requireIndexableCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
+		nameCriteria, objectIDCriteria := extractOrCriteria(t, filters[0])
+		requireIndexableCaseInsensitivePredicate(t, nameCriteria, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
+		requireIndexableCaseInsensitivePredicate(t, objectIDCriteria, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
 
 		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
