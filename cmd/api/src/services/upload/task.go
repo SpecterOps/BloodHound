@@ -45,15 +45,19 @@ func fileFormatFromFileType(ft model.FileType) metrics.IngestFileFormat {
 }
 
 func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
-	newIngestTask := model.IngestTask{
-		StoredFileName:   params.Filename,
-		OriginalFileName: params.ProvidedFileName,
-		RequestGUID:      params.RequestID,
-		JobId:            null.Int64From(params.JobID),
-		FileType:         params.FileType,
-	}
+	var (
+		taskCreationDiagnostic = startIngestTaskCreationDiagnostic(ctx, params)
+		newIngestTask          = model.IngestTask{
+			StoredFileName:   params.Filename,
+			OriginalFileName: params.ProvidedFileName,
+			RequestGUID:      params.RequestID,
+			JobId:            null.Int64From(params.JobID),
+			FileType:         params.FileType,
+		}
+	)
 
 	if task, err := db.CreateIngestTask(ctx, newIngestTask); err != nil {
+		taskCreationDiagnostic.finish(err)
 		// Record metric: file ingest task creation failed
 		metrics.RecordIngestTask(
 			metrics.IngestCollectorManual,
@@ -62,6 +66,7 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 		)
 		return task, err
 	} else {
+		taskCreationDiagnostic.finish(nil)
 		// Record metric: file ingest task created and saved to disk
 		metrics.RecordIngestTask(
 			metrics.IngestCollectorManual,

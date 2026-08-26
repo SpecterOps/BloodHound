@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"mime"
 	"net/http"
 	"net/url"
@@ -163,10 +164,17 @@ func (s *Store) key(name string) (string, error) {
 }
 
 func (s *Store) Put(ctx context.Context, name string, reader io.Reader, options WriteOptions) error {
-	key, err := s.key(name)
+	var (
+		operationDiagnostic s3OperationDiagnostic
+		key                 string
+		err                 error
+	)
+
+	key, err = s.key(name)
 	if err != nil {
 		return err
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "upload", s.bucket, key)
 
 	input := &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -187,11 +195,20 @@ func (s *Store) Put(ctx context.Context, name string, reader io.Reader, options 
 	}
 
 	_, err = s.uploader.Upload(ctx, input)
-	return mapExistsError(err)
+	err = mapExistsError(err)
+	operationDiagnostic.finish(err)
+
+	return err
 }
 
 func (s *Store) Get(ctx context.Context, name string) (io.ReadCloser, FileInfo, error) {
-	key, err := s.key(name)
+	var (
+		operationDiagnostic s3OperationDiagnostic
+		key                 string
+		err                 error
+	)
+
+	key, err = s.key(name)
 	if err != nil {
 		return nil, FileInfo{}, err
 	}
@@ -200,12 +217,15 @@ func (s *Store) Get(ctx context.Context, name string) (io.ReadCloser, FileInfo, 
 	if err != nil {
 		return nil, FileInfo{}, err
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "get_object", s.bucket, key)
 	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return nil, FileInfo{}, mapNotFoundError(err)
+		err = mapNotFoundError(err)
+		operationDiagnostic.finish(err)
+		return nil, FileInfo{}, err
 	}
 
 	info := FileInfo{
@@ -219,21 +239,35 @@ func (s *Store) Get(ctx context.Context, name string) (io.ReadCloser, FileInfo, 
 	if info.ContentType == "" {
 		info.ContentType = s3DetectContentType(normalizedPath)
 	}
+	operationDiagnostic.finish(
+		nil,
+		slog.Int64("content_length", info.Size),
+		slog.Bool("response_body_streaming", true),
+	)
 
 	return out.Body, info, nil
 }
 
 func (s *Store) Stat(ctx context.Context, name string) (FileInfo, error) {
-	key, err := s.key(name)
+	var (
+		operationDiagnostic s3OperationDiagnostic
+		key                 string
+		err                 error
+	)
+
+	key, err = s.key(name)
 	if err != nil {
 		return FileInfo{}, err
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "head_object", s.bucket, key)
 	out, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return FileInfo{}, mapNotFoundError(err)
+		err = mapNotFoundError(err)
+		operationDiagnostic.finish(err)
+		return FileInfo{}, err
 	}
 
 	normalizedPath, err := normalizePath(name)
@@ -253,6 +287,7 @@ func (s *Store) Stat(ctx context.Context, name string) (FileInfo, error) {
 	if info.ContentType == "" {
 		info.ContentType = s3DetectContentType(normalizedPath)
 	}
+	operationDiagnostic.finish(nil, slog.Int64("content_length", info.Size))
 
 	return info, nil
 }
@@ -269,18 +304,27 @@ func (s *Store) Exists(ctx context.Context, name string) (bool, error) {
 }
 
 func (s *Store) Delete(ctx context.Context, name string) error {
-	key, err := s.key(name)
+	var (
+		operationDiagnostic s3OperationDiagnostic
+		key                 string
+		err                 error
+	)
+
+	key, err = s.key(name)
 	if err != nil {
 		return err
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "delete_object", s.bucket, key)
 	_, err = s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
 	var noSuchKey *s3types.NoSuchKey
 	if errors.As(err, &noSuchKey) {
+		operationDiagnostic.finish(nil, slog.Bool("object_missing", true))
 		return nil
 	}
+	operationDiagnostic.finish(err)
 	return err
 }
 
@@ -320,10 +364,11 @@ func (s *Store) listPrefix(name string) (string, error) {
 
 func (s *Store) List(ctx context.Context, name string, options ListOptions) ([]FileInfo, error) {
 	var (
-		results        []FileInfo
-		normalizedName string
-		keyPrefix      string
-		err            error
+		operationDiagnostic s3OperationDiagnostic
+		results             []FileInfo
+		normalizedName      string
+		keyPrefix           string
+		err                 error
 	)
 
 	// This is done so items at the root path can be listed
@@ -350,6 +395,7 @@ func (s *Store) List(ctx context.Context, name string, options ListOptions) ([]F
 		Bucket: aws.String(s.bucket),
 		Prefix: aws.String(keyPrefix),
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "list_objects_v2", s.bucket, keyPrefix)
 
 	if !options.Recursive {
 		input.Delimiter = aws.String("/")
@@ -360,14 +406,17 @@ func (s *Store) List(ctx context.Context, name string, options ListOptions) ([]F
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			operationDiagnostic.finish(err, slog.Int("result_count", len(results)))
 			return nil, err
 		}
 
 		for _, obj := range page.Contents {
 			if err = ctx.Err(); err != nil {
+				operationDiagnostic.finish(err, slog.Int("result_count", len(results)))
 				return []FileInfo{}, err
 			}
 			if options.Limit > 0 && len(results) >= options.Limit {
+				operationDiagnostic.finish(nil, slog.Int("result_count", len(results)))
 				return results, nil
 			}
 			logicalPath := s.logicalPathFromKey(aws.ToString(obj.Key))
@@ -383,6 +432,7 @@ func (s *Store) List(ctx context.Context, name string, options ListOptions) ([]F
 			})
 		}
 	}
+	operationDiagnostic.finish(nil, slog.Int("result_count", len(results)))
 
 	return results, nil
 }
@@ -492,30 +542,44 @@ func (s *Store) copyMultipart(ctx context.Context, srcKey, dstKey string, source
 // guarentee FailIfExists due to a possible race condition. This function does
 // best effort by checking to see if the file exists before the copy starts.
 func (s *Store) Copy(ctx context.Context, srcName, dstName string, options WriteOptions) error {
-	srcKey, err := s.key(srcName)
+	var (
+		operationDiagnostic s3OperationDiagnostic
+		srcKey              string
+		dstKey              string
+		err                 error
+	)
+
+	srcKey, err = s.key(srcName)
 	if err != nil {
 		return err
 	}
 
-	dstKey, err := s.key(dstName)
+	dstKey, err = s.key(dstName)
 	if err != nil {
 		return err
 	}
+	operationDiagnostic = startS3OperationDiagnostic(ctx, "copy_object", s.bucket, dstKey)
 
 	head, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(srcKey),
 	})
 	if err != nil {
+		operationDiagnostic.finish(err, slog.String("source_key", srcKey))
 		return err
 	}
 
 	sourceSize := aws.ToInt64(head.ContentLength)
 	if sourceSize < s.copyCutoff {
-		return s.copySmall(ctx, srcKey, dstKey, options)
+		err = s.copySmall(ctx, srcKey, dstKey, options)
+		operationDiagnostic.finish(err, slog.String("source_key", srcKey), slog.Int64("content_length", sourceSize))
+		return err
 	}
 
-	return s.copyMultipart(ctx, srcKey, dstKey, sourceSize, options)
+	err = s.copyMultipart(ctx, srcKey, dstKey, sourceSize, options)
+	operationDiagnostic.finish(err, slog.String("source_key", srcKey), slog.Int64("content_length", sourceSize))
+	return err
+
 }
 
 func (s *Store) Move(ctx context.Context, srcPath, dstPath string, options WriteOptions) error {
