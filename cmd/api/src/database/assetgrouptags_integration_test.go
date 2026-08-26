@@ -140,17 +140,17 @@ func TestDatabase_CreateAssetGroupTagSelectorRuleKey(t *testing.T) {
 
 	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
 	require.NoError(t, err)
-	require.True(t, selector.RuleKey.Valid)
-	require.Equal(t, "test.rule", selector.RuleKey.String)
-	require.True(t, selector.ExtensionId.Valid)
-	require.Equal(t, extension.ID, selector.ExtensionId.Int32)
+	assert.True(t, selector.RuleKey.Valid)
+	assert.Equal(t, "test.rule", selector.RuleKey.String)
+	assert.True(t, selector.ExtensionId.Valid)
+	assert.Equal(t, extension.ID, selector.ExtensionId.Int32)
 
 	gotSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
 	require.NoError(t, err)
-	require.True(t, gotSelector.RuleKey.Valid)
-	require.Equal(t, "test.rule", gotSelector.RuleKey.String)
-	require.True(t, gotSelector.ExtensionId.Valid)
-	require.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
+	assert.True(t, gotSelector.RuleKey.Valid)
+	assert.Equal(t, "test.rule", gotSelector.RuleKey.String)
+	assert.True(t, gotSelector.ExtensionId.Valid)
+	assert.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
 }
 
 func TestDatabase_CreateAssetGroupTagSelectorRequiresRuleKeyAndExtensionIDTogether(t *testing.T) {
@@ -209,11 +209,11 @@ func TestDatabase_CreateAssetGroupTagSelectorRuleKeyIsUniquePerExtension(t *test
 
 	input.Name = "test selector with same rule key in other extension"
 	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, otherExtension.ID, input)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	input.Name = "test selector with duplicate rule key in same extension"
 	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
-	require.ErrorIs(t, err, database.ErrDuplicateAGTagSelectorRuleKey)
+	assert.ErrorIs(t, err, database.ErrDuplicateAGTagSelectorRuleKey)
 }
 
 func TestDatabase_UpdateAssetGroupTagSelectorPreservesExtensionManagedFields(t *testing.T) {
@@ -249,8 +249,8 @@ func TestDatabase_UpdateAssetGroupTagSelectorPreservesExtensionManagedFields(t *
 
 	gotSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
 	require.NoError(t, err)
-	require.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
-	require.Equal(t, "test.rule", gotSelector.RuleKey.String)
+	assert.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
+	assert.Equal(t, "test.rule", gotSelector.RuleKey.String)
 }
 
 func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
@@ -277,10 +277,10 @@ func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
 
 	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
 	require.NoError(t, err)
-	require.Equal(t, 1, selector.AssetGroupTagId)
-	require.Equal(t, extension.ID, selector.ExtensionId.Int32)
-	require.Equal(t, "test.rule", selector.RuleKey.String)
-	require.Len(t, selector.Seeds, 1)
+	assert.Equal(t, 1, selector.AssetGroupTagId)
+	assert.Equal(t, extension.ID, selector.ExtensionId.Int32)
+	assert.Equal(t, "test.rule", selector.RuleKey.String)
+	assert.Len(t, selector.Seeds, 1)
 
 	input.Name = "test opengraph selector updated"
 	input.Description = "test description updated"
@@ -295,13 +295,13 @@ func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
 
 	updatedSelector, err := dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
 	require.NoError(t, err)
-	require.Equal(t, "test opengraph selector updated", updatedSelector.Name)
-	require.True(t, updatedSelector.DisabledAt.Valid)
-	require.Equal(t, input.DisabledBy, updatedSelector.DisabledBy)
-	require.Len(t, updatedSelector.Seeds, 1)
-	require.Equal(t, "ObjectID5678", updatedSelector.Seeds[0].Value)
-	require.Equal(t, extension.ID, updatedSelector.ExtensionId.Int32)
-	require.Equal(t, 1, updatedSelector.AssetGroupTagId)
+	assert.Equal(t, "test opengraph selector updated", updatedSelector.Name)
+	assert.True(t, updatedSelector.DisabledAt.Valid)
+	assert.Equal(t, input.DisabledBy, updatedSelector.DisabledBy)
+	assert.Len(t, updatedSelector.Seeds, 1)
+	assert.Equal(t, "ObjectID5678", updatedSelector.Seeds[0].Value)
+	assert.Equal(t, extension.ID, updatedSelector.ExtensionId.Int32)
+	assert.Equal(t, 1, updatedSelector.AssetGroupTagId)
 
 	input.Name = "test opengraph selector updated without seeds"
 	input.Seeds = nil
