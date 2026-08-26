@@ -44,23 +44,19 @@ func logStoredIngestFileOpenStarted(ctx context.Context, storedFileName string) 
 }
 
 func logStoredIngestFileOpenFinished(ctx context.Context, storedFileName string, fileInfo storage.FileInfo, err error) {
-	var (
-		level      = slog.LevelDebug
-		message    = "S3 ingest diagnostic: stored ingest file opened"
-		attributes = []slog.Attr{
-			slog.String("diagnostic", s3IngestDiagnostic),
-			slog.String("stored_file_name", storedFileName),
-			slog.Int64("content_length", fileInfo.Size),
-		}
-	)
-
-	if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: failed to open stored ingest file"
-		attributes = append(attributes, slog.Any("error", err))
+	var attributes = []slog.Attr{
+		slog.String("diagnostic", s3IngestDiagnostic),
+		slog.String("stored_file_name", storedFileName),
+		slog.Int64("content_length", fileInfo.Size),
 	}
 
-	slog.LogAttrs(ctx, level, message, attributes...)
+	if err != nil {
+		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(ctx, slog.LevelError, "S3 ingest diagnostic: failed to open stored ingest file", attributes...)
+		return
+	}
+
+	slog.LogAttrs(ctx, slog.LevelDebug, "S3 ingest diagnostic: stored ingest file opened", attributes...)
 }
 
 func startIngestStorageStreamDiagnostic(ctx context.Context, storedFileName string) ingestStorageStreamDiagnostic {
@@ -80,22 +76,18 @@ func startIngestStorageStreamDiagnostic(ctx context.Context, storedFileName stri
 }
 
 func (s ingestStorageStreamDiagnostic) finish(bytesCopied int64, err error) {
-	var (
-		level      = slog.LevelDebug
-		message    = "S3 ingest diagnostic: stored ingest file streamed to scratch"
-		attributes = []slog.Attr{
-			slog.String("diagnostic", s3IngestDiagnostic),
-			slog.String("stored_file_name", s.storedFileName),
-			slog.Int64("bytes_copied", bytesCopied),
-			slog.Duration("duration", time.Since(s.startedAt)),
-		}
-	)
-
-	if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: failed streaming stored ingest file to scratch"
-		attributes = append(attributes, slog.Any("error", err))
+	var attributes = []slog.Attr{
+		slog.String("diagnostic", s3IngestDiagnostic),
+		slog.String("stored_file_name", s.storedFileName),
+		slog.Int64("bytes_copied", bytesCopied),
+		slog.Duration("duration", time.Since(s.startedAt)),
 	}
 
-	slog.LogAttrs(s.ctx, level, message, attributes...)
+	if err != nil {
+		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(s.ctx, slog.LevelError, "S3 ingest diagnostic: failed streaming stored ingest file to scratch", attributes...)
+		return
+	}
+
+	slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: stored ingest file streamed to scratch", attributes...)
 }

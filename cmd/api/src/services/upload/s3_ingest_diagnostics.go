@@ -74,26 +74,22 @@ func startIngestUploadDiagnostic(ctx context.Context, jobID int64, fileType mode
 }
 
 func (s ingestUploadDiagnostic) finish(tempFileName string, err error) {
-	var (
-		level      = slog.LevelInfo
-		message    = "S3 ingest diagnostic: ingest upload stored and validated"
-		attributes = []slog.Attr{
-			slog.String("diagnostic", s3IngestDiagnostic),
-			slog.String("request_id", s.requestID),
-			slog.Int64("job_id", s.jobID),
-			slog.String("file_type", s.fileType.String()),
-			slog.String("stored_file_name", tempFileName),
-			slog.Duration("duration", time.Since(s.startedAt)),
-		}
-	)
-
-	if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: ingest upload failed"
-		attributes = append(attributes, slog.Any("error", err))
+	var attributes = []slog.Attr{
+		slog.String("diagnostic", s3IngestDiagnostic),
+		slog.String("request_id", s.requestID),
+		slog.Int64("job_id", s.jobID),
+		slog.String("file_type", s.fileType.String()),
+		slog.String("stored_file_name", tempFileName),
+		slog.Duration("duration", time.Since(s.startedAt)),
 	}
 
-	slog.LogAttrs(s.ctx, level, message, attributes...)
+	if err != nil {
+		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(s.ctx, slog.LevelError, "S3 ingest diagnostic: ingest upload failed", attributes...)
+		return
+	}
+
+	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest upload stored and validated", attributes...)
 }
 
 func startIngestStorageWriteDiagnostic(ctx context.Context, prefix string) ingestStorageWriteDiagnostic {
@@ -125,24 +121,21 @@ func startIngestStorageWriteDiagnostic(ctx context.Context, prefix string) inges
 }
 
 func (s ingestStorageWriteDiagnostic) finish(tempFileName string, err error) {
-	var (
-		level      = slog.LevelInfo
-		message    = "S3 ingest diagnostic: ingest storage write returned"
-		attributes = []slog.Attr{
-			slog.String("diagnostic", s3IngestDiagnostic),
-			slog.String("request_id", s.requestID),
-			slog.String("prefix", s.prefix),
-			slog.String("stored_file_name", tempFileName),
-			slog.Duration("duration", time.Since(s.startedAt)),
-		}
-	)
-
-	if err != nil {
-		level = slog.LevelError
-		attributes = append(attributes, slog.Any("error", err))
+	var attributes = []slog.Attr{
+		slog.String("diagnostic", s3IngestDiagnostic),
+		slog.String("request_id", s.requestID),
+		slog.String("prefix", s.prefix),
+		slog.String("stored_file_name", tempFileName),
+		slog.Duration("duration", time.Since(s.startedAt)),
 	}
 
-	slog.LogAttrs(s.ctx, level, message, attributes...)
+	if err != nil {
+		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(s.ctx, slog.LevelError, "S3 ingest diagnostic: ingest storage write returned", attributes...)
+		return
+	}
+
+	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest storage write returned", attributes...)
 }
 
 func startIngestTaskCreationDiagnostic(ctx context.Context, parameters IngestTaskParams) ingestTaskCreationDiagnostic {
@@ -166,23 +159,19 @@ func startIngestTaskCreationDiagnostic(ctx context.Context, parameters IngestTas
 }
 
 func (s ingestTaskCreationDiagnostic) finish(err error) {
-	var (
-		level      = slog.LevelInfo
-		message    = "S3 ingest diagnostic: ingest task created"
-		attributes = []slog.Attr{
-			slog.String("diagnostic", s3IngestDiagnostic),
-			slog.String("request_id", s.requestID),
-			slog.Int64("job_id", s.jobID),
-			slog.String("stored_file_name", s.storedFileName),
-			slog.Duration("duration", time.Since(s.startedAt)),
-		}
-	)
-
-	if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: ingest task creation failed"
-		attributes = append(attributes, slog.Any("error", err))
+	var attributes = []slog.Attr{
+		slog.String("diagnostic", s3IngestDiagnostic),
+		slog.String("request_id", s.requestID),
+		slog.Int64("job_id", s.jobID),
+		slog.String("stored_file_name", s.storedFileName),
+		slog.Duration("duration", time.Since(s.startedAt)),
 	}
 
-	slog.LogAttrs(s.ctx, level, message, attributes...)
+	if err != nil {
+		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(s.ctx, slog.LevelError, "S3 ingest diagnostic: ingest task creation failed", attributes...)
+		return
+	}
+
+	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest task created", attributes...)
 }

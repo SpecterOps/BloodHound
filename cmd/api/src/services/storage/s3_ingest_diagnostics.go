@@ -37,9 +37,8 @@ type awsS3OperationDiagnostic struct {
 }
 
 // The helpers in this file provide temporary, removable diagnostics for S3-backed ingest integration.
-func logS3IngestDiagnostic(ctx context.Context, level slog.Level, message string, attributes ...slog.Attr) {
-	attributes = append([]slog.Attr{slog.String("diagnostic", s3IngestDiagnostic)}, attributes...)
-	slog.LogAttrs(ctx, level, message, attributes...)
+func s3IngestDiagnosticAttributes(attributes ...slog.Attr) []slog.Attr {
+	return append([]slog.Attr{slog.String("diagnostic", s3IngestDiagnostic)}, attributes...)
 }
 
 func addS3IngestDiagnosticMiddleware(stack *smithyMiddleware.Stack) error {
@@ -131,7 +130,12 @@ func startAWSS3OperationDiagnostic(ctx context.Context, operation string, parame
 		startAttributes = append(startAttributes, slog.Time("context_deadline", deadline))
 	}
 
-	logS3IngestDiagnostic(ctx, slog.LevelDebug, "S3 ingest diagnostic: AWS S3 API operation started", startAttributes...)
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"S3 ingest diagnostic: AWS S3 API operation started",
+		s3IngestDiagnosticAttributes(startAttributes...)...,
+	)
 
 	return awsS3OperationDiagnostic{
 		ctx:        ctx,
@@ -141,39 +145,49 @@ func startAWSS3OperationDiagnostic(ctx context.Context, operation string, parame
 }
 
 func (s awsS3OperationDiagnostic) finish(err error) {
-	var (
-		level      = slog.LevelDebug
-		message    = "S3 ingest diagnostic: AWS S3 API operation completed"
-		attributes = append([]slog.Attr{}, s.attributes...)
-	)
+	var attributes = append([]slog.Attr{}, s.attributes...)
 	attributes = append(attributes, slog.Duration("duration", time.Since(s.startedAt)))
 
 	if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: AWS S3 API operation failed"
 		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(
+			s.ctx,
+			slog.LevelError,
+			"S3 ingest diagnostic: AWS S3 API operation failed",
+			s3IngestDiagnosticAttributes(attributes...)...,
+		)
+		return
 	}
 
-	logS3IngestDiagnostic(s.ctx, level, message, attributes...)
+	slog.LogAttrs(
+		s.ctx,
+		slog.LevelDebug,
+		"S3 ingest diagnostic: AWS S3 API operation completed",
+		s3IngestDiagnosticAttributes(attributes...)...,
+	)
 }
 
 func logAWSConfigurationLoading(ctx context.Context, bucketConfiguration config.BucketConfiguration) {
-	logS3IngestDiagnostic(
+	slog.LogAttrs(
 		ctx,
 		slog.LevelInfo,
 		"S3 ingest diagnostic: loading AWS configuration",
-		slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
-		slog.String("region", strings.TrimSpace(bucketConfiguration.Region)),
+		s3IngestDiagnosticAttributes(
+			slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
+			slog.String("region", strings.TrimSpace(bucketConfiguration.Region)),
+		)...,
 	)
 }
 
 func logS3ClientInitialized(ctx context.Context, bucketConfiguration config.BucketConfiguration) {
-	logS3IngestDiagnostic(
+	slog.LogAttrs(
 		ctx,
 		slog.LevelInfo,
 		"S3 ingest diagnostic: S3 client initialized",
-		slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
-		slog.String("region", strings.TrimSpace(bucketConfiguration.Region)),
+		s3IngestDiagnosticAttributes(
+			slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
+			slog.String("region", strings.TrimSpace(bucketConfiguration.Region)),
+		)...,
 	)
 }
 
@@ -195,10 +209,10 @@ func logFileServiceInitialized(ctx context.Context, bucketConfiguration config.B
 		attributes = append(attributes, slog.String("local_path", definition.definition.LocalPath))
 	}
 
-	logS3IngestDiagnostic(
+	slog.LogAttrs(
 		ctx,
 		slog.LevelInfo,
 		"S3 ingest diagnostic: file service initialized",
-		attributes...,
+		s3IngestDiagnosticAttributes(attributes...)...,
 	)
 }

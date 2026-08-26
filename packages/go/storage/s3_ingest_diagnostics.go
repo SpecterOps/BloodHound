@@ -65,11 +65,6 @@ func startS3OperationDiagnostic(ctx context.Context, operation, bucket, key stri
 }
 
 func (s s3OperationDiagnostic) finish(err error, attributes ...slog.Attr) {
-	var (
-		level   = slog.LevelDebug
-		message = "S3 ingest diagnostic: S3 operation completed"
-	)
-
 	attributes = append([]slog.Attr{
 		slog.String("diagnostic", s3IngestDiagnostic),
 		slog.String("operation", s.operation),
@@ -79,13 +74,12 @@ func (s s3OperationDiagnostic) finish(err error, attributes ...slog.Attr) {
 	}, attributes...)
 
 	if errors.Is(err, fs.ErrNotExist) {
-		message = "S3 ingest diagnostic: S3 object not found"
 		attributes = append(attributes, slog.Bool("object_missing", true))
+		slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: S3 object not found", attributes...)
 	} else if err != nil {
-		level = slog.LevelError
-		message = "S3 ingest diagnostic: S3 operation failed"
 		attributes = append(attributes, slog.Any("error", err))
+		slog.LogAttrs(s.ctx, slog.LevelError, "S3 ingest diagnostic: S3 operation failed", attributes...)
+	} else {
+		slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: S3 operation completed", attributes...)
 	}
-
-	slog.LogAttrs(s.ctx, level, message, attributes...)
 }
