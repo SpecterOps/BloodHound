@@ -43,6 +43,11 @@ post:
   responses:
     200:
       description: OK
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            example: private, no-store
       content:
         application/json:
           schema:

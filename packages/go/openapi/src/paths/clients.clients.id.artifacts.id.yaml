@@ -45,9 +45,22 @@ get:
         **OK**
         This response will contain the artifact file.
       headers:
+        Cache-Control:
+          schema:
+            type: string
+            example: private, no-store, no-transform
         Content-Disposition:
           schema:
             type: string
+            example: attachment; filename="support-bundle.zip"
+        Content-Length:
+          schema:
+            type: string
+            example: 123456
+        Content-Type:
+          schema:
+            type: string
+            example: application/zip
       content:
         application/zip:
           schema:
