@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -37,6 +39,42 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type assetGroupTagSelectorCreator interface {
+	CreateAssetGroupTagSelector(context.Context, model.User, model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
+}
+
+const assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint = "asset_group_tag_selectors_rule_key_extension_id_check"
+
+func createAssetGroupTagSelector(databaseInterface assetGroupTagSelectorCreator, ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed, ruleKey null.String) (model.AssetGroupTagSelector, error) {
+	return databaseInterface.CreateAssetGroupTagSelector(ctx, user, model.AssetGroupTagSelector{
+		AssetGroupTagId: assetGroupTagId,
+		Name:            name,
+		Description:     description,
+		IsDefault:       isDefault,
+		AllowDisable:    allowDisable,
+		AutoCertify:     autoCertify,
+		Seeds:           seeds,
+		RuleKey:         ruleKey,
+	})
+}
+
+func createOpenGraphSelectorForTest(databaseInterface assetGroupTagSelectorCreator, ctx context.Context, extensionId int32, input model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+	input.AssetGroupTagId = model.AssetGroupTierZeroPosition
+	input.RuleKey = null.StringFrom(strings.TrimSpace(input.RuleKey.String))
+	input.ExtensionId = null.Int32From(extensionId)
+
+	return databaseInterface.CreateAssetGroupTagSelector(ctx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, input)
+}
+
+func assertAssetGroupTagSelectorConstraintError(t *testing.T, err error, expectedConstraint string) {
+	t.Helper()
+
+	var pgErr *pgconn.PgError
+	require.Error(t, err)
+	require.True(t, errors.As(err, &pgErr), "expected wrapped *pgconn.PgError, got %T: %v", err, err)
+	assert.Equal(t, expectedConstraint, pgErr.ConstraintName)
+}
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	t.Parallel()
@@ -55,7 +93,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds, null.String{})
 	require.NoError(t, err)
 	require.Equal(t, 1, selector.AssetGroupTagId)
 	require.False(t, selector.CreatedAt.IsZero())
@@ -80,6 +118,220 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
 }
 
+func TestDatabase_CreateAssetGroupTagSelectorRuleKey(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx = context.Background()
+		input   = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test selector with rule key",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_rule_key_extension", "Test Selector Rule Key Extension", "v1.0.0", "test_rk")
+	require.NoError(t, err)
+
+	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
+	require.NoError(t, err)
+	assert.True(t, selector.RuleKey.Valid)
+	assert.Equal(t, "test.rule", selector.RuleKey.String)
+	assert.True(t, selector.ExtensionId.Valid)
+	assert.Equal(t, extension.ID, selector.ExtensionId.Int32)
+
+	gotSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+	require.NoError(t, err)
+	assert.True(t, gotSelector.RuleKey.Valid)
+	assert.Equal(t, "test.rule", gotSelector.RuleKey.String)
+	assert.True(t, gotSelector.ExtensionId.Valid)
+	assert.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
+}
+
+func TestDatabase_CreateAssetGroupTagSelectorRequiresRuleKeyAndExtensionIDTogether(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testSeeds = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_check_extension", "Test Selector Check Extension", "v1.0.0", "test_chk")
+	require.NoError(t, err)
+
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, "test selector with rule key only", "test description", false, true, model.SelectorAutoCertifyMethodDisabled, testSeeds, null.StringFrom("test.rule.only"))
+	assertAssetGroupTagSelectorConstraintError(t, err, assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, testActor, model.AssetGroupTagSelector{
+		AssetGroupTagId: 1,
+		ExtensionId:     null.Int32From(extension.ID),
+		Name:            "test selector with extension id only",
+		Description:     "test description",
+		AllowDisable:    true,
+		AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+		Seeds:           testSeeds,
+	})
+	assertAssetGroupTagSelectorConstraintError(t, err, assetGroupTagSelectorsRuleKeyExtensionIDCheckConstraint)
+}
+
+func TestDatabase_CreateAssetGroupTagSelectorRuleKeyIsUniquePerExtension(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx = context.Background()
+		input   = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test selector with rule key",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_unique_extension", "Test Selector Unique Extension", "v1.0.0", "test_unq")
+	require.NoError(t, err)
+	otherExtension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_unique_other_extension", "Test Selector Unique Other Extension", "v1.0.0", "test_unq_oth")
+	require.NoError(t, err)
+
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
+	require.NoError(t, err)
+
+	input.Name = "test selector with same rule key in other extension"
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, otherExtension.ID, input)
+	assert.NoError(t, err)
+
+	input.Name = "test selector with duplicate rule key in same extension"
+	_, err = createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
+	assert.ErrorIs(t, err, database.ErrDuplicateAGTagSelectorRuleKey)
+}
+
+func TestDatabase_UpdateAssetGroupTagSelectorPreservesExtensionManagedFields(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testInput = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test opengraph selector",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_extension", "Test Selector Extension", "v1.0.0", "test")
+	require.NoError(t, err)
+
+	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, testInput)
+	require.NoError(t, err)
+	require.Equal(t, extension.ID, selector.ExtensionId.Int32)
+
+	selector.ExtensionId = null.Int32From(extension.ID + 1)
+	selector.RuleKey = null.StringFrom("test.rule.updated")
+
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, testActor.ID.String(), "", selector)
+	require.NoError(t, err)
+
+	gotSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+	require.NoError(t, err)
+	assert.Equal(t, extension.ID, gotSelector.ExtensionId.Int32)
+	assert.Equal(t, "test.rule", gotSelector.RuleKey.String)
+}
+
+func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
+	t.Parallel()
+	var (
+		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
+		testCtx = context.Background()
+		input   = model.AssetGroupTagSelector{
+			RuleKey:      null.StringFrom("test.rule"),
+			Name:         "test opengraph selector",
+			Description:  "test description",
+			AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+			AllowDisable: true,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+
+	extension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_helper_extension", "Test Selector Helper Extension", "v1.0.0", "test")
+	require.NoError(t, err)
+	otherExtension, err := dbInst.CreateGraphSchemaExtension(testCtx, "test_selector_helper_other_extension", "Test Selector Helper Other Extension", "v1.0.0", "test_other")
+	require.NoError(t, err)
+
+	selector, err := createOpenGraphSelectorForTest(dbInst, testCtx, extension.ID, input)
+	require.NoError(t, err)
+	assert.Equal(t, 1, selector.AssetGroupTagId)
+	assert.Equal(t, extension.ID, selector.ExtensionId.Int32)
+	assert.Equal(t, "test.rule", selector.RuleKey.String)
+	assert.Len(t, selector.Seeds, 1)
+
+	input.Name = "test opengraph selector updated"
+	input.Description = "test description updated"
+	input.DisabledAt = null.TimeFrom(time.Now())
+	input.DisabledBy = null.StringFrom("test disabled actor")
+	input.Seeds = []model.SelectorSeed{
+		{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+	}
+
+	_, err = dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, otherExtension.ID, input)
+	require.ErrorIs(t, err, database.ErrNotFound)
+
+	updatedSelector, err := dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
+	require.NoError(t, err)
+	assert.Equal(t, "test opengraph selector updated", updatedSelector.Name)
+	assert.True(t, updatedSelector.DisabledAt.Valid)
+	assert.Equal(t, input.DisabledBy, updatedSelector.DisabledBy)
+	assert.Len(t, updatedSelector.Seeds, 1)
+	assert.Equal(t, "ObjectID5678", updatedSelector.Seeds[0].Value)
+	assert.Equal(t, extension.ID, updatedSelector.ExtensionId.Int32)
+	assert.Equal(t, 1, updatedSelector.AssetGroupTagId)
+
+	input.Name = "test opengraph selector updated without seeds"
+	input.Seeds = nil
+
+	updatedSelector, err = dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
+	require.NoError(t, err)
+	require.Nil(t, updatedSelector.Seeds)
+
+	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, updatedSelector.ID)
+	require.NoError(t, err)
+	require.Len(t, readBackSelector.Seeds, 1)
+	require.Equal(t, "ObjectID5678", readBackSelector.Seeds[0].Value)
+
+	input.Seeds = []model.SelectorSeed{}
+
+	updatedSelector, err = dbInst.UpdateOpenGraphAssetGroupTagSelector(testCtx, extension.ID, input)
+	require.NoError(t, err)
+	require.Empty(t, updatedSelector.Seeds)
+
+	readBackSelector, err = dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, updatedSelector.ID)
+	require.NoError(t, err)
+	require.Empty(t, readBackSelector.Seeds)
+
+	err = dbInst.DeleteAssetGroupTagSelector(testCtx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, updatedSelector)
+	require.NoError(t, err)
+
+	_, err = dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, updatedSelector.ID)
+	require.ErrorIs(t, err, database.ErrNotFound)
+}
+
 func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
@@ -96,7 +348,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds, null.String{})
 	require.NoError(t, err)
 
 	// test the read by ID function
@@ -144,7 +396,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := createAssetGroupTagSelector(dbInst, testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds, null.String{})
 	require.NoError(t, err)
 
 	selector.Name = updateName
@@ -832,17 +1084,17 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	require.NoError(t, err)
 
 	// label1 selectors
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "1", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "1", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "2", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "2", "", false, true, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "3", "", false, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "3", "", false, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "4", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "4", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "5", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "5", "", true, false, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	selector6, err := dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "6", "", true, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{})
+	selector6, err := createAssetGroupTagSelector(dbInst, testCtx, label1.ID, model.User{}, "6", "", true, true, model.SelectorAutoCertifyMethodSeedsOnly, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 	selector6.DisabledAt = disabledTime
 	selector6.DisabledBy = null.StringFrom(user.ID.String())
@@ -850,13 +1102,13 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	require.NoError(t, err)
 
 	// label2 selectors
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "7", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label2.ID, model.User{}, "7", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "8", "", false, false, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label2.ID, model.User{}, "8", "", false, false, model.SelectorAutoCertifyMethodAllMembers, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "9", "", true, false, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label2.ID, model.User{}, "9", "", true, false, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "10", "", true, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, label2.ID, model.User{}, "10", "", true, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
 	t.Run("single asset group tag selector(s) count", func(t *testing.T) {
@@ -944,10 +1196,10 @@ func TestDatabase_GetAssetGroupTagSelectorsBySelectorIdFilteredAndPaginated(t *t
 	)
 
 	test_started_at := time.Now()
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds, null.String{})
 	require.NoError(t, err)
 	created_at := time.Now()
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds, null.String{})
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
@@ -1067,7 +1319,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 			},
 		}
 	)
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds, null.String{})
 	require.NoError(t, err)
 	insertAssetGroupSelectorNodes(t, testCtx, dbInst, model.AssetGroupSelectorNode{
 		SelectorId:  testSelectorId,
@@ -1096,7 +1348,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds, null.String{})
 	require.NoError(t, err)
 
 	history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
@@ -1173,9 +1425,9 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		}
 	)
 
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds, null.String{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
+	_, err = createAssetGroupTagSelector(dbInst, testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds, null.String{})
 	require.NoError(t, err)
 
 	t.Run("returns all selectors", func(t *testing.T) {
@@ -1183,6 +1435,178 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 	})
+}
+
+func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
+	t.Parallel()
+
+	type testSetupData struct {
+		extensionId   int32
+		extensionIds  []int32
+		expectedCount int
+		expected      map[string]model.AssetGroupTagSelector
+		db            *database.BloodhoundDB
+	}
+
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
+		assert   func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error)
+		teardown func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData)
+	}
+
+	assertSelectors := func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error) {
+		t.Helper()
+		require.NoError(t, err)
+		require.Len(t, selectors, setupData.expectedCount)
+		for _, selector := range selectors {
+			expected, ok := setupData.expected[selector.RuleKey.String]
+			require.Truef(t, ok, "unexpected selector returned with rule key %q", selector.RuleKey.String)
+
+			assert.Equal(t, setupData.extensionId, selector.ExtensionId.Int32)
+			assert.True(t, selector.RuleKey.Valid)
+			assert.Equal(t, expected.Name, selector.Name)
+			assert.Equal(t, expected.Description, selector.Description)
+			assert.Equal(t, expected.AutoCertify, selector.AutoCertify)
+			assert.Equal(t, expected.AllowDisable, selector.AllowDisable)
+			assert.Equal(t, expected.IsDefault, selector.IsDefault)
+			assert.Equal(t, model.AssetGroupTierZeroPosition, selector.AssetGroupTagId)
+			assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.CreatedBy)
+			assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.UpdatedBy)
+			assert.NotZero(t, selector.ID)
+		}
+	}
+
+	teardownExtensions := func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+		t.Helper()
+		for _, extensionId := range setupData.extensionIds {
+			// ON DELETE CASCADE removes the extension's selectors
+			assert.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionId))
+			selectors, err := testSuite.BHDatabase.GetAssetGroupTagSelectorsByExtensionId(testSuite.Context, extensionId)
+			assert.NoError(t, err)
+			assert.Empty(t, selectors)
+		}
+	}
+
+	assertError := func(t *testing.T, setupData testSetupData, selectors model.AssetGroupTagSelectors, err error) {
+		t.Helper()
+		require.Error(t, err)
+		assert.Empty(t, selectors)
+	}
+
+	tests := []testCase{
+		{
+			name: "success_-_returns_selectors_for_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_ext_with_selectors", "Test Ext With Selectors", "v1.0.0", "test_ext_ws")
+				require.NoError(t, err)
+				expected := make(map[string]model.AssetGroupTagSelector)
+				for i := 0; i < 2; i++ {
+					input := model.AssetGroupTagSelector{
+						RuleKey:      null.StringFrom(fmt.Sprintf("test.rule.%d", i)),
+						Name:         fmt.Sprintf("test selector %d", i),
+						Description:  fmt.Sprintf("test description %d", i),
+						AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+						AllowDisable: true,
+						Seeds: []model.SelectorSeed{
+							{Type: model.SelectorTypeObjectId, Value: fmt.Sprintf("ObjectID%d", i)},
+						},
+					}
+					_, err := createOpenGraphSelectorForTest(testSuite.BHDatabase, testSuite.Context, extension.ID, input)
+					require.NoError(t, err)
+					expected[input.RuleKey.String] = input
+				}
+				return testSetupData{extensionId: extension.ID, extensionIds: []int32{extension.ID}, expectedCount: 2, expected: expected}
+			},
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
+		},
+		{
+			name: "success_-_returns_only_selectors_for_requested_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				targetExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_ext_target", "Test Ext Target", "v1.0.0", "test_ext_tgt")
+				require.NoError(t, err)
+				otherExtension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_ext_other", "Test Ext Other", "v1.0.0", "test_ext_oth")
+				require.NoError(t, err)
+
+				targetInput := model.AssetGroupTagSelector{
+					RuleKey:      null.StringFrom("target.rule"),
+					Name:         "target selector",
+					Description:  "target description",
+					AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+					AllowDisable: true,
+					Seeds: []model.SelectorSeed{
+						{Type: model.SelectorTypeObjectId, Value: "ObjectIDTarget"},
+					},
+				}
+				_, err = createOpenGraphSelectorForTest(testSuite.BHDatabase, testSuite.Context, targetExtension.ID, targetInput)
+				require.NoError(t, err)
+
+				otherInput := model.AssetGroupTagSelector{
+					RuleKey:      null.StringFrom("other.rule"),
+					Name:         "other selector",
+					Description:  "other description",
+					AutoCertify:  model.SelectorAutoCertifyMethodDisabled,
+					AllowDisable: true,
+					Seeds: []model.SelectorSeed{
+						{Type: model.SelectorTypeObjectId, Value: "ObjectIDOther"},
+					},
+				}
+				_, err = createOpenGraphSelectorForTest(testSuite.BHDatabase, testSuite.Context, otherExtension.ID, otherInput)
+				require.NoError(t, err)
+
+				return testSetupData{
+					extensionId:   targetExtension.ID,
+					extensionIds:  []int32{targetExtension.ID, otherExtension.ID},
+					expectedCount: 1,
+					expected:      map[string]model.AssetGroupTagSelector{targetInput.RuleKey.String: targetInput},
+				}
+			},
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
+		},
+		{
+			name: "success_-_returns_empty_for_extension_with_no_selectors",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				extension, err := testSuite.BHDatabase.CreateGraphSchemaExtension(testSuite.Context, "test_ext_no_selectors", "Test Ext No Selectors", "v1.0.0", "test_ext_ns")
+				require.NoError(t, err)
+				return testSetupData{extensionId: extension.ID, extensionIds: []int32{extension.ID}, expectedCount: 0, expected: map[string]model.AssetGroupTagSelector{}}
+			},
+			assert:   assertSelectors,
+			teardown: teardownExtensions,
+		},
+		{
+			name: "error_-_returns_error_on_closed_connection",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				closedSuite := setupIntegrationTestSuite(t)
+				teardownIntegrationTestSuite(t, &closedSuite)
+				return testSetupData{db: closedSuite.BHDatabase}
+			},
+			assert: assertError,
+		},
+	}
+
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			setupData := testCase.setup(t, testSuite)
+			if testCase.teardown != nil {
+				defer testCase.teardown(t, testSuite, setupData)
+			}
+			queryDB := testSuite.BHDatabase
+			if setupData.db != nil {
+				queryDB = setupData.db
+			}
+			selectors, err := queryDB.GetAssetGroupTagSelectorsByExtensionId(testSuite.Context, setupData.extensionId)
+			testCase.assert(t, setupData, selectors, err)
+		})
+	}
 }
 
 func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
@@ -1217,7 +1641,7 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 		updateInputNode2   = database.UpdateCertificationBySelectorNodeInput{AssetGroupTagId: testAssetGroupTagId1, SelectorId: testSelectorId1, CertifiedBy: certifiedBy, CertificationStatus: model.AssetGroupCertificationManual, NodeId: testNodeId2, NodeName: test1Selector.Name, Note: testNote}
 		sort               = make(model.Sort, 0)
 	)
-	_, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, testAssetGroupTagId1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, testAssetGroupTagId1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds, null.String{})
 	require.NoError(t, err)
 
 	// insert selector nodes
@@ -1954,9 +2378,10 @@ func TestDatabase_DeleteSelectorNodes(t *testing.T) {
 func createUpdateSelectorNodesTestSelector(t *testing.T, ctx context.Context, bloodhoundDatabase *database.BloodhoundDB, testActor model.User, name string) model.AssetGroupTagSelector {
 	t.Helper()
 
-	selector, err := bloodhoundDatabase.CreateAssetGroupTagSelector(ctx, 1, testActor, name, "test description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
+	selector, err := createAssetGroupTagSelector(bloodhoundDatabase, ctx, 1, testActor, name, "test description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
 		{Type: model.SelectorTypeObjectId, Value: name + " object id"},
-	})
+	}, null.String{})
+
 	require.NoError(t, err)
 
 	return selector
@@ -2078,7 +2503,7 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 	tierTag, err := suite.BHDatabase.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false), null.String{})
 	require.NoError(t, err)
 
-	selector, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, tierTag.ID, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds, null.String{})
 	require.NoError(t, err)
 
 	insertAssetGroupSelectorNodes(t, testCtx, suite.BHDatabase,
@@ -2156,22 +2581,22 @@ func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
 	require.NoError(t, err)
 
 	// Zone 0 is added by the migration and is ID 1
-	sel0, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel0, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, 1, model.User{}, "Test T0 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
-	sel0_1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 2", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel0_1, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, 1, model.User{}, "Test T0 selector number 2", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
-	sel0_2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 3", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel0_2, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, 1, model.User{}, "Test T0 selector number 3", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
-	sel0_3, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel0_3, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, 1, model.User{}, "Test T0 selector number 4", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
-	sel1, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel1, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, tier1.ID, model.User{}, "Test T1 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
-	sel2, err := suite.BHDatabase.CreateAssetGroupTagSelector(testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{})
+	sel2, err := createAssetGroupTagSelector(suite.BHDatabase, testCtx, tier2.ID, model.User{}, "Test T2 selector", "description", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{}, null.String{})
 	require.NoError(t, err)
 
 	t.Run("Multiple nodes - verify highest tier wins", func(t *testing.T) {
