@@ -22,7 +22,7 @@ import {
     mockKindsHandler,
     mockSourceKindsHandler,
     singleNodeResponse,
-} from 'bh-shared-ui';
+} from 'bh-shared-ui/testing';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';

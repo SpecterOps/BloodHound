@@ -18,7 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { OIDCProviderInfo, SAMLProviderInfo, SSOProvider, SSOProviderConfiguration } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Permission, SortOrder, createAuthStateWithPermissions } from '../../';
+import { Permission, SortOrder } from '../../';
+import { createAuthStateWithPermissions } from '../../mocks';
 import { render, screen } from '../../test-utils';
 import SSOProviderTable from './SSOProviderTable';
 
