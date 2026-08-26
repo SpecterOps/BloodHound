@@ -322,7 +322,7 @@ export interface GetWebhookRequest {
 
 export interface WebhookTestRequest {
     event_type: string;
-    version: string;
+    version: number | null;
 }
 
 // ---------------------------------------------------------------------------
