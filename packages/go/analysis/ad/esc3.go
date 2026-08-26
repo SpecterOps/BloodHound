@@ -498,8 +498,82 @@ func isEndCertTemplateValidESC3(template *graph.Node) bool {
 }
 
 func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	// P1 and P2 bind their selected publishers to the ESC3 target domain through
-	// NTAuth. P6 and P7 verify their independent RootCA paths to that domain.
+	// The query represents the composed graph. The shared host-eligibility helper
+	// additionally validates the host forest when the Enterprise CA forest resolves.
+	/*
+		MATCH (n {objectid: '<principal SID>'})-[:ADCSESC3]->(d:Domain {objectid: '<domain SID>'})
+
+		MATCH p1 = (p1Principal)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct1:CertTemplate)-[:PublishedTo]->(eca1:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		WHERE (
+			p1Principal.objectid = n.objectid
+			OR p1Principal.objectid ENDS WITH '-S-1-5-11'
+			OR p1Principal.objectid ENDS WITH '-S-1-1-0'
+		)
+		AND ct1.requiresmanagerapproval = false
+		AND (
+			ct1.schemaversion = 1
+			OR (ct1.schemaversion > 1 AND ct1.authorizedsignatures = 0)
+		)
+		AND (
+			n:Group
+			OR n:Computer
+			OR (
+				n:User
+				AND (
+					n.gmsa = true
+					OR n.msa = true
+					OR (ct1.subjectaltrequiredns = false AND ct1.subjectaltrequiredomaindns = false)
+				)
+			)
+		)
+
+		MATCH p2 = (p2Principal)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct2:CertTemplate)-[:PublishedTo]->(eca2:EnterpriseCA)-[:TrustedForNTAuth]->(:NTAuthStore)-[:NTAuthStoreFor]->(d)
+		WHERE (
+			p2Principal.objectid = n.objectid
+			OR p2Principal.objectid ENDS WITH '-S-1-5-11'
+			OR p2Principal.objectid ENDS WITH '-S-1-1-0'
+		)
+		AND ct2.authenticationenabled = true
+		AND ct2.requiresmanagerapproval = false
+
+		MATCH p3 = (ct1)-[:EnrollOnBehalfOf]->(ct2)
+
+		MATCH p4 = (p4Principal)-[:MemberOf*0..]->()-[:Enroll]->(eca1)
+		WHERE (
+			p4Principal.objectid = n.objectid
+			OR p4Principal.objectid ENDS WITH '-S-1-5-11'
+			OR p4Principal.objectid ENDS WITH '-S-1-1-0'
+		)
+
+		MATCH p5 = (p5Principal)-[:MemberOf*0..]->()-[:Enroll]->(eca2)
+		WHERE (
+			p5Principal.objectid = n.objectid
+			OR p5Principal.objectid ENDS WITH '-S-1-5-11'
+			OR p5Principal.objectid ENDS WITH '-S-1-1-0'
+		)
+
+		MATCH p6 = (eca1)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
+		MATCH p7 = (eca2)-[:IssuedSignedBy|EnterpriseCAFor*1..]->(:RootCA)-[:RootCAFor]->(d)
+		MATCH p9 = (host1:Computer)-[:HostsCAService]->(eca1)
+		MATCH p10 = (host2:Computer)-[:HostsCAService]->(eca2)
+		WHERE host1.enabled = true AND host2.enabled = true
+
+		OPTIONAL MATCH p8 = (p8Principal)-[:MemberOf*0..]->()-[:DelegatedEnrollmentAgent]->(ct2)
+		WHERE (
+			p8Principal.objectid = n.objectid
+			OR p8Principal.objectid ENDS WITH '-S-1-5-11'
+			OR p8Principal.objectid ENDS WITH '-S-1-1-0'
+		)
+
+		WITH *
+		WHERE (
+			coalesce(eca2.enrollmentagentrestrictionscollected, false) = false
+			OR coalesce(eca2.hasenrollmentagentrestrictions, false) = false
+			OR p8 IS NOT NULL
+		)
+
+		RETURN p1, p2, p3, p4, p5, p6, p7, p8, p9, p10
+	*/
 	var (
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
