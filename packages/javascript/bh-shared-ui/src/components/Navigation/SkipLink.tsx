@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './BasicObjectInfoFields';
-export * from './ContextMenu/AssetGroupMenuItemPrivilegeZonesEnabled';
-export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
-export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';
-export * from './ExploreSearch';
-export * from './fragments';
-export { default as GraphItemInformationPanel } from './GraphItemInformationPanel';
-export * from './InfoStyles';
-export * from './providers';
+import { AnchorHTMLAttributes, FC } from 'react';
+import { cn } from '../../utils';
+
+export const SkipLink: FC<AnchorHTMLAttributes<HTMLAnchorElement>> = ({ children, className, ...props }) => (
+    <a
+        className={cn(
+            'sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[10000]',
+            'focus:rounded focus:bg-neutral-1 focus:px-4 focus:py-2 focus:text-primary focus:shadow-lg focus:focus-ring',
+            className
+        )}
+        {...props}>
+        {children}
+    </a>
+);
