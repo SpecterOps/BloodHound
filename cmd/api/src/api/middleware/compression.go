@@ -59,11 +59,12 @@ func (s *GzipResponseWriter) Close() error {
 func CompressionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		var (
-			gw  *GzipResponseWriter
-			err error
+			gw           *GzipResponseWriter
+			err          error
+			currentRoute *mux.Route
 		)
 
-		currentRoute := mux.CurrentRoute(request)
+		currentRoute = mux.CurrentRoute(request)
 		if currentRoute != nil && currentRoute.GetName() == SkipCompressionMiddleware {
 			next.ServeHTTP(responseWriter, request)
 			return
