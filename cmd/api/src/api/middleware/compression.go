@@ -26,10 +26,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
+
+const SkipCompressionMiddleware = "skip:compression_middleware"
 
 var errUnsupportedEncoding = errors.New("content encoding is not supported")
 
@@ -59,6 +62,12 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 			gw  *GzipResponseWriter
 			err error
 		)
+
+		currentRoute := mux.CurrentRoute(request)
+		if currentRoute != nil && currentRoute.GetName() == SkipCompressionMiddleware {
+			next.ServeHTTP(responseWriter, request)
+			return
+		}
 
 		if contentEncodingString := strings.Join(request.Header.Values(headers.ContentEncoding.String()), ","); contentEncodingString != "" { // "Content-Encoding: gzip, deflate; Content-Encoding: br;" = "gzip, deflate, br"
 			for _, encoding := range strings.Split(contentEncodingString, ",") {
