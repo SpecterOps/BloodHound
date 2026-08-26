@@ -485,8 +485,8 @@ export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
 
 export type WebhookTestResponse = BasicResponse<{
-    status_code: number;
-    error: string;
+    status_code?: number | null;
+    error?: string | null;
 }>;
 
 // ---------------------------------------------------------------------------
