@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -65,11 +67,23 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "unknown user", request), response)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		for _, node := range nodeSet {
 			unifiedGraph.AddNode(primaryDisplayKinds, node, true)
 		}
+
+		if ShouldFilterForETAC(s.DogTags, user) {
+			if filteredGraph, err := filterETACGraph(unifiedGraph, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+				return
+			} else {
+				unifiedGraph = filteredGraph
+			}
+		}
+
 		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
 }
