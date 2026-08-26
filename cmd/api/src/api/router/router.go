@@ -116,8 +116,9 @@ func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
 
 // WithFilters wires the query parameter filter middleware onto the route, validating any filters against
 // the supplied params.Filterable definition and enriching the request context with the parsed filters.
-func (s *Route) WithFilters(filterable params.Filterable) *Route {
-	s.handler.Use(middleware.FilterMiddleware(filterable))
+// Query parameters named in additionalIgnoredParameters are skipped during filter parsing.
+func (s *Route) WithFilters(filterable params.Filterable, additionalIgnoredParameters ...string) *Route {
+	s.handler.Use(middleware.FilterMiddleware(filterable, additionalIgnoredParameters...))
 	return s
 }
 
