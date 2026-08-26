@@ -18517,7 +18517,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `id`, `first_seen`, `last_seen`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -18789,6 +18789,10 @@
                                   "orphaned"
                                 ]
                               },
+                              "id": {
+                                "type": "integer",
+                                "description": "Unique identifier of the finding."
+                              },
                               "first_seen": {
                                 "type": "string",
                                 "format": "date-time",
@@ -18831,6 +18835,7 @@
                           "target_principal_kind": "User",
                           "target_principal_name": "Domain Admin",
                           "status": "active",
+                          "id": 101,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
                           "last_seen": "2026-04-14T16:57:35.675609Z"
                         },
@@ -18851,6 +18856,7 @@
                           "target_principal_kind": "User",
                           "target_principal_name": "Backup Admin",
                           "status": "accepted",
+                          "id": 102,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
                           "last_seen": "2026-04-14T16:57:35.675609Z"
                         }
