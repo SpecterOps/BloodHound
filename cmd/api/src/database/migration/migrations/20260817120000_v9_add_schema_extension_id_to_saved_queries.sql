@@ -15,7 +15,10 @@
 -- SPDX-License-Identifier: Apache-2.0
 -- +goose Up
 ALTER TABLE saved_queries
-    ADD COLUMN IF NOT EXISTS schema_extension_id INTEGER REFERENCES schema_extensions (id) ON DELETE CASCADE;
+    ADD COLUMN IF NOT EXISTS schema_extension_id INTEGER REFERENCES schema_extensions (id) ON DELETE CASCADE,
+    ADD COLUMN IF NOT EXISTS query_key TEXT
+        CONSTRAINT chk_saved_queries_query_key_schema_extension_id
+        CHECK ((schema_extension_id IS NOT NULL AND query_key IS NOT NULL) OR (schema_extension_id IS NULL AND query_key IS NULL));
 
 CREATE INDEX IF NOT EXISTS idx_saved_queries_schema_extension_id ON saved_queries (schema_extension_id);
 
@@ -23,6 +26,10 @@ DROP INDEX IF EXISTS idx_saved_queries_composite_index;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_queries_composite_index
     ON saved_queries USING btree (user_id, name, schema_extension_id) NULLS NOT DISTINCT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_queries_extension_query_key
+    ON saved_queries (schema_extension_id, query_key);
+
 
 -- +goose Down
 DROP INDEX IF EXISTS idx_saved_queries_composite_index;
@@ -32,5 +39,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_queries_composite_index
 
 DROP INDEX IF EXISTS idx_saved_queries_schema_extension_id;
 
+DROP INDEX IF EXISTS idx_saved_queries_extension_query_key;
+
 ALTER TABLE saved_queries
+    DROP COLUMN IF EXISTS query_key,
     DROP COLUMN IF EXISTS schema_extension_id;

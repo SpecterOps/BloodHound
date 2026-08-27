@@ -50,7 +50,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", nil); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", nil, nil); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
@@ -70,87 +70,210 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	}
 }
 
-func TestSavedQueries_SchemaExtensionID(t *testing.T) {
+func TestSavedQueries_CreateSavedQuery(t *testing.T) {
+	t.Parallel()
+
+	var (
+		suite          = setupIntegrationTestSuite(t)
+		userUUID, uErr = uuid.NewV4()
+	)
+	t.Cleanup(func() {
+		teardownIntegrationTestSuite(t, &suite)
+	})
+	require.NoError(t, uErr)
 
 	type testSetupData struct {
-		created model.SavedQuery
-		extID   *int32
+		name              string
+		query             string
+		description       string
+		schemaExtensionID *int32
+		queryKey          *string
 	}
 	type testCase struct {
 		name     string
-		setup    func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData
-		assert   func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData)
-		teardown func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData)
+		setup    func(t *testing.T, suite IntegrationTestSuite) testSetupData
+		assert   func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery
+		teardown func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery)
 	}
 
-	var (
-		testCtx       = context.Background()
-		userUUID, err = uuid.NewV4()
-	)
-	require.NoError(t, err)
+	stringPtr := func(value string) *string {
+		return &value
+	}
 
 	tests := []testCase{
 		{
-			name: "success_-_extension_linked_query_persists_schema_extension_id",
-			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+			name: "success_-_extension_and_query_key_persist",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
-				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "SavedQueryExt", "Saved Query Ext", "v1.0.0", "sqext_ns")
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "CreateSQPersistExt", "Create SQ Persist Ext", "v1.0.0", "create_sq_persist_ns")
 				require.NoError(t, err)
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "ext_query", "MATCH (n) RETURN n", "desc", &ext.ID)
-				require.NoError(t, err)
-				return testSetupData{created: created, extID: &ext.ID}
+				return testSetupData{
+					name:              "ext_query",
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+					queryKey:          stringPtr("ext_query_key"),
+				}
 			},
-			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				assert.Equal(t, data.extID, data.created.SchemaExtensionID)
-				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
 				require.NoError(t, err)
-				assert.Equal(t, data.extID, fetched.SchemaExtensionID)
+				assert.Equal(t, setupData.schemaExtensionID, created.SchemaExtensionID)
+				assert.Equal(t, setupData.queryKey, created.QueryKey)
+
+				fetched, err := suite.BHDatabase.GetSavedQuery(suite.Context, created.ID)
+				require.NoError(t, err)
+				assert.Equal(t, setupData.schemaExtensionID, fetched.SchemaExtensionID)
+				assert.Equal(t, setupData.queryKey, fetched.QueryKey)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
 			},
 		},
 		{
-			name: "success_-_zero_schema_extension_id_persists_as_null",
-			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+			name: "success_-_no_extension_or_query_key_persists_as_null",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "user_query", "MATCH (n) RETURN n", "desc", nil)
-				require.NoError(t, err)
-				return testSetupData{created: created}
+				return testSetupData{
+					name:        "user_query",
+					query:       "MATCH (n) RETURN n",
+					description: "desc",
+				}
 			},
-			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				assert.Nil(t, data.created.SchemaExtensionID)
-				fetched, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				require.NoError(t, err)
+				assert.Nil(t, created.SchemaExtensionID)
+				assert.Nil(t, created.QueryKey)
+
+				fetched, err := suite.BHDatabase.GetSavedQuery(suite.Context, created.ID)
 				require.NoError(t, err)
 				assert.Nil(t, fetched.SchemaExtensionID)
+				assert.Nil(t, fetched.QueryKey)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteSavedQuery(suite.Context, created.ID))
 			},
 		},
 		{
 			name: "success_-_deleting_extension_cascades_to_saved_query",
-			setup: func(t *testing.T, ctx context.Context, dbInst database.Database) testSetupData {
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
-				ext, err := dbInst.CreateGraphSchemaExtension(ctx, "CascadeExt", "Cascade Ext", "v1.0.0", "cascade_ns")
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "CascadeExt", "Cascade Ext", "v1.0.0", "cascade_ns")
 				require.NoError(t, err)
-				created, err := dbInst.CreateSavedQuery(ctx, userUUID, "cascade_query", "MATCH (n) RETURN n", "desc", &ext.ID)
-				require.NoError(t, err)
-				return testSetupData{created: created, extID: &ext.ID}
+				return testSetupData{
+					name:              "cascade_query",
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+					queryKey:          stringPtr("cascade_query_key"),
+				}
 			},
-			assert: func(t *testing.T, ctx context.Context, dbInst database.Database, data testSetupData) {
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				require.NoError(t, dbInst.DeleteGraphSchemaExtension(ctx, *data.extID))
-				_, err := dbInst.GetSavedQuery(ctx, data.created.ID)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				require.NoError(t, err)
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
+
+				_, err = suite.BHDatabase.GetSavedQuery(suite.Context, created.ID)
 				assert.ErrorIs(t, err, database.ErrNotFound)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				// The extension (and its cascaded saved query) is already removed by the assert step.
+			},
+		},
+		{
+			name: "error_-_extension_set_but_query_key_nil",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "ExtNoKeyExt", "Ext No Key Ext", "v1.0.0", "ext_no_key_ns")
+				require.NoError(t, err)
+				return testSetupData{
+					name:              "ext_no_key",
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assert.Error(t, err)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
+			},
+		},
+		{
+			name: "error_-_query_key_set_but_extension_nil",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					name:        "key_no_ext",
+					query:       "MATCH (n) RETURN n",
+					description: "desc",
+					queryKey:    stringPtr("k"),
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assert.Error(t, err)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				// Nothing was persisted: the insert is rejected and no extension is created.
+			},
+		},
+		{
+			name: "error_-_duplicate_extension_query_key",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "DupKeyExt", "Dup Key Ext", "v1.0.0", "dup_key_ns")
+				require.NoError(t, err)
+
+				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, "dup_first", "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("dup"))
+				require.NoError(t, err)
+
+				return testSetupData{
+					name:              "dup_second",
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+					queryKey:          stringPtr("dup"),
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assert.Error(t, err)
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
 			},
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			dbInst := integration.SetupDB(t)
-			data := tc.setup(t, testCtx, dbInst)
-			if tc.teardown != nil {
-				defer tc.teardown(t, testCtx, dbInst, data)
-			}
-			tc.assert(t, testCtx, dbInst, data)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			setupData := testCase.setup(t, suite)
+			created := testCase.assert(t, suite, setupData)
+			testCase.teardown(t, suite, setupData, created)
 		})
 	}
 }
