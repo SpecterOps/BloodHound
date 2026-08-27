@@ -22,6 +22,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/bloodhound/packages/go/storage/mocks"
@@ -136,6 +137,27 @@ func TestStorageFileService_GetFile(t *testing.T) {
 			require.Equal(t, testCase.expected.fileInfo, actualFileInfo)
 		})
 	}
+}
+
+func TestStorageFileService_GetPresignedURL(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx         = context.Background()
+		mockStorage = mocks.NewMockStorage(gomock.NewController(t))
+		fileService = storage.NewFileService(mockStorage)
+		ttl         = time.Minute
+		expectedURL = "https://storage.example/file.json"
+	)
+
+	mockStorage.EXPECT().
+		GetPresignedURL(ctx, "file.json", ttl).
+		Return(expectedURL, nil)
+
+	actualURL, err := fileService.GetPresignedURL(ctx, "file.json", ttl)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedURL, actualURL)
 }
 
 func TestStorageFileService_ReadFile(t *testing.T) {

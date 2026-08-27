@@ -396,6 +396,13 @@ export type SupportBundleSummaryStatus = {
     current: ManagementOperation | null;
 };
 
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+
 export type EdgeType = {
     id: number;
     name: string;

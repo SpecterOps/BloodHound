@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -751,4 +752,44 @@ func TestStore_List(t *testing.T) {
 			require.Equal(t, testCase.expected.query["delimiter"], query.Get("delimiter"))
 		})
 	}
+}
+
+func TestStore_GetPresignedURL(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	store := newTestStore(&testHTTPClient{})
+
+	// Act
+	actualURL, err := store.GetPresignedURL(context.Background(), " dir/file.json ", time.Minute)
+
+	// Assert
+	require.NoError(t, err)
+
+	parsedURL, err := url.Parse(actualURL)
+	require.NoError(t, err)
+	require.Equal(t, "https", parsedURL.Scheme)
+	require.Equal(t, "s3.test", parsedURL.Host)
+	require.Equal(t, "/test-bucket/prefix/dir/file.json", parsedURL.Path)
+
+	query := parsedURL.Query()
+	require.Equal(t, "60", query.Get("X-Amz-Expires"))
+	require.Equal(t, "attachment", query.Get("response-content-disposition"))
+	require.Equal(t, presignedDownloadCacheControl, query.Get("response-cache-control"))
+	require.NotEmpty(t, query.Get("X-Amz-Credential"))
+	require.NotEmpty(t, query.Get("X-Amz-Signature"))
+}
+
+func TestStore_GetPresignedURL_InvalidPath(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	store := newTestStore(&testHTTPClient{})
+
+	// Act
+	actualURL, err := store.GetPresignedURL(context.Background(), "../file.json", time.Minute)
+
+	// Assert
+	require.Error(t, err)
+	require.Empty(t, actualURL)
 }

@@ -120,6 +120,7 @@ import {
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
+    SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
@@ -829,6 +830,13 @@ class BHEAPIClient {
             ...options,
             responseType: 'blob',
         });
+
+    requestSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.post<SupportBundleDownloadURLResponse>(
+            `/api/v2/clients/${clientId}/artifacts/${artifactId}/download-url`,
+            undefined,
+            options
+        );
 
     deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
