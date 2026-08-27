@@ -36,6 +36,7 @@ const (
 // stored in the saml_consumed_identifiers table.
 type SAMLConsumedData interface {
 	CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) error
+	SweepSAMLConsumedIdentifiers(ctx context.Context) error
 }
 
 // CreateSAMLConsumedIdentifiers inserts the SAMLResponse and assertion from a single SAML login so they cannot be replayed.
@@ -68,4 +69,18 @@ func (s *BloodhoundDB) CreateSAMLConsumedIdentifiers(ctx context.Context, ssoPro
 		}
 		return nil
 	})
+}
+
+// SweepSAMLConsumedIdentifiers deletes all SAMLResponse and assertion identifiers that have expired
+func (s *BloodhoundDB) SweepSAMLConsumedIdentifiers(ctx context.Context) error {
+	result := s.db.WithContext(ctx).Exec(fmt.Sprintf(`DELETE FROM %s WHERE expires_at < NOW()`,
+		samlConsumedIdentifiersTableName))
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected > 0 {
+		slog.DebugContext(ctx, "SAML identifiers cleanup", slog.Int64("rows_affected", result.RowsAffected))
+	}
+	return nil
 }

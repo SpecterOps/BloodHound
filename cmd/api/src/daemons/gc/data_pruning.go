@@ -18,9 +18,11 @@ package gc
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // Daemon holds data relevant to the data daemon
@@ -52,6 +54,7 @@ func (s *Daemon) Start(ctx context.Context) {
 	// prune sessions and collections once when the daemon starts up
 	s.db.SweepSessions(ctx)
 	s.db.SweepAssetGroupCollections(ctx)
+	runSAMLConsumedIdentifiersSweep(ctx, s.db)
 
 	// thereafter, prune conditionally once a day
 	for {
@@ -59,6 +62,7 @@ func (s *Daemon) Start(ctx context.Context) {
 		case <-ticker.C:
 			s.db.SweepSessions(ctx)
 			s.db.SweepAssetGroupCollections(ctx)
+			runSAMLConsumedIdentifiersSweep(ctx, s.db)
 
 		case <-s.exitC:
 			return
@@ -77,4 +81,11 @@ func (s *Daemon) Stop(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func runSAMLConsumedIdentifiersSweep(ctx context.Context, db database.Database) {
+	err := db.SweepSAMLConsumedIdentifiers(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to remove expired SAML consumed identifiers", attr.Error(err))
+	}
 }
