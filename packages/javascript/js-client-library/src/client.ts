@@ -55,6 +55,7 @@ import {
     UpdateUserQueryRequest,
     UpdateUserRequest,
     UpdateWebhookRequest,
+    WebhookTestRequest,
 } from './requests';
 import {
     ActiveDirectoryDataQualityResponse,
@@ -119,10 +120,12 @@ import {
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
+    SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
+    ZoneProtectedAssetScoreResponse,
 } from './responses';
 import * as types from './types';
 
@@ -750,6 +753,13 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
+    getZoneProtectedAssetScore = (environments: string[], assetGroupTagId: number, options?: RequestOptions) =>
+        this.baseClient.get<ZoneProtectedAssetScoreResponse>('/api/v2/asset-scores/zone-protected-asset-score', {
+            ...options,
+            params: { ...options?.params, environments, asset_group_tag_id: assetGroupTagId },
+            paramsSerializer: { indexes: null },
+        });
+
     /* explore search */
 
     getPathfindingResult = (startNode: string, endNode: string, options?: RequestOptions) =>
@@ -820,6 +830,13 @@ class BHEAPIClient {
             ...options,
             responseType: 'blob',
         });
+
+    requestSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.post<SupportBundleDownloadURLResponse>(
+            `/api/v2/clients/${clientId}/artifacts/${artifactId}/download-url`,
+            undefined,
+            options
+        );
 
     deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
@@ -2833,8 +2850,8 @@ class BHEAPIClient {
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
-    testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+    testWebhook = (webhookId: string, payload: WebhookTestRequest, options?: RequestOptions) =>
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, payload, options);
 
     /* alerts */
     createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {

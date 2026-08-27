@@ -47,7 +47,6 @@ import {
     TimestampFields,
     Webhook,
     WebhookSecret,
-    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -191,6 +190,20 @@ export type PostureHistoryData = {
 
 export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
     data_type: string;
+};
+
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreResponse = TimeWindowedResponse<ZoneProtectedAssetScoreData[]> & {
+    environments: string[];
+    asset_group_tag_id: number;
 };
 
 type DatapipeStatus = {
@@ -383,6 +396,13 @@ export type SupportBundleSummaryStatus = {
     current: ManagementOperation | null;
 };
 
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -449,6 +469,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
 export type UnifiedFinding = {
+    id: number;
     severity: string;
     finding: string;
     title: string;
@@ -483,7 +504,11 @@ export type CreateWebhookResponse = {
 export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
-export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
 
 // ---------------------------------------------------------------------------
 //  Alert - Events
