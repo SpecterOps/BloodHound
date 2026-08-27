@@ -43,7 +43,9 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		params = request.URL.Query()
 	)
 
-	if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "unknown user", request), response)
+	} else if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterEdgeType), request), response)
 	} else if sourceNode, hasParameter := params[edgeParameterSourceNode]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterSourceNode), request), response)
@@ -67,8 +69,6 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting composition for edge: %v", err), request), response)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "unknown user", request), response)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		for _, node := range nodeSet {
