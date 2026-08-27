@@ -148,7 +148,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		}
 	)
 
-	modules.Register(deps)
+	services := modules.Register(deps)
 
 	for _, tc := range []struct {
 		name   string
@@ -172,4 +172,8 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)
 		})
 	}
+
+	// Register composes the audit feature and must hand back the Maintainer so
+	// the entrypoint can drive audit_logs partition maintenance from the GC daemon.
+	assert.NotNil(t, services.AuditMaintainer, "Register should return a non-nil audit Maintainer")
 }

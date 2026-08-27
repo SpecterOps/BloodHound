@@ -56,6 +56,19 @@ func (s *GzipResponseWriter) Close() error {
 	return s.gw.Close()
 }
 
+// Flush flushes the gzip stream to the underlying writer before flushing the
+// underlying writer itself. Without flushing the gzip buffer first, a promoted
+// Flush from the embedded ResponseWriter would push out headers/framing ahead of
+// buffered compressed bytes and corrupt streaming responses.
+func (s *GzipResponseWriter) Flush() {
+	if err := s.gw.Flush(); err != nil {
+		return
+	}
+	if flusher, ok := s.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 func CompressionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		var (

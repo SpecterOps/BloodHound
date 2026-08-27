@@ -18,6 +18,7 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -40,17 +41,31 @@ func With(limiterFactory func() mux.MiddlewareFunc, routes ...*Route) {
 
 // Router is a wrapper for the mux.Router type. It adds service-specific functionality to HTTP handler routes created.
 type Router struct {
-	globalMiddleware []mux.MiddlewareFunc
-	mux              *mux.Router
-	authorizer       auth.Authorizer
+	globalMiddleware    []mux.MiddlewareFunc
+	mux                 *mux.Router
+	authorizer          auth.Authorizer
+	auditExcludedRoutes map[string]struct{}
 }
 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
 // for easier middleware registration that may be unique for each route.
 type Route struct {
-	handler    *middleware.Wrapper
-	mux        *mux.Route
-	authorizer auth.Authorizer
+	handler             *middleware.Wrapper
+	mux                 *mux.Route
+	authorizer          auth.Authorizer
+	auditExcludedRoutes map[string]struct{}
+}
+
+// ExcludeFromAudit marks this route's template so the audit middleware skips it.
+// It lets the slice that owns a route declare the exemption at the point of
+// registration, instead of the central module registry hardcoding route strings.
+func (s *Route) ExcludeFromAudit() *Route {
+	template, err := s.mux.GetPathTemplate()
+	if err != nil {
+		panic(fmt.Sprintf("router: ExcludeFromAudit requires a route with a path template: %v", err))
+	}
+	s.auditExcludedRoutes[template] = struct{}{}
+	return s
 }
 
 func (s *Route) Queries(pairs ...string) *Route {
@@ -141,7 +156,16 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 	muxRouter.Use(middleware.EnsureRequestBodyClosed())
 	muxRouter.Use(middleware.SecureHandlerMiddleware(cfg, contentSecurityPolicy))
 
-	return Router{mux: muxRouter, authorizer: authorizer}
+	return Router{mux: muxRouter, authorizer: authorizer, auditExcludedRoutes: make(map[string]struct{})}
+}
+
+// IsAuditExcluded reports whether the given gorilla/mux route template was opted
+// out of audit logging via Route.ExcludeFromAudit. It is handed to the audit
+// middleware so exclusions live with each route's registration rather than in a
+// central list.
+func (s Router) IsAuditExcluded(routeTemplate string) bool {
+	_, excluded := s.auditExcludedRoutes[routeTemplate]
+	return excluded
 }
 
 // UsePostrouting appends all of the given mux.MiddlewareFunc instances to this router's post-route middleware execution
@@ -179,8 +203,9 @@ func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 	middlewareWrapper := middleware.NewWrapper(handler)
 
 	return &Route{
-		handler: middlewareWrapper,
-		mux:     s.mux.PathPrefix(template).Handler(middlewareWrapper),
+		handler:             middlewareWrapper,
+		mux:                 s.mux.PathPrefix(template).Handler(middlewareWrapper),
+		auditExcludedRoutes: s.auditExcludedRoutes,
 	}
 }
 
@@ -188,9 +213,10 @@ func (s Router) HandleFunc(template string, handlerFunc func(http.ResponseWriter
 	middlewareWrapper := middleware.NewWrapper(http.HandlerFunc(handlerFunc))
 
 	return &Route{
-		handler:    middlewareWrapper,
-		mux:        s.mux.Handle(template, middlewareWrapper),
-		authorizer: s.authorizer,
+		handler:             middlewareWrapper,
+		mux:                 s.mux.Handle(template, middlewareWrapper),
+		authorizer:          s.authorizer,
+		auditExcludedRoutes: s.auditExcludedRoutes,
 	}
 }
 

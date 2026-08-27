@@ -78,10 +78,11 @@ func RegisterFossRoutes(
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(rdms)
 	},
-		// Health Endpoint
+		// Health Endpoint. Opted out of audit logging at its point of registration
+		// so the audit middleware need not be handed route strings centrally.
 		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
 			response.WriteHeader(http.StatusOK)
-		}),
+		}).ExcludeFromAudit(),
 
 		// Redirect root resource to the UI
 		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
