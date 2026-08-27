@@ -19,6 +19,7 @@ package saml
 import (
 	"encoding/base64"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -52,18 +53,23 @@ type assertionCounter struct {
 
 // MakeAuthenticationRequest abstracts creating an SAML authentication request using
 // the HTTP-Redirect binding. It returns a URL that we will redirect the user to in order to start the auth process.
-func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error) {
+func (s *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error) {
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)
 }
 
 // ParseResponse wraps the parsing and validation of the IdP's SAMLResponse in req and returns the verified assertion
 // together with the SAMLResponse's own details in a ValidatedResponse.
-func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error) {
+func (s *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error) {
 	var (
 		fullResponse ValidatedResponse
 		samlResponse saml.Response
 		issuer       string
 	)
+
+	// Rejecting explicitly since BloodHound doesn't support HTTP-Artifact binding
+	if req.Form.Get("SAMLart") != "" {
+		return nil, errors.New("saml: HTTP-Artifact binding is not supported")
+	}
 
 	assertion, err := serviceProvider.ParseResponse(req, possibleRequestIDs)
 	if err != nil {

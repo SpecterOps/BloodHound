@@ -17,6 +17,10 @@
 package saml
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -127,6 +131,46 @@ func TestCalculateSAMLTimeExpiry(t *testing.T) {
 			got := CalculateSAMLTimeExpiry(testCase.responseIssueInstant, testCase.assertionIssueInstant)
 
 			assert.True(t, testCase.want.Equal(got), "expected %s, got %s", testCase.want, got)
+		})
+	}
+}
+
+// TestParseResponse_RejectsArtifactBinding verifies that ParseResponse rejects HTTP-Artifact
+// requests (SAMLart in either the POST form or as a query parameter), since we don't support HTTP-Artifact binding.
+func TestParseResponse_RejectsArtifactBinding(t *testing.T) {
+	testCases := []struct {
+		name    string
+		request func() *http.Request
+	}{
+		{
+			name: "SAMLart in POST form",
+			request: func() *http.Request {
+				form := url.Values{"SAMLart": {"artifact-id"}}
+				req := httptest.NewRequest(http.MethodPost, "/api/v2/sso/slug/callback", strings.NewReader(form.Encode()))
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				return req
+			},
+		},
+		{
+			name: "SAMLart as a query parameter",
+			request: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/sso/slug/callback?SAMLart=artifact-id", nil)
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				client Client
+				req    = testCase.request()
+			)
+			require.NoError(t, req.ParseForm())
+
+			validatedResponse, err := client.ParseResponse(saml.ServiceProvider{}, req, nil)
+
+			require.ErrorContains(t, err, "HTTP-Artifact binding is not supported")
+			assert.Nil(t, validatedResponse)
 		})
 	}
 }
