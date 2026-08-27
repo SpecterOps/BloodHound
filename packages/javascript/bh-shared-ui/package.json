@@ -113,7 +113,7 @@
     },
     "exports": {
         ".": "./dist/index.js",
-        "./mocks": "./dist/mocks.js",
+        "./testing": "./dist/testing.js",
         "./FileIngest": "./dist/FileIngest.js",
         "./ApiExplorer": "./dist/ApiExplorer.js",
         "./SSOConfiguration": "./dist/SSOConfiguration.js",
