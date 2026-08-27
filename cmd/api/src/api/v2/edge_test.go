@@ -27,6 +27,8 @@ import (
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -611,10 +613,12 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
+		name             string
+		buildRequest     func() *http.Request
+		setupMocks       func(t *testing.T, mock *mock)
+		expected         expected
+		user             model.User
+		dogTagsOverrides dogtags.TestOverrides
 	}
 
 	tt := []testData{
@@ -868,6 +872,37 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
+		{
+			name: "Success: retrieved ACL inheritance with ETAC enabled - OK",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=WriteDacl&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -879,12 +914,13 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				mockDb:    mocks.NewMockDatabase(ctrl),
 			}
 
-			request := testCase.buildRequest()
+			request := testCase.buildRequest().WithContext(setupUserCtx(testCase.user))
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				Graph: mock.mockGraph,
-				DB:    mock.mockDb,
+				Graph:   mock.mockGraph,
+				DB:      mock.mockDb,
+				DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
