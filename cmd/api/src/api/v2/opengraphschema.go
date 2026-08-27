@@ -88,8 +88,8 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	if bundle, err = extractExtensionData(request.Body); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if bundle.Schema == nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("required component %q not found in extension bundle", bundleFileNameSchema), request), response)
+	} else if err = bundle.Validate(); err != nil {
+		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	} else if graphExtensionInput, err = bundle.Schema.ToGraphExtensionInput(); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
@@ -109,6 +109,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			)
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
+		// TBD: create and hook in calls to the service layer to upsert PZ rules and saved queries
 	} else if updated {
 		response.WriteHeader(http.StatusOK)
 	} else {
@@ -130,7 +131,20 @@ type ExtensionBundle struct {
 	SavedQueries *SavedQueriesPayload
 }
 
-// Defining a placeholder for the PZ rules payload
+func (s ExtensionBundle) RequiresPZRules() bool {
+	return s.Schema != nil && len(s.Schema.GraphRelationshipFindings) > 0
+}
+
+func (s ExtensionBundle) Validate() error {
+	if s.Schema == nil {
+		return fmt.Errorf("required component %q not found in extension bundle", bundleFileNameSchema)
+	} else if s.RequiresPZRules() && s.PZRules == nil {
+		return fmt.Errorf("extension declares relationship findings and requires a %q component", bundleFileNamePzRules)
+	}
+	return nil
+}
+
+// Defining a placeholder for the PZ rules payload. This should probably end up in the model package.
 type SelectorSeedPayload struct {
 	Type  int    `json:"type"`
 	Value string `json:"value"`
@@ -147,7 +161,7 @@ type PZRulesPayload struct {
 	Rules []PZRulePayload `json:"rules"`
 }
 
-// Defining a placeholder for the saved queries payload
+// Defining a placeholder for the saved queries payload. This should probably end up in the model package.
 type SavedQueriesPayload struct {
 	Queries []TransferableSavedQuery `json:"queries"`
 }
