@@ -31,47 +31,30 @@ parameters:
       type: string
       format: uuid
 
-get:
-  operationId: DownloadClientArtifact
-  summary: Download a management operation artifact for the client
+post:
+  operationId: GetClientArtifactDownloadURL
+  summary: Get a client artifact download URL
   description: |
-    Downloads an operation artifact associated with the client.
+    Issues a presigned URL that can be used to download an operation artifact associated
+    with the client
   tags:
     - Clients
     - Enterprise
   responses:
     200:
-      description: |
-        **OK**
-        This response will contain the artifact file.
+      description: OK
       headers:
         Cache-Control:
           schema:
             type: string
-            example: private, no-store, no-transform
-        Content-Disposition:
-          schema:
-            type: string
-            example: attachment; filename="support-bundle.zip"
-        Content-Length:
-          schema:
-            type: string
-            example: 123456
-        Content-Type:
-          schema:
-            type: string
-            example: application/zip
+            example: private, no-store
       content:
-        application/zip:
+        application/json:
           schema:
-            type: string
-            format: binary
-          example: '[this request has a binary response]'
-        application/octet-stream:
-          schema:
-            type: string
-            format: binary
-          example: '[this request has a binary response]'
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.client-artifact-download-url.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -93,31 +76,6 @@ get:
             errors:
               - context: ""
                 message: artifact not finished uploading, must upload missing parts
-    429:
-      $ref: './../responses/too-many-requests.yaml'
-    500:
-      $ref: './../responses/internal-server-error.yaml'
-
-
-delete:
-  operationId: DeleteClientArtifact
-  summary: Delete a management operation artifact for the client
-  description: |
-    Deletes an operation artifact associated with the client.
-  tags:
-    - Clients
-    - Enterprise
-  responses:
-    204:
-      $ref: './../responses/no-content.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
-    401:
-      $ref: './../responses/unauthorized.yaml'
-    403:
-      $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

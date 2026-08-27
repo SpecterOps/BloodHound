@@ -213,3 +213,8 @@ func (s Router) DELETE(template string, handlerFunc func(http.ResponseWriter, *h
 func (s Router) PATCH(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	return s.HandleFunc(template, handlerFunc).Methods(http.MethodPatch)
 }
+
+func (s *Route) Name(name string) *Route {
+	s.mux.Name(name)
+	return s
+}
