@@ -3262,6 +3262,20 @@ func (mr *MockDatabaseMockRecorder) SweepAssetGroupCollections(ctx any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).SweepAssetGroupCollections), ctx)
 }
 
+// SweepSAMLConsumedIdentifiers mocks base method.
+func (m *MockDatabase) SweepSAMLConsumedIdentifiers(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SweepSAMLConsumedIdentifiers", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SweepSAMLConsumedIdentifiers indicates an expected call of SweepSAMLConsumedIdentifiers.
+func (mr *MockDatabaseMockRecorder) SweepSAMLConsumedIdentifiers(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSAMLConsumedIdentifiers", reflect.TypeOf((*MockDatabase)(nil).SweepSAMLConsumedIdentifiers), ctx)
+}
+
 // SweepSessions mocks base method.
 func (m *MockDatabase) SweepSessions(ctx context.Context) {
 	m.ctrl.T.Helper()
