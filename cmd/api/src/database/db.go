@@ -134,6 +134,7 @@ type Database interface {
 	SSOProviderData
 	OIDCProviderData
 	SAMLProviderData
+	SAMLConsumedData
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
