@@ -201,10 +201,15 @@ export type ZoneProtectedAssetScoreData = {
     value: number;
 };
 
-export type ZoneProtectedAssetScoreResponse = TimeWindowedResponse<ZoneProtectedAssetScoreData[]> & {
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
     environments: string[];
     asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
 };
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
 
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
