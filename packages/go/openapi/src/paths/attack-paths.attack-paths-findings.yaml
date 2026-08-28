@@ -127,6 +127,11 @@ get:
       in: query
       schema:
         $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: is_cross_platform
+      description: Filter findings by whether source and target principals belong to different platforms.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.boolean.yaml"
     - $ref: "./../parameters/query.skip.yaml"
     - $ref: "./../parameters/query.limit.yaml"
   responses:
@@ -140,9 +145,9 @@ get:
           examples:
             Unified CSV export:
               value: |
-                Severity,Finding,Title,FindingType,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen
-                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
-                high,Kerberoasting,Kerberoastable User Accounts,list,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z
+                Severity,Finding,Title,FindingType,IsCrossPlatform,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt
+                critical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,true,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,
+                high,Kerberoasting,Kerberoastable User Accounts,list,false,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,
         application/json:
           schema:
             allOf:
@@ -162,6 +167,9 @@ get:
                           type: string
                           description: The type of finding.
                           enum: [relationship, list]
+                        is_cross_platform:
+                          type: boolean
+                          description: Whether the source and target principals belonged to different platforms when the finding was calculated. Always false for list findings.
                         finding:
                           type: string
                           description: Finding name.
@@ -228,6 +236,7 @@ get:
                     finding: "T0GenericWrite"
                     title: "GenericWrite Privileges on Tier Zero Objects"
                     finding_type: "relationship"
+                    is_cross_platform: true
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
@@ -247,6 +256,7 @@ get:
                     finding: "Kerberoasting"
                     title: "Kerberoastable User Accounts"
                     finding_type: "list"
+                    is_cross_platform: false
                     platform: "Active Directory"
                     environment_id: "S-1-5-21-1974516972-3116780949-2584384717"
                     environment_name: "CORP1.LAB.HOME-LABS.LOL"
