@@ -60,8 +60,8 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 		updated bool
 
-		extractExtensionData func(file io.Reader) (ExtensionBundle, error)
-		bundle               ExtensionBundle
+		extractExtensionData func(file io.Reader) (model.GraphExtensionPayload, error)
+		payload              model.GraphExtensionPayload
 	)
 
 	if request.Body == nil {
@@ -85,16 +85,15 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 	var graphExtensionInput model.GraphExtensionInput
 
-	if bundle, err = extractExtensionData(request.Body); err != nil {
+	if payload, err = extractExtensionData(request.Body); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if err = bundle.Validate(); err != nil {
+	} else if graphExtensionInput, err = payload.ToGraphExtensionInput(); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if graphExtensionInput, err = bundle.Schema.ToGraphExtensionInput(); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
-	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
+	}
+
+	if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
 		switch {
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
@@ -109,7 +108,6 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 			)
 			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		}
-		// TBD: create and hook in calls to the service layer to upsert PZ rules and saved queries
 	} else if updated {
 		response.WriteHeader(http.StatusOK)
 	} else {
@@ -124,46 +122,11 @@ const (
 	bundleFileNameSavedQueries = "saved_queries.json"
 )
 
-// Each component of the bundle is a pointer so that presence can be easily detected. Only Schema is always required.
-type ExtensionBundle struct {
-	Schema       *model.GraphExtensionPayload
-	PZRules      *PZRulesPayload
-	SavedQueries *SavedQueriesPayload
-}
-
-func (s ExtensionBundle) RequiresPZRules() bool {
-	return s.Schema != nil && len(s.Schema.GraphRelationshipFindings) > 0
-}
-
-func (s ExtensionBundle) Validate() error {
-	if s.Schema == nil {
-		return fmt.Errorf("required component %q not found in extension bundle", bundleFileNameSchema)
-	} else if s.RequiresPZRules() && s.PZRules == nil {
+func validateZipBundle(payload model.GraphExtensionPayload) error {
+	if len(payload.GraphRelationshipFindings) > 0 && payload.PZRules == nil {
 		return fmt.Errorf("extension declares relationship findings and requires a %q component", bundleFileNamePzRules)
 	}
 	return nil
-}
-
-// Defining a placeholder for the PZ rules payload. This should probably end up in the model package.
-type SelectorSeedPayload struct {
-	Type  int    `json:"type"`
-	Value string `json:"value"`
-}
-
-type PZRulePayload struct {
-	Name        string                `json:"name"`
-	Description string                `json:"description,omitempty"`
-	AutoCertify *bool                 `json:"auto_certify,omitempty"`
-	Seeds       []SelectorSeedPayload `json:"seeds"`
-}
-
-type PZRulesPayload struct {
-	Rules []PZRulePayload `json:"rules"`
-}
-
-// Defining a placeholder for the saved queries payload. This should probably end up in the model package.
-type SavedQueriesPayload struct {
-	Queries []TransferableSavedQuery `json:"queries"`
 }
 
 // extractExtensionDataFromJSON - extracts a model.GraphExtensionPayload from the incoming payload. Will return an error
@@ -180,10 +143,10 @@ func extractExtensionDataFromJSON(payload io.Reader) (model.GraphExtensionPayloa
 	return graphExtension, nil
 }
 
-// extractPZRulesFromJSON - extracts a PZRulesPayload from the incoming payload. Will return an error if the
+// extractPZRulesFromJSON - extracts a model.PZRulesPayload from the incoming payload. Will return an error if the
 // decoder fails to decode the payload.
-func extractPZRulesFromJSON(payload io.Reader) (PZRulesPayload, error) {
-	var pzRules PZRulesPayload
+func extractPZRulesFromJSON(payload io.Reader) (model.PZRulesPayload, error) {
+	var pzRules model.PZRulesPayload
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
 		return pzRules, fmt.Errorf("failed to normalize %s: %w", bundleFileNamePzRules, err)
@@ -194,10 +157,10 @@ func extractPZRulesFromJSON(payload io.Reader) (PZRulesPayload, error) {
 	return pzRules, nil
 }
 
-// extractSavedQueriesFromJSON - extracts a SavedQueriesPayload from the incoming payload. Will return an error if
-// the decoder fails to decode the payload.
-func extractSavedQueriesFromJSON(payload io.Reader) (SavedQueriesPayload, error) {
-	var savedQueries SavedQueriesPayload
+// extractSavedQueriesFromJSON - extracts a model.SavedQueriesPayload from the incoming payload. Will return an error
+// if the decoder fails to decode the payload.
+func extractSavedQueriesFromJSON(payload io.Reader) (model.SavedQueriesPayload, error) {
+	var savedQueries model.SavedQueriesPayload
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
 		return savedQueries, fmt.Errorf("failed to normalize %s: %w", bundleFileNameSavedQueries, err)
@@ -208,38 +171,28 @@ func extractSavedQueriesFromJSON(payload io.Reader) (SavedQueriesPayload, error)
 	return savedQueries, nil
 }
 
-// extractBundleFromJSON - returns an ExtensionBundle from a bare JSON upload. The payload is treated
-// as a bundle of one containing only the schema component.
-func extractBundleFromJSON(payload io.Reader) (ExtensionBundle, error) {
-	var (
-		bundle ExtensionBundle
-		schema model.GraphExtensionPayload
-		err    error
-	)
-
-	if schema, err = extractExtensionDataFromJSON(payload); err != nil {
-		return bundle, err
-	}
-
-	bundle.Schema = &schema
-	return bundle, nil
+// extractBundleFromJSON - returns a model.GraphExtensionPayload from a bare JSON upload. A bare JSON upload carries
+// only the schema; the optional pz_rules/saved_queries components are delivered exclusively via the ZIP path.
+func extractBundleFromJSON(payload io.Reader) (model.GraphExtensionPayload, error) {
+	return extractExtensionDataFromJSON(payload)
 }
 
-// extractBundleFromZip - returns an ExtensionBundle from a ZIP file. The ZIP file is expected to
-// contain one or more of the recognized component files.
-func extractBundleFromZip(payload io.Reader) (ExtensionBundle, error) {
+// extractBundleFromZip - returns a model.GraphExtensionPayload assembled from a ZIP archive. The archive must contain a
+// schema.json component and may contain the optional pz_rules.json and saved_queries.json components
+func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error) {
 	var (
-		bundle       ExtensionBundle
+		extension    model.GraphExtensionPayload
 		archiveBytes []byte
 		zipReader    *zip.Reader
+		schemaFound  bool
 		errs         []error
 		err          error
 	)
 
 	if archiveBytes, err = io.ReadAll(payload); err != nil {
-		return bundle, fmt.Errorf("failed to read zip payload: %w", err)
+		return extension, fmt.Errorf("failed to read zip payload: %w", err)
 	} else if zipReader, err = zip.NewReader(bytes.NewReader(archiveBytes), int64(len(archiveBytes))); err != nil {
-		return bundle, fmt.Errorf("unable to open zip archive: %w", err)
+		return extension, fmt.Errorf("unable to open zip archive: %w", err)
 	}
 
 	for _, file := range zipReader.File {
@@ -247,19 +200,25 @@ func extractBundleFromZip(payload io.Reader) (ExtensionBundle, error) {
 			// ignore directories
 			continue
 		}
-		if err = decodeFileIntoBundle(&bundle, file); err != nil {
+		if err = decodeFileIntoPayload(&extension, &schemaFound, file); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	return bundle, errors.Join(errs...)
+	if !schemaFound {
+		errs = append(errs, fmt.Errorf("required component %q not found in extension bundle", bundleFileNameSchema))
+	} else if err = validateZipBundle(extension); err != nil {
+		errs = append(errs, err)
+	}
+
+	return extension, errors.Join(errs...)
 }
 
-func decodeFileIntoBundle(bundle *ExtensionBundle, file *zip.File) error {
+func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *bool, file *zip.File) error {
 	// instead of switching on the filename, we could open each file and inspect for known keys. This is nice and simple though.
 	switch file.Name {
 	case bundleFileNameSchema:
-		if bundle.Schema != nil {
+		if *schemaFound {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSchema)
 		}
 		reader, err := file.Open()
@@ -271,9 +230,13 @@ func decodeFileIntoBundle(bundle *ExtensionBundle, file *zip.File) error {
 		if err != nil {
 			return err
 		}
-		bundle.Schema = &schema
+		// We cannot guarantee the order of files in the zip archive, so we need to merge PZRules and SavedQueries into the schema if they were already extracted.
+		schema.PZRules = extension.PZRules
+		schema.SavedQueries = extension.SavedQueries
+		*extension = schema
+		*schemaFound = true
 	case bundleFileNamePzRules:
-		if bundle.PZRules != nil {
+		if extension.PZRules != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNamePzRules)
 		}
 		reader, err := file.Open()
@@ -285,9 +248,9 @@ func decodeFileIntoBundle(bundle *ExtensionBundle, file *zip.File) error {
 		if err != nil {
 			return err
 		}
-		bundle.PZRules = &rules
+		extension.PZRules = &rules
 	case bundleFileNameSavedQueries:
-		if bundle.SavedQueries != nil {
+		if extension.SavedQueries != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSavedQueries)
 		}
 		reader, err := file.Open()
@@ -299,7 +262,7 @@ func decodeFileIntoBundle(bundle *ExtensionBundle, file *zip.File) error {
 		if err != nil {
 			return err
 		}
-		bundle.SavedQueries = &queries
+		extension.SavedQueries = &queries
 	default:
 		return fmt.Errorf("unexpected file %q in zip archive", path.Base(file.Name))
 	}
