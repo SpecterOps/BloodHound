@@ -20,10 +20,12 @@ package database_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -70,6 +72,15 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	}
 }
 
+func assertSavedQueryConstraintError(t *testing.T, err error, expectedConstraint string) {
+	t.Helper()
+
+	var pgErr *pgconn.PgError
+	require.Error(t, err)
+	require.True(t, errors.As(err, &pgErr), "expected wrapped *pgconn.PgError, got %T: %v", err, err)
+	assert.Equal(t, expectedConstraint, pgErr.ConstraintName)
+}
+
 func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 	t.Parallel()
 
@@ -84,6 +95,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 
 	type testSetupData struct {
 		name              string
+		savedQueryID      int64
 		query             string
 		description       string
 		schemaExtensionID *int32
@@ -117,7 +129,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
 				require.NoError(t, err)
 				assert.Equal(t, setupData.schemaExtensionID, created.SchemaExtensionID)
 				assert.Equal(t, setupData.queryKey, created.QueryKey)
@@ -177,7 +189,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
 				require.NoError(t, err)
 				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
 
@@ -205,8 +217,8 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
-				assert.Error(t, err)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
 			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
@@ -228,12 +240,67 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
 				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
-				assert.Error(t, err)
+				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
 			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
 				t.Helper()
 				// Nothing was persisted: the insert is rejected and no extension is created.
+			},
+		},
+		{
+			name: "error_-_duplicate_user_saved_query_name",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				name := "duplicate_user_name"
+				savedQuery, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, name, "MATCH (n) RETURN n", "desc", nil, nil)
+				require.NoError(t, err)
+				return testSetupData{
+					name:         name,
+					savedQueryID: savedQuery.ID,
+					query:        "MATCH (n) RETURN n",
+					description:  "desc",
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, nil, nil)
+				assertSavedQueryConstraintError(t, err, "idx_saved_queries_user_id_name")
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteSavedQuery(suite.Context, setupData.savedQueryID))
+			},
+		},
+		{
+			name: "error_-_duplicate_extension_saved_query_name",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "DupNameExt", "Dup Name Ext", "v1.0.0", "dup_name_ns")
+				require.NoError(t, err)
+
+				name := "duplicate_extension_name"
+				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, name, "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("first"))
+				require.NoError(t, err)
+
+				return testSetupData{
+					name:              name,
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+					queryKey:          stringPtr("second"),
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assertSavedQueryConstraintError(t, err, "idx_saved_queries_schema_extension_id_name")
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
 			},
 		},
 		{
@@ -243,7 +310,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "DupKeyExt", "Dup Key Ext", "v1.0.0", "dup_key_ns")
 				require.NoError(t, err)
 
-				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, "dup_first", "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("dup"))
+				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, "dup_first", "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("dup"))
 				require.NoError(t, err)
 
 				return testSetupData{
@@ -256,13 +323,59 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
-				assert.Error(t, err)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assertSavedQueryConstraintError(t, err, "idx_saved_queries_extension_query_key")
 				return created
 			},
 			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
 				t.Helper()
 				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
+			},
+		},
+		{
+			name: "error_-_extension_with_real_user_id_rejected",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "ExtRealUserExt", "Ext Real User Ext", "v1.0.0", "ext_real_user_ns")
+				require.NoError(t, err)
+				return testSetupData{
+					name:              "ext_real_user",
+					query:             "MATCH (n) RETURN n",
+					description:       "desc",
+					schemaExtensionID: &ext.ID,
+					queryKey:          stringPtr("ext_real_user_key"),
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
+			},
+		},
+		{
+			name: "error_-_system_owner_without_extension_rejected",
+			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
+				t.Helper()
+				return testSetupData{
+					name:        "system_owner_no_ext",
+					query:       "MATCH (n) RETURN n",
+					description: "desc",
+				}
+			},
+			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
+				t.Helper()
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
+				return created
+			},
+			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
+				t.Helper()
+				// Nothing was persisted: the insert is rejected by chk_saved_queries_extension_shape.
 			},
 		},
 	}
