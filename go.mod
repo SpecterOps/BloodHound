@@ -17,6 +17,9 @@ module github.com/specterops/bloodhound
 
 go 1.26.6
 
+// This is required for goose as the ydb driver that is used by including it as a tool uses an extremely old build
+replace google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 => google.golang.org/genproto v0.0.0-20260622175928-b703f567277d
+
 require (
 	cuelang.org/go v0.17.0
 	github.com/Masterminds/semver/v3 v3.4.0
@@ -95,10 +98,8 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/vuln v1.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20260622175928-b703f567277d // indirect
 )
 
 require (
