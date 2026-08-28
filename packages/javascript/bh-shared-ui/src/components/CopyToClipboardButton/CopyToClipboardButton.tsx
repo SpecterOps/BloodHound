@@ -24,6 +24,7 @@ type CopyToClipboardButtonProps = {
     onAnimationEnd?: (e: AnimationEvent<HTMLDivElement>) => void;
     transitionDelay?: string;
     value: string | Array<any>;
+    className?: string;
 };
 
 const DEFAULT_TRANSITION_DELAY = 'delay-300';
