@@ -27,56 +27,63 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// fakeFlagDatabase is a minimal in-memory implementation of the Database port
-// used to drive the Service use cases without a real connection pool.
-type fakeFlagDatabase struct {
-	flag services.FeatureFlag
-	err  error
+// serviceMocks bundles the generated mocks the Service depends on so tests can
+// construct a service and set expectations through a single value.
+type serviceMocks struct {
+	database *mocks.MockDatabase
+	analysis *mocks.MockAnalysisRequestSubmitter
 }
 
-type stubAnalysisRequestSubmitter struct {
-	called       bool
-	requestedBy  string
-	analysisMode model.AnalysisMode
-	err          error
-}
-
-func (f fakeFlagDatabase) GetFlagByKey(_ context.Context, _ string) (services.FeatureFlag, error) {
-	return f.flag, f.err
-}
-
-func (f fakeFlagDatabase) GetFlagByID(_ context.Context, _ int32) (services.FeatureFlag, error) {
-	return f.flag, f.err
-}
-
-func (f fakeFlagDatabase) GetAllFlags(_ context.Context) ([]services.FeatureFlag, error) {
-	return nil, f.err
-}
-
-func (f fakeFlagDatabase) SetFlag(_ context.Context, _ services.FeatureFlag) error {
-	return f.err
-}
-
-func (s *stubAnalysisRequestSubmitter) SubmitAnalysisRequest(_ context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
-	s.called = true
-	s.requestedBy = requestedBy
-	s.analysisMode = analysisMode
-	return s.err
+// newServiceUnderTest builds a Service backed by freshly-created mocks, returning
+// both so callers can wire expectations on the mocks and exercise the service.
+func newServiceUnderTest(t *testing.T) (*services.Service, serviceMocks) {
+	t.Helper()
+	var (
+		m = serviceMocks{
+			database: mocks.NewMockDatabase(t),
+			analysis: mocks.NewMockAnalysisRequestSubmitter(t),
+		}
+		svc = services.NewService(m.database, m.analysis)
+	)
+	return svc, m
 }
 
 func TestNewService(t *testing.T) {
+	svc, _ := newServiceUnderTest(t)
+	assert.NotNil(t, svc)
+}
+
+func TestNewService_NilDependenciesPanic(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
+		construct func(m serviceMocks)
+		wantPanic string
 	}{
 		{
-			name: "returns a non-nil service",
+			name: "nil Database",
+			construct: func(m serviceMocks) {
+				services.NewService(nil, m.analysis)
+			},
+			wantPanic: "feature-flag: service requires a non-nil Database",
+		},
+		{
+			name: "nil AnalysisRequestSubmitter",
+			construct: func(m serviceMocks) {
+				services.NewService(m.database, nil)
+			},
+			wantPanic: "feature-flag: service requires a non-nil AnalysisRequestSubmitter",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDb := mocks.NewMockDatabase(t)
-			assert.NotNil(t, services.NewService(mockDb, &stubAnalysisRequestSubmitter{}))
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			m := serviceMocks{
+				database: mocks.NewMockDatabase(t),
+				analysis: mocks.NewMockAnalysisRequestSubmitter(t),
+			}
+			assert.PanicsWithValue(t, test.wantPanic, func() {
+				test.construct(m)
+			})
 		})
 	}
 }
@@ -88,33 +95,38 @@ func TestService_GetFlagByKey(t *testing.T) {
 	)
 
 	tests := []struct {
-		name     string
-		db       fakeFlagDatabase
-		wantFlag services.FeatureFlag
-		wantErr  error
+		name       string
+		setupMocks func(m serviceMocks)
+		wantFlag   services.FeatureFlag
+		wantErr    error
 	}{
 		{
-			name:     "returns the flag from the database",
-			db:       fakeFlagDatabase{flag: want},
+			name: "returns the flag from the database",
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByKey(ctx, services.FeatureOpenHoundSupport).Return(want, nil)
+			},
 			wantFlag: want,
 		},
 		{
-			name:    "propagates the database error",
-			db:      fakeFlagDatabase{err: services.ErrNotFound},
+			name: "propagates the database error",
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByKey(ctx, services.FeatureOpenHoundSupport).Return(services.FeatureFlag{}, services.ErrNotFound)
+			},
 			wantErr: services.ErrNotFound,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc := services.NewService(tt.db, &stubAnalysisRequestSubmitter{})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			svc, m := newServiceUnderTest(t)
+			test.setupMocks(m)
 
 			got, err := svc.GetFlagByKey(ctx, services.FeatureOpenHoundSupport)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			if test.wantErr != nil {
+				assert.ErrorIs(t, err, test.wantErr)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantFlag, got)
+				assert.Equal(t, test.wantFlag, got)
 			}
 		})
 	}
@@ -127,39 +139,46 @@ func TestService_IsEnabled(t *testing.T) {
 	)
 
 	tests := []struct {
-		name    string
-		db      fakeFlagDatabase
-		want    bool
-		wantErr error
+		name       string
+		setupMocks func(m serviceMocks)
+		want       bool
+		wantErr    error
 	}{
 		{
 			name: "true when the flag is enabled",
-			db:   fakeFlagDatabase{flag: services.FeatureFlag{Key: services.FeatureOpenHoundSupport, Enabled: true}},
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByKey(ctx, services.FeatureOpenHoundSupport).Return(services.FeatureFlag{Key: services.FeatureOpenHoundSupport, Enabled: true}, nil)
+			},
 			want: true,
 		},
 		{
 			name: "false when the flag is disabled",
-			db:   fakeFlagDatabase{flag: services.FeatureFlag{Key: services.FeatureOpenHoundSupport, Enabled: false}},
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByKey(ctx, services.FeatureOpenHoundSupport).Return(services.FeatureFlag{Key: services.FeatureOpenHoundSupport, Enabled: false}, nil)
+			},
 			want: false,
 		},
 		{
-			name:    "propagates database errors",
-			db:      fakeFlagDatabase{err: dbErr},
+			name: "propagates database errors",
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByKey(ctx, services.FeatureOpenHoundSupport).Return(services.FeatureFlag{}, dbErr)
+			},
 			wantErr: dbErr,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc := services.NewService(tt.db, &stubAnalysisRequestSubmitter{})
-			got, err := svc.IsEnabled(ctx, services.FeatureOpenHoundSupport)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			svc, m := newServiceUnderTest(t)
+			test.setupMocks(m)
 
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			got, err := svc.IsEnabled(ctx, services.FeatureOpenHoundSupport)
+			if test.wantErr != nil {
+				assert.ErrorIs(t, err, test.wantErr)
 				assert.False(t, got)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.want, got)
+				assert.Equal(t, test.want, got)
 			}
 		})
 	}
@@ -177,38 +196,37 @@ func TestService_GetAllFlags(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		dbResult   []services.FeatureFlag
-		dbErr      error
+		setupMocks func(m serviceMocks)
 		wantResult []services.FeatureFlag
 		wantErr    error
 	}{
 		{
-			name:       "returns all flags on success",
-			dbResult:   expected,
+			name: "returns all flags on success",
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetAllFlags(ctx).Return(expected, nil)
+			},
 			wantResult: expected,
 		},
 		{
-			name:    "propagates database errors",
-			dbErr:   unexpectedErr,
+			name: "propagates database errors",
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetAllFlags(ctx).Return(nil, unexpectedErr)
+			},
 			wantErr: unexpectedErr,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock, &stubAnalysisRequestSubmitter{})
-			)
-
-			databaseMock.EXPECT().GetAllFlags(ctx).Return(tt.dbResult, tt.dbErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			svc, m := newServiceUnderTest(t)
+			test.setupMocks(m)
 
 			got, err := svc.GetAllFlags(ctx)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			if test.wantErr != nil {
+				assert.ErrorIs(t, err, test.wantErr)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantResult, got)
+				assert.Equal(t, test.wantResult, got)
 			}
 		})
 	}
@@ -244,11 +262,10 @@ func TestService_ToggleFlag(t *testing.T) {
 	)
 
 	type testCase struct {
-		name                 string
-		featureID            int32
-		analysisRequesterErr error
-		setupMocks           func(databaseMock *mocks.MockDatabase)
-		assert               func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error)
+		name       string
+		featureID  int32
+		setupMocks func(m serviceMocks)
+		assert     func(t *testing.T, got services.FeatureFlag, err error)
 	}
 
 	toggledUpdatableFlag := updatableFlag
@@ -261,109 +278,100 @@ func TestService_ToggleFlag(t *testing.T) {
 		{
 			name:      "toggles the flag and returns the updated value",
 			featureID: updatableFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				require.NoError(t, err)
-				assert.False(t, analysisRequester.called)
 				assert.Equal(t, toggledUpdatableFlag, got)
 			},
 		},
 		{
 			name:      "requests no-post-processing analysis when findings prioritization is enabled",
 			featureID: findingsPrioritizationFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				require.NoError(t, err)
-				assert.True(t, analysisRequester.called)
-				assert.Equal(t, services.PrioritizationFlagRequestSource, analysisRequester.requestedBy)
-				assert.Equal(t, model.AnalysisModeNoPostProcessing, analysisRequester.analysisMode)
 				assert.Equal(t, enabledFindingsPrioritizationFlag, got)
 			},
 		},
 		{
 			name:      "does not request analysis when findings prioritization is disabled",
 			featureID: enabledFindingsPrioritizationFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, enabledFindingsPrioritizationFlag.ID).Return(enabledFindingsPrioritizationFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, enabledFindingsPrioritizationFlag.ID).Return(enabledFindingsPrioritizationFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				require.NoError(t, err)
-				assert.False(t, analysisRequester.called)
 				assert.Equal(t, findingsPrioritizationFlag, got)
 			},
 		},
 		{
 			name:      "returns ErrNotUserUpdatable when the flag is not user updatable",
 			featureID: nonUpdatableFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, nonUpdatableFlag.ID).Return(nonUpdatableFlag, nil)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, services.ErrNotUserUpdatable)
-				assert.False(t, analysisRequester.called)
 				assert.Equal(t, nonUpdatableFlag, got)
 			},
 		},
 		{
 			name:      "propagates errors from GetFlagByID",
 			featureID: 99,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, int32(99)).Return(services.FeatureFlag{}, unexpectedErr)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, unexpectedErr)
-				assert.False(t, analysisRequester.called)
 				assert.Equal(t, services.FeatureFlag{}, got)
 			},
 		},
 		{
 			name:      "propagates errors from SetFlag",
 			featureID: updatableFlag.ID,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(setFlagErr)
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(setFlagErr)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, setFlagErr)
-				assert.False(t, analysisRequester.called)
 				assert.Equal(t, toggledUpdatableFlag, got)
 			},
 		},
 		{
-			name:                 "propagates errors from SubmitAnalysisRequest",
-			featureID:            findingsPrioritizationFlag.ID,
-			analysisRequesterErr: requestAnalysisErr,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
-				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
+			name:      "propagates errors from SubmitAnalysisRequest",
+			featureID: findingsPrioritizationFlag.ID,
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(requestAnalysisErr)
+				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, requestAnalysisErr)
-				assert.True(t, analysisRequester.called)
 				assert.Equal(t, findingsPrioritizationFlag, got)
 			},
 		},
 		{
-			name:                 "propagates rollback errors from SubmitAnalysisRequest failure",
-			featureID:            findingsPrioritizationFlag.ID,
-			analysisRequesterErr: requestAnalysisErr,
-			setupMocks: func(databaseMock *mocks.MockDatabase) {
-				databaseMock.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
-				databaseMock.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
-				databaseMock.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(rollbackErr)
+			name:      "propagates rollback errors from SubmitAnalysisRequest failure",
+			featureID: findingsPrioritizationFlag.ID,
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(requestAnalysisErr)
+				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(rollbackErr)
 			},
-			assert: func(t *testing.T, analysisRequester *stubAnalysisRequestSubmitter, got services.FeatureFlag, err error) {
+			assert: func(t *testing.T, got services.FeatureFlag, err error) {
 				assert.ErrorIs(t, err, requestAnalysisErr)
 				assert.ErrorIs(t, err, rollbackErr)
-				assert.True(t, analysisRequester.called)
 				assert.Equal(t, findingsPrioritizationFlag, got)
 			},
 		},
@@ -373,16 +381,11 @@ func TestService_ToggleFlag(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			var (
-				databaseMock      = mocks.NewMockDatabase(t)
-				analysisRequester = &stubAnalysisRequestSubmitter{err: testCase.analysisRequesterErr}
-				svc               = services.NewService(databaseMock, analysisRequester)
-			)
-
-			testCase.setupMocks(databaseMock)
+			svc, m := newServiceUnderTest(t)
+			testCase.setupMocks(m)
 
 			got, err := svc.ToggleFlag(ctx, testCase.featureID)
-			testCase.assert(t, analysisRequester, got, err)
+			testCase.assert(t, got, err)
 		})
 	}
 }

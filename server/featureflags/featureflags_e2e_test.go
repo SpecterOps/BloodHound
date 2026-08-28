@@ -205,7 +205,7 @@ func assertNoAnalysisRequest(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	assert.Zero(t, count)
 }
 
-func TestGetAllFlags(t *testing.T) {
+func TestE2E_GetAllFlags(t *testing.T) {
 	var (
 		db        = setupFeatureFlagsDB(t)
 		ctx       = context.Background()
@@ -228,7 +228,7 @@ func TestGetAllFlags(t *testing.T) {
 		assertResponse func(t *testing.T, resp *http.Response, seededID int32)
 	}{
 		{
-			name: "returns 200 OK with the seeded flags",
+			name: "Success: returns the seeded flags - 200",
 			seedFlag: func(t *testing.T) int32 {
 				t.Helper()
 				return seedFeatureFlag(t, ctx, db.Pool(), "e2e_get_all_flag", "E2E Get All Flag", true, true)
@@ -270,7 +270,7 @@ func TestGetAllFlags(t *testing.T) {
 	}
 }
 
-func TestToggleFlag(t *testing.T) {
+func TestE2E_ToggleFlag(t *testing.T) {
 	var (
 		db     = setupFeatureFlagsDB(t)
 		userID = uuid.Must(uuid.NewV4())
