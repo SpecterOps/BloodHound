@@ -91,7 +91,10 @@ const CopyMenuItem = () => {
                 onClose={closeMenu}
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                MenuListProps={{ 'aria-label': 'Copy options' }}>
+                MenuListProps={{
+                    'aria-label': 'Copy options',
+                    onKeyDown: (event) => event.stopPropagation(),
+                }}>
                 <MenuItem onClick={handleCopyName}>Name</MenuItem>
                 <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
                 <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
