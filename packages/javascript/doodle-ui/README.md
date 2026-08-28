@@ -103,16 +103,6 @@ falls back through `Avenir Next` before the shared system sans-serif stack.
 | subtitle2 | Figtree     | 13 / 22px          | 500    | 0.25px   | Text/Main   |
 | caption   | Figtree     | 12 / 20px          | 400    | 0.25px   | Text/Muted  |
 
-The `text-muted` utility is a compatibility alias backed by the existing `--text-light` semantic value. The legacy
-`text-light` utility remains available. Body and caption variants retain their existing main-text behavior in dark
-mode.
-
-#### Visual Language Refresh migration note
-
-The public `Typography` props and variant names are unchanged. Consumers should expect intentionally shorter heading
-line boxes and different heading/body font metrics. Load both font families before first render to minimize fallback
-movement, and review layouts that previously depended on the old heading heights.
-
 ### Getting Started
 
 Clone this repository
