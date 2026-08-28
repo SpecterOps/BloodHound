@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
@@ -31,6 +32,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -349,6 +353,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 	}
 
 	type mock struct {
+		ctrl      *gomock.Controller
 		mockGraph *graphmocks.MockDatabase
 		mockDb    *mocks.MockDatabase
 	}
@@ -570,11 +575,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 		},
+
 		{
-			name: "Successful Request With ETAC Enabled",
+			name: `Etac enabled, nodes hidden outside of environment`,
 			request: http.Request{
 				URL: &url.URL{
-					RawQuery: "edge_type=CoerceAndRelayNTLMToSMB&source_node=1&target_node=2",
+					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
 				},
 			},
 			dogTagsOverrides: dogtags.TestOverrides{
@@ -589,12 +595,143 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 			expected: httpValues{
 				code:   http.StatusOK,
-				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToSMB&source_node=1&target_node=2"}},
-				body:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2"}},
+				body:   `{"data":{"nodes":{"3":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[],"literals":[]}}`,
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
-				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
+
+				var (
+					edge      = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
+					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
+					relayNode = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Computer)
+				)
+
+				// analysis.FetchEdgeByStartAndEnd: tx.Relationships().Filter(...).First()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mocks.ctrl)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().Filter(gomock.Any()).Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().First().Return(edge, nil)
+					return delegate(mockTransaction)
+				})
+
+				// ad.GetRelayTargets: outer transaction only switches on edge.Kind and delegates to db-backed helpers
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					return delegate(nil)
+				})
+
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNode(startID) -> tx.Nodes().Filterf(...).First()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().First().Return(startNode, nil)
+					return delegate(mockTransaction)
+				})
+
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNodeSet(tx.Nodes().Filter(...)) -> .Fetch(...)
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
+					mockCursor := graphmocks.NewMockCursor[*graph.Node](mocks.ctrl)
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filter(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(cursorDelegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+						nodeChannel := make(chan *graph.Node, 1)
+						nodeChannel <- relayNode
+						close(nodeChannel)
+						mockCursor.EXPECT().Chan().Return(nodeChannel)
+						mockCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockCursor)
+					})
+					return delegate(mockTransaction)
+				})
+
+				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			},
+		},
+		{
+			name: `Etac disabled, nodes not hidden`,
+			request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
+				},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: false,
+				},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "S-1-5-21-ALLOWED"},
+				},
+			},
+			expected: httpValues{
+				code:   http.StatusOK,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2"}},
+				body:   `{"data":{"nodes":{"3":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-1000"}}},"edges":[],"literals":[]}}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+
+				var (
+					edge      = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
+					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
+					relayNode = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "S-1-5-21-NOTALLOWED-1000",
+						common.Name.String():     "COMPUTER1",
+						common.LastSeen.String(): time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+						ad.DomainSID.String():    "S-1-5-21-NOTALLOWED",
+					}), ad.Computer)
+				)
+
+				// analysis.FetchEdgeByStartAndEnd: tx.Relationships().Filter(...).First()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mocks.ctrl)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().Filter(gomock.Any()).Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().First().Return(edge, nil)
+					return delegate(mockTransaction)
+				})
+
+				// ad.GetRelayTargets: outer transaction only switches on edge.Kind and delegates to db-backed helpers
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					return delegate(nil)
+				})
+
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNode(startID) -> tx.Nodes().Filterf(...).First()
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().First().Return(startNode, nil)
+					return delegate(mockTransaction)
+				})
+
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNodeSet(tx.Nodes().Filter(...)) -> .Fetch(...)
+				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
+					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
+					mockCursor := graphmocks.NewMockCursor[*graph.Node](mocks.ctrl)
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filter(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(cursorDelegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+						nodeChannel := make(chan *graph.Node, 1)
+						nodeChannel <- relayNode
+						close(nodeChannel)
+						mockCursor.EXPECT().Chan().Return(nodeChannel)
+						mockCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockCursor)
+					})
+					return delegate(mockTransaction)
+				})
+
 				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 		},
@@ -616,7 +753,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				request = testCase.request.WithContext(setupUserCtx(testCase.user))
 			)
 
-			testCase.testSetup(t, request.Context(), mock{mockGraph: mockGraph, mockDb: mockDb})
+			testCase.testSetup(t, request.Context(), mock{ctrl: ctrl, mockGraph: mockGraph, mockDb: mockDb})
 
 			response := httptest.NewRecorder()
 
