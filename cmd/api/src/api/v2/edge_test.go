@@ -577,7 +577,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 		},
 
 		{
-			name: `Etac enabled, nodes hidden outside of environment`,
+			name: `Etac enabled, nodes hidden outside of assigned environment`,
 			request: http.Request{
 				URL: &url.URL{
 					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
@@ -607,7 +607,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					relayNode = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Computer)
 				)
 
-				// analysis.FetchEdgeByStartAndEnd: tx.Relationships().Filter(...).First()
+				// analysis.FetchEdgeByStartAndEnd
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mocks.ctrl)
@@ -617,12 +617,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					return delegate(mockTransaction)
 				})
 
-				// ad.GetRelayTargets: outer transaction only switches on edge.Kind and delegates to db-backed helpers
+				// ad.GetRelayTargets
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					return delegate(nil)
 				})
 
-				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNode(startID) -> tx.Nodes().Filterf(...).First()
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
@@ -632,7 +632,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					return delegate(mockTransaction)
 				})
 
-				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNodeSet(tx.Nodes().Filter(...)) -> .Fetch(...)
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
@@ -689,7 +689,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					}), ad.Computer)
 				)
 
-				// analysis.FetchEdgeByStartAndEnd: tx.Relationships().Filter(...).First()
+				// analysis.FetchEdgeByStartAndEnd
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mocks.ctrl)
@@ -699,12 +699,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					return delegate(mockTransaction)
 				})
 
-				// ad.GetRelayTargets: outer transaction only switches on edge.Kind and delegates to db-backed helpers
+				// ad.GetRelayTargets
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					return delegate(nil)
 				})
 
-				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNode(startID) -> tx.Nodes().Filterf(...).First()
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
@@ -714,7 +714,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					return delegate(mockTransaction)
 				})
 
-				// GetVulnerableDomainControllersForRelayNTLMtoLDAP: ops.FetchNodeSet(tx.Nodes().Filter(...)) -> .Fetch(...)
+				// GetVulnerableDomainControllersForRelayNTLMtoLDAP
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
 					mockTransaction := graphmocks.NewMockTransaction(mocks.ctrl)
 					mockNodeQuery := graphmocks.NewMockNodeQuery(mocks.ctrl)
