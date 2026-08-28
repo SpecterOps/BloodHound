@@ -14,15 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './asset-group-tags/members';
 export * from './asset-group-tags/history';
 export * from './asset-group-tags/labels';
+export * from './asset-group-tags/members';
 export * from './asset-group-tags/search';
 export * from './asset-group-tags/selectors';
 export * from './asset-group-tags/tag';
 export * from './asset-group-tags/zone-details';
+export * from './attack-paths/finding-trends';
+export * from './attack-paths/findings';
 export * from './bloodhound-users/mfa';
 export * from './bloodhound-users/secret';
 export * from './features/flags';
 export * from './graphs/cypher';
+export * from './kennel/collectors';
 export * from './tokens/index';

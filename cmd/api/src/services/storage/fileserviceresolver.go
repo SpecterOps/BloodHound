@@ -232,6 +232,7 @@ func createS3Client(ctx context.Context, bucketConfiguration config.BucketConfig
 	var (
 		awsConfiguration aws.Config
 		loadOptions      []func(*awsConfig.LoadOptions) error
+		s3Client         *s3.Client
 		err              error
 	)
 
@@ -245,12 +246,17 @@ func createS3Client(ctx context.Context, bucketConfiguration config.BucketConfig
 		loadOptions = append(loadOptions, awsConfig.WithRegion(region))
 	}
 
+	logAWSConfigurationLoading(ctx, bucketConfiguration)
+
 	awsConfiguration, err = awsConfig.LoadDefaultConfig(ctx, loadOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("load AWS configuration for file services: %w", err)
 	}
 
-	return s3.NewFromConfig(awsConfiguration), nil
+	s3Client = s3.NewFromConfig(awsConfiguration, s3.WithAPIOptions(addS3IngestDiagnosticMiddleware))
+	logS3ClientInitialized(ctx, bucketConfiguration)
+
+	return s3Client, nil
 }
 
 // NewDefaultFileServices creates the file services that should be considered default with
@@ -301,6 +307,8 @@ func NewDefaultFileServices(ctx context.Context, cfg config.Configuration, addit
 			openedStores = append(openedStores, localStore)
 			fileServices[resolvedDefinition.definition.Name] = fileService
 		}
+
+		logFileServiceInitialized(ctx, cfg.Storage.InstanceBucket, resolvedDefinition)
 	}
 
 	return fileServices, nil

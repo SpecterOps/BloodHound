@@ -47,7 +47,6 @@ import {
     TimestampFields,
     Webhook,
     WebhookSecret,
-    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -202,10 +201,15 @@ export type ZoneProtectedAssetScoreData = {
     value: number;
 };
 
-export type ZoneProtectedAssetScoreResponse = TimeWindowedResponse<ZoneProtectedAssetScoreData[]> & {
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
     environments: string[];
     asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
 };
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
 
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
@@ -397,6 +401,13 @@ export type SupportBundleSummaryStatus = {
     current: ManagementOperation | null;
 };
 
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -498,7 +509,11 @@ export type CreateWebhookResponse = {
 export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
-export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
 
 // ---------------------------------------------------------------------------
 //  Alert - Events

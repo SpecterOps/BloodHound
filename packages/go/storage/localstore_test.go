@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/stretchr/testify/require"
@@ -186,6 +187,20 @@ func TestLocalStore_Close(t *testing.T) {
 	// Act / Assert
 	require.NoError(t, localStore.Close())
 	require.NoError(t, localStore.Close())
+}
+
+func TestLocalStore_GetPresignedURL(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	_, localStore := newTestLocalStore(t)
+
+	// Act
+	actualURL, err := localStore.GetPresignedURL(context.Background(), "file.json", time.Minute)
+
+	// Assert
+	require.ErrorIs(t, err, storage.ErrPresignedURLUnsupported)
+	require.Empty(t, actualURL)
 }
 
 func TestLocalStore_Put(t *testing.T) {
