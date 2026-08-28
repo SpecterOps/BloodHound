@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createAuthStateWithPermissions, mockSourceKindsHandler } from '../../../mocks';
-import { render, screen, waitFor } from '../../../test-utils';
+import { render, screen } from '../../../test-utils';
 import { Permission } from '../../../utils';
 import ContextMenu from './ContextMenuPrivilegeZonesEnabled';
 
@@ -188,7 +188,7 @@ describe('ContextMenu', () => {
         expect(window.location.search).toContain('exploreSearchTab=pathfinding');
     });
 
-    it('opens a submenu when user hovers over `Copy`', async () => {
+    it('opens a submenu when the user clicks `Copy`', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
@@ -196,27 +196,14 @@ describe('ContextMenu', () => {
         const user = userEvent.setup();
 
         const copyOption = await screen.findByRole('menuitem', { name: /copy/i });
-        await user.hover(copyOption);
+        await user.click(copyOption);
 
-        const tip = await screen.findByRole('tooltip');
-        expect(tip).toBeInTheDocument();
+        const nameOption = await screen.findByRole('menuitem', { name: 'Name' });
+        const objectIdOption = screen.getByRole('menuitem', { name: 'Object ID' });
+        const cypherOption = screen.getByRole('menuitem', { name: 'Cypher' });
 
-        const nameOption = screen.getByLabelText(/name/i);
         expect(nameOption).toBeInTheDocument();
-
-        const objectIdOption = screen.getByLabelText(/object id/i);
         expect(objectIdOption).toBeInTheDocument();
-
-        const cypherOption = screen.getByLabelText(/cypher/i);
         expect(cypherOption).toBeInTheDocument();
-
-        // hover off the `Copy` option in order to close the tooltip
-        await userEvent.unhover(copyOption);
-
-        await waitFor(() => {
-            expect(screen.queryByText(/name/i)).not.toBeInTheDocument();
-            expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
-            expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
-        });
     });
 });
