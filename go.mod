@@ -98,6 +98,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/vuln v1.6.0 // indirect
+	google.golang.org/genproto v0.0.0-20260622175928-b703f567277d // indirect
 )
 
 require (
