@@ -49,8 +49,7 @@ describe('CopyMenuItem', () => {
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
-        copyOption.focus();
-        await user.keyboard('{ArrowRight}');
+        await user.click(copyOption);
 
         const nameOption = await screen.findByRole('menuitem', { name: 'Name' });
         const objectIdOption = screen.getByRole('menuitem', { name: 'Object ID' });
