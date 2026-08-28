@@ -16,13 +16,12 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
+import { DeepPartial, Permission } from 'bh-shared-ui';
 import {
-    DeepPartial,
-    Permission,
     createAuthStateWithPermissions,
     mockGetConfigurationHandler,
     mockSourceKindsHandler,
-} from 'bh-shared-ui';
+} from 'bh-shared-ui/testing';
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';

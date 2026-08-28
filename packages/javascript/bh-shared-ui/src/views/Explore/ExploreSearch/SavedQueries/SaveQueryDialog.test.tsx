@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { mockKindsHandler } from '../../../../mocks/handlers/graphKinds';
 import { act, render, screen, waitFor } from '../../../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../../../utils/testHelpers';
+import { mockCodemirrorLayoutMethods } from '../../../../testing/testHelpers';
 import { SavedQueriesContext, SavedQueriesProvider } from '../../providers';
 import SaveQueryDialog from './SaveQueryDialog';
 
