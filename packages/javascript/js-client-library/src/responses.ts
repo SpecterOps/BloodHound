@@ -493,6 +493,7 @@ export type UnifiedFinding = {
     status: string;
     first_seen: string;
     last_seen: string;
+    prioritization_rank?: number | null;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
