@@ -32,45 +32,69 @@ import (
 )
 
 func TestNewFeatureFlagRequestAdapter(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		pool *pgxpool.Pool
+	}
+	type want struct {
+		nonNil bool
+	}
+
 	tests := []struct {
 		name string
-		pool *pgxpool.Pool
+		args args
+		want want
 	}{
 		{
-			name: "returns non-nil adapter",
-			pool: new(pgxpool.Pool),
+			name: "Success: returns a non-nil adapter",
+			args: args{pool: new(pgxpool.Pool)},
+			want: want{nonNil: true},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			adapter := featureflags.NewFeatureFlagRequestAdapter(tt.pool)
+			t.Parallel()
+			adapter := featureflags.NewFeatureFlagRequestAdapter(tt.args.pool)
 
-			require.NotNil(t, adapter)
+			if tt.want.nonNil {
+				require.NotNil(t, adapter)
+			}
 		})
 	}
 }
 
 func TestRegister(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		method string
+		path   string
+	}
+	type want struct {
+		routeRegistered bool
+	}
+
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
 		routerInst = router.NewRouter(cfg, authorizer, "")
 		pool       = new(pgxpool.Pool)
 		tests      = []struct {
-			name   string
-			method string
-			path   string
+			name string
+			args args
+			want want
 		}{
 			{
-				name:   "registers the GET features route",
-				method: http.MethodGet,
-				path:   "/api/v2/features",
+				name: "Success: registers the GET features route",
+				args: args{method: http.MethodGet, path: "/api/v2/features"},
+				want: want{routeRegistered: true},
 			},
 			{
-				name:   "registers the PUT toggle route",
-				method: http.MethodPut,
-				path:   "/api/v2/features/1/toggle",
+				name: "Success: registers the PUT toggle route",
+				args: args{method: http.MethodPut, path: "/api/v2/features/1/toggle"},
+				want: want{routeRegistered: true},
 			},
 		}
 	)
@@ -84,10 +108,11 @@ func TestRegister(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var match mux.RouteMatch
-			request := httptest.NewRequest(tt.method, tt.path, nil)
+			request := httptest.NewRequest(tt.args.method, tt.args.path, nil)
 
-			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered", tt.method, tt.path)
+			assert.Equal(t, tt.want.routeRegistered, muxRouter.Match(request, &match), "%s %s route should be registered", tt.args.method, tt.args.path)
 		})
 	}
 }

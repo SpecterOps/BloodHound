@@ -32,6 +32,16 @@ import (
 )
 
 func TestRegister(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		method string
+		path   string
+	}
+	type want struct {
+		routeRegistered bool
+	}
+
 	var (
 		cfg             = config.Configuration{}
 		authorizer      = auth.NewAuthorizer(nil)
@@ -39,19 +49,19 @@ func TestRegister(t *testing.T) {
 		featureFlagMock = mocks.NewMockFeatureFlag(t)
 		handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
 		tests           = []struct {
-			name   string
-			method string
-			path   string
+			name string
+			args args
+			want want
 		}{
 			{
-				name:   "registers the GET features route",
-				method: http.MethodGet,
-				path:   "/api/v2/features",
+				name: "Success: registers the GET features route",
+				args: args{method: http.MethodGet, path: "/api/v2/features"},
+				want: want{routeRegistered: true},
 			},
 			{
-				name:   "registers the PUT toggle route",
-				method: http.MethodPut,
-				path:   "/api/v2/features/1/toggle",
+				name: "Success: registers the PUT toggle route",
+				args: args{method: http.MethodPut, path: "/api/v2/features/1/toggle"},
+				want: want{routeRegistered: true},
 			},
 		}
 	)
@@ -62,10 +72,11 @@ func TestRegister(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var match mux.RouteMatch
-			request := httptest.NewRequest(tt.method, tt.path, nil)
+			request := httptest.NewRequest(tt.args.method, tt.args.path, nil)
 
-			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered", tt.method, tt.path)
+			assert.Equal(t, tt.want.routeRegistered, muxRouter.Match(request, &match), "%s %s route should be registered", tt.args.method, tt.args.path)
 		})
 	}
 }
@@ -75,35 +86,60 @@ func TestRegister(t *testing.T) {
 // The handlers themselves trust the middleware to enforce this contract; if the route
 // wireup ever loses RequirePermissions/RequireAuth, this test will fail.
 func TestRegister_RoutesRequireAuthentication(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		name string
+		args struct {
+			method string
+			path   string
+		}
+		want struct {
+			statusCode int
+		}
+	}
+
 	var (
 		cfg             = config.Configuration{}
 		authorizer      = auth.NewAuthorizer(nil)
 		routerInst      = router.NewRouter(cfg, authorizer, "")
 		featureFlagMock = mocks.NewMockFeatureFlag(t)
 		handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
-		tests           = []struct {
-			method string
-			path   string
-		}{
-			{http.MethodGet, "/api/v2/features"},
-			{http.MethodPut, "/api/v2/features/1/toggle"},
+		tests           = []testCase{
+			{
+				name: "Error: unauthenticated GET features route - 401",
+				args: struct {
+					method string
+					path   string
+				}{http.MethodGet, "/api/v2/features"},
+				want: struct{ statusCode int }{http.StatusUnauthorized},
+			},
+			{
+				name: "Error: unauthenticated PUT toggle route - 401",
+				args: struct {
+					method string
+					path   string
+				}{http.MethodPut, "/api/v2/features/1/toggle"},
+				want: struct{ statusCode int }{http.StatusUnauthorized},
+			},
 		}
 	)
 
 	routes.Register(&routerInst, handlerSet)
 	handler := routerInst.Handler()
 
-	for _, tt := range tests {
-		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			var (
-				request  = httptest.NewRequest(tt.method, tt.path, nil)
+				request  = httptest.NewRequest(testCase.args.method, testCase.args.path, nil)
 				recorder = httptest.NewRecorder()
 			)
 
 			handler.ServeHTTP(recorder, request)
 
-			assert.Equal(t, http.StatusUnauthorized, recorder.Code,
-				"unauthenticated %s %s must be rejected by middleware before reaching the handler", tt.method, tt.path)
+			assert.Equal(t, testCase.want.statusCode, recorder.Code,
+				"unauthenticated %s %s must be rejected by middleware before reaching the handler", testCase.args.method, testCase.args.path)
 		})
 	}
 }

@@ -34,7 +34,7 @@ import (
 	handlersmocks "github.com/specterops/bloodhound/server/featureflags/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	testifyMock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,12 +60,11 @@ func withFeatureIDVar(req *http.Request, featureID string) *http.Request {
 func TestHandlers_GetAllFlags(t *testing.T) {
 	t.Parallel()
 
-	type mocks struct {
+	type mock struct {
 		service *handlersmocks.MockFeatureFlag
 	}
 	type args struct {
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, m *mocks)
 	}
 	type want struct {
 		responseCode int
@@ -81,9 +80,10 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 	)
 
 	tests := []struct {
-		name string
-		args args
-		want want
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mock)
+		want       want
 	}{
 		{
 			name: "Success: returns the feature flags view - 200",
@@ -91,9 +91,9 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().GetAllFlags(mock.Anything).Return(flags, nil)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return(flags, nil)
 			},
 			want: want{
 				responseCode: http.StatusOK,
@@ -115,9 +115,9 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().GetAllFlags(mock.Anything).Return([]services.FeatureFlag{}, nil)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return([]services.FeatureFlag{}, nil)
 			},
 			want: want{
 				responseCode: http.StatusOK,
@@ -136,9 +136,9 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().GetAllFlags(mock.Anything).Return(nil, unexpectedErr)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return(nil, unexpectedErr)
 			},
 			want: want{
 				responseCode: http.StatusInternalServerError,
@@ -150,14 +150,14 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var (
-				m = &mocks{
+				m = &mock{
 					service: handlersmocks.NewMockFeatureFlag(t),
 				}
 				handler  = handlers.NewHandlersContainer(m.service)
 				recorder = httptest.NewRecorder()
 				request  = tt.args.buildRequest()
 			)
-			tt.args.setupMocks(t, m)
+			tt.setupMocks(t, m)
 			handler.GetAllFlags(recorder, request)
 			assert.Equal(t, tt.want.responseCode, recorder.Code)
 			if tt.want.assertBody != nil {
@@ -170,12 +170,11 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 func TestHandlers_ToggleFlag(t *testing.T) {
 	t.Parallel()
 
-	type mocks struct {
+	type mock struct {
 		service *handlersmocks.MockFeatureFlag
 	}
 	type args struct {
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, m *mocks)
 	}
 	type want struct {
 		responseCode int
@@ -189,9 +188,10 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 	)
 
 	tests := []struct {
-		name string
-		args args
-		want want
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mock)
+		want       want
 	}{
 		{
 			name: "Success: toggles the flag and returns the view - 200",
@@ -199,9 +199,9 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().ToggleFlag(mock.Anything, int32(5)).Return(toggled, nil)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(toggled, nil)
 			},
 			want: want{
 				responseCode: http.StatusOK,
@@ -221,8 +221,8 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/not-a-number/toggle", userID), "not-a-number")
 				},
-				setupMocks: func(t *testing.T, m *mocks) {},
 			},
+			setupMocks: func(t *testing.T, m *mock) {},
 			want: want{
 				responseCode: http.StatusBadRequest,
 			},
@@ -233,9 +233,9 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().ToggleFlag(mock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotFound)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotFound)
 			},
 			want: want{
 				responseCode: http.StatusNotFound,
@@ -247,9 +247,9 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().ToggleFlag(mock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
 			},
 			want: want{
 				responseCode: http.StatusForbidden,
@@ -261,9 +261,9 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 				buildRequest: func() *http.Request {
 					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
 				},
-				setupMocks: func(t *testing.T, m *mocks) {
-					m.service.EXPECT().ToggleFlag(mock.Anything, int32(5)).Return(services.FeatureFlag{}, serviceErr)
-				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, serviceErr)
 			},
 			want: want{
 				responseCode: http.StatusInternalServerError,
@@ -275,14 +275,14 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var (
-				m = &mocks{
+				m = &mock{
 					service: handlersmocks.NewMockFeatureFlag(t),
 				}
 				handler  = handlers.NewHandlersContainer(m.service)
 				recorder = httptest.NewRecorder()
 				request  = tt.args.buildRequest()
 			)
-			tt.args.setupMocks(t, m)
+			tt.setupMocks(t, m)
 			handler.ToggleFlag(recorder, request)
 			assert.Equal(t, tt.want.responseCode, recorder.Code)
 			if tt.want.assertBody != nil {
@@ -295,8 +295,12 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 func TestHandlers_IsEnabled(t *testing.T) {
 	t.Parallel()
 
-	type mocks struct {
+	type mock struct {
 		service *handlersmocks.MockFeatureFlag
+	}
+	type args struct {
+		ctx        context.Context
+		featureKey string
 	}
 	type want struct {
 		enabled bool
@@ -310,19 +314,22 @@ func TestHandlers_IsEnabled(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		setupMocks func(t *testing.T, m *mocks)
+		args       args
+		setupMocks func(t *testing.T, m *mock)
 		want       want
 	}{
 		{
 			name: "Success: delegates to the service and returns enabled=true",
-			setupMocks: func(t *testing.T, m *mocks) {
+			args: args{ctx: ctx, featureKey: services.FeatureOpenHoundSupport},
+			setupMocks: func(t *testing.T, m *mock) {
 				m.service.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(true, nil)
 			},
 			want: want{enabled: true},
 		},
 		{
 			name: "Error: propagates service errors",
-			setupMocks: func(t *testing.T, m *mocks) {
+			args: args{ctx: ctx, featureKey: services.FeatureOpenHoundSupport},
+			setupMocks: func(t *testing.T, m *mock) {
 				m.service.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(false, serviceErr)
 			},
 			want: want{err: serviceErr},
@@ -333,13 +340,13 @@ func TestHandlers_IsEnabled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			var (
-				m = &mocks{
+				m = &mock{
 					service: handlersmocks.NewMockFeatureFlag(t),
 				}
 				handler = handlers.NewHandlersContainer(m.service)
 			)
 			tt.setupMocks(t, m)
-			enabled, err := handler.IsEnabled(ctx, services.FeatureOpenHoundSupport)
+			enabled, err := handler.IsEnabled(tt.args.ctx, tt.args.featureKey)
 			if tt.want.err != nil {
 				assert.ErrorIs(t, err, tt.want.err)
 			} else {

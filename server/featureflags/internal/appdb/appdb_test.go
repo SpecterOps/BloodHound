@@ -52,10 +52,7 @@ func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
 	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, pool.ExpectationsWereMet())
-		pool.Close()
-	})
+	t.Cleanup(pool.Close)
 	return appdb.NewStore(pool), pool
 }
 
@@ -146,6 +143,7 @@ func TestStore_GetFlagByKey(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, test.want.flag, flag)
 			}
+			require.NoError(t, pool.ExpectationsWereMet())
 		})
 	}
 }
@@ -217,6 +215,7 @@ func TestStore_GetFlagByID(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, test.want.flag, flag)
 			}
+			require.NoError(t, pool.ExpectationsWereMet())
 		})
 	}
 }
@@ -288,6 +287,7 @@ func TestStore_GetAllFlags(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, test.want.flags, flags)
 			}
+			require.NoError(t, pool.ExpectationsWereMet())
 		})
 	}
 }
@@ -300,7 +300,8 @@ func TestStore_SetFlag(t *testing.T) {
 		flag services.FeatureFlag
 	}
 	type want struct {
-		err error
+		err         error
+		errContains string
 	}
 
 	var (
@@ -413,7 +414,7 @@ func TestStore_SetFlag(t *testing.T) {
 					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 				pool.ExpectRollback()
 			},
-			want: want{err: errors.New("no authenticated user on context")},
+			want: want{errContains: "no authenticated user on context"},
 		},
 	}
 
@@ -426,12 +427,17 @@ func TestStore_SetFlag(t *testing.T) {
 			}
 
 			err := store.SetFlag(test.args.ctx, test.args.flag)
-			if test.want.err != nil {
+			switch {
+			case test.want.err != nil:
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), test.want.err.Error())
-			} else {
+				assert.ErrorIs(t, err, test.want.err)
+			case test.want.errContains != "":
+				require.Error(t, err)
+				assert.ErrorContains(t, err, test.want.errContains)
+			default:
 				require.NoError(t, err)
 			}
+			require.NoError(t, pool.ExpectationsWereMet())
 		})
 	}
 }
