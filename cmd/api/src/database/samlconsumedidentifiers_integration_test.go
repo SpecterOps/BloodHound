@@ -28,16 +28,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// registerAndGetSSOProvider creates an SSO provider that saml_consumed_identifiers can reference and returns its int32 ID.
-func registerAndGetSSOProvider(t *testing.T, testSuite IntegrationTestSuite, name string) int32 {
-	t.Helper()
-
-	provider, err := testSuite.BHDatabase.CreateSSOProvider(testSuite.Context, name, model.SessionAuthProviderSAML, model.SSOProviderConfig{})
-	require.NoError(t, err)
-
-	return provider.ID
-}
-
 func TestDatabase_CreateSAMLConsumedIdentifiers(t *testing.T) {
 	const idpIssuer = "https://idp.example.com/12345678-90ab-cdef-1234-567890abcdef"
 
@@ -124,4 +114,71 @@ func TestDatabase_CreateSAMLConsumedIdentifiers(t *testing.T) {
 			testCase.test(t, testSuite)
 		})
 	}
+}
+
+func TestDatabase_SweepSAMLConsumedIdentifiers(t *testing.T) {
+	const idpIssuer = "https://idp.example.com/12345678-90ab-cdef-1234-567890abcdef"
+
+	tests := []struct {
+		name string
+		test func(t *testing.T, testSuite IntegrationTestSuite)
+	}{
+		{
+			name: "Success: no-op when the table is empty",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				err := testSuite.BHDatabase.SweepSAMLConsumedIdentifiers(testSuite.Context)
+				require.NoError(t, err)
+
+				assert.Empty(t, remainingSAMLConsumedIdentifiers(t, testSuite))
+			},
+		},
+		{
+			name: "Success: deletes expired records and keeps unexpired ones",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				ssoProviderID := registerAndGetSSOProvider(t, testSuite, "1234")
+
+				err := testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-expired", "assertion-expired", time.Now().Add(-time.Hour))
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-live", "assertion-live", time.Now().Add(time.Hour))
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.SweepSAMLConsumedIdentifiers(testSuite.Context)
+				require.NoError(t, err)
+
+				assert.ElementsMatch(t, []string{"response-live", "assertion-live"}, remainingSAMLConsumedIdentifiers(t, testSuite))
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testSuite := setupIntegrationTestSuite(t)
+			defer teardownIntegrationTestSuite(t, &testSuite)
+
+			testCase.test(t, testSuite)
+		})
+	}
+}
+
+// registerAndGetSSOProvider creates an SSO provider that saml_consumed_identifiers can reference and returns its int32 ID.
+func registerAndGetSSOProvider(t *testing.T, testSuite IntegrationTestSuite, name string) int32 {
+	t.Helper()
+
+	provider, err := testSuite.BHDatabase.CreateSSOProvider(testSuite.Context, name, model.SessionAuthProviderSAML, model.SSOProviderConfig{})
+	require.NoError(t, err)
+
+	return provider.ID
+}
+
+// remainingSAMLConsumedIdentifiers returns the identifier values currently stored in saml_consumed_identifiers.
+func remainingSAMLConsumedIdentifiers(t *testing.T, testSuite IntegrationTestSuite) []string {
+	t.Helper()
+
+	var identifiers []string
+
+	result := testSuite.DB.WithContext(testSuite.Context).Raw(`SELECT identifier FROM saml_consumed_identifiers`).Scan(&identifiers)
+	require.NoError(t, result.Error)
+
+	return identifiers
 }
