@@ -93,7 +93,10 @@ const CopyMenuItem = () => {
                 transformOrigin={{ vertical: 'top', horizontal: 'left' }}
                 MenuListProps={{
                     'aria-label': 'Copy options',
-                    onKeyDown: (event) => event.stopPropagation(),
+                    onKeyDown: (event) => {
+                        if (event.key === 'Tab' || event.key === 'Escape') return;
+                        event.stopPropagation();
+                    },
                 }}>
                 <MenuItem onClick={handleCopyName}>Name</MenuItem>
                 <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
