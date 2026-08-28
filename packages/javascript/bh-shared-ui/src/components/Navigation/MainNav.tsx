@@ -186,7 +186,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
     return (
         <>
-            <SkipLink href='#main-content'>Skip to main content</SkipLink>
+            <SkipLink href='#content-wrapper'>Skip to main content</SkipLink>
             {/* Nav expand/collapse button */}
             <IconButton
                 aria-expanded={isExpanded}

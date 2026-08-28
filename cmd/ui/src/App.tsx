@@ -115,7 +115,7 @@ export const Inner: React.FC = () => {
             <div className={classes.applicationContainer} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
                 <div
-                    id='main-content'
+                    id='content-wrapper'
                     role='main'
                     tabIndex={-1}
                     className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
