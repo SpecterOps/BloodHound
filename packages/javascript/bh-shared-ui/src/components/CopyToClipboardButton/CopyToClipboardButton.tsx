@@ -33,6 +33,7 @@ export const CopyToClipboardButton = ({
     onAnimationStart = () => {},
     transitionDelay = DEFAULT_TRANSITION_DELAY,
     value,
+    className,
 }: CopyToClipboardButtonProps) => {
     const [displayCopyCheckmark, setDisplayCopyCheckmark] = useState(false);
     const announce = useAnnounce();
@@ -98,7 +99,8 @@ export const CopyToClipboardButton = ({
             <span
                 className={cn(
                     'group-hover:pl-5 group-focus-within:pl-5 transition-[padding-left] ease-in',
-                    transitionDelay
+                    transitionDelay,
+                    className
                 )}>
                 {value}
             </span>
