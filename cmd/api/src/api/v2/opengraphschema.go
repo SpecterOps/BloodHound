@@ -73,7 +73,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	defer request.Body.Close()
 	switch {
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
-		extractExtensionData = extractBundleFromJSON
+		extractExtensionData = extractExtensionDataFromJSON
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
 		extractExtensionData = extractBundleFromZip
 	default:
@@ -169,12 +169,6 @@ func extractSavedQueriesFromJSON(payload io.Reader) (model.SavedQueriesPayload, 
 	}
 
 	return savedQueries, nil
-}
-
-// extractBundleFromJSON - returns a model.GraphExtensionPayload from a bare JSON upload. A bare JSON upload carries
-// only the schema; the optional pz_rules/saved_queries components are delivered exclusively via the ZIP path.
-func extractBundleFromJSON(payload io.Reader) (model.GraphExtensionPayload, error) {
-	return extractExtensionDataFromJSON(payload)
 }
 
 // extractBundleFromZip - returns a model.GraphExtensionPayload assembled from a ZIP archive. The archive must contain a
