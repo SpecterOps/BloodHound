@@ -92,6 +92,11 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+              saved_queries:
+                - query_key: all-node-kind-1
+                  name: All Node Kind 1
+                  query: MATCH (n:OGE_Node_Kind_1) RETURN n
+                  description: Lists all OGE_Node_Kind_1 nodes.
           Active Directory:
             summary: Active Directory Example
             description: An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.

@@ -856,6 +856,14 @@ func Test_validateGraphExtension(t *testing.T) {
 			},
 			wantErr: fmt.Errorf("duplicate graph schema relationship finding: AD_finding_1"),
 		},
+		{name: "fail - saved query empty key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
+		{name: "fail - saved query whitespace key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: " ", Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
+		{name: "fail - saved query empty name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
+		{name: "fail - saved query whitespace name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: " ", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
+		{name: "fail - saved query empty query", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query"}}}}, wantErr: fmt.Errorf("graph schema saved query text is required")},
+		{name: "fail - saved query whitespace query", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query", Query: " "}}}}, wantErr: fmt.Errorf("graph schema saved query text is required")},
+		{name: "fail - duplicate saved query key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query One", Query: "RETURN 1"}, {QueryKey: "query-key", Name: "Query Two", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query key: query-key")},
+		{name: "fail - duplicate saved query name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-one", Name: "Query", Query: "RETURN 1"}, {QueryKey: "query-two", Name: "Query", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query name: Query")},
 		{
 			name: "success - valid ExtensionInput",
 			args: args{
@@ -1348,6 +1356,20 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 						},
 					},
 				},
+			},
+		},
+		{
+			name: "success_-_saved_query",
+			args: args{payload: GraphExtensionPayload{SavedQueries: []SavedQueryPayload{{
+				QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
+			}}}},
+			want: GraphExtensionInput{
+				RelationshipKindsInput: RelationshipsInput{},
+				NodeKindsInput:         NodesInput{},
+				EnvironmentsInput:      EnvironmentsInput{},
+				SavedQueriesInput: SavedQueriesInput{{
+					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
+				}},
 			},
 		},
 		{

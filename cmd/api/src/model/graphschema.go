@@ -474,12 +474,21 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 
 // Graph Extension Upsert Input
 
+type SavedQueriesInput []SavedQueryInput
+type SavedQueryInput struct {
+	QueryKey    string
+	Name        string
+	Query       string
+	Description string
+}
+
 type GraphExtensionInput struct {
 	ExtensionInput            ExtensionInput
 	RelationshipKindsInput    RelationshipsInput
 	NodeKindsInput            NodesInput
 	EnvironmentsInput         EnvironmentsInput
 	RelationshipFindingsInput RelationshipFindingsInput
+	SavedQueriesInput         SavedQueriesInput
 }
 
 // Validate performs comprehensive validation on a GraphExtensionInput
@@ -489,7 +498,11 @@ func (s GraphExtensionInput) Validate() error {
 		relationshipKinds = make(map[string]any, 0)
 		environments      = make(map[string]any, 0)
 		findings          = make(map[string]any, 0)
+		savedQueryKeys    = map[string]struct{}{}
+		savedQueryNames   = map[string]struct{}{}
 	)
+
+	// Schema Validation
 	if strings.TrimSpace(s.ExtensionInput.Name) == "" {
 		return errors.New("graph schema extension name is required")
 	} else if strings.TrimSpace(s.ExtensionInput.Version) == "" {
@@ -504,6 +517,7 @@ func (s GraphExtensionInput) Validate() error {
 		return errors.New("graph schema node kinds are required")
 	}
 
+	// Node kind validation
 	for _, kind := range s.NodeKindsInput {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema node kind %s is missing extension namespace prefix", kind.Name)
@@ -522,6 +536,7 @@ func (s GraphExtensionInput) Validate() error {
 		nodeKinds[kind.Name] = struct{}{}
 	}
 
+	// Relationship Kinds Validation
 	for _, kind := range s.RelationshipKindsInput {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
@@ -540,6 +555,7 @@ func (s GraphExtensionInput) Validate() error {
 		relationshipKinds[kind.Name] = struct{}{}
 	}
 
+	// Environments Validation
 	for _, environment := range s.EnvironmentsInput {
 		if environmentKindName, found := strings.CutPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
@@ -574,6 +590,7 @@ func (s GraphExtensionInput) Validate() error {
 		environments[environment.EnvironmentKindName] = struct{}{}
 	}
 
+	// Findings Validation
 	for _, relationshipFindingInput := range s.RelationshipFindingsInput {
 		if findingName, found := strings.CutPrefix(relationshipFindingInput.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", relationshipFindingInput.Name)
@@ -590,6 +607,24 @@ func (s GraphExtensionInput) Validate() error {
 			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
 		}
 		findings[relationshipFindingInput.Name] = struct{}{}
+	}
+
+	// Saved queries validation
+	for _, savedQueryInput := range s.SavedQueriesInput {
+		if strings.TrimSpace(savedQueryInput.QueryKey) == "" {
+			return errors.New("graph schema saved query key is required")
+		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
+			return errors.New("graph schema saved query name is required")
+		} else if strings.TrimSpace(savedQueryInput.Query) == "" {
+			return errors.New("graph schema saved query text is required")
+		}
+		if _, found := savedQueryKeys[savedQueryInput.QueryKey]; found {
+			return fmt.Errorf("duplicate graph schema saved query key: %s", savedQueryInput.QueryKey)
+		} else if _, found := savedQueryNames[savedQueryInput.Name]; found {
+			return fmt.Errorf("duplicate graph schema saved query name: %s", savedQueryInput.Name)
+		}
+		savedQueryKeys[savedQueryInput.QueryKey] = struct{}{}
+		savedQueryNames[savedQueryInput.Name] = struct{}{}
 	}
 	return nil
 }
@@ -685,6 +720,7 @@ type GraphExtensionPayload struct {
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
 	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+	SavedQueries                 []SavedQueryPayload                   `json:"saved_queries"`
 }
 
 type GraphSchemaExtensionPayload struct {
@@ -736,6 +772,13 @@ type RemediationPayload struct {
 	LongDescription  string `json:"long_description"`
 	ShortRemediation string `json:"short_remediation"`
 	LongRemediation  string `json:"long_remediation"`
+}
+
+type SavedQueryPayload struct {
+	QueryKey    string `json:"query_key"`
+	Name        string `json:"name"`
+	Query       string `json:"query"`
+	Description string `json:"description"`
 }
 
 // parseInfoPayload converts the typed KindInfoPayload map to a KindInfoInputs slice
@@ -854,6 +897,10 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				LongRemediation:  findingPayload.Remediation.LongRemediation,
 			},
 		})
+	}
+
+	for _, savedQueryPayload := range s.SavedQueries {
+		graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput(savedQueryPayload))
 	}
 	return graphExtension, nil
 }
