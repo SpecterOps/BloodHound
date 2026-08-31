@@ -293,9 +293,9 @@ func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) post.EnsureR
 func isTargetNodeComputerDerived(node *graph.Node) (bool, error) {
 	if node.Kinds.ContainsOneOf(ad.Computer) {
 		return true, nil
-	} else {
-		return isManagedServiceAccount(node)
 	}
+
+	return isManagedServiceAccount(node)
 }
 
 func FetchAdminGroupIds(ctx context.Context, db graph.Database, groupExpansions *algo.ReachabilityCache) (cardinality.Duplex[uint64], error) {

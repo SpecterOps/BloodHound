@@ -19,7 +19,7 @@ package ad
 import (
 	"testing"
 
-	adSchema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	adschema "github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
@@ -33,18 +33,18 @@ func TestIsManagedServiceAccount(t *testing.T) {
 	}{
 		{
 			name:       "gMSA",
-			properties: graph.NewProperties().Set(adSchema.GMSA.String(), true),
+			properties: graph.NewProperties().Set(adschema.GMSA.String(), true),
 			expected:   true,
 		},
 		{
 			name:       "sMSA",
-			properties: graph.NewProperties().Set(adSchema.MSA.String(), true),
+			properties: graph.NewProperties().Set(adschema.MSA.String(), true),
 			expected:   true,
 		},
 		{
 			name: "both properties false",
-			properties: graph.NewProperties().Set(adSchema.GMSA.String(), false).
-				Set(adSchema.MSA.String(), false),
+			properties: graph.NewProperties().Set(adschema.GMSA.String(), false).
+				Set(adschema.MSA.String(), false),
 		},
 		{
 			name:       "properties absent",
@@ -52,19 +52,19 @@ func TestIsManagedServiceAccount(t *testing.T) {
 		},
 		{
 			name:                  "invalid gMSA property",
-			properties:            graph.NewProperties().Set(adSchema.GMSA.String(), "true"),
+			properties:            graph.NewProperties().Set(adschema.GMSA.String(), "true"),
 			expectedPropertyError: true,
 		},
 		{
 			name:                  "invalid sMSA property",
-			properties:            graph.NewProperties().Set(adSchema.MSA.String(), "true"),
+			properties:            graph.NewProperties().Set(adschema.MSA.String(), "true"),
 			expectedPropertyError: true,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			node := graph.NewNode(1, testCase.properties, adSchema.User)
+			node := graph.NewNode(1, testCase.properties, adschema.User)
 
 			actual, err := isManagedServiceAccount(node)
 			if testCase.expectedPropertyError {
