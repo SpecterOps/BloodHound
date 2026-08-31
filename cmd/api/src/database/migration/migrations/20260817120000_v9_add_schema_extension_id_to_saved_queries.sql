@@ -39,6 +39,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_saved_queries_extension_query_key
 
 
 -- +goose Down
+
+DELETE FROM saved_queries WHERE schema_extension_id IS NOT NULL;
+
 DROP INDEX IF EXISTS idx_saved_queries_user_id_name;
 DROP INDEX IF EXISTS idx_saved_queries_schema_extension_id_name;
 
