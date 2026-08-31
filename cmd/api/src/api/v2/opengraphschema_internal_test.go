@@ -26,8 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// validSchemaJSON is a minimal extension definition schema used to exercise the ZIP ingest path.
-const validSchemaJSON = `{
+const validSchemaBaseJSON = `{
 	"schema": {
 		"name": "TestExtension",
 		"display_name": "Test Extension",
@@ -36,24 +35,7 @@ const validSchemaJSON = `{
 	},
 	"node_kinds": [],
 	"relationship_kinds": [],
-	"environments": [],
-	"relationship_findings": []
-}`
-
-const validSchemaWithFindingsJSON = `{
-	"schema": {
-		"name": "TestExtension",
-		"display_name": "Test Extension",
-		"version": "v1.0.0",
-		"namespace": "test"
-	},
-	"node_kinds": [],
-	"relationship_kinds": [],
-	"environments": [],
-	"relationship_findings": [
-		{"name": "T0Example"}
-	]
-}`
+	"environments": []`
 
 // validPZRulesJSON is a minimal privilege zone rules component.
 const validPZRulesJSON = `{
@@ -77,6 +59,33 @@ const validSavedQueriesJSON = `{
 			"description": "example"
 		}
 	]
+}`
+
+// validSchemaJSON is a minimal extension definition schema used to exercise the ZIP ingest path.
+const validSchemaJSON = validSchemaBaseJSON + `,
+	"relationship_findings": []
+}`
+
+const validSchemaWithFindingsJSON = validSchemaBaseJSON + `,
+	"relationship_findings": [
+		{"name": "T0Example"}
+	]
+}`
+
+const validSchemaWithEmbeddedPZRulesJSON = validSchemaBaseJSON + `,
+	"relationship_findings": [],
+	"pz_rules": ` + validPZRulesJSON + `
+}`
+
+const validSchemaWithEmbeddedSavedQueriesJSON = validSchemaBaseJSON + `,
+	"relationship_findings": [],
+	"saved_queries": ` + validSavedQueriesJSON + `
+}`
+
+const validSchemaWithEmbeddedOptionalComponentsJSON = validSchemaBaseJSON + `,
+	"relationship_findings": [],
+	"pz_rules": ` + validPZRulesJSON + `,
+	"saved_queries": ` + validSavedQueriesJSON + `
 }`
 
 // newExtensionZip builds an in-memory ZIP archive from the given file name -> content map.
@@ -188,6 +197,21 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name:        "duplicate component (same file name twice) returns an error",
 			archive:     newExtensionZipWithDuplicate(t, "schema.json", validSchemaJSON),
 			wantErrText: "duplicate component \"schema.json\" in zip archive",
+		},
+		{
+			name:        "schema.json embedding pz_rules is rejected in a bundle",
+			archive:     newExtensionZip(t, map[string]string{"schema.json": validSchemaWithEmbeddedPZRulesJSON}),
+			wantErrText: "schema.json must not embed optional components: pz_rules.json",
+		},
+		{
+			name:        "schema.json embedding saved_queries is rejected in a bundle",
+			archive:     newExtensionZip(t, map[string]string{"schema.json": validSchemaWithEmbeddedSavedQueriesJSON}),
+			wantErrText: "schema.json must not embed optional components: saved_queries.json",
+		},
+		{
+			name:        "schema.json embedding both optional components is rejected in a bundle",
+			archive:     newExtensionZip(t, map[string]string{"schema.json": validSchemaWithEmbeddedOptionalComponentsJSON}),
+			wantErrText: "schema.json must not embed optional components: pz_rules.json, saved_queries.json",
 		},
 	}
 

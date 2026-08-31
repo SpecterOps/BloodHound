@@ -171,6 +171,23 @@ func extractSavedQueriesFromJSON(payload io.Reader) (model.SavedQueriesPayload, 
 	return savedQueries, nil
 }
 
+func validateSchemaComponent(payload model.GraphExtensionPayload) error {
+	var invalidComponents []string
+
+	if payload.PZRules != nil {
+		invalidComponents = append(invalidComponents, bundleFileNamePzRules)
+	}
+	if payload.SavedQueries != nil {
+		invalidComponents = append(invalidComponents, bundleFileNameSavedQueries)
+	}
+
+	if len(invalidComponents) > 0 {
+		return fmt.Errorf("%s must not embed optional components: %s", bundleFileNameSchema, strings.Join(invalidComponents, ", "))
+	}
+
+	return nil
+}
+
 // extractBundleFromZip - returns a model.GraphExtensionPayload assembled from a ZIP archive. The archive must contain a
 // schema.json component and may contain the optional pz_rules.json and saved_queries.json components
 func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error) {
@@ -222,6 +239,9 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 		defer reader.Close()
 		schema, err := extractExtensionDataFromJSON(reader)
 		if err != nil {
+			return err
+		}
+		if err = validateSchemaComponent(schema); err != nil {
 			return err
 		}
 		// We cannot guarantee the order of files in the zip archive, so we need to merge PZRules and SavedQueries into the schema if they were already extracted.
