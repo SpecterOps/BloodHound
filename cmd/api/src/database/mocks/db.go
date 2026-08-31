@@ -552,6 +552,20 @@ func (mr *MockDatabaseMockRecorder) CreateRemediation(ctx, findingId, shortDescr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRemediation", reflect.TypeOf((*MockDatabase)(nil).CreateRemediation), ctx, findingId, shortDescription, longDescription, shortRemediation, longRemediation)
 }
 
+// CreateSAMLConsumedIdentifiers mocks base method.
+func (m *MockDatabase) CreateSAMLConsumedIdentifiers(ctx context.Context, ssoProviderID int32, idpIssuer, responseID, assertionID string, expiresAt time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSAMLConsumedIdentifiers", ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSAMLConsumedIdentifiers indicates an expected call of CreateSAMLConsumedIdentifiers.
+func (mr *MockDatabaseMockRecorder) CreateSAMLConsumedIdentifiers(ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSAMLConsumedIdentifiers", reflect.TypeOf((*MockDatabase)(nil).CreateSAMLConsumedIdentifiers), ctx, ssoProviderID, idpIssuer, responseID, assertionID, expiresAt)
+}
+
 // CreateSAMLIdentityProvider mocks base method.
 func (m *MockDatabase) CreateSAMLIdentityProvider(ctx context.Context, samlProvider model.SAMLProvider, config model.SSOProviderConfig) (model.SAMLProvider, error) {
 	m.ctrl.T.Helper()
@@ -3246,6 +3260,20 @@ func (m *MockDatabase) SweepAssetGroupCollections(ctx context.Context) {
 func (mr *MockDatabaseMockRecorder) SweepAssetGroupCollections(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).SweepAssetGroupCollections), ctx)
+}
+
+// SweepSAMLConsumedIdentifiers mocks base method.
+func (m *MockDatabase) SweepSAMLConsumedIdentifiers(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SweepSAMLConsumedIdentifiers", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SweepSAMLConsumedIdentifiers indicates an expected call of SweepSAMLConsumedIdentifiers.
+func (mr *MockDatabaseMockRecorder) SweepSAMLConsumedIdentifiers(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SweepSAMLConsumedIdentifiers", reflect.TypeOf((*MockDatabase)(nil).SweepSAMLConsumedIdentifiers), ctx)
 }
 
 // SweepSessions mocks base method.

@@ -20,7 +20,8 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
-import { createGraphKinds, cypherTestResponse, encodeCypherQuery, mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { encodeCypherQuery } from 'bh-shared-ui';
+import { createGraphKinds, cypherTestResponse, mockCodemirrorLayoutMethods } from 'bh-shared-ui/testing';
 import { ConfigurationKey, GraphData } from 'js-client-library';
 
 const comboboxLookaheadOptions = {
