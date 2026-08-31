@@ -50,16 +50,17 @@ const validPZRulesJSON = `{
 	]
 }`
 
+// validSavedQueryJSON is a minimal saved query definition.
+const validSavedQueryJSON = `{
+	"query_key": "all-domain-admins",
+	"name": "All Domain Admins",
+	"query": "MATCH (n) RETURN n LIMIT 1",
+	"description": "example"
+}`
+
 // validSavedQueriesJSON is a minimal saved queries component.
 const validSavedQueriesJSON = `{
-	"queries": [
-		{
-			"query_key": "all-domain-admins",
-			"name": "All Domain Admins",
-			"query": "MATCH (n) RETURN n LIMIT 1",
-			"description": "example"
-		}
-	]
+	"queries": [` + validSavedQueryJSON + `]
 }`
 
 // validSchemaJSON is a minimal extension definition schema used to exercise the ZIP ingest path.
@@ -80,13 +81,13 @@ const validSchemaWithEmbeddedPZRulesJSON = validSchemaBaseJSON + `,
 
 const validSchemaWithEmbeddedSavedQueriesJSON = validSchemaBaseJSON + `,
 	"relationship_findings": [],
-	"saved_queries": ` + validSavedQueriesJSON + `
+	"queries": [` + validSavedQueryJSON + `]
 }`
 
 const validSchemaWithEmbeddedOptionalComponentsJSON = validSchemaBaseJSON + `,
 	"relationship_findings": [],
 	"pz_rules": ` + validPZRulesJSON + `,
-	"saved_queries": ` + validSavedQueriesJSON + `
+	"queries": [` + validSavedQueryJSON + `]
 }`
 
 // newExtensionZip builds an in-memory ZIP archive from the given file name -> content map.
@@ -243,8 +244,8 @@ func TestExtractBundleFromZip(t *testing.T) {
 			assert.Equal(t, tt.wantHasPZRules, extension.PZRules != nil)
 			assert.Equal(t, tt.wantHasSavedQrys, extension.SavedQueries != nil)
 			if tt.wantQueryKey != "" {
-				require.NotEmpty(t, extension.SavedQueries.Queries)
-				assert.Equal(t, tt.wantQueryKey, extension.SavedQueries.Queries[0].QueryKey)
+				require.NotEmpty(t, *extension.SavedQueries)
+				assert.Equal(t, tt.wantQueryKey, (*extension.SavedQueries)[0].QueryKey)
 			}
 		})
 	}

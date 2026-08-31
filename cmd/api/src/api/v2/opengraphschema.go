@@ -157,18 +157,27 @@ func extractPZRulesFromJSON(payload io.Reader) (model.PZRulesPayload, error) {
 	return pzRules, nil
 }
 
-// extractSavedQueriesFromJSON - extracts a model.SavedQueriesPayload from the incoming payload. Will return an error
-// if the decoder fails to decode the payload.
-func extractSavedQueriesFromJSON(payload io.Reader) (model.SavedQueriesPayload, error) {
-	var savedQueries model.SavedQueriesPayload
+// extractSavedQueriesFromJSON - extracts saved queries from the incoming payload. Will return an error if the decoder
+// fails to decode the payload.
+func extractSavedQueriesFromJSON(payload io.Reader) (*model.SavedQueriesPayload, error) {
+	var (
+		// contains the json tag for unmarshall
+		graphExtension model.GraphExtensionPayload
+		// saves a nil slice to the extension payload which determines if the file has been seen
+		nilSavedQueries model.SavedQueriesPayload
+	)
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
-		return savedQueries, fmt.Errorf("failed to normalize %s: %w", bundleFileNameSavedQueries, err)
-	} else if err = json.NewDecoder(normFile).Decode(&savedQueries); err != nil {
-		return savedQueries, fmt.Errorf("unable to decode %s: %w", bundleFileNameSavedQueries, err)
+		return nil, fmt.Errorf("failed to normalize %s: %w", bundleFileNameSavedQueries, err)
+	} else if err = json.NewDecoder(normFile).Decode(&graphExtension); err != nil {
+		return nil, fmt.Errorf("unable to decode %s: %w", bundleFileNameSavedQueries, err)
 	}
 
-	return savedQueries, nil
+	if graphExtension.SavedQueries == nil {
+		graphExtension.SavedQueries = &nilSavedQueries
+	}
+
+	return graphExtension.SavedQueries, nil
 }
 
 func validateSchemaComponent(payload model.GraphExtensionPayload) error {
@@ -270,7 +279,7 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 			if queries, err := extractSavedQueriesFromJSON(reader); err != nil {
 				return err
 			} else {
-				extension.SavedQueries = &queries
+				extension.SavedQueries = queries
 			}
 		}
 	default:
