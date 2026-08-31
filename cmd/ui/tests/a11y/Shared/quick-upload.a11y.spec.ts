@@ -69,7 +69,9 @@ test.describe('Quick Upload dialog', () => {
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
@@ -125,7 +127,9 @@ test.describe('Quick Upload dialog', () => {
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
@@ -191,7 +195,9 @@ test.describe('Quick Upload dialog', () => {
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
