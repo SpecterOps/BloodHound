@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
@@ -31,6 +32,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -604,6 +608,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
+		ctrl      *gomock.Controller
 		mockGraph *graphmocks.MockDatabase
 		mockDb    *mocks.MockDatabase
 	}
@@ -616,9 +621,9 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 		name             string
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
-		expected         expected
-		user             model.User
 		dogTagsOverrides dogtags.TestOverrides
+		user             model.User
+		expected         expected
 	}
 
 	tt := []testData{
@@ -873,7 +878,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: retrieved ACL inheritance with ETAC enabled - OK",
+			name: "ETAC enabled, nodes hidden outside of assigned environment",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
@@ -883,23 +888,206 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				var (
+					edge = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.AsProperties(map[string]any{
+						ad.InheritanceHash.String(): "inheritance-hash",
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): true,
+						common.LastSeen.String():    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+					}), ad.WriteDACL)
+					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String():      "S-1-5-21-NOTALLOWED-1000",
+						common.Name.String():          "USER1",
+						common.LastSeen.String():      time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+						ad.DomainSID.String():         "S-1-5-21-NOTALLOWED",
+						ad.InheritanceHashes.String(): []any{"inheritance-hash"},
+					}), ad.User)
+					endNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String():      "S-1-5-21-NOTALLOWED-2000",
+						common.Name.String():          "COMPUTER1",
+						common.LastSeen.String():      time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+						ad.DomainSID.String():         "S-1-5-21-NOTALLOWED",
+						ad.InheritanceHashes.String(): []any{"inheritance-hash"},
+					}), ad.Computer)
+				)
+
+				// analysis.FetchEdgeByStartAndEnd
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mock.ctrl)
+					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mock.ctrl)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().Filter(gomock.Any()).Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().First().Return(edge, nil)
+					return delegate(mockTransaction)
+				})
+
+				// ad.FetchACLInheritancePath
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					var (
+						mockTransaction       = graphmocks.NewMockTransaction(mock.ctrl)
+						mockNodeQuery         = graphmocks.NewMockNodeQuery(mock.ctrl)
+						mockNodeCursor        = graphmocks.NewMockCursor[*graph.Node](mock.ctrl)
+						mockRelationshipQuery = graphmocks.NewMockRelationshipQuery(mock.ctrl)
+						fetchDirectionCall    int
+					)
+
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(cursorDelegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+						nodeChannel := make(chan *graph.Node, 2)
+						nodeChannel <- startNode
+						nodeChannel <- endNode
+						close(nodeChannel)
+						mockNodeCursor.EXPECT().Chan().Return(nodeChannel)
+						mockNodeCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockNodeCursor)
+					})
+					mockTransaction.EXPECT().GraphQueryMemoryLimit().Times(2)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery).Times(2)
+					mockRelationshipQuery.EXPECT().Filterf(gomock.Any()).Return(mockRelationshipQuery).Times(2)
+					mockRelationshipQuery.EXPECT().FetchDirection(graph.DirectionOutbound, gomock.Any()).DoAndReturn(func(_ graph.Direction, cursorDelegate func(graph.Cursor[graph.DirectionalResult]) error) error {
+						var (
+							mockRelationshipCursor = graphmocks.NewMockCursor[graph.DirectionalResult](mock.ctrl)
+							relationshipChannel    = make(chan graph.DirectionalResult, 1)
+						)
+
+						if fetchDirectionCall == 0 {
+							relationshipChannel <- graph.NewDirectionalResult(graph.DirectionOutbound, edge, startNode)
+						}
+						fetchDirectionCall++
+						close(relationshipChannel)
+						mockRelationshipCursor.EXPECT().Chan().Return(relationshipChannel)
+						mockRelationshipCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockRelationshipCursor)
+					}).Times(2)
+					return delegate(mockTransaction)
+				})
+
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			},
 			dogTagsOverrides: dogtags.TestOverrides{
 				Bools: map[dogtags.BoolDogTag]bool{
 					dogtags.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
-				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				t.Helper()
-				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
-				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "S-1-5-21-ALLOWED"},
+				},
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{},"edges":[],"literals":[]}}`,
+				responseBody:   `{"data":{"nodes":{"1":{"label":"** Hidden User Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true},"2":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[{"id":"","source":"1","target":"2","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "ETAC disabled, nodes not hidden",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=WriteDacl&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				var (
+					edge = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.AsProperties(map[string]any{
+						ad.InheritanceHash.String(): "inheritance-hash",
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): true,
+						common.LastSeen.String():    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+					}), ad.WriteDACL)
+					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String():      "S-1-5-21-NOTALLOWED-1000",
+						common.Name.String():          "USER1",
+						common.LastSeen.String():      time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+						ad.DomainSID.String():         "S-1-5-21-NOTALLOWED",
+						ad.InheritanceHashes.String(): []any{"inheritance-hash"},
+					}), ad.User)
+					endNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String():      "S-1-5-21-NOTALLOWED-2000",
+						common.Name.String():          "COMPUTER1",
+						common.LastSeen.String():      time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+						ad.DomainSID.String():         "S-1-5-21-NOTALLOWED",
+						ad.InheritanceHashes.String(): []any{"inheritance-hash"},
+					}), ad.Computer)
+				)
+
+				// analysis.FetchEdgeByStartAndEnd
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					mockTransaction := graphmocks.NewMockTransaction(mock.ctrl)
+					mockRelationshipQuery := graphmocks.NewMockRelationshipQuery(mock.ctrl)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().Filter(gomock.Any()).Return(mockRelationshipQuery)
+					mockRelationshipQuery.EXPECT().First().Return(edge, nil)
+					return delegate(mockTransaction)
+				})
+
+				// ad.FetchACLInheritancePath
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
+					var (
+						mockTransaction       = graphmocks.NewMockTransaction(mock.ctrl)
+						mockNodeQuery         = graphmocks.NewMockNodeQuery(mock.ctrl)
+						mockNodeCursor        = graphmocks.NewMockCursor[*graph.Node](mock.ctrl)
+						mockRelationshipQuery = graphmocks.NewMockRelationshipQuery(mock.ctrl)
+						fetchDirectionCall    int
+					)
+
+					mockTransaction.EXPECT().Nodes().Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockNodeQuery)
+					mockNodeQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(cursorDelegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+						nodeChannel := make(chan *graph.Node, 2)
+						nodeChannel <- startNode
+						nodeChannel <- endNode
+						close(nodeChannel)
+						mockNodeCursor.EXPECT().Chan().Return(nodeChannel)
+						mockNodeCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockNodeCursor)
+					})
+					mockTransaction.EXPECT().GraphQueryMemoryLimit().Times(2)
+					mockTransaction.EXPECT().Relationships().Return(mockRelationshipQuery).Times(2)
+					mockRelationshipQuery.EXPECT().Filterf(gomock.Any()).Return(mockRelationshipQuery).Times(2)
+					mockRelationshipQuery.EXPECT().FetchDirection(graph.DirectionOutbound, gomock.Any()).DoAndReturn(func(_ graph.Direction, cursorDelegate func(graph.Cursor[graph.DirectionalResult]) error) error {
+						var (
+							mockRelationshipCursor = graphmocks.NewMockCursor[graph.DirectionalResult](mock.ctrl)
+							relationshipChannel    = make(chan graph.DirectionalResult, 1)
+						)
+
+						if fetchDirectionCall == 0 {
+							relationshipChannel <- graph.NewDirectionalResult(graph.DirectionOutbound, edge, startNode)
+						}
+						fetchDirectionCall++
+						close(relationshipChannel)
+						mockRelationshipCursor.EXPECT().Chan().Return(relationshipChannel)
+						mockRelationshipCursor.EXPECT().Error().Return(nil)
+						return cursorDelegate(mockRelationshipCursor)
+					}).Times(2)
+					return delegate(mockTransaction)
+				})
+
+				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: false,
+				},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "S-1-5-21-ALLOWED"},
+				},
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"nodes":{"1":{"label":"USER1","kind":"User","kinds":["User"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"USER1","objectid":"S-1-5-21-NOTALLOWED-1000"}},"2":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-2000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-2000"}}},"edges":[{"id":"1","source":"1","target":"2","label":"WriteDacl","kind":"WriteDacl","lastSeen":"2025-01-01T00:00:00Z","properties":{"inheritancehash":"inheritance-hash","isacl":true,"isinherited":true,"lastseen":"2025-01-01T00:00:00Z"}}],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -910,6 +1098,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mock := &mock{
+				ctrl:      ctrl,
 				mockGraph: graphmocks.NewMockDatabase(ctrl),
 				mockDb:    mocks.NewMockDatabase(ctrl),
 			}
