@@ -207,7 +207,7 @@ test.describe('Administration - Manage Users - has no detectable WCAG A/AA viola
 
         await page.getByRole('dialog', { name: 'Change Password' }).waitFor({ state: 'visible' });
 
-        await page.getByLabel('New Password', { exact: true }).waitFor({ state: 'visible' });
+        await page.getByRole('textbox', { name: 'New Password', exact: true }).waitFor({ state: 'visible' });
 
         const results = await makeAxeBuilder().include('[data-testid="password-dialog"]').analyze();
 
