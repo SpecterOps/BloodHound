@@ -22,7 +22,8 @@ ALTER TABLE saved_queries
             (schema_extension_id IS NULL AND query_key IS NULL AND user_id <> '00000000-0000-0000-0000-000000000000')
             OR
             (schema_extension_id IS NOT NULL AND query_key IS NOT NULL AND user_id = '00000000-0000-0000-0000-000000000000')
-        );
+        ),
+    ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT '';
 
 CREATE INDEX IF NOT EXISTS idx_saved_queries_schema_extension_id
     ON saved_queries (schema_extension_id) WHERE schema_extension_id IS NOT NULL;
@@ -53,5 +54,6 @@ DROP INDEX IF EXISTS idx_saved_queries_schema_extension_id;
 DROP INDEX IF EXISTS idx_saved_queries_extension_query_key;
 
 ALTER TABLE saved_queries
+    DROP COLUMN IF EXISTS category,
     DROP COLUMN IF EXISTS query_key,
     DROP COLUMN IF EXISTS schema_extension_id;
