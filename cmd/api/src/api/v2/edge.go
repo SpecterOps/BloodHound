@@ -21,14 +21,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/ein"
-
-	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -63,6 +63,22 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
 	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
+	} else if sourceGraphNode, err := s.GraphQuery.FetchNodeByGraphId(request.Context(), graph.ID(startID)); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if targetGraphNode, err := s.GraphQuery.FetchNodeByGraphId(request.Context(), graph.ID(endID)); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if sourceNodeObjectID, err := sourceGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if targetNodeObjectID, err := targetGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if hasSourceAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.DogTags, user, sourceNodeObjectID, sourceGraphNode.Kinds[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if !hasSourceAccess {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
+	} else if hasTargetAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.DogTags, user, targetNodeObjectID, targetGraphNode.Kinds[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if !hasTargetAccess {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if nodeSet, err := ad.GetRelayTargets(request.Context(), s.Graph, edge); err != nil {
