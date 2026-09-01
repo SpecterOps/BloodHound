@@ -57,6 +57,7 @@ var (
 	ErrDuplicateKindName             = errors.New("duplicate kind name")
 	ErrDuplicateGlyph                = errors.New("duplicate glyph")
 	ErrPositionOutOfRange            = errors.New("position out of range")
+	ErrSAMLIdentifierAlreadyConsumed = errors.New("SAMLResponse or assertion has already been consumed")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -133,6 +134,7 @@ type Database interface {
 	SSOProviderData
 	OIDCProviderData
 	SAMLProviderData
+	SAMLConsumedData
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)

@@ -49,13 +49,16 @@ describe('CopyMenuItem', () => {
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
-        await user.hover(copyOption);
+        await user.click(copyOption);
 
-        const tooltip = await screen.findByRole('tooltip');
-        expect(tooltip).toBeInTheDocument();
+        const nameOption = await screen.findByRole('menuitem', { name: 'Name' });
+        const objectIdOption = screen.getByRole('menuitem', { name: 'Object ID' });
+        const cypherOption = screen.getByRole('menuitem', { name: 'Cypher' });
 
-        // the tooltip container and the menu item for `name` have the same accessible name, so return the second element here (which is the menu item)
-        const nameOption = screen.getAllByRole('menuitem', { name: /name/i })[1];
+        expect(nameOption).toBeInTheDocument();
+        expect(objectIdOption).toBeInTheDocument();
+        expect(cypherOption).toBeInTheDocument();
+
         await user.click(nameOption);
 
         const clipboardText = await navigator.clipboard.readText();

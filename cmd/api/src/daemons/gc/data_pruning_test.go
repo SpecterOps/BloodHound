@@ -58,6 +58,9 @@ func TestGC_Start(t *testing.T) {
 	mockDB.EXPECT().SweepAssetGroupCollections(gomock.Any()).Do(func(ctx context.Context) {
 		time.Sleep(1 * time.Millisecond)
 	})
+	mockDB.EXPECT().SweepSAMLConsumedIdentifiers(gomock.Any()).Do(func(ctx context.Context) {
+		time.Sleep(1 * time.Millisecond)
+	}).Return(nil)
 
 	daemon := NewDataPruningDaemon(mockDB)
 	require.NotNil(t, daemon)
