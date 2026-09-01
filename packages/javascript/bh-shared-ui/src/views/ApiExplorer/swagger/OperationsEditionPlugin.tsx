@@ -155,8 +155,8 @@ export class OperationSummaryWithEdition extends PureComponent<{
                                     ? 'Available in BloodHound Enterprise'
                                     : 'Not available in BloodHound Enterprise'
                             }
-                            width='47px'
-                            height='30px'
+                            width='50px'
+                            height='33px'
                         />
 
                         {displayOperationId && (originalOperationId || operationId) ? (
