@@ -21,6 +21,7 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
+    CardTitle,
     Table,
     TableBody,
     TableCell,
@@ -49,13 +50,11 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
 
     return (
         <Card className='min-h-[33rem] h-[33rem]'>
-            <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
+            <CardHeader className='px-6 first:pt-6'>
                 <div className='flex justify-between'>
-                    <span>Object Rule</span>
+                    <CardTitle>Object Rule</CardTitle>
                 </div>
-                <CardDescription className='pt-3 font-normal'>
-                    Use the input field to add objects to the list
-                </CardDescription>
+                <CardDescription className='pt-3'>Use the input field to add objects to the list</CardDescription>
             </CardHeader>
             <CardContent className='px-6'>
                 <div className='flex content-center mb-3'>

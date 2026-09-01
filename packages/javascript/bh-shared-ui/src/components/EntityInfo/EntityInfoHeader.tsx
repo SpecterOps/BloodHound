@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Tooltip } from 'doodle-ui';
+import { Tooltip, Typography } from 'doodle-ui';
 import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
@@ -55,11 +55,12 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
             </Icon>
             {isHidden ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
-                <h6
+                <Typography
+                    variant='h6'
                     data-testid='explore_entity-information-panel_header-text'
-                    className='truncate pl-2 pr-4 leading-10 grow'>
+                    className='truncate pl-2 pr-4 grow'>
                     {name}
-                </h6>
+                </Typography>
             </Tooltip>
             {selectedItem && (
                 <Icon className='box-border text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>

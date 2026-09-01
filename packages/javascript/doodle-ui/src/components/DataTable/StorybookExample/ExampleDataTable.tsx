@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ColumnPinningState } from '@tanstack/react-table';
 import React, { useState } from 'react';
+import { Pagination } from '../../Pagination';
 import { DataTable } from '../DataTable';
 import { getColumns, getData } from './utils';
-import { Pagination } from '../../Pagination';
 
 const DATA = getData(50);
 
@@ -98,7 +98,7 @@ const ExampleDataTable: React.FC = () => {
             <DataTable
                 TableProps={{ heightContainerClassName: 'overflow-auto' }}
                 TableHeadProps={{ className: 'font-bold text-base pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs font-roboto' }}
+                TableBodyProps={{ className: 'text-xs' }}
                 TableCellProps={{ className: 'pl-2 pr-4' }}
                 onRowClick={console.log}
                 selectedRow={data[0].id}

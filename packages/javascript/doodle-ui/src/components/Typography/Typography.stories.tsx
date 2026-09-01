@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
+import { Card, CardContent, CardHeader } from '../Card';
 import { Typography } from './Typography';
-import { tagOptions, Variant, variantMapping } from './utils';
+import { tagOptions, variantMapping } from './utils';
 
 const meta = {
     title: 'Components/Typography',
@@ -44,66 +45,88 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Usage:
- *
- * ```javascript
- * <Typography variant='h1' component='optional tag name'>Lorem ipsum dolor sit amet.</Typography>
- * ```
+ * Use the default body style for primary explanatory content in a product view.
+ * Leave `component` unset when a semantic paragraph is appropriate.
  */
-
 export const TypographyComponent: Story = {
     name: 'Typography',
     args: {
-        variant: 'h1',
-    },
-    render: (args) => {
-        const componentString = args.component || variantMapping[args.variant || 'body1'];
-        const codeString = `<${componentString} variant='${args.variant}'${args.component ? " component='" + args.component + "'" : ''}>Lorem ipsum dolor sit amet.</${componentString}>`;
-
-        return (
-            <>
-                <div className='mb-8'>
-                    <Typography variant={args.variant} {...args}>
-                        Lorem ipsum dolor sit amet.
-                    </Typography>
-                </div>
-                <p>Code Output:</p>
-                <code className='bg-sky-400/10 p-4 block rounded-lg'>{codeString}</code>
-            </>
-        );
+        variant: 'body1',
+        children:
+            'Review the attack paths that give principals control of your most critical assets before prioritizing remediation.',
     },
 };
 
 /**
- * #### Mapping
- *  > h1: 'h1'<br>
- *  > h2: 'h2'<br>
- *  > h3: 'h3'<br>
- *  > h4: 'h4'<br>
- *  > h5: 'h5'<br>
- *  > h6: 'h6'<br>
- *  > subtitle1: 'h6'<br>
- *  > subtitle2: 'h6'<br>
- *  > body1: 'p'<br>
- *  > body2: 'p'<br>
- *  > caption: 'span'<br>
+ * Use a heading variant to establish hierarchy within a view, so people can
+ * scan related content before reading its details.
  */
-
 export const Variants: Story = {
-    args: {},
-    render: () => {
-        const shortText = 'Heading';
-        const longText =
-            'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quos blanditiis tenetur unde suscipit, quam beatae rerum inventore consectetur, neque doloribus, cupiditate numquam dignissimos laborum fugiat deleniti? Eum quasi quidem quibusdam.';
-
-        const headings = Object.keys(variantMapping).map((variant, i) => {
-            return (
-                <Typography variant={variant as Variant} className='mb-4' key={variant}>
-                    {variant}. {i < 6 ? shortText : longText}
-                </Typography>
-            );
-        });
-
-        return <div>{headings}</div>;
+    args: {
+        variant: 'h2',
+        children: 'Attack paths requiring review',
     },
+};
+
+/**
+ * Use body text for long-form explanations that must remain readable when the
+ * available content width is constrained.
+ */
+export const MultilineAndLongText: Story = {
+    args: {
+        variant: 'body1',
+        children:
+            'This explanation remains readable when a narrow side panel or browser zoom reduces the available width. It wraps naturally without changing the intended visual hierarchy.',
+    },
+    render: (args) => (
+        <div className='w-80 max-w-full'>
+            <Typography {...args} />
+        </div>
+    ),
+};
+
+/**
+ * Pair a group name with supporting context and a compact count when users
+ * need to compare many related records without losing the important detail.
+ */
+export const DenseList: Story = {
+    args: {
+        variant: 'subtitle2',
+    },
+    render: (args) => (
+        <div className='w-[36rem] max-w-full divide-y divide-neutral-400 rounded border border-neutral-400'>
+            {['Domain Admins', 'Enterprise Admins', 'Remote Desktop Users', 'Backup Operators'].map((name, index) => (
+                <div className='grid grid-cols-[1fr_auto] gap-4 p-3' key={name}>
+                    <div>
+                        <Typography variant={args.variant}>{name}</Typography>
+                        <Typography variant='body2'>Active Directory group · Tier {index % 2}</Typography>
+                    </div>
+                    <Typography variant='caption'>{12 + index * 7} members</Typography>
+                </div>
+            ))}
+        </div>
+    ),
+};
+
+/**
+ * Combine a card title, status, and explanation to communicate a single
+ * focused decision without making the card compete with surrounding content.
+ */
+export const CardComposition: Story = {
+    args: {
+        variant: 'h3',
+    },
+    render: (args) => (
+        <Card className='w-[28rem] max-w-full'>
+            <CardHeader className='space-y-1'>
+                <Typography variant={args.variant}>Review attack-path exposure</Typography>
+                <Typography variant='subtitle2'>Updated a few seconds ago</Typography>
+            </CardHeader>
+            <CardContent>
+                <Typography variant='body1'>
+                    Prioritize the paths that give principals control of your most critical assets.
+                </Typography>
+            </CardContent>
+        </Card>
+    ),
 };

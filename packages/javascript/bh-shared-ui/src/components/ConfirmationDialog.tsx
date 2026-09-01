@@ -56,7 +56,7 @@ const ConfirmationDialog: React.FC<{
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
                 <DialogContent>
-                    <DialogTitle className='text-lg'>{title}</DialogTitle>
+                    <DialogTitle>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
                         <DialogDescription asChild className='text-sm'>

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, AlertTitle } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { FC } from 'react';
 import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
@@ -64,7 +65,9 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-6 mt-4 h-full'>
                 <div className='flex flex-col bg-neutral-2 pt-4 rounded-lg shadow-outer-1 basis-2/3'>
-                    <h2 className='font-bold text-xl pl-4 mb-2'>{tagTypeDisplay} Details</h2>
+                    <Typography variant='h2' className='pl-4 mb-2'>
+                        {tagTypeDisplay} Details
+                    </Typography>
                     <div className='flex flex-wrap justify-between w-full pb-6 border-b border-neutral-3 pl-4'>
                         <div className='flex gap-4 items-center'>
                             <TagSelector />
