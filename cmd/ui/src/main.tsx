@@ -18,7 +18,6 @@ import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
 import '@fontsource/nunito-sans/600.css';
 import '@fontsource/nunito-sans/700.css';
-import '@fontsource/roboto-mono';
 import { StyledEngineProvider } from '@mui/material';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from 'react-query';

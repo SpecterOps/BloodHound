@@ -93,9 +93,9 @@ export const RulesAccordion: React.FC = () => {
         <div>
             <div className='flex justify-between items-center pl-4 py-2 pr-12 border-b border-neutral-3'>
                 <Typography variant='h5'>Rules</Typography>
-                <span>
-                    <span className='font-bold'>Total Rules:</span> {selectedTag.counts[RulesKey].toLocaleString()}
-                </span>
+                <Typography variant='body1'>
+                    <strong>Total Rules:</strong> {selectedTag.counts[RulesKey].toLocaleString()}
+                </Typography>
             </div>
             <div
                 className={cn('border-b border-neutral-3 relative', {

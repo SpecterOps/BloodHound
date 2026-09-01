@@ -63,9 +63,9 @@ export const ObjectsAccordion: React.FC<ObjectsAccordionProps> = ({
         <div>
             <div className='flex justify-between items-center pl-4 py-2 pr-12 border-b border-neutral-3'>
                 <Typography variant='h5'>Objects</Typography>
-                <span>
-                    <span className='font-bold'>Total Objects:</span> {totalCount.toLocaleString()}
-                </span>
+                <Typography variant='body1'>
+                    <strong>Total Objects:</strong> {totalCount.toLocaleString()}
+                </Typography>
             </div>
             <Accordion
                 type='single'

@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='h-10 box-border text-contrast p-4'
+                className='h-10 ml-1 box-border text-contrast'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
@@ -51,13 +51,13 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
             {isHidden && <HiddenEntityIcon />}
 
             <Typography
-                variant='h2'
+                variant='h5'
                 data-testid='explore_edge-information-pane_header-text'
                 className='text-nowrap grow'>
                 {name}
             </Typography>
 
-            <Icon className='h-10 box-border p-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+            <Icon className='h-10 box-border mr-1 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
                 <FontAwesomeIcon icon={faRemove} />
             </Icon>
         </div>

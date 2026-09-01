@@ -186,7 +186,7 @@ const CommonSearches = ({
                     className='flex justify-start items-center w-full rounded-sm'
                     data-testid='common-queries-toggle'>
                     <FontAwesomeIcon className='px-1 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                    <Typography variant='h5' component='span' className='my-4'>
+                    <Typography variant='h5' className='my-2'>
                         Saved Queries
                     </Typography>
                 </TextButton>
