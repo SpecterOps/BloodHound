@@ -25,6 +25,7 @@ type SavedQuery struct {
 	Name              string  `json:"name" gorm:"index:,unique,composite:compositeIndex"`
 	Query             string  `json:"query"`
 	Description       string  `json:"description"`
+	Category          string  `json:"-" gorm:"column:category"`
 	SchemaExtensionID *int32  `json:"-" gorm:"column:schema_extension_id;index:,unique,composite:compositeIndex;index:,unique,composite:extensionQueryKey"`
 	QueryKey          *string `json:"-" gorm:"column:query_key;index:,unique,composite:extensionQueryKey"`
 	BigSerial

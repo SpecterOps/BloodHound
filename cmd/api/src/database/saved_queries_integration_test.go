@@ -52,7 +52,7 @@ func TestSavedQueries_ListSavedQueries(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 7; i++ {
-		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", nil, nil); err != nil {
+		if _, err := dbInst.CreateSavedQuery(testCtx, userUUID, fmt.Sprintf("saved_query_%d", i), "", "", nil, nil, ""); err != nil {
 			t.Fatalf("Error creating audit log: %v", err)
 		}
 	}
@@ -100,6 +100,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 		description       string
 		schemaExtensionID *int32
 		queryKey          *string
+		category          string
 	}
 	type testCase struct {
 		name     string
@@ -114,7 +115,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 
 	tests := []testCase{
 		{
-			name: "success_-_extension_and_query_key_persist",
+			name: "success_-_create_extension_query",
 			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "CreateSQPersistExt", "Create SQ Persist Ext", "v1.0.0", "create_sq_persist_ns")
@@ -125,19 +126,22 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 					description:       "desc",
 					schemaExtensionID: &ext.ID,
 					queryKey:          stringPtr("ext_query_key"),
+					category:          "extension",
 				}
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				require.NoError(t, err)
 				assert.Equal(t, setupData.schemaExtensionID, created.SchemaExtensionID)
 				assert.Equal(t, setupData.queryKey, created.QueryKey)
+				assert.Equal(t, setupData.category, created.Category)
 
 				fetched, err := suite.BHDatabase.GetSavedQuery(suite.Context, created.ID)
 				require.NoError(t, err)
 				assert.Equal(t, setupData.schemaExtensionID, fetched.SchemaExtensionID)
 				assert.Equal(t, setupData.queryKey, fetched.QueryKey)
+				assert.Equal(t, setupData.category, fetched.Category)
 				return created
 			},
 			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
@@ -146,26 +150,29 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 		},
 		{
-			name: "success_-_no_extension_or_query_key_persists_as_null",
+			name: "success_-_create_user_query",
 			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				return testSetupData{
 					name:        "user_query",
 					query:       "MATCH (n) RETURN n",
 					description: "desc",
+					category:    "",
 				}
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				require.NoError(t, err)
 				assert.Nil(t, created.SchemaExtensionID)
 				assert.Nil(t, created.QueryKey)
+				assert.Equal(t, setupData.category, created.Category)
 
 				fetched, err := suite.BHDatabase.GetSavedQuery(suite.Context, created.ID)
 				require.NoError(t, err)
 				assert.Nil(t, fetched.SchemaExtensionID)
 				assert.Nil(t, fetched.QueryKey)
+				assert.Equal(t, setupData.category, fetched.Category)
 				return created
 			},
 			teardown: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData, created model.SavedQuery) {
@@ -189,7 +196,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				require.NoError(t, err)
 				require.NoError(t, suite.BHDatabase.DeleteGraphSchemaExtension(suite.Context, *setupData.schemaExtensionID))
 
@@ -217,7 +224,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
@@ -239,7 +246,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
@@ -253,7 +260,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			setup: func(t *testing.T, suite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				name := "duplicate_user_name"
-				savedQuery, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, name, "MATCH (n) RETURN n", "desc", nil, nil)
+				savedQuery, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, name, "MATCH (n) RETURN n", "desc", nil, nil, "")
 				require.NoError(t, err)
 				return testSetupData{
 					name:         name,
@@ -264,7 +271,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, nil, nil)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, nil, nil, setupData.category)
 				assertSavedQueryConstraintError(t, err, "idx_saved_queries_user_id_name")
 				return created
 			},
@@ -281,7 +288,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 				require.NoError(t, err)
 
 				name := "duplicate_extension_name"
-				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, name, "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("first"))
+				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, name, "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("first"), "")
 				require.NoError(t, err)
 
 				return testSetupData{
@@ -294,7 +301,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "idx_saved_queries_schema_extension_id_name")
 				return created
 			},
@@ -310,7 +317,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 				ext, err := suite.BHDatabase.CreateGraphSchemaExtension(suite.Context, "DupKeyExt", "Dup Key Ext", "v1.0.0", "dup_key_ns")
 				require.NoError(t, err)
 
-				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, "dup_first", "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("dup"))
+				_, err = suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, "dup_first", "MATCH (n) RETURN n", "desc", &ext.ID, stringPtr("dup"), "")
 				require.NoError(t, err)
 
 				return testSetupData{
@@ -323,7 +330,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "idx_saved_queries_extension_query_key")
 				return created
 			},
@@ -348,7 +355,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, userUUID, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
@@ -369,7 +376,7 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, setupData testSetupData) model.SavedQuery {
 				t.Helper()
-				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey)
+				created, err := suite.BHDatabase.CreateSavedQuery(suite.Context, uuid.Nil, setupData.name, setupData.query, setupData.description, setupData.schemaExtensionID, setupData.queryKey, setupData.category)
 				assertSavedQueryConstraintError(t, err, "chk_saved_queries_extension_shape")
 				return created
 			},
