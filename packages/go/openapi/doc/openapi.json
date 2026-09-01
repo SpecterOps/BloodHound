@@ -22510,7 +22510,7 @@
       "post": {
         "operationId": "RetryAlertAttempt",
         "summary": "Retry Alert Attempt",
-        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded.\n",
+        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded, or when the alert, event, or channel/webhook are disabled.\n",
         "tags": [
           "Alerts",
           "Enterprise"
