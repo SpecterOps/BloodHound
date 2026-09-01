@@ -54,6 +54,7 @@ const validPZRulesJSON = `{
 const validSavedQueriesJSON = `{
 	"queries": [
 		{
+			"query_key": "all-domain-admins",
 			"name": "All Domain Admins",
 			"query": "MATCH (n) RETURN n LIMIT 1",
 			"description": "example"
@@ -133,6 +134,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 		wantHasSchema    bool
 		wantHasPZRules   bool
 		wantHasSavedQrys bool
+		wantQueryKey     string
 	}{
 		{
 			name:           "valid zip with only schema.json yields a schema-only bundle",
@@ -166,6 +168,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 			wantHasSchema:    true,
 			wantHasPZRules:   true,
 			wantHasSavedQrys: true,
+			wantQueryKey:     "all-domain-admins",
 		},
 		{
 			name:           "missing schema.json is an extractor error",
@@ -230,6 +233,10 @@ func TestExtractBundleFromZip(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantHasPZRules, extension.PZRules != nil)
 			assert.Equal(t, tt.wantHasSavedQrys, extension.SavedQueries != nil)
+			if tt.wantQueryKey != "" {
+				require.NotEmpty(t, extension.SavedQueries.Queries)
+				assert.Equal(t, tt.wantQueryKey, extension.SavedQueries.Queries[0].QueryKey)
+			}
 		})
 	}
 }

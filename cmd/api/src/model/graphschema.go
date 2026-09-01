@@ -501,6 +501,7 @@ type SavedQueriesInput []SavedQueryInput
 type SavedQueryInput struct {
 	Name        string
 	Query       string
+	QueryKey    string
 	Description string
 }
 
@@ -785,6 +786,7 @@ type PZRulesPayload struct {
 type SavedQueryPayload struct {
 	Name        string `json:"name"`
 	Query       string `json:"query"`
+	QueryKey    string `json:"query_key"`
 	Description string `json:"description"`
 }
 
@@ -992,6 +994,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 		graphExtension.SavedQueriesInput = make(SavedQueriesInput, 0, len(s.SavedQueries.Queries))
 		for _, queryPayload := range s.SavedQueries.Queries {
 			graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput{
+				QueryKey:    queryPayload.QueryKey,
 				Name:        queryPayload.Name,
 				Query:       queryPayload.Query,
 				Description: queryPayload.Description,
