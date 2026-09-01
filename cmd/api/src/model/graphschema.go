@@ -481,6 +481,7 @@ type SavedQueryInput struct {
 	Name        string
 	Query       string
 	Description string
+	Category    string
 }
 
 type GraphExtensionInput struct {
@@ -843,6 +844,7 @@ type SavedQueryPayload struct {
 	Name        string `json:"name"`
 	Query       string `json:"query"`
 	Description string `json:"description"`
+	Category    string `json:"category"`
 }
 
 type SavedQueriesPayload []SavedQueryPayload
@@ -908,6 +910,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			NodeKindsInput:         make(NodesInput, 0),
 			RelationshipKindsInput: make(RelationshipsInput, 0),
 			EnvironmentsInput:      make(EnvironmentsInput, 0),
+			SavedQueriesInput:      make(SavedQueriesInput, 0),
 		}
 		infoInputs    KindInfoInputs
 		autoCertify   SelectorAutoCertifyMethod

@@ -1307,6 +1307,9 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 							},
 						},
 					},
+					SavedQueries: &SavedQueriesPayload{{
+						QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
+					}},
 				},
 			},
 			want: GraphExtensionInput{
@@ -1356,20 +1359,21 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 						},
 					},
 				},
+				SavedQueriesInput: SavedQueriesInput{{
+					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
+				}},
 			},
 		},
 		{
-			name: "success_-_saved_query",
-			args: args{payload: GraphExtensionPayload{SavedQueries: &SavedQueriesPayload{{
-				QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
-			}}}},
+			name: "success_without_saved_queries",
+			args: args{
+				payload: GraphExtensionPayload{},
+			},
 			want: GraphExtensionInput{
-				RelationshipKindsInput: RelationshipsInput{},
-				NodeKindsInput:         NodesInput{},
-				EnvironmentsInput:      EnvironmentsInput{},
-				SavedQueriesInput: SavedQueriesInput{{
-					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
-				}},
+				NodeKindsInput:         make(NodesInput, 0),
+				RelationshipKindsInput: make(RelationshipsInput, 0),
+				EnvironmentsInput:      make(EnvironmentsInput, 0),
+				SavedQueriesInput:      make(SavedQueriesInput, 0),
 			},
 		},
 		{
