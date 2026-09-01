@@ -475,11 +475,13 @@ type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWi
 // Graph Extension Upsert Input
 
 type SavedQueriesInput []SavedQueryInput
+
 type SavedQueryInput struct {
 	QueryKey    string
 	Name        string
 	Query       string
 	Description string
+	Category    string
 }
 
 type GraphExtensionInput struct {
@@ -779,6 +781,7 @@ type SavedQueryPayload struct {
 	Name        string `json:"name"`
 	Query       string `json:"query"`
 	Description string `json:"description"`
+	Category    string `json:"category"`
 }
 
 // parseInfoPayload converts the typed KindInfoPayload map to a KindInfoInputs slice

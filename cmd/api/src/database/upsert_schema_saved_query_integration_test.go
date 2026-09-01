@@ -18,7 +18,6 @@
 package database_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -28,12 +27,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func savedQuery(queryKey string, name string, query string, description string) model.SavedQueryInput {
+func savedQuery(queryKey string, name string, query string, description string, category string) model.SavedQueryInput {
 	return model.SavedQueryInput{
 		QueryKey:    queryKey,
 		Name:        name,
 		Query:       query,
 		Description: description,
+		Category:    category,
 	}
 }
 
@@ -52,43 +52,44 @@ func upsertExtensionSavedQueries(t *testing.T, testSuite IntegrationTestSuite, e
 	return extensions[0].ID
 }
 
-func requireExtensionSavedQueries(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, expectedSavedQueries ...model.SavedQueryInput) map[string]model.SavedQuery {
+func assertExtensionSavedQueries(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, expectedSavedQueries ...model.SavedQueryInput) map[string]model.SavedQuery {
 	t.Helper()
 	var (
 		expectedSavedQueriesByKey = map[string]model.SavedQueryInput{}
 		savedQueriesByKey         = map[string]model.SavedQuery{}
 	)
 	for _, expectedSavedQuery := range expectedSavedQueries {
-		expectedSavedQueriesByKey[strings.ToLower(expectedSavedQuery.QueryKey)] = expectedSavedQuery
+		expectedSavedQueriesByKey[expectedSavedQuery.QueryKey] = expectedSavedQuery
 	}
 	savedQueries, err := testSuite.BHDatabase.GetSavedQueriesByExtensionID(testSuite.Context, extensionID)
 	require.NoError(t, err)
-	require.Len(t, savedQueries, len(expectedSavedQueries))
+	assert.Len(t, savedQueries, len(expectedSavedQueries))
 	for _, savedQuery := range savedQueries {
 		require.NotNil(t, savedQuery.QueryKey)
-		normalizedQueryKey := strings.ToLower(*savedQuery.QueryKey)
-		expectedSavedQuery, found := expectedSavedQueriesByKey[normalizedQueryKey]
-		require.True(t, found)
-		require.Equal(t, expectedSavedQuery.QueryKey, *savedQuery.QueryKey)
-		require.Equal(t, uuid.Nil.String(), savedQuery.UserID)
+		queryKey := *savedQuery.QueryKey
+		expectedSavedQuery, found := expectedSavedQueriesByKey[queryKey]
+		assert.True(t, found)
+		assert.Equal(t, expectedSavedQuery.QueryKey, *savedQuery.QueryKey)
+		assert.Equal(t, uuid.Nil.String(), savedQuery.UserID)
 		require.NotNil(t, savedQuery.SchemaExtensionID)
-		require.Equal(t, extensionID, *savedQuery.SchemaExtensionID)
-		require.Equal(t, expectedSavedQuery.Name, savedQuery.Name)
-		require.Equal(t, expectedSavedQuery.Query, savedQuery.Query)
-		require.Equal(t, expectedSavedQuery.Description, savedQuery.Description)
+		assert.Equal(t, extensionID, *savedQuery.SchemaExtensionID)
+		assert.Equal(t, expectedSavedQuery.Category, savedQuery.Category)
+		assert.Equal(t, expectedSavedQuery.Name, savedQuery.Name)
+		assert.Equal(t, expectedSavedQuery.Query, savedQuery.Query)
+		assert.Equal(t, expectedSavedQuery.Description, savedQuery.Description)
 		isPublic, err := testSuite.BHDatabase.IsSavedQueryPublic(testSuite.Context, savedQuery.ID)
 		require.NoError(t, err)
-		require.True(t, isPublic)
-		savedQueriesByKey[normalizedQueryKey] = savedQuery
+		assert.True(t, isPublic)
+		savedQueriesByKey[queryKey] = savedQuery
 	}
 	return savedQueriesByKey
 }
 
-func requireSavedQueriesDeleted(t *testing.T, testSuite IntegrationTestSuite, savedQueryIDs ...int64) {
+func assertSavedQueriesDeleted(t *testing.T, testSuite IntegrationTestSuite, savedQueryIDs ...int64) {
 	t.Helper()
 	for _, savedQueryID := range savedQueryIDs {
 		_, err := testSuite.BHDatabase.GetSavedQuery(testSuite.Context, savedQueryID)
-		require.ErrorIs(t, err, database.ErrNotFound)
+		assert.ErrorIs(t, err, database.ErrNotFound)
 	}
 }
 
@@ -100,39 +101,49 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 		existingSavedQueriesByKey map[string]model.SavedQuery
 		deletedSavedQueryIDs      []int64
 	}
+
+	var (
+		baseGraphExtensionInput = model.GraphExtensionInput{
+			ExtensionInput: model.ExtensionInput{
+				DisplayName: "Saved Query Extension",
+				Version:     "1.0.0",
+				Namespace:   "SQ",
+			},
+			NodeKindsInput: model.NodesInput{{Name: "SQ_Node"}},
+		}
+		teardownExtension = func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
+			t.Helper()
+			if setupData.extensionID != 0 {
+				assert.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, setupData.extensionID))
+			}
+		}
+	)
+	t.Parallel()
+	testSuite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
 	type testCase struct {
 		name     string
 		setup    func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
 		assert   func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, updated bool, err error)
 		teardown func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData)
 	}
-	graphExtensionWithSavedQueries := func(extensionName string, savedQueries model.SavedQueriesInput) model.GraphExtensionInput {
-		return model.GraphExtensionInput{
-			ExtensionInput:    model.ExtensionInput{Name: extensionName, DisplayName: "Saved Query Extension", Version: "1.0.0", Namespace: "SQ"},
-			NodeKindsInput:    model.NodesInput{{Name: "SQ_Node"}},
-			SavedQueriesInput: savedQueries,
-		}
-	}
-	teardownExtension := func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData) {
-		t.Helper()
-		if setupData.extensionID != 0 {
-			assert.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, setupData.extensionID))
-		}
-	}
-	t.Parallel()
-	testSuite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &testSuite)
 	tests := []testCase{
 		{
 			name: "Create",
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
-				expectedSavedQueries := model.SavedQueriesInput{
-					savedQuery("one", "One", "RETURN 1", "first"),
-					savedQuery("two", "Two", "RETURN 2", "second"),
-				}
+				var (
+					expectedSavedQueries = model.SavedQueriesInput{
+						savedQuery("one", "One", "RETURN 1", "first", "First Category"),
+						savedQuery("two", "Two", "RETURN 2", "second", "Second Category"),
+					}
+					graphExtensionInput = baseGraphExtensionInput
+				)
+				graphExtensionInput.ExtensionInput.Name = "SavedQueryReconcileCreate"
+				graphExtensionInput.SavedQueriesInput = expectedSavedQueries
 				return testSetupData{
-					graphExtensionInput:  graphExtensionWithSavedQueries("SavedQueryReconcileCreate", expectedSavedQueries),
+					graphExtensionInput:  graphExtensionInput,
 					expectedSavedQueries: expectedSavedQueries,
 				}
 			},
@@ -150,7 +161,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				require.NoError(t, lookupErr)
 				require.Len(t, graphSchemaExtensions, 1)
 				setupData.extensionID = graphSchemaExtensions[0].ID
-				requireExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
+				assertExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
 			},
 			teardown: teardownExtension,
 		},
@@ -160,14 +171,17 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				t.Helper()
 				var (
 					extensionName             = "SavedQueryReconcileUpdate"
-					initialSavedQueries       = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "old")}
-					expectedSavedQueries      = model.SavedQueriesInput{savedQuery("keep", "Updated", "RETURN 2", "new")}
-					updatedSavedQueries       = model.SavedQueriesInput{savedQuery("KEEP", "Updated", "RETURN 2", "new")}
+					initialSavedQueries       = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "old", "Old Category")}
+					expectedSavedQueries      = model.SavedQueriesInput{savedQuery("keep", "Updated", "RETURN 2", "new", "New Category")}
+					updatedSavedQueries       = model.SavedQueriesInput{savedQuery("keep", "Updated", "RETURN 2", "new", "New Category")}
+					graphExtensionInput       = baseGraphExtensionInput
 					extensionID               = upsertExtensionSavedQueries(t, testSuite, extensionName, initialSavedQueries...)
-					existingSavedQueriesByKey = requireExtensionSavedQueries(t, testSuite, extensionID, initialSavedQueries...)
+					existingSavedQueriesByKey = assertExtensionSavedQueries(t, testSuite, extensionID, initialSavedQueries...)
 				)
+				graphExtensionInput.ExtensionInput.Name = extensionName
+				graphExtensionInput.SavedQueriesInput = updatedSavedQueries
 				return testSetupData{
-					graphExtensionInput:       graphExtensionWithSavedQueries(extensionName, updatedSavedQueries),
+					graphExtensionInput:       graphExtensionInput,
 					extensionID:               extensionID,
 					expectedSavedQueries:      expectedSavedQueries,
 					existingSavedQueriesByKey: existingSavedQueriesByKey,
@@ -177,7 +191,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				t.Helper()
 				require.NoError(t, err)
 				assert.True(t, updated)
-				currentSavedQueriesByKey := requireExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
+				currentSavedQueriesByKey := assertExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
 				require.Equal(t, setupData.existingSavedQueriesByKey["keep"].ID, currentSavedQueriesByKey["keep"].ID)
 			},
 			teardown: teardownExtension,
@@ -188,13 +202,16 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				t.Helper()
 				var (
 					extensionName        = "SavedQueryReconcileDelete"
-					initialSavedQueries  = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "keep"), savedQuery("drop", "Drop", "RETURN 2", "drop")}
-					expectedSavedQueries = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "keep")}
+					initialSavedQueries  = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "keep", "Keep Category"), savedQuery("drop", "Drop", "RETURN 2", "drop", "Drop Category")}
+					expectedSavedQueries = model.SavedQueriesInput{savedQuery("keep", "Keep", "RETURN 1", "keep", "Keep Category")}
+					graphExtensionInput  = baseGraphExtensionInput
 					extensionID          = upsertExtensionSavedQueries(t, testSuite, extensionName, initialSavedQueries...)
-					savedQueriesByKey    = requireExtensionSavedQueries(t, testSuite, extensionID, initialSavedQueries...)
+					savedQueriesByKey    = assertExtensionSavedQueries(t, testSuite, extensionID, initialSavedQueries...)
 				)
+				graphExtensionInput.ExtensionInput.Name = extensionName
+				graphExtensionInput.SavedQueriesInput = expectedSavedQueries
 				return testSetupData{
-					graphExtensionInput:  graphExtensionWithSavedQueries(extensionName, expectedSavedQueries),
+					graphExtensionInput:  graphExtensionInput,
 					extensionID:          extensionID,
 					expectedSavedQueries: expectedSavedQueries,
 					deletedSavedQueryIDs: []int64{savedQueriesByKey["drop"].ID},
@@ -204,8 +221,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				t.Helper()
 				require.NoError(t, err)
 				assert.True(t, updated)
-				requireExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
-				requireSavedQueriesDeleted(t, testSuite, setupData.deletedSavedQueryIDs...)
+				assertExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
+				assertSavedQueriesDeleted(t, testSuite, setupData.deletedSavedQueryIDs...)
 			},
 			teardown: teardownExtension,
 		},

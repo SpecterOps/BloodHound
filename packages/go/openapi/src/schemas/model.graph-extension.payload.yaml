@@ -144,3 +144,7 @@ properties:
           type: string
           description: An optional description of the saved query.
           example: Lists all critical assets.
+        category:
+          type: string
+          description: An optional category for grouping the saved query.
+          example: Asset Management

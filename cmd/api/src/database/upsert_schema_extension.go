@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid"
 
@@ -133,7 +132,7 @@ func (s *BloodhoundDB) createNewExtension(ctx context.Context, extensionInput mo
 
 func (s *BloodhoundDB) createExtensionSavedQuery(ctx context.Context, extensionID int32, input model.SavedQueryInput) (model.SavedQuery, error) {
 	queryKey := input.QueryKey
-	if created, err := s.CreateSavedQuery(ctx, uuid.Nil, input.Name, input.Query, input.Description, &extensionID, &queryKey); err != nil {
+	if created, err := s.CreateSavedQuery(ctx, uuid.Nil, input.Name, input.Query, input.Description, &extensionID, &queryKey, input.Category); err != nil {
 		return model.SavedQuery{}, fmt.Errorf("failed to create extension saved query %q: %w", input.QueryKey, err)
 	} else if _, err := s.CreateSavedQueryPermissionToPublic(ctx, created.ID); err != nil {
 		return model.SavedQuery{}, fmt.Errorf("failed to make extension saved query %q public: %w", input.QueryKey, err)
@@ -144,12 +143,13 @@ func (s *BloodhoundDB) createExtensionSavedQuery(ctx context.Context, extensionI
 
 func (s *BloodhoundDB) savedQueryReconcileConfig(extensionID int32) reconcileConfig[model.SavedQueryInput, model.SavedQuery, string] {
 	return reconcileConfig[model.SavedQueryInput, model.SavedQuery, string]{
-		getInputKey:    func(input model.SavedQueryInput) string { return strings.ToLower(input.QueryKey) },
-		getExistingKey: func(existing model.SavedQuery) string { return strings.ToLower(*existing.QueryKey) },
+		getInputKey:    func(input model.SavedQueryInput) string { return input.QueryKey },
+		getExistingKey: func(existing model.SavedQuery) string { return *existing.QueryKey },
 		create: func(ctx context.Context, input model.SavedQueryInput) (model.SavedQuery, error) {
 			return s.createExtensionSavedQuery(ctx, extensionID, input)
 		},
 		update: func(ctx context.Context, existing model.SavedQuery, input model.SavedQueryInput) (model.SavedQuery, error) {
+			existing.Category = input.Category
 			existing.Name = input.Name
 			existing.Query = input.Query
 			existing.Description = input.Description

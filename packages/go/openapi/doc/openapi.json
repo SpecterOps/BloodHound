@@ -7938,7 +7938,8 @@
                         "query_key": "all-node-kind-1",
                         "name": "All Node Kind 1",
                         "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
-                        "description": "Lists all OGE_Node_Kind_1 nodes."
+                        "description": "Lists all OGE_Node_Kind_1 nodes.",
+                        "category": "Asset Management"
                       }
                     ]
                   }
@@ -25792,6 +25793,11 @@
                   "type": "string",
                   "description": "An optional description of the saved query.",
                   "example": "Lists all critical assets."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "An optional category for grouping the saved query.",
+                  "example": "Asset Management"
                 }
               }
             }

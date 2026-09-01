@@ -1307,6 +1307,9 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 							},
 						},
 					},
+					SavedQueries: []SavedQueryPayload{{
+						QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
+					}},
 				},
 			},
 			want: GraphExtensionInput{
@@ -1356,19 +1359,8 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			name: "success_-_saved_query",
-			args: args{payload: GraphExtensionPayload{SavedQueries: []SavedQueryPayload{{
-				QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
-			}}}},
-			want: GraphExtensionInput{
-				RelationshipKindsInput: RelationshipsInput{},
-				NodeKindsInput:         NodesInput{},
-				EnvironmentsInput:      EnvironmentsInput{},
 				SavedQueriesInput: SavedQueriesInput{{
-					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description",
+					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
 				}},
 			},
 		},
