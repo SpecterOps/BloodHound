@@ -14,12 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from '../Button';
-import { Card, CardContent, CardFooter, CardHeader } from '../Card';
-import { Input } from '../Input';
-import { Link } from '../Link';
+import { Card, CardContent, CardHeader } from '../Card';
 import { Typography } from './Typography';
-import { tagOptions, Variant, variantMapping } from './utils';
+import { tagOptions, variantMapping } from './utils';
 
 const meta = {
     title: 'Components/Typography',
@@ -48,96 +45,60 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Usage:
- *
- * ```javascript
- * <Typography variant='h1' component='optional tag name'>Lorem ipsum dolor sit amet.</Typography>
- * ```
+ * Use the default body style for primary explanatory content in a product view.
+ * Leave `component` unset when a semantic paragraph is appropriate.
  */
-
 export const TypographyComponent: Story = {
     name: 'Typography',
     args: {
-        variant: 'h1',
-    },
-    render: (args) => {
-        const componentString = args.component || variantMapping[args.variant || 'body1'];
-        const codeString = `<${componentString} variant='${args.variant}'${args.component ? " component='" + args.component + "'" : ''}>Lorem ipsum dolor sit amet.</${componentString}>`;
-
-        return (
-            <>
-                <div className='mb-8'>
-                    <Typography variant={args.variant} {...args}>
-                        Lorem ipsum dolor sit amet.
-                    </Typography>
-                </div>
-                <p>Code Output:</p>
-                <code className='bg-sky-400/10 p-4 block rounded-lg'>{codeString}</code>
-            </>
-        );
+        variant: 'body1',
+        children:
+            'Review the attack paths that give principals control of your most critical assets before prioritizing remediation.',
     },
 };
 
 /**
- * #### Mapping
- *  > h1: 'h1'<br>
- *  > h2: 'h2'<br>
- *  > h3: 'h3'<br>
- *  > h4: 'h4'<br>
- *  > h5: 'h5'<br>
- *  > h6: 'h6'<br>
- *  > subtitle1: 'h6'<br>
- *  > subtitle2: 'h6'<br>
- *  > body1: 'p'<br>
- *  > body2: 'p'<br>
- *  > caption: 'span'<br>
+ * Use a heading variant to establish hierarchy within a view, so people can
+ * scan related content before reading its details.
  */
-
 export const Variants: Story = {
-    args: {},
-    render: () => {
-        return (
-            <div className='w-[32rem] max-w-full space-y-4'>
-                {Object.keys(variantMapping).map((variant) => (
-                    <Typography variant={variant as Variant} key={variant}>
-                        {variant}. The quick brown fox jumps over the lazy dog.
-                    </Typography>
-                ))}
-            </div>
-        );
+    args: {
+        variant: 'h2',
+        children: 'Attack paths requiring review',
     },
 };
 
+/**
+ * Use body text for long-form explanations that must remain readable when the
+ * available content width is constrained.
+ */
 export const MultilineAndLongText: Story = {
-    args: {},
-    render: () => (
-        <div className='w-80 max-w-full space-y-4'>
-            <Typography variant='h2'>
-                A compact heading that wraps cleanly across multiple lines without clipping
-            </Typography>
-            <Typography variant='body1'>
-                Body1 remains comfortable for longer explanatory content. This deliberately long string verifies
-                wrapping, line boxes, descenders, and spacing when the viewport or browser zoom reduces available width.
-            </Typography>
-            <Typography variant='body2'>
-                Body2 supports dense product interfaces while preserving its existing size and line height across
-                several lines of supporting information.
-            </Typography>
-            <Typography variant='caption'>
-                Caption: extraordinarily-long-unbroken-identifier-for-overflow-validation.example
-            </Typography>
+    args: {
+        variant: 'body1',
+        children:
+            'This explanation remains readable when a narrow side panel or browser zoom reduces the available width. It wraps naturally without changing the intended visual hierarchy.',
+    },
+    render: (args) => (
+        <div className='w-80 max-w-full'>
+            <Typography {...args} />
         </div>
     ),
 };
 
+/**
+ * Pair a group name with supporting context and a compact count when users
+ * need to compare many related records without losing the important detail.
+ */
 export const DenseList: Story = {
-    args: {},
-    render: () => (
+    args: {
+        variant: 'subtitle2',
+    },
+    render: (args) => (
         <div className='w-[36rem] max-w-full divide-y divide-neutral-400 rounded border border-neutral-400'>
             {['Domain Admins', 'Enterprise Admins', 'Remote Desktop Users', 'Backup Operators'].map((name, index) => (
                 <div className='grid grid-cols-[1fr_auto] gap-4 p-3' key={name}>
                     <div>
-                        <Typography variant='subtitle2'>{name}</Typography>
+                        <Typography variant={args.variant}>{name}</Typography>
                         <Typography variant='body2'>Active Directory group · Tier {index % 2}</Typography>
                     </div>
                     <Typography variant='caption'>{12 + index * 7} members</Typography>
@@ -147,43 +108,25 @@ export const DenseList: Story = {
     ),
 };
 
+/**
+ * Combine a card title, status, and explanation to communicate a single
+ * focused decision without making the card compete with surrounding content.
+ */
 export const CardComposition: Story = {
-    args: {},
-    render: () => (
+    args: {
+        variant: 'h3',
+    },
+    render: (args) => (
         <Card className='w-[28rem] max-w-full'>
-            <CardHeader>
-                <Typography variant='h3'>Review attack-path exposure</Typography>
+            <CardHeader className='space-y-1'>
+                <Typography variant={args.variant}>Review attack-path exposure</Typography>
                 <Typography variant='subtitle2'>Updated a few seconds ago</Typography>
             </CardHeader>
-            <CardContent className='space-y-3'>
+            <CardContent>
                 <Typography variant='body1'>
                     Prioritize the paths that give principals control of your most critical assets.
                 </Typography>
-                <Typography variant='body2'>
-                    Learn how exposure is calculated in the{' '}
-                    <Link href='https://bloodhound.specterops.io/' className='inline-flex'>
-                        BloodHound documentation
-                    </Link>
-                    .
-                </Typography>
-                <div>
-                    <Typography id='typography-card-filter-label' variant='caption' component='span'>
-                        Filter by asset name
-                    </Typography>
-                    <Input
-                        id='typography-card-filter'
-                        aria-labelledby='typography-card-filter-label'
-                        className='mt-1'
-                        placeholder='Search assets'
-                    />
-                </div>
             </CardContent>
-            <CardFooter className='gap-2'>
-                <Button size='small'>Review paths</Button>
-                <Button size='small' variant='secondary'>
-                    Dismiss
-                </Button>
-            </CardFooter>
         </Card>
     ),
 };
