@@ -18,6 +18,7 @@ import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
     DEFAULT_PINNED_COLUMN_KEYS,
+    ExploreSearchTab,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -48,6 +49,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
+import { capitalize } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -110,6 +112,12 @@ const GraphView: FC = () => {
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay(autoDisplayTableEnabled);
     // TODO: incorporate into larger hook with auto display table logic
     const displayTable = searchType === 'cypher' && (isExploreTableSelected || autoDisplayTable);
+
+    const formattedHiddenHeadingTabDisplay = (currentTab: ExploreSearchTab | null) => {
+        if (!currentTab || currentTab === 'node') return 'Search';
+        return capitalize(currentTab);
+    };
+    const hiddenHeading = `Explore - ${formattedHiddenHeadingTabDisplay(exploreSearchTab)} tab`;
 
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
@@ -272,6 +280,8 @@ const GraphView: FC = () => {
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
             {title}
+            {/* Added for Screen Readers */}
+            <h1 className='sr-only'>{hiddenHeading}</h1>
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
