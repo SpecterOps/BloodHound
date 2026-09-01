@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Switch } from 'doodle-ui';
+import { Switch, Typography } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
 import { cn } from '../utils';
 
@@ -42,14 +42,14 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({
                 'bg-neutral-2/30 border-neutral-3 shadow-none': !isEnabled,
             })}>
             <div className='flex justify-between mb-4'>
-                <h4 className='font-bold text-lg'>{title}</h4>
+                <Typography variant='h4'>{title}</Typography>
                 <Switch
                     label={isEnabled ? 'On' : 'Off'}
                     checked={isEnabled}
                     onCheckedChange={onSwitchChange}
                     disabled={disableSwitch}></Switch>
             </div>
-            {children || <p>{description}</p>}
+            {children || <Typography variant='body1'>{description}</Typography>}
         </div>
     );
 };

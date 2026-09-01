@@ -16,7 +16,7 @@
 
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { TextButton } from 'doodle-ui';
+import { TextButton, Typography } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { useMemo, useState } from 'react';
 import PrebuiltSearchList from '../../../../components/PrebuiltSearchList';
@@ -186,7 +186,9 @@ const CommonSearches = ({
                     className='flex justify-start items-center w-full rounded-sm'
                     data-testid='common-queries-toggle'>
                     <FontAwesomeIcon className='px-1 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
-                    <span className='font-semibold text-lg py-0.5'>Saved Queries</span>
+                    <Typography variant='h5' className='my-2'>
+                        Saved Queries
+                    </Typography>
                 </TextButton>
             </div>
 

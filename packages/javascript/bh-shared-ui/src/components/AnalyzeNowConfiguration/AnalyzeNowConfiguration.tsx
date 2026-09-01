@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button } from 'doodle-ui';
+import { Button, Typography } from 'doodle-ui';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNotifications } from '../../providers';
@@ -65,14 +65,18 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
         <>
             <div>
                 <div className='flex justify-between items-center'>
-                    <h4 className='font-medium text-xl '>Run Analysis Now</h4>
+                    <Typography variant='h4'>Run Analysis Now</Typography>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
                         {dataProcessing ? <ProcessingIndicator title='Analyzing' /> : 'Analyze Now'}
                     </Button>
                 </div>
                 <div className='w-[677px] flex flex-col items-start gap-2 shrink-0'>
-                    <p>{description}</p>
-                    {note && <p className='text-xs italic'>{note}</p>}
+                    <Typography variant='body1'>{description}</Typography>
+                    {note && (
+                        <Typography variant='caption' className='italic'>
+                            {note}
+                        </Typography>
+                    )}
                 </div>
             </div>
 
