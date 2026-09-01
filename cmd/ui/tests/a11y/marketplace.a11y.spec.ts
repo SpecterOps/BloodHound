@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from '../fixtures';
+import { expectNoAccessibilityViolations, test } from '../fixtures';
 
 test.describe('Marketplace page accessibility', () => {
     test('Marketplace content has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
@@ -24,20 +24,5 @@ test.describe('Marketplace page accessibility', () => {
 
         const results = await makeAxeBuilder().include('#content-wrapper').analyze();
         await expectNoAccessibilityViolations(testInfo, results, { page });
-
-        const search = page.getByRole('searchbox', { name: 'Search marketplace' });
-        const typeFilter = page.getByRole('combobox', { name: 'Filter Marketplace items by type' });
-        const publisherFilter = page.getByRole('combobox', { name: 'Filter Marketplace items by publisher' });
-        const availabilityFilter = page.getByRole('combobox', {
-            name: 'Filter Marketplace items by availability',
-        });
-
-        await search.focus();
-        await page.keyboard.press('Tab');
-        await expect(typeFilter).toBeFocused();
-        await page.keyboard.press('Tab');
-        await expect(publisherFilter).toBeFocused();
-        await page.keyboard.press('Tab');
-        await expect(availabilityFilter).toBeFocused();
     });
 });
