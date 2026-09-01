@@ -58,10 +58,15 @@ func TestReverseRelationshipMap(t *testing.T) {
 		2: {11},
 	})
 
-	assert.Equal(t, map[graph.ID][]graph.ID{
+	expected := map[graph.ID][]graph.ID{
 		10: {1},
 		11: {1, 2},
-	}, actual)
+	}
+
+	require.Len(t, actual, len(expected))
+	for targetNodeID, sourceNodeIDs := range expected {
+		assert.ElementsMatch(t, sourceNodeIDs, actual[targetNodeID])
+	}
 }
 
 func TestAddNodeToObjectIDMap(t *testing.T) {
