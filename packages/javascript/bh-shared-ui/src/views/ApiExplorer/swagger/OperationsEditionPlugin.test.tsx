@@ -68,7 +68,8 @@ describe('OperationSummaryWithEdition', () => {
             name: 'Available in BloodHound Enterprise',
         });
 
-        expect(enterpriseLogo.querySelector('path')).toHaveAttribute('fill', 'var(--bhe-main)');
+        expect(enterpriseLogo).toHaveTextContent('app-icon-bh-logo');
+        expect(enterpriseLogo).toHaveStyle({ color: 'var(--bhe-main)' });
         expect(enterpriseLogo).toHaveAttribute('width', '50px');
         expect(enterpriseLogo).toHaveAttribute('height', '33px');
         expect(enterpriseLogo).toHaveAttribute('viewBox', '0 2.75 24 18.5');
@@ -76,11 +77,15 @@ describe('OperationSummaryWithEdition', () => {
 
     it('shows the Community BloodHound dog logo in the Community brand color when the endpoint is available', () => {
         renderOperationSummary({ isCommunity: true });
-        const communityLogo = screen.getByTitle('Available in BloodHound Community Edition').closest('svg');
+        const communityLogo = screen.getByRole('img', {
+            name: 'Available in BloodHound Community Edition',
+        });
 
-        expect(communityLogo?.querySelector('g')).toHaveAttribute('fill', 'var(--bhce-main)');
+        expect(communityLogo).toHaveTextContent('app-icon-bh-logo');
+        expect(communityLogo).toHaveStyle({ color: 'var(--bhce-main)' });
         expect(communityLogo).toHaveAttribute('width', '50px');
         expect(communityLogo).toHaveAttribute('height', '33px');
+        expect(communityLogo).toHaveAttribute('viewBox', '0 2.75 24 18.5');
     });
 
     it('shows the Enterprise BloodHound dog logo in grey when the endpoint is unavailable', () => {
@@ -90,6 +95,7 @@ describe('OperationSummaryWithEdition', () => {
             name: 'Not available in BloodHound Enterprise',
         });
 
-        expect(enterpriseLogo.querySelector('path')).toHaveAttribute('fill', 'grey');
+        expect(enterpriseLogo).toHaveTextContent('app-icon-bh-logo');
+        expect(enterpriseLogo.style.color).toBe('grey');
     });
 });
