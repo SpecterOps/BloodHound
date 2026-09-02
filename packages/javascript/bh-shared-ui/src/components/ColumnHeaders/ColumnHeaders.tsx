@@ -17,6 +17,7 @@
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TextButton, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { useId } from 'react';
 import { SortOrder } from '../../types';
 import { adaptClickHandlerToKeyDown, cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
@@ -52,6 +53,7 @@ interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     const { title, tooltipText, sortOrder, disable, classes, onSort, ...rest } = props;
+    const tooltipDescriptionId = useId();
 
     const containerClass = classes && classes.container ? classes.container : '';
     const buttonClass = classes && classes.button ? classes.button : '';
@@ -68,6 +70,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                         <TextButton
                             disabled={disable}
                             aria-label={`Sort by ${title}`}
+                            aria-describedby={tooltipText ? tooltipDescriptionId : undefined}
                             className={cn(
                                 'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
                                 buttonClass
@@ -80,17 +83,12 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
                             {tooltipText && (
                                 <>
-                                    {/* The informational tooltip must be keyboard-focusable without presenting as a button. */}
-                                    {/* eslint-disable jsx-a11y/no-noninteractive-tabindex */}
                                     <span
                                         className='flex items-center'
-                                        role='img'
-                                        aria-label='More information in tooltip'
-                                        tabIndex={0}
+                                        aria-hidden='true'
                                         data-testid='column-header_tooltip-trigger-icon'>
                                         <FontAwesomeIcon size='sm' icon={faInfoCircle} />
                                     </span>
-                                    {/* eslint-enable jsx-a11y/no-noninteractive-tabindex */}
                                     <span className='flex items-center'>
                                         <IconComponent size={12} />
                                     </span>
@@ -104,6 +102,11 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                                 </>
                             )}
                         </TextButton>
+                        {tooltipText && (
+                            <span id={tooltipDescriptionId} className='sr-only'>
+                                {tooltipText}
+                            </span>
+                        )}
                     </div>
                 </TooltipTrigger>
             </TooltipRoot>

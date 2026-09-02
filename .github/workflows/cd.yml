@@ -45,8 +45,21 @@ jobs:
       image_cache_to: type=gha,mode=max
       image_flavor: latest=${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) == false }}
       image_tags: |
+        # Edge builds from main
+        ## edge-<git_sha>
         type=edge,branch=main
+        type=sha,format=short,prefix=edge-,enable=${{ github.ref_name == 'main' }}
+
+        # Release candidates
+        ## candidate-<git_sha>
+        type=sha,format=short,prefix=candidate-,enable=${{ contains(github.ref_name, '-rc') }}
+        type=raw,value=candidate,enable=${{ contains(github.ref_name, '-rc') }}
         type=semver,pattern={{version}}
+
+        # Production releases
+        ## production-<git_sha>
+        type=sha,format=short,prefix=production-,enable=${{ github.ref_type == 'tag' && !contains(github.ref_name, '-rc') }}
+        type=raw,value=production,enable=${{ github.ref_type == 'tag' && !contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}}.{{minor}},enable=${{ ! contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |

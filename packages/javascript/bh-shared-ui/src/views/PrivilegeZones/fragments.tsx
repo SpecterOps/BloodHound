@@ -72,6 +72,7 @@ export const EditTagButtonLink: FC = () => {
     return (
         <AppLink
             data-testid='privilege-zones_edit-tag-link'
+            aria-label={`Edit ${tagTypeDisplay}`}
             to={tagEditLink(tagId, tagType)}
             className={ButtonVariants({
                 variant: 'secondary',
@@ -94,6 +95,7 @@ export const CreateRuleButtonLink: FC = () => {
     return (
         <AppLink
             data-testid='privilege-zones_create-rule-link'
+            aria-label='Create Rule'
             to={ruleCreateLink(tagId)}
             className={ButtonVariants({
                 variant: 'secondary',
@@ -116,6 +118,7 @@ export const EditRuleButtonLink: FC = () => {
     return (
         <AppLink
             data-testid='privilege-zones_edit-rule-link'
+            aria-label='Edit Rule'
             to={ruleEditLink(tagId, ruleId)}
             className={ButtonVariants({
                 variant: 'secondary',

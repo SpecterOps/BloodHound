@@ -47,7 +47,6 @@ import {
     TimestampFields,
     Webhook,
     WebhookSecret,
-    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -192,6 +191,25 @@ export type PostureHistoryData = {
 export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
     data_type: string;
 };
+
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
+    environments: string[];
+    asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
+};
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
 
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
@@ -383,6 +401,13 @@ export type SupportBundleSummaryStatus = {
     current: ManagementOperation | null;
 };
 
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+
 export type EdgeType = {
     id: number;
     name: string;
@@ -449,6 +474,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
 export type UnifiedFinding = {
+    id: number;
     severity: string;
     finding: string;
     title: string;
@@ -467,6 +493,7 @@ export type UnifiedFinding = {
     status: string;
     first_seen: string;
     last_seen: string;
+    prioritization_rank?: number | null;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
@@ -483,7 +510,11 @@ export type CreateWebhookResponse = {
 export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
 export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
-export type WebhookTestResponse = BasicResponse<WebhookTest>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
 
 // ---------------------------------------------------------------------------
 //  Alert - Events
@@ -498,7 +529,7 @@ export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEvent
 type AlertPayload = { alert: Notification };
 export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
 export type GetAlertResponse = BasicResponse<AlertPayload>;
-export type CreateAlertResponse = Notification;
+export type CreateAlertResponse = BasicResponse<AlertPayload>;
 export type UpdateAlertResponse = BasicResponse<AlertPayload>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
