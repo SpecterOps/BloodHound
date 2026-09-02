@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "ESC1-ESC1-DC-CA@ESC1.LOCAL",
+        "distinguishedname": "CN=ESC1-ESC1-DC-CA,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "description": null,
+        "whencreated": 1664426237,
+        "certthumbprint": "5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703",
+        "certname": "5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703",
+        "certchain": ["5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703"],
+        "hasbasicconstraints": false,
+        "basicconstraintpathlength": 0
+      },
+      "DomainSID": "S-1-5-21-909015691-3030120388-2582151266",
+      "Aces": [
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-517",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": true
+        }
+      ],
+      "ObjectIdentifier": "4B5183E1-DB57-4A57-8159-3E9649F3B01C",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": {
+        "ObjectIdentifier": "242AB0E0-13D1-4517-BEB0-07E504802B6B",
+        "ObjectType": "Container"
+      }
+    }
+  ],
+  "meta": { "methods": 521215, "type": "rootcas", "count": 1, "version": 6 }
+}

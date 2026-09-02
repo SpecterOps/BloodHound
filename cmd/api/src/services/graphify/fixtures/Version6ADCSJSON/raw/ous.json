@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "GPOChanges": {
+        "LocalAdmins": [],
+        "RemoteDesktopUsers": [],
+        "DcomUsers": [],
+        "PSRemoteUsers": [],
+        "AffectedComputers": [
+          {
+            "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1000",
+            "ObjectType": "Computer"
+          }
+        ]
+      },
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "DOMAIN CONTROLLERS@ESC1.LOCAL",
+        "distinguishedname": "OU=DOMAIN CONTROLLERS,DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "highvalue": false,
+        "description": "Default container for domain controllers",
+        "whencreated": 1664419051,
+        "blocksinheritance": false
+      },
+      "Links": [
+        { "IsEnforced": false, "GUID": "1A8AA814-033D-45F2-96C2-3D2A1363F078" }
+      ],
+      "ChildObjects": [],
+      "Aces": [
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": true
+        }
+      ],
+      "ObjectIdentifier": "1AEEE963-F4C8-49DA-BBE6-A6107F42CAF0",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": {
+        "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266",
+        "ObjectType": "Domain"
+      }
+    }
+  ],
+  "meta": { "methods": 521215, "type": "ous", "count": 1, "version": 6 }
+}

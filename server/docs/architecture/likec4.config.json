@@ -1,0 +1,5 @@
+{
+  "$schema": "https://likec4.dev/schemas/config.json",
+  "name": "bhce-new-architecture",
+  "title": "BloodHound — Sliced Onion Architecture"
+}

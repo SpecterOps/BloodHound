@@ -1,0 +1,488 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package utils_test
+
+import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/stretchr/testify/require"
+)
+
+func TestIsValidClientVersion(t *testing.T) {
+	var (
+		err error
+	)
+
+	azureHoundVersion, err := utils.IsValidClientVersion("azurehound/0.0.0", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundVersion.ClientType)
+	require.Equal(t, 0, azureHoundVersion.Major)
+	require.Equal(t, 0, azureHoundVersion.Minor)
+	require.Equal(t, 0, azureHoundVersion.Patch)
+	require.Empty(t, azureHoundVersion.BuildMetadata)
+
+	azureHoundDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0+docker", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundDockerVersion.ClientType)
+	require.Equal(t, 0, azureHoundDockerVersion.Major)
+	require.Equal(t, 0, azureHoundDockerVersion.Minor)
+	require.Equal(t, 0, azureHoundDockerVersion.Patch)
+	require.Empty(t, azureHoundDockerVersion.Prerelease)
+	require.Equal(t, "docker", azureHoundDockerVersion.BuildMetadata)
+
+	azureHoundRCVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundRCVersion.ClientType)
+	require.Equal(t, 0, azureHoundRCVersion.Major)
+	require.Equal(t, 0, azureHoundRCVersion.Minor)
+	require.Equal(t, 0, azureHoundRCVersion.Patch)
+	require.Equal(t, "rc1", azureHoundRCVersion.Prerelease)
+	require.Empty(t, azureHoundRCVersion.BuildMetadata)
+
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0+notdocker", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	azureHoundRCDockerVersion, err := utils.IsValidClientVersion("azurehound/0.0.0-rc1+docker", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundRCDockerVersion.ClientType)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Major)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Minor)
+	require.Equal(t, 0, azureHoundRCDockerVersion.Patch)
+	require.Equal(t, "rc1", azureHoundRCDockerVersion.Prerelease)
+	require.Equal(t, "docker", azureHoundRCDockerVersion.BuildMetadata)
+
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rc1+notdocker", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-rcfoo", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("azurehound/0.0.0-alpha", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	// When the UseRawObjectIDs flag is enabled, AzureHound versions below v3.0.0 are rejected.
+	_, err = utils.IsValidClientVersion("azurehound/2.9.9", true)
+	require.ErrorIs(t, err, utils.ErrRecommendAzureHoundVersion)
+
+	azureHoundV3Version, err := utils.IsValidClientVersion("azurehound/3.0.0", true)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundV3Version.ClientType)
+	require.Equal(t, 3, azureHoundV3Version.Major)
+
+	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundversion.ClientType)
+	require.Equal(t, 2, sharpHoundversion.Major)
+	require.Equal(t, 0, sharpHoundversion.Minor)
+	require.Equal(t, 3, sharpHoundversion.Patch)
+	require.Equal(t, 0, sharpHoundversion.Extra)
+	require.Empty(t, sharpHoundversion.Prerelease)
+
+	sharpHoundRCVersion, err := utils.IsValidClientVersion("sharphound/2.0.3.0-rc1", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundRCVersion.ClientType)
+	require.Equal(t, 2, sharpHoundRCVersion.Major)
+	require.Equal(t, 0, sharpHoundRCVersion.Minor)
+	require.Equal(t, 3, sharpHoundRCVersion.Patch)
+	require.Equal(t, 0, sharpHoundRCVersion.Extra)
+	require.Equal(t, "rc1", sharpHoundRCVersion.Prerelease)
+
+	_, err = utils.IsValidClientVersion("sharphound/2X0Y3Z0", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-rcfoo", false)
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-alpha", false)
+	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
+
+	_, err = utils.IsValidClientVersion("sharphound/1.9.3.0", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
+
+	openHoundVersion, err := utils.IsValidClientVersion("openhound/0.0.0", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, openHoundVersion.ClientType)
+	require.Equal(t, 0, openHoundVersion.Major)
+	require.Equal(t, 0, openHoundVersion.Minor)
+	require.Equal(t, 0, openHoundVersion.Patch)
+	require.Empty(t, openHoundVersion.Prerelease)
+	require.Empty(t, openHoundVersion.BuildMetadata)
+
+	openHoundRCVersion, err := utils.IsValidClientVersion("openhound/0.0.0-rc1", false)
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, openHoundRCVersion.ClientType)
+	require.Equal(t, 0, openHoundRCVersion.Major)
+	require.Equal(t, 0, openHoundRCVersion.Minor)
+	require.Equal(t, 0, openHoundRCVersion.Patch)
+	require.Equal(t, "rc1", openHoundRCVersion.Prerelease)
+	require.Empty(t, openHoundRCVersion.BuildMetadata)
+
+	_, err = utils.IsValidClientVersion("openhound/0.0.0+docker", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("openhound/0.0.0-rcfoo", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("openhound/0.0.0-alpha", false)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	_, err = utils.IsValidClientVersion("openhound/1X0Y1", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
+
+	// Unknown client type
+	_, err = utils.IsValidClientVersion("unknown/0.0.0", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
+
+	// Client type without slash is not a valid user agent
+	_, err = utils.IsValidClientVersion("azurehound", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
+
+	// Client type without slash is not a valid user agent
+	_, err = utils.IsValidClientVersion("openhound", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
+
+	// Invalid UA
+	_, err = utils.IsValidClientVersion("garbage", false)
+	require.NotNil(t, err)
+	require.ErrorIs(t, err, utils.ErrInvalidClientType)
+}
+
+func TestParseClientVersion(t *testing.T) {
+	version, err := utils.ParseClientVersion("sharphound/2.0.6.0")
+
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, version.ClientType)
+	require.Equal(t, 2, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 6, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+
+	version, err = utils.ParseClientVersion("sharphound/1.0.25.0")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 25, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+
+	version, err = utils.ParseClientVersion("sharphound/2.0.6.0-rc1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeSharpHound, version.ClientType)
+	require.Equal(t, 2, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 6, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Equal(t, "rc1", version.Prerelease)
+
+	version, err = utils.ParseClientVersion("azurehound/1.0.1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+	require.Empty(t, version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+	require.Empty(t, version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rc1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Equal(t, "rc1", version.Prerelease)
+	require.Empty(t, version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1+docker")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+	require.Equal(t, "docker", version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rc1+docker")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeAzureHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Equal(t, "rc1", version.Prerelease)
+	require.Equal(t, "docker", version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rc1+notdocker")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1+notdocker")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-rcfoo")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("azurehound/v1.0.1-alpha")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Empty(t, version.Prerelease)
+	require.Empty(t, version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1-rc1")
+	require.Nil(t, err)
+	require.Equal(t, utils.ClientTypeOpenHound, version.ClientType)
+	require.Equal(t, 1, version.Major)
+	require.Equal(t, 0, version.Minor)
+	require.Equal(t, 1, version.Patch)
+	require.Equal(t, 0, version.Extra)
+	require.Equal(t, "rc1", version.Prerelease)
+	require.Empty(t, version.BuildMetadata)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1+docker")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1-rcfoo")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/v1.0.1-alpha")
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("sharphound/2.0.6.0-alpha")
+	require.Equal(t, utils.ErrInvalidSharpHoundVersion, err)
+
+	version, err = utils.ParseClientVersion("teststring")
+
+	require.Equal(t, utils.ErrInvalidClientType, err)
+
+	version, err = utils.ParseClientVersion("sharphound/abc")
+
+	require.Equal(t, utils.ErrInvalidSharpHoundVersion, err)
+
+	version, err = utils.ParseClientVersion("azurehound/abc")
+
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	version, err = utils.ParseClientVersion("openhound/abc")
+
+	require.Equal(t, utils.ErrInvalidCollectorVersion, err)
+
+	//This is the Eli test
+	version, err = utils.ParseClientVersion("v2.-5.:biohazard_sign:")
+
+	require.Equal(t, utils.ErrInvalidClientType, err)
+}
+
+func TestWriteResultJson(t *testing.T) {
+	rr := httptest.NewRecorder()
+	expectedResult := make(map[string]any)
+	expectedResult["foo"] = "bar"
+
+	utils.WriteResultJson(rr, expectedResult)
+
+	resp := rr.Result()
+	defer resp.Body.Close()
+
+	if status := resp.StatusCode; status != http.StatusOK {
+		t.Errorf("returned the wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	bytes, _ := io.ReadAll(resp.Body)
+	var data map[string]any
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		t.Errorf("could not unmarshal json")
+	}
+
+	if data["foo"] != expectedResult["foo"] {
+		t.Errorf("returned the wrong body: got %v want %v", data, expectedResult)
+	}
+}
+
+func TestWriteResultRawJson(t *testing.T) {
+	rr := httptest.NewRecorder()
+	expectedResult := make(map[string]any)
+	expectedResult["foo"] = "bar"
+	raw, _ := json.Marshal(expectedResult)
+
+	utils.WriteResultRawJson(rr, raw)
+
+	resp := rr.Result()
+	defer resp.Body.Close()
+
+	if status := resp.StatusCode; status != http.StatusOK {
+		t.Errorf("returned the wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	bytes, _ := io.ReadAll(resp.Body)
+	var data map[string]any
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		t.Errorf("could not unmarshal json")
+	}
+
+	if data["foo"] != expectedResult["foo"] {
+		t.Errorf("returned the wrong body: got %v want %v", data, expectedResult)
+	}
+}
+
+func TestGetPageParamsForGraphQuery(t *testing.T) {
+	expectedSkip := 0
+	expectedLimit := 10
+	expectedOrder := "n.foo, n.bar DESC"
+	params := url.Values{"sort_by": []string{"foo", "-bar"}}
+
+	if skip, limit, order, err := utils.GetPageParamsForGraphQuery(context.Background(), params); err != nil {
+		t.Errorf("failed getting page params: %s", err)
+	} else if skip != expectedSkip {
+		t.Errorf("returned the wrong skip: got %v want %v", skip, expectedSkip)
+	} else if limit != expectedLimit {
+		t.Errorf("returned the wrong limit: got %v want %v", limit, expectedLimit)
+	} else if order != expectedOrder {
+		t.Errorf("returned the wrong order: got %v want %v", order, expectedOrder)
+	}
+}
+
+func TestGetSkipParamForGraphQuery(t *testing.T) {
+	params := url.Values{}
+	params.Add("skip", "foo")
+
+	_, err := utils.GetSkipParamForGraphQuery(params)
+	require.Error(t, err)
+
+	expectedSkip := "10"
+	expectedSkipInt := 10
+
+	params = url.Values{}
+	params.Add("skip", expectedSkip)
+
+	actualSkip, err := utils.GetSkipParamForGraphQuery(params)
+	require.Nil(t, err)
+	require.Equal(t, expectedSkipInt, actualSkip)
+}
+
+func TestGetLimitParamForGraphQuery(t *testing.T) {
+	params := url.Values{}
+	params.Add("limit", "foo")
+
+	_, err := utils.GetLimitParamForGraphQuery(params)
+	require.Error(t, err)
+
+	expectedLimit := "10"
+	expectedLimitInt := 10
+
+	params = url.Values{}
+	params.Add("skip", expectedLimit)
+
+	actualSkip, err := utils.GetSkipParamForGraphQuery(params)
+	require.Nil(t, err)
+	require.Equal(t, expectedLimitInt, actualSkip)
+}
+
+func TestGetOrderForNeo4jQuery(t *testing.T) {
+	expectedResult := "n.someColumn, n.anotherColumn DESC"
+
+	params := url.Values{}
+	params.Add("sort_by", "someColumn")
+	params.Add("sort_by", "-anotherColumn")
+
+	result := utils.GetOrderForNeo4jQuery(params)
+	require.Equal(t, expectedResult, result)
+}
+
+func TestHeaderMatches(t *testing.T) {
+	header := http.Header{
+		headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()},
+	}
+
+	if !utils.HeaderMatches(header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
+		t.Fatalf("Expected content type %s to match %s", mediatypes.ApplicationJson.String(), mediatypes.ApplicationJson.String())
+	}
+}
+
+func TestParseUUID(t *testing.T) {
+	t.Run("valid lowercase UUID returns parsed value", func(t *testing.T) {
+		result, err := utils.ParseUUID("c0de600d-c0de-600d-c0de-600dc0de600d")
+		require.NoError(t, err)
+		require.Equal(t, "c0de600d-c0de-600d-c0de-600dc0de600d", result.String())
+	})
+
+	t.Run("valid uppercase UUID is normalized", func(t *testing.T) {
+		lower, _ := utils.ParseUUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+		upper, err := utils.ParseUUID("6BA7B810-9DAD-11D1-80B4-00C04FD430C8")
+		require.NoError(t, err)
+		require.Equal(t, lower, upper)
+	})
+
+	t.Run("invalid string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("random-random")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
+
+	t.Run("empty string returns ErrInvalidUUID", func(t *testing.T) {
+		_, err := utils.ParseUUID("")
+		require.Error(t, err)
+		require.ErrorIs(t, err, utils.ErrInvalidUUID)
+	})
+}
+
+func TestIsValidEmail(t *testing.T) {
+	t.Run("is valid email", func(t *testing.T) {
+		require.True(t, utils.IsValidEmail("odoylerules@specterops.io"))
+	})
+
+	t.Run("is not valid email", func(t *testing.T) {
+		require.False(t, utils.IsValidEmail("odoyle"))
+	})
+}

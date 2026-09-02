@@ -1,0 +1,44 @@
+// ──────────────────────────────────────────────────────────────────────────
+// L4 – Analysis Feature: Startup Wireup
+//
+// The construction sequence that runs once at startup, before any request is
+// served: modules registers the feature, the feature composition root builds
+// the layer chain bottom-up, and routes binds the handlers onto the router.
+// ──────────────────────────────────────────────────────────────────────────
+
+views {
+
+  view analysisWireup of bhce.apiServer.analysisFeature {
+    title 'Sliced Onion Architecture – L4 Analysis: Startup Wireup'
+    description '''
+      The one-time registration sequence at startup.
+
+      modules.Register calls the feature composition root (analysis.go), which
+      constructs appdb → services → handlers bottom-up and then calls
+      routes.Register to bind GET/PUT/DELETE /api/v2/analysis onto the router.
+
+      These are calls (construction) and a registers edge (route binding) —
+      distinct from both the runtime request flow (analysisCallFlow) and the
+      compile-time import graph (analysisImports).
+    '''
+
+    include
+      bhce.apiServer.modules,
+      bhce.apiServer.httpRouter,
+      bhce.apiServer.analysisFeature.analysisWireup,
+      bhce.apiServer.analysisFeature.analysisRoutes,
+      bhce.apiServer.analysisFeature.analysisHandlers,
+      bhce.apiServer.analysisFeature.analysisServices,
+      bhce.apiServer.analysisFeature.analysisAppdb
+
+    // Wireup view: keep construction calls + the route registration edge,
+    // drop the compile-time import graph and external-library use.
+    exclude * -[imports]-> *
+    exclude * -[uses]-> *
+
+    style bhce.apiServer.analysisFeature.analysisWireup {
+      color primary
+    }
+  }
+
+}

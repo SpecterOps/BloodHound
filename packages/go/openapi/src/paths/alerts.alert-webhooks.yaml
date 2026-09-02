@@ -1,0 +1,185 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+
+get:
+  operationId: ListAlertWebhooks
+  summary: List Alert Webhooks
+  description: Returns a paginated list of alert webhooks.
+  tags:
+    - Alerts
+    - Enterprise
+  parameters:
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      in: query
+      description: Sortable columns are `name`, `created_at`, `updated_at`, `health`. Default `name` ascending.
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: type
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: url
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: disabled
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.boolean.yaml'
+    - name: health
+      in: query
+      description: Filter by the webhook's rolling health score in [0, 1].
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.number.yaml'
+    - name: attempts
+      in: query
+      description: Filter by the total attempts observed for the webhook.
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: failures
+      in: query
+      description: Filter by the total failed attempts observed for the webhook.
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - $ref: './../parameters/query.created-at.yaml'
+    - $ref: './../parameters/query.updated-at.yaml'
+    - name: last_errored_at
+      in: query
+      description: Filter results by `last_errored_at` value. See filter schema details for valid predicates.
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: last_succeeded_at
+      in: query
+      description: Filter results by `last_succeeded_at` value. See filter schema details for valid predicates.
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.pagination.yaml'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      webhooks:
+                        type: array
+                        items:
+                          $ref: './../schemas/model.alert-webhook.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
+post:
+  operationId: CreateAlertWebhook
+  summary: Create Alert Webhook
+  description: |
+    Creates a new alert webhook (channel + webhook + HMAC secret in one
+    transaction). The generated HMAC secret is returned on this response only.
+  tags:
+    - Alerts
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          description: Request body for creating an alert webhook.
+          required:
+            - type
+            - name
+            - url
+          properties:
+            type:
+              type: string
+              enum:
+                - generic
+                - slack
+                - ms-teams
+            name:
+              type: string
+            description:
+              type: string
+            url:
+              type: string
+              format: uri
+              description: Must be https, http is not supported.
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                description: |
+                  Response payload from creating an alert webhook. The newly generated HMAC
+                  secret is included on this response only; subsequent reads of the webhook
+                  do not expose the secret value.
+                properties:
+                  webhook:
+                    $ref: './../schemas/model.alert-webhook.yaml'
+                  hmac_secret:
+                    type: string
+                    description: Base64-encoded HMAC secret used to sign outbound webhook payloads.
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    409:
+      description: |
+        **Conflict**
+        The supplied `url` collides with an existing alert webhook
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
+          example:
+            http_status: 409
+            timestamp: 2026-05-21T19:27:43.866Z
+            request_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            errors:
+              - context: alert-webhooks
+                message: An alert webhook with the supplied URL already exists.
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

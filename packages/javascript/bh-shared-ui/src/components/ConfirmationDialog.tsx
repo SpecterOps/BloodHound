@@ -1,0 +1,97 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    Input,
+} from 'doodle-ui';
+import React, { useCallback, useState } from 'react';
+
+const ConfirmationDialog: React.FC<{
+    open: boolean;
+    title: string;
+    text: string | JSX.Element;
+    onCancel: () => void;
+    onConfirm: () => void;
+    challengeTxt?: string;
+    isLoading?: boolean;
+    error?: string;
+}> = ({ open, title, text, onCancel, isLoading, error, challengeTxt = '', onConfirm }) => {
+    const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
+
+    const handleClose = useCallback(() => {
+        onCancel();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onCancel]);
+
+    const handleConfirm = useCallback(() => {
+        onConfirm();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onConfirm]);
+
+    return (
+        <Dialog open={open} data-testid='confirmation-dialog'>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle className='text-lg'>{title}</DialogTitle>
+                    <DialogDescription className='text-lg'>{text}</DialogDescription>
+                    {challengeTxt && (
+                        <DialogDescription asChild className='text-sm'>
+                            <div className='pb-1'>
+                                Please input "{challengeTxt}" prior to clicking confirm.
+                                <Input
+                                    placeholder={challengeTxt}
+                                    variant='outlined'
+                                    onChange={(e) => setChallengeTxtReply(e.target.value)}
+                                    value={challengeTxtReply}
+                                    data-testid='confirmation-dialog_challenge-text'
+                                />
+                            </div>
+                        </DialogDescription>
+                    )}
+                    <DialogActions>
+                        {error && <p className='content-center text-error text-xs mt-[3px]'>{error}</p>}
+                        <Button
+                            variant='secondary'
+                            onClick={handleClose}
+                            disabled={isLoading}
+                            data-testid='confirmation-dialog_button-no'>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleConfirm}
+                            disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
+                            data-testid='confirmation-dialog_button-yes'>
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
+    );
+};
+
+export default ConfirmationDialog;

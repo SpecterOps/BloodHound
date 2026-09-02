@@ -1,0 +1,79 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import { NotificationSnackbar } from 'bh-shared-ui';
+import { SnackbarKey, useSnackbar } from 'notistack';
+import React, { useEffect } from 'react';
+import { removeSnackbar } from 'src/ducks/global/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
+
+let displayed: string[] = [];
+
+const Notifier: React.FC = () => {
+    const dispatch = useAppDispatch();
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
+    const notifications = useAppSelector((state) => state.global.view.notifications);
+
+    const storeDisplayed = (id: string) => {
+        displayed = [...displayed, id];
+    };
+
+    const removeDisplayed = (id: string) => {
+        displayed = [...displayed.filter((key) => id !== key)];
+    };
+
+    useEffect(() => {
+        notifications.forEach(({ key, message, options = {}, dismissed = false }) => {
+            if (dismissed) {
+                closeSnackbar(key);
+                return;
+            }
+
+            if (displayed.includes(key)) return;
+
+            enqueueSnackbar(message, {
+                key,
+                ...options,
+                content: (id, snackMessage) => (
+                    <NotificationSnackbar
+                        id={id}
+                        message={snackMessage}
+                        variant={options.variant}
+                        title={options.title}
+                    />
+                ),
+                onClose: (event, reason, myKey) => {
+                    if (options.onClose) {
+                        options.onClose(event, reason, myKey);
+                    }
+                },
+                onExited: (_, myKey: SnackbarKey) => {
+                    dispatch(removeSnackbar(myKey));
+                    removeDisplayed(myKey.toString());
+                },
+            });
+
+            // keep track of snackbars that we've displayed
+            storeDisplayed(key);
+        });
+    }, [notifications, closeSnackbar, enqueueSnackbar, dispatch]);
+
+    return null;
+};
+
+Notifier.propTypes = {};
+export default Notifier;

@@ -1,0 +1,14 @@
+{
+    "metadata": {},
+    "graph": {
+        "nodes": [
+            { "id": "1", "kinds": ["Base", "User"], "properties": { "hello": "world" } },
+            { "id": "2", "kinds": ["Base", "Group"], "properties": { "hello": "world" } },
+            { "id": "3", "kinds": ["Base", "Computer"], "properties": { "hello": "world" } }
+        ],
+        "edges": [
+            { "kind": "MemberOf", "start": { "value": "1", "match_by": "id" }, "end": { "value": "2", "match_by": "id" } },
+            { "kind": "AdminTo", "start": { "value": "2", "match_by": "id" }, "end": { "value": "3", "match_by": "id" } }
+        ]
+    }
+}

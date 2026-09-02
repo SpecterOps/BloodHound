@@ -1,0 +1,111 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
+import del from 'rollup-plugin-delete';
+
+export default {
+    input: {
+        index: 'src/index.ts',
+        'testing/index': 'src/testing/index.ts',
+        UserProfile: 'src/UserProfile.ts',
+        ApiExplorer: 'src/ApiExplorer.ts',
+        FileIngest: 'src/FileIngest.ts',
+        SSOConfiguration: 'src/SSOConfiguration.ts',
+        Users: 'src/Users.ts',
+        OpenGraphManagement: 'src/OpenGraphManagement.ts',
+    },
+    output: {
+        dir: 'dist',
+        format: 'esm',
+        sourcemap: true,
+    },
+    plugins: [
+        typescript({
+            exclude: ['**/*.test.*', 'src/setupTests.tsx'],
+        }),
+        terser(),
+        del({ targets: 'dist/*' }),
+    ],
+    external: [
+        'doodle-ui',
+        '@date-io/luxon',
+        '@emotion/react',
+        '@emotion/styled',
+        '@faker-js/faker',
+        '@faker-js/faker/locale/en',
+        '@fortawesome/fontawesome-svg-core',
+        '@fortawesome/free-regular-svg-icons',
+        '@fortawesome/free-solid-svg-icons',
+        '@fortawesome/react-fontawesome',
+        '@mona-health/react-input-mask',
+        '@mui/material',
+        '@mui/material/styles/createPalette',
+        '@mui/styles',
+        '@mui/styles/makeStyles',
+        '@mui/styles/withStyles',
+        '@neo4j-cypher/react-codemirror',
+        '@neo4j-cypher/codemirror/css/cypher-codemirror.css',
+        '@reduxjs/toolkit',
+        'clsx',
+        'downshift',
+        'history',
+        'immer',
+        'immutable',
+        'jotai',
+        'jotai/react',
+        'jotai/utils',
+        'jotai/vanilla',
+        'json-2-csv',
+        'js-client-library',
+        'js-file-download',
+        'json-2-csv',
+        'lodash/capitalize',
+        'lodash/cloneDeep',
+        'lodash/omit',
+        'lodash/find',
+        'lodash/groupBy',
+        'lodash/isEmpty',
+        'lodash/isEqual',
+        'lodash/orderBy',
+        'lodash/pick',
+        'lodash/startCase',
+        'lodash/toString',
+        'lucide-react',
+        'luxon',
+        'msw',
+        'notistack',
+        'prop-types',
+        'react',
+        'react-dom',
+        'react-error-boundary',
+        'react-helmet-async',
+        'react-hook-form',
+        'react-immutable-proptypes',
+        'react-markdown',
+        'react-query',
+        'react-router-dom',
+        'react-window',
+        'react-window-infinite-loader',
+        'react/jsx-runtime',
+        'remark-gfm',
+        'swagger-ui-react',
+        'swagger-ui-react/swagger-ui.css',
+        'tailwind-merge',
+        'tailwindcss',
+    ],
+};

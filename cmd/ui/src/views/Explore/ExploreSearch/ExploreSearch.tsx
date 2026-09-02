@@ -1,0 +1,280 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { faChevronDown, faChevronUp, faCode, faDirections, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tab, Tabs } from '@mui/material';
+import {
+    CypherSearch,
+    ExploreQueryParams,
+    ExploreSearchTab,
+    MappedStringLiteral,
+    NodeSearch,
+    PathfindingSearch,
+    cn,
+    encodeCypherQuery,
+    isGraphResponse,
+    useCypherSearch,
+    useExploreParams,
+    useExploreSelectedItem,
+    useNodeSearch,
+    usePathfindingFilters,
+    usePathfindingSearch,
+} from 'bh-shared-ui';
+import { IconButton } from 'doodle-ui';
+import { FlatGraphResponse, GraphResponse } from 'js-client-library';
+import React, { useState } from 'react';
+import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
+
+const tabMap = {
+    node: 0,
+    pathfinding: 1,
+    cypher: 2,
+} satisfies MappedStringLiteral<ExploreSearchTab, number>;
+
+const tabs = [
+    {
+        label: 'Search',
+        icon: faSearch,
+    },
+    {
+        label: 'Pathfinding',
+        icon: faDirections,
+    },
+    {
+        label: 'Cypher',
+        icon: faCode,
+    },
+];
+
+const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
+    if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
+    return 'node';
+};
+
+const ExploreSearch: React.FC = () => {
+    /* Hooks */
+    const { cypherSearch, exploreSearchTab, setExploreParams } = useExploreParams();
+    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
+
+    const nodeSearchState = useNodeSearch();
+    const pathfindingSearchState = usePathfindingSearch();
+    const cypherSearchState = useCypherSearch();
+
+    // We can move this back down into the filter modal once we remove the redux implementation
+    const pathfindingFilterState = usePathfindingFilters();
+
+    const activeTab = getTab(exploreSearchTab);
+
+    const [showSearchWidget, setShowSearchWidget] = useState(true);
+
+    /* Event Handlers */
+    const handleTabChange = (newTabIndex: number) => {
+        const tabs = ['node', 'pathfinding', 'cypher'] as ExploreSearchTab[];
+        const nextTab = tabs[newTabIndex];
+
+        const teardownParams = teardownActiveTab(activeTab);
+        const setupParams = setupNextTab(nextTab);
+
+        setExploreParams({ ...teardownParams, ...setupParams });
+    };
+
+    // Clean up query params from previous tab, removing query params when the field has been edited since the last search
+    const teardownActiveTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (!nodeSearchState.selectedItem) {
+                params.primarySearch = null;
+                pathfindingSearchState.handleSourceNodeEdited(nodeSearchState.searchTerm);
+            }
+        }
+        if (tab === 'pathfinding') {
+            if (!pathfindingSearchState.sourceSelectedItem) {
+                params.primarySearch = null;
+                nodeSearchState.editSourceNode(pathfindingSearchState.sourceSearchTerm);
+            }
+            if (!pathfindingSearchState.destinationSelectedItem) {
+                params.secondarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[2]?.selectedItem) {
+                params.tertiarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[3]?.selectedItem) {
+                params.quaternarySearch = null;
+            }
+        }
+        if (tab === 'cypher') {
+            if (!cypherSearchState.cypherQuery) {
+                params.cypherSearch = null;
+            }
+        }
+        return params;
+    };
+
+    // Set up up query params for the incoming tab. should only update the query type if the query can be performed
+    const setupNextTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (nodeSearchState.selectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'node';
+        }
+        if (tab === 'pathfinding') {
+            if (pathfindingSearchState.sourceSelectedItem && pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'pathfinding';
+            } else if (pathfindingSearchState.sourceSelectedItem || pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'pathfinding';
+        }
+        if (tab === 'cypher') {
+            if (cypherSearchState.cypherQuery) {
+                params.searchType = 'cypher';
+            }
+            params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
+            params.exploreSearchTab = 'cypher';
+        }
+        return params;
+    };
+
+    //auto run queries
+    const autoRun = useAppSelector((state) => state.global.view.autoRunQueries);
+    const dispatch = useAppDispatch();
+    const handleAutoRunChange = (autoRun: boolean) => {
+        dispatch(setAutoRunQueries(autoRun));
+    };
+
+    // disable query timeout
+    const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
+    const handleDisableTimeoutChange = (disableTimeout: boolean) => {
+        dispatch(setTimeoutSetting(disableTimeout));
+    };
+
+    const handleQuerySuccess: (data: GraphResponse | FlatGraphResponse) => void = (data) => {
+        if (isGraphResponse(data)) {
+            const returnedNodes = Object.keys(data.data.nodes || {});
+
+            const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
+            const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
+
+            if (returnedNodes.length > 1) {
+                clearSelectedItem();
+            } else if (returnedNodes.length === 1) {
+                setSelectedItem(returnedNodes[0]);
+            }
+
+            if (shouldCloseMenu) {
+                setShowSearchWidget(false);
+            }
+        }
+    };
+
+    return (
+        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
+            <div
+                className='h-10 pl-1 w-full flex gap-1 items-center rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                data-testid='explore_search-container_header'>
+                <IconButton
+                    aria-label='Toggle search widget'
+                    data-testid='explore_search-container_header_expand-collapse-button'
+                    className='rounded-sm'
+                    onClick={() => {
+                        setShowSearchWidget((v) => !v);
+                    }}>
+                    <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} />
+                </IconButton>
+                <Tabs
+                    variant='fullWidth'
+                    value={tabMap[activeTab]}
+                    onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
+                    onClick={() => setShowSearchWidget(true)}
+                    className='h-10 min-h-10 w-full'
+                    TabIndicatorProps={{
+                        className: 'h-[3px]',
+                    }}>
+                    {tabs.map(({ label, icon }) => (
+                        <Tab
+                            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
+                            label={label}
+                            key={label}
+                            icon={<FontAwesomeIcon icon={icon} />}
+                            iconPosition='start'
+                            title={label}
+                            className='h-10 min-h-10'
+                        />
+                    ))}
+                </Tabs>
+            </div>
+
+            <div
+                className={cn('hidden min-h-0 rounded pointer-events-auto', {
+                    block: showSearchWidget,
+                    'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
+                })}>
+                <TabPanels
+                    tabs={[
+                        // This linting rule is disabled because the elements in this array do not require a key prop.
+                        /* eslint-disable react/jsx-key */
+                        <NodeSearch nodeSearchState={nodeSearchState} />,
+                        <PathfindingSearch
+                            pathfindingSearchState={pathfindingSearchState}
+                            pathfindingFilterState={pathfindingFilterState}
+                        />,
+                        <CypherSearch
+                            cypherSearchState={cypherSearchState}
+                            autoRun={autoRun}
+                            setAutoRun={handleAutoRunChange}
+                            disableQueryLimit={disableTimeout}
+                            setDisableQueryLimit={handleDisableTimeoutChange}
+                            onQuerySuccess={handleQuerySuccess}
+                        />,
+                        /* eslint-enable react/jsx-key */
+                    ]}
+                    activeTab={tabMap[activeTab]}
+                />
+            </div>
+        </div>
+    );
+};
+
+interface TabPanelsProps {
+    tabs: React.ReactNode[];
+    activeTab: number;
+}
+
+const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
+    return (
+        <>
+            {tabs.map((tab, index) => {
+                if (activeTab === index) {
+                    return (
+                        <div role='tabpanel' key={index} className='h-full'>
+                            {tab}
+                        </div>
+                    );
+                } else {
+                    return null;
+                }
+            })}
+        </>
+    );
+};
+
+export default ExploreSearch;

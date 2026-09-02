@@ -1,0 +1,258 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+/**
+ * Sigma.js WebGL Renderer Arrow Program
+ * ======================================
+ *
+ * Program rendering direction arrows as a simple triangle.
+ * @module
+ */
+import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
+import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
+import { Coordinates, NodeDisplayData } from 'sigma/types';
+import { floatColor } from 'sigma/utils';
+import { CurvedEdgeDisplayData } from 'src/rendering/programs/edge.curvedArrow';
+import { fragmentShaderSource } from 'src/rendering/shaders/edge.arrowHead.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/edge.arrowHead.vert';
+import { bezier } from 'src/rendering/utils/bezier';
+import { getNodeRadius } from 'src/rendering/utils/utils';
+
+const POINTS = 3,
+    ATTRIBUTES = 9,
+    STRIDE = POINTS * ATTRIBUTES,
+    EPSILON = 1e-10;
+
+export default class CurvedEdgeArrowHeadProgram extends AbstractEdgeProgram {
+    // Locations
+    positionLocation: GLint;
+    colorLocation: GLint;
+    normalLocation: GLint;
+    radiusLocation: GLint;
+    barycentricLocation: GLint;
+    matrixLocation: WebGLUniformLocation;
+    sqrtZoomRatioLocation: WebGLUniformLocation;
+    correctionRatioLocation: WebGLUniformLocation;
+
+    correctionRatio: number = 1;
+
+    constructor(gl: WebGLRenderingContext) {
+        super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
+
+        // Locations
+        this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
+        this.colorLocation = gl.getAttribLocation(this.program, 'a_color');
+        this.normalLocation = gl.getAttribLocation(this.program, 'a_normal');
+        this.radiusLocation = gl.getAttribLocation(this.program, 'a_radius');
+        this.barycentricLocation = gl.getAttribLocation(this.program, 'a_barycentric');
+
+        // Uniform locations
+        const matrixLocation = gl.getUniformLocation(this.program, 'u_matrix');
+        if (matrixLocation === null) throw new Error('EdgeArrowHeadProgram: error while getting matrixLocation');
+        this.matrixLocation = matrixLocation;
+
+        const sqrtZoomRatioLocation = gl.getUniformLocation(this.program, 'u_sqrtZoomRatio');
+        if (sqrtZoomRatioLocation === null)
+            throw new Error('EdgeArrowHeadProgram: error while getting sqrtZoomRatioLocation');
+        this.sqrtZoomRatioLocation = sqrtZoomRatioLocation;
+
+        const correctionRatioLocation = gl.getUniformLocation(this.program, 'u_correctionRatio');
+        if (correctionRatioLocation === null)
+            throw new Error('EdgeArrowHeadProgram: error while getting correctionRatioLocation');
+        this.correctionRatioLocation = correctionRatioLocation;
+
+        this.bind();
+    }
+
+    bind(): void {
+        const gl = this.gl;
+
+        // Bindings
+        gl.enableVertexAttribArray(this.positionLocation);
+        gl.enableVertexAttribArray(this.normalLocation);
+        gl.enableVertexAttribArray(this.radiusLocation);
+        gl.enableVertexAttribArray(this.colorLocation);
+        gl.enableVertexAttribArray(this.barycentricLocation);
+
+        gl.vertexAttribPointer(
+            this.positionLocation,
+            2,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            0
+        );
+        gl.vertexAttribPointer(this.normalLocation, 2, gl.FLOAT, false, ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT, 8);
+        gl.vertexAttribPointer(
+            this.radiusLocation,
+            1,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            16
+        );
+        gl.vertexAttribPointer(
+            this.colorLocation,
+            4,
+            gl.UNSIGNED_BYTE,
+            true,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            20
+        );
+
+        // TODO: maybe we can optimize here by packing this in a bit mask
+        gl.vertexAttribPointer(
+            this.barycentricLocation,
+            3,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            24
+        );
+    }
+
+    computeIndices(): void {
+        // nothing to do
+    }
+
+    process(
+        sourceData: NodeDisplayData,
+        targetData: NodeDisplayData,
+        data: CurvedEdgeDisplayData,
+        hidden: boolean,
+        offset: number
+    ): void {
+        if (hidden) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
+        }
+
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+        const thickness = data.size || 1;
+        const color = floatColor(data.color);
+
+        // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
+        // to calculate the correct arrowhead length.
+        const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * this.correctionRatio;
+        const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * this.correctionRatio;
+
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+        const control = bezier.getControlAtMidpoint(height, sourceData, targetData);
+
+        // The following approximates two points along the curved edge via binary search -- first, the intersection between the
+        // curve and the node's edge, where the tip of the arrowhead should be placed. Then we use that point in our second
+        // search to find a point on the curve exactly one arrowhead length away, where the center of the arrowhead's base should
+        // be placed. We duplicate this behavior in our edge rendering program (to find a clamp value) rather than pass this
+        // calculation down from the reducer to prevent unneccessary curve evaluations when panning/zooming.
+        let tip: Coordinates, base: Coordinates, radius: number;
+        if (height !== 0) {
+            const evalCurve = (t: number) =>
+                bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
+
+            // The original straight line arrowhead shader, which we are using here, takes the target node's coordinates
+            // and a radius and projects the arrowhead out from the nodes center by distance === radius. Instead, we can
+            // pass in the tip's coordinates and set radius to 0 to bypass this projection.
+            const tipT = bezier.getTAtDistance(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            tip = evalCurve(tipT);
+
+            const baseT = bezier.getTAtDistance(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+            base = evalCurve(baseT);
+            radius = 0;
+        } else {
+            // If height === 0, this is the straight line in the center of an odd-numbered edge group and we can project
+            // out from the node's center.
+            tip = targetData;
+            base = sourceData;
+            radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
+        }
+
+        const dx = tip.x - base.x;
+        const dy = tip.y - base.y;
+        const distSquared = dx * dx + dy * dy;
+
+        // Don't try to render anything if the nodes are at the same point
+        if (distSquared < EPSILON) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
+        }
+
+        const len = 1 / Math.sqrt(distSquared);
+        const normal = { x: dx * len, y: dy * len };
+
+        const vOffset = {
+            x: normal.x * thickness,
+            y: -normal.y * thickness,
+        };
+
+        let i = POINTS * ATTRIBUTES * offset;
+
+        const array = this.array;
+
+        // First point
+        array[i++] = tip.x;
+        array[i++] = tip.y;
+        array[i++] = -vOffset.y;
+        array[i++] = -vOffset.x;
+        array[i++] = radius;
+        array[i++] = color;
+        array[i++] = 1;
+        array[i++] = 0;
+        array[i++] = 0;
+
+        // Second point
+        array[i++] = tip.x;
+        array[i++] = tip.y;
+        array[i++] = -vOffset.y;
+        array[i++] = -vOffset.x;
+        array[i++] = radius;
+        array[i++] = color;
+        array[i++] = 0;
+        array[i++] = 1;
+        array[i++] = 0;
+
+        // Third point
+        array[i++] = tip.x;
+        array[i++] = tip.y;
+        array[i++] = -vOffset.y;
+        array[i++] = -vOffset.x;
+        array[i++] = radius;
+        array[i++] = color;
+        array[i++] = 0;
+        array[i++] = 0;
+        array[i] = 1;
+    }
+
+    render(params: RenderParams): void {
+        if (this.hasNothingToRender()) return;
+
+        this.correctionRatio = params.correctionRatio;
+
+        const gl = this.gl;
+
+        const program = this.program;
+        gl.useProgram(program);
+
+        // Binding uniforms
+        gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
+        gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
+        gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
+
+        // Drawing:
+        gl.drawArrays(gl.TRIANGLES, 0, this.array.length / ATTRIBUTES);
+    }
+}

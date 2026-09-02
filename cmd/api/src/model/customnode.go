@@ -1,0 +1,99 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package model
+
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"regexp"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+)
+
+var ValidColorStringRegex = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
+
+type CustomNodeKinds []CustomNodeKind
+
+func (s CustomNodeKinds) AuditData() AuditData {
+	var data = make(AuditData)
+
+	for i, kind := range s {
+		data[fmt.Sprint(i)] = kind.AuditData()
+	}
+
+	return data
+}
+
+type CustomNodeKind struct {
+	ID               int32                `json:"id"`
+	KindId           int16                `json:"kindId"`   // FK to kind.id; stored column
+	KindName         string               `json:"kindName"` // joined from kind.name; not a stored column
+	SchemaNodeKindId *int32               `json:"-"`        // SchemaNodeKindId is nullable
+	Config           CustomNodeKindConfig `json:"config"`
+}
+
+func (s CustomNodeKind) TableName() string {
+	return "custom_node_kinds"
+}
+
+func (s CustomNodeKind) AuditData() AuditData {
+	return AuditData{
+		"id":     s.ID,
+		"kind":   s.KindName,
+		"config": s.Config,
+	}
+}
+
+type CustomNodeKindConfig struct {
+	Icon graphschema.DisplayNodeIcon `json:"icon"`
+}
+
+type CustomNodeKindType string
+
+type CustomNodeKindMap map[string]CustomNodeKindConfig
+
+func (s *CustomNodeKindConfig) Scan(value any) error {
+	if value == nil {
+		*s = CustomNodeKindConfig{}
+		return nil
+	}
+
+	if bytes, ok := value.([]byte); !ok {
+		return errors.New("type assertion to []byte failed for CustomNodeKindConfig")
+	} else {
+		return json.Unmarshal(bytes, &s)
+	}
+}
+
+func (s CustomNodeKindConfig) Value() (driver.Value, error) {
+	return json.Marshal(s)
+}
+
+func (s CustomNodeKindConfig) Validate() error {
+	if s.Icon.Type != graphschema.DisplayNodeTypeFontAwesome {
+		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
+	} else if s.Icon.Color != "" && !IsValidIconColor(s.Icon.Color) {
+		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
+	}
+	return nil
+}
+
+func IsValidIconColor(iconColor string) bool {
+	return ValidColorStringRegex.MatchString(iconColor)
+}

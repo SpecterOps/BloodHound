@@ -1,0 +1,393 @@
+{
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    },
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": 604.0284270522187,
+                "y": 237
+            },
+            "caption": "Controlled User",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 353.0284270522187,
+                "y": 237
+            },
+            "caption": "Group B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 75,
+                "y": 237
+            },
+            "caption": "User A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 353.0284270522187,
+                "y": 424
+            },
+            "caption": "User D",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 75,
+                "y": 631.1367165687844
+            },
+            "caption": "User C",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 75,
+                "y": 50
+            },
+            "caption": "Group A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 75,
+                "y": 424
+            },
+            "caption": "User B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 1059.8976569191977,
+                "y": 1346.027889910619
+            },
+            "caption": "Controlled Group",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": 604.0284270522187,
+                "y": 894.3371380482427
+            },
+            "caption": "Group C",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n9",
+            "position": {
+                "x": 604.0284270522187,
+                "y": 1838.502464519107
+            },
+            "caption": "Group D",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n10",
+            "position": {
+                "x": 604.0284270522187,
+                "y": 1475.6758276195499
+            },
+            "caption": "User F",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n11",
+            "position": {
+                "x": 604.0284270522187,
+                "y": 1229.2947464229803
+            },
+            "caption": "User E",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n12",
+            "position": {
+                "x": 1055.7383287905805,
+                "y": 894.3371380482428
+            },
+            "caption": "User G",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        },
+        {
+            "id": "n13",
+            "position": {
+                "x": 75,
+                "y": 1838.502464519107
+            },
+            "caption": "User H",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#000000"
+            }
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n1",
+            "toId": "n0",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n1",
+            "fromId": "n2",
+            "toId": "n1",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n2",
+            "fromId": "n3",
+            "toId": "n0",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n3",
+            "fromId": "n4",
+            "toId": "n3",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n4",
+            "fromId": "n5",
+            "toId": "n1",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {
+                "arrow-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n5",
+            "fromId": "n6",
+            "toId": "n1",
+            "type": "GenericAll",
+            "properties": {},
+            "style": {
+                "arrow-color": "#f44e3b"
+            }
+        },
+        {
+            "id": "n6",
+            "fromId": "n8",
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "fromId": "n10",
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n9",
+            "fromId": "n11",
+            "toId": "n7",
+            "type": "GenericWrite",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n10",
+            "fromId": "n12",
+            "toId": "n8",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n11",
+            "fromId": "n13",
+            "toId": "n9",
+            "type": "MemberOf",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n12",
+            "fromId": "n8",
+            "toId": "n7",
+            "type": "WriteOwner",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n13",
+            "fromId": "n8",
+            "toId": "n7",
+            "type": "WriteDacl",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n14",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "WriteDacl",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n15",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "Owns",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n16",
+            "fromId": "n9",
+            "toId": "n7",
+            "type": "WriteOwner",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n17",
+            "type": "MemberOf",
+            "style": {},
+            "properties": {},
+            "fromId": "n12",
+            "toId": "n7"
+        }
+    ]
+}

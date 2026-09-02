@@ -1,0 +1,469 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
+import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
+import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { UncommonSearches } from '../../../commonSearchesAGT';
+import { AppIcon } from '../../../components';
+import ProcessingIndicator from '../../../components/Animations';
+import {
+    useCreateSavedQuery,
+    useExploreGraph,
+    useFeatureFlag,
+    useKeybindings,
+    usePermissions,
+    useQueryPermissions,
+    useTimeoutLimitConfiguration,
+    useUpdateQueryPermissions,
+    useUpdateSavedQuery,
+} from '../../../hooks';
+import { useCypherSchema } from '../../../hooks/useGraphKinds';
+import { useNotifications } from '../../../providers';
+import { Permission, adaptClickHandlerToKeyDown, cn } from '../../../utils';
+import { SavedQueriesProvider, useSavedQueriesContext } from '../providers';
+import CommonSearches from './SavedQueries/CommonSearches';
+import CypherSearchMessage, { MessageState } from './SavedQueries/CypherSearchMessage';
+import SaveQueryActionMenu from './SavedQueries/SaveQueryActionMenu';
+import SaveQueryDialog from './SavedQueries/SaveQueryDialog';
+import TagToZoneLabel from './SavedQueries/TagToZoneLabel';
+import { CypherSearchState } from './types';
+
+const CypherSearchInner = ({
+    cypherSearchState,
+    autoRun,
+    setAutoRun,
+    disableQueryLimit,
+    setDisableQueryLimit,
+    onQuerySuccess,
+}: {
+    cypherSearchState: CypherSearchState;
+    autoRun: boolean;
+    setAutoRun: (autoRunQueries: boolean) => void;
+    disableQueryLimit: boolean;
+    setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onQuerySuccess?: (data: GraphResponse | FlatGraphResponse) => void;
+}) => {
+    const { selectedQuery, saveAction, showSaveQueryDialog, setSelected, setSaveAction, setShowSaveQueryDialog } =
+        useSavedQueriesContext();
+
+    const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
+
+    const { data: featureFlagData, isLoading, isError } = useFeatureFlag('tier_management_engine');
+    const privilegeZonesEnabled = !isLoading && !isError && featureFlagData?.enabled;
+
+    const [showCommonQueries, setShowCommonQueries] = useState(false);
+    const [messageState, setMessageState] = useState<MessageState>({
+        showMessage: false,
+        message: '',
+    });
+
+    const [sharedIds, setSharedIds] = useState<string[]>([]);
+    const [isPublic, setIsPublic] = useState(false);
+    const [saveUpdatePending, setSaveUpdatePending] = useState(false);
+
+    const [hasQueryParseError, setHasQueryParseError] = useState(false);
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
+    const getCypherValueOnLoadRef = useRef(false);
+
+    const createSavedQueryMutation = useCreateSavedQuery();
+    const updateSavedQueryMutation = useUpdateSavedQuery();
+    const updateQueryPermissionsMutation = useUpdateQueryPermissions();
+
+    const cypherSchema = useCypherSchema();
+
+    const { addNotification } = useNotifications();
+    const { checkPermission } = usePermissions();
+    const { data: permissions } = useQueryPermissions(selectedQuery?.id);
+
+    const { isFetching: cypherSearchIsRunning, refetch } = useExploreGraph({
+        onSuccess: onQuerySuccess,
+    });
+
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+
+    const handleDisableQueryTimeoutChange = (checked: boolean) => {
+        setDisableQueryLimit(checked);
+    };
+
+    useLayoutEffect(() => {
+        if (cypherEditorRef.current?.cypherEditor) {
+            // Because the editor library does not seem to accept an aria-label prop,
+            // this seems to be the easiest way to apply one for accessibility
+            cypherEditorRef.current?.cypherEditor?.codemirror?.contentDOM?.setAttribute('aria-label', 'Cypher Editor');
+        }
+    }, []);
+
+    useEffect(() => {
+        //Setting the selected query once on load
+        //The cypherQuery dependency is required
+        //check for flag
+        if (!getCypherValueOnLoadRef.current && cypherQuery) {
+            getCypherValueOnLoadRef.current = true;
+            setSelected({ query: cypherQuery, id: undefined });
+        }
+    }, [cypherQuery, setSelected]);
+
+    const handleCypherSearch = () => {
+        // Pre-emptive check for performance impacting query errors
+        if (
+            UncommonSearches.some((search) =>
+                search.queries.some((query) => cypherQuery.toLowerCase().includes(query.query.toLocaleLowerCase()))
+            )
+        ) {
+            setHasQueryParseError(true);
+            return;
+        } else {
+            setHasQueryParseError(false);
+        }
+
+        if (cypherQuery) {
+            performSearch();
+            // If the user has toggled the query timeout limit, we need to allow them to re run the query to refetch the graph data
+            if (disableQueryLimit) {
+                refetch();
+            }
+        }
+
+        setMessageState((prev) => ({
+            ...prev,
+            showMessage: false,
+        }));
+    };
+
+    const handleSavedSearch = (query: string) => {
+        if (autoRun) {
+            setMessageState((prev) => ({
+                ...prev,
+                showMessage: false,
+            }));
+            performSearch(query);
+        }
+    };
+    const handleToggleCommonQueries = () => {
+        setShowCommonQueries((v) => !v);
+    };
+
+    const updateQueryPermissions = (id: number) => {
+        if (permissions?.public && !isPublic && sharedIds.length) {
+            const localSharedIds = [...sharedIds];
+            updateQueryPermissionsMutation.mutate(
+                {
+                    id: id,
+                    payload: {
+                        user_ids: [],
+                        public: isPublic,
+                    },
+                },
+                {
+                    onSettled: () => {
+                        updateQueryPermissionsMutation.mutate({
+                            id: id,
+                            payload: {
+                                user_ids: localSharedIds,
+                                public: false,
+                            },
+                        });
+                    },
+                }
+            );
+        } else {
+            updateQueryPermissionsMutation.mutate(
+                {
+                    id: id,
+                    payload: {
+                        user_ids: isPublic ? [] : sharedIds,
+                        public: isPublic,
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        setSharedIds([]);
+                        setIsPublic(false);
+                    },
+                }
+            );
+        }
+    };
+
+    const handleSaveQuery = async (data: { name: string; description: string; localCypherQuery: string }) => {
+        setSaveUpdatePending(true);
+        return createSavedQueryMutation.mutate(
+            { name: data.name, description: data.description, query: data.localCypherQuery },
+            {
+                onSuccess: (res) => {
+                    setShowSaveQueryDialog(false);
+                    addNotification(`${data.name} saved!`, 'userSavedQuery');
+                    performSearch(data.localCypherQuery);
+                    setSelected({ query: data.localCypherQuery, id: res.id });
+                    updateQueryPermissions(res.id);
+                },
+                onSettled: () => {
+                    setSaveUpdatePending(false);
+                },
+            }
+        );
+    };
+
+    const handleUpdateQuery = async (data: UpdateUserQueryRequest) => {
+        setSaveUpdatePending(true);
+        return updateSavedQueryMutation.mutate(
+            { name: data.name, description: data.description, id: data.id, query: data.query },
+            {
+                onSuccess: (res) => {
+                    setShowSaveQueryDialog(false);
+                    setSelected({ query: data.query, id: data.id });
+                    addNotification(`${data.name} updated!`, 'userSavedQuery');
+                    performSearch(data.query);
+                    updateQueryPermissions(res.id);
+                },
+                onSettled: () => {
+                    setSaveUpdatePending(false);
+                },
+            }
+        );
+    };
+
+    const handleClickSave = () => {
+        if (selectedQuery) {
+            if (selectedQuery.canEdit) {
+                //save existing
+                setSelected({ query: cypherQuery, id: selectedQuery.id });
+                setSaveAction('edit');
+                setShowSaveQueryDialog(true);
+            } else {
+                setMessageState({
+                    showMessage: true,
+                    message: 'You do not have permission to update this query, save as a new query instead',
+                });
+            }
+        } else {
+            //save new
+            setSaveAction(undefined);
+            setShowSaveQueryDialog(true);
+        }
+    };
+
+    const handleCloseSaveQueryDialog = () => {
+        setShowSaveQueryDialog(false);
+        createSavedQueryMutation.reset();
+        setSharedIds([]);
+        setIsPublic(false);
+    };
+
+    const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
+    const handleAutoRunQueryChange = (checked: boolean) => setAutoRun(checked);
+
+    const handleSaveAs = () => {
+        setSelected({ query: '', id: undefined });
+        setSaveAction('save-as');
+        setShowSaveQueryDialog(true);
+    };
+
+    useKeybindings({
+        KeyR: handleCypherSearch,
+        KeyC: setFocusOnCypherEditor,
+        KeyS: showSaveQueryDialog ? handleCloseSaveQueryDialog : handleClickSave,
+    });
+
+    return (
+        <>
+            <div className='flex flex-col h-full' data-testid='cypher-search-section'>
+                {/* PRE BUILT SEARCHES SECTION */}
+                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] shadow-outer-1 py-0 rounded-lg mb-4')}>
+                    <CommonSearches
+                        onSetCypherQuery={setCypherQuery}
+                        onPerformCypherSearch={handleSavedSearch}
+                        onToggleCommonQueries={handleToggleCommonQueries}
+                        showCommonQueries={showCommonQueries}
+                    />
+                </div>
+                {/* CYPHER EDITOR SECTION */}
+                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
+                    <div className='flex items-center justify-between mb-2'>
+                        <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
+                        <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
+                            <CheckboxWithLabel
+                                label='Auto-run selected query'
+                                id='auto-run-selected-query'
+                                checked={autoRun}
+                                onCheckedChange={handleAutoRunQueryChange}
+                            />
+                        </div>
+                    </div>
+
+                    <div className='flex gap-2 shrink-0'>
+                        <div
+                            role='button'
+                            tabIndex={0}
+                            onKeyDown={adaptClickHandlerToKeyDown(setFocusOnCypherEditor)}
+                            onClick={setFocusOnCypherEditor}
+                            className='cursor-default flex-1'>
+                            <CypherEditor
+                                ref={cypherEditorRef}
+                                className={cn(
+                                    '[&_.cm-content]:saturate-200 flex grow flex-col cursor-text border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
+                                )}
+                                value={cypherQuery}
+                                onValueChanged={(value: string) => {
+                                    setCypherQuery(value);
+                                }}
+                                theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                                onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+                                    if (event.key === 'Enter' && event.shiftKey) {
+                                        // if enter and shift key is pressed, execute cypher search
+                                        event.preventDefault();
+                                        handleCypherSearch();
+                                    }
+                                }}
+                                aria-label='Cypher editor'
+                                schema={cypherSchema}
+                                lineWrapping
+                                lint
+                                placeholder='Cypher Query'
+                                tooltipAbsolute={false}
+                            />
+
+                            {hasQueryParseError && (
+                                <img
+                                    src={`${import.meta.env.BASE_URL}/img/query-parse-error.png`}
+                                    alt='The Cypher query contains a parse error'
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className='flex gap-2 mt-2 shrink-0 justify-between'>
+                        <div className='flex align-center justify-start ml-1'>
+                            {timeoutLimitEnabled === false && (
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex items-center gap-2 whitespace-nowrap pr-2'>
+                                        <CheckboxWithLabel
+                                            label='Disable query timeout'
+                                            id='disable-query-timeout'
+                                            checked={disableQueryLimit}
+                                            onCheckedChange={handleDisableQueryTimeoutChange}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className='flex gap-2 justify-end'>
+                            {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
+                                <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
+                            )}
+                            <Button
+                                variant='secondary'
+                                onClick={handleClickSave}
+                                aria-label='Save query'
+                                size='small'
+                                className='rounded-r-none'>
+                                <div className='flex items-center'>
+                                    <p className='ml-2 text-base'>Save </p>
+                                </div>
+                            </Button>
+                            <SaveQueryActionMenu saveAs={handleSaveAs} />
+
+                            <a
+                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                rel='noopener noreferrer'
+                                target='_blank'
+                                aria-label='Learn more about Cypher (opens in a new tab)'
+                                className={cn(
+                                    ButtonVariants({
+                                        variant: 'secondary',
+                                        size: 'small',
+                                    }),
+                                    'group px-1.5'
+                                )}>
+                                <AppIcon.Info size={24} />
+                            </a>
+
+                            <Button
+                                onClick={handleCypherSearch}
+                                size='small'
+                                disabled={cypherSearchIsRunning}
+                                aria-label='Run cypher query'
+                                className='max-w-[83px]'>
+                                <div className='flex items-center transition-all animate-in fade-in-10 '>
+                                    {cypherSearchIsRunning ? (
+                                        <ProcessingIndicator title='Running' className='text-base' />
+                                    ) : (
+                                        <>
+                                            <p className='text-base'>Run</p>
+                                            <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                        </>
+                                    )}
+                                </div>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <SaveQueryDialog
+                open={showSaveQueryDialog}
+                error={createSavedQueryMutation.error}
+                cypherSearchState={cypherSearchState}
+                sharedIds={sharedIds}
+                isPublic={isPublic}
+                saveAction={saveAction}
+                saveUpdatePending={saveUpdatePending}
+                onClose={handleCloseSaveQueryDialog}
+                onSave={handleSaveQuery}
+                onUpdate={handleUpdateQuery}
+                setSharedIds={setSharedIds}
+                setIsPublic={setIsPublic}
+            />
+        </>
+    );
+};
+
+const CypherSearch = ({
+    cypherSearchState,
+    autoRun,
+    setAutoRun,
+    disableQueryLimit,
+    setDisableQueryLimit,
+    onQuerySuccess = () => {},
+}: {
+    cypherSearchState: CypherSearchState;
+    autoRun: boolean;
+    setAutoRun: (autoRunQueries: boolean) => void;
+    disableQueryLimit: boolean;
+    setDisableQueryLimit: (timeoutSetting: boolean) => void;
+    onQuerySuccess?: (data: GraphResponse | FlatGraphResponse) => void;
+}) => {
+    return (
+        <SavedQueriesProvider>
+            <CypherSearchInner
+                cypherSearchState={cypherSearchState}
+                autoRun={autoRun}
+                setAutoRun={setAutoRun}
+                disableQueryLimit={disableQueryLimit}
+                setDisableQueryLimit={setDisableQueryLimit}
+                onQuerySuccess={onQuerySuccess}
+            />
+        </SavedQueriesProvider>
+    );
+};
+
+export default CypherSearch;

@@ -1,0 +1,16 @@
+{
+    "ignorePatterns": [
+        "**/node_modules/**",
+        "**/*.tests.{js,jsx,ts,tsx}",
+        "**/*.test.{js,jsx,ts,tsx}",
+        "**/*.spec.{js,jsx,ts,tsx}",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/__mocks__/**",
+        "**/*.d.ts"
+    ],
+    "ignoreUnimported": ["src/mocks/factories.ts", "src/mocks/handlers.ts", "src/setupTests.tsx", "src/test-utils.jsx"],
+    "ignoreUnused": ["sass"],
+    "ignoreUnresolved": [],
+    "moduleDirectory": ["node_modules", "."]
+}

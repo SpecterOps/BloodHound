@@ -1,0 +1,3 @@
+debian/bhapi.json.default etc/bloodhound
+debian/bloodhound.service usr/lib/systemd/system
+dist/* usr/lib/bloodhound/bin

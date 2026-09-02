@@ -1,0 +1,859 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package model
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"math"
+	"regexp"
+	"slices"
+	"strconv"
+	"strings"
+	"text/template"
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/safetemplate"
+	"github.com/specterops/dawgs/graph"
+)
+
+var (
+	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
+	ErrGraphExtensionValidation = errors.New("graph schema validation error")
+	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+
+	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
+	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
+	ErrDuplicateSchemaNodeKindName               = errors.New("duplicate schema node kind name")
+	ErrDuplicateGraphSchemaExtensionPropertyName = errors.New("duplicate graph schema extension property name")
+	ErrDuplicateSchemaRelationshipKindName       = errors.New("duplicate schema relationship kind name")
+	ErrDuplicateSchemaEnvironment                = errors.New("duplicate schema environment")
+	ErrDuplicateSchemaFindingName                = errors.New("duplicate schema finding name")
+	ErrDuplicatePrincipalKind                    = errors.New("duplicate principal kind")
+
+	// entity panel db errors
+	ErrKindInfoKindNotFound = errors.New("kind info references a kind that does not exist")
+
+	// entity panel duplicate errors, enforced at both the model (validation) and db (uniqueness constraint) layers
+	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
+	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
+
+	// entity panel validation errors
+	ErrInvalidKindInfoTitle    = errors.New("invalid kind info title: must not be empty or whitespace-only")
+	ErrInvalidKindInfoKey      = errors.New("invalid kind info key: must match pattern ^[a-z0-9_-]{1,128}$")
+	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
+	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 0")
+	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
+	ErrInvalidKindInfoTemplate = errors.New("invalid kind info markdown template")
+)
+
+func ErrIsGraphSchemaDuplicateError(err error) bool {
+	switch {
+	case errors.Is(err, ErrDuplicateGraphSchemaExtensionName),
+		errors.Is(err, ErrDuplicateGraphSchemaExtensionNamespace),
+		errors.Is(err, ErrDuplicateSchemaNodeKindName),
+		errors.Is(err, ErrDuplicateSchemaRelationshipKindName),
+		errors.Is(err, ErrDuplicateSchemaEnvironment),
+		errors.Is(err, ErrDuplicateSchemaFindingName),
+		errors.Is(err, ErrDuplicatePrincipalKind),
+		errors.Is(err, ErrKindInfoDuplicatePosition),
+		errors.Is(err, ErrKindInfoDuplicateInfoKey):
+		return true
+	default:
+		return false
+	}
+}
+
+// kindInfoKeyPattern is the regex pattern for validating info keys
+var kindInfoKeyPattern = regexp.MustCompile(`^[a-z0-9_-]{1,128}$`)
+
+// reservedGraphKindNamespaces lists namespaces that cannot be used in custom
+// graph extensions or ingest payloads. These are owned by internal subsystems
+// (e.g., "tag" is reserved for asset tagging). Comparisons are case-insensitive.
+var reservedGraphKindNamespaces = []string{"tag"}
+
+// MatchReservedGraphKindNamespace reports whether a kind either exactly
+// matches a reserved namespace or uses one as its "namespace_" prefix. The
+// matched namespace is returned (in its canonical lowercase form) for use in
+// error messages. Comparisons are case-insensitive.
+//
+// This function is used to validate kind names at ingest time and at
+// extension upload time.
+func MatchReservedGraphKindNamespace(candidate string) (string, bool) {
+	for _, reserved := range reservedGraphKindNamespaces {
+		if strings.EqualFold(candidate, reserved) {
+			return reserved, true
+		}
+		if len(candidate) > len(reserved) && candidate[len(reserved)] == '_' && strings.EqualFold(candidate[:len(reserved)], reserved) {
+			return reserved, true
+		}
+	}
+	return "", false
+}
+
+// ReservedKindError indicates that a node or edge kind uses a namespace that
+// is reserved for internal use. Callers can render it as a string via Error()
+// or type-assert to inspect the offending kind and namespace.
+type ReservedKindError struct {
+	KindName  string
+	Namespace string
+}
+
+func (s *ReservedKindError) Error() string {
+	return fmt.Sprintf("kind '%s' uses reserved namespace '%s'", s.KindName, s.Namespace)
+}
+
+// validateKindInfoContent verifies that entity panel content matches the expected
+// JSON structure: {"markdown":{"content":"..."}} and that the markdown content is a
+// parseable Go template using the same utility functions registered by the read
+// path renderer. It does not sanitize or inspect the markdown for unsafe HTML
+// (see BED-8764).
+func validateKindInfoContent(content json.RawMessage) error {
+	if content, err := (KindInfoInput{Content: content}).MarkdownContent(); err != nil {
+		return err
+	} else if _, err := template.New("kind-info-markdown").
+		Funcs(safetemplate.FuncMap()).
+		Parse(content); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidKindInfoTemplate, err)
+	}
+	return nil
+}
+
+// MarkdownContent extracts the inner markdown content string from the KindInfoInput's
+// Content JSON ({"markdown":{"content":"..."}}). It returns ErrInvalidKindInfoContent
+// if the content does not match the expected structure.
+func (s KindInfoInput) MarkdownContent() (string, error) {
+	var (
+		contentWrapper struct {
+			Markdown struct {
+				Content *string `json:"content"`
+			} `json:"markdown"`
+		}
+		decoder = json.NewDecoder(strings.NewReader(string(s.Content)))
+	)
+
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&contentWrapper); err != nil {
+		return "", ErrInvalidKindInfoContent
+	} else if contentWrapper.Markdown.Content == nil {
+		return "", ErrInvalidKindInfoContent
+	}
+
+	return *contentWrapper.Markdown.Content, nil
+}
+
+// validateKindInfo validates a map of KindInfo entries
+func validateKindInfo(kindName string, info KindInfoInputs) error {
+	if len(info) > 100 {
+		return fmt.Errorf("%w for kind %s: has %d entries", ErrTooManyKindInfoEntries, kindName, len(info))
+	}
+
+	var (
+		seenInfoKeys  = make(map[string]struct{}, len(info))
+		seenPositions = make(map[int32]struct{}, len(info))
+	)
+
+	for _, infoEntry := range info {
+		if strings.TrimSpace(infoEntry.Title) == "" {
+			return fmt.Errorf("%w for info key '%s' in kind %s", ErrInvalidKindInfoTitle, infoEntry.InfoKey, kindName)
+		} else if !kindInfoKeyPattern.MatchString(infoEntry.InfoKey) {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrInvalidKindInfoKey, infoEntry.InfoKey, kindName)
+		} else if infoEntry.Position < 0 {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrInvalidKindInfoPosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		} else if err := validateKindInfoContent(infoEntry.Content); err != nil {
+			return fmt.Errorf("info key '%s' in kind %s: %w", infoEntry.InfoKey, kindName, err)
+		}
+
+		if _, exists := seenInfoKeys[infoEntry.InfoKey]; exists {
+			return fmt.Errorf("%w: key '%s' in kind %s", ErrKindInfoDuplicateInfoKey, infoEntry.InfoKey, kindName)
+		} else if _, exists := seenPositions[infoEntry.Position]; exists {
+			return fmt.Errorf("%w: position %d for info key '%s' in kind %s", ErrKindInfoDuplicatePosition, infoEntry.Position, infoEntry.InfoKey, kindName)
+		}
+
+		seenInfoKeys[infoEntry.InfoKey] = struct{}{}
+		seenPositions[infoEntry.Position] = struct{}{}
+	}
+	return nil
+}
+
+type GraphSchemaExtensions []GraphSchemaExtension
+
+type GraphSchemaExtension struct {
+	Serial
+
+	Name        string
+	DisplayName string
+	Version     string
+	IsBuiltin   bool
+	Namespace   string
+}
+
+func (GraphSchemaExtension) TableName() string {
+	return "schema_extensions"
+}
+
+func (s GraphSchemaExtension) AuditData() AuditData {
+	return AuditData{
+		"id":           s.ID,
+		"name":         s.Name,
+		"display_name": s.DisplayName,
+		"version":      s.Version,
+		"is_builtin":   s.IsBuiltin,
+		"namespace":    s.Namespace,
+	}
+}
+
+// GraphSchemaNodeKinds - slice of node kinds
+type GraphSchemaNodeKinds []GraphSchemaNodeKind
+
+// GraphSchemaNodeKind - represents a node kind for an extension
+type GraphSchemaNodeKind struct {
+	Serial
+	KindId            int32 // DAWGS kind table ID
+	Name              string
+	SchemaExtensionId int32  // indicates which extension this node kind belongs to
+	DisplayName       string // can be different from name but usually isn't other than Base/Entity
+	Description       string // human-readable description of the node kind
+	IsDisplayKind     bool   // indicates if this kind should supersede others and be displayed
+	Icon              string // font-awesome icon for the registered node kind
+	IconColor         string // icon hex color
+}
+
+func (s GraphSchemaNodeKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
+}
+
+// TableName - Retrieve table name
+func (GraphSchemaNodeKind) TableName() string {
+	return "schema_node_kinds"
+}
+
+// GraphSchemaProperties - slice of graph schema properties.
+type GraphSchemaProperties []GraphSchemaProperty
+
+// GraphSchemaProperty - represents a property that an relationship or node kind can have. Grouped by schema extension.
+type GraphSchemaProperty struct {
+	Serial
+
+	SchemaExtensionId int32
+	Name              string
+	DisplayName       string
+	DataType          string
+	Description       string
+}
+
+func (GraphSchemaProperty) TableName() string {
+	return "schema_properties"
+}
+
+// GraphSchemaRelationshipKinds - slice of model.GraphSchemaRelationshipKind
+type GraphSchemaRelationshipKinds []GraphSchemaRelationshipKind
+
+// GraphSchemaRelationshipKind - represents an relationship kind for an extension
+type GraphSchemaRelationshipKind struct {
+	Serial
+	SchemaExtensionId int32 // indicates which extension this relationship kind belongs to
+	KindId            int32
+	Name              string
+	Description       string
+	IsTraversable     bool // indicates whether the relationship-kind is a traversable path
+}
+
+func (s GraphSchemaRelationshipKind) ToKind() graph.Kind {
+	return graph.StringKind(s.Name)
+}
+
+func (GraphSchemaRelationshipKind) TableName() string {
+	return "schema_relationship_kinds"
+}
+
+type SchemaEnvironment struct {
+	Serial
+	SchemaExtensionId          int32
+	SchemaExtensionDisplayName string
+	EnvironmentKindId          int32
+	EnvironmentKindName        string
+	EnvironmentKindDisplayName string
+	SourceKindId               int32
+}
+
+type EnvironmentKindsToEnvironment map[string]SchemaEnvironment
+
+func (SchemaEnvironment) TableName() string {
+	return "schema_environments"
+}
+
+type SchemaFindingType int
+
+const (
+	SchemaFindingTypeRelationship SchemaFindingType = 1
+	SchemaFindingTypeList         SchemaFindingType = 2
+)
+
+func (s SchemaFindingType) String() string {
+	switch s {
+	case SchemaFindingTypeRelationship:
+		return "relationship"
+	case SchemaFindingTypeList:
+		return "list"
+	default:
+		return "invalid enumeration case: " + strconv.Itoa(int(s))
+	}
+}
+
+// SchemaFinding represents an individual finding (e.g., T0WriteOwner, T0ADCSESC1, T0DCSync)
+type SchemaFinding struct {
+	ID                int32
+	Type              SchemaFindingType
+	SchemaExtensionId int32
+	EnvironmentId     int32
+	KindId            int32
+	Name              string
+	DisplayName       string
+	// PZ Variant Display Title
+	PZDisplayName null.String
+	CreatedAt     time.Time
+
+	// This is the kind that the finding is associated with based on the kind_id, it is enriched by db getters
+	Kind graph.Kind `gorm:"-"`
+	// This is the subtypes a finding is associated with, it is enriched by the db getters
+	Subtypes []string `gorm:"-"`
+	// This is the extension a finding is associated with, it is enriched by the db getters
+	Extension GraphSchemaExtension `gorm:"-"`
+}
+
+func (s SchemaFinding) GetType() SchemaFindingType {
+	return s.Type
+}
+
+func (s SchemaFinding) IsType(findingType SchemaFindingType) bool {
+	return s.Type == findingType
+}
+
+func (s SchemaFinding) String() string {
+	return s.Name
+}
+
+func (s SchemaFinding) FindingKind() graph.Kind {
+	return s.Kind
+}
+
+func (s SchemaFinding) GetDisplayName() string {
+	return s.DisplayName
+}
+
+func (s SchemaFinding) GetPZDisplayName() string {
+	return s.PZDisplayName.String
+}
+
+func (s SchemaFinding) GetExtensionName() string {
+	return s.Extension.Name
+}
+
+func (s SchemaFinding) GetSubtypes() []string {
+	return s.Subtypes
+}
+
+func (s SchemaFinding) Is(others ...graph.Kind) bool {
+	for _, other := range others {
+		if other.String() == s.String() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s SchemaFinding) IsSubtype(subtype string) bool {
+	return slices.Contains(s.Subtypes, subtype)
+}
+
+func (SchemaFinding) TableName() string {
+	return "schema_findings"
+}
+
+func (s SchemaFinding) IsSortable(column string) bool {
+	switch column {
+	case "name",
+		"display_name",
+		"pz_display_name",
+		"type",
+		"id",
+		"created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func (SchemaFinding) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"name":            {Equals, NotEquals, ApproximatelyEquals},
+		"display_name":    {Equals, NotEquals, ApproximatelyEquals},
+		"pz_display_name": {Equals, NotEquals, ApproximatelyEquals},
+		"id":              {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"extension_name":  {Equals, NotEquals, ApproximatelyEquals},
+		"extension_id":    {Equals, NotEquals},
+		"is_builtin":      {Equals, NotEquals},
+		"kind":            {Equals, NotEquals},
+	}
+}
+
+type SchemaFindingsSubtype struct {
+	SchemaFindingId int32
+	Subtype         string
+}
+
+func (SchemaFindingsSubtype) TableName() string {
+	return "schema_findings_subtypes"
+}
+
+type Remediation struct {
+	FindingID        int32
+	DisplayName      string
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
+}
+
+func (Remediation) TableName() string {
+	return "schema_remediations"
+}
+
+type SchemaEnvironmentPrincipalKinds []SchemaEnvironmentPrincipalKind
+
+type SchemaEnvironmentPrincipalKind struct {
+	EnvironmentId int32
+	PrincipalKind int32
+	CreatedAt     time.Time
+}
+
+func (SchemaEnvironmentPrincipalKind) TableName() string {
+	return "schema_environments_principal_kinds"
+}
+
+func (GraphSchemaRelationshipKind) ValidFilters() map[string][]FilterOperator {
+	return ValidFilters{
+		"is_traversable": {Equals, NotEquals},
+		"schema_names":   {Equals, NotEquals, ApproximatelyEquals},
+	}
+}
+
+func (GraphSchemaRelationshipKind) IsStringColumn(filter string) bool {
+	return filter == "schema_names"
+}
+
+type GraphSchemaRelationshipKindWithNamedSchema struct {
+	ID            int32  `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	IsTraversable bool   `json:"is_traversable"`
+	SchemaName    string `json:"schema_name"`
+	IsBuiltin     bool   `json:"is_builtin"`
+}
+
+type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
+
+// Graph Extension Upsert Input
+
+type GraphExtensionInput struct {
+	ExtensionInput            ExtensionInput
+	RelationshipKindsInput    RelationshipsInput
+	NodeKindsInput            NodesInput
+	EnvironmentsInput         EnvironmentsInput
+	RelationshipFindingsInput RelationshipFindingsInput
+}
+
+// Validate performs comprehensive validation on a GraphExtensionInput
+func (s GraphExtensionInput) Validate() error {
+	var (
+		nodeKinds         = make(map[string]any, 0)
+		relationshipKinds = make(map[string]any, 0)
+		environments      = make(map[string]any, 0)
+		findings          = make(map[string]any, 0)
+	)
+	if strings.TrimSpace(s.ExtensionInput.Name) == "" {
+		return errors.New("graph schema extension name is required")
+	} else if strings.TrimSpace(s.ExtensionInput.Version) == "" {
+		return errors.New("graph schema extension version is required")
+	} else if _, err := version.Parse(s.ExtensionInput.Version); err != nil {
+		return fmt.Errorf("graph schema extension version is not valid semver: %w", err)
+	} else if strings.TrimSpace(s.ExtensionInput.Namespace) == "" {
+		return errors.New("graph schema extension namespace is required")
+	} else if reservedNamespace, isReserved := MatchReservedGraphKindNamespace(s.ExtensionInput.Namespace); isReserved {
+		return fmt.Errorf("graph schema extension namespace '%s' uses reserved namespace '%s'", s.ExtensionInput.Namespace, reservedNamespace)
+	} else if len(s.NodeKindsInput) == 0 {
+		return errors.New("graph schema node kinds are required")
+	}
+
+	for _, kind := range s.NodeKindsInput {
+		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
+			return fmt.Errorf("graph schema node kind %s is missing extension namespace prefix", kind.Name)
+		} else if strings.TrimSpace(kindName) == "" {
+			return errors.New("graph schema node kind cannot be empty after the namespace prefix")
+		}
+		if _, ok := nodeKinds[kind.Name]; ok {
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		if kind.IconColor != "" && !IsValidIconColor(kind.IconColor) {
+			return fmt.Errorf("invalid hex color string %s for node kind %s", kind.IconColor, kind.Name)
+		}
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
+		}
+		nodeKinds[kind.Name] = struct{}{}
+	}
+
+	for _, kind := range s.RelationshipKindsInput {
+		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
+			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
+		} else if strings.TrimSpace(kindName) == "" {
+			return errors.New("graph schema edge kind cannot be empty after the namespace prefix")
+		}
+		if _, ok := relationshipKinds[kind.Name]; ok {
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		if _, ok := nodeKinds[kind.Name]; ok {
+			return fmt.Errorf("duplicate graph kinds: %s", kind.Name)
+		}
+		if err := validateKindInfo(kind.Name, kind.Info); err != nil {
+			return err
+		}
+		relationshipKinds[kind.Name] = struct{}{}
+	}
+
+	for _, environment := range s.EnvironmentsInput {
+		if environmentKindName, found := strings.CutPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
+			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
+		} else if strings.TrimSpace(environmentKindName) == "" {
+			return errors.New("graph schema environment kind cannot be empty after the namespace prefix")
+		}
+		if _, ok := nodeKinds[environment.EnvironmentKindName]; !ok {
+			return fmt.Errorf("graph schema environment %s not declared as a node kind", environment.EnvironmentKindName)
+		}
+		if _, ok := environments[environment.EnvironmentKindName]; ok {
+			return fmt.Errorf("duplicate graph environments: %s", environment.EnvironmentKindName)
+		}
+		if strings.TrimSpace(environment.SourceKindName) == "" {
+			return fmt.Errorf("graph schema environment source kind cannot be empty")
+		}
+		if _, ok := nodeKinds[environment.SourceKindName]; ok {
+			return fmt.Errorf("graph schema environment source kind name %s conflicts with existing node kind", environment.SourceKindName)
+		}
+		if _, ok := relationshipKinds[environment.SourceKindName]; ok {
+			return fmt.Errorf("graph schema environment source kind name %s conflicts with existing relationship kind", environment.SourceKindName)
+		}
+		for _, principalKind := range environment.PrincipalKinds {
+			if principalKindName, found := strings.CutPrefix(principalKind, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
+				return fmt.Errorf("graph schema environment principal kind %s is missing extension namespace prefix", principalKind)
+			} else if strings.TrimSpace(principalKindName) == "" {
+				return errors.New("graph schema environment principal kind cannot be empty after the namespace prefix")
+			}
+			if _, ok := nodeKinds[principalKind]; !ok {
+				return fmt.Errorf("graph schema environment principal kind %s not declared node kind", principalKind)
+			}
+		}
+		environments[environment.EnvironmentKindName] = struct{}{}
+	}
+
+	for _, relationshipFindingInput := range s.RelationshipFindingsInput {
+		if findingName, found := strings.CutPrefix(relationshipFindingInput.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
+			return fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", relationshipFindingInput.Name)
+		} else if strings.TrimSpace(findingName) == "" {
+			return errors.New("graph schema relationship finding cannot be empty after the namespace prefix")
+		}
+		if _, ok := findings[relationshipFindingInput.Name]; ok {
+			return fmt.Errorf("duplicate graph schema relationship finding: %s", relationshipFindingInput.Name)
+		}
+		if !strings.HasPrefix(relationshipFindingInput.RelationshipKindName, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)) {
+			return fmt.Errorf("graph schema relationship finding relationship kind %s is missing extension namespace prefix", relationshipFindingInput.RelationshipKindName)
+		}
+		if _, ok := relationshipKinds[relationshipFindingInput.RelationshipKindName]; !ok {
+			return fmt.Errorf("graph schema relationship finding relationship kind %s not declared as a relationship kind", relationshipFindingInput.RelationshipKindName)
+		}
+		findings[relationshipFindingInput.Name] = struct{}{}
+	}
+	return nil
+}
+
+type RelationshipFindingsInput []RelationshipFindingInput
+type RelationshipFindingInput struct {
+	Name                 string
+	DisplayName          string
+	PZDisplayName        string
+	RelationshipKindName string // edge kind
+	EnvironmentKindName  string
+	RemediationInput     RemediationInput
+}
+
+type EnvironmentsInput []EnvironmentInput
+type EnvironmentInput struct {
+	EnvironmentKindName string
+	SourceKindName      string
+	PrincipalKinds      []string
+}
+
+type ExtensionInput struct {
+	Name        string
+	DisplayName string
+	Version     string
+	Namespace   string // the required extension prefix for node and edge kind names
+}
+
+func (s ExtensionInput) GetDisplayName() string {
+	if s.DisplayName != "" {
+		return s.DisplayName
+	}
+	return s.Name
+}
+
+type NodesInput []NodeInput
+type NodeInput struct {
+	Name          string
+	DisplayName   string         // human-readable name
+	Description   string         // human-readable description of the node kind
+	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+	Icon          string         // font-awesome icon for the registered node kind
+	IconColor     string         // icon hex color
+	Info          KindInfoInputs // entity panel definitions for this node kind
+}
+
+type RelationshipsInput []RelationshipInput
+type RelationshipInput struct {
+	Name          string
+	Description   string
+	IsTraversable bool           // indicates whether the edge-kind is a traversable path
+	Info          KindInfoInputs // entity panel definitions for this relationship kind
+}
+type RemediationInput struct {
+	ShortDescription string
+	LongDescription  string
+	ShortRemediation string
+	LongRemediation  string
+}
+
+// represents a slice of entity panel definitions
+type KindInfoInputs []KindInfoInput
+
+// KindInfoInput represents one entity panel definition as provided in a user's upload JSON
+type KindInfoInput struct {
+	InfoKey  string
+	Title    string
+	Position int32
+	Content  json.RawMessage
+}
+
+// GraphSchemaKindInfo is the storage-layer shape of an entity panel
+type GraphSchemaKindInfo struct {
+	ID                 int32
+	KindID             int32
+	NodeKindID         *int32
+	RelationshipKindID *int32
+	InfoKey            string
+	Title              string
+	Position           int32
+	Content            json.RawMessage
+	CreatedAt          null.Time
+	UpdatedAt          null.Time
+}
+
+// GraphExtensionPayload is the JSON format for graph extension upserts,
+// shared by both the HTTP upload handler (api/v2) and the filesystem-based embedded
+// extension loader. It deserializes snake_case JSON and converts into the service-layer
+// GraphExtensionInput via ToGraphExtensionInput.
+type GraphExtensionPayload struct {
+	GraphSchemaExtension         GraphSchemaExtensionPayload           `json:"schema"`
+	GraphSchemaRelationshipKinds []GraphSchemaRelationshipKindsPayload `json:"relationship_kinds"`
+	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
+	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
+	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+}
+
+type GraphSchemaExtensionPayload struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+	Version     string `json:"version"`
+	Namespace   string `json:"namespace"`
+}
+
+type GraphSchemaRelationshipKindsPayload struct {
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	IsTraversable bool                       `json:"is_traversable"` // indicates whether the edge-kind is a traversable path
+	Info          map[string]KindInfoPayload `json:"info"`
+}
+
+type GraphSchemaNodeKindsPayload struct {
+	Name          string                     `json:"name"`
+	DisplayName   string                     `json:"display_name"`    // can be different from name but usually isn't other than Base/Entity
+	Description   string                     `json:"description"`     // human-readable description of the node kind
+	IsDisplayKind bool                       `json:"is_display_kind"` // indicates if this kind should supersede others and be displayed
+	Icon          string                     `json:"icon"`            // font-awesome icon for the registered node kind
+	IconColor     string                     `json:"color"`           // icon hex color
+	Info          map[string]KindInfoPayload `json:"info"`
+}
+
+type KindInfoPayload struct {
+	Title    string          `json:"title"`
+	Position int             `json:"position"`
+	Markdown json.RawMessage `json:"markdown"` // Raw: {"content": "..."}
+}
+
+type EnvironmentPayload struct {
+	EnvironmentKind string   `json:"environment_kind"`
+	SourceKind      string   `json:"source_kind"`
+	PrincipalKinds  []string `json:"principal_kinds"`
+}
+
+type RelationshipFindingsPayload struct {
+	Name             string             `json:"name"`
+	DisplayName      string             `json:"display_name"`
+	RelationshipKind string             `json:"relationship_kind"`
+	EnvironmentKind  string             `json:"environment_kind"`
+	Remediation      RemediationPayload `json:"remediation"`
+}
+
+type RemediationPayload struct {
+	ShortDescription string `json:"short_description"`
+	LongDescription  string `json:"long_description"`
+	ShortRemediation string `json:"short_remediation"`
+	LongRemediation  string `json:"long_remediation"`
+}
+
+// parseInfoPayload converts the typed KindInfoPayload map to a KindInfoInputs slice
+func parseInfoPayload(infoPayload map[string]KindInfoPayload) (KindInfoInputs, error) {
+	var (
+		wrappedContent map[string]json.RawMessage
+		contentBytes   []byte
+		markdown       json.RawMessage
+		err            error
+	)
+
+	if len(infoPayload) == 0 {
+		return make(KindInfoInputs, 0), nil
+	}
+
+	result := make(KindInfoInputs, 0, len(infoPayload))
+
+	for key, payload := range infoPayload {
+		// Guard against int32 overflow before the cast below; a position outside the
+		// int32 range would silently wrap and corrupt the stored value.
+		if payload.Position > math.MaxInt32 || payload.Position < math.MinInt32 {
+			return nil, fmt.Errorf("%w: position %d for info key %q is outside the int32 range", ErrInvalidKindInfoPosition, payload.Position, key)
+		}
+
+		// Handle empty markdown by providing empty content structure
+		if len(payload.Markdown) == 0 {
+			markdown = []byte(`{"content":""}`)
+		} else {
+			markdown = payload.Markdown
+		}
+
+		wrappedContent = map[string]json.RawMessage{
+			"markdown": markdown,
+		}
+
+		if contentBytes, err = json.Marshal(wrappedContent); err != nil {
+			return nil, fmt.Errorf("failed to wrap markdown content for info key %s: %w", key, err)
+		}
+
+		result = append(result, KindInfoInput{
+			InfoKey:  key,
+			Title:    payload.Title,
+			Position: int32(payload.Position),
+			Content:  contentBytes,
+		})
+	}
+
+	return result, nil
+}
+
+// ToGraphExtensionInput converts the GraphExtensionPayload model to the service-layer GraphExtensionInput.
+func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, error) {
+	var (
+		graphExtension = GraphExtensionInput{
+			ExtensionInput: ExtensionInput{
+				Name:        s.GraphSchemaExtension.Name,
+				DisplayName: s.GraphSchemaExtension.DisplayName,
+				Version:     s.GraphSchemaExtension.Version,
+				Namespace:   s.GraphSchemaExtension.Namespace,
+			},
+			NodeKindsInput:         make(NodesInput, 0),
+			RelationshipKindsInput: make(RelationshipsInput, 0),
+			EnvironmentsInput:      make(EnvironmentsInput, 0),
+		}
+		infoInputs KindInfoInputs
+		err        error
+	)
+
+	for _, nodeKindPayload := range s.GraphSchemaNodeKinds {
+		if infoInputs, err = parseInfoPayload(nodeKindPayload.Info); err != nil {
+			return GraphExtensionInput{}, fmt.Errorf("error parsing node kind %s info: %w", nodeKindPayload.Name, err)
+		}
+
+		graphExtension.NodeKindsInput = append(graphExtension.NodeKindsInput,
+			NodeInput{
+				Name:          nodeKindPayload.Name,
+				DisplayName:   nodeKindPayload.DisplayName,
+				Description:   nodeKindPayload.Description,
+				IsDisplayKind: nodeKindPayload.IsDisplayKind,
+				Icon:          nodeKindPayload.Icon,
+				IconColor:     nodeKindPayload.IconColor,
+				Info:          infoInputs,
+			})
+	}
+	for _, edgeKindPayload := range s.GraphSchemaRelationshipKinds {
+		if infoInputs, err = parseInfoPayload(edgeKindPayload.Info); err != nil {
+			return GraphExtensionInput{}, fmt.Errorf("error parsing relationship kind %s info: %w", edgeKindPayload.Name, err)
+		}
+
+		graphExtension.RelationshipKindsInput = append(graphExtension.RelationshipKindsInput,
+			RelationshipInput{
+				Name:          edgeKindPayload.Name,
+				Description:   edgeKindPayload.Description,
+				IsTraversable: edgeKindPayload.IsTraversable,
+				Info:          infoInputs,
+			})
+	}
+	for _, environmentPayload := range s.GraphEnvironments {
+		graphExtension.EnvironmentsInput = append(graphExtension.EnvironmentsInput,
+			EnvironmentInput{
+				EnvironmentKindName: environmentPayload.EnvironmentKind,
+				SourceKindName:      environmentPayload.SourceKind,
+				PrincipalKinds:      environmentPayload.PrincipalKinds,
+			})
+	}
+	for _, findingPayload := range s.GraphRelationshipFindings {
+		graphExtension.RelationshipFindingsInput = append(graphExtension.RelationshipFindingsInput, RelationshipFindingInput{
+			Name:                 findingPayload.Name,
+			DisplayName:          findingPayload.DisplayName,
+			RelationshipKindName: findingPayload.RelationshipKind,
+			EnvironmentKindName:  findingPayload.EnvironmentKind,
+			RemediationInput: RemediationInput{
+				ShortDescription: findingPayload.Remediation.ShortDescription,
+				LongDescription:  findingPayload.Remediation.LongDescription,
+				ShortRemediation: findingPayload.Remediation.ShortRemediation,
+				LongRemediation:  findingPayload.Remediation.LongRemediation,
+			},
+		})
+	}
+	return graphExtension, nil
+}

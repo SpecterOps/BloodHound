@@ -1,0 +1,297 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 702.1469844175493,
+        "y": 50.000000000000114
+      },
+      "caption": "AZTenant",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 1329.2939688350984,
+        "y": 50.000000000000114
+      },
+      "caption": "AZRole",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 702.1469844175493,
+        "y": 516.6125619146503
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {
+        "appRoleId": "9e3f62cf-ca93-4989-b6ce-bf83c28f9fe8"
+      },
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 75,
+        "y": 50
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {
+        "appId": "00000003-0000-0000-c000-000000000000",
+        "name": "Microsoft Graph"
+      },
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 75,
+        "y": 209.1581690152445
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 1329.2939688350987,
+        "y": 209.1581690152445
+      },
+      "caption": "AZApp",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 1329.2939688350987,
+        "y": 368.3163380304889
+      },
+      "caption": "AZGroup",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n0",
+      "toId": "n1",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "fromId": "n0",
+      "toId": "n2",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "AZMGRoleManagement_ReadWrite_Directory",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n0",
+      "toId": "n3",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n2",
+      "toId": "n1",
+      "type": "AZMGGrantRole",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "AZMGGrantAppRoles",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n7",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n8",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n9",
+      "fromId": "n0",
+      "toId": "n4",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n2",
+      "toId": "n4",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n11",
+      "fromId": "n2",
+      "toId": "n4",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n12",
+      "fromId": "n0",
+      "toId": "n5",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n13",
+      "fromId": "n2",
+      "toId": "n5",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n14",
+      "fromId": "n2",
+      "toId": "n5",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n15",
+      "fromId": "n0",
+      "toId": "n6",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n16",
+      "fromId": "n2",
+      "toId": "n6",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n17",
+      "fromId": "n2",
+      "toId": "n6",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    }
+  ],
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  }
+}

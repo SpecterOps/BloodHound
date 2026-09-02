@@ -1,0 +1,219 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": -788.2604243535471,
+        "y": -294.8509354486657
+      },
+      "caption": "AZTenant",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -161.11343993599792,
+        "y": -294.8509354486657
+      },
+      "caption": "AZApp",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": -788.2604243535471,
+        "y": 171.76162646598448
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {
+        "appRoleId": "1bfefb4e-e0b5-418b-a88f-73c46d2cc8e9"
+      },
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": -1415.4074087710965,
+        "y": -294.85093544866584
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {
+        "appId": "00000003-0000-0000-c000-000000000000",
+        "name": "Microsoft Graph"
+      },
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -1415.4074087710965,
+        "y": -67.98583417415242
+      },
+      "caption": "AZServicePrincipal",
+      "labels": [],
+      "properties": {},
+      "style": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n1",
+      "fromId": "n0",
+      "toId": "n2",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n0",
+      "toId": "n3",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n3",
+      "toId": "n4",
+      "type": "AZMGApplication_ReadWrite_All",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n0",
+      "toId": "n4",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n3",
+      "toId": "n2",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n3",
+      "toId": "n2",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n7",
+      "fromId": "n3",
+      "toId": "n4",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n8",
+      "fromId": "n3",
+      "toId": "n4",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n9",
+      "fromId": "n0",
+      "toId": "n5",
+      "type": "AZContains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n3",
+      "toId": "n5",
+      "type": "AZMGAddOwner",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n11",
+      "fromId": "n3",
+      "toId": "n5",
+      "type": "AZMGAddSecret",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    }
+  ],
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  }
+}

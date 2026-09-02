@@ -1,0 +1,1258 @@
+{
+    "meta": {
+        "methods": 46067,
+        "type": "containers",
+        "count": 0
+    },
+    "data": [
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "POLICYTYPE@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dPOLICYTYPE,CN\u003dWMIPOLICY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "3509C504-9CD1-497E-A0F7-F1A4D63BDF39",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "COMPUTERS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dCOMPUTERS,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2120",
+                    "ObjectType": "Computer"
+                }
+            ],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "AB616901-D423-4B9A-B68F-D24CEE1E36EF",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "FOREIGNSECURITYPRINCIPALS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dFOREIGNSECURITYPRINCIPALS,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "629289D5-75F1-4122-B30E-3D823AD0E83C",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "COMPARTITIONSETS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dCOMPARTITIONSETS,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "80C5D5D6-B1F3-47BC-BE3A-AA5CE922CA9B",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "USERS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dUSERS,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2121",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2119",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2116",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-500",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-571",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-517",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-522",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2112",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2122",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-572",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-1105",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-1102",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-1103",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-515",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-516",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-514",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-513",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-498",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2106",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2107",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2111",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2110",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-520",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-501",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2114",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-502",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-525",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-553",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-521",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-518",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2118",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-1000",
+                    "ObjectType": "Group"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2117",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2115",
+                    "ObjectType": "User"
+                }
+            ],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "ECAD920E-8EB1-4E31-A80E-DD36367F81F4",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "MEETINGS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dMEETINGS,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "6BC79CB0-E66B-4752-ABF5-6727C336AD27",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "COMPARTITIONS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dCOMPARTITIONS,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "C8F2C713-3DB8-4DE3-B6CD-F07C2F712A0D",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "WMIPOLICY@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dWMIPOLICY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                }
+            ],
+            "ObjectIdentifier": "87594131-09D5-4F8F-87D4-E350F04AEC3E",
+            "IsDeleted": false,
+            "IsACLProtected": true
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "POLICYTEMPLATE@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dPOLICYTEMPLATE,CN\u003dWMIPOLICY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "C011E11D-13DC-4C49-9D99-55A8B26465E1",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "SOM@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dSOM,CN\u003dWMIPOLICY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                }
+            ],
+            "ObjectIdentifier": "D09245F3-7CFB-4F62-9EA1-14CFE88FDA05",
+            "IsDeleted": false,
+            "IsACLProtected": true
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "SYSTEM@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "45781029-28B5-4B9B-BAA6-308741A6F8C4",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "PSPS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dPSPS,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "B3EC44D7-7FED-4D9C-AAEF-48C9FE98DB16",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "RAS AND IAS SERVERS ACCESS CHECK@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dRAS AND IAS SERVERS ACCESS CHECK,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-553",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-553",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "53921E98-3004-4285-858D-C901F2D1C242",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "WMIGPO@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dWMIGPO,CN\u003dWMIPOLICY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "FF0D453E-352C-492B-94FE-3C39D8D1757E",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "POLICIES@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dPOLICIES,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "EF0393C4-339D-4652-A2F3-59135EC87BB5",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "IP SECURITY@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dIP SECURITY,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "E986A16E-91DD-4964-8C23-17CC5C33071D",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "MICROSOFT@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dMICROSOFT,CN\u003dPROGRAM DATA,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "351420A9-A4DA-451E-A439-FCC83B7289DD",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "RPCSERVICES@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dRPCSERVICES,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "696C77F5-24AF-4D4F-AE48-CE323905E84C",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "PROGRAM DATA@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dPROGRAM DATA,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "EA359D65-E573-48DF-8BF0-1B1031751729",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "MANAGED SERVICE ACCOUNTS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dMANAGED SERVICE ACCOUNTS,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2103",
+                    "ObjectType": "User"
+                },
+                {
+                    "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2105",
+                    "ObjectType": "Computer"
+                }
+            ],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "9AC9B1D2-469D-4C28-A397-1FD3C7ED2B23",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "WINSOCKSERVICES@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dWINSOCKSERVICES,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "31621345-B09B-4045-9FEF-4C87F5FBE492",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "MICROSOFTDNS@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dMICROSOFTDNS,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-9",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-9",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-1102",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-1102",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "GenericAll",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": true
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": true
+                }
+            ],
+            "ObjectIdentifier": "B075DB24-5B1D-4187-BB42-00057CB2EDFD",
+            "IsDeleted": false,
+            "IsACLProtected": false
+        },
+        {
+            "Properties": {
+                "domain": "TESTLAB.LOCAL",
+                "name": "ADMINSDHOLDER@TESTLAB.LOCAL",
+                "distinguishedname": "CN\u003dADMINSDHOLDER,CN\u003dSYSTEM,DC\u003dTESTLAB,DC\u003dLOCAL",
+                "domainsid": "S-1-5-21-3130019616-2776909439-2417379446"
+            },
+            "ChildObjects": [],
+            "Aces": [
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "Owns",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "TESTLAB.LOCAL-S-1-5-32-544",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-512",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteDacl",
+                    "IsInherited": false
+                },
+                {
+                    "PrincipalSID": "S-1-5-21-3130019616-2776909439-2417379446-519",
+                    "PrincipalType": "Group",
+                    "RightName": "WriteOwner",
+                    "IsInherited": false
+                }
+            ],
+            "ObjectIdentifier": "1663A808-69CC-4653-BA67-62635BDCC504",
+            "IsDeleted": false,
+            "IsACLProtected": true
+        }
+    ]
+}

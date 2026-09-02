@@ -1,0 +1,45 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+type: object
+description: |
+  Alert event resource. Events are system-generated source signals that fan out
+  into per-channel delivery attempts. The API exposes events as read-only; they
+  are not mutable through this API surface.
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    type: string
+    description: Event type identifier, e.g. an alert kind name.
+  message:
+    type: string
+  data:
+    type: object
+    description: Event payload (`JSONB`); shape varies per event type.
+    additionalProperties: true
+  created_at:
+    type: string
+    format: date-time
+  attempts_queued_at:
+    type: string
+    format: date-time
+    nullable: true
+    description: |
+      Timestamp at which delivery attempts were queued for this event. `null`
+      when the event has not yet been dispatched (matches the `delivered`
+      filter on the list endpoint).

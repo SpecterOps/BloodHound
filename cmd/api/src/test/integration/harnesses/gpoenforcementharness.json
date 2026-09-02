@@ -1,0 +1,294 @@
+{
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": 1.874699728327322e-32,
+                "y": -88
+            },
+            "caption": "GPO A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#009ce0"
+            }
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": 1.874699728327322e-32,
+                "y": 197.63030787576963
+            },
+            "caption": "GPO B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#fcdc00"
+            }
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": 215,
+                "y": 73.5
+            },
+            "caption": "Domain",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 429.99999999999994,
+                "y": -50.63030787576963
+            },
+            "caption": "OU A",
+            "labels": [],
+            "properties": {
+                "blocksInheritence": "true"
+            },
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 430,
+                "y": 197.63030787576963
+            },
+            "caption": "OU B",
+            "labels": [],
+            "properties": {
+                "blocksInheritence": "False"
+            },
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 655.5,
+                "y": -50.63030787576963
+            },
+            "caption": "OU C",
+            "labels": [],
+            "properties": {
+                "blocksInheritence": "False"
+            },
+            "style": {
+                "border-color": "#009ce0"
+            }
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 655.5,
+                "y": 197.63030787576963
+            },
+            "caption": "OU D",
+            "labels": [],
+            "properties": {
+                "blocksInheritence": "True"
+            },
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 856.5,
+                "y": -50.63030787576965
+            },
+            "caption": "User C",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#009ce0"
+            }
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": 856.5,
+                "y": 197.6303078757696
+            },
+            "caption": "User D",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n9",
+            "position": {
+                "x": 655.5,
+                "y": 347.3151539378848
+            },
+            "caption": "User B",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        },
+        {
+            "id": "n10",
+            "position": {
+                "x": 655.5,
+                "y": -215.68484606211518
+            },
+            "caption": "User A",
+            "labels": [],
+            "properties": {},
+            "style": {
+                "border-color": "#a4dd00"
+            }
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "fromId": "n0",
+            "toId": "n2",
+            "type": "GPLink",
+            "properties": {
+                "enforced": "True"
+            },
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "fromId": "n1",
+            "toId": "n2",
+            "type": "GPLink",
+            "properties": {
+                "enforced": "False"
+            },
+            "style": {}
+        },
+        {
+            "id": "n2",
+            "fromId": "n2",
+            "toId": "n3",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n3",
+            "fromId": "n2",
+            "toId": "n4",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n4",
+            "fromId": "n3",
+            "toId": "n5",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n5",
+            "fromId": "n4",
+            "toId": "n6",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n6",
+            "fromId": "n5",
+            "toId": "n7",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n7",
+            "fromId": "n6",
+            "toId": "n8",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n8",
+            "fromId": "n4",
+            "toId": "n9",
+            "type": "",
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n9",
+            "fromId": "n3",
+            "toId": "n10",
+            "type": "",
+            "properties": {},
+            "style": {}
+        }
+    ],
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    }
+}

@@ -1,0 +1,256 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 1059.8976569191977,
+        "y": 501.6907518623764
+      },
+      "caption": "Controlled AZUser",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#fcc400"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 604.0284270522187,
+        "y": 50
+      },
+      "caption": "AZGroup A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 604.0284270522187,
+        "y": 994.1653264708643
+      },
+      "caption": "AZGroup B",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 604.0284270522187,
+        "y": 631.3386895713072
+      },
+      "caption": "AZServicePrincipal A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 604.0284270522187,
+        "y": 384.9576083747377
+      },
+      "caption": "AZUser B",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 75,
+        "y": 50
+      },
+      "caption": "AZUser A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 75,
+        "y": 994.1653264708643
+      },
+      "caption": "AZServicePrincipal B",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 75,
+        "y": 631.3386895713072
+      },
+      "caption": "AZApp A",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "border-color": "#d33115"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 379.0709828688383,
+        "y": 274.95744418338046
+      },
+      "caption": "AZTenant",
+      "style": {
+        "border-color": "#aea1ff"
+      },
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n3",
+      "toId": "n0",
+      "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n4",
+      "toId": "n0",
+      "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n5",
+      "toId": "n1",
+      "type": "AZMemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n6",
+      "toId": "n2",
+      "type": "AZMemberOf",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n4",
+      "fromId": "n1",
+      "toId": "n0",
+      "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "AZResetPassword",
+      "properties": {},
+      "style": {
+        "arrow-color": "#68bc00"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n7",
+      "toId": "n3",
+      "type": "AZRunsAs",
+      "properties": {},
+      "style": {
+        "arrow-color": "#d33115"
+      }
+    },
+    {
+      "id": "n7",
+      "type": "AZContains",
+      "style": {
+        "arrow-color": "#68bc00"
+      },
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n1"
+    }
+  ]
+}

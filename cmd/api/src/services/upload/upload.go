@@ -1,0 +1,169 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package upload
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/metrics"
+	"github.com/specterops/bloodhound/packages/go/storage"
+)
+
+var ErrInvalidJSON = errors.New("file is not valid json")
+
+func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
+	fileData := request.Body
+
+	var (
+		uploadDiagnostic ingestUploadDiagnostic
+		tempFileName     string
+		fileType         model.FileType
+		validationFn     FileValidator
+		err              error
+	)
+
+	switch {
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+		fileType = model.FileTypeJson
+		validationFn = validator.WriteAndValidateJSON
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+		fileType = model.FileTypeZip
+		validationFn = WriteAndValidateZip
+	default:
+		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
+	}
+
+	uploadDiagnostic = startIngestUploadDiagnostic(ctx, jobID, fileType)
+	tempFileName, err = WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("file_upload_job%d_", jobID), validationFn)
+	uploadDiagnostic.finish(tempFileName, err)
+	if err != nil {
+		// Record validation failure metric
+		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
+		return IngestTaskParams{}, err
+	}
+
+	return IngestTaskParams{
+		Filename: tempFileName,
+		FileType: fileType,
+	}, nil
+}
+
+func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
+	if tempFileName == "" {
+		return
+	}
+
+	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
+
+	if err := fileService.DeleteFile(cleanupCtx, tempFileName); err != nil {
+		slog.ErrorContext(
+			cleanupCtx,
+			"Failed to delete temp file",
+			slog.String("temp_file_name", tempFileName),
+			attr.Error(err),
+		)
+	}
+}
+
+func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
+	var storageWriteDiagnostic ingestStorageWriteDiagnostic
+
+	if validationFunc == nil {
+		return "", fmt.Errorf("validation function is required")
+	}
+
+	// Create a pipe: pr (read end) and pw (write end).
+	// Data written to pw can be read from pr.
+	pr, pw := io.Pipe()
+
+	// validationErrCh carries the result of the validation goroutine.
+	// Using a buffered channel (size 1) ensures the goroutine never blocks on send,
+	// and gives the main goroutine a synchronization point to wait for the result.
+	validationErrCh := make(chan error, 1)
+
+	// Start validation in a separate goroutine.
+	// validationFunc reads from the request body and writes the validated output to pw.
+	// WriteTempFile reads from pr and persists that validated output.
+	go func() {
+		_, err := validationFunc(fileData, pw)
+		_ = pw.CloseWithError(err)
+		validationErrCh <- err
+	}()
+
+	// Write to storage while validation happens concurrently.
+	storageWriteDiagnostic = startIngestStorageWriteDiagnostic(ctx, prefix)
+	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, pr, storage.WriteOptions{})
+	storageWriteDiagnostic.finish(tempFileName, writeErr)
+	if writeErr != nil {
+		_ = pr.CloseWithError(writeErr)
+	}
+
+	var validationErr error
+	select {
+	case validationErr = <-validationErrCh:
+		// Context cancelation wins over validation errors when both are ready
+		if err := ctx.Err(); err != nil {
+			cleanupTempFile(ctx, fileService, tempFileName)
+			return "", err
+		}
+	case <-ctx.Done():
+		_ = pr.CloseWithError(ctx.Err())
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", ctx.Err()
+	}
+
+	// Check if validation failed, which should win over write errors.
+	if validationErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Validation failed",
+			slog.String("temp_file_name",
+				tempFileName),
+			attr.Error(validationErr),
+		)
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", validationErr
+	}
+
+	// Check if writing failed; the temp file should be cleaned up.
+	if writeErr != nil {
+		slog.ErrorContext(
+			ctx,
+			"Write failed",
+			slog.String("temp_file_name", tempFileName),
+			attr.Error(writeErr),
+		)
+		cleanupTempFile(ctx, fileService, tempFileName)
+		return "", writeErr
+	}
+
+	slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", tempFileName))
+	return tempFileName, nil
+}

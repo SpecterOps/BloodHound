@@ -1,0 +1,547 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import type { AxiosResponse } from 'axios';
+import { EnvironmentRequest } from './requests';
+import {
+    AlertAttempt,
+    AlertEvent,
+    AlertEventType,
+    AssetGroupTag,
+    AssetGroupTagCertificationRecord,
+    AssetGroupTagHistoryRecord,
+    AssetGroupTagMember,
+    AssetGroupTagSelector,
+    Client,
+    CollectorManifest,
+    CommunityCollectorType,
+    CustomNodeKindType,
+    EnterpriseCollectorType,
+    FileIngestCompletedTask,
+    FileIngestJob,
+    GraphData,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    NodeKindResponse,
+    NodeSourceTypes,
+    Notification,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+    RelationshipKindResponse,
+    Role,
+    ScheduledJobDisplay,
+    SourceKind,
+    TimestampFields,
+    Webhook,
+    WebhookSecret,
+} from './types';
+import { ConfigurationPayload } from './utils/config';
+
+export interface BasicResponse<T> {
+    data: T;
+}
+
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
+    start: string;
+    end: string;
+}
+
+export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
+    Required<BasicResponse<T>> & {
+        count: number;
+        limit: number;
+        skip: number;
+    };
+
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
+};
+
+export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
+
+export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
+
+export type Environment = {
+    // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
+    // Needed because environment types can be provided by the user
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    type: KnownEnvironmentType | (string & {});
+    impactValue: number;
+    name: string;
+    id: string;
+    collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
+    environment_kind_display_name?: string; // OG Environments
+    environment_kind_id?: number; // OG Environments
+};
+
+export type GraphResponse = BasicResponse<GraphData>;
+
+export type ActiveDirectoryQualityStat = TimestampFields & {
+    users: number;
+    computers: number;
+    groups: number;
+    ous: number;
+    gpos: number;
+    aiacas: number;
+    rootcas: number;
+    enterprisecas: number;
+    ntauthstores: number;
+    certtemplates: number;
+    issuancepolicies: number;
+    acls: number;
+    relationships: number;
+    sessions: number;
+    local_group_completeness: number;
+    session_completeness: number;
+    containers?: number;
+    domains?: number;
+};
+
+export type ActiveDirectoryDataQualityResponse = PaginatedResponse<ActiveDirectoryQualityStat[]>;
+
+export type AzureDataQualityStat = TimestampFields & {
+    run_id: string;
+    relationships: number;
+    users: number;
+    groups: number;
+    apps: number;
+    service_principals: number;
+    devices: number;
+    management_groups: number;
+    subscriptions: number;
+    resource_groups: number;
+    vms: number;
+    key_vaults: number;
+    automation_accounts: number;
+    container_registries: number;
+    function_apps: number;
+    logic_apps: number;
+    managed_clusters: number;
+    vm_scale_sets: number;
+    web_apps: number;
+    tenants?: number;
+    tenantid?: string;
+};
+
+export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
+
+export type OpenGraphDataQualityStat = TimestampFields & {
+    run_id: string;
+    environment_kind_id: number;
+    environment_id: string;
+    extension_id: number;
+    id: number;
+    kind_id: number;
+    metric_name: string;
+    metric_type: string;
+    metric_value: number;
+};
+
+export type OpenGraphDataQualityResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
+
+type PostureStat = TimestampFields & {
+    domain_sid: string;
+    exposure_index: number;
+    tier_zero_count: number;
+    critical_risk_count: number;
+    id: number;
+};
+
+export type PostureResponse = PaginatedResponse<PostureStat[]>;
+
+type PostureFindingTrend = {
+    environment_id: string;
+    finding: string;
+    finding_count_start: number;
+    finding_count_end: number;
+    finding_count_increase: number;
+    finding_count_decrease: number;
+    composite_risk: number;
+    display_title: string;
+    display_type: string;
+};
+
+export type PostureFindingTrendsResponse = TimeWindowedResponse<{
+    findings: PostureFindingTrend[];
+    total_finding_count_start: number;
+    total_finding_count_end: number;
+}>;
+
+export type PostureHistoryData = {
+    date: string;
+    value: number;
+};
+
+export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
+    data_type: string;
+};
+
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
+    environments: string[];
+    asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
+};
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
+
+type DatapipeStatus = {
+    status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
+    last_complete_analysis_at: string;
+    updated_at: string;
+};
+
+export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
+
+export type NullTime = {
+    Time: string;
+    Valid: boolean;
+};
+
+export type AuthToken = TimestampFields & {
+    hmac_method: string;
+    id: string;
+    last_access: string;
+    name: string;
+    user_id: string;
+    expires_at: NullTime | null;
+};
+
+export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;
+
+export type NewAuthToken = AuthToken & {
+    key: string;
+};
+
+export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
+
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
+
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
+export type AssetGroupTagsCertification = PaginatedResponse<{ members: AssetGroupTagCertificationRecord[] }>;
+
+export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
+    source: NodeSourceTypes;
+}
+
+export interface AssetGroupTagMemberInfo extends AssetGroupTagMember {
+    properties: Record<string, any>;
+    selectors: AssetGroupTagSelector[];
+}
+
+export type AssetGroupTagSearchResponse = BasicResponse<{
+    tags: AssetGroupTag[];
+    selectors: AssetGroupTagSelector[];
+    members: AssetGroupTagMember[];
+}>;
+
+export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
+export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;
+export type AssetGroupTagSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
+export type AssetGroupTagSelectorsResponse = PaginatedResponse<{ selectors: AssetGroupTagSelector[] }>;
+export type AssetGroupTagMembersResponse = PaginatedResponse<{ members: AssetGroupTagMemberListItem[] }>;
+export type AssetGroupTagMemberInfoResponse = BasicResponse<{
+    member: AssetGroupTagMemberInfo;
+}>;
+
+export type AssetGroupSelector = TimestampFields & {
+    id: number;
+    asset_group_id: number;
+    name: string;
+    selector: string;
+    system_selector: boolean;
+};
+
+export type AssetGroup = TimestampFields & {
+    id: number;
+    name: string;
+    tag: string;
+    member_count: number;
+    system_group: boolean;
+    Selectors: AssetGroupSelector[];
+};
+
+export type AssetGroupMember = {
+    asset_group_id: number;
+    custom_member: boolean;
+    environment_id: string;
+    environment_kind: string;
+    kinds: string[];
+    name: string;
+    object_id: string;
+    primary_kind: string;
+};
+
+export type AssetGroupMemberCounts = {
+    total_count: number;
+    counts: Record<AssetGroupMember['primary_kind'], number>;
+};
+
+export type AssetGroupResponse = BasicResponse<{ asset_groups: AssetGroup[] }>;
+
+export type AssetGroupMembersResponse = PaginatedResponse<{ members: AssetGroupMember[] }>;
+
+export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCounts>;
+
+export type SavedQuery = {
+    id: number;
+    name: string;
+    description: string;
+    query: string;
+    user_id: string;
+};
+
+export type SavedQueryPermissionsResponse = {
+    shared_to_user_ids: string[];
+    query_id: number | undefined;
+    public: boolean;
+};
+
+export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
+
+export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
+
+export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
+
+export type UploadFileToIngestResponse = null;
+
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
+
+export type EndFileIngestResponse = null;
+
+export type ConfigurationWithMetadata<T> = TimestampFields &
+    T & {
+        name: string;
+        description: string;
+        id: number;
+    };
+
+export type GetConfigurationResponse = BasicResponse<ConfigurationWithMetadata<ConfigurationPayload>[]>;
+
+export type UpdateConfigurationResponse = BasicResponse<ConfigurationPayload>;
+
+export type GetCollectorsResponse = BasicResponse<{
+    latest: string;
+    versions: {
+        version: string;
+        sha256sum: string;
+        deprecated: boolean;
+    }[];
+}>;
+
+export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityCollectorType, CollectorManifest[]>>;
+
+export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
+
+export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;
+
+export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
+
+export type GetExportQueryResponse = AxiosResponse<Blob>;
+
+export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export enum ArtifactStatus {
+    PENDING = 'pending',
+    UPLOADING = 'uploading',
+    COMPLETE = 'complete',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    // total byte size of the artifact to download
+    artifact_size: number | null;
+    artifact_status: ArtifactStatus | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    started_at: string | null;
+    completed_at: string | null;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+
+export type EdgeType = {
+    id: number;
+    name: string;
+    description: string;
+    is_traversable: boolean;
+    schema_name: string;
+    is_builtin: boolean;
+};
+
+export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
+export type GetSelfResponse = BasicResponse<Self>;
+
+export type Self = {
+    AuthSecret: {
+        id: number;
+        digest_method: string;
+        expires_at: string;
+        totp_activated: boolean;
+    };
+    email_address: string;
+    eula_accepted: boolean;
+    first_name: string;
+    id: string;
+    last_login: string;
+    last_name: string;
+    principal_name: string;
+    saml_provider_id: number | null;
+    roles: Role[];
+    all_environments?: boolean;
+    created_at: string;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+    is_disabled: boolean;
+    sso_provider_id: number | null;
+    updated_at: string;
+};
+
+export type Extension = {
+    id: string;
+    is_builtin: boolean;
+    name: string;
+    namespace: string;
+    version: string;
+};
+
+export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
+
+export type FindingTypeResponse = BasicResponse<{ finding: string; title: string }[]>;
+
+export type FindingSchema = {
+    id: number;
+    name: string;
+    display_name: string;
+    type: string;
+    environment_id: number;
+    extension_id: number;
+    kind: string;
+    subtypes: string[];
+    is_builtin: boolean;
+    created_at: string;
+};
+
+export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
+
+export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
+
+export type UnifiedFinding = {
+    id: number;
+    severity: string;
+    finding: string;
+    title: string;
+    finding_type: string;
+    platform: string;
+    environment_id: string;
+    environment_name: string;
+    asset_group_tag_id: number;
+    zone_name: string;
+    source_principal_id: string;
+    source_principal_name: string;
+    source_principal_kind: string;
+    target_principal_id: string;
+    target_principal_name: string;
+    target_principal_kind: string;
+    status: string;
+    first_seen: string;
+    last_seen: string;
+    prioritization_rank?: number | null;
+};
+
+export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
+
+export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
+export type CreateWebhookResponse = {
+    webhook: Webhook;
+    hmac_secret: string;
+};
+export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
+export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export type GetAlertEventsResponse = PaginatedResponse<{ events: AlertEvent[] }>;
+export type GetAlertEventResponse = BasicResponse<{ event: AlertEvent }>;
+export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEventType[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+type AlertPayload = { alert: Notification };
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
+export type GetAlertResponse = BasicResponse<AlertPayload>;
+export type CreateAlertResponse = Notification;
+export type UpdateAlertResponse = BasicResponse<AlertPayload>;
+export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
+export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+
+export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
+
+export type GetRelationshipResponse = BasicResponse<RelationshipDetails | RelationshipDetailsWithInfo>;
+
+export type ListNodeKindsResponse = BasicResponse<NodeKindResponse[]>;
+
+export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
+
+export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
+
+export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;

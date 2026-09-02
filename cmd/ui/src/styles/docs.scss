@@ -1,0 +1,175 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+#docs {
+    display: flex;
+    flex-direction: row;
+
+    #docs-menu {
+        width: 300px;
+        position: fixed;
+        top: 50px;
+        bottom: 0;
+        background: #343131;
+        h3 {
+            padding: 24px 20px 10px;
+            color: #3a7ca8;
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        h6 {
+            padding: 4px 20px;
+            color: #d9d9d9;
+            margin: 0;
+            font-size: 0.9em;
+            font-weight: normal;
+            cursor: pointer;
+            &:hover {
+                background: #4e4a4a;
+            }
+        }
+        form {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: $docs-blue;
+            .version {
+                color: rgba(255, 255, 255, 0.3);
+                text-align: center;
+            }
+            .title {
+                text-align: center;
+                span {
+                    color: #fff;
+                    font-weight: bold;
+                }
+            }
+            div.search {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                input {
+                    margin: 14px 0 0 0;
+                    color: #888;
+                    padding: 6px 14px;
+                    border: none;
+                    border-radius: 16px;
+                    &:focus {
+                        border: none;
+                        outline: none;
+                    }
+                }
+            }
+        }
+    }
+
+    #docs-content {
+        position: fixed;
+        top: 50px;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        padding: 10px 20px;
+        color: #404040;
+        margin-left: 300px;
+        overflow: auto;
+
+        ul#docs-breadcrumbs {
+            margin: 0;
+            padding: 0 0 10px 0;
+            list-style-type: none;
+            display: flex;
+            justify-content: flex-start;
+            border-bottom: 1px solid #d9d9d9;
+
+            li {
+                margin-right: 4px;
+                ::after {
+                    content: ' \00bb';
+                }
+                &:last-child {
+                    ::after {
+                        content: '';
+                    }
+                }
+            }
+        }
+
+        .search-result {
+            .summary {
+                h4 {
+                    font-size: 1.2em;
+                    font-weight: normal;
+                }
+            }
+            .summary,
+            .search-result-item {
+                border-bottom: 1px solid #d9d9d9;
+            }
+            .search-result-item {
+                padding: 20px 0;
+                a {
+                    color: $docs-blue;
+                    font-size: 1.4em;
+                }
+            }
+        }
+
+        .docs-gfm {
+            pre {
+                padding: 10px 25px;
+                background: #f6f8fa;
+                overflow: auto;
+            }
+            a {
+                color: #00f;
+                &:visited {
+                    color: #9b59b6;
+                }
+            }
+            blockquote {
+                margin: 0;
+                background: #e7f2fa;
+                border-top: 24px solid #6ab0de;
+                p {
+                    padding: 10px;
+                    margin: 0;
+                }
+            }
+            img {
+                max-width: 100%;
+                max-height: 400px;
+            }
+        }
+
+        span.highlight {
+            background: burlywood;
+            padding: 0 0.1em;
+        }
+    }
+}
+
+.curl-command {
+    position: relative;
+
+    code {
+        white-space: pre-wrap !important;
+        word-break: break-all;
+    }
+}
