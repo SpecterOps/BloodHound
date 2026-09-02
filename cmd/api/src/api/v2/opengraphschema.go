@@ -77,7 +77,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
 		extractExtensionData = extractBundleFromZip
 	default:
-		var errMessage = fmt.Sprintf("%s; Content type must be application/json",
+		var errMessage = fmt.Sprintf("%s; Content type must be application/json or application/zip",
 			fmt.Sprintf("invalid content-type: %s", request.Header[headers.ContentType.String()]))
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusUnsupportedMediaType, errMessage, request), response)
 		return
