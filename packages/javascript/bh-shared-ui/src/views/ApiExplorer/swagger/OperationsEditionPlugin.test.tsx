@@ -70,7 +70,7 @@ describe('OperationSummaryWithEdition', () => {
         expect(enterpriseLogo).toHaveAttribute('aria-hidden', 'true');
         expect(enterpriseLogo).toHaveStyle({ color: 'var(--bhe-main)' });
         expect(enterpriseLogo).toHaveAttribute('width', '50px');
-        expect(enterpriseLogo).toHaveAttribute('height', '30px');
+        expect(enterpriseLogo).toHaveAttribute('height', '33px');
         expect(enterpriseLogo).toHaveAttribute('viewBox', '0 2.75 24 18.5');
     });
 
@@ -82,7 +82,7 @@ describe('OperationSummaryWithEdition', () => {
         expect(communityLogo).toHaveAttribute('aria-hidden', 'true');
         expect(communityLogo).toHaveStyle({ color: 'var(--bhce-main)' });
         expect(communityLogo).toHaveAttribute('width', '50px');
-        expect(communityLogo).toHaveAttribute('height', '30px');
+        expect(communityLogo).toHaveAttribute('height', '33px');
         expect(communityLogo).toHaveAttribute('viewBox', '0 2.75 24 18.5');
     });
 
