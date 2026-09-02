@@ -62,7 +62,7 @@ const tabs = [
 ];
 
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
-    if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
+    if (exploreSearchTab && Object.hasOwn(tabMap, exploreSearchTab)) return exploreSearchTab as keyof typeof tabMap;
     return 'node';
 };
 
