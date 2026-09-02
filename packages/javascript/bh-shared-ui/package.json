@@ -60,7 +60,7 @@
         "@emotion/styled": "^11.10.4",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
-        "@faker-js/faker": "^7.3.0",
+        "@faker-js/faker": "^10.6.0",
         "@mui/lab": "^5.0.0-alpha.136",
         "@mui/material": "^5.14.0",
         "@mui/styles": "^5.14.0",
