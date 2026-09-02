@@ -7825,6 +7825,407 @@
         }
       }
     },
+    "/api/v2/red-team-notes": {
+      "get": {
+        "operationId": "ListRedTeamNotes",
+        "summary": "List red team notes",
+        "description": "List red team knowledge base notes with optional filters.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "object_id",
+            "description": "Filter notes linked to a graph node object id.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "edge_kind",
+            "description": "Filter notes linked to a graph edge kind name.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "description": "Filter notes by type.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "general",
+                "technique",
+                "tool",
+                "source"
+              ]
+            }
+          },
+          {
+            "name": "tag",
+            "description": "Filter notes containing every supplied tag (repeatable, AND semantics).",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "description": "Case-insensitive search across note title and content.",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.red-team-note"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateRedTeamNote",
+        "summary": "Create a red team note",
+        "description": "Create a new red team knowledge base note.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "general",
+                      "technique",
+                      "tool",
+                      "source"
+                    ],
+                    "default": "general"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "object_id": {
+                    "type": "string"
+                  },
+                  "edge_kind": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.red-team-note"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          }
+        }
+      }
+    },
+    "/api/v2/red-team-notes/{note_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/path.note-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetRedTeamNote",
+        "summary": "Get a red team note",
+        "description": "Get a single red team note by id.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.red-team-note"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateRedTeamNote",
+        "summary": "Update a red team note",
+        "description": "Update an existing red team note by id.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "general",
+                      "technique",
+                      "tool",
+                      "source"
+                    ]
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "object_id": {
+                    "type": "string"
+                  },
+                  "edge_kind": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.red-team-note"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteRedTeamNote",
+        "summary": "Delete a red team note",
+        "description": "Soft-delete a red team note by id.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          }
+        }
+      }
+    },
+    "/api/v2/red-team-notes/media/{attachment_token}": {
+      "parameters": [
+        {
+          "name": "attachment_token",
+          "description": "The unguessable token of the attachment.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetRedTeamNoteMedia",
+        "summary": "Get red team note media by token",
+        "description": "Streams an uploaded attachment (image) by its unguessable token. This endpoint is unauthenticated so markdown image references render in browsers and exported documents; possession of the token is the only capability required.",
+        "tags": [
+          "Graph",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "The attachment bytes.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          }
+        }
+      }
+    },
     "/api/v2/extensions": {
       "put": {
         "description": "**Experimental** - Upserts the OpenGraph extension",
@@ -22675,6 +23076,16 @@
           "$ref": "#/components/schemas/api.params.query.environments"
         }
       },
+      "path.note-id": {
+        "name": "note_id",
+        "description": "The unique identifier of the red team note.",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "description": "The unique note identifier"
+        }
+      },
       "path.object-id": {
         "name": "object_id",
         "description": "The object id of the entity being operated on.",
@@ -25532,6 +25943,57 @@
             }
           }
         }
+      },
+      "model.red-team-note": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "readOnly": true
+              },
+              "title": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "general",
+                  "technique",
+                  "tool",
+                  "source"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "url": {
+                "type": "string"
+              },
+              "object_id": {
+                "type": "string",
+                "description": "Optional graph node object id this note is linked to."
+              },
+              "edge_kind": {
+                "type": "string",
+                "description": "Optional graph edge kind name this note is linked to."
+              }
+            }
+          }
+        ]
       },
       "api.response.graph-extensions-info": {
         "type": "object",

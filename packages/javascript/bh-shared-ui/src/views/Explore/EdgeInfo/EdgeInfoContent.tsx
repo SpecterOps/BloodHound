@@ -27,6 +27,7 @@ import { EdgeSections } from '../ExploreSearch/EdgeFilter/edgeCategories';
 import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
+import EdgeObjectNotes from './EdgeObjectNotes';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInfo> }> = ({ selectedEdge }) => {
     const { setExploreParams, expandedPanelSections } = useExploreParams();
@@ -158,6 +159,15 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInf
                 {shouldRenderACLInheritance && renderACLInheritanceDropdown()}
 
                 {!isBuiltInKind(selectedEdge.kind.name) && <KindInfoItems items={selectedEdge.info} />}
+
+                {!isHidden && (
+                    <>
+                        <div className='p-2'>
+                            <Divider />
+                        </div>
+                        <EdgeObjectNotes edgeKind={selectedEdge.kind.name} />
+                    </>
+                )}
             </>
         </div>
     );

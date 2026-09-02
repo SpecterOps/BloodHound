@@ -73,6 +73,12 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             route: routes.ROUTE_EXPLORE,
             testId: 'global_nav-explore',
         },
+        {
+            label: 'Red Team Notes',
+            icon: <AppIcon.LinedPaper size={24} />,
+            route: routes.ROUTE_RED_TEAM_NOTES,
+            testId: 'global_nav-red-team-notes',
+        },
         ...(areFeatureFlagsLoaded && isTierFlagEnabled
             ? [
                   {

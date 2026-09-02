@@ -41,6 +41,7 @@ import {
     RelationshipDetails,
     RelationshipDetailsWithInfo,
     RelationshipKindResponse,
+    RedTeamNote,
     Role,
     ScheduledJobDisplay,
     SourceKind,
@@ -545,3 +546,7 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type RedTeamNotesResponse = PaginatedResponse<RedTeamNote[]>;
+
+export type RedTeamNoteResponse = BasicResponse<RedTeamNote>;
