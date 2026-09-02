@@ -724,30 +724,6 @@ func (s *ADCSCache) GetPublishedTemplateCache(id graph.ID) []*graph.Node {
 	return s.publishedTemplateCache[id]
 }
 
-func (s *ADCSCache) getPublishedCertTemplates() []*graph.Node {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-
-	var (
-		publishedTemplateIDs = cardinality.NewBitmap64()
-		publishedTemplates   = make([]*graph.Node, 0)
-	)
-
-	for _, templates := range s.publishedTemplateCache {
-		for _, certTemplate := range templates {
-			publishedTemplateIDs.Add(certTemplate.ID.Uint64())
-		}
-	}
-
-	for _, certTemplate := range s.certTemplates {
-		if publishedTemplateIDs.Contains(certTemplate.ID.Uint64()) {
-			publishedTemplates = append(publishedTemplates, certTemplate)
-		}
-	}
-
-	return publishedTemplates
-}
-
 func (s *ADCSCache) HasUPNCertMappingInForest(id uint64) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
