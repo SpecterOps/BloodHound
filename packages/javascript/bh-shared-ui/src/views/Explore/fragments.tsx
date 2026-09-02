@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, CircularProgress } from '@mui/material';
-import { Typography } from 'doodle-ui';
+import { Alert, CircularProgress } from '@mui/material';
+import { Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
@@ -80,14 +80,14 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
 }) => {
     const styles = useCollapsibleSectionStyles();
     return (
-        <Box display='flex' justifyContent='space-between' alignItems='center' width='100%'>
+        <div className='flex w-full items-center justify-between'>
             <Typography variant='h6' className={styles.title}>
                 {label}
             </Typography>
             {isLoading ? (
-                <Box className={styles.accordionCount}>
+                <div className={styles.accordionCount}>
                     <CircularProgress size={20} />
-                </Box>
+                </div>
             ) : isError ? (
                 <Alert
                     severity='error'
@@ -99,13 +99,27 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
             ) : (
                 count !== undefined && <span className={styles.accordionCount}>{count.toLocaleString()}</span>
             )}
-        </Box>
+        </div>
     );
 };
 
 export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     const styles = useCollapsibleSectionStyles();
-    return <Box className={styles.fieldsContainer}>{children}</Box>;
+    return <div className={styles.fieldsContainer}>{children}</div>;
+};
+
+const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
+    if (Array.isArray(value) && value.length === 0) {
+        return 'Empty array, zero values';
+    }
+
+    if (value === '') {
+        return 'Empty string';
+    }
+
+    if (value === null) {
+        return 'Null value';
+    }
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {
@@ -114,48 +128,49 @@ export const Field: React.FC<EntityField> = (entityField) => {
     try {
         if (
             value === undefined ||
-            value === '' ||
-            (Array.isArray(value) && value.length === 0) ||
-            (typeof value === 'object' && Object.keys(value).length === 0)
+            (value !== null && !Array.isArray(value) && typeof value === 'object' && Object.keys(value).length === 0)
         )
             return null;
     } catch (e) {
         return null;
     }
 
+    const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
-            <Box display='flex' flexDirection='row' flexWrap='wrap' padding={1}>
-                <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1}>
-                    {label}
-                </Box>
-                <Box overflow='hidden' textOverflow='ellipsis' title={formattedValue}>
-                    {formattedValue}
-                </Box>
-            </Box>
+            <div className='flex flex-row flex-wrap p-2'>
+                <div className='mr-2 grow shrink-0 font-bold'>{label}</div>
+                <div className='overflow-hidden text-ellipsis break-all' title={formattedValue}>
+                    {emptyValueAccessibleLabel ? (
+                        <>
+                            <span aria-hidden='true'>{formattedValue}</span>
+                            <VisuallyHidden>{emptyValueAccessibleLabel}</VisuallyHidden>
+                        </>
+                    ) : (
+                        formattedValue
+                    )}
+                </div>
+            </div>
         );
     } else {
         content = formattedValue!.map((value: string, index: number) => {
             return (
-                <Box
-                    display='flex'
-                    flexDirection='row'
-                    flexWrap='wrap'
-                    padding={1}
-                    justifyContent='flex-end'
-                    key={`${keyprop}-${index}`}>
-                    {index === 0 && (
-                        <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1}>
-                            {label}
-                        </Box>
-                    )}
-                    <Box overflow='hidden' textOverflow='ellipsis' title={value}>
-                        {value}
-                    </Box>
-                </Box>
+                <div className='flex flex-row flex-wrap justify-end p-2' key={`${keyprop}-${index}`}>
+                    {index === 0 && <div className='mr-2 grow shrink-0 font-bold'>{label}</div>}
+                    <div className='overflow-hidden text-ellipsis break-all' title={value}>
+                        {emptyValueAccessibleLabel ? (
+                            <>
+                                <span aria-hidden='true'>{value}</span>
+                                <VisuallyHidden>{emptyValueAccessibleLabel}</VisuallyHidden>
+                            </>
+                        ) : (
+                            value
+                        )}
+                    </div>
+                </div>
             );
         });
     }
