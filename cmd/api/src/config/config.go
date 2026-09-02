@@ -228,9 +228,11 @@ type BucketConfiguration struct {
 	Region string `json:"region"`
 }
 
+type FileServiceConfigurationMap map[string]FileServiceConfiguration
+
 type StorageConfiguration struct {
-	InstanceBucket BucketConfiguration                 `json:"instance_bucket"`
-	FileServices   map[string]FileServiceConfiguration `json:"file_services"`
+	InstanceBucket BucketConfiguration         `json:"instance_bucket"`
+	FileServices   FileServiceConfigurationMap `json:"file_services"`
 }
 
 type Configuration struct {
