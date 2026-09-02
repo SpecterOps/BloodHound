@@ -163,6 +163,21 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 
 	operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
+		type schemaSplit struct {
+			versionOneTemplates []*graph.Node
+			versionTwoTemplates []*graph.Node
+		}
+		splitsByTargetCA := make(map[graph.ID]schemaSplit)
+		splitForTargetCA := func(enterpriseCAID graph.ID) schemaSplit {
+			if split, ok := splitsByTargetCA[enterpriseCAID]; ok {
+				return split
+			}
+			versionOneTemplates, versionTwoTemplates := splitCertTemplatesBySchemaVersion(cache.GetPublishedTemplateCache(enterpriseCAID))
+			split := schemaSplit{versionOneTemplates: versionOneTemplates, versionTwoTemplates: versionTwoTemplates}
+			splitsByTargetCA[enterpriseCAID] = split
+			return split
+		}
+
 		submitRelationship := func(result post.EnsureRelationshipJob) bool {
 			if targets, ok := submittedTargetsBySource[result.FromID]; ok {
 				if _, ok := targets[result.ToID]; ok {
@@ -187,15 +202,15 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 					continue
 				}
 
-				versionOneTemplates, versionTwoTemplates := splitCertTemplatesBySchemaVersion(cache.GetPublishedTemplateCache(targetChains.EnterpriseCA.ID))
+				split := splitForTargetCA(targetChains.EnterpriseCA.ID)
 
-				for _, result := range EnrollOnBehalfOfVersionTwo(versionTwoTemplates, enrollmentAgentTemplates) {
+				for _, result := range EnrollOnBehalfOfVersionTwo(split.versionTwoTemplates, enrollmentAgentTemplates) {
 					if !submitRelationship(result) {
 						return nil
 					}
 				}
 
-				for _, result := range EnrollOnBehalfOfVersionOne(versionOneTemplates, enrollmentAgentTemplates) {
+				for _, result := range EnrollOnBehalfOfVersionOne(split.versionOneTemplates, enrollmentAgentTemplates) {
 					if !submitRelationship(result) {
 						return nil
 					}
