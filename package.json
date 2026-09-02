@@ -37,7 +37,7 @@
         "browserslist": "4.28.8",
         "cross-spawn": "^7.0.5",
         "dompurify": "3.4.13",
-        "fast-uri": "3.1.5",
+        "fast-uri": "3.1.6",
         "form-data": "^4.0.6",
         "glob": "^11.1.0",
         "immutable": "^4.3.9",
