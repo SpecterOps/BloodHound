@@ -122,5 +122,14 @@
         "long_remediation": "Query the registration system to confirm this patron has a valid membership and authorized access to this area."
       }
     }
+  ],
+  "saved_queries": [
+    {
+      "query_key": "dogs-and-owners",
+      "name": "Dogs and Their Owners",
+      "query": "MATCH p=(:dogpark_Dog)-[:dogpark_OwnedBy]->(:dogpark_Patron) RETURN p",
+      "description": "Lists dogs and their registered owners.",
+      "category": "Dog Park"
+    }
   ]
 }
