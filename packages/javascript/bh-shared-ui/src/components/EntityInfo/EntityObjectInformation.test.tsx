@@ -17,7 +17,7 @@
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { ActiveDirectoryKindProperties, ActiveDirectoryNodeKind } from '../../graphSchema';
 import { mockSourceKindsHandler } from '../../mocks';
 import { render, screen } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
@@ -56,6 +56,32 @@ describe('EntityObjectInformation', () => {
         expect(await screen.findByText('Object Information')).toBeInTheDocument();
         expect(screen.getByText('test-object-id')).toBeInTheDocument();
         expect(screen.getByText('a test description')).toBeInTheDocument();
+    });
+
+    it('renders explicitly empty property values', async () => {
+        const selectedNode: NodeDetails = {
+            node_id: 1,
+            kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+            properties: {
+                objectid: 'test-object-id',
+                [ActiveDirectoryKindProperties.EffectiveEKUs]: [],
+                emptystring: '',
+                nullvalue: null,
+            },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Effective EKUs:')).toBeInTheDocument();
+        expect(screen.getByText('NONE')).toHaveAttribute('aria-hidden', 'true');
+        expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
+        expect(screen.getByText('Emptystring:')).toBeInTheDocument();
+        expect(screen.getByText('Empty string')).toBeInTheDocument();
+        expect(screen.getByText('Nullvalue:')).toBeInTheDocument();
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+        screen.getAllByText('—').forEach((placeholder) => {
+            expect(placeholder).toHaveAttribute('aria-hidden', 'true');
+        });
     });
 
     it('does not throw a React useRef error when a property is named "ref"', async () => {
