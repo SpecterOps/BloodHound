@@ -8,7 +8,7 @@ Because these suites drive a real browser against a running app, the live state 
 
 ## Quick Start
 
-First-time setup and a full run of the `a11y` suite. All commands are ran from the root (`/`); the same script names also work from within `cmd/ui`.
+First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
 1. **Install dependencies** — from the root, install workspace packages and the Playwright browsers the suite drives:
 
@@ -60,7 +60,7 @@ tests/
     └── *.a11y.spec.ts
 ```
 
-Shared Playwright building blocks (fixtures, stubs, and auth helper) live in the `bh-playwright-testing` workspace package (`packages/javascript/bh-playwright-testing`) for reusablility. See the [full module map](../../../packages/javascript/bh-playwright-testing/README.md#modules) in that package's README.
+Shared Playwright building blocks (fixtures, stubs, and auth helper) live in the `bh-playwright-testing` workspace package (`packages/javascript/bh-playwright-testing`) for reusability. See the [full module map](../../../packages/javascript/bh-playwright-testing/README.md#modules) in that package's README.
 
 ## Shared Scaffolding
 
