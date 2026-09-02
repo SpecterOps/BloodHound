@@ -1,0 +1,85 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+get:
+  operationId: ListAvailableCollectorJobs
+  summary: List collector jobs available to the authenticated collector
+  description: Returns due jobs eligible for the caller, ordered by priority
+    descending and creation time ascending.
+  tags:
+    - Collector Jobs
+    - Enterprise
+  parameters:
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      in: query
+      description: Sortable columns are `priority`, `created_at`, `run_at`, `job_key`.
+        Default is `-priority`, then `created_at` (highest priority, oldest first).
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: job_type_id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: job_key
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: priority
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: run_at
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: scope_client_id
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+    - $ref: './../parameters/query.created-at.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: './../schemas/api.response.pagination.yaml'
+              - type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - jobs
+                    properties:
+                      jobs:
+                        type: array
+                        items:
+                          $ref: './../schemas/model.collector-job.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
