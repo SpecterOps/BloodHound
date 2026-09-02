@@ -29,6 +29,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	querymocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
@@ -353,9 +354,10 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 	}
 
 	type mock struct {
-		ctrl      *gomock.Controller
-		mockGraph *graphmocks.MockDatabase
-		mockDb    *mocks.MockDatabase
+		ctrl           *gomock.Controller
+		mockGraph      *graphmocks.MockDatabase
+		mockGraphQuery *querymocks.MockGraph
+		mockDb         *mocks.MockDatabase
 	}
 
 	cases := []struct {
@@ -505,6 +507,208 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {},
 		},
 		{
+			name: "Error Fetching Source Node",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"source node error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(nil, errors.New("source node error"))
+			},
+		},
+		{
+			name: "Error Fetching Target Node",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"target node error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				sourceNode := graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "source-object-id",
+				}), ad.User)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(nil, errors.New("target node error"))
+			},
+		},
+		{
+			name: "Source Node Missing Object ID",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"property objectid: property not found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(graph.NewNode(graph.ID(1), graph.NewProperties(), ad.User), nil)
+				targetNode := graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "target-object-id",
+				}), ad.Computer)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+			},
+		},
+		{
+			name: "Target Node Missing Object ID",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"property objectid: property not found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				sourceNode := graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "source-object-id",
+				}), ad.User)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(graph.NewNode(graph.ID(2), graph.NewProperties(), ad.Computer), nil)
+			},
+		},
+		{
+			name: "Error Checking Source Node Access",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"source access error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "source-object-id",
+					}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "target-object-id",
+					}), ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "source-object-id", ad.User).Return(nil, errors.New("source access error"))
+			},
+		},
+		{
+			name: "Source Node Access Denied",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
+			expected: httpValues{
+				code:   http.StatusNotFound,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "source-object-id",
+					}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "target-object-id",
+					}), ad.Computer)
+					deniedSourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						ad.DomainSID.String(): "S-1-5-21-DENIED",
+					}), ad.Entity, ad.User)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "source-object-id", ad.User).Return(deniedSourceNode, nil)
+			},
+		},
+		{
+			name: "Error Checking Target Node Access",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
+			expected: httpValues{
+				code:   http.StatusBadRequest,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"target access error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "source-object-id",
+					}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "target-object-id",
+					}), ad.Computer)
+					allowedSourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+					}), ad.Entity, ad.User)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "source-object-id", ad.User).Return(allowedSourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "target-object-id", ad.Computer).Return(nil, errors.New("target access error"))
+			},
+		},
+		{
+			name: "Target Node Access Denied",
+			request: http.Request{
+				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
+			expected: httpValues{
+				code:   http.StatusNotFound,
+				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				body:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
+				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "source-object-id",
+					}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						common.ObjectID.String(): "target-object-id",
+					}), ad.Computer)
+					allowedSourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+						ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+					}), ad.Entity, ad.User)
+					deniedTargetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+						ad.DomainSID.String(): "S-1-5-21-DENIED",
+					}), ad.Entity, ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "source-object-id", ad.User).Return(allowedSourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "target-object-id", ad.Computer).Return(deniedTargetNode, nil)
+			},
+		},
+		{
 			name: "Error Trying to get Matching Edge",
 			request: http.Request{
 				URL: &url.URL{
@@ -518,6 +722,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
 			},
 		},
@@ -535,6 +745,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
 			},
@@ -553,6 +769,12 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
 				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 			},
@@ -571,13 +793,18 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
+				var (
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil).Times(2)
 				mocks.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 		},
-
 		{
-			name: `Etac enabled, nodes hidden outside of assigned environment`,
+			name: `ETAC enabled, nodes hidden outside of assigned environment`,
 			request: http.Request{
 				URL: &url.URL{
 					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
@@ -602,10 +829,18 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				t.Helper()
 
 				var (
-					edge      = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
-					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
-					relayNode = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Computer)
+					edge              = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
+					startNode         = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
+					relayNode         = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Computer)
+					sourceNode        = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode        = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+					allowedSourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-ALLOWED"}), ad.Entity, ad.User)
+					allowedTargetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-ALLOWED"}), ad.Entity, ad.Computer)
 				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "source-object-id", ad.User).Return(allowedSourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(ctx, "target-object-id", ad.Computer).Return(allowedTargetNode, nil)
 
 				// analysis.FetchEdgeByStartAndEnd
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
@@ -654,7 +889,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			},
 		},
 		{
-			name: `Etac disabled, nodes not hidden`,
+			name: `ETAC disabled, nodes not hidden`,
 			request: http.Request{
 				URL: &url.URL{
 					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
@@ -679,15 +914,19 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				t.Helper()
 
 				var (
-					edge      = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
-					startNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
-					relayNode = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{
+					edge       = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.NewProperties(), ad.CoerceAndRelayNTLMToLDAP)
+					startNode  = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{ad.DomainSID.String(): "S-1-5-21-NOTALLOWED"}), ad.Entity)
+					sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{common.ObjectID.String(): "source-object-id"}), ad.User)
+					targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{common.ObjectID.String(): "target-object-id"}), ad.Computer)
+					relayNode  = graph.NewNode(graph.ID(3), graph.AsProperties(map[string]any{
 						common.ObjectID.String(): "S-1-5-21-NOTALLOWED-1000",
 						common.Name.String():     "COMPUTER1",
 						common.LastSeen.String(): time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 						ad.DomainSID.String():    "S-1-5-21-NOTALLOWED",
 					}), ad.Computer)
 				)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(1)).Return(sourceNode, nil)
+				mocks.mockGraphQuery.EXPECT().FetchNodeByGraphId(ctx, graph.ID(2)).Return(targetNode, nil)
 
 				// analysis.FetchEdgeByStartAndEnd
 				mocks.mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...any) error {
@@ -742,18 +981,20 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			t.Parallel()
 
 			var (
-				ctrl      = gomock.NewController(t)
-				mockGraph = graphmocks.NewMockDatabase(ctrl)
-				mockDb    = mocks.NewMockDatabase(ctrl)
-				resources = v2.Resources{
-					Graph:   mockGraph,
-					DB:      mockDb,
-					DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
+				ctrl           = gomock.NewController(t)
+				mockGraph      = graphmocks.NewMockDatabase(ctrl)
+				mockGraphQuery = querymocks.NewMockGraph(ctrl)
+				mockDb         = mocks.NewMockDatabase(ctrl)
+				resources      = v2.Resources{
+					Graph:      mockGraph,
+					GraphQuery: mockGraphQuery,
+					DB:         mockDb,
+					DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 				}
 				request = testCase.request.WithContext(setupUserCtx(testCase.user))
 			)
 
-			testCase.testSetup(t, request.Context(), mock{ctrl: ctrl, mockGraph: mockGraph, mockDb: mockDb})
+			testCase.testSetup(t, request.Context(), mock{ctrl: ctrl, mockGraph: mockGraph, mockGraphQuery: mockGraphQuery, mockDb: mockDb})
 
 			response := httptest.NewRecorder()
 
