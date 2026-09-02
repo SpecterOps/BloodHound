@@ -1609,17 +1609,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^7.3.0":
-  version: 7.6.0
-  resolution: "@faker-js/faker@npm:7.6.0"
-  checksum: 10/9236ee7a7ab32fcd99fa8cbc046b65b0af4fe714b12e33a39d3e058bef77e53bb0f42fe3331ed578a6db581b22c31f12ed2ba587a4bdb58a9ba0bb5b19f99bc4
-  languageName: node
-  linkType: hard
-
-"@faker-js/faker@npm:^9.0.3":
-  version: 9.9.0
-  resolution: "@faker-js/faker@npm:9.9.0"
-  checksum: 10/b24b1be0fb3090d54abaaa3a814f37d1a7551f1207dcd330a1af2c70f6312a8b95ebb82653577757dd62f4cbbb56caa3c83513053253654dc3e286a05040ecbe
+"@faker-js/faker@npm:^10.6.0":
+  version: 10.6.0
+  resolution: "@faker-js/faker@npm:10.6.0"
+  checksum: 10/f45220ceae76133d831dee8c8f5c8566767bfd857b7f872b5ec58866b68da889dabe96e805a598e095a6c58eae250363a7f335aa0afc513cb2ad5fe69e2a967f
   languageName: node
   linkType: hard
 
@@ -7032,7 +7025,7 @@ __metadata:
     "@emotion/styled": "npm:^11.10.4"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^7.3.0"
+    "@faker-js/faker": "npm:^10.6.0"
     "@fortawesome/fontawesome-free": "npm:^6.7.2"
     "@fortawesome/fontawesome-svg-core": "npm:^6.7.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.7.2"
@@ -7172,7 +7165,7 @@ __metadata:
     "@eslint/compat": "npm:^2.0.3"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^7.3.0"
+    "@faker-js/faker": "npm:^10.6.0"
     "@fontsource/roboto": "npm:^4.5.1"
     "@fontsource/roboto-mono": "npm:^4.5.0"
     "@fortawesome/fontawesome-free": "npm:^6.7.2"
@@ -8358,7 +8351,7 @@ __metadata:
     "@dnd-kit/sortable": "npm:^10.0.0"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^9.0.3"
+    "@faker-js/faker": "npm:^10.6.0"
     "@fontsource/roboto": "npm:^5.0.13"
     "@fortawesome/fontawesome-svg-core": "npm:^6.5.2"
     "@fortawesome/free-brands-svg-icons": "npm:^6.5.2"
@@ -9523,10 +9516,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.5":
-  version: 3.1.5
-  resolution: "fast-uri@npm:3.1.5"
-  checksum: 10/784bef687ca3ecfb4587a05104a4d41101796f0fec72be47a9abed743b10109e69a24d1ad0854ee7d2705912dc2ca9d93e03d35b65df0a3da0339e05b5d83b5c
+"fast-uri@npm:3.1.6":
+  version: 3.1.6
+  resolution: "fast-uri@npm:3.1.6"
+  checksum: 10/de34fceafd3a1d917989a1116b092d9b6ebe6fa3c9e908a308b988a6455449fa0a0256b6ef628aa7da80f1f84031d704c290d6ba0ea4c6f4c42b7974a3bd43ae
   languageName: node
   linkType: hard
 
