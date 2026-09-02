@@ -374,6 +374,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab - Saved Queries', () 
         // Select the dots action from the saved query
         await page.getByTestId('saved-query-action-menu-trigger').click();
         await page.getByRole('button', { name: 'Edit/Share' }).click();
+        await page.getByText('MATCH (n) RETURN n LIMIT').waitFor();
 
         await hideBySelector(page, 'nav');
         await hideBySelector(page, '#content-wrapper');
