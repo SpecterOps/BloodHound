@@ -131,11 +131,14 @@ export class OperationSummaryWithEdition extends PureComponent<{
                 name: 'BloodHound Enterprise',
             },
         ];
-
         return (
             <div className={`opblock-summary opblock-summary-${method}`}>
                 <button
-                    aria-label={`${method} ${path.replace(/\//g, '\u200b/')}`}
+                    aria-label={`${method} ${path}. ${
+                        isCommunity ? 'Available' : 'Not available'
+                    } in BloodHound Community Edition. ${
+                        isEnterprise ? 'Available' : 'Not available'
+                    } in BloodHound Enterprise`}
                     aria-expanded={isShown}
                     className='opblock-summary-control'
                     onClick={toggleShown}>
@@ -152,10 +155,10 @@ export class OperationSummaryWithEdition extends PureComponent<{
                     <span className='flex justify-end items-center'>
                         {editionAvailability.map(({ name, isAvailable, color, marginRight }) => (
                             <AppIcon.BHLogo
-                                aria-label={`${isAvailable ? 'Available' : 'Not available'} in ${name}`}
+                                aria-hidden='true'
+                                focusable='false'
                                 height='33px'
                                 key={name}
-                                role='img'
                                 style={{ marginRight, color: isAvailable ? color : 'grey' }}
                                 viewBox='0 2.75 24 18.5'
                                 width='50px'

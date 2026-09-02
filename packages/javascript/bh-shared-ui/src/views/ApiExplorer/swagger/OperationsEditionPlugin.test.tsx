@@ -64,11 +64,10 @@ describe('OperationSummaryWithEdition', () => {
     it('shows the Enterprise BloodHound dog logo in the Enterprise brand color when the endpoint is available', () => {
         renderOperationSummary({ isEnterprise: true });
 
-        const enterpriseLogo = screen.getByRole('img', {
-            name: 'Available in BloodHound Enterprise',
-        });
+        const [, enterpriseLogoLabel] = screen.getAllByText('app-icon-bh-logo');
+        const enterpriseLogo = enterpriseLogoLabel.closest('svg');
 
-        expect(enterpriseLogo).toHaveTextContent('app-icon-bh-logo');
+        expect(enterpriseLogo).toHaveAttribute('aria-hidden', 'true');
         expect(enterpriseLogo).toHaveStyle({ color: 'var(--bhe-main)' });
         expect(enterpriseLogo).toHaveAttribute('width', '50px');
         expect(enterpriseLogo).toHaveAttribute('height', '33px');
@@ -77,11 +76,10 @@ describe('OperationSummaryWithEdition', () => {
 
     it('shows the Community BloodHound dog logo in the Community brand color when the endpoint is available', () => {
         renderOperationSummary({ isCommunity: true });
-        const communityLogo = screen.getByRole('img', {
-            name: 'Available in BloodHound Community Edition',
-        });
+        const [communityLogoLabel] = screen.getAllByText('app-icon-bh-logo');
+        const communityLogo = communityLogoLabel.closest('svg');
 
-        expect(communityLogo).toHaveTextContent('app-icon-bh-logo');
+        expect(communityLogo).toHaveAttribute('aria-hidden', 'true');
         expect(communityLogo).toHaveStyle({ color: 'var(--bhce-main)' });
         expect(communityLogo).toHaveAttribute('width', '50px');
         expect(communityLogo).toHaveAttribute('height', '33px');
@@ -91,11 +89,17 @@ describe('OperationSummaryWithEdition', () => {
     it('shows the Enterprise BloodHound dog logo in grey when the endpoint is unavailable', () => {
         renderOperationSummary({ isEnterprise: false });
 
-        const enterpriseLogo = screen.getByRole('img', {
-            name: 'Not available in BloodHound Enterprise',
-        });
+        const [, enterpriseLogoLabel] = screen.getAllByText('app-icon-bh-logo');
+        const enterpriseLogo = enterpriseLogoLabel.closest('svg');
 
-        expect(enterpriseLogo).toHaveTextContent('app-icon-bh-logo');
-        expect(enterpriseLogo.style.color).toBe('grey');
+        expect(enterpriseLogo?.style.color).toBe('grey');
+    });
+
+    it('includes edition availability in the operation button name', () => {
+        renderOperationSummary({ isCommunity: true, isEnterprise: false });
+
+        expect(screen.getByRole('button')).toHaveAccessibleName(
+            'get /api/v2/test. Available in BloodHound Community Edition. Not available in BloodHound Enterprise'
+        );
     });
 });
