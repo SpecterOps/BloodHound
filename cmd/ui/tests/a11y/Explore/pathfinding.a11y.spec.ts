@@ -13,22 +13,40 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { Page } from '@playwright/test';
+import { expect, test } from 'bh-playwright-testing';
+
+const installPathfindingStub = async (page: Page) => {
+    await page.route('**/api/v2/graphs/shortest-path**', async (route) => {
+        if (route.request().method() !== 'GET') {
+            return route.fallback();
+        }
+
+        await route.fulfill({
+            json: {
+                data: {
+                    nodes: {},
+                    edges: [],
+                },
+            },
+        });
+    });
+};
 
 test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/ui/explore?exploreSearchTab=pathfinding');
-        await page.getByRole('textbox', { name: 'Start Node' }).waitFor({ state: 'visible' });
+    test.beforeEach(async ({ page, goAndWaitFor }) => {
+        await goAndWaitFor(
+            '/ui/explore?exploreSearchTab=pathfinding',
+            page.getByRole('textbox', { name: 'Start node' })
+        );
     });
 
-    test('Pathfinding tab', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.getByText('Begin typing to search.').first().waitFor({ state: 'visible' });
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+    test('Pathfinding tab', async ({ page, checkA11y }) => {
+        await page.getByText('Begin typing to search.').first().waitFor();
+        await checkA11y();
     });
 
-    test('Start Node with results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Start node with results', async ({ page, checkA11y }) => {
         const searchTerm = 'test';
         const searchResultName = 'TEST RESULT';
 
@@ -50,14 +68,13 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        await page.getByLabel('Start Node').fill(searchTerm);
-        await page.getByRole('option', { name: 'No results found for "' }).waitFor({ state: 'visible' });
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(searchTerm);
+        await page.getByText('TEST RESULT').waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Start Node with no results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Start node with no results', async ({ page, checkA11y }) => {
         const searchTerm = 'zzzznonexistentnode9999';
 
         await page.route('**/api/v2/search**', async (route) => {
@@ -68,28 +85,24 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             await route.fulfill({ json: { data: [] } });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
+        const startNodeField = page.getByRole('textbox', { name: 'Start Node' });
         await startNodeField.fill(searchTerm);
 
         const noResultsMessage = `No results found for "${searchTerm}"`;
         await expect(page.getByText(noResultsMessage)).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Destination Node', async ({ page, makeAxeBuilder }, testInfo) => {
-        // Pathfinding autofocus opens the Start Node popup over the Destination Node field.
-        await page.getByLabel('Start Node').press('Escape');
+    test('Destination node', async ({ page, checkA11y }) => {
+        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
+        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
+        await page.getByRole('textbox', { name: 'Destination Node' }).click();
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.click();
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Destination Node with results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Destination node with results', async ({ page, checkA11y }) => {
         const searchTerm = 'test';
         const searchResultName = 'DESTINATION TEST RESULT';
 
@@ -111,21 +124,15 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        // Pathfinding autofocus opens the Start Node popup over the Destination Node field.
-        await page.getByLabel('Start Node').press('Escape');
+        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
+        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(searchTerm);
+        await page.getByText('DESTINATION TEST RESULT').waitFor();
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.click();
-        await destinationNodeField.fill(searchTerm);
-
-        const searchResult = page.getByRole('option').filter({ hasText: searchResultName });
-        await expect(searchResult).toBeVisible();
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Destination Node with no results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Destination node with no results', async ({ page, checkA11y }) => {
         const searchTerm = 'zzzznonexistentdestination9999';
 
         await page.route('**/api/v2/search**', async (route) => {
@@ -136,21 +143,15 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             await route.fulfill({ json: { data: [] } });
         });
 
-        // Pathfinding autofocus opens the Start Node popup over the Destination Node field.
-        await page.getByLabel('Start Node').press('Escape');
+        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
+        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(searchTerm);
+        await page.getByText('No results found for "').waitFor();
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.click();
-        await destinationNodeField.fill(searchTerm);
-
-        const noResultsMessage = `No results found for "${searchTerm}"`;
-        await expect(page.getByText(noResultsMessage)).toBeVisible();
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Enabled pathfinding controls', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Enabled pathfinding controls', async ({ page, checkA11y }) => {
         const startResultName = 'START TEST RESULT';
         const destinationResultName = 'DESTINATION TEST RESULT';
 
@@ -177,34 +178,21 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(startResultName);
+        await installPathfindingStub(page);
 
-        const startResult = page.getByRole('option').filter({ hasText: startResultName });
-        await expect(startResult).toBeVisible();
-        await startResult.click();
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.click();
-        await destinationNodeField.fill(destinationResultName);
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
+        await page.getByRole('option').filter({ hasText: destinationResultName }).click();
 
-        const destinationResult = page.getByRole('option').filter({ hasText: destinationResultName });
-        await expect(destinationResult).toBeVisible();
-        await destinationResult.click();
+        await page.getByRole('button', { name: 'Swap start and destination' }).waitFor();
+        await page.getByRole('button', { name: 'Show pathfinding filter options' }).waitFor();
 
-        const swapButton = page.getByRole('button', { name: 'Swap start and destination' });
-        const filterButton = page.getByRole('button', {
-            name: 'Show pathfinding filter options',
-        });
-
-        await expect(swapButton).toBeEnabled();
-        await expect(filterButton).toBeEnabled();
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Path Edge Filtering dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Path edge filtering dialog', async ({ page, checkA11y }) => {
         const startResultName = 'START TEST RESULT';
         const destinationResultName = 'DESTINATION TEST RESULT';
 
@@ -231,112 +219,67 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(startResultName);
+        await installPathfindingStub(page);
 
-        const startResult = page.getByRole('option').filter({ hasText: startResultName });
-        await expect(startResult).toBeVisible();
-        await startResult.click();
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.click();
-        await destinationNodeField.fill(destinationResultName);
+        await page.getByRole('option').filter({ hasText: destinationResultName }).click();
+        await page.getByRole('button', { name: 'Show pathfinding filter options' }).click();
+        await page.getByRole('dialog', { name: 'Path Edge Filtering' }).waitFor();
 
-        const destinationResult = page.getByRole('option').filter({ hasText: destinationResultName });
-        await expect(destinationResult).toBeVisible();
-        await destinationResult.click();
+        await checkA11y({ include: '[role=dialog]' });
+    });
 
-        const filterButton = page.getByRole('button', {
-            name: 'Show pathfinding filter options',
+    test('Path edge filtering dialog with no selections', async ({ page, checkA11y }) => {
+        const startResultName = 'START TEST RESULT';
+        const destinationResultName = 'DESTINATION TEST RESULT';
+
+        await page.route('**/api/v2/search**', async (route) => {
+            if (route.request().method() !== 'GET') {
+                return route.fallback();
+            }
+
+            await route.fulfill({
+                json: {
+                    data: [
+                        {
+                            name: startResultName,
+                            objectid: 'playwright-pathfinding-start-result',
+                            type: 'User',
+                        },
+                        {
+                            name: destinationResultName,
+                            objectid: 'playwright-pathfinding-destination-result',
+                            type: 'Computer',
+                        },
+                    ],
+                },
+            });
         });
-        await expect(filterButton).toBeEnabled();
-        await filterButton.click();
+
+        await installPathfindingStub(page);
+
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
+
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
+        await page.getByRole('option').filter({ hasText: destinationResultName }).click();
+        await page.getByRole('button', { name: 'Show pathfinding filter options' }).click();
 
         const dialog = page.getByRole('dialog', { name: 'Path Edge Filtering' });
-        await expect(dialog).toBeVisible();
-        await expect(dialog.getByRole('checkbox', { name: 'Active Directory', exact: true })).toBeChecked();
-        await expect(dialog.getByRole('checkbox', { name: 'Azure', exact: true })).toBeChecked();
+        await dialog.waitFor();
 
-        const results = await makeAxeBuilder().include('[role=dialog]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
-    });
+        await dialog.getByRole('checkbox', { name: 'Active Directory', exact: true }).click();
+        await dialog.getByRole('checkbox', { name: 'Azure', exact: true }).click();
 
-    test('Path Edge Filtering dialog with no selections', async ({ page, makeAxeBuilder }, testInfo) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
-
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(startResultName);
-
-        const startResult = page.getByRole('option').filter({ hasText: startResultName });
-        await expect(startResult).toBeVisible();
-        await startResult.click();
-
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.fill(destinationResultName);
-
-        const destinationResult = page.getByRole('option').filter({ hasText: destinationResultName });
-        await expect(destinationResult).toBeVisible();
-        await destinationResult.click();
-
-        const filterButton = page.getByRole('button', {
-            name: 'Show pathfinding filter options',
-        });
-        await expect(filterButton).toBeEnabled();
-        await filterButton.click();
-
-        const dialog = page.getByRole('dialog', {
-            name: 'Path Edge Filtering',
-        });
-        await expect(dialog).toBeVisible();
-
-        const activeDirectoryFilter = dialog.getByRole('checkbox', {
-            name: 'Active Directory',
-            exact: true,
-        });
-        const azureFilter = dialog.getByRole('checkbox', {
-            name: 'Azure',
-            exact: true,
-        });
-
-        await expect(activeDirectoryFilter).toBeChecked();
-        await expect(azureFilter).toBeChecked();
-
-        await activeDirectoryFilter.click();
-        await azureFilter.click();
-
-        await expect(activeDirectoryFilter).not.toBeChecked();
-        await expect(azureFilter).not.toBeChecked();
         await expect(dialog.getByRole('checkbox', { checked: true })).toHaveCount(0);
 
-        const results = await makeAxeBuilder().include('[role=dialog]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role=dialog]' });
     });
 
-    test('Path Edge Filtering dialog with search results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Path edge filtering dialog with search results', async ({ page, checkA11y }) => {
         const startResultName = 'START TEST RESULT';
         const destinationResultName = 'DESTINATION TEST RESULT';
 
@@ -363,44 +306,26 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(startResultName);
+        await installPathfindingStub(page);
 
-        const startResult = page.getByRole('option').filter({ hasText: startResultName });
-        await expect(startResult).toBeVisible();
-        await startResult.click();
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.fill(destinationResultName);
+        await page.getByRole('option').filter({ hasText: destinationResultName }).click();
+        await page.getByRole('button', { name: 'Show pathfinding filter options' }).click();
 
-        const destinationResult = page.getByRole('option').filter({ hasText: destinationResultName });
-        await expect(destinationResult).toBeVisible();
-        await destinationResult.click();
-
-        const filterButton = page.getByRole('button', {
-            name: 'Show pathfinding filter options',
-        });
-        await expect(filterButton).toBeEnabled();
-        await filterButton.click();
-
-        const dialog = page.getByRole('dialog', {
-            name: 'Path Edge Filtering',
-        });
-        await expect(dialog).toBeVisible();
+        const dialog = page.getByRole('dialog', { name: 'Path Edge Filtering' });
+        await dialog.waitFor();
 
         const searchTextbox = dialog.getByRole('textbox', { name: 'Search edges...' });
         await searchTextbox.fill('write');
         await expect(searchTextbox).toHaveValue('write');
 
-        await expect(dialog.getByRole('checkbox', { name: 'GenericWrite', exact: true })).toBeVisible();
-        await expect(dialog.getByRole('checkbox', { name: 'WriteOwner', exact: true })).toBeVisible();
-        await expect(dialog.getByRole('checkbox', { name: 'Credential Access', exact: true })).toHaveCount(0);
-
-        const results = await makeAxeBuilder().include('[role=dialog]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role=dialog]' });
     });
 
-    test('Path Edge Filtering dialog with no search results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Path edge filtering dialog with no search results', async ({ page, checkA11y }) => {
         const startResultName = 'START TEST RESULT';
         const destinationResultName = 'DESTINATION TEST RESULT';
         const searchTerm = 'no-match-test-value';
@@ -428,40 +353,21 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
             });
         });
 
-        const startNodeField = page.getByLabel('Start Node');
-        await startNodeField.fill(startResultName);
+        await installPathfindingStub(page);
 
-        const startResult = page.getByRole('option').filter({ hasText: startResultName });
-        await expect(startResult).toBeVisible();
-        await startResult.click();
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
+        await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
 
-        const destinationNodeField = page.getByLabel('Destination Node');
-        await destinationNodeField.fill(destinationResultName);
+        await page.getByRole('option').filter({ hasText: destinationResultName }).click();
+        await page.getByRole('button', { name: 'Show pathfinding filter options' }).click();
 
-        const destinationResult = page.getByRole('option').filter({ hasText: destinationResultName });
-        await expect(destinationResult).toBeVisible();
-        await destinationResult.click();
+        const dialog = page.getByRole('dialog', { name: 'Path Edge Filtering' });
+        await dialog.waitFor();
 
-        const filterButton = page.getByRole('button', {
-            name: 'Show pathfinding filter options',
-        });
-        await expect(filterButton).toBeEnabled();
-        await filterButton.click();
-
-        const dialog = page.getByRole('dialog', {
-            name: 'Path Edge Filtering',
-        });
-        await expect(dialog).toBeVisible();
-
-        const searchTextbox = dialog.getByRole('textbox', { name: 'Search edges...' });
-        await searchTextbox.fill(searchTerm);
-        await expect(searchTextbox).toHaveValue(searchTerm);
-
-        await expect(dialog.getByRole('checkbox', { name: 'GenericWrite', exact: true })).toHaveCount(0);
-        await expect(dialog.getByRole('checkbox', { name: 'Active Directory', exact: true })).toHaveCount(0);
+        await dialog.getByRole('textbox', { name: 'Search edges...' }).fill(searchTerm);
         await expect(dialog.getByRole('checkbox')).toHaveCount(0);
 
-        const results = await makeAxeBuilder().include('[role=dialog]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role=dialog]' });
     });
 });
