@@ -190,15 +190,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
             maxWidth='md'
             PaperProps={{ sx: { maxHeight: '86vh' } }}
             data-testid='red-team-note-editor-dialog'>
-            <DialogContent
-                className='flex flex-col gap-4 pt-4'
-                sx={{
-                    overflowY: 'auto',
-                    maxHeight: 'calc(86vh - 140px)',
-                    scrollbarWidth: 'thin',
-                    '&::-webkit-scrollbar': { width: 8 },
-                    '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(128, 128, 128, 0.6)', borderRadius: 4 },
-                }}>
+            <DialogContent className='flex flex-col gap-4 pt-4'>
                 <TextField
                     label='Title'
                     value={payload.title}
@@ -320,13 +312,24 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                                 fullWidth
                                 multiline
                                 minRows={10}
+                                maxRows={15}
                                 variant='outlined'
                                 className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
+                                sx={{
+                                    '& textarea': {
+                                        scrollbarWidth: 'thin',
+                                        '&::-webkit-scrollbar': { width: 8 },
+                                        '&::-webkit-scrollbar-thumb': {
+                                            backgroundColor: 'rgba(128, 128, 128, 0.6)',
+                                            borderRadius: 4,
+                                        },
+                                    },
+                                }}
                                 data-testid='red-team-note-editor-content'
                             />
                         ) : (
                             <div
-                                className='p-4 min-h-[230px] text-sm'
+                                className='p-4 min-h-[230px] max-h-[375px] overflow-y-auto text-sm'
                                 data-testid='red-team-note-editor-preview'>
                                 {payload.content ? (
                                     <MarkdownContent markdown={payload.content} />
