@@ -179,36 +179,40 @@ export const importNotesZip = async (
     );
 
     for (const path of [...notePaths, ...loosePaths]) {
-        const raw = await zip.files[path].async('string');
-        const { fields, content: parsedContent } = parseFrontmatter(raw);
+        try {
+            const raw = await zip.files[path].async('string');
+            const { fields, content: parsedContent } = parseFrontmatter(raw);
 
-        let content = parsedContent;
-        const attachmentRefs = Array.from(
-            new Set(Array.from(parsedContent.matchAll(RELATIVE_ATTACHMENT_PATTERN)).map((match) => match[1]))
-        );
+            let content = parsedContent;
+            const attachmentRefs = Array.from(
+                new Set(Array.from(parsedContent.matchAll(RELATIVE_ATTACHMENT_PATTERN)).map((match) => match[1]))
+            );
 
-        for (const name of attachmentRefs) {
-            const attachmentEntry = zip.files[`attachments/${name}`];
-            if (!attachmentEntry) continue;
-            const attachmentBlob = await attachmentEntry.async('blob');
-            const attachmentFile = new File([attachmentBlob], name, { type: contentTypeForExtension(name) });
-            const uploaded = await uploadAttachment(attachmentFile);
-            content = content.split(`attachments/${name}`).join(uploaded.url);
-            result.createdAttachments += 1;
+            for (const name of attachmentRefs) {
+                const attachmentEntry = zip.files[`attachments/${name}`];
+                if (!attachmentEntry) continue;
+                const attachmentBlob = await attachmentEntry.async('blob');
+                const attachmentFile = new File([attachmentBlob], name, { type: contentTypeForExtension(name) });
+                const uploaded = await uploadAttachment(attachmentFile);
+                content = content.split(`attachments/${name}`).join(uploaded.url);
+                result.createdAttachments += 1;
+            }
+
+            const payload: RedTeamNotePayload = {
+                title: typeof fields.title === 'string' && fields.title ? fields.title : path.replace(/\.md$/, ''),
+                content,
+                type: fields.type ?? 'general',
+                tags: Array.isArray(fields.tags) ? fields.tags : [],
+                url: fields.url ?? '',
+                object_id: fields.object_id ?? '',
+                edge_kind: fields.edge_kind ?? '',
+            };
+
+            await createNote(payload);
+            result.createdNotes += 1;
+        } catch {
+            // skip broken entries and keep importing the rest of the archive
         }
-
-        const payload: RedTeamNotePayload = {
-            title: typeof fields.title === 'string' && fields.title ? fields.title : path.replace(/\.md$/, ''),
-            content,
-            type: fields.type ?? 'general',
-            tags: Array.isArray(fields.tags) ? fields.tags : [],
-            url: fields.url ?? '',
-            object_id: fields.object_id ?? '',
-            edge_kind: fields.edge_kind ?? '',
-        };
-
-        await createNote(payload);
-        result.createdNotes += 1;
     }
 
     return result;
