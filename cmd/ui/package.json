@@ -48,6 +48,7 @@
         "js-cookie": "^3.0.1",
         "js-file-download": "^0.4.12",
         "json-2-csv": "^5.5.9",
+        "jszip": "^3.10.1",
         "lodash": "^4.18.1",
         "luxon": "^3.3.0",
         "memoize-one": "^6.0.0",

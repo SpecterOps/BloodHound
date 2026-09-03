@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faBook, faDownload, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faBook, faDownload, faPlus, faSearch, faUpload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Autocomplete, Button, CircularProgress, InputAdornment, MenuItem, TextField, Typography } from '@mui/material';
 import {
@@ -27,14 +27,17 @@ import {
     NoteDetailDialog,
     NoteEditorDialog,
     PageWithTitle,
-    downloadJsonFile,
+    listRedTeamNotes,
+    uploadRedTeamNoteAttachment,
+    useCreateRedTeamNote,
     useDeleteRedTeamNote,
     useNotifications,
     useRedTeamNoteTags,
     useRedTeamNotes,
 } from 'bh-shared-ui';
 import { RedTeamNote, RedTeamNoteType, RedTeamNotesListParams } from 'js-client-library';
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { exportNotesZip, importNotesZip } from './zipUtils';
 
 const PAGE_SIZE = 25;
 
@@ -50,8 +53,13 @@ const RedTeamNotes: React.FC = () => {
     const [noteToEdit, setNoteToEdit] = useState<RedTeamNote | null>(null);
     const [noteToView, setNoteToView] = useState<RedTeamNote | null>(null);
     const [noteToDelete, setNoteToDelete] = useState<RedTeamNote | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+
+    const importInputRef = useRef<HTMLInputElement>(null);
 
     const { addNotification } = useNotifications();
+    const createNote = useCreateRedTeamNote();
 
     useEffect(() => {
         const debounceHandle = setTimeout(() => {
@@ -110,16 +118,60 @@ const RedTeamNotes: React.FC = () => {
         });
     };
 
-    const handleExport = () => {
-        if (notes.length === 0) return;
+    const handleExport = async () => {
+        try {
+            setIsExporting(true);
+            const { data: allNotes } = await listRedTeamNotes({ limit: 500 });
 
-        const timestamp = new Date().toISOString().slice(0, 10);
-        downloadJsonFile(`red-team-notes-${timestamp}.json`, {
-            exported_at: new Date().toISOString(),
-            count: notes.length,
-            notes,
-        });
-        addNotification(`Exported ${notes.length} notes.`, 'redTeamNotesExported', { variant: 'success' });
+            const { blob, stats } = await exportNotesZip(allNotes, (token) =>
+                fetch(`/api/v2/red-team-notes/media/${token}`)
+            );
+
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const objectUrl = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = objectUrl;
+            anchor.download = `red-team-notes-${timestamp}.zip`;
+            anchor.click();
+            URL.revokeObjectURL(objectUrl);
+
+            addNotification(
+                `Exported ${stats.noteCount} notes (${stats.attachmentCount} attachments) to ZIP.`,
+                'redTeamNotesExported',
+                { variant: 'success' }
+            );
+        } catch {
+            addNotification('Export failed.', 'redTeamNotesExportFailed', { variant: 'error' });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleImportFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) return;
+
+        try {
+            setIsImporting(true);
+            const result = await importNotesZip(
+                file,
+                (attachmentFile) => uploadRedTeamNoteAttachment(attachmentFile),
+                (payload) => createNote.mutateAsync(payload)
+            );
+            addNotification(
+                `Imported ${result.createdNotes} notes (${result.createdAttachments} attachments).`,
+                'redTeamNotesImported',
+                { variant: 'success' }
+            );
+        } catch {
+            addNotification('Import failed. Expected a ZIP with markdown notes.', 'redTeamNotesImportFailed', {
+                variant: 'error',
+            });
+        } finally {
+            setIsImporting(false);
+        }
     };
 
     const isFiltering = !!search || !!typeFilter || tagFilter.length > 0;
@@ -205,12 +257,29 @@ const RedTeamNotes: React.FC = () => {
                         ))}
                     </TextField>
                     <div className='ml-auto flex items-center gap-2'>
+                        <input
+                            type='file'
+                            accept='.zip,application/zip'
+                            hidden
+                            ref={importInputRef}
+                            onChange={handleImportFileSelected}
+                            data-testid='red-team-notes-import-input'
+                        />
                         <Button
-                            startIcon={<FontAwesomeIcon icon={faDownload} />}
+                            startIcon={<FontAwesomeIcon icon={faUpload} />}
+                            onClick={() => importInputRef.current?.click()}
+                            disabled={isImporting}
+                            data-testid='red-team-notes-import'>
+                            {isImporting ? 'Importing...' : 'Import ZIP'}
+                        </Button>
+                        <Button
+                            startIcon={
+                                isExporting ? <CircularProgress size={14} /> : <FontAwesomeIcon icon={faDownload} />
+                            }
                             onClick={handleExport}
-                            disabled={notes.length === 0}
+                            disabled={notes.length === 0 || isExporting}
                             data-testid='red-team-notes-export'>
-                            Export
+                            Export ZIP
                         </Button>
                         <Button
                             variant='contained'
