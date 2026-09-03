@@ -80,6 +80,10 @@ func (s *Resources) ListADUserSessions(response http.ResponseWriter, request *ht
 	s.handleAdRelatedEntityQuery(response, request, "ListADUserSessions", adAnalysis.FetchUserSessionPaths, adAnalysis.FetchUserSessions)
 }
 
+func (s *Resources) ListADUserKerberoastablePrincipals(response http.ResponseWriter, request *http.Request) {
+	s.handleAdRelatedEntityQuery(response, request, "ListADUserKerberoastablePrincipals", adAnalysis.CreateInboundLocalGroupPathDelegate(ad.Kerberoastable), adAnalysis.CreateInboundLocalGroupListDelegate(ad.Kerberoastable))
+}
+
 func (s *Resources) ListADUserSQLAdminRights(response http.ResponseWriter, request *http.Request) {
 	s.handleAdRelatedEntityQuery(response, request, "ListADUserSQLAdminRights", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound))
 }

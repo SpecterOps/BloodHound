@@ -2090,6 +2090,21 @@ class BHEAPIClient {
             )
         );
 
+    getUserKerberoastablePrincipals = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/users/${id}/kerberoastable-principals`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getUserSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/sessions`,
