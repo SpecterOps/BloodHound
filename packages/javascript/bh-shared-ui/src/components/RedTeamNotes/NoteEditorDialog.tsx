@@ -185,7 +185,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth='md' data-testid='red-team-note-editor-dialog'>
             <DialogTitle>{note ? 'Edit Note' : 'New Red Team Note'}</DialogTitle>
-            <DialogContent className='flex flex-col gap-4 pt-4'>
+            <DialogContent className='flex flex-col gap-4 pt-4' sx={{ overflowY: 'auto', maxHeight: '72vh' }}>
                 <TextField
                     label='Title'
                     value={payload.title}
