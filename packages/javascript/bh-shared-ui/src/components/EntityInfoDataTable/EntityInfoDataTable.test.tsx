@@ -165,7 +165,7 @@ describe('EntityInfoDataTable', () => {
             expect(nestedContent).toBeInTheDocument();
         });
 
-        it('displays ! icon when one of the Affected Object calls fail', async () => {
+        it('displays an error alert when one of the Affected Object calls fail', async () => {
             console.error = vi.fn();
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
@@ -175,9 +175,9 @@ describe('EntityInfoDataTable', () => {
 
             render(<EntityInfoDataTable {...adGpoSections[0]} />);
 
-            const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
+            const errorAlert = await screen.findByRole('alert');
 
-            expect(errorIcon).not.toBeNull();
+            expect(errorAlert).toHaveTextContent('Error loading Affected Objects');
         });
 
         it('displays 0 when a given sections returns empty, and sums the rest of the sections correctly', async () => {

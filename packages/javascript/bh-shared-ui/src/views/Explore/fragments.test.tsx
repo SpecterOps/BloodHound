@@ -49,6 +49,16 @@ describe('Field', () => {
         expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
     });
 
+    it('should render accessible placeholders for empty values in a list', () => {
+        render(<Field label='Test Field (Array)' value={['value', '', null]} keyprop='test-field-array' />);
+        expect(screen.getByText('value')).not.toHaveAttribute('aria-hidden');
+        screen.getAllByText('—').forEach((placeholder) => {
+            expect(placeholder).toHaveAttribute('aria-hidden', 'true');
+        });
+        expect(screen.getByText('Empty string')).toBeInTheDocument();
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+    });
+
     it('should render an accessible placeholder when the provided value is null', () => {
         render(<Field label='Test Field (Null)' value={null} keyprop='test-field-null' />);
         expect(screen.getByText('Test Field (Null)')).toBeInTheDocument();

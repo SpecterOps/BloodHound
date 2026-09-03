@@ -42,7 +42,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
             <Icon
                 tip='Collapse All'
                 onClick={handleCollapseAll}
-                className='h-10 box-border text-contrast p-4'
+                className='h-10 box-border text-contrast px-4'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
                 {name}
             </h2>
 
-            <Icon className='h-10 box-border p-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+            <Icon className='h-10 box-border px-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
                 <FontAwesomeIcon icon={faRemove} />
             </Icon>
         </div>
