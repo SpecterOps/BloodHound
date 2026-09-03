@@ -127,6 +127,7 @@ import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
+import Kerberoastable from './Kerberoastable/Kerberoastable';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
@@ -217,6 +218,7 @@ const EdgeInfoComponents = {
     AddSelf: AddSelf,
     AddKeyCredentialLink: AddKeyCredentialLink,
     DCSync: DCSync,
+    Kerberoastable: Kerberoastable,
     SyncLAPSPassword: SyncLAPSPassword,
     WriteAccountRestrictions: WriteAccountRestrictions,
     WriteGPLink: WriteGPLink,

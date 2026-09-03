@@ -921,6 +921,8 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		return &aggregateStats, err
 	} else if ntlmStats, err := PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled); err != nil {
 		return &aggregateStats, err
+	} else if kerberoastableStats, err := PostKerberoastable(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(deleteTransitEdgesStats)
 		aggregateStats.Merge(syncLAPSStats)
@@ -932,6 +934,7 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
 		aggregateStats.Merge(ntlmStats)
+		aggregateStats.Merge(kerberoastableStats)
 
 		return &aggregateStats, nil
 	}

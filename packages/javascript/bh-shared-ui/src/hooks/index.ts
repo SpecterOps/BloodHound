@@ -60,6 +60,7 @@ export * from './usePreviousValue';
 export * from './usePrimaryKind';
 export * from './usePZParams';
 export { default as useRoleBasedFiltering } from './useRoleBasedFiltering';
+export * from './useRedTeamNotes';
 export * from './useSavedQueries';
 export * from './useSearch';
 export * from './useSelectedTag';

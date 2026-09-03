@@ -20,6 +20,7 @@ import { EntityInfoContentProps } from '../../utils/content';
 import EntityInfoList from './EntityInfoDataTableList';
 import EntityInfoDataTablePriorityList from './EntityInfoDataTablePriorityList';
 import EntityObjectInformation from './EntityObjectInformation';
+import EntityObjectNotes from './EntityObjectNotes';
 import { KindInfoItems } from './KindInfoItems';
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
@@ -29,6 +30,7 @@ const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
         <div>
             <EntityInfoDataTablePriorityList priorityTables={props.priorityTables} />
             <EntityObjectInformation selectedNode={props.selectedNode} />
+            <EntityObjectNotes selectedNode={props.selectedNode} />
             {/* we have decided to initially omit showing KindInfoItems for built in kinds even if `KindInfo` is available */}
             {isBuiltInKind(primaryKind) ? (
                 <EntityInfoList {...props} />

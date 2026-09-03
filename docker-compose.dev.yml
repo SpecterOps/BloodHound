@@ -100,6 +100,8 @@ services:
     environment:
       - NEO4J_AUTH=${BH_NEO4J_AUTH:-neo4j/bloodhoundcommunityedition}
       - NEO4J_dbms_allow__upgrade=${BH_NEO4J_ALLOW_UPGRADE:-true}
+      - NEO4J_dbms_memory_heap_initial__size=${BH_NEO4J_HEAP_INITIAL:-512m}
+      - NEO4J_dbms_memory_heap_max__size=${BH_NEO4J_HEAP_MAX:-1g}
     ports:
       - ${BH_NEO4J_PORT:-127.0.0.1:7687}:7687
       - ${BH_NEO4J_WEB_PORT:-127.0.0.1:7474}:7474

@@ -30,6 +30,7 @@ const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui/ApiExplorer'));
 const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
 const PrivilegeZones = React.lazy(() => import('src/views/PrivilegeZones'));
+const RedTeamNotes = React.lazy(() => import('src/views/RedTeamNotes/RedTeamNotes'));
 
 export const ROUTES: Routable[] = [
     {
@@ -65,6 +66,12 @@ export const ROUTES: Routable[] = [
     {
         path: routes.ROUTE_GROUP_MANAGEMENT,
         component: GroupManagement,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: routes.ROUTE_RED_TEAM_NOTES,
+        component: RedTeamNotes,
         authenticationRequired: true,
         navigation: true,
     },

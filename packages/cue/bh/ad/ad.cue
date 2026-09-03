@@ -1569,6 +1569,11 @@ GoldenCert: types.#Kind & {
 	schema: "active_directory"
 }
 
+Kerberoastable: types.#Kind & {
+	symbol: "Kerberoastable"
+	schema: "active_directory"
+}
+
 EnrollOnBehalfOf: types.#Kind & {
 	symbol: "EnrollOnBehalfOf"
 	schema: "active_directory"
@@ -1789,6 +1794,7 @@ RelationshipKinds: [
 	EnterpriseCAFor,
 	IssuedSignedBy,
 	GoldenCert,
+	Kerberoastable,
 	EnrollOnBehalfOf,
 	OIDGroupLink,
 	ExtendedByPolicy,
@@ -1892,6 +1898,7 @@ SharedRelationshipKinds: [
 	WriteAccountRestrictions,
 	WriteGPLink,
 	GoldenCert,
+	Kerberoastable,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
@@ -1966,6 +1973,7 @@ PostProcessedRelationships: [
 	IssuedSignedBy,
 	EnterpriseCAFor,
 	GoldenCert,
+	Kerberoastable,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,

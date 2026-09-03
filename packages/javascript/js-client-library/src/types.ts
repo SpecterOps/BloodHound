@@ -1004,3 +1004,62 @@ export interface RelationshipDetails {
 export type RelationshipDetailsWithInfo = RelationshipDetails & {
     info?: RelationshipKindInfo;
 };
+
+export const RedTeamNoteTypeGeneral = 'general';
+export const RedTeamNoteTypeTechnique = 'technique';
+export const RedTeamNoteTypeTool = 'tool';
+export const RedTeamNoteTypeSource = 'source';
+
+export type RedTeamNoteType =
+    | typeof RedTeamNoteTypeGeneral
+    | typeof RedTeamNoteTypeTechnique
+    | typeof RedTeamNoteTypeTool
+    | typeof RedTeamNoteTypeSource;
+
+export interface RedTeamNote {
+    id: number;
+    created_at: string;
+    updated_at: string;
+    user_id: string;
+    title: string;
+    content: string;
+    type: RedTeamNoteType;
+    tags: string[];
+    url: string;
+    object_id: string;
+    edge_kind: string;
+}
+
+export interface RedTeamNotePayload {
+    title: string;
+    content: string;
+    type: RedTeamNoteType;
+    tags: string[];
+    url: string;
+    object_id: string;
+    edge_kind: string;
+}
+
+export interface RedTeamNotesListParams {
+    object_id?: string;
+    edge_kind?: string;
+    type?: RedTeamNoteType;
+    tags?: string[];
+    search?: string;
+    sort?: string;
+    skip?: number;
+    limit?: number;
+}
+
+export interface RedTeamNoteTagCount {
+    tag: string;
+    count: number;
+}
+
+export interface RedTeamNoteAttachment {
+    id: number;
+    filename: string;
+    content_type: string;
+    url: string;
+    markdown: string;
+}

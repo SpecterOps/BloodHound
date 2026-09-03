@@ -115,6 +115,8 @@ import {
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
+    RedTeamNoteResponse,
+    RedTeamNotesResponse,
     RotateWebhookSecretResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
@@ -1241,6 +1243,56 @@ class BHEAPIClient {
     toggleFeatureFlag = (flagId: string | number, options?: RequestOptions) =>
         this.baseClient.put(`/api/v2/features/${flagId}/toggle`, options);
 
+    listRedTeamNotes = (
+        params: types.RedTeamNotesListParams,
+        options?: RequestOptions
+    ): Promise<AxiosResponse<RedTeamNotesResponse>> => {
+        const searchParams = new URLSearchParams();
+
+        if (params.object_id) searchParams.set('object_id', params.object_id);
+        if (params.edge_kind) searchParams.set('edge_kind', params.edge_kind);
+        if (params.type) searchParams.set('type', params.type);
+        if (params.search) searchParams.set('search', params.search);
+        if (params.sort) searchParams.set('sort', params.sort);
+        if (params.skip !== undefined) searchParams.set('skip', String(params.skip));
+        if (params.limit !== undefined) searchParams.set('limit', String(params.limit));
+        (params.tags ?? []).forEach((tag) => searchParams.append('tag', tag));
+
+        return this.baseClient.get<RedTeamNotesResponse>(
+            `/api/v2/red-team-notes?${searchParams.toString()}`,
+            options
+        );
+    };
+
+    getRedTeamNote = (noteId: string | number, options?: RequestOptions) =>
+        this.baseClient.get<RedTeamNoteResponse>(`/api/v2/red-team-notes/${noteId}`, options);
+
+    createRedTeamNote = (payload: types.RedTeamNotePayload, options?: RequestOptions) =>
+        this.baseClient.post<RedTeamNoteResponse>('/api/v2/red-team-notes', payload, options);
+
+    updateRedTeamNote = (noteId: string | number, payload: types.RedTeamNotePayload, options?: RequestOptions) =>
+        this.baseClient.put<RedTeamNoteResponse>(`/api/v2/red-team-notes/${noteId}`, payload, options);
+
+    deleteRedTeamNote = (noteId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/red-team-notes/${noteId}`, options);
+
+    listRedTeamNoteTags = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<types.RedTeamNoteTagCount[]>>('/api/v2/red-team-notes/tags', options);
+
+    uploadRedTeamNoteAttachment = (file: File, options?: RequestOptions) => {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+
+        return this.baseClient.post<BasicResponse<types.RedTeamNoteAttachment>>(
+            '/api/v2/red-team-notes/attachments',
+            formData,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                ...options,
+            }
+        );
+    };
+
     getCollectors = (collectorType: types.CommunityCollectorType, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
@@ -2032,6 +2084,21 @@ class BHEAPIClient {
                 {
                     params: {
                         counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getUserKerberoastablePrincipals = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/users/${id}/kerberoastable-principals`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
                     },
                 },
                 options

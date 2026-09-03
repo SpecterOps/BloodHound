@@ -1047,6 +1047,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
     [ActiveDirectoryNodeKind.User]: (id: string) => [
         {
             id,
+            label: 'Kerberoastable',
+            queryType: 'user-kerberoastable_principals',
+        },
+        {
+            id,
             label: 'Sessions',
             queryType: 'user-sessions',
         },
@@ -1833,6 +1838,8 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getIssuancePolicyLinkedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'user-kerberoastable_principals': ({ id, skip, limit, type }) =>
+        apiClient.getUserKerberoastablePrincipals(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-sessions': ({ id, skip, limit, type }) =>
         apiClient.getUserSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-member_of': ({ id, skip, limit, type }) =>

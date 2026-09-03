@@ -312,6 +312,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		// User Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}", api.URIPathVariableObjectID), resources.GetUserEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/sessions", api.URIPathVariableObjectID), resources.ListADUserSessions).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/kerberoastable-principals", api.URIPathVariableObjectID), resources.ListADUserKerberoastablePrincipals).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/memberships", api.URIPathVariableObjectID), resources.ListADGroupMembership).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/admin-rights", api.URIPathVariableObjectID), resources.ListADEntityAdminRights).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/users/{%s}/rdp-rights", api.URIPathVariableObjectID), resources.ListADEntityRDPRights).RequirePermissions(permissions.GraphDBRead),
