@@ -312,7 +312,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                             data-testid='red-team-note-editor-content'
                         />
                     ) : (
-                        <div className='p-4 min-h-[230px] text-sm overflow-y-auto' data-testid='red-team-note-editor-preview'>
+                        <div className='p-4 min-h-[230px] max-h-[46vh] overflow-y-auto text-sm' data-testid='red-team-note-editor-preview'>
                             {payload.content ? (
                                 <MarkdownContent markdown={payload.content} />
                             ) : (
