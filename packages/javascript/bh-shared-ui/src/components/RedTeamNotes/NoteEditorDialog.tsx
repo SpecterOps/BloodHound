@@ -183,9 +183,15 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
     const isSaving = createNote.isLoading || updateNote.isLoading;
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth='md' data-testid='red-team-note-editor-dialog'>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth='md'
+            PaperProps={{ sx: { maxHeight: '86vh', display: 'flex', flexDirection: 'column' } }}
+            data-testid='red-team-note-editor-dialog'>
             <DialogTitle>{note ? 'Edit Note' : 'New Red Team Note'}</DialogTitle>
-            <DialogContent className='flex flex-col gap-4 pt-4' sx={{ overflowY: 'auto', maxHeight: '72vh' }}>
+            <DialogContent className='flex flex-col gap-4 pt-4' sx={{ overflowY: 'auto', minHeight: 0 }}>
                 <TextField
                     label='Title'
                     value={payload.title}
@@ -306,13 +312,12 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                             fullWidth
                             multiline
                             minRows={10}
-                            maxRows={14}
                             variant='outlined'
                             className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
                             data-testid='red-team-note-editor-content'
                         />
                     ) : (
-                        <div className='p-4 min-h-[230px] max-h-[46vh] overflow-y-auto text-sm' data-testid='red-team-note-editor-preview'>
+                        <div className='p-4 min-h-[230px] text-sm' data-testid='red-team-note-editor-preview'>
                             {payload.content ? (
                                 <MarkdownContent markdown={payload.content} />
                             ) : (

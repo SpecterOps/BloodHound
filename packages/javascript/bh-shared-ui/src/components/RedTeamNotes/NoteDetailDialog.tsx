@@ -36,7 +36,13 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({ open, note, onClose
     if (!note) return null;
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth='md' data-testid='red-team-note-detail-dialog'>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth='md'
+            PaperProps={{ sx: { maxHeight: '86vh', display: 'flex', flexDirection: 'column' } }}
+            data-testid='red-team-note-detail-dialog'>
             <DialogTitle>
                 <div className='flex items-center gap-3 flex-wrap'>
                     <FontAwesomeIcon icon={NOTE_TYPE_ICONS[note.type] ?? NOTE_TYPE_ICONS.general} />
@@ -52,7 +58,7 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({ open, note, onClose
                     ))}
                 </div>
             </DialogTitle>
-            <DialogContent className='flex flex-col gap-3' sx={{ overflowY: 'auto', maxHeight: '70vh' }}>
+            <DialogContent className='flex flex-col gap-3' sx={{ overflowY: 'auto', minHeight: 0 }}>
                 {note.url && (
                     <a href={note.url} target='_blank' rel='noreferrer' className='flex items-center gap-2 text-sm'>
                         <FontAwesomeIcon icon={faLink} /> {note.url}
