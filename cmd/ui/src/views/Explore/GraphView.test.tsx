@@ -185,6 +185,12 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GraphView', () => {
+    it('renders a hidden h1 with the text Explore for screen readers', async () => {
+        render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
+        const hiddenHeading = screen.getByRole('heading', { level: 1, name: /explore/i });
+        expect(hiddenHeading).toBeInTheDocument();
+        expect(hiddenHeading).toHaveClass('sr-only');
+    });
     it('renders a graph view', () => {
         render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
         const container = screen.getByTestId('explore');
