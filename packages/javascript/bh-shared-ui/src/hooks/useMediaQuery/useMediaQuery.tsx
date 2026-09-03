@@ -26,13 +26,21 @@ export const BREAKPOINTS = {
     '3xl': '1920px',
 };
 
+const getMediaQueryMatches = (query: string): boolean => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+
+    return window.matchMedia(query).matches;
+};
+
 export const useMediaQuery = (query: string): boolean => {
-    const [matches, setMatches] = useState(false);
+    const [matches, setMatches] = useState(() => getMediaQueryMatches(query));
 
     useEffect(() => {
+        if (typeof window.matchMedia !== 'function') return;
+
         const mediaQueryList = window.matchMedia(query);
 
-        // Set initial value
+        // Reconcile the value if the query changed after the initial render.
         setMatches(mediaQueryList.matches);
 
         // Create a listener function
