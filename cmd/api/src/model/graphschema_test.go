@@ -865,6 +865,36 @@ func Test_validateGraphExtension(t *testing.T) {
 		{name: "fail - duplicate saved query key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query One", Query: "RETURN 1"}, {QueryKey: "query-key", Name: "Query Two", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query key: query-key")},
 		{name: "fail - duplicate saved query name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-one", Name: "Query", Query: "RETURN 1"}, {QueryKey: "query-two", Name: "Query", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query name: Query")},
 		{
+			name: "success - parsable saved query",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "valid-query",
+						Name:     "Valid query",
+						Query:    "MATCH (n) RETURN n",
+					}},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "fail - unparseable saved query",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "invalid-query",
+						Name:     "Invalid query",
+						Query:    "MATCH (",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Invalid query contains invalid Cypher"),
+		},
+		{
 			name: "success - valid ExtensionInput",
 			args: args{
 				graphExtension: GraphExtensionInput{

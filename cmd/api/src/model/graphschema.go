@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/safetemplate"
+	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -624,6 +625,9 @@ func (s GraphExtensionInput) Validate() error {
 			return fmt.Errorf("duplicate graph schema saved query key: %s", savedQueryInput.QueryKey)
 		} else if _, found := savedQueryNames[savedQueryInput.Name]; found {
 			return fmt.Errorf("duplicate graph schema saved query name: %s", savedQueryInput.Name)
+		}
+		if _, err := frontend.ParseCypher(frontend.NewContext(), savedQueryInput.Query); err != nil {
+			return fmt.Errorf("graph schema saved query %s contains invalid Cypher: %w", savedQueryInput.Name, err)
 		}
 		savedQueryKeys[savedQueryInput.QueryKey] = struct{}{}
 		savedQueryNames[savedQueryInput.Name] = struct{}{}
