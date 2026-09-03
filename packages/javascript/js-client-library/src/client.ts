@@ -16,6 +16,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
+    AlertRetryRequest,
     ClearDatabaseRequest,
     CreateAlertRequest,
     CreateAssetGroupRequest,
@@ -115,6 +116,7 @@ import {
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
+    RetryAlertAttemptResponse,
     RotateWebhookSecretResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
@@ -2909,6 +2911,9 @@ class BHEAPIClient {
             },
             paramsSerializer: { indexes: null },
         });
+
+    retryAlertAttempt = (payload: AlertRetryRequest, options?: RequestOptions) =>
+        this.baseClient.post<RetryAlertAttemptResponse>('api/v2/alert-attempts/retry', payload, options);
 }
 
 export default BHEAPIClient;
