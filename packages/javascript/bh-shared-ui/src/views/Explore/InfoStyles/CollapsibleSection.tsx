@@ -122,17 +122,6 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         },
         borderRadius: theme.shape.borderRadius,
     },
-    alertRoot: {
-        display: 'flex',
-        justifyContent: 'center',
-        padding: 0,
-        minWidth: '3rem',
-        borderRadius: theme.shape.borderRadius,
-    },
-    alertIcon: {
-        padding: '4px',
-        margin: 0,
-    },
 }));
 
 export default useCollapsibleSectionStyles;

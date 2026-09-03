@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, CircularProgress } from '@mui/material';
-import { Typography, VisuallyHidden } from 'doodle-ui';
+import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
@@ -86,16 +85,18 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
             </Typography>
             {isLoading ? (
                 <div className={styles.accordionCount}>
-                    <CircularProgress size={20} />
+                    <span
+                        aria-label={`Loading ${label}`}
+                        className='size-5 animate-spin rounded-full border-2 border-neutral-4 border-t-primary'
+                        role='progressbar'
+                    />
                 </div>
-            ) : isError ? (
+            ) : true ? (
                 <Alert
-                    severity='error'
-                    classes={{
-                        root: styles.alertRoot,
-                        icon: styles.alertIcon,
-                    }}
-                />
+                    className='h-[1.6rem] w-12 items-center justify-center p-0 [&>div:first-child]:m-0 [&>div:nth-child(2)]:sr-only'
+                    variant='error'>
+                    Error loading {label}
+                </Alert>
             ) : (
                 count !== undefined && <span className={styles.accordionCount}>{count.toLocaleString()}</span>
             )}
