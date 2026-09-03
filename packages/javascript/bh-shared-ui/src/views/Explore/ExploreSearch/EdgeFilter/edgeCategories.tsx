@@ -207,6 +207,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     AzureRelationshipKind.KeyVaultContributor,
                     AzureRelationshipKind.Owner,
                     AzureRelationshipKind.Contributor,
+                    AzureRelationshipKind.ManageEntraDS,
                     AzureRelationshipKind.UserAccessAdministrator,
                     AzureRelationshipKind.VMAdminLogin,
                     AzureRelationshipKind.VMContributor,
@@ -223,7 +224,13 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
             },
             {
                 name: 'Cross Platform',
-                edgeTypes: [AzureRelationshipKind.SyncedToEntraUser],
+                edgeTypes: [
+                    AzureRelationshipKind.SyncedToEntraUser,
+                    AzureRelationshipKind.SyncedToEntraDSUser,
+                    AzureRelationshipKind.AddEntraDSGroupMember,
+                    AzureRelationshipKind.ManageEntraDSSync,
+                    AzureRelationshipKind.ManageEntraDSSyncFilter,
+                ],
             },
         ],
     },

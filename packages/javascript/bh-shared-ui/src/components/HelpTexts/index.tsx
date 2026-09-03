@@ -36,6 +36,7 @@ import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
 import AZCloudAppAdmin from './AZCloudAppAdmin/AZCloudAppAdmin';
 import AZContains from './AZContains/AZContains';
 import AZContributor from './AZContributor/AZContributor';
+import AZEntraDSContributor from './AZEntraDSContributor/AZEntraDSContributor';
 import AZExecuteCommand from './AZExecuteCommand/AZExecuteCommand';
 import AZGetCertificates from './AZGetCertificates/AZGetCertificates';
 import AZGetKeys from './AZGetKeys/AZGetKeys';
@@ -56,6 +57,7 @@ import AZMGGroupMember_ReadWrite_All from './AZMGGroupMember_ReadWrite_All/AZMGG
 import AZMGGroup_ReadWrite_All from './AZMGGroup_ReadWrite_All/AZMGGroup_ReadWrite_All';
 import AZMGRoleManagement_ReadWrite_Directory from './AZMGRoleManagement_ReadWrite_Directory/AZMGRoleManagement_ReadWrite_Directory';
 import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEndpoint_ReadWrite_All/AZMGServicePrincipalEndpoint_ReadWrite_All';
+import AZManageEntraDS from './AZManageEntraDS/AZManageEntraDS';
 import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
 import AZMemberOf from './AZMemberOf/AZMemberOf';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
@@ -73,6 +75,7 @@ import AZVMContributor from './AZVMContributor/AZVMContributor';
 import AZWebsiteContributor from './AZWebsiteContributor/AZWebsiteContributor';
 import AbuseTGTDelegation from './AbuseTGTDelegation/AbuseTGTDelegation';
 import AddAllowedToAct from './AddAllowedToAct/AddAllowedToAct';
+import AddEntraDSGroupMember from './AddEntraDSGroupMember/AddEntraDSGroupMember';
 import AddKeyCredentialLink from './AddKeyCredentialLink/AddKeyCredentialLink';
 import AddMember from './AddMember/AddMember';
 import AddSelf from './AddSelf/AddSelf';
@@ -97,6 +100,7 @@ import DumpSMSAPassword from './DumpSMSAPassword/DumpSMSAPassword';
 import Enroll from './Enroll/Enroll';
 import EnrollOnBehalfOf from './EnrollOnBehalfOf/EnrollOnBehalfOf';
 import EnterpriseCAFor from './EnterpriseCAFor/EnterpriseCAFor';
+import EntraDSFor from './EntraDSFor/EntraDSFor';
 import ExecuteDCOM from './ExecuteDCOM/ExecuteDCOM';
 import ExtendedByPolicy from './ExtendedByPolicy/ExtendedByPolicy';
 import ForceChangePassword from './ForceChangePassword/ForceChangePassword';
@@ -113,6 +117,8 @@ import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import ManageCA from './ManageCA/ManageCA';
 import ManageCertificates from './ManageCertificates/ManageCertificates';
+import ManageEntraDSSync from './ManageEntraDSSync/ManageEntraDSSync';
+import ManageEntraDSSyncFilter from './ManageEntraDSSyncFilter/ManageEntraDSSyncFilter';
 import MemberOf from './MemberOf/MemberOf';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
@@ -129,6 +135,8 @@ import SameForestTrust from './SameForestTrust/SameForestTrust';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
+import SyncedToEntraDSGroup from './SyncedToEntraDSGroup/SyncedToEntraDSGroup';
+import SyncedToEntraDSUser from './SyncedToEntraDSUser/SyncedToEntraDSUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
@@ -194,6 +202,8 @@ const EdgeInfoComponents = {
     AZAvereContributor: AZAvereContributor,
     AZContains: AZContains,
     AZContributor: AZContributor,
+    AZEntraDSContributor: AZEntraDSContributor,
+    AZManageEntraDS: AZManageEntraDS,
     AZExecuteCommand: AZExecuteCommand,
     AZGetCertificates: AZGetCertificates,
     AZGetKeys: AZGetKeys,
@@ -216,6 +226,10 @@ const EdgeInfoComponents = {
     WriteSPN: WriteSPN,
     AddSelf: AddSelf,
     AddKeyCredentialLink: AddKeyCredentialLink,
+    AddEntraDSGroupMember: AddEntraDSGroupMember,
+    EntraDSFor: EntraDSFor,
+    ManageEntraDSSync: ManageEntraDSSync,
+    ManageEntraDSSyncFilter: ManageEntraDSSyncFilter,
     DCSync: DCSync,
     SyncLAPSPassword: SyncLAPSPassword,
     WriteAccountRestrictions: WriteAccountRestrictions,
@@ -272,6 +286,8 @@ const EdgeInfoComponents = {
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
+    SyncedToEntraDSUser: SyncedToEntraDSUser,
+    SyncedToEntraDSGroup: SyncedToEntraDSGroup,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,

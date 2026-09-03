@@ -342,25 +342,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
     }
 }
 export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
-export const EdgeCompositionRelationships = [
-    'GoldenCert',
-    'ADCSESC1',
-    'ADCSESC3',
-    'ADCSESC4',
-    'ADCSESC6a',
-    'ADCSESC6b',
-    'ADCSESC9a',
-    'ADCSESC9b',
-    'ADCSESC10a',
-    'ADCSESC10b',
-    'ADCSESC13',
-    'CoerceAndRelayNTLMToSMB',
-    'CoerceAndRelayNTLMToADCS',
-    'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPS',
-    'GPOAppliesTo',
-    'CanApplyGPO',
-];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
@@ -444,6 +425,7 @@ export enum ActiveDirectoryKindProperties {
     CertTemplateOID = 'certtemplateoid',
     GroupLinkID = 'grouplinkid',
     ObjectGUID = 'objectguid',
+    AADObjectID = 'aadobjectid',
     ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
     MachineAccountQuota = 'machineaccountquota',
     SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
@@ -669,6 +651,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Link ID';
         case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
+        case ActiveDirectoryKindProperties.AADObjectID:
+            return 'Microsoft Entra Object ID';
         case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
             return 'Expire Passwords on Smart Card only Accounts';
         case ActiveDirectoryKindProperties.MachineAccountQuota:
@@ -929,6 +913,7 @@ export enum AzureNodeKind {
     Role = 'AZRole',
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
+    EntraDS = 'AZEntraDS',
     Group = 'AZGroup',
     KeyVault = 'AZKeyVault',
     ManagementGroup = 'AZManagementGroup',
@@ -959,6 +944,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'Device';
         case AzureNodeKind.FunctionApp:
             return 'FunctionApp';
+        case AzureNodeKind.EntraDS:
+            return 'EntraDS';
         case AzureNodeKind.Group:
             return 'Group';
         case AzureNodeKind.KeyVault:
@@ -997,6 +984,8 @@ export enum AzureRelationshipKind {
     AvereContributor = 'AZAvereContributor',
     Contains = 'AZContains',
     Contributor = 'AZContributor',
+    EntraDSContributor = 'AZEntraDSContributor',
+    ManageEntraDS = 'AZManageEntraDS',
     GetCertificates = 'AZGetCertificates',
     GetKeys = 'AZGetKeys',
     GetSecrets = 'AZGetSecrets',
@@ -1041,6 +1030,12 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToEntraUser = 'SyncedToEntraUser',
+    SyncedToEntraDSUser = 'SyncedToEntraDSUser',
+    SyncedToEntraDSGroup = 'SyncedToEntraDSGroup',
+    AddEntraDSGroupMember = 'AddEntraDSGroupMember',
+    EntraDSFor = 'EntraDSFor',
+    ManageEntraDSSync = 'ManageEntraDSSync',
+    ManageEntraDSSyncFilter = 'ManageEntraDSSyncFilter',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
     AZAuthenticatesTo = 'AZAuthenticatesTo',
@@ -1053,6 +1048,10 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'Contains';
         case AzureRelationshipKind.Contributor:
             return 'Contributor';
+        case AzureRelationshipKind.EntraDSContributor:
+            return 'EntraDSContributor';
+        case AzureRelationshipKind.ManageEntraDS:
+            return 'ManageEntraDS';
         case AzureRelationshipKind.GetCertificates:
             return 'GetCertificates';
         case AzureRelationshipKind.GetKeys:
@@ -1141,6 +1140,18 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
+        case AzureRelationshipKind.SyncedToEntraDSUser:
+            return 'SyncedToEntraDSUser';
+        case AzureRelationshipKind.SyncedToEntraDSGroup:
+            return 'SyncedToEntraDSGroup';
+        case AzureRelationshipKind.AddEntraDSGroupMember:
+            return 'AddEntraDSGroupMember';
+        case AzureRelationshipKind.EntraDSFor:
+            return 'EntraDSFor';
+        case AzureRelationshipKind.ManageEntraDSSync:
+            return 'ManageEntraDSSync';
+        case AzureRelationshipKind.ManageEntraDSSyncFilter:
+            return 'ManageEntraDSSyncFilter';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1197,6 +1208,23 @@ export enum AzureKindProperties {
     Subject = 'subject',
     Audiences = 'audiences',
     FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
+    DomainName = 'domainname',
+    DomainConfigurationType = 'domainconfigurationtype',
+    FilteredSyncEnabled = 'filteredsyncenabled',
+    SyncScope = 'syncscope',
+    SyncApplicationID = 'syncapplicationid',
+    NTLMV1Enabled = 'ntlmv1enabled',
+    TLSV1Enabled = 'tlsv1enabled',
+    SyncNTLMPasswordsEnabled = 'syncntlmpasswordsenabled',
+    SyncKerberosPasswordsEnabled = 'synckerberospasswordsenabled',
+    SyncOnPremPasswordsEnabled = 'synconprempasswordsenabled',
+    KerberosRC4EncryptionEnabled = 'kerberosrc4encryptionenabled',
+    KerberosArmoringEnabled = 'kerberosarmoringenabled',
+    LDAPSigningEnabled = 'ldapsigningenabled',
+    ChannelBindingEnabled = 'channelbindingenabled',
+    SyncOnPremSAMAccountNameEnabled = 'synconpremsamaccountnameenabled',
+    LDAPSEnabled = 'ldapsenabled',
+    LDAPSExternalAccessEnabled = 'ldapsexternalaccessenabled',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1288,6 +1316,40 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Audiences';
         case AzureKindProperties.FederatedIdentityCredentialAppID:
             return 'Federated Identity Credential Application ID';
+        case AzureKindProperties.DomainName:
+            return 'Domain Name';
+        case AzureKindProperties.DomainConfigurationType:
+            return 'Domain Configuration Type';
+        case AzureKindProperties.FilteredSyncEnabled:
+            return 'Filtered Sync Enabled';
+        case AzureKindProperties.SyncScope:
+            return 'Sync Scope';
+        case AzureKindProperties.SyncApplicationID:
+            return 'Sync Application ID';
+        case AzureKindProperties.NTLMV1Enabled:
+            return 'NTLM V1 Enabled';
+        case AzureKindProperties.TLSV1Enabled:
+            return 'TLS V1 Enabled';
+        case AzureKindProperties.SyncNTLMPasswordsEnabled:
+            return 'Sync NTLM Passwords Enabled';
+        case AzureKindProperties.SyncKerberosPasswordsEnabled:
+            return 'Sync Kerberos Passwords Enabled';
+        case AzureKindProperties.SyncOnPremPasswordsEnabled:
+            return 'Sync On-Premises Passwords Enabled';
+        case AzureKindProperties.KerberosRC4EncryptionEnabled:
+            return 'Kerberos RC4 Encryption Enabled';
+        case AzureKindProperties.KerberosArmoringEnabled:
+            return 'Kerberos Armoring Enabled';
+        case AzureKindProperties.LDAPSigningEnabled:
+            return 'LDAP Signing Enabled';
+        case AzureKindProperties.ChannelBindingEnabled:
+            return 'Channel Binding Enabled';
+        case AzureKindProperties.SyncOnPremSAMAccountNameEnabled:
+            return 'Sync On-Premises SAM Account Name Enabled';
+        case AzureKindProperties.LDAPSEnabled:
+            return 'Secure LDAP Enabled';
+        case AzureKindProperties.LDAPSExternalAccessEnabled:
+            return 'Secure LDAP External Access Enabled';
         default:
             return undefined;
     }
@@ -1296,6 +1358,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
         AzureRelationshipKind.Contributor,
+        AzureRelationshipKind.ManageEntraDS,
         AzureRelationshipKind.GetCertificates,
         AzureRelationshipKind.GetKeys,
         AzureRelationshipKind.GetSecrets,
@@ -1332,12 +1395,38 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToEntraUser,
+        AzureRelationshipKind.SyncedToEntraDSUser,
+        AzureRelationshipKind.AddEntraDSGroupMember,
+        AzureRelationshipKind.ManageEntraDSSync,
+        AzureRelationshipKind.ManageEntraDSSyncFilter,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
         AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
+export const EdgeCompositionRelationships = [
+    'GoldenCert',
+    'ADCSESC1',
+    'ADCSESC3',
+    'ADCSESC4',
+    'ADCSESC6a',
+    'ADCSESC6b',
+    'ADCSESC9a',
+    'ADCSESC9b',
+    'ADCSESC10a',
+    'ADCSESC10b',
+    'ADCSESC13',
+    'CoerceAndRelayNTLMToSMB',
+    'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToLDAP',
+    'CoerceAndRelayNTLMToLDAPS',
+    'GPOAppliesTo',
+    'CanApplyGPO',
+    'AZManageEntraDS',
+    'AddEntraDSGroupMember',
+    'ManageEntraDSSync',
+];
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
 }

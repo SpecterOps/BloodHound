@@ -55,6 +55,10 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureFunctionApp
 	case enums.KindAZFunctionAppRoleAssignment:
 		return convertAzureFunctionAppRoleAssignment
+	case enums.Kind("AZEntraDS"):
+		return convertAzureDomainService
+	case enums.Kind("AZEntraDSRoleAssignment"):
+		return convertAzureDomainServiceRoleAssignment
 	case enums.KindAZGroup:
 		return convertAzureGroup
 	case enums.KindAZGroupMember:
@@ -329,6 +333,33 @@ func convertAzureFunctionAppRoleAssignment(raw json.RawMessage, converted *Conve
 		)
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureFunctionAppRoleAssignmentToRels(data)...)
+	}
+}
+
+func convertAzureDomainService(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data ein.AzureDomainService
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "domain service"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureDomainServiceToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureDomainServiceToRels(data)...)
+	}
+}
+
+func convertAzureDomainServiceRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "domain service role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureDomainServiceRoleAssignmentToRels(data)...)
 	}
 }
 

@@ -339,6 +339,125 @@ FederatedIdentityCredentialAppID: types.#StringEnum & {
 	representation: "federatedidentitycredentialappid"
 }
 
+DomainName: types.#StringEnum & {
+	symbol:         "DomainName"
+	schema:         "azure"
+	name:           "Domain Name"
+	representation: "domainname"
+}
+
+DomainConfigurationType: types.#StringEnum & {
+	symbol:         "DomainConfigurationType"
+	schema:         "azure"
+	name:           "Domain Configuration Type"
+	representation: "domainconfigurationtype"
+}
+
+FilteredSyncEnabled: types.#StringEnum & {
+	symbol:         "FilteredSyncEnabled"
+	schema:         "azure"
+	name:           "Filtered Sync Enabled"
+	representation: "filteredsyncenabled"
+}
+
+SyncScope: types.#StringEnum & {
+	symbol:         "SyncScope"
+	schema:         "azure"
+	name:           "Sync Scope"
+	representation: "syncscope"
+}
+
+SyncApplicationID: types.#StringEnum & {
+	symbol:         "SyncApplicationID"
+	schema:         "azure"
+	name:           "Sync Application ID"
+	representation: "syncapplicationid"
+}
+
+NTLMV1Enabled: types.#StringEnum & {
+	symbol:         "NTLMV1Enabled"
+	schema:         "azure"
+	name:           "NTLM V1 Enabled"
+	representation: "ntlmv1enabled"
+}
+
+TLSV1Enabled: types.#StringEnum & {
+	symbol:         "TLSV1Enabled"
+	schema:         "azure"
+	name:           "TLS V1 Enabled"
+	representation: "tlsv1enabled"
+}
+
+SyncNTLMPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncNTLMPasswordsEnabled"
+	schema:         "azure"
+	name:           "Sync NTLM Passwords Enabled"
+	representation: "syncntlmpasswordsenabled"
+}
+
+SyncKerberosPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncKerberosPasswordsEnabled"
+	schema:         "azure"
+	name:           "Sync Kerberos Passwords Enabled"
+	representation: "synckerberospasswordsenabled"
+}
+
+SyncOnPremPasswordsEnabled: types.#StringEnum & {
+	symbol:         "SyncOnPremPasswordsEnabled"
+	schema:         "azure"
+	name:           "Sync On-Premises Passwords Enabled"
+	representation: "synconprempasswordsenabled"
+}
+
+KerberosRC4EncryptionEnabled: types.#StringEnum & {
+	symbol:         "KerberosRC4EncryptionEnabled"
+	schema:         "azure"
+	name:           "Kerberos RC4 Encryption Enabled"
+	representation: "kerberosrc4encryptionenabled"
+}
+
+KerberosArmoringEnabled: types.#StringEnum & {
+	symbol:         "KerberosArmoringEnabled"
+	schema:         "azure"
+	name:           "Kerberos Armoring Enabled"
+	representation: "kerberosarmoringenabled"
+}
+
+LDAPSigningEnabled: types.#StringEnum & {
+	symbol:         "LDAPSigningEnabled"
+	schema:         "azure"
+	name:           "LDAP Signing Enabled"
+	representation: "ldapsigningenabled"
+}
+
+ChannelBindingEnabled: types.#StringEnum & {
+	symbol:         "ChannelBindingEnabled"
+	schema:         "azure"
+	name:           "Channel Binding Enabled"
+	representation: "channelbindingenabled"
+}
+
+SyncOnPremSAMAccountNameEnabled: types.#StringEnum & {
+	symbol:         "SyncOnPremSAMAccountNameEnabled"
+	schema:         "azure"
+	name:           "Sync On-Premises SAM Account Name Enabled"
+	representation: "synconpremsamaccountnameenabled"
+}
+
+LDAPSEnabled: types.#StringEnum & {
+	symbol:         "LDAPSEnabled"
+	schema:         "azure"
+	name:           "Secure LDAP Enabled"
+	representation: "ldapsenabled"
+}
+
+LDAPSExternalAccessEnabled: types.#StringEnum & {
+	symbol:         "LDAPSExternalAccessEnabled"
+	schema:         "azure"
+	name:           "Secure LDAP External Access Enabled"
+	representation: "ldapsexternalaccessenabled"
+}
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -383,7 +502,24 @@ Properties: [
 	Issuer,
 	Subject,
 	Audiences,
-	FederatedIdentityCredentialAppID
+	FederatedIdentityCredentialAppID,
+	DomainName,
+	DomainConfigurationType,
+	FilteredSyncEnabled,
+	SyncScope,
+	SyncApplicationID,
+	NTLMV1Enabled,
+	TLSV1Enabled,
+	SyncNTLMPasswordsEnabled,
+	SyncKerberosPasswordsEnabled,
+	SyncOnPremPasswordsEnabled,
+	KerberosRC4EncryptionEnabled,
+	KerberosArmoringEnabled,
+	LDAPSigningEnabled,
+	ChannelBindingEnabled,
+	SyncOnPremSAMAccountNameEnabled,
+	LDAPSEnabled,
+	LDAPSExternalAccessEnabled
 ]
 
 // Kinds
@@ -421,6 +557,12 @@ FunctionApp: types.#Kind & {
 	symbol:         "FunctionApp"
 	schema:         "azure"
 	representation: "AZFunctionApp"
+}
+
+EntraDS: types.#Kind & {
+	symbol:         "EntraDS"
+	schema:         "azure"
+	representation: "AZEntraDS"
 }
 
 Group: types.#Kind & {
@@ -520,6 +662,7 @@ NodeKinds: [
 	Role,
 	Device,
 	FunctionApp,
+	EntraDS,
 	Group,
 	KeyVault,
 	ManagementGroup,
@@ -655,6 +798,18 @@ Contributor: types.#Kind & {
 	symbol:         "Contributor"
 	schema:         "azure"
 	representation: "AZContributor"
+}
+
+EntraDSContributor: types.#Kind & {
+	symbol:         "EntraDSContributor"
+	schema:         "azure"
+	representation: "AZEntraDSContributor"
+}
+
+ManageEntraDS: types.#Kind & {
+	symbol:         "ManageEntraDS"
+	schema:         "azure"
+	representation: "AZManageEntraDS"
 }
 
 GetCertificates: types.#Kind & {
@@ -818,6 +973,42 @@ SyncedToEntraUser: types.#Kind & {
 	schema: "azure"
 }
 
+SyncedToEntraDSUser: types.#Kind & {
+	symbol:         "SyncedToEntraDSUser"
+	schema:         "azure"
+	representation: "SyncedToEntraDSUser"
+}
+
+SyncedToEntraDSGroup: types.#Kind & {
+	symbol:         "SyncedToEntraDSGroup"
+	schema:         "azure"
+	representation: "SyncedToEntraDSGroup"
+}
+
+AddEntraDSGroupMember: types.#Kind & {
+	symbol:         "AddEntraDSGroupMember"
+	schema:         "azure"
+	representation: "AddEntraDSGroupMember"
+}
+
+EntraDSFor: types.#Kind & {
+	symbol:         "EntraDSFor"
+	schema:         "azure"
+	representation: "EntraDSFor"
+}
+
+ManageEntraDSSync: types.#Kind & {
+	symbol:         "ManageEntraDSSync"
+	schema:         "azure"
+	representation: "ManageEntraDSSync"
+}
+
+ManageEntraDSSyncFilter: types.#Kind & {
+	symbol:         "ManageEntraDSSyncFilter"
+	schema:         "azure"
+	representation: "ManageEntraDSSyncFilter"
+}
+
 AZRoleEligible: types.#Kind & {
 	symbol: "AZRoleEligible"
 	schema: "azure"
@@ -840,6 +1031,8 @@ RelationshipKinds: [
 	AvereContributor,
 	Contains,
 	Contributor,
+	EntraDSContributor,
+	ManageEntraDS,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -884,6 +1077,12 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	SyncedToEntraDSUser,
+	SyncedToEntraDSGroup,
+	AddEntraDSGroupMember,
+	EntraDSFor,
+	ManageEntraDSSync,
+	ManageEntraDSSyncFilter,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -910,6 +1109,7 @@ AbusableAppRoleRelationshipKinds: [
 ControlRelationshipKinds: [
 	AvereContributor,
 	Contributor,
+	ManageEntraDS,
 	Owner,
 	VMContributor,
 	AutomationContributor,
@@ -952,6 +1152,7 @@ ExecutionPrivilegeKinds: [
 InboundOutboundRelationshipKinds: [
 	AvereContributor,
 	Contributor,
+	ManageEntraDS,
 	GetCertificates,
 	GetKeys,
 	GetSecrets,
@@ -988,6 +1189,10 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	SyncedToEntraDSUser,
+	AddEntraDSGroupMember,
+	ManageEntraDSSync,
+	ManageEntraDSSyncFilter,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
@@ -995,6 +1200,12 @@ InboundOutboundRelationshipKinds: [
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
+
+EdgeCompositionRelationships: [
+	ManageEntraDS,
+	AddEntraDSGroupMember,
+	ManageEntraDSSync,
+]
 
 PostProcessedRelationships: [
 	ExecuteCommand,

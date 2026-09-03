@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/edgecomposition"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graphAzure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -1167,4 +1168,110 @@ func TestListEntityDescendents_NestedManagementGroupToSubscription(t *testing.T)
 
 	require.Equal(t, 1, len(nodes), "expected nested subscription to be returned as a descendent of mgRoot")
 	require.Contains(t, nodes.IDs(), nestedSubNode.ID)
+}
+
+func TestManageEntraDSRequiresARMAndBothDirectoryRoles(t *testing.T) {
+	t.Parallel()
+
+	suite := setupIntegrationTestSuite(t)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	tenantID := integration.RandomObjectID(t)
+	tenant := NewAzureTenant(t, &suite, tenantID)
+	appAdminRole := NewAzureRole(t, &suite, "Application Administrator", integration.RandomObjectID(t), graphAzure.ApplicationAdministratorRole, tenantID)
+	groupsAdminRole := NewAzureRole(t, &suite, "Groups Administrator", integration.RandomObjectID(t), graphAzure.GroupsAdministratorRole, tenantID)
+	subscription := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Subscription",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.Subscription)
+	resourceGroup := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Resource Group",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.ResourceGroup)
+	domainService := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Managed Domain",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.EntraDS)
+	armGroup := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Inherited ARM Contributors",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.Group)
+	qualifiedUser := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Qualified User",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.User)
+	appOnlyUser := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Application Administrator Only",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.User)
+	domainServicesContributor := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+		common.Name:         "Direct Domain Services Contributor",
+		common.ObjectID:     integration.RandomObjectID(t),
+		graphAzure.TenantID: tenantID,
+	}), graphAzure.Entity, graphAzure.User)
+
+	// Role tenant scope is represented by each AZRole's tenantid property. AZManageEntraDS must not require or return
+	// tenant-to-role AZContains relationships.
+	for _, principal := range []*graph.Node{armGroup, qualifiedUser, appOnlyUser, domainServicesContributor} {
+		NewRelationship(t, &suite, tenant, principal, graphAzure.Contains)
+	}
+	NewRelationship(t, &suite, tenant, subscription, graphAzure.Contains)
+	NewRelationship(t, &suite, subscription, resourceGroup, graphAzure.Contains)
+	NewRelationship(t, &suite, resourceGroup, domainService, graphAzure.Contains)
+	NewRelationship(t, &suite, armGroup, resourceGroup, graphAzure.Contributor)
+	NewRelationship(t, &suite, qualifiedUser, armGroup, graphAzure.MemberOf)
+	NewRelationship(t, &suite, appOnlyUser, armGroup, graphAzure.MemberOf)
+	NewRelationship(t, &suite, domainServicesContributor, domainService, graphAzure.EntraDSContributor)
+
+	for _, principal := range []*graph.Node{qualifiedUser, appOnlyUser, domainServicesContributor} {
+		NewRelationship(t, &suite, principal, appAdminRole, graphAzure.HasRole)
+	}
+	for _, principal := range []*graph.Node{qualifiedUser, domainServicesContributor} {
+		NewRelationship(t, &suite, principal, groupsAdminRole, graphAzure.HasRole)
+	}
+
+	_, err := azure.ManageEntraDS(context.Background(), suite.GraphDB, true)
+	require.NoError(t, err)
+
+	var manageEdges []*graph.Relationship
+	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		edges, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), graphAzure.ManageEntraDS)))
+		require.NoError(t, err)
+		require.Len(t, edges, 2)
+		manageEdges = edges
+
+		actualSources := []graph.ID{edges[0].StartID, edges[1].StartID}
+		assert.ElementsMatch(t, []graph.ID{qualifiedUser.ID, domainServicesContributor.ID}, actualSources)
+		for _, edge := range edges {
+			assert.Equal(t, domainService.ID, edge.EndID)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	for _, edge := range manageEdges {
+		composition, err := edgecomposition.GetEdgeCompositionPath(context.Background(), suite.GraphDB, edge)
+		require.NoError(t, err)
+		nodes := composition.AllNodes()
+		assert.False(t, nodes.Contains(tenant))
+		assert.True(t, nodes.Contains(appAdminRole))
+		assert.True(t, nodes.Contains(groupsAdminRole))
+		assert.True(t, nodes.Contains(domainService))
+		assert.False(t, nodes.Contains(appOnlyUser))
+
+		if edge.StartID == qualifiedUser.ID {
+			assert.True(t, nodes.Contains(qualifiedUser))
+			assert.True(t, nodes.Contains(armGroup))
+			assert.True(t, nodes.Contains(resourceGroup))
+		} else {
+			assert.True(t, nodes.Contains(domainServicesContributor))
+			assert.False(t, nodes.Contains(armGroup))
+		}
+	}
 }

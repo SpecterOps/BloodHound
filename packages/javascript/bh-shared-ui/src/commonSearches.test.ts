@@ -25,8 +25,9 @@ import { CommonSearchType } from './types';
 
 describe('common search list', () => {
     const kindPattern = /:([^ )\n\]*]+)/gm;
+    const supportedRelationshipShortcuts = ['ALL_ATTACK_PATHS', 'AZ_ATTACK_PATHS'];
 
-    test('the queries in the list only include nodes and edges that are defined in our schema', () => {
+    test('the queries in the list only include nodes, edges, and relationship shortcuts supported by BloodHound', () => {
         CommonSearches.forEach((commonSearchType: CommonSearchType) => {
             commonSearchType.queries.forEach((query) => {
                 const kinds = query.query.match(kindPattern);
@@ -47,9 +48,11 @@ describe('common search list', () => {
                                 const isAZEdge = Object.values(AzureRelationshipKind).includes(
                                     kind as AzureRelationshipKind
                                 );
-                                const inSchema = isADNode || isADEdge || isAZNode || isAZEdge;
+                                const isSupportedRelationshipShortcut = supportedRelationshipShortcuts.includes(kind);
+                                const isSupported =
+                                    isADNode || isADEdge || isAZNode || isAZEdge || isSupportedRelationshipShortcut;
 
-                                expect(inSchema).toBeTruthy();
+                                expect(isSupported).toBeTruthy();
                             });
                     });
                 }

@@ -123,6 +123,7 @@ public static readonly string CertificatePolicy = "certificatepolicy";
 public static readonly string CertTemplateOID = "certtemplateoid";
 public static readonly string GroupLinkID = "grouplinkid";
 public static readonly string ObjectGUID = "objectguid";
+public static readonly string AADObjectID = "aadobjectid";
 public static readonly string ExpirePasswordsOnSmartCardOnlyAccounts = "expirepasswordsonsmartcardonlyaccounts";
 public static readonly string MachineAccountQuota = "machineaccountquota";
 public static readonly string SupportedKerberosEncryptionTypes = "supportedencryptiontypes";

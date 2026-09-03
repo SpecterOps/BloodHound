@@ -41,6 +41,20 @@ const References: FC = () => {
             <Link target='_blank' rel='noopener noreferrer' href='https://blog.netspi.com/attacking-azure-cloud-shell/'>
                 https://blog.netspi.com/attacking-azure-cloud-shell/
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/azure/templates/microsoft.aad/domainservices'>
+                Microsoft.AAD/domainServices reference
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://learn.microsoft.com/en-us/entra/identity/domain-services/secure-your-domain'>
+                Secure a Microsoft Entra Domain Services managed domain
+            </Link>
         </Box>
     );
 };

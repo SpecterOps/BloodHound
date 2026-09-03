@@ -216,6 +216,7 @@ const (
 	CertTemplateOID                               Property = "certtemplateoid"
 	GroupLinkID                                   Property = "grouplinkid"
 	ObjectGUID                                    Property = "objectguid"
+	AADObjectID                                   Property = "aadobjectid"
 	ExpirePasswordsOnSmartCardOnlyAccounts        Property = "expirepasswordsonsmartcardonlyaccounts"
 	MachineAccountQuota                           Property = "machineaccountquota"
 	SupportedKerberosEncryptionTypes              Property = "supportedencryptiontypes"
@@ -277,7 +278,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, AdminSDHolderProtected, ServicePrincipalNames, GPOStatusRaw, GPOStatus}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, AADObjectID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, AdminSDHolderProtected, ServicePrincipalNames, GPOStatusRaw, GPOStatus}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -445,6 +446,8 @@ func ParseProperty(source string) (Property, error) {
 		return GroupLinkID, nil
 	case "objectguid":
 		return ObjectGUID, nil
+	case "aadobjectid":
+		return AADObjectID, nil
 	case "expirepasswordsonsmartcardonlyaccounts":
 		return ExpirePasswordsOnSmartCardOnlyAccounts, nil
 	case "machineaccountquota":
@@ -731,6 +734,8 @@ func (s Property) String() string {
 		return string(GroupLinkID)
 	case ObjectGUID:
 		return string(ObjectGUID)
+	case AADObjectID:
+		return string(AADObjectID)
 	case ExpirePasswordsOnSmartCardOnlyAccounts:
 		return string(ExpirePasswordsOnSmartCardOnlyAccounts)
 	case MachineAccountQuota:
@@ -1017,6 +1022,8 @@ func (s Property) Name() string {
 		return "Group Link ID"
 	case ObjectGUID:
 		return "Object GUID"
+	case AADObjectID:
+		return "Microsoft Entra Object ID"
 	case ExpirePasswordsOnSmartCardOnlyAccounts:
 		return "Expire Passwords on Smart Card only Accounts"
 	case MachineAccountQuota:

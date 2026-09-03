@@ -1,11 +1,118 @@
 [
     {
+        "source": "AZResourceGroup",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContains"
+            ],
+            "post": []
+        }
+    },
+    {
+        "source": "AZUser",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZServicePrincipal",
+        "target": "AZEntraDS",
+        "edges": {
+            "ingest": [
+                "AZContributor",
+                "AZEntraDSContributor",
+                "AZOwner",
+                "AZUserAccessAdministrator"
+            ],
+            "post": [
+                "AZManageEntraDS"
+            ]
+        }
+    },
+    {
+        "source": "AZEntraDS",
+        "target": "Domain",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "EntraDSFor"
+            ]
+        }
+    },
+    {
         "source": "AZUser",
         "target": "User",
         "edges": {
             "ingest": [],
             "post": [
-                "SyncedToADUser"
+                "SyncedToADUser",
+                "SyncedToEntraDSUser"
+            ]
+        }
+    },
+    {
+        "source": "AZUser",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "AddEntraDSGroupMember"
+            ]
+        }
+    },
+    {
+        "source": "AZUser",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "ManageEntraDSSync"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "ManageEntraDSSync"
+            ]
+        }
+    },
+    {
+        "source": "AZServicePrincipal",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "ManageEntraDSSync",
+                "ManageEntraDSSyncFilter"
             ]
         }
     },
@@ -559,6 +666,16 @@
             ],
             "post": [
                 "Owns"
+            ]
+        }
+    },
+    {
+        "source": "AZGroup",
+        "target": "Group",
+        "edges": {
+            "ingest": [],
+            "post": [
+                "SyncedToEntraDSGroup"
             ]
         }
     },

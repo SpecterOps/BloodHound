@@ -68,8 +68,8 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const { addNotification } = useNotifications();
     const userSettings = useUserSettings();
 
-    const { data } = useGraphItem(params.relationshipQueryItemId);
-    const relationshipDetails = data && isRelationshipResponse(data) ? data : undefined;
+    const { data, isPreviousData } = useGraphItem(params.relationshipQueryItemId);
+    const relationshipDetails = data && !isPreviousData && isRelationshipResponse(data) ? data : undefined;
 
     const query = exploreGraphQueryFactory(params, { userSettings, relationshipDetails });
 

@@ -87,10 +87,12 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		numEdges, err := tx.Relationships().Filter(query.Kind(query.Relationship(), azure.SyncedToEntraUser)).Count()
+		require.Nil(t, err)
 
 		// This must be true which would mean that the above created SyncedToEntraUser was correctly deleted by the DeleteTransitEdges call
 		require.Equal(t, int64(0), numEdges)
-		return err
+
+		return nil
 	})
 
 	// The DB must not return any errors
