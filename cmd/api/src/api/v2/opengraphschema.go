@@ -91,9 +91,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	} else if graphExtensionInput, err = payload.ToGraphExtensionInput(); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	}
-
-	if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
+	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
 		switch {
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):
@@ -231,52 +229,48 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 	case bundleFileNameSchema:
 		if *schemaFound {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSchema)
-		}
-		reader, err := file.Open()
-		if err != nil {
+		} else if reader, err := file.Open(); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNameSchema, err)
+		} else {
+			defer reader.Close()
+			if schema, err := extractExtensionDataFromJSON(reader); err != nil {
+				return err
+			} else if err = validateSchemaComponent(schema); err != nil {
+				return err
+			} else {
+				// We cannot guarantee the order of files in the zip archive, so we need to merge PZRules and SavedQueries into the schema if they were already extracted.
+				schema.PZRules = extension.PZRules
+				schema.SavedQueries = extension.SavedQueries
+				*extension = schema
+				*schemaFound = true
+			}
 		}
-		defer reader.Close()
-		schema, err := extractExtensionDataFromJSON(reader)
-		if err != nil {
-			return err
-		}
-		if err = validateSchemaComponent(schema); err != nil {
-			return err
-		}
-		// We cannot guarantee the order of files in the zip archive, so we need to merge PZRules and SavedQueries into the schema if they were already extracted.
-		schema.PZRules = extension.PZRules
-		schema.SavedQueries = extension.SavedQueries
-		*extension = schema
-		*schemaFound = true
 	case bundleFileNamePzRules:
 		if extension.PZRules != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNamePzRules)
-		}
-		reader, err := file.Open()
-		if err != nil {
+		} else if reader, err := file.Open(); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNamePzRules, err)
+		} else {
+			defer reader.Close()
+			if rules, err := extractPZRulesFromJSON(reader); err != nil {
+				return err
+			} else {
+				extension.PZRules = &rules
+			}
 		}
-		defer reader.Close()
-		rules, err := extractPZRulesFromJSON(reader)
-		if err != nil {
-			return err
-		}
-		extension.PZRules = &rules
 	case bundleFileNameSavedQueries:
 		if extension.SavedQueries != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSavedQueries)
-		}
-		reader, err := file.Open()
-		if err != nil {
+		} else if reader, err := file.Open(); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNameSavedQueries, err)
+		} else {
+			defer reader.Close()
+			if queries, err := extractSavedQueriesFromJSON(reader); err != nil {
+				return err
+			} else {
+				extension.SavedQueries = &queries
+			}
 		}
-		defer reader.Close()
-		queries, err := extractSavedQueriesFromJSON(reader)
-		if err != nil {
-			return err
-		}
-		extension.SavedQueries = &queries
 	default:
 		return fmt.Errorf("unexpected file %q in zip archive", path.Base(file.Name))
 	}
