@@ -306,6 +306,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                             fullWidth
                             multiline
                             minRows={10}
+                            maxRows={14}
                             variant='outlined'
                             className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
                             data-testid='red-team-note-editor-content'
