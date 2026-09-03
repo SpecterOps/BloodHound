@@ -41,7 +41,7 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({ open, note, onClose
             onClose={onClose}
             fullWidth
             maxWidth='md'
-            PaperProps={{ sx: { maxHeight: '86vh', display: 'flex', flexDirection: 'column' } }}
+            PaperProps={{ sx: { maxHeight: '86vh' } }}
             data-testid='red-team-note-detail-dialog'>
             <DialogTitle>
                 <div className='flex items-center gap-3 flex-wrap'>
@@ -62,7 +62,7 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({ open, note, onClose
                 className='flex flex-col gap-3'
                 sx={{
                     overflowY: 'auto',
-                    minHeight: 0,
+                    maxHeight: 'calc(86vh - 140px)',
                     scrollbarWidth: 'thin',
                     '&::-webkit-scrollbar': { width: 8 },
                     '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(128, 128, 128, 0.6)', borderRadius: 4 },
