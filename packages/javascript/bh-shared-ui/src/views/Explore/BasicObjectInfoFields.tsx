@@ -30,7 +30,11 @@ interface BasicObjectInfoFieldsProps {
         name?: string;
         noderesourcegroupid?: string;
         objectid?: string;
+        serverreferencecomputer?: string;
+        serverreferencecomputername?: string;
         service_principal_id?: string;
+        siteservernode?: string;
+        siteservernodename?: string;
         federatedidentitycredentialappid?: string;
     };
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
@@ -43,8 +47,11 @@ const RelatedKindField = (
     fieldLabel: string,
     relatedKind: EntityKinds,
     id: string,
-    name?: string
+    name?: string,
+    displayValue?: string
 ) => {
+    const value = displayValue || id;
+
     return (
         <Box padding={1}>
             <Box fontWeight='bold' mr={1}>
@@ -54,12 +61,14 @@ const RelatedKindField = (
             <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
                 <NodeIcon nodeType={relatedKind} />
                 <Box
-                    onClick={() => onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || '' })}
+                    onClick={() =>
+                        onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || displayValue || '' })
+                    }
                     style={{ cursor: 'pointer' }}
                     overflow='hidden'
                     textOverflow='ellipsis'
-                    title={id}>
-                    {id}
+                    title={value}>
+                    {value}
                 </Box>
             </Box>
         </Box>
@@ -99,6 +108,24 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
                             AzureNodeKind.ServicePrincipal,
                             props.service_principal_id,
                             props.name
+                        )}
+                    {props.serverreferencecomputer &&
+                        RelatedKindField(
+                            handleSourceNodeSelected,
+                            'Referenced Computer:',
+                            ActiveDirectoryNodeKind.Computer,
+                            props.serverreferencecomputer,
+                            props.serverreferencecomputername,
+                            props.serverreferencecomputername
+                        )}
+                    {props.siteservernode &&
+                        RelatedKindField(
+                            handleSourceNodeSelected,
+                            'Site Server:',
+                            ActiveDirectoryNodeKind.SiteServer,
+                            props.siteservernode,
+                            props.siteservernodename,
+                            props.siteservernodename
                         )}
                     {props.federatedidentitycredentialappid &&
                         RelatedKindField(

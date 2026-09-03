@@ -170,6 +170,11 @@ const selectedEdgeADCSESC4: RelationshipDetails = {
     kind: { name: ActiveDirectoryRelationshipKind.ADCSESC4, relationship_kind_id: 4 },
 };
 
+const selectedEdgeServerIs: RelationshipDetails = {
+    ...selectedEdge,
+    kind: { name: ActiveDirectoryRelationshipKind.ServerIs, relationship_kind_id: 5 },
+};
+
 const selectedEdgeACLInheritance: RelationshipDetails = {
     relationship_id: 2,
     kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
@@ -246,6 +251,24 @@ describe('EdgeInfoContent', () => {
         await user.click(inheritanceAccordion);
 
         expect(screen.queryByText(INHERITANCE_DROPDOWN_DESCRIPTION)).toBeInTheDocument();
+    });
+    test('Selecting a ServerIs edge shows its contextual HelpTexts', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeServerIs} />);
+
+        const user = userEvent.setup();
+
+        await user.click(await screen.findByText('General'));
+        expect(screen.getByText(/references the Computer/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('Abuse'));
+        expect(screen.getByText(/does not itself grant control/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('OPSEC'));
+        expect(screen.getByText(/creates no activity/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('References'));
+        expect(screen.getByText('BloodHound: ServerIs')).toBeInTheDocument();
+        expect(screen.getByText('Microsoft: Server-Reference attribute')).toBeInTheDocument();
     });
     describe('EdgeInfoContent support for Deep Linking', () => {
         const test_id = selectedEdgeADCSESC4.relationship_id;
