@@ -580,16 +580,23 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
 			Driver: ADCSESC3Path1Pattern(edge.EndID, enterpriseCANodes).Do(func(terminal *graph.PathSegment) error {
-				certTemplateNode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
-				})
+				var (
+					certTemplateNode = terminal.Search(func(nextSegment *graph.PathSegment) bool {
+						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
+					})
+					userStartNode = startNode.Kinds.ContainsOneOf(ad.User)
+				)
+
+				managedServiceAccount, err := isManagedServiceAccount(startNode)
+				if err != nil {
+					return err
+				}
 
 				lock.Lock()
 				path1CandidateSegments[certTemplateNode.ID] = append(path1CandidateSegments[certTemplateNode.ID], terminal)
 
-				// Check that CT is valid for user start nodes
-				userStartNode := startNode.Kinds.ContainsOneOf(ad.User)
-				if !userStartNode || certTemplateValidForUserVictim(certTemplateNode) {
+				// gMSAs and sMSAs are User nodes with DNS names, so DNS requirements are valid for them.
+				if !userStartNode || managedServiceAccount || certTemplateValidForUserVictim(certTemplateNode) {
 					path1CertTemplates.Add(certTemplateNode.ID.Uint64())
 				}
 				lock.Unlock()
