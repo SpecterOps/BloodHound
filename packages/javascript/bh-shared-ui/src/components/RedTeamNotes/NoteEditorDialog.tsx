@@ -300,17 +300,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                             Insert image
                         </Button>
                     </div>
-                    <Box
-                        sx={{
-                            maxHeight: '50vh',
-                            overflowY: 'auto',
-                            scrollbarWidth: 'thin',
-                            '&::-webkit-scrollbar': { width: 8 },
-                            '&::-webkit-scrollbar-thumb': {
-                                backgroundColor: 'rgba(128, 128, 128, 0.6)',
-                                borderRadius: 4,
-                            },
-                        }}>
+                    <Box>
                         {contentTab === 'write' ? (
                             <TextField
                                 placeholder={
@@ -323,12 +313,25 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                                 fullWidth
                                 multiline
                                 minRows={10}
+                                maxRows={22}
                                 variant='outlined'
                                 className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
+                                sx={{
+                                    '& textarea': {
+                                        scrollbarWidth: 'thin',
+                                        '&::-webkit-scrollbar': { width: 8 },
+                                        '&::-webkit-scrollbar-thumb': {
+                                            backgroundColor: 'rgba(128, 128, 128, 0.6)',
+                                            borderRadius: 4,
+                                        },
+                                    },
+                                }}
                                 data-testid='red-team-note-editor-content'
                             />
                         ) : (
-                            <div className='p-4 min-h-[230px] text-sm' data-testid='red-team-note-editor-preview'>
+                            <div
+                                className='p-4 min-h-[230px] max-h-[50vh] overflow-y-auto text-sm'
+                                data-testid='red-team-note-editor-preview'>
                                 {payload.content ? (
                                     <MarkdownContent markdown={payload.content} />
                                 ) : (
