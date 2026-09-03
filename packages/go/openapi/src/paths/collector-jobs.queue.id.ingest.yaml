@@ -18,10 +18,10 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.collector-job-id.yaml'
 post:
-  operationId: UploadCollectorJobData
-  summary: Upload data collected by a running job
+  operationId: IngestCollectorJobData
+  summary: Ingest data collected by a running job
   description: Streams a collected data file for ingestion and renews the job
-    claim. Uploads must complete before the job is ended.
+    claim. Ingest requests must complete before the job is ended.
   tags:
     - Collector Jobs
     - Enterprise

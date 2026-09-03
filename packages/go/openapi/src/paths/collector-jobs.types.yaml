@@ -38,6 +38,10 @@ get:
     - $ref: './../parameters/query.created-at.yaml'
     - $ref: './../parameters/query.updated-at.yaml'
     - $ref: './../parameters/query.deleted-at.yaml'
+    - name: deleted_by
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
   responses:
     200:
       description: OK

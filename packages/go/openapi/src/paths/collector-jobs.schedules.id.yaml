@@ -75,6 +75,8 @@ patch:
           additionalProperties: false
           minProperties: 1
           properties:
+            name:
+              type: string
             rrule:
               type: string
             priority:

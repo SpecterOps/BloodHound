@@ -18,14 +18,16 @@ type: object
 description: Minimal collector job schedule representation.
 required:
   - id
+  - name
   - rrule
   - next_run_at
   - priority
-  - disabled
 properties:
   id:
     type: integer
     format: int64
+  name:
+    type: string
   rrule:
     type: string
     description: RFC 5545 recurrence rule.
@@ -35,5 +37,3 @@ properties:
   priority:
     type: integer
     format: int32
-  disabled:
-    type: boolean

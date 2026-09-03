@@ -725,8 +725,8 @@ paths:
 #    $ref: './paths/collector-jobs.queue.id.start.yaml'
 #  /api/v2/collector-job-queue/{collector_job_id}/heartbeat:
 #    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/upload:
-#    $ref: './paths/collector-jobs.queue.id.upload.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/ingest:
+#    $ref: './paths/collector-jobs.queue.id.ingest.yaml'
 #  /api/v2/collector-job-queue/{collector_job_id}/end:
 #    $ref: './paths/collector-jobs.queue.id.end.yaml'
 #  /api/v2/collector-job-types:
