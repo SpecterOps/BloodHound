@@ -33,6 +33,7 @@ required:
   - created_at
   - updated_at
   - deleted_at
+  - deleted_by
 properties:
   id:
     type: integer
@@ -84,3 +85,7 @@ properties:
     format: date-time
   deleted_at:
     $ref: './null.time.response.yaml'
+  deleted_by:
+    allOf:
+      - $ref: './null.string.response.yaml'
+    description: Actor responsible for soft deletion.

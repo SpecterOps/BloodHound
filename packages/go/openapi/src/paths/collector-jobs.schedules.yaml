@@ -27,10 +27,14 @@ get:
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
       in: query
-      description: Sortable columns are `next_run_at`, `created_at`.
+      description: Sortable columns are `name`, `next_run_at`, `created_at`.
         Default is `created_at` ascending.
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: name
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: priority
       in: query
       schema:
@@ -90,8 +94,11 @@ post:
           type: object
           additionalProperties: false
           required:
+            - name
             - rrule
           properties:
+            name:
+              type: string
             rrule:
               type: string
               description: RFC 5545 recurrence rule.
