@@ -301,31 +301,21 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                     </div>
                     <Box>
                         {contentTab === 'write' ? (
-                            <TextField
-                                placeholder={
-                                    'Markdown supported: # headings, **bold**, `code`, ```blocks```, lists, links...\nPaste an image (Ctrl+V) to upload it and insert the markdown reference automatically.'
-                                }
+                            <textarea
                                 value={payload.content}
                                 onChange={(event) => setPayload({ ...payload, content: event.target.value })}
                                 onPaste={handleImagePaste}
-                                inputRef={contentInputRef}
-                                fullWidth
-                                multiline
-                                minRows={10}
-                                maxRows={15}
-                                variant='outlined'
-                                className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
-                                sx={{
-                                    '& textarea': {
-                                        scrollbarWidth: 'thin',
-                                        '&::-webkit-scrollbar': { width: 8 },
-                                        '&::-webkit-scrollbar-thumb': {
-                                            backgroundColor: 'rgba(128, 128, 128, 0.6)',
-                                            borderRadius: 4,
-                                        },
-                                    },
-                                }}
+                                ref={contentInputRef}
+                                placeholder={
+                                    'Markdown supported: # headings, **bold**, `code`, ```blocks```, lists, links...\nPaste an image (Ctrl+V) to upload it and insert the markdown reference automatically.'
+                                }
                                 data-testid='red-team-note-editor-content'
+                                className='w-full bg-transparent outline-none p-3 text-sm'
+                                style={{
+                                    height: 375,
+                                    overflowY: 'auto',
+                                    scrollbarWidth: 'thin',
+                                }}
                             />
                         ) : (
                             <div
