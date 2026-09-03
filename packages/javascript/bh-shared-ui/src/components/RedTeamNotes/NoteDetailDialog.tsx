@@ -58,7 +58,15 @@ const NoteDetailDialog: React.FC<NoteDetailDialogProps> = ({ open, note, onClose
                     ))}
                 </div>
             </DialogTitle>
-            <DialogContent className='flex flex-col gap-3' sx={{ overflowY: 'auto', minHeight: 0 }}>
+            <DialogContent
+                className='flex flex-col gap-3'
+                sx={{
+                    overflowY: 'auto',
+                    minHeight: 0,
+                    scrollbarWidth: 'thin',
+                    '&::-webkit-scrollbar': { width: 8 },
+                    '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(128, 128, 128, 0.6)', borderRadius: 4 },
+                }}>
                 {note.url && (
                     <a href={note.url} target='_blank' rel='noreferrer' className='flex items-center gap-2 text-sm'>
                         <FontAwesomeIcon icon={faLink} /> {note.url}

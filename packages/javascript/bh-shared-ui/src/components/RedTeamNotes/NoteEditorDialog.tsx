@@ -16,7 +16,7 @@
 
 import { faEye, faImage, faKeyboard } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Tab, Tabs, TextField } from '@mui/material';
 import { RedTeamNote, RedTeamNotePayload, RedTeamNoteType } from 'js-client-library';
 import React, { ChangeEvent, ClipboardEvent, useEffect, useRef, useState } from 'react';
 import { uploadRedTeamNoteAttachment, useCreateRedTeamNote, useUpdateRedTeamNote } from '../../hooks';
@@ -191,7 +191,7 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
             PaperProps={{ sx: { maxHeight: '86vh', display: 'flex', flexDirection: 'column' } }}
             data-testid='red-team-note-editor-dialog'>
             <DialogTitle>{note ? 'Edit Note' : 'New Red Team Note'}</DialogTitle>
-            <DialogContent className='flex flex-col gap-4 pt-4' sx={{ overflowY: 'auto', minHeight: 0 }}>
+            <DialogContent className='flex flex-col gap-4 pt-4'>
                 <TextField
                     label='Title'
                     value={payload.title}
@@ -300,31 +300,43 @@ const NoteEditorDialog: React.FC<NoteEditorDialogProps> = ({ open, onClose, note
                             Insert image
                         </Button>
                     </div>
-                    {contentTab === 'write' ? (
-                        <TextField
-                            placeholder={
-                                'Markdown supported: # headings, **bold**, `code`, ```blocks```, lists, links...\nPaste an image (Ctrl+V) to upload it and insert the markdown reference automatically.'
-                            }
-                            value={payload.content}
-                            onChange={(event) => setPayload({ ...payload, content: event.target.value })}
-                            onPaste={handleImagePaste}
-                            inputRef={contentInputRef}
-                            fullWidth
-                            multiline
-                            minRows={10}
-                            variant='outlined'
-                            className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
-                            data-testid='red-team-note-editor-content'
-                        />
-                    ) : (
-                        <div className='p-4 min-h-[230px] text-sm' data-testid='red-team-note-editor-preview'>
-                            {payload.content ? (
-                                <MarkdownContent markdown={payload.content} />
-                            ) : (
-                                <span className='opacity-70'>Nothing to preview yet.</span>
-                            )}
-                        </div>
-                    )}
+                    <Box
+                        sx={{
+                            maxHeight: '50vh',
+                            overflowY: 'auto',
+                            scrollbarWidth: 'thin',
+                            '&::-webkit-scrollbar': { width: 8 },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(128, 128, 128, 0.6)',
+                                borderRadius: 4,
+                            },
+                        }}>
+                        {contentTab === 'write' ? (
+                            <TextField
+                                placeholder={
+                                    'Markdown supported: # headings, **bold**, `code`, ```blocks```, lists, links...\nPaste an image (Ctrl+V) to upload it and insert the markdown reference automatically.'
+                                }
+                                value={payload.content}
+                                onChange={(event) => setPayload({ ...payload, content: event.target.value })}
+                                onPaste={handleImagePaste}
+                                inputRef={contentInputRef}
+                                fullWidth
+                                multiline
+                                minRows={10}
+                                variant='outlined'
+                                className='[&_.MuiOutlinedInput-notchedOutline]:border-none'
+                                data-testid='red-team-note-editor-content'
+                            />
+                        ) : (
+                            <div className='p-4 min-h-[230px] text-sm' data-testid='red-team-note-editor-preview'>
+                                {payload.content ? (
+                                    <MarkdownContent markdown={payload.content} />
+                                ) : (
+                                    <span className='opacity-70'>Nothing to preview yet.</span>
+                                )}
+                            </div>
+                        )}
+                    </Box>
                 </div>
             </DialogContent>
             <DialogActions>
