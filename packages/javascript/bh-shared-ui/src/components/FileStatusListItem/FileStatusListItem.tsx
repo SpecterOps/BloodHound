@@ -34,10 +34,12 @@ const FileStatusListItem: React.FC<{
 
     return (
         <div className='mb-2 relative flex flex-row h-8 justify-between text-sm'>
-            <div className='pl-3 flex items-center z-10 gap-2 flex-1 leading-none'>
+            <div className='px-3 flex items-center z-10 gap-2 flex-1 leading-none justify-between'>
                 <span>{file.file.name}</span>
-                {!!percentWithFallback && !hasErrors && <span className='text-primary'>{clampedPercent}%</span>}
-                {hasErrors && <span className='text-status-error-text flex-1 text-right'>Failed to Upload</span>}
+                {!!percentWithFallback && !hasErrors && (
+                    <span className='text-primary dark:text-purple-100'>{clampedPercent}%</span>
+                )}
+                {hasErrors && <span className='text-status-error-text'>Failed to Upload</span>}
             </div>
             <div
                 className={cn('absolute h-8 rounded-lg transition-all', {
