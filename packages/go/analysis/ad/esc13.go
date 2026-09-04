@@ -197,19 +197,17 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		endNode    *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths                   = graph.PathSet{}
-		path1CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs      = cardinality.NewBitmap64()
-		path1DomainNodes        = cardinality.NewBitmap64()
-		path1CertTemplates      = cardinality.NewBitmap64()
-		path2CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path3CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path4CandidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path2EnterpriseCAs      = cardinality.NewBitmap64()
-		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
-		finalEnterpriseCAs      = cardinality.NewBitmap64()
-		lock                    = &sync.Mutex{}
+		traversalInst          = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                  = graph.PathSet{}
+		path1CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs     = cardinality.NewBitmap64()
+		path1DomainNodes       = cardinality.NewBitmap64()
+		path1CertTemplates     = cardinality.NewBitmap64()
+		path2CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path3CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path4CandidateSegments = map[graph.ID][]*graph.PathSegment{}
+		path2EnterpriseCAs     = cardinality.NewBitmap64()
+		lock                   = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -256,14 +254,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 				})
 
-				if startNode.Kinds.ContainsOneOf(ad.User) && !certTemplateValidForUserVictim(certTemplate) {
-					if managedServiceAccount, err := isManagedServiceAccount(startNode); err != nil {
-						return err
-					} else if !managedServiceAccount {
-						return nil
-					}
-				}
-
 				lock.Lock()
 				path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
 				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
@@ -275,26 +265,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}); err != nil {
 			return nil, err
 		}
-	}
-
-	if path1EnterpriseCAs.Cardinality() == 0 {
-		return paths, nil
-	}
-
-	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
-		return nil, err
-	} else {
-		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
-		for enterpriseCAID := range qualifyingHostPaths {
-			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
-		}
-
-		path1EnterpriseCAs.And(qualifyingEnterpriseCAs)
-		hostPathsByEnterpriseCA = qualifyingHostPaths
-	}
-
-	if path1EnterpriseCAs.Cardinality() == 0 {
-		return paths, nil
 	}
 
 	//Manifest P2 and key it to the enterprise CA nodes to cross product
@@ -359,12 +329,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
 
 	for path1NodeIndex, path1Segments := range path1CandidateSegments {
-		if !path1EnterpriseCAs.Contains(path1NodeIndex.Uint64()) {
-			continue
-		} else if _, hasQualifyingHost := hostPathsByEnterpriseCA[path1NodeIndex]; !hasQualifyingHost {
-			continue
-		}
-
 		path2segments := path2CandidateSegments[path1NodeIndex]
 		for _, p1 := range path1Segments {
 			//If we don't have a domain contain relationship, then this is not a valid path and we can kick out early
@@ -389,7 +353,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					//Merge all our paths together
 					paths.AddPath(p1.Path())
 					paths.AddPath(p2.Path())
-					finalEnterpriseCAs.Add(path1NodeIndex.Uint64())
 					for _, p3 := range p3segments {
 						paths.AddPath(p3.Path())
 					}
@@ -400,16 +363,12 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 			}
 		}
 	}
-	finalEnterpriseCAs.Each(func(enterpriseCAID uint64) bool {
-		paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(enterpriseCAID)])
-		return true
-	})
 
 	return paths, nil
 }
 
 func adcsESC13Path1Pattern() traversal.PatternContinuation {
-	return enterpriseCAChainPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(
 			0, 0,
 			query.And(
@@ -439,20 +398,39 @@ func adcsESC13Path1Pattern() traversal.PatternContinuation {
 		query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)))
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.KindIn(query.End(), ad.Domain),
+		))
 }
 
 func adcsESC13Path2Pattern(caNodes, domains []graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
 		Outbound(query.And(
 			query.Kind(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
 			query.InIDs(query.End(), caNodes...),
-		)), query.InIDs(query.End(), domains...))
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.InIDs(query.End(), domains...),
+		))
 }
 
 func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {
