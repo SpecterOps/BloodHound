@@ -7932,6 +7932,15 @@
                           "long_remediation": "Do X to fix Finding 1"
                         }
                       }
+                    ],
+                    "saved_queries": [
+                      {
+                        "query_key": "all-node-kind-1",
+                        "name": "All Node Kind 1",
+                        "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
+                        "description": "Lists all OGE_Node_Kind_1 nodes.",
+                        "category": "Asset Management"
+                      }
                     ]
                   }
                 },
@@ -25750,6 +25759,45 @@
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          },
+          "saved_queries": {
+            "type": "array",
+            "description": "Declares the extension's desired saved queries. Omitting this property or\nproviding an empty array removes existing saved queries associated with the extension.\n",
+            "items": {
+              "type": "object",
+              "required": [
+                "query_key",
+                "name",
+                "query"
+              ],
+              "properties": {
+                "query_key": {
+                  "type": "string",
+                  "description": "A stable identifier for reconciling the saved query.",
+                  "example": "critical-assets"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The saved query's display name.",
+                  "example": "Critical Assets"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "The Cypher query to run.",
+                  "example": "MATCH (n) RETURN n"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "An optional description of the saved query.",
+                  "example": "Lists all critical assets."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "An optional category for grouping the saved query.",
+                  "example": "Asset Management"
                 }
               }
             }

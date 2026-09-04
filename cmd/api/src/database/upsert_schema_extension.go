@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 )
@@ -72,6 +74,10 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		return schemaExists, fmt.Errorf("failed to fetch existing findings: %w", err)
 	} else if _, err := reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
 		return schemaExists, fmt.Errorf("failed to reconcile findings: %w", err)
+	} else if existingSavedQueries, err := bloodhoundDBTransaction.GetSavedQueriesByExtensionID(ctx, extension.ID); err != nil {
+		return schemaExists, fmt.Errorf("failed to fetch existing saved queries: %w", err)
+	} else if _, err := reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
+		return schemaExists, fmt.Errorf("failed to reconcile saved queries: %w", err)
 	} else if err = tx.Commit().Error; err != nil {
 		return schemaExists, err
 	} else {
@@ -121,6 +127,37 @@ func (s *BloodhoundDB) createNewExtension(ctx context.Context, extensionInput mo
 		return model.GraphSchemaExtension{}, false, fmt.Errorf("error creating extension: %w", err)
 	} else {
 		return created, false, nil
+	}
+}
+
+func (s *BloodhoundDB) createExtensionSavedQuery(ctx context.Context, extensionID int32, input model.SavedQueryInput) (model.SavedQuery, error) {
+	queryKey := input.QueryKey
+	if created, err := s.CreateSavedQuery(ctx, uuid.Nil, input.Name, input.Query, input.Description, &extensionID, &queryKey, input.Category); err != nil {
+		return model.SavedQuery{}, fmt.Errorf("failed to create extension saved query %q: %w", input.QueryKey, err)
+	} else if _, err := s.CreateSavedQueryPermissionToPublic(ctx, created.ID); err != nil {
+		return model.SavedQuery{}, fmt.Errorf("failed to make extension saved query %q public: %w", input.QueryKey, err)
+	} else {
+		return created, nil
+	}
+}
+
+func (s *BloodhoundDB) savedQueryReconcileConfig(extensionID int32) reconcileConfig[model.SavedQueryInput, model.SavedQuery, string] {
+	return reconcileConfig[model.SavedQueryInput, model.SavedQuery, string]{
+		getInputKey:    func(input model.SavedQueryInput) string { return input.QueryKey },
+		getExistingKey: func(existing model.SavedQuery) string { return *existing.QueryKey },
+		create: func(ctx context.Context, input model.SavedQueryInput) (model.SavedQuery, error) {
+			return s.createExtensionSavedQuery(ctx, extensionID, input)
+		},
+		update: func(ctx context.Context, existing model.SavedQuery, input model.SavedQueryInput) (model.SavedQuery, error) {
+			existing.Category = input.Category
+			existing.Name = input.Name
+			existing.Query = input.Query
+			existing.Description = input.Description
+			return s.UpdateSavedQuery(ctx, existing)
+		},
+		delete: func(ctx context.Context, existing model.SavedQuery) error {
+			return s.DeleteSavedQuery(ctx, existing.ID)
+		},
 	}
 }
 

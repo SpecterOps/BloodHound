@@ -70,23 +70,6 @@ properties:
           type: boolean
         info:
           $ref: './model.graph-extension.kind-info-definition.yaml'
-  #properties:
-  #  type: array
-  #  items:
-  #    type: object
-  #    properties:
-  #      name:
-  #        type: string
-  #        example: UserPrincipalName
-  #      display_name:
-  #        type: string
-  #        example: User Principal Name
-  #      data_type:
-  #        type: string
-  #        example: string
-  #      description:
-  #        type: string
-  #        example: An Active Directory User Principal Name
   environments:
     type: array
     items:
@@ -133,3 +116,35 @@ properties:
               type: string
             long_remediation:
               type: string
+  saved_queries:
+    type: array
+    description: |
+      Declares the extension's desired saved queries. Omitting this property or
+      providing an empty array removes existing saved queries associated with the extension.
+    items:
+      type: object
+      required:
+        - query_key
+        - name
+        - query
+      properties:
+        query_key:
+          type: string
+          description: A stable identifier for reconciling the saved query.
+          example: critical-assets
+        name:
+          type: string
+          description: The saved query's display name.
+          example: Critical Assets
+        query:
+          type: string
+          description: The Cypher query to run.
+          example: MATCH (n) RETURN n
+        description:
+          type: string
+          description: An optional description of the saved query.
+          example: Lists all critical assets.
+        category:
+          type: string
+          description: An optional category for grouping the saved query.
+          example: Asset Management
