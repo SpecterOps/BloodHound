@@ -34,9 +34,9 @@ const FileStatusListItem: React.FC<{
 
     return (
         <div
-            className={cn('mb-2 relative flex flex-row h-8 justify-between text-sm', {
-                'bg-red-500/10 rounded-lg': hasErrors,
-                'bg-purple-300/20 rounded-lg': isComplete,
+            className={cn('mb-2 relative flex flex-row h-8 justify-between text-sm rounded-lg', {
+                'bg-red-500/10': hasErrors,
+                'bg-purple-300/20': isComplete,
             })}>
             <div className='px-3 flex items-center z-10 gap-2 flex-1 leading-none justify-between'>
                 <span>{file.file.name}</span>
