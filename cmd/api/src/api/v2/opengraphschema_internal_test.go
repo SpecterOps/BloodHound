@@ -153,7 +153,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 				"schema.json":   validSchemaWithFindingsJSON,
 				"pz_rules.json": `{"rules": []}`,
 			}),
-			wantErrText:    "requires a \"pz_rules.json\" component",
+			wantErrText:    "\"pz_rules.json\" must contain at least one rule",
 			wantHasPZRules: true,
 		},
 		{
