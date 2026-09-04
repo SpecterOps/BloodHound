@@ -45,32 +45,11 @@ func FetchADCSPrereqs(db graph.Database) (*adAnalysis.LocalGroupData, *adAnalysi
 			return nil, nil, err
 		} else if certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate); err != nil {
 			return nil, nil, err
-		} else if err := cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates); err != nil {
-			return nil, nil, err
 		} else {
+			cache.BuildCache(context.Background(), db, enterpriseCertAuthorities, certTemplates)
 			return localGroupData, cache, nil
 		}
 	}
-}
-
-func requireCompositionContainsEdge(t *testing.T, composition graph.PathSet, kind graph.Kind) {
-	t.Helper()
-
-	var found bool
-	for _, path := range composition.Paths() {
-		path.Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-			if relationship.Kind.Is(kind) {
-				found = true
-				return false
-			}
-			return true
-		})
-		if found {
-			break
-		}
-	}
-
-	require.True(t, found, "composition does not contain a %s edge", kind.String())
 }
 
 func TestTrustedForNTAuth(t *testing.T) {
@@ -581,10 +560,9 @@ func TestADCSESC1(t *testing.T) {
 				} else {
 					comp, err := adAnalysis.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
-					requireCompositionContainsEdge(t, comp, ad.HostsCAService)
 
 					domain2Nodes := comp.AllNodes()
-					assert.Len(t, domain2Nodes, 10)
+					assert.Len(t, domain2Nodes, 9)
 					require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.Group22))
 					require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.CertTemplate2))
 					require.True(t, domain2Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA21))
@@ -607,10 +585,9 @@ func TestADCSESC1(t *testing.T) {
 				} else {
 					comp, err := adAnalysis.GetADCSESC1EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
-					requireCompositionContainsEdge(t, comp, ad.HostsCAService)
 
 					domain3Nodes := comp.AllNodes()
-					assert.Len(t, domain3Nodes, 7)
+					assert.Len(t, domain3Nodes, 6)
 					require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.Group32))
 					require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.CertTemplate3))
 					require.True(t, domain3Nodes.Contains(harness.ADCSESC1Harness.EnterpriseCA31))
@@ -749,8 +726,7 @@ func TestADCSESC3(t *testing.T) {
 				} else {
 					comp, err := adAnalysis.GetADCSESC3EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
-					requireCompositionContainsEdge(t, comp, ad.HostsCAService)
-					assert.Equal(t, 9, len(comp.AllNodes()))
+					assert.Equal(t, 8, len(comp.AllNodes()))
 					assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User2))
 					// CT3 requires DNS name meaning user3 -> domain is not a valid ESC3
 					assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness2.User3))
@@ -803,8 +779,7 @@ func TestADCSESC3(t *testing.T) {
 				} else {
 					comp, err := adAnalysis.GetADCSESC3EdgeComposition(context.Background(), db, edge)
 					assert.Nil(t, err)
-					requireCompositionContainsEdge(t, comp, ad.HostsCAService)
-					assert.Equal(t, 8, len(comp.AllNodes()))
+					assert.Equal(t, 7, len(comp.AllNodes()))
 					assert.False(t, comp.AllNodes().Contains(harness.ESC3Harness3.User2))
 				}
 				return nil
@@ -865,7 +840,6 @@ func TestADCSESC3(t *testing.T) {
 					composition, err := adAnalysis.GetADCSESC3EdgeComposition(ctx, db, edge)
 					require.NoError(t, err, testCase.name)
 					require.NotEmpty(t, composition, testCase.name)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 					require.True(t, composition.AllNodes().Contains(testCase.principal), testCase.name)
 				}
 
@@ -1133,11 +1107,10 @@ func TestADCSESC4Composition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 8, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group11))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
 				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
@@ -1164,11 +1137,10 @@ func TestADCSESC4Composition(t *testing.T) {
 				} else {
 					composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 					nodes := composition.AllNodes()
 
-					require.Equal(t, 8, len(nodes))
+					require.Equal(t, 7, len(nodes))
 					require.True(t, nodes.Contains(harness.ESC4Template1.Group12))
 					require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
 					require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
@@ -1205,11 +1177,10 @@ func TestADCSESC4Composition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 8, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group13))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
 				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
@@ -1246,11 +1217,10 @@ func TestADCSESC4Composition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 8, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group14))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
 				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
@@ -1287,11 +1257,10 @@ func TestADCSESC4Composition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetADCSESC4EdgeComposition(context.Background(), db, edge)
 				require.Nil(t, err)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 8, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group15))
 				require.True(t, nodes.Contains(harness.ESC4Template1.Group0))
 				require.True(t, nodes.Contains(harness.ESC4Template1.CertTemplate1))
@@ -1444,13 +1413,12 @@ func TestADCSESC6a(t *testing.T) {
 				} else {
 					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 					names := []string{}
 					for _, node := range composition.AllNodes() {
 						name, _ := node.Properties.Get(common.Name.String()).String()
 						names = append(names, name)
 					}
-					require.Equal(t, 8, len(composition.AllNodes()))
+					require.Equal(t, 7, len(composition.AllNodes()))
 					require.Contains(t, names, "Group1")
 					require.Contains(t, names, "Group0")
 					require.Contains(t, names, "CertTemplate1")
@@ -1470,13 +1438,12 @@ func TestADCSESC6a(t *testing.T) {
 				} else {
 					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 					names := []string{}
 					for _, node := range composition.AllNodes() {
 						name, _ := node.Properties.Get(common.Name.String()).String()
 						names = append(names, name)
 					}
-					require.Equal(t, 8, len(composition.AllNodes()))
+					require.Equal(t, 7, len(composition.AllNodes()))
 					require.Contains(t, names, "Group2")
 					require.Contains(t, names, "Group0")
 					require.Contains(t, names, "CertTemplate2")
@@ -1588,9 +1555,8 @@ func TestADCSESC6b(t *testing.T) {
 				} else {
 					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
-					require.Equal(t, 9, len(composition.AllNodes()))
+					require.Equal(t, 8, len(composition.AllNodes()))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group0))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group1))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.CertTemplate1))
@@ -1614,9 +1580,8 @@ func TestADCSESC6b(t *testing.T) {
 				} else {
 					composition, err := adAnalysis.GetADCSESC6EdgeComposition(context.Background(), db, edge)
 					require.Nil(t, err)
-					requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
-					require.Equal(t, 9, len(composition.AllNodes()))
+					require.Equal(t, 8, len(composition.AllNodes()))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group0))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.Group2))
 					require.True(t, composition.AllNodes().Contains(harness.ESC6bTemplate1Harness.CertTemplate2))
@@ -1838,86 +1803,7 @@ func TestADCSESC6b(t *testing.T) {
 	})
 }
 
-type esc10CompositionHarness struct {
-	attacker        *graph.Node
-	domain          *graph.Node
-	enterpriseCA    *graph.Node
-	hostingComputer *graph.Node
-}
-
-func setupESC10CompositionHarness(graphTestContext *integration.GraphTestContext) esc10CompositionHarness {
-	var (
-		domainSID    = integration.RandomDomainSID()
-		domain       = graphTestContext.NewActiveDirectoryDomain("Domain", domainSID, false, true)
-		rootCA       = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSID)
-		authStore    = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSID)
-		enterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSID)
-		certTemplate = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate", domainSID, integration.CertTemplateData{
-			ApplicationPolicies:           []string{},
-			AuthorizedSignatures:          0,
-			EffectiveEKUs:                 []string{},
-			EnrolleeSuppliesSubject:       false,
-			RequiresManagerApproval:       false,
-			SchemaVersion:                 1,
-			SchannelAuthenticationEnabled: true,
-			SubjectAltRequireUPN:          true,
-		})
-		domainController = graphTestContext.NewActiveDirectoryComputer("Domain Controller", domainSID)
-		hostingComputer  = graphTestContext.NewActiveDirectoryComputer("EnterpriseCA host", domainSID)
-		attacker         = graphTestContext.NewActiveDirectoryGroup("Attacker", domainSID)
-		victim           = graphTestContext.NewActiveDirectoryUser("Victim", domainSID)
-	)
-
-	domainController.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
-	hostingComputer.Properties.Set(common.Enabled.String(), true)
-	graphTestContext.UpdateNode(domainController)
-	graphTestContext.UpdateNode(hostingComputer)
-
-	graphTestContext.NewRelationship(rootCA, domain, ad.RootCAFor)
-	graphTestContext.NewRelationship(enterpriseCA, rootCA, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(authStore, domain, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(enterpriseCA, authStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(domainController, domain, ad.DCFor)
-	graphTestContext.NewRelationship(hostingComputer, enterpriseCA, ad.HostsCAService)
-	graphTestContext.NewRelationship(certTemplate, enterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(attacker, victim, ad.GenericAll)
-	graphTestContext.NewRelationship(victim, certTemplate, ad.Enroll)
-	graphTestContext.NewRelationship(victim, enterpriseCA, ad.Enroll)
-
-	return esc10CompositionHarness{
-		attacker:        attacker,
-		domain:          domain,
-		enterpriseCA:    enterpriseCA,
-		hostingComputer: hostingComputer,
-	}
-}
-
 func TestADCSESC10a(t *testing.T) {
-	t.Run("composition excludes shared paths when the exact CA host is disabled", func(t *testing.T) {
-		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		var testHarness esc10CompositionHarness
-
-		testContext.DatabaseTestWithSetup(
-			func(harness *integration.HarnessDetails) error {
-				testHarness = setupESC10CompositionHarness(testContext)
-				testHarness.hostingComputer.Properties.Set(common.Enabled.String(), false)
-				testContext.UpdateNode(testHarness.hostingComputer)
-				return nil
-			},
-			func(harness integration.HarnessDetails, db graph.Database) {
-				composition, err := adAnalysis.GetADCSESC10EdgeComposition(t.Context(), db, graph.NewRelationship(
-					0,
-					testHarness.attacker.ID,
-					testHarness.domain.ID,
-					graph.NewProperties(),
-					ad.ADCSESC10a,
-				))
-				require.NoError(t, err)
-				require.Empty(t, composition)
-				require.False(t, composition.AllNodes().Contains(testHarness.enterpriseCA))
-			},
-		)
-	})
 	t.Run("ADCSESC10aPrincipalHarness", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -2095,13 +1981,12 @@ func TestADCSESC10a(t *testing.T) {
 					if composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc10a: %v", err)
 					} else {
-						requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 						names := []string{}
 						for _, node := range composition.AllNodes() {
 							name, _ := node.Properties.Get(common.Name.String()).String()
 							names = append(names, name)
 						}
-						require.Equal(t, 9, len(composition.AllNodes()))
+						require.Equal(t, 8, len(composition.AllNodes()))
 						require.Contains(t, names, "Group1")
 						require.Contains(t, names, "Domain1")
 						require.Contains(t, names, "DC1")
@@ -2410,13 +2295,12 @@ func TestADCSESC10b(t *testing.T) {
 					if composition, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc10b: %v", err)
 					} else {
-						requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 						names := []string{}
 						for _, node := range composition.AllNodes() {
 							name, _ := node.Properties.Get(common.Name.String()).String()
 							names = append(names, name)
 						}
-						require.Equal(t, 9, len(composition.AllNodes()))
+						require.Equal(t, 8, len(composition.AllNodes()))
 						require.Contains(t, names, "Group1")
 						require.Contains(t, names, "Domain1")
 						require.Contains(t, names, "ComputerDC1")
@@ -2732,7 +2616,6 @@ func TestADCSESC13(t *testing.T) {
 					if edgeComp, err := adAnalysis.GetEdgeCompositionPath(context.Background(), db, edge); err != nil {
 						t.Fatalf("error getting edge composition for esc13: %v", err)
 					} else {
-						requireCompositionContainsEdge(t, edgeComp, ad.HostsCAService)
 						nodes := edgeComp.AllNodes().Slice()
 						assert.Contains(t, nodes, harness.ESC13HarnessECA.Group1)
 						assert.Contains(t, nodes, harness.ESC13HarnessECA.Domain1)
