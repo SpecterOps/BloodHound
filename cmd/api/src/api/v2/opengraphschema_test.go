@@ -16,11 +16,13 @@
 package v2_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -199,7 +201,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			want: want{
 				responseCode: http.StatusUnsupportedMediaType,
-				err:          fmt.Errorf("Code: 415 - errors: invalid content-type: [invalid]; Content type must be application/json"),
+				err:          fmt.Errorf("Code: 415 - errors: invalid content-type: [invalid]; Content type must be application/json or application/zip"),
 			},
 		},
 		{
@@ -358,6 +360,71 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					require.NoError(t, err)
 					req.Header.Set("content-type", mediatypes.ApplicationJson.String())
 					return req
+				},
+			},
+			want: want{
+				responseCode: http.StatusCreated,
+			},
+		},
+		{
+			name: "success - inserted new graph extension from zip bundle",
+			fields: fields{
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
+					var expectedGraphExtension = serviceGraphExtension
+					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
+						Name:        "Tier Zero Admins",
+						Description: "Seeds for tier zero",
+						AutoCertify: model.SelectorAutoCertifyMethodAllMembers,
+						Seeds: []model.SelectorSeedInput{{
+							Type:  model.SelectorTypeCypher,
+							Value: "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n",
+						}},
+					}}
+
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), expectedGraphExtension).Return(false, nil)
+				},
+			},
+			args: args{
+				func() *http.Request {
+					var (
+						zipBuffer     bytes.Buffer
+						jsonPayload   []byte
+						zipWriter     *zip.Writer
+						schemaWriter  io.Writer
+						pzRulesWriter io.Writer
+						request       *http.Request
+						err           error
+					)
+
+					jsonPayload, err = json.Marshal(graphExtension)
+					require.NoError(t, err)
+
+					zipWriter = zip.NewWriter(&zipBuffer)
+					schemaWriter, err = zipWriter.Create("schema.json")
+					require.NoError(t, err)
+					_, err = schemaWriter.Write(jsonPayload)
+					require.NoError(t, err)
+					pzRulesWriter, err = zipWriter.Create("pz_rules.json")
+					require.NoError(t, err)
+					_, err = pzRulesWriter.Write([]byte(`{
+						"rules": [{
+							"name": "Tier Zero Admins",
+							"description": "Seeds for tier zero",
+							"auto_certify": true,
+							"seeds": [{
+								"type": 2,
+								"value": "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n"
+							}]
+						}]
+					}`))
+					require.NoError(t, err)
+					require.NoError(t, zipWriter.Close())
+
+					request, err = http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut,
+						"/api/v2/extensions", bytes.NewReader(zipBuffer.Bytes()))
+					require.NoError(t, err)
+					request.Header.Set("content-type", mediatypes.ApplicationZip.String())
+					return request
 				},
 			},
 			want: want{

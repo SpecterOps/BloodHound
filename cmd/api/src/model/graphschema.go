@@ -480,6 +480,29 @@ type GraphExtensionInput struct {
 	NodeKindsInput            NodesInput
 	EnvironmentsInput         EnvironmentsInput
 	RelationshipFindingsInput RelationshipFindingsInput
+	PZRulesInput              PZRulesInput
+	SavedQueriesInput         SavedQueriesInput
+}
+
+type PZRulesInput []PZRuleInput
+type PZRuleInput struct {
+	Name        string
+	Description string
+	AutoCertify SelectorAutoCertifyMethod
+	Seeds       []SelectorSeedInput
+}
+
+type SelectorSeedInput struct {
+	Type  SelectorType
+	Value string
+}
+
+type SavedQueriesInput []SavedQueryInput
+type SavedQueryInput struct {
+	Name        string
+	Query       string
+	QueryKey    string
+	Description string
 }
 
 // Validate performs comprehensive validation on a GraphExtensionInput
@@ -591,6 +614,55 @@ func (s GraphExtensionInput) Validate() error {
 		}
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
+
+	if err := s.PZRulesInput.Validate(); err != nil {
+		return err
+	} else if err := s.SavedQueriesInput.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Placeholder, may be more to consider here
+func (s PZRulesInput) Validate() error {
+	var ruleNames = make(map[string]any, len(s))
+
+	for _, rule := range s {
+		if strings.TrimSpace(rule.Name) == "" {
+			return errors.New("privilege zone rule name is required")
+		}
+		if _, ok := ruleNames[rule.Name]; ok {
+			return fmt.Errorf("duplicate privilege zone rule: %s", rule.Name)
+		}
+		if len(rule.Seeds) == 0 {
+			return fmt.Errorf("privilege zone rule %s requires at least one seed", rule.Name)
+		}
+		for _, seed := range rule.Seeds {
+			if strings.TrimSpace(seed.Value) == "" {
+				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
+			}
+		}
+		ruleNames[rule.Name] = struct{}{}
+	}
+	return nil
+}
+
+// Placeholder, may be more to consider here
+func (s SavedQueriesInput) Validate() error {
+	var queryNames = make(map[string]any, len(s))
+
+	for _, query := range s {
+		if strings.TrimSpace(query.Name) == "" {
+			return errors.New("saved query name is required")
+		}
+		if _, ok := queryNames[query.Name]; ok {
+			return fmt.Errorf("duplicate saved query: %s", query.Name)
+		}
+		if strings.TrimSpace(query.Query) == "" {
+			return fmt.Errorf("saved query %s requires a query body", query.Name)
+		}
+		queryNames[query.Name] = struct{}{}
+	}
 	return nil
 }
 
@@ -685,6 +757,42 @@ type GraphExtensionPayload struct {
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
 	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+
+	// PZRules and SavedQueries are optional components
+	PZRules      *PZRulesPayload      `json:"pz_rules,omitempty"`
+	SavedQueries *SavedQueriesPayload `json:"saved_queries,omitempty"`
+}
+
+// SelectorSeedPayload is the JSON shape of a single privilege-zone selector seed within pz_rules.
+type SelectorSeedPayload struct {
+	Type  SelectorType `json:"type"`
+	Value string       `json:"value"`
+}
+
+// PZRulePayload is the JSON shape of a single privilege-zone rule (asset group tag selector) within pz_rules.
+type PZRulePayload struct {
+	Name        string                `json:"name"`
+	Description string                `json:"description,omitempty"`
+	AutoCertify *bool                 `json:"auto_certify,omitempty"`
+	Seeds       []SelectorSeedPayload `json:"seeds"`
+}
+
+// PZRulesPayload is the "rules" envelope for the pz_rules.json component.
+type PZRulesPayload struct {
+	Rules []PZRulePayload `json:"rules"`
+}
+
+// SavedQueryPayload is the JSON shape of a single saved query within saved_queries.
+type SavedQueryPayload struct {
+	Name        string `json:"name"`
+	Query       string `json:"query"`
+	QueryKey    string `json:"query_key"`
+	Description string `json:"description"`
+}
+
+// SavedQueriesPayload is the "queries" envelope for the saved_queries.json component.
+type SavedQueriesPayload struct {
+	Queries []SavedQueryPayload `json:"queries"`
 }
 
 type GraphSchemaExtensionPayload struct {
@@ -854,6 +962,44 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				LongRemediation:  findingPayload.Remediation.LongRemediation,
 			},
 		})
+	}
+
+	// Optional components are only mapped when present
+	if s.PZRules != nil {
+		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(s.PZRules.Rules))
+		for _, rulePayload := range s.PZRules.Rules {
+			var autoCertify = SelectorAutoCertifyMethodDisabled
+			if rulePayload.AutoCertify != nil && *rulePayload.AutoCertify {
+				autoCertify = SelectorAutoCertifyMethodAllMembers
+			}
+
+			var seeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
+			for _, seedPayload := range rulePayload.Seeds {
+				seeds = append(seeds, SelectorSeedInput{
+					Type:  seedPayload.Type,
+					Value: seedPayload.Value,
+				})
+			}
+
+			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
+				Name:        rulePayload.Name,
+				Description: rulePayload.Description,
+				AutoCertify: autoCertify,
+				Seeds:       seeds,
+			})
+		}
+	}
+
+	if s.SavedQueries != nil {
+		graphExtension.SavedQueriesInput = make(SavedQueriesInput, 0, len(s.SavedQueries.Queries))
+		for _, queryPayload := range s.SavedQueries.Queries {
+			graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput{
+				QueryKey:    queryPayload.QueryKey,
+				Name:        queryPayload.Name,
+				Query:       queryPayload.Query,
+				Description: queryPayload.Description,
+			})
+		}
 	}
 	return graphExtension, nil
 }

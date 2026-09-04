@@ -17,11 +17,9 @@
 package ad
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -65,7 +63,8 @@ func TestGetECAHostedChainedDomains_ForestHosting(t *testing.T) {
 		eca, inForestDomain, foreignDomain := adcsForestHostingNodes()
 		cache := newForestHostingCache(eca, inForestDomain, foreignDomain)
 
-		cache.enterpriseCAsWithQualifyingHosts.Add(eca.ID.Uint64())
+		cache.hasHostingComputer[eca.ID] = true
+		cache.hasInForestHostingComputer[eca.ID] = true
 
 		result := cache.GetECAHostedChainedDomains()
 
@@ -80,8 +79,9 @@ func TestGetECAHostedChainedDomains_ForestHosting(t *testing.T) {
 		eca, inForestDomain, foreignDomain := adcsForestHostingNodes()
 		cache := newForestHostingCache(eca, inForestDomain, foreignDomain)
 
-		// The CA is absent from the qualifying-host bitmap because its only host
-		// lives outside the CA's forest.
+		// A hosting computer exists, but it lives outside the CA's forest.
+		cache.hasHostingComputer[eca.ID] = true
+		cache.hasInForestHostingComputer[eca.ID] = false
 
 		result := cache.GetECAHostedChainedDomains()
 
@@ -92,7 +92,8 @@ func TestGetECAHostedChainedDomains_ForestHosting(t *testing.T) {
 		eca, inForestDomain, foreignDomain := adcsForestHostingNodes()
 		cache := newForestHostingCache(eca, inForestDomain, foreignDomain)
 
-		cache.enterpriseCAsWithQualifyingHosts.Add(eca.ID.Uint64())
+		// No hasInForestHostingComputer entry => forest unknown.
+		cache.hasHostingComputer[eca.ID] = true
 
 		result := cache.GetECAHostedChainedDomains()
 
@@ -107,7 +108,7 @@ func TestGetECAHostedChainedDomains_ForestHosting(t *testing.T) {
 		eca, inForestDomain, foreignDomain := adcsForestHostingNodes()
 		cache := newForestHostingCache(eca, inForestDomain, foreignDomain)
 
-		// The CA has no entry in the qualifying-host bitmap.
+		// hasHostingComputer absent/false and forest unknown.
 
 		result := cache.GetECAHostedChainedDomains()
 
@@ -119,6 +120,7 @@ func TestGetChainedDomains_IgnoresForestHosting(t *testing.T) {
 	t.Run("does not apply the hosting-computer guard", func(t *testing.T) {
 		eca, inForestDomain, foreignDomain := adcsForestHostingNodes()
 		cache := newForestHostingCache(eca, inForestDomain, foreignDomain)
+		cache.hasInForestHostingComputer[eca.ID] = false
 
 		result := cache.GetChainedDomains()
 
@@ -138,203 +140,4 @@ func TestGetChainedDomains_IgnoresForestHosting(t *testing.T) {
 		chains := result[eca.ID.Uint64()]
 		assert.Equal(t, uint64(2), chains.Domains.Cardinality())
 	})
-}
-
-func TestEnterpriseCAHostIsEligible(t *testing.T) {
-	var (
-		inForestDomainSID = "S-1-5-21-100-200-300"
-		foreignDomainSID  = "S-1-5-21-400-500-600"
-		inForestDomain    = graph.NewNode(1, graph.NewProperties(), ad.Domain)
-		foreignDomain     = graph.NewNode(2, graph.NewProperties(), ad.Domain)
-		domainsBySID      = map[string]*graph.Node{
-			inForestDomainSID: inForestDomain,
-			foreignDomainSID:  foreignDomain,
-		}
-		knownForest = duplexOf(inForestDomain.ID)
-		testCases   = []struct {
-			name             string
-			kind             graph.Kind
-			setEnabled       bool
-			enabled          any
-			setDomainSID     bool
-			domainSID        string
-			forestDomains    cardinality.Duplex[uint64]
-			expectedEligible bool
-		}{
-			{
-				name:             "enabled host qualifies when CA forest is unresolved",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          true,
-				forestDomains:    nil,
-				expectedEligible: true,
-			},
-			{
-				name:             "disabled host does not qualify",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          false,
-				forestDomains:    nil,
-				expectedEligible: false,
-			},
-			{
-				name:             "missing enabled property does not qualify",
-				kind:             ad.Computer,
-				forestDomains:    nil,
-				expectedEligible: false,
-			},
-			{
-				name:             "malformed enabled property does not qualify",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          "true",
-				forestDomains:    nil,
-				expectedEligible: false,
-			},
-			{
-				name:             "enabled in-forest host qualifies",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          true,
-				setDomainSID:     true,
-				domainSID:        inForestDomainSID,
-				forestDomains:    knownForest,
-				expectedEligible: true,
-			},
-			{
-				name:             "enabled cross-forest host does not qualify",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          true,
-				setDomainSID:     true,
-				domainSID:        foreignDomainSID,
-				forestDomains:    knownForest,
-				expectedEligible: false,
-			},
-			{
-				name:             "host missing domain SID does not qualify for known forest",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          true,
-				forestDomains:    knownForest,
-				expectedEligible: false,
-			},
-			{
-				name:             "host with unknown domain SID does not qualify for known forest",
-				kind:             ad.Computer,
-				setEnabled:       true,
-				enabled:          true,
-				setDomainSID:     true,
-				domainSID:        "S-1-5-21-700-800-900",
-				forestDomains:    knownForest,
-				expectedEligible: false,
-			},
-			{
-				name:             "enabled non-computer does not qualify",
-				kind:             ad.User,
-				setEnabled:       true,
-				enabled:          true,
-				setDomainSID:     true,
-				domainSID:        inForestDomainSID,
-				forestDomains:    knownForest,
-				expectedEligible: false,
-			},
-		}
-	)
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			properties := graph.NewProperties()
-			if testCase.setEnabled {
-				properties.Set(common.Enabled.String(), testCase.enabled)
-			}
-			if testCase.setDomainSID {
-				properties.Set(ad.DomainSID.String(), testCase.domainSID)
-			}
-
-			host := graph.NewNode(10, properties, testCase.kind)
-
-			assert.Equal(t, testCase.expectedEligible, enterpriseCAHostIsEligible(host, testCase.forestDomains, domainsBySID))
-		})
-	}
-}
-
-func TestQualifyEnterpriseCAHostPathsPropagatesForestResolutionErrors(t *testing.T) {
-	var (
-		expectedErr  = errors.New("failed forest traversal")
-		host         = graph.NewNode(1, graph.NewProperties(), ad.Computer)
-		enterpriseCA = graph.NewNode(2, graph.NewProperties(), ad.EnterpriseCA)
-		hostingPath  = graph.Path{
-			Nodes: []*graph.Node{host, enterpriseCA},
-			Edges: []*graph.Relationship{{
-				ID:      3,
-				Kind:    ad.HostsCAService,
-				StartID: host.ID,
-				EndID:   enterpriseCA.ID,
-			}},
-		}
-	)
-
-	qualifyingPaths, err := qualifyEnterpriseCAHostPaths(graph.NewPathSet(hostingPath), nil, func(*graph.Node) (cardinality.Duplex[uint64], error) {
-		return nil, expectedErr
-	})
-
-	require.ErrorIs(t, err, expectedErr)
-	assert.Nil(t, qualifyingPaths)
-}
-
-func TestQualifyEnterpriseCAHostPathsKeepsOnlyEligibleHostsForExactCA(t *testing.T) {
-	const (
-		inForestDomainSID = "S-1-5-21-100-200-300"
-		foreignDomainSID  = "S-1-5-21-400-500-600"
-	)
-
-	var (
-		inForestDomain = graph.NewNode(1, graph.NewProperties(), ad.Domain)
-		foreignDomain  = graph.NewNode(2, graph.NewProperties(), ad.Domain)
-		enterpriseCA   = graph.NewNode(3, graph.NewProperties(), ad.EnterpriseCA)
-		validHost      = graph.NewNode(4, graph.NewProperties(), ad.Computer)
-		disabledHost   = graph.NewNode(5, graph.NewProperties(), ad.Computer)
-		foreignHost    = graph.NewNode(6, graph.NewProperties(), ad.Computer)
-		forestDomains  = duplexOf(inForestDomain.ID)
-		domainsBySID   = map[string]*graph.Node{
-			inForestDomainSID: inForestDomain,
-			foreignDomainSID:  foreignDomain,
-		}
-		forestResolutionCount int
-	)
-
-	validHost.Properties.Set(common.Enabled.String(), true)
-	validHost.Properties.Set(ad.DomainSID.String(), inForestDomainSID)
-	disabledHost.Properties.Set(common.Enabled.String(), false)
-	disabledHost.Properties.Set(ad.DomainSID.String(), inForestDomainSID)
-	foreignHost.Properties.Set(common.Enabled.String(), true)
-	foreignHost.Properties.Set(ad.DomainSID.String(), foreignDomainSID)
-
-	hostingPath := func(id graph.ID, host *graph.Node) graph.Path {
-		return graph.Path{
-			Nodes: []*graph.Node{host, enterpriseCA},
-			Edges: []*graph.Relationship{{
-				ID:      id,
-				Kind:    ad.HostsCAService,
-				StartID: host.ID,
-				EndID:   enterpriseCA.ID,
-			}},
-		}
-	}
-
-	qualifyingPaths, err := qualifyEnterpriseCAHostPaths(graph.NewPathSet(
-		hostingPath(10, validHost),
-		hostingPath(11, disabledHost),
-		hostingPath(12, foreignHost),
-	), domainsBySID, func(*graph.Node) (cardinality.Duplex[uint64], error) {
-		forestResolutionCount++
-		return forestDomains, nil
-	})
-
-	require.NoError(t, err)
-	require.Contains(t, qualifyingPaths, enterpriseCA.ID)
-	require.Len(t, qualifyingPaths[enterpriseCA.ID], 1)
-	assert.Equal(t, validHost.ID, qualifyingPaths[enterpriseCA.ID][0].Root().ID)
-	assert.Equal(t, 1, forestResolutionCount)
 }
