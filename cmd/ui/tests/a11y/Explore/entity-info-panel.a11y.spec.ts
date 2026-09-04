@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Page } from '@playwright/test';
-import { hideBySelector, test } from 'bh-playwright-testing';
+import { test } from 'bh-playwright-testing';
 
 const SEARCH_TERM = 'test';
 const OBJECT_ID = 'playwright-gpo-1';
@@ -172,11 +172,9 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
 
         await infoPanel.getByText('RELATED_USER_0@PLAYWRIGHT.LOCAL').waitFor({ state: 'visible' });
 
-        await hideBySelector(page, '[data-testid="explore_search-container"]');
-        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
-        await hideBySelector(page, '.ReactQueryDevtools');
-
-        await checkA11y();
+        await checkA11y({
+            include: '[data-testid="explore_entity-information-panel"]',
+        });
     });
 
     test('With disabled sections', async ({ page, checkA11y }) => {
@@ -212,11 +210,9 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
         await infoPanel.getByTestId('entity-object-information-skeleton').waitFor({ state: 'detached' });
         await infoPanel.getByRole('button', { name: /Inbound Object Control/ }).waitFor({ state: 'visible' });
 
-        await hideBySelector(page, '[data-testid="explore_search-container"]');
-        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
-        await hideBySelector(page, '.ReactQueryDevtools');
-
-        await checkA11y();
+        await checkA11y({
+            include: '[data-testid="explore_entity-information-panel"]',
+        });
     });
 
     test('With selectable items section', async ({ page, checkA11y }) => {
@@ -301,10 +297,8 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
 
         await infoPanel.getByText(SELECTABLE_OU_NAME).waitFor({ state: 'visible' });
 
-        await hideBySelector(page, '[data-testid="explore_search-container"]');
-        await hideBySelector(page, '[data-testid="sigma-container-wrapper"]');
-        await hideBySelector(page, '.ReactQueryDevtools');
-
-        await checkA11y();
+        await checkA11y({
+            include: '[data-testid="explore_entity-information-panel"]',
+        });
     });
 });

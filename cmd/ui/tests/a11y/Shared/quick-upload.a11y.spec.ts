@@ -67,7 +67,7 @@ test.describe('Quick Upload dialog', () => {
         const fileChooserPromise = page.waitForEvent('filechooser');
 
         await dialog
-            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .getByText('Click here or drag and drop to upload JSON or zip/compressed JSON files', { exact: true })
             .click();
 
         const fileChooser = await fileChooserPromise;
