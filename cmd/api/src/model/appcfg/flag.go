@@ -133,11 +133,6 @@ func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
 }
 
-// GetManagedOpenHoundCollectionEnabled returns true if managed OpenHound collection is enabled.
-func GetManagedOpenHoundCollectionEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	return GetFlagEnabled(ctx, service, FeatureManagedOpenHoundCollection)
-}
-
 // GetUseRawObjectIDsEnabled returns true if the use raw object id feature flag is enabled.
 func GetUseRawObjectIDsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureUseRawObjectID)
