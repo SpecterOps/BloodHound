@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { hideBySelector, test } from 'bh-playwright-testing';
+import { test } from 'bh-playwright-testing';
 import { installGraphHasNoDataStub } from 'bh-playwright-testing/stubs';
 
 test.describe('No Data Available dialog accessibility', () => {
@@ -27,10 +27,8 @@ test.describe('No Data Available dialog accessibility', () => {
             page.getByRole('heading', { name: 'Upload Data to Start Mapping Your Environment' })
         );
 
-        await hideBySelector(page, '#content-wrapper');
-
         // Scope the scan to the dialog (rendered as `role="dialog"` by MUI) so violations from
         // the rest of the Explore page don't bleed into this test's signal.
-        await checkA11y({ include: '[role="dialog"]' });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 });

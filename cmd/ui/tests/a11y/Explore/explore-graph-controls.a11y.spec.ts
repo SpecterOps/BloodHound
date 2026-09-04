@@ -29,7 +29,7 @@ const SECOND_NODE_OBJECT_ID = 'playwright-object-2';
 const FIRST_NODE_LABEL = 'PLAYWRIGHT GRAPH USER';
 const SECOND_NODE_LABEL = 'PLAYWRIGHT GRAPH GROUP';
 const HIDE_CLASSES =
-    '[data-testid="explore_search-container"], [data-testid="explore_graph-controls"], [data-testid="sigma-container-wrapper"], .ReactQueryDevtools';
+    '[data-testid="explore_search-container"], [data-testid="explore_graph-controls"], [data-testid="sigma-container-wrapper"]';
 
 const createStyledNode = (objectId: string, label: string, nodeType: string): StyledGraphNode => ({
     color: '#5c6bc0',

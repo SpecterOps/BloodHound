@@ -40,7 +40,9 @@ The axe fixture is a thin wrapper around `@axe-core/playwright`'s `AxeBuilder`:
 1. `test` is Playwright's `test` extended with a `makeAxeBuilder()` fixture, a worker-scoped `theme` option (default `'light'`), and a `context` fixture that injects a `window.__APP_TEST_RUNTIME__` marker so the app can detect a Playwright run (e.g. to disable CSS transition animations).
 2. Calling `makeAxeBuilder()` returns a fresh `AxeBuilder` bound to the current `page` and constrained to `WCAG_TAGS` (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`).
 3. The spec chains scoping or rule methods it needs (`.include(...)`, `.exclude(...)`, `.disableRules(...)`) and `await builder.analyze()`.
-4. The `AxeResults` are handed to `expectNoAccessibilityViolations(testInfo, results, opts?)`, which attaches `axe-results.json` (always) and `a11y-violations.md` (only on failure) before asserting that `results.violations` is empty.
+4. The `AxeResults` are handed to `expectNoAccessibilityViolations(testInfo, results, opts?)`, which attaches `axe-results.json` (always), `a11y-violations.md` when violations exist, and `a11y-incomplete.md` when checks require manual review. Violations and incomplete checks fail by default.
+
+Incomplete axe results are attached to the report for manual review but do not fail a scan by default. Use `checkA11y({ failOnIncomplete: true })` when a specific scan is expected to produce definitive results and should fail if axe cannot determine whether an element passes or fails.
 
 The fixture also records an `a11y-tags` annotation on `testInfo` so the active tag set shows up in Playwright and Allure reports.
 
@@ -49,10 +51,11 @@ The fixture also records an `a11y-tags` annotation on `testInfo` so the active t
 `expectNoAccessibilityViolations` (and `attachAxeReport`) accept an optional third argument:
 
 ```ts
-type AttachAxeReportOptions = {
+type ExpectNoAccessibilityViolationsOptions = {
     page?: Page;
     maxNodesPerViolation?: number; // default 5
     attachmentNamePrefix?: string;
+    failOnIncomplete?: boolean; // default false
 };
 ```
 
