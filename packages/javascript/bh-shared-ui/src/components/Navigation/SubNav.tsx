@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Typography, TypographyVariants } from 'doodle-ui';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useOnClickOutside } from '../../hooks';
@@ -21,21 +22,42 @@ import { SubNavItem, SubNavSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
 
-const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item }) => {
+type SubNavVariant = 'legacy' | 'refreshed';
+
+const SubNavListItem: FC<{
+    item: Pick<SubNavItem, 'label' | 'path'>;
+    variant: SubNavVariant;
+}> = ({ item, variant }) => {
     const location = useLocation();
     const { label, path } = item;
     const isActiveRoute = path ? location.pathname.includes(path.replace(/\*/g, '')) : false;
 
     return (
         <li
-            className={cn('mx-2 rounded', {
-                'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
-                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
-                    !isActiveRoute,
-            })}>
-            {/* Full width ensures that even clicking white space activates the link */}
-            {/* Anchor uses block display instead of inline so full width works */}
-            <AppLink className='w-full block px-2 py-0.5' to={path}>
+            className={
+                variant === 'legacy'
+                    ? cn('mx-2 rounded', {
+                          'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
+                          'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
+                              !isActiveRoute,
+                      })
+                    : cn(
+                          'min-h-7 rounded focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
+                          {
+                              'text-common-white bg-primary dark:text-[#8D8BF8] dark:bg-neutral-4': isActiveRoute,
+                              'hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-[#1A1A1A]':
+                                  !isActiveRoute,
+                          }
+                      )
+            }>
+            <AppLink
+                aria-current={isActiveRoute ? 'page' : undefined}
+                className={cn(
+                    'w-full block px-2 py-0.5',
+                    variant === 'refreshed' && TypographyVariants({ variant: 'body2' }),
+                    variant === 'refreshed' && 'truncate !text-inherit'
+                )}
+                to={path}>
                 {label}
             </AppLink>
         </li>
@@ -55,8 +77,8 @@ const SubNav: React.FC<{
     sections: SubNavSections[];
     /** Clicking outside of subnav closes it unless trigger element was clicked; Prevents unintended reopens */
     triggerRef?: RefObject<HTMLElement>;
-}> = ({ isExpanded, close, sections, triggerRef }) => {
-    // Handles slide-in transition
+    variant?: SubNavVariant;
+}> = ({ isExpanded, close, sections, triggerRef, variant = 'legacy' }) => {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -66,7 +88,6 @@ const SubNav: React.FC<{
     const ref = useRef<HTMLDivElement>(null);
     const handleClickOutside = useCallback(
         (e: Event) => {
-            // trigger element excluded to prevent unintended reopens
             if (triggerRef?.current?.contains(e.target as Node)) return;
             close();
         },
@@ -76,30 +97,38 @@ const SubNav: React.FC<{
 
     return (
         <nav
+            aria-label='Sub-navigation'
             className={cn(
-                'bottom-2 py-2 rounded-lg cursor-default z-subNav',
-                'flex flex-col gap-8 absolute shadow-md',
-                'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                'bottom-2 cursor-default z-subNav flex flex-col gap-8 absolute',
+                variant === 'legacy'
+                    ? 'py-2 rounded-lg shadow-md bg-[#F2F2F2] dark:bg-[#1F1F1F]'
+                    : 'w-[264px] p-2 rounded text-common-white bg-primary-variant dark:text-main dark:bg-[#1F1F1F]',
                 'transform-gpu translate-z-[0px]', // This line addresses a Safari hardware rendering bug
                 'transition-all duration-300 ease-out',
                 {
                     'opacity-100': visible,
                     'opacity-0': !visible,
-                    'left-subnav-expanded': isExpanded,
-                    'left-subnav-collapsed': !isExpanded,
+                    'left-subnav-expanded': variant === 'legacy' && isExpanded,
+                    'left-subnav-collapsed': variant === 'legacy' && !isExpanded,
+                    'left-[272px]': variant === 'refreshed' && isExpanded,
+                    'left-16': variant === 'refreshed' && !isExpanded,
                 }
             )}
             data-testid='sub-nav'
             ref={ref}
             onMouseLeave={close}>
             {sections.map((section, sectionIndex) => (
-                <ul key={sectionIndex} className='flex flex-col gap-1'>
-                    {/* Section title */}
-                    <li className='px-4 text-lg font-medium'>{section.title}</li>
+                <ul key={sectionIndex} className={cn('flex flex-col', variant === 'legacy' ? 'gap-1' : 'gap-2')}>
+                    {variant === 'legacy' ? (
+                        <li className='px-4 text-lg font-medium'>{section.title}</li>
+                    ) : (
+                        <Typography className='px-2 !text-inherit' component='li' variant='h6'>
+                            {section.title}
+                        </Typography>
+                    )}
 
-                    {/* Section items */}
                     {section.items.map((item, itemIndex) => (
-                        <SubNavListItem key={itemIndex} item={item} />
+                        <SubNavListItem key={itemIndex} item={item} variant={variant} />
                     ))}
                 </ul>
             ))}

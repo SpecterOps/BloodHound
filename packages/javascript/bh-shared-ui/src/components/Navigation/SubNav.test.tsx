@@ -88,4 +88,32 @@ describe('SubNav', () => {
             }
         }
     });
+
+    it('uses refreshed geometry and Doodle typography without elevation', () => {
+        render(
+            <SubNav
+                close={() => {}}
+                isExpanded
+                sections={[{ title: 'Configuration', items: [{ label: 'Settings', path: '/settings' }] }]}
+                variant='refreshed'
+            />,
+            { route: '/settings' }
+        );
+
+        const navigation = screen.getByRole('navigation', { name: 'Sub-navigation' });
+        const heading = screen.getByText('Configuration');
+        const item = screen.getByRole('link', { name: 'Navigate to settings' });
+
+        expect(navigation).toHaveClass('left-[272px]', 'w-[264px]', 'p-2', 'rounded', 'bg-primary-variant');
+        expect(navigation).not.toHaveClass('shadow-md');
+        expect(heading).toHaveClass('typography-h6');
+        expect(item).toHaveClass('truncate', '!text-inherit');
+        expect(item).toHaveAttribute('aria-current', 'page');
+        expect(item.closest('li')).toHaveClass(
+            'min-h-7',
+            'bg-primary',
+            'focus-within:focus-ring-inset',
+            'focus-within:[--focus-ring:var(--common-white)]'
+        );
+    });
 });
