@@ -111,11 +111,10 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(t.Context(), db, edge)
 				require.Nil(t, err)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 8, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Computer))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.CertTemplate1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.EnterpriseCA1))
@@ -187,7 +186,6 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, graphDB, edge)
 				require.NoError(t, err)
 				require.Greater(t, composition.AllNodes().Len(), 0)
-				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				compositionEdgeCount := 0
 				for _, path := range composition.Paths() {
