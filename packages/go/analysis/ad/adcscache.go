@@ -140,12 +140,13 @@ type ADCSCache struct {
 	rootCAForChainValid              map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
 
 	// ESC4-specific caches: principals with specific rights on cert templates, pre-computed to avoid per-ECA DB queries
-	certTemplateGenericWriters              map[graph.ID]CachedPrincipalSet // principals with GenericWrite on a cert template
-	certTemplateEnrollOrAllExtendedRighters map[graph.ID]CachedPrincipalSet // principals with Enroll or AllExtendedRights on a cert template
-	certTemplateWritePKINameFlaggers        map[graph.ID]CachedPrincipalSet // principals with WritePKINameFlag on a cert template
-	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID]CachedPrincipalSet // principals with WritePKIEnrollmentFlag on a cert template
-	hasUPNCertMappingInForest               cardinality.Duplex[uint64]      // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
-	hasWeakCertBindingInForest              cardinality.Duplex[uint64]      // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+	certTemplateGenericWriters              map[graph.ID]CachedPrincipalSet         // principals with GenericWrite on a cert template
+	certTemplateEnrollOrAllExtendedRighters map[graph.ID]CachedPrincipalSet         // principals with Enroll or AllExtendedRights on a cert template
+	certTemplateWritePKINameFlaggers        map[graph.ID]CachedPrincipalSet         // principals with WritePKINameFlag on a cert template
+	certTemplateWritePKIEnrollmentFlaggers  map[graph.ID]CachedPrincipalSet         // principals with WritePKIEnrollmentFlag on a cert template
+	hasUPNCertMappingInForest               cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Schannel UPN cert mapping enabled
+	hasWeakCertBindingInForest              cardinality.Duplex[uint64]              // domains where at least one DC in the forest has Kerberos weak cert binding enabled
+	certTemplateLinkedDomains               map[graph.ID]cardinality.Duplex[uint64] // cert template ID → bitmap of domain IDs reachable via PublishedTo→RootCAFor chain
 }
 
 func NewADCSCache() *ADCSCache {
@@ -168,6 +169,7 @@ func NewADCSCache() *ADCSCache {
 		certTemplateWritePKINameFlaggers:        make(map[graph.ID]CachedPrincipalSet),
 		certTemplateWritePKIEnrollmentFlaggers:  make(map[graph.ID]CachedPrincipalSet),
 		hasWeakCertBindingInForest:              cardinality.NewBitmap64(),
+		certTemplateLinkedDomains:               make(map[graph.ID]cardinality.Duplex[uint64]),
 	}
 }
 
@@ -401,6 +403,37 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 
 		domainMeasure()
 
+		// Pre-compute cert template → domain linkage by combining rootCAForChainValid
+		// and publishedTemplateCache. A cert template links to a domain if it is
+		// published to any ECA that has a valid RootCAFor chain to that domain. This
+		// eliminates per-pair shortest-path queries in EnrollOnBehalfOf processing.
+		linkMeasure := measure.ContextMeasure(
+			ctx,
+			slog.LevelInfo,
+			"BuildCache cert template domain linkage",
+			attr.Namespace("analysis"),
+			attr.Function("BuildCache.CertTemplateDomainLinkage"),
+			attr.Scope("routine"),
+		)
+
+		for domainID, validECAs := range s.rootCAForChainValid {
+			validECAs.Each(func(ecaID uint64) bool {
+				if publishedTemplates, ok := s.publishedTemplateCache[graph.ID(ecaID)]; ok {
+					for _, certTemplate := range publishedTemplates {
+						domains, exists := s.certTemplateLinkedDomains[certTemplate.ID]
+						if !exists {
+							domains = cardinality.NewBitmap64()
+							s.certTemplateLinkedDomains[certTemplate.ID] = domains
+						}
+						domains.Add(domainID.Uint64())
+					}
+				}
+				return true
+			})
+		}
+
+		linkMeasure()
+
 		return nil
 	})
 
@@ -625,19 +658,18 @@ func (s *ADCSCache) GetCertTemplateHasSpecialEnrollers(id graph.ID) bool {
 	return s.certTemplateHasSpecialEnrollers[id]
 }
 
-// enterpriseCAHasChainedDomain returns true when the Enterprise CA has both a
-// RootCAFor path and a TrustedForNTAuth path to the domain.
-func (s *ADCSCache) enterpriseCAHasChainedDomain(enterpriseCAID, domainID graph.ID) bool {
+// CertTemplateLinksToDomain returns true if the given cert template can reach the
+// given domain through a PublishedTo → RootCAFor chain (via any Enterprise CA).
+// This is a pre-computed O(1) bitmap lookup that replaces the per-pair
+// DoesCertTemplateLinkToDomain shortest-path DB query.
+func (s *ADCSCache) CertTemplateLinksToDomain(certTemplateID, domainID graph.ID) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	rootCAEnterpriseCAs, hasRootCAPath := s.rootCAForChainValid[domainID]
-	ntAuthEnterpriseCAs, hasNTAuthPath := s.authStoreForChainValid[domainID]
-	if !hasRootCAPath || !hasNTAuthPath {
-		return false
+	if domains, ok := s.certTemplateLinkedDomains[certTemplateID]; ok {
+		return domains.Contains(domainID.Uint64())
 	}
-
-	return rootCAEnterpriseCAs.Contains(enterpriseCAID.Uint64()) && ntAuthEnterpriseCAs.Contains(enterpriseCAID.Uint64())
+	return false
 }
 
 func (s *ADCSCache) GetEnterpriseCAHasSpecialEnrollers(id graph.ID) bool {
