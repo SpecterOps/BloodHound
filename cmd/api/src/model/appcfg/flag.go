@@ -46,6 +46,7 @@ const (
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureManagedOpenHoundCollection   = "managed_openhound_collection"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
 	FeatureArtifactExpirationCleanup    = "artifact_expiration_cleanup"
@@ -130,6 +131,11 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
 func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
+}
+
+// GetManagedOpenHoundCollectionEnabled returns true if managed OpenHound collection is enabled.
+func GetManagedOpenHoundCollectionEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureManagedOpenHoundCollection)
 }
 
 // GetUseRawObjectIDsEnabled returns true if the use raw object id feature flag is enabled.
