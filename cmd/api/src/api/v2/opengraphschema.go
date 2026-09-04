@@ -121,7 +121,7 @@ const (
 )
 
 func validateZipBundle(payload model.GraphExtensionPayload) error {
-	if len(payload.GraphRelationshipFindings) > 0 && payload.PZRules == nil {
+	if len(payload.GraphRelationshipFindings) > 0 && (payload.PZRules == nil || len(payload.PZRules.Rules) == 0) {
 		return fmt.Errorf("extension declares relationship findings and requires a %q component", bundleFileNamePzRules)
 	}
 	return nil

@@ -148,6 +148,15 @@ func TestExtractBundleFromZip(t *testing.T) {
 			wantErrText: "requires a \"pz_rules.json\" component",
 		},
 		{
+			name: "zip schema with findings requires at least one pz rule",
+			archive: newExtensionZip(t, map[string]string{
+				"schema.json":   validSchemaWithFindingsJSON,
+				"pz_rules.json": `{"rules": []}`,
+			}),
+			wantErrText:    "requires a \"pz_rules.json\" component",
+			wantHasPZRules: true,
+		},
+		{
 			name: "zip schema with findings and pz_rules.json is valid",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":   validSchemaWithFindingsJSON,
@@ -288,7 +297,7 @@ func TestValidateZipBundle(t *testing.T) {
 				name: "enterprise extension (findings) with pz_rules is valid",
 				payload: func() model.GraphExtensionPayload {
 					var payload = schemaWithFindings
-					payload.PZRules = &model.PZRulesPayload{}
+					payload.PZRules = &model.PZRulesPayload{Rules: []model.PZRulePayload{{Name: "Test rule"}}}
 					return payload
 				}(),
 			},
