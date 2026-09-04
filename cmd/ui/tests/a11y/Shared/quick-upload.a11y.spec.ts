@@ -58,7 +58,7 @@ test.describe('Quick Upload dialog', () => {
             .waitFor({ state: 'visible' });
         await dialog.getByText('View File Ingest History', { exact: true }).waitFor({ state: 'visible' });
 
-        await checkA11y({ include: '[role="dialog"]' });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
     test('with files added', async ({ page, checkA11y }) => {
@@ -67,7 +67,7 @@ test.describe('Quick Upload dialog', () => {
         const fileChooserPromise = page.waitForEvent('filechooser');
 
         await dialog
-            .getByText('Click here or drag and drop to upload JSON or zip/compressed JSON files', { exact: true })
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
             .click();
 
         const fileChooser = await fileChooserPromise;
@@ -75,7 +75,7 @@ test.describe('Quick Upload dialog', () => {
         await dialog.getByText('playwright-upload.json', { exact: true }).waitFor({ state: 'visible' });
         await dialog.getByRole('button', { name: 'Remove item', exact: true }).waitFor({ state: 'visible' });
 
-        await checkA11y({ include: '[role="dialog"]' });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
     test('with completed uploads', async ({ page, checkA11y }) => {
@@ -137,7 +137,7 @@ test.describe('Quick Upload dialog', () => {
         await dialog.getByText('100%', { exact: true }).waitFor({ state: 'visible' });
         await dialog.getByText('Upload in progress.', { exact: true }).waitFor({ state: 'hidden' });
 
-        await checkA11y({ include: '[role="dialog"]' });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
     test('with failed uploads', async ({ page, checkA11y }) => {
@@ -206,6 +206,6 @@ test.describe('Quick Upload dialog', () => {
         await dialog.getByRole('button', { name: 'Retry upload', exact: true }).waitFor({ state: 'visible' });
         await dialog.getByText('Upload in progress.', { exact: true }).waitFor({ state: 'hidden' });
 
-        await checkA11y({ include: '[role="dialog"]' });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 });
