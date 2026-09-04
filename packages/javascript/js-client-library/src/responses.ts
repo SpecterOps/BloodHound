@@ -533,6 +533,7 @@ export type CreateAlertResponse = BasicResponse<AlertPayload>;
 export type UpdateAlertResponse = BasicResponse<AlertPayload>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 
