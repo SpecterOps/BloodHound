@@ -350,11 +350,7 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 				})
 
 				if !certTemplateValidForUserVictim(certTemplate) {
-					if managedServiceAccount, err := isManagedServiceAccount(victimNode); err != nil {
-						return err
-					} else if !managedServiceAccount {
-						return nil
-					}
+					return nil
 				}
 			}
 

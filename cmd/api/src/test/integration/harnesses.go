@@ -2240,115 +2240,6 @@ func (s *ESC3Harness3) Setup(c *GraphTestContext) {
 	addHostingComputer(c, "EnterpriseCA1 host", sid, s.EnterpriseCA1)
 }
 
-type ESC3ManagedServiceAccountDNSHarness struct {
-	GMSA                            *graph.Node
-	SMSA                            *graph.Node
-	RegularUser                     *graph.Node
-	SubjectAltRequireDNSTemplate    *graph.Node
-	DomainDNSTemplate               *graph.Node
-	DNSAuthenticationTemplate       *graph.Node
-	DomainDNSAuthenticationTemplate *graph.Node
-	DNSEnterpriseCA                 *graph.Node
-	DomainDNSEnterpriseCA           *graph.Node
-	DNSNTAuthStore                  *graph.Node
-	DomainDNSNTAuthStore            *graph.Node
-	DNSRootCA                       *graph.Node
-	DomainDNSRootCA                 *graph.Node
-	DNSDomain                       *graph.Node
-	DomainDNSDomain                 *graph.Node
-}
-
-func (s *ESC3ManagedServiceAccountDNSHarness) Setup(graphTestContext *GraphTestContext) {
-	var (
-		dnsDomainSID       = RandomDomainSID()
-		domainDNSDomainSID = RandomDomainSID()
-		emptyEKUs          = make([]string, 0)
-	)
-
-	s.GMSA = graphTestContext.NewActiveDirectoryUser("GMSA", dnsDomainSID)
-	s.GMSA.Properties.Set(ad.GMSA.String(), true)
-	graphTestContext.UpdateNode(s.GMSA)
-
-	s.SMSA = graphTestContext.NewActiveDirectoryUser("SMSA", dnsDomainSID)
-	s.SMSA.Properties.Set(ad.MSA.String(), true)
-	graphTestContext.UpdateNode(s.SMSA)
-
-	s.RegularUser = graphTestContext.NewActiveDirectoryUser("RegularUser", dnsDomainSID)
-	s.SubjectAltRequireDNSTemplate = graphTestContext.NewActiveDirectoryCertTemplate("SubjectAltRequireDNSTemplate", dnsDomainSID, CertTemplateData{
-		RequiresManagerApproval: false,
-		SubjectAltRequireDNS:    true,
-		SchemaVersion:           1,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           emptyEKUs,
-		ApplicationPolicies:     emptyEKUs,
-	})
-	s.DNSAuthenticationTemplate = graphTestContext.NewActiveDirectoryCertTemplate("DNSAuthenticationTemplate", dnsDomainSID, CertTemplateData{
-		RequiresManagerApproval: false,
-		AuthenticationEnabled:   true,
-		SchemaVersion:           1,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           emptyEKUs,
-		ApplicationPolicies:     emptyEKUs,
-	})
-	s.DomainDNSTemplate = graphTestContext.NewActiveDirectoryCertTemplate("SubjectAltRequireDomainDNSTemplate", domainDNSDomainSID, CertTemplateData{
-		RequiresManagerApproval:    false,
-		SubjectAltRequireDomainDNS: true,
-		SchemaVersion:              1,
-		AuthorizedSignatures:       0,
-		EffectiveEKUs:              emptyEKUs,
-		ApplicationPolicies:        emptyEKUs,
-	})
-	s.DomainDNSAuthenticationTemplate = graphTestContext.NewActiveDirectoryCertTemplate("DomainDNSAuthenticationTemplate", domainDNSDomainSID, CertTemplateData{
-		RequiresManagerApproval: false,
-		AuthenticationEnabled:   true,
-		SchemaVersion:           1,
-		AuthorizedSignatures:    0,
-		EffectiveEKUs:           emptyEKUs,
-		ApplicationPolicies:     emptyEKUs,
-	})
-	s.DNSEnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("DNSEnterpriseCA", dnsDomainSID)
-	s.DomainDNSEnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("DomainDNSEnterpriseCA", domainDNSDomainSID)
-	s.DNSNTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("DNSNTAuthStore", dnsDomainSID)
-	s.DomainDNSNTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("DomainDNSNTAuthStore", domainDNSDomainSID)
-	s.DNSRootCA = graphTestContext.NewActiveDirectoryRootCA("DNSRootCA", dnsDomainSID)
-	s.DomainDNSRootCA = graphTestContext.NewActiveDirectoryRootCA("DomainDNSRootCA", domainDNSDomainSID)
-	s.DNSDomain = graphTestContext.NewActiveDirectoryDomain("DNSDomain", dnsDomainSID, false, true)
-	s.DomainDNSDomain = graphTestContext.NewActiveDirectoryDomain("DomainDNSDomain", domainDNSDomainSID, false, true)
-
-	for _, principal := range []*graph.Node{s.GMSA, s.SMSA, s.RegularUser} {
-		graphTestContext.NewRelationship(principal, s.SubjectAltRequireDNSTemplate, ad.Enroll)
-		graphTestContext.NewRelationship(principal, s.DNSAuthenticationTemplate, ad.Enroll)
-		graphTestContext.NewRelationship(principal, s.DNSEnterpriseCA, ad.Enroll)
-		graphTestContext.NewRelationship(principal, s.DomainDNSTemplate, ad.Enroll)
-		graphTestContext.NewRelationship(principal, s.DomainDNSAuthenticationTemplate, ad.Enroll)
-		graphTestContext.NewRelationship(principal, s.DomainDNSEnterpriseCA, ad.Enroll)
-	}
-
-	graphTestContext.NewRelationship(s.SubjectAltRequireDNSTemplate, s.DNSAuthenticationTemplate, ad.EnrollOnBehalfOf)
-	graphTestContext.NewRelationship(s.SubjectAltRequireDNSTemplate, s.DNSEnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.DNSAuthenticationTemplate, s.DNSEnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.DNSEnterpriseCA, s.DNSNTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.DNSEnterpriseCA, s.DNSRootCA, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.DNSNTAuthStore, s.DNSDomain, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DNSRootCA, s.DNSDomain, ad.RootCAFor)
-
-	graphTestContext.NewRelationship(s.DomainDNSTemplate, s.DomainDNSAuthenticationTemplate, ad.EnrollOnBehalfOf)
-	graphTestContext.NewRelationship(s.DomainDNSTemplate, s.DomainDNSEnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.DomainDNSAuthenticationTemplate, s.DomainDNSEnterpriseCA, ad.PublishedTo)
-	graphTestContext.NewRelationship(s.DomainDNSEnterpriseCA, s.DomainDNSNTAuthStore, ad.TrustedForNTAuth)
-	graphTestContext.NewRelationship(s.DomainDNSEnterpriseCA, s.DomainDNSRootCA, ad.IssuedSignedBy)
-	graphTestContext.NewRelationship(s.DomainDNSNTAuthStore, s.DomainDNSDomain, ad.NTAuthStoreFor)
-	graphTestContext.NewRelationship(s.DomainDNSRootCA, s.DomainDNSDomain, ad.RootCAFor)
-
-	s.DNSEnterpriseCA.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
-	graphTestContext.UpdateNode(s.DNSEnterpriseCA)
-	s.DomainDNSEnterpriseCA.Properties.Set(ad.EnrollmentAgentRestrictionsCollected.String(), false)
-	graphTestContext.UpdateNode(s.DomainDNSEnterpriseCA)
-
-	addHostingComputer(graphTestContext, "DNSEnterpriseCA host", dnsDomainSID, s.DNSEnterpriseCA)
-	addHostingComputer(graphTestContext, "DomainDNSEnterpriseCA host", domainDNSDomainSID, s.DomainDNSEnterpriseCA)
-}
-
 type ESC9aPrincipalHarness struct {
 	CertTemplate *graph.Node
 	DC           *graph.Node
@@ -10518,7 +10409,6 @@ type HarnessDetails struct {
 	ESC3Harness1                                    ESC3Harness1
 	ESC3Harness2                                    ESC3Harness2
 	ESC3Harness3                                    ESC3Harness3
-	ESC3ManagedServiceAccountDNSHarness             ESC3ManagedServiceAccountDNSHarness
 	ESC6aHarnessPrincipalEdges                      ESC6aHarnessPrincipalEdges
 	ESC6aHarnessECA                                 ESC6aHarnessECA
 	ESC6aHarnessTemplate1                           ESC6aHarnessTemplate1

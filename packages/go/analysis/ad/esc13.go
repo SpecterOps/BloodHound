@@ -254,14 +254,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 					return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 				})
 
-				if startNode.Kinds.ContainsOneOf(ad.User) && !certTemplateValidForUserVictim(certTemplate) {
-					if managedServiceAccount, err := isManagedServiceAccount(startNode); err != nil {
-						return err
-					} else if !managedServiceAccount {
-						return nil
-					}
-				}
-
 				lock.Lock()
 				path1CandidateSegments[enterpriseCANode.ID] = append(path1CandidateSegments[enterpriseCANode.ID], terminal)
 				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
@@ -273,10 +265,6 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}); err != nil {
 			return nil, err
 		}
-	}
-
-	if path1EnterpriseCAs.Cardinality() == 0 {
-		return paths, nil
 	}
 
 	//Manifest P2 and key it to the enterprise CA nodes to cross product

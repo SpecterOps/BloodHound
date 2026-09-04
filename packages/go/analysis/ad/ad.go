@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -41,18 +40,6 @@ import (
 const (
 	AdminSDHolderDNPrefix = "CN=ADMINSDHOLDER,CN=SYSTEM,"
 )
-
-func isManagedServiceAccount(node *graph.Node) (bool, error) {
-	if gmsa, err := node.Properties.Get(ad.GMSA.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else if gmsa {
-		return true, nil
-	} else if msa, err := node.Properties.Get(ad.MSA.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else {
-		return msa, nil
-	}
-}
 
 func TierZeroWellKnownSIDSuffixes() []string {
 	return []string{
