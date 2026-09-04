@@ -380,7 +380,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 }
 
 func adcsESC13Path1Pattern() traversal.PatternContinuation {
-	return enterpriseCAChainPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(
 			0, 0,
 			query.And(
@@ -410,20 +410,39 @@ func adcsESC13Path1Pattern() traversal.PatternContinuation {
 		query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)))
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.KindIn(query.End(), ad.Domain),
+		))
 }
 
 func adcsESC13Path2Pattern(caNodes, domains []graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
 		)).
 		Outbound(query.And(
 			query.Kind(query.Relationship(), ad.Enroll),
-			query.Kind(query.End(), ad.EnterpriseCA),
 			query.InIDs(query.End(), caNodes...),
-		)), query.InIDs(query.End(), domains...))
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.InIDs(query.End(), domains...),
+		))
 }
 
 func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuation {

@@ -202,7 +202,7 @@ func getESC10CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 }
 
 func adcsESC10Path1Pattern(domainID graph.ID, edgeKind graph.Kind) traversal.PatternContinuation {
-	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(
 			1, 1,
 			query.And(
@@ -242,7 +242,19 @@ func adcsESC10Path1Pattern(domainID graph.ID, edgeKind graph.Kind) traversal.Pat
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)), domainID)
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.Equals(query.EndID(), domainID),
+		))
 }
 
 func adcsESC10APath3Pattern() traversal.PatternContinuation {

@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
 )
 
@@ -202,48 +201,6 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.
 		}
 	}
 	return nil
-}
-
-func enterpriseCAChainPattern(pattern traversal.PatternContinuation, rootCAForCriteria ...graph.Criteria) traversal.PatternContinuation {
-	var criteria = []graph.Criteria{
-		query.Kind(query.Relationship(), ad.RootCAFor),
-		query.Kind(query.End(), ad.Domain),
-	}
-	criteria = append(criteria, rootCAForCriteria...)
-
-	return pattern.
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		OutboundWithDepth(1, 1, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		OutboundWithDepth(1, 1, query.And(criteria...))
-}
-
-func enterpriseCAChainToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
-	return enterpriseCAChainPattern(pattern, query.Equals(query.EndID(), domainID))
-}
-
-func enterpriseCATrustedForNTAuthPattern(pattern traversal.PatternContinuation, ntAuthStoreForCriteria ...graph.Criteria) traversal.PatternContinuation {
-	var criteria = []graph.Criteria{
-		query.Kind(query.Relationship(), ad.NTAuthStoreFor),
-		query.Kind(query.End(), ad.Domain),
-	}
-	criteria = append(criteria, ntAuthStoreForCriteria...)
-
-	return pattern.
-		OutboundWithDepth(1, 1, query.And(
-			query.Kind(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		OutboundWithDepth(1, 1, query.And(criteria...))
-}
-
-func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
 }
 
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {

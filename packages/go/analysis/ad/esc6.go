@@ -362,7 +362,7 @@ func getESC6CertTemplateCriteria(edgeKind graph.Kind) graph.Criteria {
 }
 
 func ADCSESC6Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
-	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -373,7 +373,15 @@ func ADCSESC6Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
 				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
-			)), domainId)
+			)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
+			query.Equals(query.EndID(), domainId),
+		))
 }
 
 func ADCSESC6Path2Pattern(domainId graph.ID) traversal.PatternContinuation {
@@ -390,7 +398,7 @@ func ADCSESC6Path2Pattern(domainId graph.ID) traversal.PatternContinuation {
 }
 
 func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint64], edgeKind graph.Kind) traversal.PatternContinuation {
-	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
+	return traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
@@ -404,5 +412,17 @@ func ADCSESC6Path3Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[ui
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)), domainId)
+		)).
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		Outbound(query.And(
+			query.KindIn(query.Relationship(), ad.RootCAFor),
+			query.Equals(query.EndID(), domainId),
+		))
 }
