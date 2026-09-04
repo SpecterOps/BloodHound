@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Page } from '@playwright/test';
+import { hideBySelector, test } from 'bh-playwright-testing';
 import type { StyledGraphEdge, StyledGraphNode } from 'js-client-library';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 const CYPHER_QUERY = 'MATCH (n) RETURN n LIMIT 2';
 const EXPLORE_URL =
@@ -28,6 +28,8 @@ const FIRST_NODE_OBJECT_ID = 'playwright-object-1';
 const SECOND_NODE_OBJECT_ID = 'playwright-object-2';
 const FIRST_NODE_LABEL = 'PLAYWRIGHT GRAPH USER';
 const SECOND_NODE_LABEL = 'PLAYWRIGHT GRAPH GROUP';
+const HIDE_CLASSES =
+    '[data-testid="explore_search-container"], [data-testid="explore_graph-controls"], [data-testid="sigma-container-wrapper"], .ReactQueryDevtools';
 
 const createStyledNode = (objectId: string, label: string, nodeType: string): StyledGraphNode => ({
     color: '#5c6bc0',
@@ -98,33 +100,26 @@ const installExploreGraphRoute = async (page: Page) => {
     });
 };
 
-const loadExploreGraph = async (page: Page) => {
-    await installExploreGraphRoute(page);
-    await page.goto(EXPLORE_URL);
-    await page.getByTestId('sigma-container-wrapper').waitFor({ state: 'attached' });
-    await page.getByTestId('explore_graph-controls').waitFor({ state: 'visible' });
-};
-
 const expandGraphSearch = async (page: Page) => {
-    const searchButton = page.getByRole('button', {
-        name: 'Search node in results',
-        exact: true,
-    });
-
-    await searchButton.click();
+    await page.getByTestId('explore_graph-controls_search-current-results').click();
 
     const searchInput = page.getByPlaceholder('Search node in results');
-    await searchInput.waitFor({ state: 'visible' });
+    await searchInput.waitFor();
 
     return searchInput;
 };
 
 test.describe('WCAG A/AA Violations - Explore - Graph Controls', () => {
-    test.beforeEach(async ({ page }) => {
-        await loadExploreGraph(page);
+    test.beforeEach(async ({ goAndWaitFor, page }) => {
+        await installExploreGraphRoute(page);
+        await goAndWaitFor(EXPLORE_URL, page.getByTestId('explore_graph-controls'));
     });
 
-    test('With Hide Labels expanded', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Graph control buttons', async ({ checkA11y }) => {
+        await checkA11y({ include: '[data-testid="explore_graph-controls"]' });
+    });
+
+    test('With hide labels expanded', async ({ page, checkA11y }) => {
         const hideLabelsButton = page.getByRole('button', { name: 'Hide Labels', exact: true });
         await hideLabelsButton.click();
 
@@ -132,60 +127,64 @@ test.describe('WCAG A/AA Violations - Explore - Graph Controls', () => {
             name: 'Hide All Labels Toggle',
             exact: true,
         });
-        await hideAllLabelsMenuItem.waitFor({ state: 'visible' });
+        await hideAllLabelsMenuItem.waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="menu"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+
+        await checkA11y({ include: '[data-radix-popper-content-wrapper]' });
     });
 
-    test('With Layout expanded', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With layout expanded', async ({ page, checkA11y }) => {
         const layoutButton = page.getByRole('button', { name: 'Layout', exact: true });
         await layoutButton.click();
 
         const sequentialMenuItem = page.getByRole('menuitem', { name: 'Sequential', exact: true });
-        await sequentialMenuItem.waitFor({ state: 'visible' });
+        await sequentialMenuItem.waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="menu"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+
+        await checkA11y({ include: '[data-radix-popper-content-wrapper]' });
     });
 
-    test('With Export expanded', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With Export expanded', async ({ page, checkA11y }) => {
         const exportButton = page.getByRole('button', { name: 'Export', exact: true });
         await exportButton.click();
 
         const jsonMenuItem = page.getByRole('menuitem', { name: 'JSON', exact: true });
-        await jsonMenuItem.waitFor({ state: 'visible' });
+        await jsonMenuItem.waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').include('[role="menu"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+
+        await checkA11y({ include: '[data-radix-popper-content-wrapper]' });
     });
 
-    test('With Search expanded', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With Search expanded', async ({ page, checkA11y }) => {
         await expandGraphSearch(page);
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+        await checkA11y({ include: '[aria-label="Search Current Nodes"]' });
     });
 
-    test('With search showing results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With search showing results', async ({ page, checkA11y }) => {
         const searchInput = await expandGraphSearch(page);
         await searchInput.fill(FIRST_NODE_LABEL);
 
         const matchingResult = page.getByRole('option').filter({ hasText: FIRST_NODE_LABEL });
-        await matchingResult.waitFor({ state: 'visible' });
+        await matchingResult.waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+
+        await checkA11y({ include: '[aria-label="Search Current Nodes"]' });
     });
 
-    test('With search showing no results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With search showing no results', async ({ page, checkA11y }) => {
         const searchInput = await expandGraphSearch(page);
         await searchInput.fill('no-matching-playwright-node');
 
         const noResultsMessage = page.getByText('No result found in current results', { exact: true });
-        await noResultsMessage.waitFor({ state: 'visible' });
+        await noResultsMessage.waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await hideBySelector(page, HIDE_CLASSES);
+
+        await checkA11y({ include: '[aria-label="Search Current Nodes"]' });
     });
 });

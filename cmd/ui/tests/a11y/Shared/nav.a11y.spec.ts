@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector, test } from 'bh-playwright-testing';
 
 const MAIN_NAV_SCOPE = '#app-root > nav';
 
@@ -28,28 +27,25 @@ test.describe('Shared navigation - has no detectable WCAG A/AA violations', () =
         await hideBySelector(page, '#content-wrapper');
     });
 
-    test('nav menu', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('nav menu', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'Toggle Navigation', expanded: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include(MAIN_NAV_SCOPE).analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: MAIN_NAV_SCOPE });
     });
 
-    test('collapsed nav menu', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('collapsed nav menu', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'Toggle Navigation', expanded: true }).click();
         await page.getByRole('button', { name: 'Toggle Navigation', expanded: false }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include(MAIN_NAV_SCOPE).analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: MAIN_NAV_SCOPE });
     });
 
-    test('administration subnav menu visible', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('administration subnav menu visible', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'Administration', exact: true }).click();
         const subNav = page.getByTestId('sub-nav');
         await subNav.waitFor({ state: 'visible' });
         await subNav.getByText('File Ingest', { exact: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include(MAIN_NAV_SCOPE).analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: MAIN_NAV_SCOPE });
     });
 });
