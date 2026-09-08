@@ -52,7 +52,7 @@ const PageWithTitle: React.FC<PageWithTitleProps> = ({
                 </Helmet>
             )}
             <Box component={'header'} className='pb-4'>
-                <div className='mb-4 flex justify-between'>
+                <div className='mb-4 flex justify-between gap-2'>
                     {title && <Typography variant='h1'>{title}</Typography>}
                     {actions && actions}
                 </div>
