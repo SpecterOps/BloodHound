@@ -40,7 +40,7 @@ import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithGraphId>();
 
-type DataTableProps = React.ComponentProps<typeof DataTable<MungedTableRowWithGraphId, any>>;
+type DataTableProps = React.ComponentProps<typeof DataTable<MungedTableRowWithGraphId, unknown>>;
 
 type ExploreTableMeta = {
     sortBy?: keyof MungedTableRowWithGraphId;
