@@ -371,6 +371,8 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
