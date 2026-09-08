@@ -124,6 +124,7 @@ export const FileIngestDetailsPanel = ({ ingest }: Props) => {
             Content={IngestContent}
             Empty={NoIngest}
             Header={IngestHeader}
+            itemClassName={`${OUTLINED_CANVAS_SURFACE_CLASS} rounded-lg overflow-hidden`}
             items={ingest}
             openIndex={0}
         />

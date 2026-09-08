@@ -37,10 +37,7 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({
     disableSwitch = false,
 }) => {
     return (
-        <div
-            className={cn(OUTLINED_CANVAS_SURFACE_CLASS, 'p-4 rounded-lg', {
-                'opacity-60': !isEnabled,
-            })}>
+        <div className={cn(OUTLINED_CANVAS_SURFACE_CLASS, 'p-4 rounded-lg')}>
             <div className='flex justify-between mb-4'>
                 <h4 className='font-bold text-lg'>{title}</h4>
                 <Switch
