@@ -18,6 +18,7 @@ import { Alert, AlertTitle } from '@mui/material';
 import { Card, CardContent } from 'doodle-ui';
 import type { FileIngestCompletedTask, FileIngestJob } from 'js-client-library';
 import { useFileUploadQuery } from '../../hooks';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { IndicatorType } from '../../types';
 import { DetailsAccordion } from '../DetailsAccordion';
 import { StatusIndicator } from '../StatusIndicator';
@@ -106,7 +107,7 @@ const IngestContent: React.FC<FileIngestJob> = (ingest) => {
 
 /** Displays a message to click an ingest ID */
 export const NoIngest = () => (
-    <Card>
+    <Card className={OUTLINED_CANVAS_SURFACE_CLASS}>
         <CardContent className='px-4'>Click on the Ingest ID to reveal further information.</CardContent>
     </Card>
 );

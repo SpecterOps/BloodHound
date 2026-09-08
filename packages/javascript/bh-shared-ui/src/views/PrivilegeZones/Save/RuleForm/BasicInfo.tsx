@@ -40,6 +40,7 @@ import { FC, useContext, useEffect } from 'react';
 import { Control } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { useAssetGroupTagInfo, usePZPathParams } from '../../../../hooks';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../../styles';
 import { queriesAreLoadingOrErrored } from '../../../../utils';
 import { PrivilegeZonesContext } from '../../PrivilegeZonesContext';
 import { useRuleFormContext } from './RuleFormContext';
@@ -69,7 +70,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
 
     return (
         <div className={'max-lg:w-full w-96 h-[36rem]'}>
-            <Card className='p-3'>
+            <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} p-3`}>
                 <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
                 <CardContent>
                     {ruleId !== '' && (

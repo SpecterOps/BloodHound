@@ -32,6 +32,7 @@ import {
 import { UpsertOIDCProviderDialog, UpsertSAMLProviderDialog } from '../../components/UpsertSSOProviders';
 import { useFeatureFlag, useMountEffect, usePermissions, useTheme } from '../../hooks';
 import { useNotifications } from '../../providers';
+import { CANVAS_MUI_TABLE_CLASS } from '../../styles';
 import { SortOrder } from '../../types';
 import { Permission, apiClient } from '../../utils';
 
@@ -283,7 +284,7 @@ const SSOConfiguration: FC = () => {
                         />
                     </Grid>
                     <Grid item xs={6}>
-                        <div className='bg-neutral-2 rounded-lg shadow-outer-1 pt-2'>
+                        <div className={`${CANVAS_MUI_TABLE_CLASS} rounded-lg pt-2`}>
                             <Box display='flex' justifyContent='space-between'>
                                 <Box className='flex items-center ml-6'>
                                     <Typography variant='h5'>Providers</Typography>

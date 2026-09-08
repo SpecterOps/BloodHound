@@ -19,6 +19,7 @@ import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { ZERO_VALUE_API_DATE } from '../../constants';
 import { useGetFileUploadsQuery } from '../../hooks';
+import { CANVAS_MUI_TABLE_CLASS } from '../../styles';
 import { LuxonFormat, getSimpleDuration } from '../../utils/datetime';
 import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
@@ -74,7 +75,7 @@ const LegacyFileIngestTable: React.FC = () => {
                 <FileIngestUploadButton />
             </div>
 
-            <Paper>
+            <Paper className={CANVAS_MUI_TABLE_CLASS} elevation={0}>
                 <DataTable
                     headers={ingestTableHeaders}
                     data={ingestRows}

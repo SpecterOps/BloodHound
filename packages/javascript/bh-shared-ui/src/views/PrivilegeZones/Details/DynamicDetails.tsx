@@ -27,6 +27,7 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useHighestPrivilegeTagId, useOwnedTagId, usePZPathParams, usePrivilegeZoneAnalysis } from '../../../hooks';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../styles';
 import { LuxonFormat } from '../../../utils';
 import { PrivilegeZonesContext } from '../PrivilegeZonesContext';
 import PrivilegeZonesCypherEditor from '../PrivilegeZonesCypherEditor';
@@ -80,7 +81,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
         <div
             className='mb-8 flex max-h-full min-w-0 max-w-full flex-col gap-6'
             data-testid='privilege-zones_tag-details-card'>
-            <Card className='min-w-0 max-w-full overflow-hidden p-6'>
+            <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} min-w-0 max-w-full overflow-hidden p-6`}>
                 <div className='flex items-center min-w-0' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} wrapperClasses='shrink-0' />}
                     <span className='min-w-0 flex-1 truncate text-xl font-bold'>{name}</span>
@@ -131,7 +132,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
 
     return (
         <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
-            <Card className='p-6'>
+            <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} p-6`}>
                 <div className='text-xl font-bold break-all line-clamp-2' title={name}>
                     {name}
                 </div>
@@ -177,7 +178,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({
         return <Skeleton className='p-6 h-52' />;
     } else if (isError) {
         return (
-            <Card className='p-6'>
+            <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} p-6`}>
                 <span className='text-base'>There was an error fetching this data</span>
             </Card>
         );

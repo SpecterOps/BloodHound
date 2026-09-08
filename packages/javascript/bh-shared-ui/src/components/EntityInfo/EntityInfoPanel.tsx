@@ -33,6 +33,7 @@ export interface EntityInfoPanelProps {
     DataTable: EntityTable;
     selectedNode?: NodeDetails | NodeDetailsWithInfo;
     className?: HTMLProps<HTMLDivElement>['className'];
+    surfaceClassName?: HTMLProps<HTMLDivElement>['className'];
     additionalTables?: EntityTables;
     priorityTables?: EntityTables;
     showPlaceholderMessage?: boolean;
@@ -41,6 +42,7 @@ export interface EntityInfoPanelProps {
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
     selectedNode,
     className,
+    surfaceClassName,
     additionalTables,
     priorityTables,
     DataTable,
@@ -55,10 +57,14 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             )}
             data-testid='explore_entity-information-panel'>
             <RoleBasedFilterBadge />
-            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+            <div className={cn('bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1', surfaceClassName)}>
                 <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
             </div>
-            <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
+            <div
+                className={cn(
+                    'bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1',
+                    surfaceClassName
+                )}>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}

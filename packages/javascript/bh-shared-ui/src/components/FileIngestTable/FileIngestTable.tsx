@@ -18,6 +18,7 @@ import { Card } from 'doodle-ui';
 import type { FileIngestJob } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useGetFileUploadsQuery } from '../../hooks';
+import { CANVAS_MUI_TABLE_CLASS } from '../../styles';
 import { JOB_STATUS_INDICATORS, JOB_STATUS_MAP, getSimpleDuration, toFormatted } from '../../utils';
 import DataTable from '../DataTable';
 import { FileIngestUploadButton } from '../FileIngest/FileIngestUploadButton';
@@ -91,7 +92,7 @@ export const FileIngestTable: FC = () => {
             </div>
 
             <div className='col-[1] row-[2] min-h-0'>
-                <Card>
+                <Card className={CANVAS_MUI_TABLE_CLASS}>
                     <DataTable
                         data={fileUploadJobs.map(getRowWithSelect)}
                         headers={getHeaders(HEADERS)}

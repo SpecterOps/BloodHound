@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { SearchInput } from '../../components';
 import { useDeleteExtension, useExtensionsQuery, usePermissions } from '../../hooks';
 import { DEFAULT_NOTIFICATION, ERROR_NOTIFICATION, useNotifications } from '../../providers';
+import { CANVAS_TABLE_ROW_CLASS, OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { Permission } from '../../utils';
 import { ConfirmDeleteExtensionDialog, DeleteExtensionButton } from './DeleteExtensionButton';
 
@@ -174,7 +175,7 @@ export const ActiveExtensionsCard = () => {
     }
 
     return (
-        <Card className='flex flex-col gap-4 overflow-hidden'>
+        <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col gap-4 overflow-hidden`}>
             <header className='flex justify-between items-center pt-6 px-6 gap-3'>
                 <CardTitle className='text-base'>Active Extensions</CardTitle>
                 <SearchInput
@@ -196,6 +197,7 @@ export const ActiveExtensionsCard = () => {
                             : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
                 }}>
                 <DataTable
+                    TableBodyRowProps={{ className: CANVAS_TABLE_ROW_CLASS }}
                     className='h-full'
                     data={filteredData}
                     noResultsFallback={

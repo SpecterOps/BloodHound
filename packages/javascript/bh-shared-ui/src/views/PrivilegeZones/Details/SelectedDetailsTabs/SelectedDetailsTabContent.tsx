@@ -17,6 +17,7 @@
 import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
 import { useAssetGroupTagInfo, useGetNodeById, useMemberInfo, useRuleInfo } from '../../../../hooks';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../../styles';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import DynamicDetails from '../DynamicDetails';
 import EntityRulesInformation from '../EntityRulesInformation';
@@ -46,6 +47,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
             <div className='h-full'>
                 <EntityInfoPanel
                     selectedNode={selectedNode}
+                    surfaceClassName={OUTLINED_CANVAS_SURFACE_CLASS}
                     showPlaceholderMessage={true}
                     DataTable={EntityInfoDataTable}
                     additionalTables={[
