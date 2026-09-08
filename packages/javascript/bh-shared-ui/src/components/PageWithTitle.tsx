@@ -25,6 +25,7 @@ type PageWithTitleProps = ContainerProps<
     'div',
     {
         title?: string;
+        actions?: React.ReactNode;
         pageDescription?: JSX.Element;
         children?: React.ReactNode;
         fullWidth?: boolean;
@@ -33,6 +34,7 @@ type PageWithTitleProps = ContainerProps<
 
 const PageWithTitle: React.FC<PageWithTitleProps> = ({
     title,
+    actions,
     pageDescription,
     children,
     fullWidth,
@@ -50,11 +52,10 @@ const PageWithTitle: React.FC<PageWithTitleProps> = ({
                 </Helmet>
             )}
             <Box component={'header'} className='pb-4'>
-                {title && (
-                    <Typography variant='h1' className='mb-4'>
-                        {title}
-                    </Typography>
-                )}
+                <div className='mb-4 flex justify-between'>
+                    {title && <Typography variant='h1'>{title}</Typography>}
+                    {actions && actions}
+                </div>
                 {pageDescription}
             </Box>
             {children}
