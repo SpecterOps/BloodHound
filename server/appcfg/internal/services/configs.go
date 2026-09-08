@@ -18,6 +18,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -46,6 +47,7 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
+// TODO: this and IsProtectedKey don't need to have Parameter receivers or be public
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
@@ -67,3 +69,11 @@ func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
+
+func (s Service) GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error) {
+	return s.db.GetConfigurationParameter(ctx, parameterKey)
+}
+
+func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
+	return s.db.GetAllConfigurationParameters(ctx)
+}

@@ -112,3 +112,25 @@ func (_c *MockDatabase_GetDatapipeStatus_Call) RunAndReturn(run func(ctx context
 	_c.Call.Return(run)
 	return _c
 }
+
+// Unused; needed to fill interface
+func (_mock *MockDatabase) GetConfigurationParameter(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error) {
+	ret := _mock.Called(ctx, parameterKey)
+
+	if len(ret) < 2 {
+		panic("not enough return values specified for GetConfigurationParameter")
+	}
+
+	return ret.Get(0).(services.Parameter), ret.Error(1)
+}
+
+// Unused; needed to fill interface
+func (_mock *MockDatabase) GetAllConfigurationParameters(ctx context.Context) (services.Parameters, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) < 2 {
+		panic("not enough return values specified for GetAllConfigurationParameters")
+	}
+
+	return ret.Get(0).(services.Parameters), ret.Error(1)
+}

@@ -28,6 +28,7 @@ type Database interface {
 	GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error)
 	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
 	GetConfigurationParameter(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
+	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
 }
 
 type Service struct {
