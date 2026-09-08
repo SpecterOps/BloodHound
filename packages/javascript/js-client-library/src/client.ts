@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { CollectorJob, CollectorJobHistory, CollectorJobProfile, CollectorJobSchedule } from './types';
-
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
@@ -89,6 +87,8 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobProfilesResponse,
+    GetCollectorJobScheduleResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -97,6 +97,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -118,6 +119,7 @@ import {
     PostureResponse,
     PreviewSelectorsResponse,
     RotateWebhookSecretResponse,
+    RunCollectorJobProfileResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
@@ -799,7 +801,7 @@ class BHEAPIClient {
     /* collector job profiles */
 
     getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<PaginatedResponse<{ records: CollectorJobHistory[] }>>('/api/v2/collector-job-history', {
+        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
                 ...options?.params,
@@ -811,22 +813,19 @@ class BHEAPIClient {
         });
 
     getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
-        this.baseClient.get<PaginatedResponse<{ profiles: CollectorJobProfile[] }>>('/api/v2/collector-job-profiles', {
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<{ schedule: CollectorJobSchedule }>>(
-            `/api/v2/collector-job-schedules/${scheduleId}`,
-            options
-        );
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
 
     deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
 
     runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.post<BasicResponse<{ job: CollectorJob }>>(
+        this.baseClient.post<RunCollectorJobProfileResponse>(
             '/api/v2/collector-job-queue',
             { job_profile_id: profileId },
             options

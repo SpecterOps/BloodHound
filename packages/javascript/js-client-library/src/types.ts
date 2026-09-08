@@ -1036,6 +1036,12 @@ export interface CollectorJobSchedule extends CollectorJobScheduleMinimal {
     updated_at: string;
 }
 
+export enum CollectorJobStatus {
+    Ready = 'ready',
+    Claimed = 'claimed',
+    Running = 'running',
+}
+
 export interface CollectorJob {
     id: string;
     job_schedule_id: number | null;
@@ -1047,7 +1053,7 @@ export interface CollectorJob {
     scope_client_id: string | null;
     secret_key_id: string | null;
     priority: number;
-    status: 'ready' | 'claimed' | 'running';
+    status: CollectorJobStatus;
     run_at: string;
     unclaimed_deadline_at: string;
     attempts: number;
@@ -1058,6 +1064,12 @@ export interface CollectorJob {
     claim_expires_at: string | null;
     created_at: string;
     updated_at: string;
+}
+
+export enum CollectorJobOutcome {
+    Succeeded = 'succeeded',
+    Failed = 'failed',
+    Cancelled = 'cancelled',
 }
 
 export interface CollectorJobHistory {
@@ -1074,7 +1086,7 @@ export interface CollectorJobHistory {
     priority: number;
     params: Record<string, unknown>;
     attempts: number;
-    outcome: 'succeeded' | 'failed' | 'cancelled';
+    outcome: CollectorJobOutcome;
     outcome_metadata: Record<string, unknown> | null;
     failure_reason: string | null;
 }
