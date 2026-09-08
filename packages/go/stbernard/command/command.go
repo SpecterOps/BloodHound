@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/deps"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/dora"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/goimports"
@@ -99,6 +100,7 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			license.Create(env),
 			tag.Create(env),
 			audit.Create(env),
+			dora.Create(env),
 		}
 	)
 
