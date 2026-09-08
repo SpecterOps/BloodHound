@@ -38,12 +38,30 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
     </svg>
 );
 
-const MultiSelectTriggerVariants = cva(
-    'flex h-10 w-full items-center justify-between rounded bg-primary px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px] text-text-contrast focus:outline-none focus-visible:focus-ring data-[state=open]:bg-primary enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text  aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill'
-);
+type MultiSelectVariant = 'outlined' | 'filled';
 
-const multiSelectEmptyTriggerStyles =
-    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-text-main enabled:hover:text-text-contrast [&:enabled:hover>svg]:text-text-contrast data-[state=open]:text-text-contrast [&[data-state=open]>svg]:text-text-contrast';
+const MultiSelectTriggerVariants = cva(
+    [
+        'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px]',
+        'focus:outline-none focus-visible:focus-ring',
+        'enabled:hover:bg-secondary enabled:hover:text-text-contrast',
+        'data-[state=open]:bg-primary data-[state=open]:text-text-contrast',
+        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-text-main',
+    ],
+    {
+        variants: {
+            variant: {
+                outlined:
+                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-text-main [&:enabled:hover>svg]:text-text-contrast [&[data-state=open]>svg]:text-text-contrast',
+                filled: 'bg-primary text-text-contrast',
+            },
+        },
+        defaultVariants: {
+            variant: 'filled',
+        },
+    }
+);
 
 const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
@@ -59,11 +77,12 @@ const multiSelectIndeterminateCheckboxStyles =
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
+    variant?: MultiSelectVariant;
 }
 
 const MultiSelectTrigger = React.forwardRef<HTMLButtonElement, MultiSelectTriggerProps>(
-    ({ className, open, children, ...props }, ref) => (
-        <button ref={ref} type='button' className={cn(MultiSelectTriggerVariants({ className }))} {...props}>
+    ({ className, open, children, variant, ...props }, ref) => (
+        <button ref={ref} type='button' className={cn(MultiSelectTriggerVariants({ className, variant }))} {...props}>
             <span className='truncate'>{children}</span>
             <CaretDown className={cn('ml-2 shrink-0 transition-transform duration-200', open && 'rotate-180')} />
         </button>
@@ -86,6 +105,11 @@ interface MultiSelectProps {
     loadingText?: string;
     emptyText?: string;
     noResultsText?: string;
+    /**
+     * Controls the collapsed trigger appearance independently of its selected values.
+     * Use `outlined` when a “Select All” is defaulted state. Example: Findings Table Trigger defaults to all selected.
+     */
+    variant?: MultiSelectVariant;
 }
 
 interface MultiSelectOption {
@@ -178,6 +202,7 @@ const MultiSelect = ({
     loadingText = 'Loading options',
     emptyText = 'No options available',
     noResultsText = 'No matches',
+    variant,
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
@@ -189,6 +214,16 @@ const MultiSelect = ({
             setSearchValue('');
         }
     };
+
+    let triggerVariant: MultiSelectVariant;
+
+    if (variant !== undefined) {
+        triggerVariant = variant;
+    } else if (value.length === 0 && !disabled && !error) {
+        triggerVariant = 'outlined';
+    } else {
+        triggerVariant = 'filled';
+    }
 
     const handleSelect = (selectedValue: string) => {
         const isSelected = value.includes(selectedValue);
@@ -287,13 +322,11 @@ const MultiSelect = ({
         <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <MultiSelectTrigger
+                    variant={triggerVariant}
                     open={open}
                     disabled={disabled}
                     aria-invalid={error || undefined}
-                    className={cn(
-                        value.length === 0 && !disabled && !error && multiSelectEmptyTriggerStyles,
-                        className
-                    )}>
+                    className={className}>
                     {triggerText}
                 </MultiSelectTrigger>
             </PopoverTrigger>
@@ -343,4 +376,4 @@ const MultiSelect = ({
 };
 
 export { MultiSelect, MultiSelectOptionRow, MultiSelectTrigger };
-export type { MultiSelectOption, MultiSelectProps };
+export type { MultiSelectOption, MultiSelectProps, MultiSelectVariant };

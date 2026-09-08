@@ -1,0 +1,149 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+
+get:
+  operationId: GetZoneProtectedAssetScore
+  summary: Get zone protected asset score
+  description: |
+    Gets a per-day series describing how much of a zone is free of open findings
+    over the requested time range. For each day in the range, the score is the
+    number of objects in the zone without an open finding divided by the total
+    number of objects in the zone. Zones that attack path analysis does not run
+    against yield an empty series.
+  tags:
+    - Asset Scores
+    - Enterprise
+  parameters:
+    - name: environments
+      description: Environment IDs
+      in: query
+      required: true
+      schema:
+        type: array
+        items:
+          type: string
+    - name: asset_group_tag_id
+      description: The asset group tag id of the zone requested
+      in: query
+      required: true
+      schema:
+        type: integer
+    - name: start
+      description: Beginning datetime of range (inclusive) in RFC-3339 format; Defaults
+        to current datetime minus 30 days
+      in: query
+      schema:
+        type: string
+        format: date-time
+    - name: end
+      description: Ending datetime of range (exclusive) in RFC-3339 format; Defaults
+        to current datetime
+      in: query
+      schema:
+        type: string
+        format: date-time
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                allOf:
+                  - $ref: './../schemas/api.response.time-window.yaml'
+                  - type: object
+                    properties:
+                      environments:
+                        type: array
+                        description: The environment IDs the caller has access to
+                          out of those requested
+                        items:
+                          type: string
+                      asset_group_tag_id:
+                        type: integer
+                        description: The asset group tag id of the zone requested
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date-time
+                              readOnly: true
+                            exposed_count:
+                              type: integer
+                              format: int64
+                              description: Number of objects in the zone holding an
+                                open finding
+                              readOnly: true
+                            protected_count:
+                              type: integer
+                              format: int64
+                              description: Number of objects in the zone without an
+                                open finding
+                              readOnly: true
+                            total_count:
+                              type: integer
+                              format: int64
+                              description: Total number of objects in the zone
+                              readOnly: true
+                            value:
+                              type: number
+                              format: double
+                              description: The protected share of the zone,
+                                `protected_count` divided by `total_count`
+                              readOnly: true
+          examples:
+            Zone protected asset score:
+              value:
+                data:
+                  start: "2026-08-01T00:00:00Z"
+                  end: "2026-08-04T00:00:00Z"
+                  environments:
+                    - "S-1-5-21-1004336348-1177238915-682003330"
+                  asset_group_tag_id: 1
+                  data:
+                    - date: "2026-08-01T00:00:00Z"
+                      exposed_count: 120
+                      protected_count: 880
+                      total_count: 1000
+                      value: 0.88
+                    - date: "2026-08-02T00:00:00Z"
+                      exposed_count: 95
+                      protected_count: 905
+                      total_count: 1000
+                      value: 0.905
+                    - date: "2026-08-03T00:00:00Z"
+                      exposed_count: 80
+                      protected_count: 922
+                      total_count: 1002
+                      value: 0.9201596806387226
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

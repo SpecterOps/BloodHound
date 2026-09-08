@@ -44,47 +44,57 @@ export const TagIdField: FC<{
         <FormField
             control={form.control}
             name='tagId'
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel aria-labelledby='tag'>{fieldLabel}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <div className='flex gap-2'>
-                            <FormControl className='w-11/12'>
-                                {tagsQuery.isError ? (
-                                    <span className='text-error'>
-                                        There was an error fetching this data. Please refresh the page to try again.
-                                    </span>
-                                ) : (
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={`Select ${fieldLabel}`} />
-                                    </SelectTrigger>
-                                )}
-                            </FormControl>
-                            <TextButton
-                                aria-label={`clear ${fieldLabel}`}
-                                disabled={!field.value}
-                                className={cn('w-1/12 p-0', { invisible: !field.value })}
-                                onClick={() => {
-                                    form.setValue(field.name, '');
-                                }}>
-                                <FontAwesomeIcon icon={faClose} />
-                            </TextButton>
-                        </div>
+            render={({ field }) => {
+                const selectedTagName = tagsQuery.data?.find((tag) => tag.id.toString() === field.value)?.name;
 
-                        {tagsQuery.isLoading ? (
-                            <Skeleton className='h-10 w-24' />
-                        ) : (
-                            <SelectContent>
-                                {tagsQuery.data?.map((tag) => (
-                                    <SelectItem key={tag.id} value={tag.id.toString()}>
-                                        {tag.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        )}
-                    </Select>
-                </FormItem>
-            )}
+                return (
+                    <FormItem>
+                        <FormLabel aria-labelledby='tag'>{fieldLabel}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                            <div className='flex min-w-0 gap-2'>
+                                <FormControl className='w-11/12 min-w-0'>
+                                    {tagsQuery.isError ? (
+                                        <span className='text-error'>
+                                            There was an error fetching this data. Please refresh the page to try again.
+                                        </span>
+                                    ) : (
+                                        <SelectTrigger
+                                            className='min-w-0 overflow-hidden gap-2 [&>span]:min-w-0 [&>span]:truncate [&>svg]:shrink-0'
+                                            title={selectedTagName}>
+                                            <SelectValue placeholder={`Select ${fieldLabel}`} />
+                                        </SelectTrigger>
+                                    )}
+                                </FormControl>
+                                <TextButton
+                                    aria-label={`clear ${fieldLabel}`}
+                                    disabled={!field.value}
+                                    className={cn('w-1/12 p-0', { invisible: !field.value })}
+                                    onClick={() => {
+                                        form.setValue(field.name, '');
+                                    }}>
+                                    <FontAwesomeIcon icon={faClose} />
+                                </TextButton>
+                            </div>
+
+                            {tagsQuery.isLoading ? (
+                                <Skeleton className='h-10 w-24' />
+                            ) : (
+                                <SelectContent className='max-w-[var(--radix-select-trigger-width)]'>
+                                    {tagsQuery.data?.map((tag) => (
+                                        <SelectItem
+                                            key={tag.id}
+                                            value={tag.id.toString()}
+                                            title={tag.name}
+                                            className='min-w-0 [&>span]:truncate'>
+                                            {tag.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            )}
+                        </Select>
+                    </FormItem>
+                );
+            }}
         />
     );
 };

@@ -16,6 +16,7 @@
 
 import { NodeKindRef, RelationshipKindRef, SourceKind } from 'js-client-library';
 import { TagLabelPrefix } from '../constants';
+import { useCustomNodeKinds } from './useCustomNodeKinds';
 import { useSourceKindsQuery } from './useSourceKinds';
 
 type KindNames = string[];
@@ -47,13 +48,25 @@ const filterTagsAndSourceKinds = (kinds: KindNames, sourceKindNames: KindNames) 
 
 export const usePrimaryKind = (kinds: KindList) => {
     const { data: sourceKinds } = useSourceKindsQuery();
+    const { data: customNodeKinds } = useCustomNodeKinds();
+
     const sourceKindNames = getSourceKindNames(sourceKinds);
+
+    // The frontend has no endpoint that surfaces a node kind's is_display_kind flag directly. During schema
+    // reconciliation the backend creates a custom_node_kinds row for exactly those extension node kinds marked
+    // is_display_kind (see upsertCustomIcons), and useCustomNodeKinds keys its result by those kind names.
+    // The set of custom node kind names is therefore a faithful substitute for the set of is_display_kind kinds.
+    const displayKindNames = customNodeKinds ? Object.keys(customNodeKinds) : [];
 
     const kindNames = isKindNames(kinds) ? kinds : kindObjectsToKindNames(kinds);
 
     const sourceAndTagFilteredKinds = filterTagsAndSourceKinds(kindNames, sourceKindNames);
 
-    const primaryKind = sourceAndTagFilteredKinds[0];
+    // A display kind (extension node kind flagged with is_display_kind) takes priority over any
+    // non-display kind regardless of its position in the kinds array.
+    const displayKind = sourceAndTagFilteredKinds.find((kind) => displayKindNames.includes(kind));
+
+    const primaryKind = displayKind ?? sourceAndTagFilteredKinds[0];
 
     return primaryKind ? primaryKind : kindNames[0];
 };

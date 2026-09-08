@@ -27,7 +27,14 @@ const meta = {
     },
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
-    argTypes: {},
+    argTypes: {
+        variant: {
+            control: 'radio',
+            options: ['outlined', 'filled'],
+            description:
+                'Controls the closed trigger button appearance. Use outlined when "All items" are selected as the default state, example: Findings Table Filters',
+        },
+    },
     args: {},
 } satisfies Meta<typeof MultiSelect>;
 
@@ -241,4 +248,29 @@ export const Empty: Story = {
         emptyText: 'No options available.',
     },
     render: renderMultiSelect,
+};
+
+export const Variants: Story = {
+    parameters: {
+        controls: {
+            exclude: ['variant'],
+        },
+        docs: {
+            description: {
+                story: 'Both triggers have all options selected. Use outlined when the all Items selection is the default state and filled to show an updated selection.',
+            },
+        },
+    },
+    args: {
+        options: itemOptions,
+        value: itemOptions.map((option) => option.value),
+        onValueChange: () => {},
+        selectAllLabel: 'All Items',
+    },
+    render: (args) => (
+        <div className='flex w-60 flex-col gap-4'>
+            <MultiSelect {...args} variant='outlined' />
+            <MultiSelect {...args} variant='filled' />
+        </div>
+    ),
 };

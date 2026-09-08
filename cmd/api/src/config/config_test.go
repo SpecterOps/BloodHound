@@ -223,3 +223,53 @@ func TestParseConfiguration_Storage(t *testing.T) {
 		Provider: "local",
 	}, configuration.Storage.FileServices["work"])
 }
+
+func TestParseConfiguration_DefaultAdminEnabled(t *testing.T) {
+	var testCases = []struct {
+		name            string
+		configuration   string
+		expectedEnabled bool
+	}{
+		{
+			name:            "default admin section omitted",
+			configuration:   `{}`,
+			expectedEnabled: true,
+		},
+		{
+			name: "enabled setting omitted",
+			configuration: `{
+				"default_admin": {
+					"principal_name": "admin"
+				}
+			}`,
+			expectedEnabled: true,
+		},
+		{
+			name: "default admin explicitly enabled",
+			configuration: `{
+				"default_admin": {
+					"enabled": true
+				}
+			}`,
+			expectedEnabled: true,
+		},
+		{
+			name: "default admin explicitly disabled",
+			configuration: `{
+				"default_admin": {
+					"enabled": false
+				}
+			}`,
+			expectedEnabled: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			configuration, err := config.ParseConfiguration([]byte(testCase.configuration))
+
+			require.NoError(t, err)
+			require.Equal(t, testCase.expectedEnabled, configuration.DefaultAdmin.Enabled)
+		})
+	}
+}

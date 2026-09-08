@@ -18,7 +18,6 @@ package v2
 
 import (
 	"errors"
-
 	"log/slog"
 	"maps"
 	"net/http"
@@ -31,12 +30,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/util"
 )
 
-var (
-	errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
-)
+var errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 
 type CypherQueryPayload struct {
 	Query             string `json:"query"`
@@ -45,13 +43,30 @@ type CypherQueryPayload struct {
 
 // Helper function to handle error conditions in CypherQuery.
 func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, err error) {
+	var (
+		errorResp          *api.ErrorWrapper
+		errorCategoryLabel string
+	)
+
 	if errors.Is(err, errUnauthorizedGraphMutation) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
-	} else if util.IsNeoTimeoutError(err) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
+		return
+	} else if util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+		errorCategoryLabel = cypherQueryErrorTypeTimeout
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request)
+	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
+		errorCategoryLabel = cypherQueryErrorTypeMemory
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
+	} else if errors.Is(err, ops.ErrGraphQueryExecutionFailed) {
+		errorCategoryLabel = cypherQueryErrorTypeExecute
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		errorCategoryLabel = cypherQueryErrorTypeUnknown
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	}
+
+	cypherQueryErrors.WithLabelValues(errorCategoryLabel).Inc()
+	api.WriteErrorResponse(request.Context(), errorResp, response)
 }
 
 // Helper function to handle processing of property keys.
@@ -95,11 +110,19 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
+		cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeDecode).Inc()
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
 	}
 
 	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query, queries.DefaultQueryFitnessLowerBoundExplore); err != nil {
+		if errors.Is(err, queries.ErrCypherQueryTooComplex) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeFitness).Inc()
+		} else if errors.Is(err, queries.ErrCypherQueryUnparseable) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeParse).Inc()
+		} else {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeUnknown).Inc()
+		}
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
@@ -219,5 +242,4 @@ func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds gra
 	}
 
 	return graphResponse, err
-
 }

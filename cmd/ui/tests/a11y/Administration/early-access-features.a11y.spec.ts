@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { test } from 'bh-playwright-testing';
 import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
 const earlyAccessFeature = {
     id: 1,
     name: 'Example Early Access Feature',
@@ -66,34 +66,33 @@ test.describe('Administration - Early Access Features - has no detectable WCAG A
         });
     });
 
-    test('Heads up dialog', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/administration/early-access-features');
+    test('notice dialog', async ({ checkA11y, goAndWaitFor, page }) => {
+        await goAndWaitFor(
+            '/ui/administration/early-access-features',
+            page.getByRole('heading', { name: 'Heads up!' })
+        );
 
         await hideBySelector(page, '#content-wrapper');
 
-        await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'visible' });
-        await page.getByRole('button', { name: 'Take me back' }).waitFor({ state: 'visible' });
-        await page.getByRole('button', { name: 'I understand, show me the new stuff!' }).waitFor({ state: 'visible' });
+        await page.getByRole('heading', { name: 'Heads up!' }).waitFor();
+        await page.getByRole('button', { name: 'Take me back' }).waitFor();
+        await page.getByRole('button', { name: 'I understand, show me the new stuff!' }).waitFor();
 
-        const results = await makeAxeBuilder()
-            .include('[data-testid="early-access-features-warning-dialog"]')
-            .analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="early-access-features-warning-dialog"]' });
     });
 
-    test('page', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/administration/early-access-features');
+    test('page', async ({ checkA11y, goAndWaitFor, page }) => {
+        await goAndWaitFor(
+            '/ui/administration/early-access-features',
+            page.getByRole('heading', { name: 'Heads up!' })
+        );
 
-        await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'I understand, show me the new stuff!' }).click();
 
         await page.getByRole('heading', { name: 'Heads up!' }).waitFor({ state: 'hidden' });
-        await page.getByRole('heading', { name: 'Early Access Features' }).waitFor({ state: 'visible' });
-        await page.getByText(earlyAccessFeature.name).waitFor({ state: 'visible' });
-        await page.getByText(earlyAccessFeature.description).waitFor({ state: 'visible' });
+        await page.getByRole('heading', { name: 'Early Access Features' }).waitFor();
+        await page.getByText(earlyAccessFeature.description).waitFor();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

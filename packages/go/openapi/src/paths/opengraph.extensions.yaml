@@ -15,7 +15,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 put:
-  description: "**Experimental** - Upserts the OpenGraph extension"
+  description: |
+    **Experimental** - Upserts the OpenGraph extension.
+
+    The request body may be a JSON extension payload or a ZIP bundle. ZIP bundles must contain `schema.json` and may include `pz_rules.json` and `saved_queries.json`.
   tags:
     - OpenGraph (Experimental)
     - Community
@@ -23,6 +26,7 @@ put:
   operationId: UpsertOpenGraphExtension
   summary: Upserts the OpenGraph Extension
   requestBody:
+    description: An OpenGraph extension JSON payload or ZIP bundle.
     required: true
     content:
       application/json:
@@ -172,6 +176,10 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+      application/zip:
+        schema:
+          type: string
+          format: binary
   responses:
     200:
       description: OK
@@ -185,6 +193,8 @@ put:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    415:
+      $ref: './../responses/unsupported-media-type.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

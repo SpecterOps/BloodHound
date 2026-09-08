@@ -19,6 +19,7 @@ import { setupServer } from 'msw/node';
 import { bloodHoundUsersHandlers } from '../../../../mocks';
 import { act, render, waitFor } from '../../../../test-utils';
 import { HistoryTableContext } from '../HistoryTableContext';
+import { DEFAULT_FILTER_VALUE } from '../utils';
 import FilterDialog from './FilterDialog';
 
 const server = setupServer(
@@ -45,6 +46,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('Privilege Zones History Filter Dialog', () => {
+    const longZoneName = 'reallylongnameforanythingbutIwanttobreakthingsletsmakeitevenlongerbeacusewhynot';
+
     const setup = async (props?: Partial<React.ComponentProps<typeof FilterDialog>>) => {
         return await act(() => {
             const contextValue = {
@@ -112,6 +115,28 @@ describe('Privilege Zones History Filter Dialog', () => {
 
         expect(screen.getByLabelText('Start Date')).toHaveValue('2025-07-12');
         expect(screen.getByLabelText('End Date')).toHaveValue('2025-08-12');
+    });
+
+    it('constrains long zone names to the select width', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+                return res(ctx.json({ data: { tags: [{ name: longZoneName, id: 77 }] } }));
+            })
+        );
+        const { screen, user, openDialog } = await setup({
+            filters: { ...DEFAULT_FILTER_VALUE, tagId: '77' },
+        });
+        await openDialog();
+
+        const selectTrigger = await screen.findByRole('combobox', { name: 'Zone/Label' });
+        expect(selectTrigger).toHaveClass('min-w-0', 'overflow-hidden', '[&>span]:truncate', '[&>svg]:shrink-0');
+        expect(selectTrigger).toHaveAttribute('title', longZoneName);
+
+        await user.click(selectTrigger);
+
+        const option = await screen.findByRole('option', { name: longZoneName });
+        expect(option).toHaveClass('min-w-0', '[&>span]:truncate');
+        expect(option).toHaveAttribute('title', longZoneName);
     });
 
     it('clears applied filters when clicking the Clear button', async () => {

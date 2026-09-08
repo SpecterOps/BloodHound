@@ -21,6 +21,7 @@ import del from 'rollup-plugin-delete';
 export default {
     input: {
         index: 'src/index.ts',
+        'testing/index': 'src/testing/index.ts',
         UserProfile: 'src/UserProfile.ts',
         ApiExplorer: 'src/ApiExplorer.ts',
         FileIngest: 'src/FileIngest.ts',

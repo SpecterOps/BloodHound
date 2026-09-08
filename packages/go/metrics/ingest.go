@@ -95,7 +95,7 @@ var (
 	//   - status: "success" or "failed"
 	//
 	// For operational queue monitoring, use:
-	//   - bhe_ingest_tasks (gauge: current queue depth)
+	//   - bh_ingest_tasks (gauge: current queue depth)
 	//   - bh_ingest_task_queue_latency_seconds_count (summary: tasks processed)
 	ingestTasks = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -112,7 +112,7 @@ var (
 	// This measures queue wait time, not processing time.
 	//
 	// The _count value represents tasks that have been PROCESSED (picked up from queue) since last restart.
-	// For current queue depth, use the bhe_ingest_tasks gauge instead.
+	// For current queue depth, use the bh_ingest_tasks gauge instead.
 	ingestTaskQueueLatency = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:  model.Namespace,

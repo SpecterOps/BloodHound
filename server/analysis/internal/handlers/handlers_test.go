@@ -132,7 +132,7 @@ func TestHandlers_GetRequest(t *testing.T) {
 	}
 }
 
-func TestHandlers_CreateRequest(t *testing.T) {
+func TestHandlers_CreateAnalysisRequest(t *testing.T) {
 	var (
 		userID         = uuid.Must(uuid.NewV4())
 		userIDString   = userID.String()

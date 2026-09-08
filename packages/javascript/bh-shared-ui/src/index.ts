@@ -55,7 +55,6 @@ export * from './components';
 export * from './constants';
 export * from './graphSchema';
 export * from './hooks';
-export * from './mocks';
 export * from './providers';
 export * from './routes';
 export * from './types';

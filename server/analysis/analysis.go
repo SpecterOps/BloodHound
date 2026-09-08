@@ -20,10 +20,12 @@
 package analysis
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/handlers"
 	"github.com/specterops/bloodhound/server/analysis/internal/routes"
@@ -34,6 +36,11 @@ import (
 // It provides methods for retrieving analysis requests via HTTP.
 type AnalysisRequestAdapter interface {
 	CreateAnalysisRequest(response http.ResponseWriter, request *http.Request)
+}
+
+// AnalysisRequestSubmitter lets other slices submit analysis requests.
+type AnalysisRequestSubmitter interface {
+	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
 // NewAnalysisRequestAdapter creates a new AnalysisRequestAdapter by wiring up the
@@ -47,6 +54,17 @@ func NewAnalysisRequestAdapter(pool *pgxpool.Pool) AnalysisRequestAdapter {
 	)
 
 	return handlerSet
+}
+
+// NewAnalysisRequestSubmitter creates the internal interface other slices use
+// to submit analysis work without depending on HTTP handlers.
+func NewAnalysisRequestSubmitter(pool *pgxpool.Pool) AnalysisRequestSubmitter {
+	var (
+		store = appdb.NewStore(pool)
+		svc   = services.NewService(store)
+	)
+
+	return svc
 }
 
 // Register builds the analysis store -> service -> handler chain and attaches

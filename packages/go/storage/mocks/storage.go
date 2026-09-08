@@ -29,6 +29,7 @@ import (
 	context "context"
 	io "io"
 	reflect "reflect"
+	time "time"
 
 	storage "github.com/specterops/bloodhound/packages/go/storage"
 	gomock "go.uber.org/mock/gomock"
@@ -117,6 +118,21 @@ func (mr *MockStorageMockRecorder) Get(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), ctx, name)
 }
 
+// GetPresignedURL mocks base method.
+func (m *MockStorage) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedURL", ctx, name, ttl)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedURL indicates an expected call of GetPresignedURL.
+func (mr *MockStorageMockRecorder) GetPresignedURL(ctx, name, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedURL", reflect.TypeOf((*MockStorage)(nil).GetPresignedURL), ctx, name, ttl)
+}
+
 // List mocks base method.
 func (m *MockStorage) List(ctx context.Context, name string, options storage.ListOptions) ([]storage.FileInfo, error) {
 	m.ctrl.T.Helper()
@@ -144,6 +160,20 @@ func (m *MockStorage) Move(ctx context.Context, srcName, dstName string, options
 func (mr *MockStorageMockRecorder) Move(ctx, srcName, dstName, options any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockStorage)(nil).Move), ctx, srcName, dstName, options)
+}
+
+// PruneEmptyParents mocks base method.
+func (m *MockStorage) PruneEmptyParents(ctx context.Context, name string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PruneEmptyParents", ctx, name)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PruneEmptyParents indicates an expected call of PruneEmptyParents.
+func (mr *MockStorageMockRecorder) PruneEmptyParents(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PruneEmptyParents", reflect.TypeOf((*MockStorage)(nil).PruneEmptyParents), ctx, name)
 }
 
 // Put mocks base method.
@@ -213,6 +243,20 @@ func (mr *MockFileServiceMockRecorder) DeleteFile(ctx, name any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFile", reflect.TypeOf((*MockFileService)(nil).DeleteFile), ctx, name)
 }
 
+// DeleteFileWithOptions mocks base method.
+func (m *MockFileService) DeleteFileWithOptions(ctx context.Context, name string, opts storage.DeleteOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFileWithOptions", ctx, name, opts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFileWithOptions indicates an expected call of DeleteFileWithOptions.
+func (mr *MockFileServiceMockRecorder) DeleteFileWithOptions(ctx, name, opts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFileWithOptions", reflect.TypeOf((*MockFileService)(nil).DeleteFileWithOptions), ctx, name, opts)
+}
+
 // GetFile mocks base method.
 func (m *MockFileService) GetFile(ctx context.Context, name string) (io.ReadCloser, storage.FileInfo, error) {
 	m.ctrl.T.Helper()
@@ -227,6 +271,21 @@ func (m *MockFileService) GetFile(ctx context.Context, name string) (io.ReadClos
 func (mr *MockFileServiceMockRecorder) GetFile(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFile", reflect.TypeOf((*MockFileService)(nil).GetFile), ctx, name)
+}
+
+// GetPresignedURL mocks base method.
+func (m *MockFileService) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedURL", ctx, name, ttl)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedURL indicates an expected call of GetPresignedURL.
+func (mr *MockFileServiceMockRecorder) GetPresignedURL(ctx, name, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedURL", reflect.TypeOf((*MockFileService)(nil).GetPresignedURL), ctx, name, ttl)
 }
 
 // ListFiles mocks base method.

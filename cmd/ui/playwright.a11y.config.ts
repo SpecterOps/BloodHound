@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { defineConfig, devices } from '@playwright/test';
-import { authStorageStateFor, THEMES, type TestOptions } from 'bh-playwright-testing/themes';
+import type { A11yTestOptions } from 'bh-playwright-testing';
+import { authStorageStateFor, THEMES } from 'bh-playwright-testing/themes';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -48,7 +49,7 @@ const webServer = {
     timeout: 180_000,
 };
 
-export default defineConfig<TestOptions>({
+export default defineConfig<A11yTestOptions>({
     testDir: './tests/a11y',
     outputDir: './playwright/a11y/results',
     fullyParallel: true,
@@ -78,21 +79,27 @@ export default defineConfig<TestOptions>({
     ],
     use: {
         ...devices['Desktop Chrome'],
+        a11yDefaultInclude: '#content-wrapper',
         baseURL,
         contextOptions: {
             // Turns off transition animations to reduce false negatives
             reducedMotion: 'reduce',
         },
+        // App-specific priming of the shared a11y fixture options from `bh-playwright-testing`:
+        // install the cypher "has data" stub for every a11y spec, scope scans to the app's content
+        // wrapper by default, and tell `goAndWaitFor` which button collapses the global nav.
+        installGraphDataStub: true,
+        navToggleName: 'Toggle Navigation',
         screenshot: 'only-on-failure',
-        trace: 'retain-on-failure',
         // Block service workers so MSW (registered by the Vite dev build in `main.tsx`) cannot
         // take over network traffic. With MSW active, requests are routed through its Service
         // Worker before Playwright sees them, which makes `page.route` / `context.route` invisible
-        // to API calls and causes test-only stubs (e.g. the `useGraphHasData` cypher stub
-        // installed in `global.setup.ts` and `tests/a11y/fixtures.ts`) to silently fall through to
-        // the real backend. `main.tsx` swallows the resulting registration failure so the app
+        // to API calls and causes test-only stubs (e.g. the `useGraphHasData` cypher stub installed
+        // via the `installGraphDataStub` option and in `global.setup.ts`) to silently fall through
+        // to the real backend. `main.tsx` swallows the resulting registration failure so the app
         // still mounts.
         serviceWorkers: 'block',
+        trace: 'retain-on-failure',
     },
     // Browser × theme matrix. A single `setup` project logs in once and snapshots both
     // light and dark storage states (see global.setup.ts); each browser-theme project then loads

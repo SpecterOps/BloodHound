@@ -29,6 +29,7 @@ import {
     DialogTitle,
     IconButton,
     Input,
+    TextButton,
     Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useState } from 'react';
@@ -46,12 +47,12 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
     iconName,
     onClick,
 }) => (
-    <div className='flex flex-col justify-center'>
-        <IconButton
+    <div className='flex h-36 w-40 flex-col items-center justify-start'>
+        <TextButton
             aria-label={`${iconName}-glyph`}
             className={clsx(
                 ['relative', !iconName && 'invisible'],
-                'justify-center focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
+                'flex size-24 shrink-0 flex-col justify-center !p-0 focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
             )}
             onClick={() => {
                 iconName && onClick(iconName);
@@ -61,8 +62,8 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
                     {iconName && <FontAwesomeIcon icon={iconName} size='2xl' />}
                 </CardContent>
             </Card>
-        </IconButton>
-        <p className='mt-4 m-auto'>{iconName}</p>
+        </TextButton>
+        <p className='mt-4 h-5 w-full whitespace-nowrap text-center'>{iconName}</p>
     </div>
 );
 
@@ -98,7 +99,7 @@ export const VirtualizedIconList = ({
             itemData={{ filteredList, onClick }}
             itemSize={64 * 3}
             innerElementType={InnerElement}
-            width={'100%'}
+            width='100%'
             className='rounded-md bg-neutral-3'
             initialScrollOffset={0}>
             {Row}

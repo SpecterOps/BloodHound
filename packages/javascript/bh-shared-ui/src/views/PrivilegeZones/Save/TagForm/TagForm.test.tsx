@@ -23,7 +23,8 @@ import TagForm from '.';
 import { privilegeZonesKeys } from '../../../../hooks';
 import { labelsPath, privilegeZonesPath, savePath, zonesPath } from '../../../../routes';
 import { act, fireEvent, render, screen, waitFor, within } from '../../../../test-utils';
-import { apiClient, setUpQueryClient } from '../../../../utils';
+import { setUpQueryClient } from '../../../../testing';
+import { apiClient } from '../../../../utils';
 
 const testTierZero = {
     id: 1,

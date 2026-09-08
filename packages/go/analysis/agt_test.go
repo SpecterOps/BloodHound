@@ -319,8 +319,15 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label all", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
-		_, err = bhDB.CreateAssetGroupTagSelector(testCtx, tag.ID, testActor, "regression selector all", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
-			{Type: model.SelectorTypeObjectId, Value: "REGRESSION-ALL-NO-MATCH"},
+		_, err = bhDB.CreateAssetGroupTagSelector(testCtx, testActor, model.AssetGroupTagSelector{
+			AssetGroupTagId: tag.ID,
+			Name:            "regression selector all",
+			IsDefault:       false,
+			AllowDisable:    true,
+			AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "REGRESSION-ALL-NO-MATCH"},
+			},
 		})
 		require.NoError(t, err)
 
@@ -368,8 +375,15 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "regression label mixed", "", null.Int32{}, null.Bool{}, null.String{})
 		require.NoError(t, err)
 
-		selector, err := bhDB.CreateAssetGroupTagSelector(testCtx, tag.ID, testActor, "regression selector mixed", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
-			{Type: model.SelectorTypeObjectId, Value: "REGRESSION-MIXED-OBJECT-ID-0"},
+		selector, err := bhDB.CreateAssetGroupTagSelector(testCtx, testActor, model.AssetGroupTagSelector{
+			AssetGroupTagId: tag.ID,
+			Name:            "regression selector mixed",
+			IsDefault:       false,
+			AllowDisable:    true,
+			AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "REGRESSION-MIXED-OBJECT-ID-0"},
+			},
 		})
 		require.NoError(t, err)
 
@@ -441,8 +455,15 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 		tag, err := bhDB.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "regression tier", "", null.Int32From(tierPosition), null.Bool{}, null.String{})
 		require.NoError(t, err)
 
-		selector, err := bhDB.CreateAssetGroupTagSelector(testCtx, tag.ID, testActor, "regression tier selector", "", false, true, model.SelectorAutoCertifyMethodDisabled, []model.SelectorSeed{
-			{Type: model.SelectorTypeObjectId, Value: "REGRESSION-TIER-NO-MATCH"},
+		selector, err := bhDB.CreateAssetGroupTagSelector(testCtx, testActor, model.AssetGroupTagSelector{
+			AssetGroupTagId: tag.ID,
+			Name:            "regression tier selector",
+			IsDefault:       false,
+			AllowDisable:    true,
+			AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "REGRESSION-TIER-NO-MATCH"},
+			},
 		})
 		require.NoError(t, err)
 
@@ -803,14 +824,21 @@ func TestSelectNodes(t *testing.T) {
 
 func insertTagAndTagSelector(t *testing.T, ctx context.Context, bhDB interface {
 	CreateAssetGroupTag(ctx context.Context, assetGroupTagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool, glyph null.String) (model.AssetGroupTag, error)
-	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify model.SelectorAutoCertifyMethod, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	CreateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 }, testActor model.User, name string, autoCertify model.SelectorAutoCertifyMethod, seeds ...model.SelectorSeed) model.AssetGroupTagSelector {
 	t.Helper()
 
 	tag, err := bhDB.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeLabel, testActor, name+" tag", "", null.Int32{}, null.Bool{}, null.String{})
 	require.NoError(t, err)
 
-	selector, err := bhDB.CreateAssetGroupTagSelector(ctx, tag.ID, testActor, name, "", false, true, autoCertify, seeds)
+	selector, err := bhDB.CreateAssetGroupTagSelector(ctx, testActor, model.AssetGroupTagSelector{
+		AssetGroupTagId: tag.ID,
+		Name:            name,
+		IsDefault:       false,
+		AllowDisable:    true,
+		AutoCertify:     autoCertify,
+		Seeds:           seeds,
+	})
 	require.NoError(t, err)
 
 	return selector

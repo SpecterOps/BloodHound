@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -38,6 +39,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -1803,6 +1807,116 @@ func TestGetDataQualityAggregations_Success(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestResources_GetDatabaseCompleteness_ResponseKeys drives the read transaction delegate with a graph
+// holding a known session completeness and a known, different local group completeness, so that the two
+// values cannot be transposed in the response without failing the assertion.
+func TestResources_GetDatabaseCompleteness_ResponseKeys(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctrl          = gomock.NewController(t)
+		mockGraph     = graphmocks.NewMockDatabase(ctrl)
+		mockTx        = graphmocks.NewMockTransaction(ctrl)
+		userQuery     = graphmocks.NewMockNodeQuery(ctrl)
+		computerQuery = graphmocks.NewMockNodeQuery(ctrl)
+		relQuery      = graphmocks.NewMockRelationshipQuery(ctrl)
+		lastLogon     = time.Now()
+	)
+
+	newActiveNode := func(id graph.ID, nodeKind graph.Kind) *graph.Node {
+		return graph.NewNode(id, graph.AsProperties(graph.PropertyMap{
+			common.Enabled:         true,
+			common.OperatingSystem: "Windows Server 2022",
+			ad.LastLogonTimestamp:  lastLogon,
+		}), nodeKind)
+	}
+
+	nodeCursor := func(nodes ...*graph.Node) graph.Cursor[*graph.Node] {
+		cursor := graphmocks.NewMockCursor[*graph.Node](ctrl)
+		channel := make(chan *graph.Node, len(nodes))
+
+		for _, node := range nodes {
+			channel <- node
+		}
+		close(channel)
+
+		cursor.EXPECT().Chan().Return(channel).AnyTimes()
+		cursor.EXPECT().Error().Return(nil).AnyTimes()
+
+		return cursor
+	}
+
+	relationshipCursor := func(relationships ...*graph.Relationship) graph.Cursor[*graph.Relationship] {
+		cursor := graphmocks.NewMockCursor[*graph.Relationship](ctrl)
+		channel := make(chan *graph.Relationship, len(relationships))
+
+		for _, relationship := range relationships {
+			channel <- relationship
+		}
+		close(channel)
+
+		cursor.EXPECT().Chan().Return(channel).AnyTimes()
+		cursor.EXPECT().Error().Return(nil).AnyTimes()
+
+		return cursor
+	}
+
+	// Four active users, one of which has a session: session completeness is 0.25.
+	userQuery.EXPECT().Filterf(gomock.Any()).Return(userQuery)
+	userQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+		return delegate(nodeCursor(
+			newActiveNode(graph.ID(1), ad.User),
+			newActiveNode(graph.ID(2), ad.User),
+			newActiveNode(graph.ID(3), ad.User),
+			newActiveNode(graph.ID(4), ad.User),
+		))
+	})
+
+	// Two active computers, one of which has an admin: local group completeness is 0.5.
+	computerQuery.EXPECT().Filterf(gomock.Any()).Return(computerQuery)
+	computerQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+		return delegate(nodeCursor(
+			newActiveNode(graph.ID(5), ad.Computer),
+			newActiveNode(graph.ID(6), ad.Computer),
+		))
+	})
+
+	gomock.InOrder(
+		mockTx.EXPECT().Nodes().Return(userQuery),
+		mockTx.EXPECT().Nodes().Return(computerQuery),
+	)
+
+	relQuery.EXPECT().Filterf(gomock.Any()).Return(relQuery).Times(2)
+	gomock.InOrder(
+		relQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Relationship]) error) error {
+			return delegate(relationshipCursor(&graph.Relationship{StartID: graph.ID(5), EndID: graph.ID(1), Kind: ad.HasSession}))
+		}),
+		relQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Relationship]) error) error {
+			return delegate(relationshipCursor(&graph.Relationship{StartID: graph.ID(1), EndID: graph.ID(5), Kind: ad.AdminTo}))
+		}),
+	)
+	mockTx.EXPECT().Relationships().Return(relQuery).Times(2)
+
+	mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate func(tx graph.Transaction) error, _ ...graph.TransactionOption) error {
+		return delegate(mockTx)
+	})
+
+	var (
+		resources = v2.Resources{Graph: mockGraph}
+		request   = &http.Request{URL: &url.URL{Path: "/api/v2/completeness"}, Method: http.MethodGet}
+		response  = httptest.NewRecorder()
+		router    = mux.NewRouter()
+	)
+
+	router.HandleFunc("/api/v2/completeness", resources.GetDatabaseCompleteness).Methods(request.Method)
+	router.ServeHTTP(response, request)
+
+	status, _, body := test.ProcessResponse(t, response)
+
+	assert.Equal(t, http.StatusOK, status)
+	assert.JSONEq(t, `{"data":{"SessionCompleteness":0.25,"LocalGroupCompleteness":0.5}}`, body)
 }
 
 func TestResources_GetDatabaseCompleteness(t *testing.T) {

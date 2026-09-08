@@ -15,9 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePZPathParams } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
+import { createAssetGroupTag } from '../../../../mocks/factories/privilegeZones';
 import { render, screen } from '../../../../test-utils';
 import { SelectedDetailsTabs } from './SelectedDetailsTabs';
 import SelectedDetailsTabProvider from './SelectedDetailsTabsProvider';
@@ -40,6 +42,27 @@ const SelectedDetailsTabsWrapper = () => {
 };
 
 describe('Selected Details Tabs', () => {
+    it('constrains long zone names to the details panel width', async () => {
+        const longZoneName = 'reallylongnameforanythingbutIwanttobreakthingsletsmakeitevenlongerbeacusewhynot';
+
+        mockedUsePathParams.mockReturnValue({
+            tagId: '999',
+            ruleId: undefined,
+            memberId: undefined,
+            tagTypeDisplay: 'Zone',
+        } as any);
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+                return res(ctx.json({ data: { tag: createAssetGroupTag(999, longZoneName) } }));
+            })
+        );
+
+        const { container } = render(<SelectedDetailsTabsWrapper />);
+
+        expect(await screen.findByText(longZoneName)).toHaveClass('truncate');
+        expect(container.firstElementChild).toHaveClass('min-w-0');
+    });
+
     describe('Selected Details Tabs - Click Interactions', () => {
         it('switches Rule tab to active/selected when clicked', async () => {
             mockedUsePathParams.mockReturnValue({

@@ -662,6 +662,15 @@ export type WebhookSortBy =
     | '-last_error'
     | '-attempts';
 
+export interface GetWebhooksParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: WebhookSortBy;
+    name?: string;
+}
+
+export type AlertsSortBy = 'name' | 'created_at' | 'updated_at' | '-name' | '-created_at' | '-updated_at';
+
 export interface WebhookParams {
     skip?: number;
     limit?: number;
@@ -699,6 +708,15 @@ export type SourceKind = {
 //  Alert - Events
 // ---------------------------------------------------------------------------
 
+export interface AlertParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: AlertsSortBy;
+    type?: WebhookType;
+    created_at?: string;
+    delivered?: string | boolean;
+}
+
 export interface AlertEvent {
     id: string;
     type: string;
@@ -708,13 +726,25 @@ export interface AlertEvent {
     attempts_queued_at: ISO_DATE_STRING;
 }
 
+export interface AlertEventTypeVersion {
+    created_at?: ISO_DATE_STRING;
+    dataExample: object;
+    data_version: number;
+    deprecated_at?: ISO_DATE_STRING;
+}
+
 export interface AlertEventType {
+    category: string;
+    description: string;
+    name: string;
+    namespace: string;
+    severity: string;
     type: string;
-    versions: string[];
+    versions: AlertEventTypeVersion[];
 }
 
 // ---------------------------------------------------------------------------
-//  Alert - Alerts
+//  Alert - Alerts (Notifications)
 // ---------------------------------------------------------------------------
 
 export interface AlertsParams {
@@ -729,18 +759,12 @@ export interface AlertsParams {
 export interface Subscription {
     channel_id: string;
     event_type: string;
-    version: string;
-    created_at: ISO_DATE_STRING;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    version: number;
+    created_at: ISO_DATE_STRING | null;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string;
 }
-export interface Alert {
+export interface Notification {
     id: string;
     name: string;
     description: string;
@@ -748,25 +772,21 @@ export interface Alert {
     created_by: string;
     updated_at: ISO_DATE_STRING;
     updated_by: string;
-    disabled_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    disabled_by: {
-        string: string;
-        valid: boolean;
-    };
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
     subscriptions: Subscription[];
 }
 
-export interface AlertAttamptsParams {
+export type AlertAttemptsSortableColumn = 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
+export type AlertAttemptsSortBy = AlertAttemptsSortableColumn | `-${AlertAttemptsSortableColumn}`;
+export interface AlertAttemptsParams {
     skip?: number;
     limit?: number;
-    sort_by?: 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
-    alert_id: string;
-    channel_id: string;
-    event_id: string;
-    succeeded: boolean;
+    sort_by?: AlertAttemptsSortBy;
+    alert_id?: string;
+    channel_id?: string;
+    event_id?: string;
+    succeeded?: boolean;
     created_at?: ISO_DATE_STRING;
 }
 
@@ -775,23 +795,11 @@ export interface AlertAttempt {
     channel_id: string;
     event_id: string;
     created_at: ISO_DATE_STRING;
-    succeeded_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
-    last_status_code: {
-        int32: number;
-        valid: boolean;
-    };
-    last_error: {
-        string: string;
-        valid: boolean;
-    };
+    succeeded_at: ISO_DATE_STRING;
+    last_status_code: number;
+    last_error: string;
     attempts: number;
-    next_attempt_at: {
-        time: ISO_DATE_STRING;
-        valid: boolean;
-    };
+    next_attempt_at: ISO_DATE_STRING;
 }
 
 // ---------------------------------------------------------------------------
@@ -996,3 +1004,89 @@ export interface RelationshipDetails {
 export type RelationshipDetailsWithInfo = RelationshipDetails & {
     info?: RelationshipKindInfo;
 };
+
+export interface CollectorJobProfileMinimal {
+    id: number;
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_id: string | null;
+}
+
+export interface CollectorJobScheduleMinimal {
+    id: number;
+    name: string;
+    rrule: string;
+    next_run_at: string;
+    priority: number;
+}
+
+export interface CollectorJobProfile extends CollectorJobProfileMinimal {
+    schedules: CollectorJobScheduleMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CollectorJobSchedule extends CollectorJobScheduleMinimal {
+    disabled_at: string | null;
+    disabled_by: string | null;
+    profiles: CollectorJobProfileMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobStatus {
+    Ready = 'ready',
+    Claimed = 'claimed',
+    Running = 'running',
+}
+
+export interface CollectorJob {
+    id: string;
+    job_schedule_id: number | null;
+    job_profile_id: number | null;
+    job_type_id: number;
+    job_key: string;
+    params_version: string;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_key_id: string | null;
+    priority: number;
+    status: CollectorJobStatus;
+    run_at: string;
+    unclaimed_deadline_at: string;
+    attempts: number;
+    max_attempts: number;
+    last_failure: string | null;
+    claimed_by: string | null;
+    claimed_at: string | null;
+    claim_expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobOutcome {
+    Succeeded = 'succeeded',
+    Failed = 'failed',
+    Cancelled = 'cancelled',
+}
+
+export interface CollectorJobHistory {
+    id: string;
+    recorded_at: string;
+    job_created_at: string;
+    last_claimed_at: string | null;
+    last_claimed_by: string | null;
+    job_schedule_id: number | null;
+    job_profile_id: number | null;
+    job_type_id: number;
+    job_key: string;
+    params_version: string;
+    priority: number;
+    params: Record<string, unknown>;
+    attempts: number;
+    outcome: CollectorJobOutcome;
+    outcome_metadata: Record<string, unknown> | null;
+    failure_reason: string | null;
+}

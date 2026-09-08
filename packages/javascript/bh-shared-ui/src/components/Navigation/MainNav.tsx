@@ -26,6 +26,7 @@ import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ConditionalTooltip } from '../ConditionalTooltip';
 import { AppLink } from './AppLink';
+import { SkipLink } from './SkipLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
 
@@ -185,6 +186,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
     return (
         <>
+            <SkipLink href='#content-wrapper'>Skip to main content</SkipLink>
             {/* Nav expand/collapse button */}
             <IconButton
                 aria-expanded={isExpanded}
@@ -209,6 +211,9 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             </IconButton>
 
             <nav
+                id='global-navigation'
+                aria-label='Global navigation'
+                tabIndex={-1}
                 className={cn(
                     'flex flex-col flex-none font-medium shadow-md z-nav print:hidden overflow-hidden',
                     'transition-all duration-300 ease-in',

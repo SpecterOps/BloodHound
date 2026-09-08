@@ -27,6 +27,8 @@ export type ExploreQueryParams = {
     exploreSearchTab: ExploreSearchTab | null;
     primarySearch: string | null;
     secondarySearch: string | null;
+    tertiarySearch: string | null;
+    quaternarySearch: string | null;
     cypherSearch: string | null;
     searchType: SearchType | null;
     expandedPanelSections: string[] | null;
@@ -81,6 +83,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         exploreSearchTab: parseSearchTab(searchParams.get('exploreSearchTab')),
         primarySearch: searchParams.get('primarySearch'),
         secondarySearch: searchParams.get('secondarySearch'),
+        tertiarySearch: searchParams.get('tertiarySearch'),
+        quaternarySearch: searchParams.get('quaternarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
@@ -96,6 +100,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                         'exploreSearchTab',
                         'primarySearch',
                         'secondarySearch',
+                        'tertiarySearch',
+                        'quaternarySearch',
                         'cypherSearch',
                         'searchType',
                         'expandedPanelSections',

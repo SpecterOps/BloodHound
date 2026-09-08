@@ -51,20 +51,22 @@ const CreateUserTokenDialog: React.FC<{
                 'data-testid': 'create-user-token-dialog',
             }}>
             <DialogTitle id='createUserTokenDialogTitle'>Create User Token</DialogTitle>
-            <form autoComplete={'off'} onSubmit={handleSubmit(onSubmit)}>
+            <form autoComplete={'off'} noValidate onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
                     <Grid container spacing={1}>
                         <Controller
-                            name={'token_name'}
+                            name='token_name'
                             control={control}
-                            defaultValue={''}
+                            defaultValue=''
                             rules={{ required: 'Token name is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
+                                    inputRef={ref}
                                     variant='standard'
-                                    label={'Token Name'}
+                                    label='Token Name'
                                     fullWidth
+                                    required
                                     error={!!errors.token_name}
                                     helperText={errors.token_name?.message}
                                     data-testid='create-user-token-dialog_input-token-name'

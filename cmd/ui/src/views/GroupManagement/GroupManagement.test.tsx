@@ -15,16 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { DeepPartial, NoEntitySelectedHeader, NoEntitySelectedMessage, Permission } from 'bh-shared-ui';
 import {
-    DeepPartial,
-    NoEntitySelectedHeader,
-    NoEntitySelectedMessage,
-    Permission,
     createAuthStateWithPermissions,
     createMockAssetGroup,
     createMockAssetGroupMembers,
     createMockMemberCounts,
-} from 'bh-shared-ui';
+} from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMockDomain } from 'src/mocks/factories/initial';

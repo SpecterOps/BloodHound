@@ -480,3 +480,4 @@ cmd/ui/playwright
 .dora.local.yaml
 # DORA data directory (contains SQLite DB and authentication tokens)
 .dora/
+.claude/

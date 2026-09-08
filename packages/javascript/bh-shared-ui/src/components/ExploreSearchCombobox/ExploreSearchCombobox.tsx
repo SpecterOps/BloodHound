@@ -25,6 +25,13 @@ import SearchResultItem from '../SearchResultItem';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
+    // Overrides the accessible name when several inputs share one visible label and assistive tech
+    // needs to tell them apart. Must contain labelText so the spoken name still matches what is on
+    // screen (WCAG 2.5.3 Label in Name). Defaults to labelText.
+    ariaLabel?: string;
+    // Attaches to the input's root element, which excludes the results dropdown rendered alongside
+    // it. Lets a caller reference the field box on its own — e.g. as an HTML5 drag image.
+    inputContainerRef?: React.Ref<HTMLDivElement>;
     inputValue: string;
     autoFocus?: boolean;
     selectedItem: SearchValue | null;
@@ -35,6 +42,8 @@ const ExploreSearchCombobox: React.FC<{
     errorMessage?: string;
 }> = ({
     labelText,
+    ariaLabel,
+    inputContainerRef,
     inputValue,
     selectedItem,
     handleNodeEdited,
@@ -86,13 +95,14 @@ const ExploreSearchCombobox: React.FC<{
     return (
         <div style={{ position: 'relative' }}>
             <TextField
+                ref={inputContainerRef}
                 placeholder={labelText}
                 variant={variant}
                 size='small'
                 fullWidth
                 disabled={disabled}
                 inputProps={{
-                    'aria-label': labelText,
+                    'aria-label': ariaLabel ?? labelText,
                 }}
                 InputProps={{
                     style: {

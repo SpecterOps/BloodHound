@@ -69,7 +69,7 @@
         "@eslint/compat": "^2.0.3",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
-        "@faker-js/faker": "^7.3.0",
+        "@faker-js/faker": "^10.6.0",
         "@playwright/test": "^1.59.1",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^5.16.5",

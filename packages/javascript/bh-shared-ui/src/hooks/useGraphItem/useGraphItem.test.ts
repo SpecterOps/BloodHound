@@ -27,12 +27,38 @@ import {
 } from './useGraphItem';
 
 const MOCK_NODE_ID = 42;
+const MOCK_CUSTOM_NODE_ID = 43;
+const MOCK_USER_NODE_ID = 44;
 const MOCK_REL_ID = 99;
+const MOCK_OBJECT_ID = 'S-1-5-21-000';
 
+// AZApp is one of the enrichable kinds whose entity endpoint returns a runtime-derived related-node id.
 const MOCK_NODE_RESPONSE = {
     node_id: MOCK_NODE_ID,
-    kinds: [{ name: 'User', node_kind_id: 1 }],
-    properties: { objectid: 'S-1-5-21-000' },
+    kinds: [{ name: 'AZApp', node_kind_id: 1 }],
+    properties: { objectid: MOCK_OBJECT_ID },
+};
+
+// A node whose kinds are not built in AD/Azure kinds should not be enriched via kind-specific endpoints.
+const MOCK_CUSTOM_NODE_RESPONSE = {
+    node_id: MOCK_CUSTOM_NODE_ID,
+    kinds: [{ name: 'CustomKind', node_kind_id: 2 }],
+    properties: { objectid: 'custom-object-id' },
+};
+
+// A built in AD kind that is not in the enrichable allow-list should not trigger a kind-specific fetch.
+const MOCK_USER_NODE_RESPONSE = {
+    node_id: MOCK_USER_NODE_ID,
+    kinds: [{ name: 'User', node_kind_id: 4 }],
+    properties: { objectid: 'user-object-id' },
+};
+
+// Runtime-derived properties that only the kind-specific entity endpoint returns.
+const MOCK_ENRICHED_PROPS = { objectid: MOCK_OBJECT_ID, serviceprincipalid: 'SP-123' };
+
+const MOCK_ENRICHED_NODE_RESPONSE = {
+    ...MOCK_NODE_RESPONSE,
+    properties: { ...MOCK_NODE_RESPONSE.properties, ...MOCK_ENRICHED_PROPS },
 };
 
 const MOCK_RELATIONSHIP_RESPONSE = {
@@ -46,6 +72,15 @@ const MOCK_RELATIONSHIP_RESPONSE = {
 const server = setupServer(
     rest.get(`/api/v2/nodes/${MOCK_NODE_ID}`, (_req, res, ctx) => {
         return res(ctx.json({ data: MOCK_NODE_RESPONSE }));
+    }),
+    rest.get(`/api/v2/nodes/${MOCK_CUSTOM_NODE_ID}`, (_req, res, ctx) => {
+        return res(ctx.json({ data: MOCK_CUSTOM_NODE_RESPONSE }));
+    }),
+    rest.get(`/api/v2/nodes/${MOCK_USER_NODE_ID}`, (_req, res, ctx) => {
+        return res(ctx.json({ data: MOCK_USER_NODE_RESPONSE }));
+    }),
+    rest.get('/api/v2/azure/applications', (_req, res, ctx) => {
+        return res(ctx.json({ data: { props: MOCK_ENRICHED_PROPS, kinds: ['AZApp', 'AZBase'] } }));
     }),
     rest.get(`/api/v2/relationships/${MOCK_REL_ID}`, (_req, res, ctx) => {
         return res(ctx.json({ data: MOCK_RELATIONSHIP_RESPONSE }));
@@ -103,7 +138,62 @@ describe('useGetNodeById', () => {
             MOCK_NODE_ID,
             expect.objectContaining({ params: { 'include-info': true } })
         );
+        await waitFor(() => expect(result.current.data).toEqual(MOCK_ENRICHED_NODE_RESPONSE));
+    });
+
+    it('merges kind-specific runtime properties for enrichable node kinds', async () => {
+        const getAZEntityInfoV2Spy = vi.spyOn(apiClient, 'getAZEntityInfoV2');
+        const { result } = renderHook(() => useGetNodeById(MOCK_NODE_ID));
+
+        await waitFor(() => expect(result.current.data).toEqual(MOCK_ENRICHED_NODE_RESPONSE));
+
+        expect(getAZEntityInfoV2Spy).toHaveBeenCalledWith(
+            'applications',
+            MOCK_OBJECT_ID,
+            undefined,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            expect.anything()
+        );
+        expect(result.current.data?.properties.serviceprincipalid).toBe('SP-123');
+    });
+
+    it('falls back to the base node when the kind-specific request fails', async () => {
+        server.use(
+            rest.get('/api/v2/azure/applications', (_req, res, ctx) => {
+                return res(ctx.status(500));
+            })
+        );
+
+        const { result } = renderHook(() => useGetNodeById(MOCK_NODE_ID));
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
         expect(result.current.data).toEqual(MOCK_NODE_RESPONSE);
+    });
+
+    it('does not enrich non built in node kinds', async () => {
+        const getAZEntityInfoV2Spy = vi.spyOn(apiClient, 'getAZEntityInfoV2');
+        const { result } = renderHook(() => useGetNodeById(MOCK_CUSTOM_NODE_ID));
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        expect(getAZEntityInfoV2Spy).not.toHaveBeenCalled();
+        expect(result.current.data).toEqual(MOCK_CUSTOM_NODE_RESPONSE);
+    });
+
+    it('does not enrich built in node kinds outside the enrichable allow-list', async () => {
+        const getAZEntityInfoV2Spy = vi.spyOn(apiClient, 'getAZEntityInfoV2');
+        const getUserV2Spy = vi.spyOn(apiClient, 'getUserV2');
+        const { result } = renderHook(() => useGetNodeById(MOCK_USER_NODE_ID));
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        expect(getAZEntityInfoV2Spy).not.toHaveBeenCalled();
+        expect(getUserV2Spy).not.toHaveBeenCalled();
+        expect(result.current.data).toEqual(MOCK_USER_NODE_RESPONSE);
     });
 });
 
@@ -153,7 +243,7 @@ describe('useGraphItem', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(getNodeByIDSpy).toHaveBeenCalledWith(MOCK_NODE_ID, expect.anything());
-        expect(result.current.data).toEqual(MOCK_NODE_RESPONSE);
+        await waitFor(() => expect(result.current.data).toEqual(MOCK_ENRICHED_NODE_RESPONSE));
     });
 
     it('fetches relationship data when itemId has the rel_ prefix', async () => {

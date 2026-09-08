@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { test } from 'bh-playwright-testing';
 import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
 const completedIngest = {
     created_at: '2026-08-01T12:00:00Z',
     deleted_at: { Time: '0001-01-01T00:00:00Z', Valid: false },
@@ -55,7 +55,7 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
         });
     });
 
-    test('empty history', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('empty history', async ({ page, goAndWaitFor, checkA11y }) => {
         await page.route('**/api/v2/file-upload**', async (route) => {
             if (
                 route.request().method() !== 'GET' ||
@@ -67,14 +67,15 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
             await route.fulfill({ json: { count: 0, data: [], limit: 10, skip: 0 } });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-        await page.getByRole('columnheader', { name: 'ID / User / Status' }).waitFor({ state: 'visible' });
+        await goAndWaitFor(
+            '/ui/administration/file-ingest',
+            page.getByRole('columnheader', { name: 'ID / User / Status' })
+        );
         await page.getByText('0–0 of 0').waitFor({ state: 'visible' });
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('with history', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with history', async ({ page, goAndWaitFor, checkA11y }) => {
         await page.route('**/api/v2/file-upload**', async (route) => {
             if (
                 route.request().method() !== 'GET' ||
@@ -86,12 +87,13 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
             await route.fulfill({ json: { count: 1, data: [completedIngest], limit: 10, skip: 0 } });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-        await page.getByRole('button', { name: 'View ingest 1 details' }).waitFor({ state: 'visible' });
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await goAndWaitFor(
+            '/ui/administration/file-ingest',
+            page.getByRole('button', { name: 'View ingest 1 details' })
+        );
+        await checkA11y();
     });
-    test('with ingest selected', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with ingest selected', async ({ checkA11y, goAndWaitFor, page }) => {
         await page.route('**/api/v2/file-upload**', async (route) => {
             if (
                 route.request().method() !== 'GET' ||
@@ -125,14 +127,15 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
             });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-        await page.getByRole('button', { name: 'View ingest 1 details' }).click();
+        const ingestButton = page.getByRole('button', { name: 'View ingest 1 details' });
+        await goAndWaitFor('/ui/administration/file-ingest', ingestButton);
+
+        await ingestButton.click();
         await page.getByText('bloodhound-data.zip').waitFor({ state: 'visible' });
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('with errored ingest selected', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with errored ingest selected', async ({ checkA11y, goAndWaitFor, page }) => {
         await page.route('**/api/v2/file-upload**', async (route) => {
             if (
                 route.request().method() !== 'GET' ||
@@ -166,15 +169,16 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
             });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-        await page.getByRole('button', { name: 'View ingest 2 details' }).click();
+        const ingestButton = page.getByRole('button', { name: 'View ingest 2 details' });
+        await goAndWaitFor('/ui/administration/file-ingest', ingestButton);
+
+        await ingestButton.click();
         await page.getByRole('button', { name: /invalid-data\.json Failure/ }).click();
         await page.getByText('The uploaded file could not be parsed.').waitFor({ state: 'visible' });
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('ingest filter', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('ingest filter', async ({ checkA11y, goAndWaitFor, page }) => {
         await page.route('**/api/v2/file-upload**', async (route) => {
             if (
                 route.request().method() !== 'GET' ||
@@ -193,14 +197,13 @@ test.describe('Administration - File Ingest - has no detectable WCAG A/AA violat
             await route.fulfill({ json: { data: { users: [] } } });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-        await page.getByTestId('file_ingest_log-open_filter_dialog').click();
+        const filterDialog = page.getByTestId('file_ingest_log-open_filter_dialog');
+        await goAndWaitFor('/ui/administration/file-ingest', filterDialog);
 
+        await filterDialog.click();
         await hideBySelector(page, '#content-wrapper');
-
         await page.getByRole('heading', { name: 'Filter' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });

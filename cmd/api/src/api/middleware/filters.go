@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/gorilla/mux"
 
@@ -31,18 +32,26 @@ import (
 
 // FilterMiddleware parses query parameter filters from the request, validates them against the supplied
 // params.Filterable definition, and enriches the BloodHound context with the resulting params.Filters map.
+// Query parameters named in additionalIgnoredParameters are skipped during filter parsing but remain
+// available on the request.
 //
 // When filterable is nil the middleware performs no parsing and passes the request through unchanged. If
 // the filters are malformed, reference a column that cannot be filtered, or use an operator the column
 // does not support, the middleware writes a 400 response and halts the chain.
-func FilterMiddleware(filterable params.Filterable) mux.MiddlewareFunc {
+func FilterMiddleware(filterable params.Filterable, additionalIgnoredParameters ...string) mux.MiddlewareFunc {
 	if filterable == nil {
 		return func(next http.Handler) http.Handler {
 			return next
 		}
 	}
 
-	parser := params.NewQueryParameterFilterParser(append(model.IgnoreFilters(), model.AllPaginationQueryParameters()...)...)
+	ignoredParameters := slices.Concat(
+		model.IgnoreFilters(),
+		model.AllPaginationQueryParameters(),
+		additionalIgnoredParameters,
+	)
+
+	parser := params.NewQueryParameterFilterParser(ignoredParameters...)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {

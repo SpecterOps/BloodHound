@@ -17,6 +17,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
+    CreateAlertRequest,
     CreateAssetGroupRequest,
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
@@ -37,6 +38,7 @@ import {
     PutUserAuthSecretRequest,
     QueryScope,
     RequestOptions,
+    UpdateAlertRequest,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
     UpdateAssetGroupTagRequest,
@@ -53,6 +55,7 @@ import {
     UpdateUserQueryRequest,
     UpdateUserRequest,
     UpdateWebhookRequest,
+    WebhookTestRequest,
 } from './requests';
 import {
     ActiveDirectoryDataQualityResponse,
@@ -70,6 +73,7 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CreateAlertResponse,
     CreateAuthTokenResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
@@ -77,7 +81,14 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    FindingTypeResponse,
+    GetAlertAttemptsResponse,
+    GetAlertEventTypesResponse,
+    GetAlertResponse,
+    GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobProfilesResponse,
+    GetCollectorJobScheduleResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -86,6 +97,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -107,14 +119,17 @@ import {
     PostureResponse,
     PreviewSelectorsResponse,
     RotateWebhookSecretResponse,
+    RunCollectorJobProfileResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
+    SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
+    ZoneProtectedAssetScoreResponse,
 } from './responses';
 import * as types from './types';
 
@@ -584,6 +599,9 @@ class BHEAPIClient {
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
 
+    getAllFindingTypes = (options?: RequestOptions) =>
+        this.baseClient.get<FindingTypeResponse>(`/api/v2/attack-paths/finding-types`, options);
+
     getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
         this.baseClient.get<FindingSchemaResponse>(
             '/api/v2/extensions-findings',
@@ -739,6 +757,13 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
+    getZoneProtectedAssetScore = (environments: string[], assetGroupTagId: number, options?: RequestOptions) =>
+        this.baseClient.get<ZoneProtectedAssetScoreResponse>('/api/v2/asset-scores/zone-protected-asset-score', {
+            ...options,
+            params: { ...options?.params, environments, asset_group_tag_id: assetGroupTagId },
+            paramsSerializer: { indexes: null },
+        });
+
     /* explore search */
 
     getPathfindingResult = (startNode: string, endNode: string, options?: RequestOptions) =>
@@ -772,6 +797,39 @@ class BHEAPIClient {
     /* ingest */
 
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+
+    /* collector job profiles */
+
+    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+            ...options,
+            params: {
+                ...options?.params,
+                job_profile_id: `eq:${profileId}`,
+                sort_by: '-recorded_at',
+                skip: 0,
+                limit: 1,
+            },
+        });
+
+    getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.post<RunCollectorJobProfileResponse>(
+            '/api/v2/collector-job-queue',
+            { job_profile_id: profileId },
+            options
+        );
 
     /* clients */
 
@@ -809,6 +867,13 @@ class BHEAPIClient {
             ...options,
             responseType: 'blob',
         });
+
+    requestSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.post<SupportBundleDownloadURLResponse>(
+            `/api/v2/clients/${clientId}/artifacts/${artifactId}/download-url`,
+            undefined,
+            options
+        );
 
     deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
@@ -2795,13 +2860,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (
-        skip?: number,
-        limit?: number,
-        sort_by?: types.WebhookSortBy,
-        name?: string,
-        options?: RequestOptions
-    ) =>
+    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams = {}, options?: RequestOptions) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2828,8 +2887,65 @@ class BHEAPIClient {
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
-    testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+    testWebhook = (webhookId: string, payload: WebhookTestRequest, options?: RequestOptions) =>
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, payload, options);
+
+    /* alerts */
+    createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
+        return this.baseClient.post<CreateAlertResponse>('/api/v2/alerts', payload, options);
+    };
+
+    getAlerts = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.AlertsSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertsResponse>('/api/v2/alerts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                name: name ? `~eq:${name}` : undefined,
+            },
+            paramsSerializer: { indexes: null },
+        });
+
+    getAlertEventTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetAlertEventTypesResponse>('/api/v2/alert-event-types', {
+            ...options,
+        });
+
+    getAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, options);
+
+    updateAlert = (alertId: string, payload: UpdateAlertRequest, options?: RequestOptions) =>
+        this.baseClient.patch<GetAlertResponse>(`api/v2/alerts/${alertId}`, payload, options);
+
+    deleteAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
+
+    getAlertAttempts = (
+        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams = {},
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                alert_id: alert_id ? `eq:${alert_id}` : undefined,
+                channel_id: channel_id ? `eq:${channel_id}` : undefined,
+                event_id: event_id ? `eq:${event_id}` : undefined,
+                succeeded,
+            },
+            paramsSerializer: { indexes: null },
+        });
 }
 
 export default BHEAPIClient;

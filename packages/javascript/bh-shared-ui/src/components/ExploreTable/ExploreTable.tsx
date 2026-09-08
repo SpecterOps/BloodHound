@@ -41,11 +41,11 @@ const tableProps: DataTableProps['TableProps'] = {
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm',
+    className: 'sticky top-0 z-10 shadow-sm text-base',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'px-2 text-center',
+    className: 'px-2 py-4 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {

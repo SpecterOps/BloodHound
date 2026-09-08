@@ -20,7 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createGraphKinds } from '../../../mocks/factories/graphKinds';
 import { act, render, screen, waitFor } from '../../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../../utils';
+import { mockCodemirrorLayoutMethods } from '../../../testing';
 import RuleFormContext, { initialValue } from '../Save/RuleForm/RuleFormContext';
 import { PrivilegeZonesCypherEditor } from './PrivilegeZonesCypherEditor';
 

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { test } from 'bh-playwright-testing';
 
 test.describe('Administration - BloodHound Configuration - has no detectable WCAG A/AA violations', () => {
     test.beforeEach(async ({ page }) => {
@@ -44,19 +44,20 @@ test.describe('Administration - BloodHound Configuration - has no detectable WCA
         });
     });
 
-    test('page', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/administration/bloodhound-configuration');
+    test('page', async ({ page, goAndWaitFor, checkA11y }) => {
+        await goAndWaitFor(
+            '/ui/administration/bloodhound-configuration',
+            page.getByRole('heading', { name: 'BloodHound Configuration' })
+        );
 
-        await page.getByRole('heading', { name: 'BloodHound Configuration' }).waitFor({ state: 'visible' });
         await page.getByRole('heading', { name: 'Run Analysis Now' }).waitFor({ state: 'visible' });
         await page.getByRole('heading', { name: 'Citrix RDP Support' }).waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'Analyze Now' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Analyze Now dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Analyze Now dialog', async ({ page, checkA11y }) => {
         await page.goto('/ui/administration/bloodhound-configuration');
         await page.getByRole('button', { name: 'Analyze Now' }).click();
 
@@ -68,7 +69,6 @@ test.describe('Administration - BloodHound Configuration - has no detectable WCA
         // This dialog is mixed in with the page content rather than on its own portal
         await hideBySelector(page, '[data-aria-hidden="true"]');
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });

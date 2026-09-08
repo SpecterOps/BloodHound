@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { test } from 'bh-playwright-testing';
 
 const dataQualityResult = {
     acls: 34,
@@ -41,7 +41,7 @@ const dataQualityResult = {
 };
 
 test.describe('Administration - Data Quality - has no detectable WCAG A/AA violations', () => {
-    test('empty page', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('empty page', async ({ page, goAndWaitFor, checkA11y }) => {
         await page.route('**/api/v2/available-domains', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -50,13 +50,14 @@ test.describe('Administration - Data Quality - has no detectable WCAG A/AA viola
             await route.fulfill({ json: { data: [] } });
         });
 
-        await page.goto('/ui/administration/data-quality');
-        await page.getByText('No Domain or Tenant Selected', { exact: true }).waitFor();
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await goAndWaitFor(
+            '/ui/administration/data-quality',
+            page.getByText('No Domain or Tenant Selected', { exact: true })
+        );
+        await checkA11y();
     });
 
-    test('page with results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('page with results', async ({ page, goAndWaitFor, checkA11y }) => {
         await page.route('**/api/v2/available-domains', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -93,10 +94,8 @@ test.describe('Administration - Data Quality - has no detectable WCAG A/AA viola
             });
         });
 
-        await page.goto('/ui/administration/data-quality');
-        await page.getByText('Group Completeness').waitFor();
+        await goAndWaitFor('/ui/administration/data-quality', page.getByText('Group Completeness'));
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

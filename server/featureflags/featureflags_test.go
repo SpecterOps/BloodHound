@@ -32,40 +32,87 @@ import (
 )
 
 func TestNewFeatureFlagRequestAdapter(t *testing.T) {
-	t.Run("returns non-nil adapter", func(t *testing.T) {
-		pool := new(pgxpool.Pool)
-		adapter := featureflags.NewFeatureFlagRequestAdapter(pool)
+	t.Parallel()
 
-		require.NotNil(t, adapter)
-	})
+	type args struct {
+		pool *pgxpool.Pool
+	}
+	type want struct {
+		nonNil bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "Success: returns a non-nil adapter",
+			args: args{pool: new(pgxpool.Pool)},
+			want: want{nonNil: true},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			adapter := featureflags.NewFeatureFlagRequestAdapter(tt.args.pool)
+
+			if tt.want.nonNil {
+				require.NotNil(t, adapter)
+			}
+		})
+	}
 }
 
 func TestRegister(t *testing.T) {
-	t.Run("successfully registers featureflags routes", func(t *testing.T) {
-		var (
-			cfg        = config.Configuration{}
-			authorizer = auth.NewAuthorizer(nil)
-			routerInst = router.NewRouter(cfg, authorizer, "")
-			pool       = new(pgxpool.Pool)
-		)
+	t.Parallel()
 
-		// Should not panic
-		require.NotPanics(t, func() {
-			featureflags.Register(&routerInst, pool)
-		})
+	type args struct {
+		method string
+		path   string
+	}
+	type want struct {
+		routeRegistered bool
+	}
 
-		// Verify routes are registered
-		var (
-			muxRouter = routerInst.MuxRouter()
-			match     mux.RouteMatch
-		)
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+		pool       = new(pgxpool.Pool)
+		tests      = []struct {
+			name string
+			args args
+			want want
+		}{
+			{
+				name: "Success: registers the GET features route",
+				args: args{method: http.MethodGet, path: "/api/v2/features"},
+				want: want{routeRegistered: true},
+			},
+			{
+				name: "Success: registers the PUT toggle route",
+				args: args{method: http.MethodPut, path: "/api/v2/features/1/toggle"},
+				want: want{routeRegistered: true},
+			},
+		}
+	)
 
-		// Test GET /api/v2/features route
-		getRequest := httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
-		assert.True(t, muxRouter.Match(getRequest, &match), "GET /api/v2/features route should be registered")
-
-		// Test PUT /api/v2/features/{feature_id}/toggle route
-		putRequest := httptest.NewRequest(http.MethodPut, "/api/v2/features/1/toggle", nil)
-		assert.True(t, muxRouter.Match(putRequest, &match), "PUT /api/v2/features/{feature_id}/toggle route should be registered")
+	// Should not panic
+	require.NotPanics(t, func() {
+		featureflags.Register(&routerInst, pool)
 	})
+
+	muxRouter := routerInst.MuxRouter()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			var match mux.RouteMatch
+			request := httptest.NewRequest(tt.args.method, tt.args.path, nil)
+
+			assert.Equal(t, tt.want.routeRegistered, muxRouter.Match(request, &match), "%s %s route should be registered", tt.args.method, tt.args.path)
+		})
+	}
 }

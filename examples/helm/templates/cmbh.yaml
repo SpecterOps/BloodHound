@@ -36,6 +36,7 @@ data:
       },
       "collectors_base_path": "/etc/bloodhound/collectors",
       "default_admin": {
+        "enabled": true,
         "principal_name": "admin",
         "first_name": "BloodHound",
         "last_name": "Admin",

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { extensionsKeys } from '../../hooks';
+import { customNodeKindsKeys, extensionsKeys } from '../../hooks';
 import { act, renderHook } from '../../test-utils';
 import { useSchemaUploadHandlers } from './useSchemaUploadHandlers';
 
@@ -44,7 +44,7 @@ describe('useSchemaUploadHandlers', () => {
         mutateMock.mockReset();
     });
 
-    it('invalidates the extensions query key when upload succeeds', () => {
+    it('invalidates the extensions and custom node kinds query keys when upload succeeds', () => {
         mutateMock.mockImplementation((_variables, options: { onSuccess?: () => void } = {}) => {
             options.onSuccess?.();
         });
@@ -56,5 +56,6 @@ describe('useSchemaUploadHandlers', () => {
         act(() => result.current.handleUpload());
 
         expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: extensionsKeys.all });
+        expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: customNodeKindsKeys.all });
     });
 });

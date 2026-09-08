@@ -76,6 +76,7 @@ const (
 	ErrorResponseAssetGroupTagExceededNameLimit                      = "asset group tag name is limited to 250 characters"
 	ErrorResponseAssetGroupTagDuplicateKindName                      = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagSelectorDuplicateName                  = "asset group tag selector name must be unique"
+	ErrorAssetGroupTagSelectorReadOnlyField                          = "request contains read-only fields"
 	ErrorResponseAssetGroupTagInvalid                                = "valid tag_type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit                       = "tag limit has been exceeded"
 	ErrorResponseAssetGroupTagInvalidFields                          = "position and require_certify are only allowed for tiers"

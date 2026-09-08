@@ -32,14 +32,19 @@ import (
 
 func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName string) (string, error) {
 	var (
-		sourceFile  io.ReadCloser
-		scratchFile *os.File
-		scratchPath string
-		err         error
-		success     bool
+		streamDiagnostic ingestStorageStreamDiagnostic
+		sourceFile       io.ReadCloser
+		fileInfo         storage.FileInfo
+		scratchFile      *os.File
+		scratchPath      string
+		bytesCopied      int64
+		err              error
+		success          bool
 	)
 
-	sourceFile, _, err = fileService.GetFile(ctx, storedFileName)
+	logStoredIngestFileOpenStarted(ctx, storedFileName)
+	sourceFile, fileInfo, err = fileService.GetFile(ctx, storedFileName)
+	logStoredIngestFileOpenFinished(ctx, storedFileName, fileInfo, err)
 	if err != nil {
 		return "", fmt.Errorf("open stored ingest file %q: %w", storedFileName, err)
 	}
@@ -61,7 +66,10 @@ func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService st
 		}
 	}()
 
-	if _, err = io.Copy(scratchFile, sourceFile); err != nil {
+	streamDiagnostic = startIngestStorageStreamDiagnostic(ctx, storedFileName)
+	bytesCopied, err = io.Copy(scratchFile, sourceFile)
+	streamDiagnostic.finish(bytesCopied, err)
+	if err != nil {
 		return "", fmt.Errorf("copy stored ingest file %q to scratch: %w", storedFileName, err)
 	}
 
