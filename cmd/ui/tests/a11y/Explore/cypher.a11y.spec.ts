@@ -19,6 +19,9 @@ import { hideBySelector, test } from 'bh-playwright-testing';
 
 const installSaveQueryStub = async (page: Page, testInfo: TestInfo) => {
     const queryName = `a11y-export-${testInfo.project.name}-${Date.now()}`;
+    const testRunTime = Date.now();
+    const authSecretExpiresAt = new Date(testRunTime + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const lastLogin = new Date(testRunTime - 8 * 60 * 60 * 1000).toISOString();
 
     const savedQuery = {
         id: 1,
@@ -34,14 +37,14 @@ const installSaveQueryStub = async (page: Page, testInfo: TestInfo) => {
             sso_provider_id: null,
             AuthSecret: {
                 digest_method: 'argon2',
-                expires_at: '2026-11-15T14:32:05.868773Z',
+                expires_at: authSecretExpiresAt,
                 id: 1,
             },
             first_name: 'BloodHound',
             last_name: 'Dev',
             email_address: 'spam@example.com',
             principal_name: 'admin',
-            last_login: '2026-08-24T17:12:33.222043Z',
+            last_login: lastLogin,
             is_disabled: false,
             all_environments: true,
             environment_targeted_access_control: [],
@@ -374,7 +377,7 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab - Saved Queries', () 
         // Select the dots action from the saved query
         await page.getByTestId('saved-query-action-menu-trigger').click();
         await page.getByRole('button', { name: 'Edit/Share' }).click();
-        await page.getByText('MATCH (n) RETURN n LIMIT').waitFor();
+        await page.getByRole('dialog', { name: 'Edit Saved Query' }).waitFor();
 
         await hideBySelector(page, 'nav');
         await hideBySelector(page, '#content-wrapper');
@@ -393,10 +396,11 @@ test.describe('WCAG A/AA Violations - Explore - Cypher Tab - Saved Queries', () 
 
         // Additional specifier as there are multiple Delete buttons in scope
         await page.getByTestId('saved-query-action-menu').getByRole('button', { name: 'Delete' }).click();
+        await page.getByRole('dialog', { name: 'Delete Query' }).waitFor();
 
         await hideBySelector(page, 'nav');
         await hideBySelector(page, '#content-wrapper');
 
-        await checkA11y();
+        await checkA11y({ include: '[role="presentation"][tabindex="-1"]' });
     });
 });

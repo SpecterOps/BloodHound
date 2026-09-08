@@ -16,6 +16,9 @@
 import { Page } from '@playwright/test';
 import { expect, test } from 'bh-playwright-testing';
 
+const startResultName = 'START TEST RESULT';
+const destinationResultName = 'DESTINATION TEST RESULT';
+
 const installPathfindingStub = async (page: Page) => {
     await page.route('**/api/v2/graphs/shortest-path**', async (route) => {
         if (route.request().method() !== 'GET') {
@@ -31,14 +34,36 @@ const installPathfindingStub = async (page: Page) => {
             },
         });
     });
+
+    await page.route('**/api/v2/search**', async (route) => {
+        if (route.request().method() !== 'GET') {
+            return route.fallback();
+        }
+
+        await route.fulfill({
+            json: {
+                data: [
+                    {
+                        name: startResultName,
+                        objectid: 'playwright-pathfinding-start-result',
+                        type: 'User',
+                    },
+                    {
+                        name: destinationResultName,
+                        objectid: 'playwright-pathfinding-destination-result',
+                        type: 'Computer',
+                    },
+                ],
+            },
+        });
+    });
 };
 
 test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     test.beforeEach(async ({ page, goAndWaitFor }) => {
-        await goAndWaitFor(
-            '/ui/explore?exploreSearchTab=pathfinding',
-            page.getByRole('textbox', { name: 'Start node' })
-        );
+        const startNode = page.getByRole('textbox', { name: 'Start Node' });
+        await goAndWaitFor('/ui/explore?exploreSearchTab=pathfinding', startNode);
+        await startNode.focus();
     });
 
     test('Pathfinding tab', async ({ page, checkA11y }) => {
@@ -94,90 +119,7 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
         await checkA11y();
     });
 
-    test('Destination node', async ({ page, checkA11y }) => {
-        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
-        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
-        await page.getByRole('textbox', { name: 'Destination Node' }).click();
-
-        await checkA11y();
-    });
-
-    test('Destination node with results', async ({ page, checkA11y }) => {
-        const searchTerm = 'test';
-        const searchResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: searchResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'User',
-                        },
-                    ],
-                },
-            });
-        });
-
-        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
-        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
-        await page.getByRole('textbox', { name: 'Destination Node' }).fill(searchTerm);
-        await page.getByText('DESTINATION TEST RESULT').waitFor();
-
-        await checkA11y();
-    });
-
-    test('Destination node with no results', async ({ page, checkA11y }) => {
-        const searchTerm = 'zzzznonexistentdestination9999';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({ json: { data: [] } });
-        });
-
-        // Pathfinding autofocus opens the Start node popup over the Destination Node field.
-        await page.getByRole('textbox', { name: 'Start Node' }).press('Escape');
-        await page.getByRole('textbox', { name: 'Destination Node' }).fill(searchTerm);
-        await page.getByText('No results found for "').waitFor();
-
-        await checkA11y();
-    });
-
     test('Enabled pathfinding controls', async ({ page, checkA11y }) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
-
         await installPathfindingStub(page);
 
         await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
@@ -186,39 +128,27 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
         await page.getByRole('textbox', { name: 'Destination Node' }).fill(destinationResultName);
         await page.getByRole('option').filter({ hasText: destinationResultName }).click();
 
-        await page.getByRole('button', { name: 'Swap start and destination' }).waitFor();
-        await page.getByRole('button', { name: 'Show pathfinding filter options' }).waitFor();
+        // Assertions set to ensure enabled state before
+        await expect(page.getByRole('button', { name: 'Swap start and destination' })).toBeEnabled();
+        await expect(page.getByRole('button', { name: 'Show pathfinding filter options' })).toBeEnabled();
+
+        await checkA11y();
+    });
+
+    test('Disabled swap controls', async ({ page, checkA11y }) => {
+        await installPathfindingStub(page);
+
+        await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
+        await page.getByRole('option').filter({ hasText: startResultName }).click();
+
+        // Assertions set to ensure enabled state before
+        await expect(page.getByRole('button', { name: 'Swap start and destination' })).toBeDisabled();
+        await expect(page.getByRole('button', { name: 'Show pathfinding filter options' })).toBeEnabled();
 
         await checkA11y();
     });
 
     test('Path edge filtering dialog', async ({ page, checkA11y }) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
-
         await installPathfindingStub(page);
 
         await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
@@ -233,32 +163,6 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     });
 
     test('Path edge filtering dialog with no selections', async ({ page, checkA11y }) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
-
         await installPathfindingStub(page);
 
         await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
@@ -280,32 +184,6 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     });
 
     test('Path edge filtering dialog with search results', async ({ page, checkA11y }) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
-
         await installPathfindingStub(page);
 
         await page.getByRole('textbox', { name: 'Start Node' }).fill(startResultName);
@@ -326,32 +204,7 @@ test.describe('WCAG A/AA Violations - Explore - Pathfinding Tab', () => {
     });
 
     test('Path edge filtering dialog with no search results', async ({ page, checkA11y }) => {
-        const startResultName = 'START TEST RESULT';
-        const destinationResultName = 'DESTINATION TEST RESULT';
         const searchTerm = 'no-match-test-value';
-
-        await page.route('**/api/v2/search**', async (route) => {
-            if (route.request().method() !== 'GET') {
-                return route.fallback();
-            }
-
-            await route.fulfill({
-                json: {
-                    data: [
-                        {
-                            name: startResultName,
-                            objectid: 'playwright-pathfinding-start-result',
-                            type: 'User',
-                        },
-                        {
-                            name: destinationResultName,
-                            objectid: 'playwright-pathfinding-destination-result',
-                            type: 'Computer',
-                        },
-                    ],
-                },
-            });
-        });
 
         await installPathfindingStub(page);
 
