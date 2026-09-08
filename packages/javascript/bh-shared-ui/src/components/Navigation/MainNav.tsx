@@ -161,6 +161,7 @@ const MainNavFooter: FC<{
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isExpanded, setIsExpanded] = useNavExpanded();
     const isExtraLargeViewport = useMediaQuery(`(min-width: ${BREAKPOINTS.xl})`);
+    const previousIsExtraLargeViewport = useRef(isExtraLargeViewport);
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -184,6 +185,9 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     useKeybindings(keybindings);
 
     useEffect(() => {
+        if (previousIsExtraLargeViewport.current === isExtraLargeViewport) return;
+
+        previousIsExtraLargeViewport.current = isExtraLargeViewport;
         setIsExpanded(isExtraLargeViewport);
     }, [isExtraLargeViewport, setIsExpanded]);
 

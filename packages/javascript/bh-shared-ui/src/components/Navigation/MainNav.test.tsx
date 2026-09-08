@@ -188,28 +188,39 @@ describe('MainNav responsive expansion', () => {
         });
     });
 
-    it('contracts an expanded nav on initial load below the xl breakpoint', async () => {
+    it('preserves an expanded nav on initial load below the xl breakpoint', () => {
         createMatchMediaController(false);
         window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
 
         render(<MainNav mainNavData={mainNavData} />);
 
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
-            expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
-        });
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'true');
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(true));
     });
 
-    it('expands a contracted nav on initial load at the xl breakpoint', async () => {
+    it('preserves a contracted nav on initial load at the xl breakpoint', () => {
         createMatchMediaController(true);
         window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(false));
 
         render(<MainNav mainNavData={mainNavData} />);
 
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'true');
-            expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(true));
-        });
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
+    });
+
+    it('preserves the user-selected state after a refresh without a breakpoint crossing', async () => {
+        const user = userEvent.setup();
+        createMatchMediaController(false);
+        const { unmount } = render(<MainNav mainNavData={mainNavData} />);
+
+        await user.click(screen.getByRole('button', { name: 'Toggle Navigation' }));
+
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
+
+        unmount();
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
     });
 });
 
