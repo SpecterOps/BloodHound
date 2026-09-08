@@ -29,6 +29,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	querymocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
@@ -608,9 +609,10 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		ctrl      *gomock.Controller
-		mockGraph *graphmocks.MockDatabase
-		mockDb    *mocks.MockDatabase
+		ctrl           *gomock.Controller
+		mockGraph      *graphmocks.MockDatabase
+		mockGraphQuery *querymocks.MockGraph
+		mockDb         *mocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
@@ -623,10 +625,43 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 		setupMocks       func(t *testing.T, mock *mock)
 		dogTagsOverrides dogtags.TestOverrides
 		user             model.User
+		withoutUser      bool
 		expected         expected
+	}
+	setupNodeAccess := func(mock *mock) {
+		var (
+			sourceNode = graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+				common.ObjectID.String(): "source-object-id",
+			}), ad.User)
+			targetNode = graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+				common.ObjectID.String(): "target-object-id",
+			}), ad.Computer)
+		)
+
+		mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(1)).Return(sourceNode, nil)
+		mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(2)).Return(targetNode, nil)
 	}
 
 	tt := []testData{
+		{
+			name: "Error: unauthenticated user - Forbidden",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks:  func(t *testing.T, mock *mock) {},
+			withoutUser: true,
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseBody:   `{"errors":[{"context":"","message":"unknown user"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
 		{
 			name: "Error: missing edge_type parameter - Bad Request",
 			buildRequest: func() *http.Request {
@@ -789,6 +824,223 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 		},
 		{
+			name: "Error: unable to fetch source node for access validation - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(1)).Return(nil, errors.New("source node error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"source node error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: unable to fetch target node for access validation - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				sourceNode := graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "source-object-id",
+				}), ad.User)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(1)).Return(sourceNode, nil)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(2)).Return(nil, errors.New("target node error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"target node error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: source node is missing an object ID - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				sourceNode := graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{}), ad.User)
+				targetNode := graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "target-object-id",
+				}), ad.Computer)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(1)).Return(sourceNode, nil)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(2)).Return(targetNode, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"property objectid: property not found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: target node is missing an object ID - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				sourceNode := graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					common.ObjectID.String(): "source-object-id",
+				}), ad.User)
+				targetNode := graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{}), ad.Computer)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(1)).Return(sourceNode, nil)
+				mock.mockGraphQuery.EXPECT().FetchNodeByGraphId(gomock.Any(), graph.ID(2)).Return(targetNode, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"property objectid: property not found"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: unable to validate source node environment access - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				setupNodeAccess(mock)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(nil, errors.New("source access error"))
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"source access error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: unable to validate target node environment access - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				setupNodeAccess(mock)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+				}), ad.User, ad.Entity), nil)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "target-object-id", ad.Computer).Return(nil, errors.New("target access error"))
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"target access error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: source node is outside assigned environments - Not Found",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				setupNodeAccess(mock)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-DENIED",
+				}), ad.User, ad.Entity), nil)
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Error: target node is outside assigned environments - Not Found",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/graphs/acl-inheritance",
+						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				setupNodeAccess(mock)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+				}), ad.User, ad.Entity), nil)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "target-object-id", ad.Computer).Return(graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-DENIED",
+				}), ad.Computer, ad.Entity), nil)
+			},
+			dogTagsOverrides: dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			},
+			user: model.User{
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Error: database error fetching edge by start and end - Bad Request",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -801,6 +1053,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
@@ -822,6 +1075,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -844,6 +1098,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
@@ -867,6 +1122,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
@@ -890,6 +1146,13 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(graph.NewNode(graph.ID(1), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+				}), ad.User, ad.Entity), nil)
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "target-object-id", ad.Computer).Return(graph.NewNode(graph.ID(2), graph.AsProperties(map[string]any{
+					ad.DomainSID.String(): "S-1-5-21-ALLOWED",
+				}), ad.Computer, ad.Entity), nil)
 
 				var (
 					edge = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.AsProperties(map[string]any{
@@ -997,6 +1260,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
+				setupNodeAccess(mock)
 
 				var (
 					edge = graph.NewRelationship(graph.ID(1), graph.ID(1), graph.ID(2), graph.AsProperties(map[string]any{
@@ -1098,18 +1362,23 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mock := &mock{
-				ctrl:      ctrl,
-				mockGraph: graphmocks.NewMockDatabase(ctrl),
-				mockDb:    mocks.NewMockDatabase(ctrl),
+				ctrl:           ctrl,
+				mockGraph:      graphmocks.NewMockDatabase(ctrl),
+				mockGraphQuery: querymocks.NewMockGraph(ctrl),
+				mockDb:         mocks.NewMockDatabase(ctrl),
 			}
 
-			request := testCase.buildRequest().WithContext(setupUserCtx(testCase.user))
+			request := testCase.buildRequest()
+			if !testCase.withoutUser {
+				request = request.WithContext(setupUserCtx(testCase.user))
+			}
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				Graph:   mock.mockGraph,
-				DB:      mock.mockDb,
-				DogTags: dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:      mock.mockGraph,
+				GraphQuery: mock.mockGraphQuery,
+				DB:         mock.mockDb,
+				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
 			}
 
 			response := httptest.NewRecorder()
