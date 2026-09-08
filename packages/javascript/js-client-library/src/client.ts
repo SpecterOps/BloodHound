@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { CollectorJob, CollectorJobHistory, CollectorJobProfile, CollectorJobSchedule } from './types';
+
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
@@ -793,6 +795,42 @@ class BHEAPIClient {
     /* ingest */
 
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+
+    /* collector job profiles */
+
+    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<PaginatedResponse<{ records: CollectorJobHistory[] }>>('/api/v2/collector-job-history', {
+            ...options,
+            params: {
+                ...options?.params,
+                job_profile_id: `eq:${profileId}`,
+                sort_by: '-recorded_at',
+                skip: 0,
+                limit: 1,
+            },
+        });
+
+    getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<PaginatedResponse<{ profiles: CollectorJobProfile[] }>>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ schedule: CollectorJobSchedule }>>(
+            `/api/v2/collector-job-schedules/${scheduleId}`,
+            options
+        );
+
+    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.post<BasicResponse<{ job: CollectorJob }>>(
+            '/api/v2/collector-job-queue',
+            { job_profile_id: profileId },
+            options
+        );
 
     /* clients */
 
