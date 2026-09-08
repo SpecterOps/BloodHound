@@ -79,28 +79,6 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 	}
 }
 
-func validateNodeAccess(request *http.Request, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, startID, endID int64) *api.ErrorWrapper {
-	if sourceGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(startID)); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if targetGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(endID)); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if sourceNodeObjectID, err := sourceGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if targetNodeObjectID, err := targetGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if hasSourceAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, sourceNodeObjectID, sourceGraphNode.Kinds[0]); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if !hasSourceAccess {
-		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
-	} else if hasTargetAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, targetNodeObjectID, targetGraphNode.Kinds[0]); err != nil {
-		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if !hasTargetAccess {
-		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
-	}
-
-	return nil
-}
-
 func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *http.Request) {
 	var (
 		params = request.URL.Query()
@@ -187,4 +165,26 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 
 		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
+}
+
+func validateNodeAccess(request *http.Request, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, startID, endID int64) *api.ErrorWrapper {
+	if sourceGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(startID)); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if targetGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(endID)); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if sourceNodeObjectID, err := sourceGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if targetNodeObjectID, err := targetGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if hasSourceAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, sourceNodeObjectID, sourceGraphNode.Kinds[0]); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if !hasSourceAccess {
+		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
+	} else if hasTargetAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, targetNodeObjectID, targetGraphNode.Kinds[0]); err != nil {
+		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
+	} else if !hasTargetAccess {
+		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
+	}
+
+	return nil
 }
