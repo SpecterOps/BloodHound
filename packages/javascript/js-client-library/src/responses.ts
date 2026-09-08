@@ -26,6 +26,10 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -366,6 +370,14 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
 
 export enum ManagementOperationStatus {
     QUEUED = 'queued',
