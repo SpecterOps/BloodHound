@@ -41,8 +41,7 @@ type Parameter struct {
 	DeletedAt sql.NullTime
 }
 
-// TODO: this and IsProtectedKey don't need to have Parameter receivers or be public
-func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
+func (s Service) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
 		return true
@@ -52,7 +51,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 }
 
 // IsProtectedKey These keys should not be updatable by users
-func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
+func (s Service) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey:
 		return true
