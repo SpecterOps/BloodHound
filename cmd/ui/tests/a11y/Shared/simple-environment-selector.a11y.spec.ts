@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { test } from 'bh-playwright-testing';
 
 test.describe('Simple Environment Selector - has no detectable WCAG A/AA violations', () => {
     test.beforeEach(async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('Simple Environment Selector - has no detectable WCAG A/AA violati
         await page.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).waitFor({ state: 'visible' });
     });
 
-    test('no query', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('no query', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).click();
 
         const popover = page.getByTestId('data-quality_context-selector-popover');
@@ -53,14 +53,10 @@ test.describe('Simple Environment Selector - has no detectable WCAG A/AA violati
         await popover.getByRole('textbox', { name: 'Search' }).waitFor({ state: 'visible' });
         await popover.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder()
-            .include('[data-testid="data-quality_context-selector-popover"]')
-            .analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="data-quality_context-selector-popover"]' });
     });
 
-    test('with query', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with query', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).click();
 
         const popover = page.getByTestId('data-quality_context-selector-popover');
@@ -73,14 +69,10 @@ test.describe('Simple Environment Selector - has no detectable WCAG A/AA violati
         await searchInput.and(page.locator('[value="EXAMPLE"]')).waitFor({ state: 'visible' });
         await popover.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder()
-            .include('[data-testid="data-quality_context-selector-popover"]')
-            .analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="data-quality_context-selector-popover"]' });
     });
 
-    test('no results query', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('no results query', async ({ page, checkA11y }) => {
         const query = 'zzzznonexistentenvironment9999';
 
         await page.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).click();
@@ -95,10 +87,6 @@ test.describe('Simple Environment Selector - has no detectable WCAG A/AA violati
         await searchInput.and(page.locator(`[value="${query}"]`)).waitFor({ state: 'visible' });
         await popover.getByRole('button', { name: 'EXAMPLE.COM', exact: true }).waitFor({ state: 'hidden' });
 
-        const results = await makeAxeBuilder()
-            .include('[data-testid="data-quality_context-selector-popover"]')
-            .analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="data-quality_context-selector-popover"]' });
     });
 });

@@ -14,50 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Locator, Page } from '@playwright/test';
+import { test } from 'bh-playwright-testing';
 import { installAssetGroupTagsHistoryStub } from 'bh-playwright-testing/stubs';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 const HISTORY_URL = '/ui/privilege-zones/history';
 
-/** Visit the URL, collapse the nav menu (for more space), and wait for locator to be visible */
-const openPage = async (page: Page, url: string, waitFor?: Locator) => {
-    const waitLocator = waitFor ?? page.getByRole('heading', { name: 'History Log' });
-
-    await page.goto(url);
-    await page.getByRole('button', { name: 'Toggle Navigation' }).click();
-    await waitLocator.waitFor({ state: 'visible' });
-};
-
 test.describe('WCAG A/AA violations - Privilege Zones - History tab', () => {
-    test('empty history', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('empty history', async ({ page, goAndWaitFor, checkA11y }) => {
         // Return no history records so the History Log renders its empty state.
         await installAssetGroupTagsHistoryStub(page, { data: { records: [] } });
-        await openPage(page, HISTORY_URL);
+        await goAndWaitFor(HISTORY_URL, page.getByRole('heading', { name: 'History Log' }));
 
         // Wait for the DataTable's empty fallback to render before scanning.
         await page.getByText('No results.').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('with history', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with history', async ({ page, goAndWaitFor, checkA11y }) => {
         // Default stub data renders a populated History Log table.
         await installAssetGroupTagsHistoryStub(page);
-        await openPage(page, HISTORY_URL);
+        await goAndWaitFor(HISTORY_URL, page.getByRole('heading', { name: 'History Log' }));
 
         // Wait for a stubbed record's translated action to render before scanning.
         await page.getByText('Create Tag').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('With open note', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('With open note', async ({ page, goAndWaitFor, checkA11y }) => {
         // Default stub data includes a record with a note so the Note panel can be opened.
         await installAssetGroupTagsHistoryStub(page);
-        await openPage(page, HISTORY_URL);
+        await goAndWaitFor(HISTORY_URL, page.getByRole('heading', { name: 'History Log' }));
 
         // Wait for the populated table, then open the first record's note into the side panel.
         await page.getByText('Create Tag').waitFor({ state: 'visible' });
@@ -66,27 +54,25 @@ test.describe('WCAG A/AA violations - Privilege Zones - History tab', () => {
         // Wait for the note contents to render in the side panel before scanning.
         await page.getByText('Created the Playwright zone for accessibility testing.').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Filter dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Filter dialog', async ({ page, goAndWaitFor, checkA11y }) => {
         // Default stub data provides Zone/Label options for the filter dialog.
         await installAssetGroupTagsHistoryStub(page);
-        await openPage(page, HISTORY_URL);
+        await goAndWaitFor(HISTORY_URL, page.getByRole('heading', { name: 'History Log' }));
 
         // Open the filter dialog and wait for its content to render before scanning.
         await page.getByTestId('privilege-zones_history_filter-button').click();
         await page.getByRole('button', { name: 'Clear All' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 
-    test('Filter dialog with selections', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Filter dialog with selections', async ({ page, goAndWaitFor, checkA11y }) => {
         // Default stub data provides Zone/Label options for the filter dialog.
         await installAssetGroupTagsHistoryStub(page);
-        await openPage(page, HISTORY_URL);
+        await goAndWaitFor(HISTORY_URL, page.getByRole('heading', { name: 'History Log' }));
 
         // Open the filter dialog and wait for its content to render before scanning.
         await page.getByTestId('privilege-zones_history_filter-button').click();
@@ -118,7 +104,6 @@ test.describe('WCAG A/AA violations - Privilege Zones - History tab', () => {
         await madeBySelect.getByText('BloodHound').waitFor({ state: 'visible' });
         await startDate.and(page.locator('[value="2024-01-01"]')).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });

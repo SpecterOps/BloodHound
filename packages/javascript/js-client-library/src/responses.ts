@@ -26,6 +26,10 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -367,6 +371,14 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
 export enum ManagementOperationStatus {
     QUEUED = 'queued',
     RUNNING = 'running',
@@ -533,6 +545,7 @@ export type CreateAlertResponse = BasicResponse<AlertPayload>;
 export type UpdateAlertResponse = BasicResponse<AlertPayload>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 

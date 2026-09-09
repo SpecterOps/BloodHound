@@ -133,3 +133,48 @@ properties:
               type: string
             long_remediation:
               type: string
+  pz_rules:
+    type: object
+    description: Optional privilege-zone rules component.
+    properties:
+      rules:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            auto_certify:
+              type: boolean
+            seeds:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: integer
+                  value:
+                    type: string
+  saved_queries:
+    type: object
+    description: Optional saved queries component.
+    properties:
+      queries:
+        type: array
+        items:
+          type: object
+          properties:
+            query_key:
+              type: string
+              example: all-domain-admins
+            name:
+              type: string
+              example: All Domain Admins
+            query:
+              type: string
+              example: MATCH (n) RETURN n LIMIT 1
+            description:
+              type: string
+              example: Returns all domain admin nodes.

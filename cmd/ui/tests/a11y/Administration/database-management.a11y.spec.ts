@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { test } from 'bh-playwright-testing';
 
 test.describe('Administration - Database Management - has no detectable WCAG A/AA violations', () => {
     test.beforeEach(async ({ page }) => {
@@ -90,16 +90,17 @@ test.describe('Administration - Database Management - has no detectable WCAG A/A
         });
     });
 
-    test('page', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/administration/database-management');
-        await page.getByRole('heading', { name: 'Database Management' }).waitFor({ state: 'visible' });
+    test('page', async ({ page, goAndWaitFor, checkA11y }) => {
+        await goAndWaitFor(
+            '/ui/administration/database-management',
+            page.getByRole('heading', { name: 'Database Management' })
+        );
         await page.getByRole('checkbox', { name: 'All graph data' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('delete confirmation dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('delete confirmation dialog', async ({ page, checkA11y }) => {
         await page.goto('/ui/administration/database-management');
         await page.getByRole('checkbox', { name: 'All asset group selectors' }).check();
         await page.getByRole('button', { name: 'Delete' }).click();
@@ -109,8 +110,6 @@ test.describe('Administration - Database Management - has no detectable WCAG A/A
             .getByRole('dialog', { name: 'Delete data from the current environment?' })
             .waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });
