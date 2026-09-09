@@ -239,5 +239,43 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			})
 		}
 	})
+}
 
+func TestStore_GetConfigurationParameter_Integration(t *testing.T) {
+	t.Run("returns ErrNotFound when no parameter row exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		_, err = store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		assert.ErrorIs(t, err, services.ErrNotFound)
+	})
+
+	t.Run("returns an existing parameter", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		var (
+			expectedKey         = services.ParameterKey("auth.password_expiration_window")
+			expectedName        = "Local Auth Password Expiry Window"
+			expectedDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
+		)
+
+		parameter, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		require.NoError(t, err)
+		assert.Equal(t, expectedKey, parameter.Key)
+		assert.Equal(t, expectedName, parameter.Name)
+		assert.Equal(t, expectedDescription, parameter.Description)
+		assert.NotEmpty(t, parameter.CreatedAt)
+		assert.NotEmpty(t, parameter.UpdatedAt)
+		assert.NotEmpty(t, parameter.Value)
+
+	})
 }
