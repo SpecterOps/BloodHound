@@ -156,6 +156,7 @@ describe('Main Nav Route Highlighting', () => {
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
         expect(elem).toHaveClass('bg-neutral-4');
+        expect(screen.getByTestId('global_nav-test-link')).toHaveAttribute('aria-current', 'page');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -165,6 +166,53 @@ describe('Main Nav Route Highlighting', () => {
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
         expect(selected).toHaveClass('bg-neutral-4');
         expect(unselected).not.toHaveClass('bg-neutral-light-4');
+    });
+});
+
+describe('Refreshed MainNav', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it('applies refreshed geometry, typography, and a semantic icon-only collapsed DOM', async () => {
+        const user = userEvent.setup();
+        render(<MainNav mainNavData={mainNavData} variant='refreshed' />);
+
+        const navigation = screen.getByRole('navigation', { name: 'Global navigation' });
+        expect(navigation).toHaveClass('basis-[264px]', 'w-[264px]', 'bg-primary-variant');
+        expect(navigation).not.toHaveClass('shadow-md');
+        const logo = screen.getByTestId('global_nav-home');
+        expect(logo).toHaveClass('ml-2', 'mt-4', 'h-[30px]', 'w-[166px]');
+        expect(logo.parentElement).toHaveClass('h-[72px]', 'border-b');
+        const homeLink = screen.getByRole('link', { name: 'BloodHound home' });
+        expect(homeLink).toHaveClass(
+            'focus-visible:focus-ring-inset',
+            'focus-visible:[--focus-ring:var(--common-white)]'
+        );
+        const toggle = screen.getByRole('button', { name: 'Toggle Navigation' });
+        expect(toggle).toHaveClass(
+            'h-8',
+            'w-8',
+            'left-[248px]',
+            'bg-primary',
+            'focus-visible:focus-ring-inset',
+            'focus-visible:[--focus-ring:var(--common-white)]'
+        );
+        expect(screen.getByText('Link Item')).toHaveClass('typography-h5');
+        expect(screen.getByText('Action Item')).toHaveClass('typography-body1');
+
+        await user.click(toggle);
+
+        expect(navigation).toHaveClass('basis-14', 'w-14');
+        expect(screen.getByTestId('global_nav-home')).toHaveClass('w-10', 'h-[30px]');
+        expect(homeLink).toHaveClass(
+            'focus-visible:focus-ring-inset',
+            'focus-visible:[--focus-ring:var(--common-white)]'
+        );
+        expect(screen.queryAllByTestId('global_nav-item-label-text')).toHaveLength(0);
+        expect(screen.queryByTestId('global_nav-version-number')).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Link Item' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Action Item' })).toBeInTheDocument();
     });
 });
 

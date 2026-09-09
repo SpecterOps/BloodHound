@@ -16,7 +16,7 @@
 
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton } from 'doodle-ui';
+import { IconButton, Typography } from 'doodle-ui';
 import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
@@ -30,7 +30,33 @@ import { SkipLink } from './SkipLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
 
-export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
+export type MainNavVariant = 'legacy' | 'refreshed';
+
+export const MainNavLogo: FC<{
+    data: MainNavLogoDataObject;
+    isExpanded?: boolean;
+    variant?: MainNavVariant;
+}> = ({ data, isExpanded = true, variant = 'legacy' }) => {
+    if (variant === 'refreshed') {
+        return (
+            <div className='h-[72px] flex-none border-b border-primary dark:border-neutral-4'>
+                <div
+                    className={cn('ml-2 mt-4 h-[30px] overflow-hidden', {
+                        'w-[166px]': isExpanded,
+                        'w-10': !isExpanded,
+                    })}
+                    data-testid='global_nav-home'>
+                    <AppLink
+                        aria-label='BloodHound home'
+                        className='block h-[30px] w-[166px] focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
+                        to={data.project.route}>
+                        {data.project.icon}
+                    </AppLink>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className='flex-none basis-10 m-2 mt-4 mb-6 overflow-hidden' data-testid='global_nav-home'>
             <AppLink to={data.project.route}>{data.project.icon}</AppLink>
@@ -41,9 +67,11 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
 const MainNavListItem: FC<{
     /** Whether the main nav is in its expanded (wide) state; controls tooltip visibility */
     isExpanded: boolean;
+    labelVariant: 'h5' | 'body1';
     /** The navigation item data to render, either a link, action, or subnav trigger */
     item: MainNavDataListItem;
-}> = ({ isExpanded, item }) => {
+    variant: MainNavVariant;
+}> = ({ isExpanded, item, labelVariant, variant }) => {
     const location = useLocation();
     const [isSubNavOpen, setIsSubNavOpen] = useState(false);
     const navItemRef = useRef<HTMLLIElement>(null);
@@ -55,24 +83,55 @@ const MainNavListItem: FC<{
         : false;
     const isSubNavVisible = subNav && isSubNavOpen;
 
-    // Handles nav item text color and background with hover/active interactions
-    const navItemContainerClasses = cn('text-xl rounded flex items-center cursor-pointer', {
-        'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
-        'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
-            !isActiveRoute && !isActiveSubNavRoute,
+    const isActive = isActiveRoute || isActiveSubNavRoute;
+    const navItemContainerClasses =
+        variant === 'legacy'
+            ? cn('text-xl rounded flex items-center cursor-pointer', {
+                  'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActive,
+                  'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
+                      !isActive,
+              })
+            : cn(
+                  'rounded flex items-center cursor-pointer focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
+                  {
+                      'text-common-white bg-primary dark:text-[#8D8BF8] dark:bg-neutral-4': isActive,
+                      'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-[#1A1A1A]':
+                          !isActive,
+                  }
+              );
+
+    const navItemClasses = cn('w-full px-2 flex items-center group-hover:cursor-pointer', {
+        'h-10 gap-x-2': variant === 'legacy',
+        'h-8 min-w-0 overflow-hidden gap-2 py-1': variant === 'refreshed',
     });
 
-    // Full width ensures that even clicking white space activates menu item
-    const navItemClasses = 'h-10 w-full px-2 flex items-center gap-x-2 group-hover:cursor-pointer';
-
-    const labelElement = (
-        <span className='whitespace-nowrap flex items-center gap-x-2'>
-            <span data-testid='global_nav-item-label-icon'>{icon}</span>
-            <span data-testid='global_nav-item-label-text' aria-label={label}>
-                {label}
+    const labelElement =
+        variant === 'legacy' ? (
+            <span className='whitespace-nowrap flex items-center gap-x-2'>
+                <span data-testid='global_nav-item-label-icon'>{icon}</span>
+                <span data-testid='global_nav-item-label-text' aria-label={label}>
+                    {label}
+                </span>
             </span>
-        </span>
-    );
+        ) : (
+            <span className='min-w-0 flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap'>
+                <span
+                    className='flex size-6 shrink-0 items-center justify-center'
+                    data-testid='global_nav-item-label-icon'>
+                    {icon}
+                </span>
+                {isExpanded && (
+                    <Typography
+                        aria-label={label}
+                        className='block min-w-0 truncate !text-inherit'
+                        component='span'
+                        data-testid='global_nav-item-label-text'
+                        variant={labelVariant}>
+                        {label}
+                    </Typography>
+                )}
+            </span>
+        );
 
     const handleClickSubNav = () => {
         setIsSubNavOpen(!isSubNavOpen);
@@ -86,6 +145,7 @@ const MainNavListItem: FC<{
     // If route is defined, render a link otherwise item is an action or subnav item
     const navItem = route ? (
         <AppLink
+            aria-current={isActiveRoute ? 'page' : undefined}
             className={navItemClasses}
             data-testid={testId}
             // PZ pages discard environment query params so all Zone Objects are counted
@@ -93,20 +153,31 @@ const MainNavListItem: FC<{
             // As such, even using the "all" environments param does not capture everything
             discardQueryParams={route.includes(privilegeZonesPath)}
             target={target}
+            {...(variant === 'refreshed' ? { 'aria-label': label } : {})}
             to={route}>
             {labelElement}
-            {target === '_blank' && <FontAwesomeIcon icon={faExternalLink} size='sm' />}
+            {target === '_blank' && (variant === 'legacy' || isExpanded) && (
+                <FontAwesomeIcon
+                    className={variant === 'refreshed' ? 'shrink-0' : undefined}
+                    icon={faExternalLink}
+                    size='sm'
+                />
+            )}
         </AppLink>
     ) : (
         <div
             className={navItemClasses}
+            aria-expanded={subNav ? isSubNavOpen : undefined}
+            {...(variant === 'refreshed' ? { 'aria-label': label } : {})}
             data-testid={testId}
             onClick={onClick}
             onKeyDown={onKeyDown}
             role='button'
             tabIndex={0}>
             {labelElement}
-            {control && <span className='ml-1'>{control}</span>}
+            {control && (variant === 'legacy' || isExpanded) && (
+                <span className={cn('ml-1', variant === 'refreshed' && 'shrink-0')}>{control}</span>
+            )}
         </div>
     );
 
@@ -121,7 +192,13 @@ const MainNavListItem: FC<{
             {isSubNavVisible &&
                 navItemRef.current?.closest('nav') &&
                 createPortal(
-                    <SubNav close={closeSubNav} isExpanded={isExpanded} sections={subNav} triggerRef={navItemRef} />,
+                    <SubNav
+                        close={closeSubNav}
+                        isExpanded={isExpanded}
+                        sections={subNav}
+                        triggerRef={navItemRef}
+                        variant={variant}
+                    />,
                     navItemRef.current.closest('nav')!
                 )}
         </>
@@ -129,20 +206,17 @@ const MainNavListItem: FC<{
 };
 
 const MainNavFooter: FC<{
-    /** Object containing image props */
     image: MainNavLogoDataObject['specterOps']['image'];
-}> = ({ image }) => {
+    variant?: MainNavVariant;
+}> = ({ image, variant = 'legacy' }) => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
-    return (
+    return variant === 'legacy' ? (
         <div className='py-3 text-xs'>
-            {/* Container div keeps footer content centered */}
             <div className='flex flex-col w-[264px] items-center gap-2'>
-                {/* App version */}
                 <div data-testid='global_nav-version-number'>BloodHound: {apiVersion}</div>
 
-                {/* SpecterOps logo */}
                 <div className='flex items-center gap-1' data-testid='global_nav-powered-by'>
                     powered by
                     <img
@@ -155,10 +229,30 @@ const MainNavFooter: FC<{
                 </div>
             </div>
         </div>
+    ) : (
+        <div className='h-[58px] w-[264px] border-t border-primary pl-4 pr-2 py-2 text-left dark:border-neutral-4'>
+            <Typography className='!text-[#BCB8E1]' data-testid='global_nav-version-number' variant='subtitle2'>
+                BloodHound: {apiVersion}
+            </Typography>
+            <Typography
+                className='flex items-center gap-1 !text-inherit'
+                component='div'
+                data-testid='global_nav-powered-by'
+                variant='caption'>
+                Powered by
+                <img
+                    src={image.imageUrl}
+                    alt={image.altText}
+                    height={image.dimensions.height}
+                    width={image.dimensions.width}
+                    className={image.classes}
+                />
+            </Typography>
+        </div>
     );
 };
 
-const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
+const MainNav: FC<{ mainNavData: MainNavData; variant?: MainNavVariant }> = ({ mainNavData, variant = 'legacy' }) => {
     const [isExpanded, setIsExpanded] = useNavExpanded();
     const navigate = useAppNavigate();
 
@@ -187,23 +281,24 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     return (
         <>
             <SkipLink href='#content-wrapper'>Skip to main content</SkipLink>
-            {/* Nav expand/collapse button */}
             <IconButton
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
-                // Negative right margin allows button to hover outside nav bar bounds
                 className={cn(
-                    'absolute top-14 min-h-6 min-w-6 w-5 p-1 border-none z-navToggle',
+                    'absolute top-14 border-none z-navToggle',
                     'transition-all duration-300 ease-in',
-                    'text-main',
-                    'bg-neutral-4 dark:bg-neutral-5',
-                    'hover:bg-[#B2B8BE] hover:text-main dark:hover:bg-neutral-3 dark:hover:text-main',
-                    'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                    'dark:focus-visible:text-white',
-                    {
-                        'rotate-180 left-[16.75rem]': isExpanded,
-                        'left-[2.75rem]': !isExpanded,
-                    }
+                    variant === 'legacy'
+                        ? 'min-h-6 min-w-6 w-5 p-1 text-main bg-neutral-4 dark:bg-neutral-5 hover:bg-[#B2B8BE] hover:text-main dark:hover:bg-neutral-3 dark:hover:text-main active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2 dark:focus-visible:text-white'
+                        : 'h-8 w-8 p-2 text-common-white bg-primary hover:text-common-white hover:bg-secondary active:text-common-white active:bg-primary-variant focus-visible:text-common-white focus-visible:bg-secondary focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)] dark:text-main dark:bg-neutral-5 dark:hover:text-main dark:hover:bg-neutral-3 dark:active:text-main dark:active:bg-neutral-2 dark:focus-visible:text-white dark:focus-visible:bg-neutral-3',
+                    variant === 'legacy'
+                        ? {
+                              'rotate-180 left-[16.75rem]': isExpanded,
+                              'left-[2.75rem]': !isExpanded,
+                          }
+                        : {
+                              'rotate-180 left-[248px]': isExpanded,
+                              'left-10': !isExpanded,
+                          }
                 )}
                 size={16}
                 onClick={handleToggleNav}>
@@ -215,29 +310,55 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-label='Global navigation'
                 tabIndex={-1}
                 className={cn(
-                    'flex flex-col flex-none font-medium shadow-md z-nav print:hidden overflow-hidden',
+                    'flex flex-col flex-none font-medium z-nav print:hidden overflow-hidden',
                     'transition-all duration-300 ease-in',
-                    'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
-                    { 'basis-nav-width': !isExpanded, 'basis-nav-width-expanded': isExpanded }
+                    variant === 'legacy'
+                        ? 'shadow-md bg-[#F2F2F2] dark:bg-[#1F1F1F]'
+                        : 'text-common-white bg-primary-variant dark:text-main dark:bg-[#1F1F1F]',
+                    variant === 'legacy'
+                        ? { 'basis-nav-width': !isExpanded, 'basis-nav-width-expanded': isExpanded }
+                        : {
+                              'basis-14 w-14': !isExpanded,
+                              'basis-[264px] w-[264px]': isExpanded,
+                          }
                 )}>
-                {/* Bloodhound logo */}
-                <MainNavLogo data={mainNavData.logo} />
+                <MainNavLogo data={mainNavData.logo} isExpanded={isExpanded} variant={variant} />
 
-                <div className='flex flex-col h-full mx-2 overflow-x-hidden overflow-y-auto'>
-                    {/* Nav menu top and bottom lists of items */}
-                    <ul className='flex flex-col flex-grow gap-2' data-testid='global_nav-primary-list'>
+                <div
+                    className={cn('flex flex-col h-full overflow-x-hidden overflow-y-auto', {
+                        'mx-2': variant === 'legacy',
+                    })}>
+                    <ul
+                        className={cn('flex flex-col flex-grow', variant === 'legacy' ? 'gap-2' : 'gap-4 px-2 py-4')}
+                        data-testid='global_nav-primary-list'>
                         {mainNavData.primaryList.map((item: MainNavDataListItem) => (
-                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                            <MainNavListItem
+                                item={item}
+                                isExpanded={isExpanded}
+                                key={item.testId}
+                                labelVariant='h5'
+                                variant={variant}
+                            />
                         ))}
                     </ul>
 
-                    <ul className='flex flex-col gap-2 mt-2' data-testid='global_nav-secondary-list'>
+                    <ul
+                        className={cn('flex flex-col gap-2', variant === 'legacy' ? 'mt-2' : 'px-2 py-4')}
+                        data-testid='global_nav-secondary-list'>
                         {mainNavData.secondaryList.map((item: MainNavDataListItem) => (
-                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                            <MainNavListItem
+                                item={item}
+                                isExpanded={isExpanded}
+                                key={item.testId}
+                                labelVariant='body1'
+                                variant={variant}
+                            />
                         ))}
                     </ul>
 
-                    <MainNavFooter image={mainNavData.logo.specterOps.image} />
+                    {(variant === 'legacy' || isExpanded) && (
+                        <MainNavFooter image={mainNavData.logo.specterOps.image} variant={variant} />
+                    )}
                 </div>
             </nav>
         </>
