@@ -33,7 +33,6 @@ import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
 import { adminSections } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import MarketplaceIcon from './MarketplaceIcon';
 
 export const useMainNavLogoData = (): MainNavData['logo'] => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -132,7 +131,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     const secondaryList: MainNavData['secondaryList'] = [
         {
             label: 'Marketplace',
-            icon: <MarketplaceIcon />,
+            icon: <AppIcon.Marketplace aria-hidden='true' data-testid='marketplace-icon' focusable='false' size={24} />,
             route: routes.ROUTE_MARKETPLACE,
             testId: 'global_nav-marketplace',
         },

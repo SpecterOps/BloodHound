@@ -14,20 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-const MarketplaceIcon = () => (
-    <svg
-        aria-hidden='true'
-        data-testid='marketplace-icon'
-        fill='none'
-        focusable='false'
-        height='24'
-        viewBox='0 0 24 24'
-        width='24'>
+import React from 'react';
+import { BaseSVG, BaseSVGProps } from './utils';
+
+export const Marketplace: React.FC<BaseSVGProps> = (props) => (
+    <BaseSVG fill='none' name='marketplace' viewBox='0 0 24 24' {...props}>
         <rect height='7' rx='1.5' stroke='currentColor' strokeWidth='2' width='7' x='3' y='3' />
         <rect height='7' rx='1.5' stroke='currentColor' strokeWidth='2' width='7' x='14' y='3' />
         <rect height='7' rx='1.5' stroke='currentColor' strokeWidth='2' width='7' x='3' y='14' />
         <rect height='7' rx='1.5' stroke='currentColor' strokeWidth='2' width='7' x='14' y='14' />
-    </svg>
+    </BaseSVG>
 );
 
-export default MarketplaceIcon;
+export default Marketplace;
