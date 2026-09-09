@@ -33,6 +33,7 @@ const (
 )
 
 type ParameterRow struct {
+	ID          int32             `db:"id"`
 	Key         string            `db:"key"`
 	Name        string            `db:"name"`
 	Description string            `db:"description"`
@@ -45,6 +46,7 @@ type ParameterRow struct {
 
 func toParameter(row ParameterRow) services.Parameter {
 	return services.Parameter{
+		ID:          row.ID,
 		Key:         services.ParameterKey(row.Key),
 		Name:        row.Name,
 		Description: row.Description,
@@ -63,6 +65,7 @@ func (s *Store) GetConfigurationParameter(ctx context.Context, parameterKey serv
 
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
 	selectBuilder.Select(
+		"id",
 		"key",
 		"name",
 		"description",
@@ -101,6 +104,7 @@ func (s *Store) GetAllConfigurationParameters(ctx context.Context) (services.Par
 
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
 	selectBuilder.Select(
+		"id",
 		"key",
 		"name",
 		"description",

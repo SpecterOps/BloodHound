@@ -270,6 +270,7 @@ func TestStore_GetConfigurationParameter_Integration(t *testing.T) {
 
 		parameter, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
 		require.NoError(t, err)
+		assert.NotEmpty(t, parameter.ID)
 		assert.Equal(t, expectedKey, parameter.Key)
 		assert.Equal(t, expectedName, parameter.Name)
 		assert.Equal(t, expectedDescription, parameter.Description)
@@ -306,6 +307,7 @@ func TestStore_GetAllConfigurationParameters_Integration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Greater(t, len(parameters), 10)
+		assert.NotEmpty(t, parameters[0].ID)
 		assert.NotEmpty(t, parameters[0].Name)
 		assert.NotEmpty(t, parameters[0])
 		assert.NotEmpty(t, parameters[0].CreatedAt)

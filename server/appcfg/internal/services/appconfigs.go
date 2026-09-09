@@ -31,6 +31,7 @@ type ParameterKey string
 // Value member is a DB-safe JSON type wrapper that can store arbitrary JSON objects and map them to golang struct
 // definitions.
 type Parameter struct {
+	ID          int32 // should not be necessary, but part of the API interface so must include
 	Key         ParameterKey
 	Name        string
 	Description string
