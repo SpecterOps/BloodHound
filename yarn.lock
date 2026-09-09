@@ -6303,10 +6303,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:^0.8.3":
-  version: 0.8.13
-  resolution: "@xmldom/xmldom@npm:0.8.13"
-  checksum: 10/f8f3d56fa91d5026885c0c5c00b07eae47647bda0d742ecbf8e51e06bb287ab30222977b20529ee15c364031606225ebca58907a8ecc76a3add6b3f10e6ddfc6
+"@xmldom/xmldom@npm:0.8.15":
+  version: 0.8.15
+  resolution: "@xmldom/xmldom@npm:0.8.15"
+  checksum: 10/521d8e5a9798a47dddb28237d112e47637d638e4f3d60ce1eefa1f397d2439af5a00f781c956b5affc251ef8a1bbc1f8325161d32f7b27c89aacf5ff84f14cf7
   languageName: node
   linkType: hard
 
@@ -11211,14 +11211,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:4.3.1":
-  version: 4.3.1
-  resolution: "js-yaml@npm:4.3.1"
+"js-yaml@npm:4.3.2":
+  version: 4.3.2
+  resolution: "js-yaml@npm:4.3.2"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 10/2ce71b5d632abbd77da80447bf860e8a0264e54bffe94840984887d58b023761495b523727547904517a6107a1ef189854b361e0fc44995ee13a84f222d7bd42
+  checksum: 10/05c44b9c73e4901d92703b155e76518df64bf01ac62e4c036b47de4b391e19b72e32656e8954d51b436307f08cc9d0c0d4ec617d061cf2f65fffee9f3114bee7
   languageName: node
   linkType: hard
 
