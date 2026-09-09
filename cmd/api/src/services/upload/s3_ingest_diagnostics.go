@@ -56,7 +56,7 @@ func startIngestUploadDiagnostic(ctx context.Context, jobID int64, fileType mode
 
 	slog.LogAttrs(
 		ctx,
-		slog.LevelInfo,
+		slog.LevelDebug,
 		"S3 ingest diagnostic: ingest upload started",
 		slog.String("diagnostic", s3IngestDiagnostic),
 		slog.String("request_id", requestID),
@@ -89,7 +89,7 @@ func (s ingestUploadDiagnostic) finish(tempFileName string, err error) {
 		return
 	}
 
-	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest upload stored and validated", attributes...)
+	slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: ingest upload stored and validated", attributes...)
 }
 
 func startIngestStorageWriteDiagnostic(ctx context.Context, prefix string) ingestStorageWriteDiagnostic {
@@ -110,7 +110,7 @@ func startIngestStorageWriteDiagnostic(ctx context.Context, prefix string) inges
 		attributes = append(attributes, slog.Time("context_deadline", deadline))
 	}
 
-	slog.LogAttrs(ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest storage write started", attributes...)
+	slog.LogAttrs(ctx, slog.LevelDebug, "S3 ingest diagnostic: ingest storage write started", attributes...)
 
 	return ingestStorageWriteDiagnostic{
 		ctx:       ctx,
@@ -135,13 +135,13 @@ func (s ingestStorageWriteDiagnostic) finish(tempFileName string, err error) {
 		return
 	}
 
-	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest storage write returned", attributes...)
+	slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: ingest storage write returned", attributes...)
 }
 
 func startIngestTaskCreationDiagnostic(ctx context.Context, parameters IngestTaskParams) ingestTaskCreationDiagnostic {
 	slog.LogAttrs(
 		ctx,
-		slog.LevelInfo,
+		slog.LevelDebug,
 		"S3 ingest diagnostic: creating ingest task",
 		slog.String("diagnostic", s3IngestDiagnostic),
 		slog.String("request_id", parameters.RequestID),
@@ -173,5 +173,5 @@ func (s ingestTaskCreationDiagnostic) finish(err error) {
 		return
 	}
 
-	slog.LogAttrs(s.ctx, slog.LevelInfo, "S3 ingest diagnostic: ingest task created", attributes...)
+	slog.LogAttrs(s.ctx, slog.LevelDebug, "S3 ingest diagnostic: ingest task created", attributes...)
 }
