@@ -57,12 +57,18 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             )}
             data-testid='explore_entity-information-panel'>
             <RoleBasedFilterBadge />
-            <div className={cn('bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1', surfaceClassName)}>
+            <div
+                className={cn(
+                    'bg-neutral-2 pointer-events-auto rounded-lg',
+                    !surfaceClassName && 'shadow-outer-1',
+                    surfaceClassName
+                )}>
                 <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
             </div>
             <div
                 className={cn(
-                    'bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1',
+                    'bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg',
+                    !surfaceClassName && 'shadow-outer-1',
                     surfaceClassName
                 )}>
                 {selectedNode ? (
