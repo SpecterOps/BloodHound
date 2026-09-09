@@ -7827,7 +7827,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. ZIP bundles must contain `schema.json` and may include `pz_rules.json` and `saved_queries.json`.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -7836,6 +7836,7 @@
         "operationId": "UpsertOpenGraphExtension",
         "summary": "Upserts the OpenGraph Extension",
         "requestBody": {
+          "description": "An OpenGraph extension JSON payload or ZIP bundle.",
           "required": true,
           "content": {
             "application/json": {
@@ -8052,6 +8053,12 @@
                   }
                 }
               }
+            },
+            "application/zip": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
             }
           }
         },
@@ -8073,6 +8080,9 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -25748,6 +25758,73 @@
                     },
                     "long_remediation": {
                       "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "pz_rules": {
+            "type": "object",
+            "description": "Optional privilege-zone rules component.",
+            "properties": {
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "auto_certify": {
+                      "type": "boolean"
+                    },
+                    "seeds": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "integer"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "saved_queries": {
+            "type": "object",
+            "description": "Optional saved queries component.",
+            "properties": {
+              "queries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "query_key": {
+                      "type": "string",
+                      "example": "all-domain-admins"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "All Domain Admins"
+                    },
+                    "query": {
+                      "type": "string",
+                      "example": "MATCH (n) RETURN n LIMIT 1"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Returns all domain admin nodes."
                     }
                   }
                 }

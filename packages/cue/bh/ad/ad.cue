@@ -849,6 +849,20 @@ DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
  	representation: "doesanyinheritedacegrantownerrights"
 }
 
+CustomExplicitDenyAcesCount: types.#StringEnum & {
+	symbol: "CustomExplicitDenyAcesCount"
+	schema: "ad"
+	name: "Custom Explicit Deny ACEs Count"
+	representation: "customexplicitdenyacescount"
+}
+
+CustomInheritedDenyAcesCount: types.#StringEnum & {
+	symbol: "CustomInheritedDenyAcesCount"
+	schema: "ad"
+	name: "Custom Inherited Deny ACEs Count"
+	representation: "custominheriteddenyacescount"
+}
+
 OwnerSid: types.#StringEnum & {
 	symbol: "OwnerSid"
  	schema: "ad"
@@ -1151,6 +1165,8 @@ Properties: [
 	MSA,
 	DoesAnyAceGrantOwnerRights,
 	DoesAnyInheritedAceGrantOwnerRights,
+	CustomExplicitDenyAcesCount,
+	CustomInheritedDenyAcesCount,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,

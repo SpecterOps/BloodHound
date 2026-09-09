@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { test } from 'bh-playwright-testing';
 const authenticatedUser = {
     AuthSecret: {
         expires_at: '9999-01-01T00:00:00Z',
@@ -106,17 +106,18 @@ test.describe('Administration - SSO Configuration - has no detectable WCAG A/AA 
         });
     });
 
-    test('page with no providers', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/administration/sso-configuration');
+    test('page with no providers', async ({ page, goAndWaitFor, checkA11y }) => {
+        await goAndWaitFor(
+            '/ui/administration/sso-configuration',
+            page.getByRole('heading', { name: 'SSO Configuration' })
+        );
 
-        await page.getByRole('heading', { name: 'SSO Configuration' }).waitFor({ state: 'visible' });
         await page.getByText('No SSO Providers found').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('create providers menu', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('create providers menu', async ({ page, checkA11y }) => {
         await page.goto('/ui/administration/sso-configuration');
         await page.getByRole('button', { name: 'Create Provider' }).click();
 
@@ -125,11 +126,10 @@ test.describe('Administration - SSO Configuration - has no detectable WCAG A/AA 
         await page.getByRole('menuitem', { name: 'SAML Provider' }).waitFor({ state: 'visible' });
         await page.getByRole('menuitem', { name: 'OIDC Provider' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="menu"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="menu"]' });
     });
 
-    test('create SAML provider dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('create SAML provider dialog', async ({ page, checkA11y }) => {
         await page.goto('/ui/administration/sso-configuration');
         await page.getByRole('button', { name: 'Create Provider' }).click();
         await page.getByRole('menuitem', { name: 'SAML Provider' }).click();
@@ -139,12 +139,10 @@ test.describe('Administration - SSO Configuration - has no detectable WCAG A/AA 
         await page.getByRole('dialog', { name: 'Create SAML Provider' }).waitFor({ state: 'visible' });
         await page.getByLabel('SAML Provider Name').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[data-testid="create-saml-provider-dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="create-saml-provider-dialog"]' });
     });
 
-    test('create OIDC provider dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('create OIDC provider dialog', async ({ page, checkA11y }) => {
         await page.goto('/ui/administration/sso-configuration');
         await page.getByRole('button', { name: 'Create Provider' }).click();
         await page.getByRole('menuitem', { name: 'OIDC Provider' }).click();
@@ -154,12 +152,10 @@ test.describe('Administration - SSO Configuration - has no detectable WCAG A/AA 
         await page.getByRole('dialog', { name: 'Create OIDC Provider' }).waitFor({ state: 'visible' });
         await page.getByLabel('OIDC Provider Name').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[data-testid="create-oidc-provider-dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[data-testid="create-oidc-provider-dialog"]' });
     });
 
-    test('page with providers', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('page with providers', async ({ page, goAndWaitFor, checkA11y }) => {
         await page.route('**/api/v2/sso-providers', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -168,12 +164,10 @@ test.describe('Administration - SSO Configuration - has no detectable WCAG A/AA 
             await route.fulfill({ json: { data: [samlProvider] } });
         });
 
-        await page.goto('/ui/administration/sso-configuration');
+        await goAndWaitFor('/ui/administration/sso-configuration', page.getByRole('button', { name: 'Test IDP 1' }));
 
-        await page.getByRole('button', { name: 'Test IDP 1' }).waitFor({ state: 'visible' });
         await page.getByRole('cell', { name: 'SAML' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

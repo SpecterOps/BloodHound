@@ -33,9 +33,10 @@ import (
 )
 
 const (
-	FeatureOpenHoundSupport          = services.FeatureOpenHoundSupport
-	FeatureAlerts                    = services.FeatureAlerts
-	FeatureArtifactExpirationCleanup = services.FeatureArtifactExpirationCleanup
+	FeatureOpenHoundSupport           = services.FeatureOpenHoundSupport
+	FeatureManagedOpenHoundCollection = services.FeatureManagedOpenHoundCollection
+	FeatureAlerts                     = services.FeatureAlerts
+	FeatureArtifactExpirationCleanup  = services.FeatureArtifactExpirationCleanup
 )
 
 type FeatureFlagRequestAdapter interface {
