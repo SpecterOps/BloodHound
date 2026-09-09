@@ -88,6 +88,8 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobProfilesResponse,
+    GetCollectorJobScheduleResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -96,6 +98,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -118,6 +121,7 @@ import {
     PreviewSelectorsResponse,
     RetryAlertAttemptResponse,
     RotateWebhookSecretResponse,
+    RunCollectorJobProfileResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
@@ -795,6 +799,39 @@ class BHEAPIClient {
     /* ingest */
 
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+
+    /* collector job profiles */
+
+    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+            ...options,
+            params: {
+                ...options?.params,
+                job_profile_id: `eq:${profileId}`,
+                sort_by: '-recorded_at',
+                skip: 0,
+                limit: 1,
+            },
+        });
+
+    getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.post<RunCollectorJobProfileResponse>(
+            '/api/v2/collector-job-queue',
+            { job_profile_id: profileId },
+            options
+        );
 
     /* clients */
 
