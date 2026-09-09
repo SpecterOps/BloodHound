@@ -976,10 +976,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 
 			var seeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
 			for _, seedPayload := range rulePayload.Seeds {
-				seeds = append(seeds, SelectorSeedInput{
-					Type:  seedPayload.Type,
-					Value: seedPayload.Value,
-				})
+				seeds = append(seeds, SelectorSeedInput(seedPayload))
 			}
 
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
@@ -994,12 +991,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 	if s.SavedQueries != nil {
 		graphExtension.SavedQueriesInput = make(SavedQueriesInput, 0, len(s.SavedQueries.Queries))
 		for _, queryPayload := range s.SavedQueries.Queries {
-			graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput{
-				QueryKey:    queryPayload.QueryKey,
-				Name:        queryPayload.Name,
-				Query:       queryPayload.Query,
-				Description: queryPayload.Description,
-			})
+			graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput(queryPayload))
 		}
 	}
 	return graphExtension, nil
