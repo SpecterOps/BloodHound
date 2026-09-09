@@ -67,7 +67,7 @@ export const adminSections: SubNavSection[] = [
                 label: 'Database Management',
                 path: ROUTE_ADMINISTRATION_DB_MANAGEMENT,
                 component: lazy(() => import('src/views/DatabaseManagement')),
-                adminOnly: false,
+                adminOnly: true,
             },
         ],
     },
