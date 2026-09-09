@@ -52,10 +52,6 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
     className: 'truncate group relative p-0 pl-2',
 };
 
-const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.bhGraphId,
-};
-
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
     estimateSize: () => 40,
 };
@@ -89,13 +85,20 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            selectedColumns,
-            exploreTableData,
-        });
+    const {
+        columnOptionsForDropdown,
+        sortedFilteredRows,
+        tableColumns,
+        resultsCount,
+        columnOrder,
+        setColumnOrder,
+        tableOptions,
+    } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        selectedColumns,
+        exploreTableData,
+    });
 
     const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 
