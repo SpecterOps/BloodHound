@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Alert, Button } from 'doodle-ui';
 import { ReactNode, useRef } from 'react';
 import { useOnClickOutside, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
@@ -108,10 +108,9 @@ const FileUploadDialog: React.FC<{
                 )}
 
                 {currentlyUploading && (
-                    <div>
-                        <p>Upload in progress.</p>
-                        <p>You can continue using the platform&mdash;we will alert you once the upload is complete.</p>
-                    </div>
+                    <Alert title='Upload in Progress' className='mb-2' variant='info'>
+                        You can continue using the platform&mdash;we will alert you once the upload is complete.
+                    </Alert>
                 )}
             </DialogContent>
             <DialogActions>
