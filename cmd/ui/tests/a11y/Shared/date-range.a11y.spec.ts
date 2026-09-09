@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector, test } from 'bh-playwright-testing';
 
 test.describe('Date Range', () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ goAndWaitFor, page }) => {
         await page.route('**/api/v2/features', async (route) => {
             if (route.request().method() !== 'GET') {
                 return route.fallback();
@@ -61,38 +60,38 @@ test.describe('Date Range', () => {
             });
         });
 
-        await page.goto('/ui/administration/file-ingest');
-
-        await page
-            .getByRole('columnheader', {
+        await goAndWaitFor(
+            '/ui/administration/file-ingest',
+            page.getByRole('columnheader', {
                 name: 'ID / User / Status',
                 exact: true,
             })
-            .waitFor({ state: 'visible' });
-        await page.getByText('0\u20130 of 0', { exact: true }).waitFor({ state: 'visible' });
+        );
+
+        await page.getByText('0\u20130 of 0', { exact: true }).waitFor();
 
         const filterButton = page.getByRole('button', {
             name: 'Open file ingest filters',
             exact: true,
         });
 
-        await filterButton.waitFor({ state: 'visible' });
+        await filterButton.waitFor();
         await filterButton.click();
 
         await hideBySelector(page, '#content-wrapper');
 
         const filterDialog = page.getByRole('dialog');
 
-        await filterDialog.waitFor({ state: 'visible' });
+        await filterDialog.waitFor();
         await filterDialog
             .getByRole('heading', {
                 name: 'Filter Clear All',
                 exact: true,
             })
-            .waitFor({ state: 'visible' });
+            .waitFor();
     });
 
-    test('default state', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('default state', async ({ page, checkA11y }) => {
         const filterDialog = page.getByRole('dialog');
         const startDate = filterDialog.getByRole('textbox', {
             name: 'Start Date',
@@ -103,16 +102,14 @@ test.describe('Date Range', () => {
             exact: true,
         });
 
-        await filterDialog.getByText('Date Range', { exact: true }).waitFor({ state: 'visible' });
-        await startDate.waitFor({ state: 'visible' });
-        await endDate.waitFor({ state: 'visible' });
+        await filterDialog.getByText('Date Range', { exact: true }).waitFor();
+        await startDate.waitFor();
+        await endDate.waitFor();
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 
-    test('with focus', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with focus', async ({ page, checkA11y }) => {
         const filterDialog = page.getByRole('dialog');
         const statusSelect = filterDialog.getByRole('combobox', {
             name: 'Status Select',
@@ -126,15 +123,13 @@ test.describe('Date Range', () => {
         await statusSelect.focus();
         await page.keyboard.press('Tab');
 
-        await startDate.and(page.locator(':focus')).waitFor({ state: 'visible' });
-        await filterDialog.getByPlaceholder('yyyy-mm-dd', { exact: true }).waitFor({ state: 'visible' });
+        await startDate.and(page.locator(':focus')).waitFor();
+        await filterDialog.getByPlaceholder('yyyy-mm-dd', { exact: true }).waitFor();
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 
-    test('calendar visible', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('calendar visible', async ({ page, checkA11y }) => {
         const filterDialog = page.getByRole('dialog');
         const startDateCalendarButton = filterDialog
             .getByRole('button', {
@@ -154,13 +149,11 @@ test.describe('Date Range', () => {
             year: 'numeric',
         }).format(new Date());
 
-        await calendarDialog.waitFor({ state: 'visible' });
-        await calendarGrid.waitFor({ state: 'visible' });
-        await calendarGrid.getByRole('gridcell').first().waitFor({ state: 'visible' });
-        await calendarDialog.getByText(visibleMonth, { exact: true }).waitFor({ state: 'visible' });
+        await calendarDialog.waitFor();
+        await calendarGrid.waitFor();
+        await calendarGrid.getByRole('gridcell').first().waitFor();
+        await calendarDialog.getByText(visibleMonth, { exact: true }).waitFor();
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]' });
     });
 });
