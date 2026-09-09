@@ -279,3 +279,38 @@ func TestStore_GetConfigurationParameter_Integration(t *testing.T) {
 
 	})
 }
+
+func TestStore_GetAllConfigurationParameters_Integration(t *testing.T) {
+	t.Run("returns empty array when no parameter rows exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, parameters, 0)
+	})
+
+	t.Run("returns default parameters", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		require.NoError(t, err)
+
+		assert.Greater(t, len(parameters), 10)
+		assert.NotEmpty(t, parameters[0].Name)
+		assert.NotEmpty(t, parameters[0])
+		assert.NotEmpty(t, parameters[0].CreatedAt)
+		assert.Empty(t, parameters[0].DeletedAt)
+		assert.NotEmpty(t, parameters[0].UpdatedAt)
+		assert.NotEmpty(t, parameters[0].Value)
+	})
+}

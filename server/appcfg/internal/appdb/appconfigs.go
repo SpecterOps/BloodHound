@@ -91,3 +91,39 @@ func (s *Store) GetConfigurationParameter(ctx context.Context, parameterKey serv
 
 	return toParameter(row), nil
 }
+
+func (s *Store) GetAllConfigurationParameters(ctx context.Context) (services.Parameters, error) {
+	var (
+		parameterRows []ParameterRow
+		rows          pgx.Rows
+		err           error
+	)
+
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	selectBuilder.Select(
+		"key",
+		"name",
+		"description",
+		"value",
+		"created_at",
+		"updated_at",
+	)
+	selectBuilder.From(tableParameters)
+
+	sqlQuery, args := selectBuilder.Build()
+
+	rows, err = s.db.Query(ctx, sqlQuery, args...)
+	if err != nil {
+		return nil, err
+	} else if parameterRows, err = pgx.CollectRows(rows, pgx.RowToStructByName[ParameterRow]); err != nil {
+		return nil, fmt.Errorf("reading rows: %w", err)
+	}
+
+	returnParameters := []services.Parameter{}
+
+	for _, row := range parameterRows {
+		returnParameters = append(returnParameters, toParameter(row))
+	}
+
+	return services.Parameters(returnParameters), nil
+}
