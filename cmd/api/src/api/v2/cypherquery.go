@@ -17,11 +17,13 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -33,6 +35,8 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/util"
 )
+
+const auditLogOutcomeTimeout = time.Second
 
 var errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 
@@ -148,7 +152,10 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	auditLogEntry.Status = model.AuditLogStatusFailure
 
 	defer func() {
-		if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
+
+		if err = s.DB.AppendAuditLog(auditContext, auditLogEntry); err != nil {
 			slog.ErrorContext(request.Context(), "Failure to create run cypher query audit log", attr.Error(err))
 		}
 	}()
@@ -230,15 +237,19 @@ func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds gra
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err != nil {
-		auditLogEntry.Status = model.AuditLogStatusFailure
-	} else {
-		auditLogEntry.Status = model.AuditLogStatusSuccess
-	}
+	auditLogEntry.Status = model.AuditLogStatusFailure
+	defer func() {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
 
-	if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
-		// We want to keep err scoped because having info on the mutation graph response trumps this error
-		slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(err))
+		if auditErr := s.DB.AppendAuditLog(auditContext, auditLogEntry); auditErr != nil {
+			// We want to keep the graph response error because it is more useful to the caller than an audit log error.
+			slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(auditErr))
+		}
+	}()
+
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err == nil {
+		auditLogEntry.Status = model.AuditLogStatusSuccess
 	}
 
 	return graphResponse, err
