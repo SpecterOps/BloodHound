@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -731,4 +732,45 @@ func TestResources_CypherQuery(t *testing.T) {
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
+}
+
+func TestResources_CypherQuery_CanceledRequestKeepsAuditOutcomeContextActive(t *testing.T) {
+	var (
+		mockController                = gomock.NewController(t)
+		mockDatabase                  = dbmocks.NewMockDatabase(mockController)
+		mockGraphQuery                = mocks.NewMockGraph(mockController)
+		requestContext, ctxCancelFunc = context.WithCancel(setupUserCtx(model.User{AllEnvironments: true}))
+		request                       = httptest.NewRequest(http.MethodPost, "/api/v2/graphs/cypher", bytes.NewBufferString(`{"query":"query","include_properties":true}`)).WithContext(requestContext)
+		auditOutcomeContextErr        error
+	)
+	defer ctxCancelFunc()
+
+	request.Header.Set(headers.ContentType.String(), "application/json")
+
+	mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+		StrippedQuery: "query",
+	}, nil)
+	mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, entry model.AuditEntry) error {
+		if entry.Action == model.AuditLogActionRunCypherQuery && entry.Status == model.AuditLogStatusFailure {
+			// cache the context error from the audit outcome write to assert that it is not canceled
+			auditOutcomeContextErr = ctx.Err()
+		}
+		return nil
+	}).Times(2)
+	mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{}, nil)
+	mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any(), true).DoAndReturn(func(context.Context, graphschema.PrimaryDisplayKinds, queries.PreparedQuery, bool) (model.UnifiedGraph, error) {
+		// cancel the context within the cypher query execution
+		ctxCancelFunc()
+		return model.UnifiedGraph{}, context.Canceled
+	})
+
+	resources := v2.Resources{
+		GraphQuery: mockGraphQuery,
+		DB:         mockDatabase,
+		Authorizer: auth.NewAuthorizer(mockDatabase),
+		DogTags:    dogtags.NewTestService(dogtags.TestOverrides{}),
+	}
+	resources.CypherQuery(httptest.NewRecorder(), request)
+
+	assert.NoError(t, auditOutcomeContextErr, "the audit outcome write must not inherit a canceled request context")
 }
