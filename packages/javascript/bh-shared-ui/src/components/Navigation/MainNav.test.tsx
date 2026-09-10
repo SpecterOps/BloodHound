@@ -17,7 +17,9 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, within } from '../../test-utils';
+import { NAV_EXPANDED_STORAGE_KEY } from '../../hooks';
+import { act, render, screen, waitFor, within } from '../../test-utils';
+import { createMatchMediaController } from '../../testing';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
@@ -145,6 +147,80 @@ describe('MainNav', () => {
     it('should have a .z-nav class', () => {
         const navbarElement = screen.getByRole('navigation');
         expect(navbarElement).toHaveClass('z-nav');
+    });
+});
+
+describe('MainNav responsive expansion', () => {
+    afterEach(() => {
+        window.localStorage.clear();
+        vi.unstubAllGlobals();
+    });
+
+    it('contracts an expanded nav when the viewport shrinks below the xl breakpoint', async () => {
+        const matchMediaController = createMatchMediaController(true);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
+
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'true');
+
+        act(() => matchMediaController.setMatches(false));
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
+            expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
+        });
+    });
+
+    it('expands a contracted nav when the viewport grows to the xl breakpoint', async () => {
+        const matchMediaController = createMatchMediaController(false);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(false));
+
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
+
+        act(() => matchMediaController.setMatches(true));
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'true');
+            expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(true));
+        });
+    });
+
+    it('preserves an expanded nav on initial load below the xl breakpoint', () => {
+        createMatchMediaController(false);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
+
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'true');
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(true));
+    });
+
+    it('preserves a contracted nav on initial load at the xl breakpoint', () => {
+        createMatchMediaController(true);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(false));
+
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
+    });
+
+    it('preserves the user-selected state after a refresh without a breakpoint crossing', async () => {
+        const user = userEvent.setup();
+        createMatchMediaController(false);
+        const { unmount } = render(<MainNav mainNavData={mainNavData} />);
+
+        await user.click(screen.getByRole('button', { name: 'Toggle Navigation' }));
+
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
+
+        unmount();
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
     });
 });
 

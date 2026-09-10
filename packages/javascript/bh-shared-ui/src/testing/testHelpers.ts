@@ -16,6 +16,69 @@
 
 import { QueryClient, QueryKey } from 'react-query';
 
+type MediaQueryChangeListener = (event: MediaQueryListEvent) => void;
+type MockMediaQueryList = {
+    matches: boolean;
+    listeners: Set<MediaQueryChangeListener>;
+    addEventListener: ReturnType<typeof vi.fn>;
+    removeEventListener: ReturnType<typeof vi.fn>;
+};
+
+/**
+ * Installs a controllable `window.matchMedia` mock for tests that use media-query APIs.
+ * Each query receives an independent media-query list. Call `setMatches` to simulate
+ * crossing a breakpoint, then call `vi.unstubAllGlobals()` in test cleanup to restore
+ * the browser global.
+ */
+export const createMatchMediaController = (initialMatches: boolean | Record<string, boolean> = false) => {
+    const mediaQueryLists = new Map<string, MockMediaQueryList>();
+
+    const getInitialMatches = (query: string) =>
+        typeof initialMatches === 'boolean' ? initialMatches : initialMatches[query] ?? false;
+
+    const getMediaQueryList = (query: string): MockMediaQueryList => {
+        const existingMediaQueryList = mediaQueryLists.get(query);
+        if (existingMediaQueryList) return existingMediaQueryList;
+
+        const listeners = new Set<MediaQueryChangeListener>();
+        const mediaQueryList = {
+            matches: getInitialMatches(query),
+            listeners,
+            addEventListener: vi.fn((eventType: string, listener: EventListenerOrEventListenerObject) => {
+                if (eventType === 'change' && typeof listener === 'function') {
+                    listeners.add(listener as MediaQueryChangeListener);
+                }
+            }),
+            removeEventListener: vi.fn((eventType: string, listener: EventListenerOrEventListenerObject) => {
+                if (eventType === 'change' && typeof listener === 'function') {
+                    listeners.delete(listener as MediaQueryChangeListener);
+                }
+            }),
+        };
+
+        mediaQueryLists.set(query, mediaQueryList);
+
+        return mediaQueryList;
+    };
+
+    vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => getMediaQueryList(query))
+    );
+
+    return {
+        getMediaQueryList,
+        setMatches: (matches: boolean, query?: string) => {
+            const selectedMediaQueryLists = query ? [getMediaQueryList(query)] : Array.from(mediaQueryLists.values());
+
+            selectedMediaQueryLists.forEach((mediaQueryList) => {
+                mediaQueryList.matches = matches;
+                mediaQueryList.listeners.forEach((listener) => listener({ matches } as MediaQueryListEvent));
+            });
+        },
+    };
+};
+
 /**
  * Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods; running this
  * function in your test file will prevent those errors.
