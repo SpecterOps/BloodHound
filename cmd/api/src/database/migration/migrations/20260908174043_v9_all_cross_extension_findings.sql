@@ -29,8 +29,18 @@ ALTER TABLE schema_findings
     FOREIGN KEY (environment_id) REFERENCES kind(id) ON DELETE RESTRICT;
 
 -- +goose Down
--- A rollback would only work while every referenced environment kind still has a
--- schema_environments mapping to restore the original foreign key.
+-- The Down migration can restore the schema_finding only while every environment
+-- kind referenced by schema_findings has a corresponding schema_environments mapping. A
+-- rollback will fail if a finding references an environment kind whose owning extension
+-- was never installed or was later removed, because there is no schema environment ID to
+-- restore.
+--
+-- Recovering from this condition requires manually removing findings that do not have a
+-- corresponding schema_environments mapping, then retrying the rollback. Built-in and
+-- embedded extensions are not expected to encounter this condition because their
+-- environment kinds have schema_environments mappings. The risk is therefore limited to
+-- extensions that create findings for environment kinds whose owning extensions are
+-- absent during rollback.
 -- +goose StatementBegin
 DO $$
 BEGIN
