@@ -38,7 +38,7 @@ get:
     - name: job_type_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
     - name: scope_client_id
       in: query
       schema:

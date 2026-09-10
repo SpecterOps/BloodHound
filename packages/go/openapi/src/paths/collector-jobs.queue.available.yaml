@@ -36,11 +36,11 @@ get:
     - name: job_type_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
     - name: job_key
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
     - name: priority
       in: query
       schema:
