@@ -19,6 +19,8 @@ put:
     **Experimental** - Upserts the OpenGraph extension.
 
     The request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{"rules":[...]}`) and `saved_queries.json` (`{"queries":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.
+
+    Each recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.
   tags:
     - OpenGraph (Experimental)
     - Community

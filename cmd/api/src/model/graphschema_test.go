@@ -880,6 +880,36 @@ func Test_validateGraphExtension(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name: "fail - saved query contains updating clause",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "updating-query",
+						Name:     "Updating query",
+						Query:    "MATCH (n) DELETE n",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Updating query contains invalid Cypher: updating clauses are not supported"),
+		},
+		{
+			name: "fail - saved query contains procedure invocation",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "procedure-query",
+						Name:     "Procedure query",
+						Query:    "CALL db.labels()",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Procedure query contains invalid Cypher: procedure invocation is not supported"),
+		},
+		{
 			name: "fail - unparseable saved query",
 			args: args{
 				graphExtension: GraphExtensionInput{

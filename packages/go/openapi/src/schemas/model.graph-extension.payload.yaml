@@ -164,7 +164,7 @@ properties:
           example: Critical Assets
         query:
           type: string
-          description: The Cypher query to run.
+          description: Extension-provided saved queries must be read-only; updating clauses are not supported.
           example: MATCH (n) RETURN n
         description:
           type: string

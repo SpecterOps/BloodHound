@@ -515,8 +515,6 @@ func (s GraphExtensionInput) Validate() error {
 		relationshipKinds = make(map[string]any, 0)
 		environments      = make(map[string]any, 0)
 		findings          = make(map[string]any, 0)
-		savedQueryKeys    = map[string]struct{}{}
-		savedQueryNames   = map[string]struct{}{}
 	)
 
 	// Schema Validation
@@ -626,28 +624,9 @@ func (s GraphExtensionInput) Validate() error {
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
 
-	// Saved queries validation
-	for _, savedQueryInput := range s.SavedQueriesInput {
-		if strings.TrimSpace(savedQueryInput.QueryKey) == "" {
-			return errors.New("graph schema saved query key is required")
-		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
-			return errors.New("graph schema saved query name is required")
-		} else if strings.TrimSpace(savedQueryInput.Query) == "" {
-			return errors.New("graph schema saved query text is required")
-		}
-		if _, found := savedQueryKeys[savedQueryInput.QueryKey]; found {
-			return fmt.Errorf("duplicate graph schema saved query key: %s", savedQueryInput.QueryKey)
-		} else if _, found := savedQueryNames[savedQueryInput.Name]; found {
-			return fmt.Errorf("duplicate graph schema saved query name: %s", savedQueryInput.Name)
-		}
-		if _, err := frontend.ParseCypher(frontend.NewContext(), savedQueryInput.Query); err != nil {
-			return fmt.Errorf("graph schema saved query %s contains invalid Cypher: %w", savedQueryInput.Name, err)
-		}
-		savedQueryKeys[savedQueryInput.QueryKey] = struct{}{}
-		savedQueryNames[savedQueryInput.Name] = struct{}{}
-	}
-
 	if err := s.PZRulesInput.Validate(); err != nil {
+		return err
+	} else if err := s.SavedQueriesInput.Validate(); err != nil {
 		return err
 	}
 
@@ -675,6 +654,35 @@ func (s PZRulesInput) Validate() error {
 		}
 		ruleNames[rule.Name] = struct{}{}
 	}
+	return nil
+}
+
+func (s SavedQueriesInput) Validate() error {
+	var (
+		savedQueryKeys  = make(map[string]any, len(s))
+		savedQueryNames = make(map[string]any, len(s))
+	)
+
+	for _, savedQueryInput := range s {
+		if strings.TrimSpace(savedQueryInput.QueryKey) == "" {
+			return errors.New("graph schema saved query key is required")
+		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
+			return errors.New("graph schema saved query name is required")
+		} else if strings.TrimSpace(savedQueryInput.Query) == "" {
+			return errors.New("graph schema saved query text is required")
+		}
+		if _, found := savedQueryKeys[savedQueryInput.QueryKey]; found {
+			return fmt.Errorf("duplicate graph schema saved query key: %s", savedQueryInput.QueryKey)
+		} else if _, found := savedQueryNames[savedQueryInput.Name]; found {
+			return fmt.Errorf("duplicate graph schema saved query name: %s", savedQueryInput.Name)
+		}
+		if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), savedQueryInput.Query); err != nil {
+			return fmt.Errorf("graph schema saved query %s contains invalid Cypher: %w", savedQueryInput.Name, err)
+		}
+		savedQueryKeys[savedQueryInput.QueryKey] = struct{}{}
+		savedQueryNames[savedQueryInput.Name] = struct{}{}
+	}
+
 	return nil
 }
 

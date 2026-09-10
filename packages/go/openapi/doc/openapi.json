@@ -7827,7 +7827,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -25836,7 +25836,7 @@
                 },
                 "query": {
                   "type": "string",
-                  "description": "The Cypher query to run.",
+                  "description": "Extension-provided saved queries must be read-only; updating clauses are not supported.",
                   "example": "MATCH (n) RETURN n"
                 },
                 "description": {

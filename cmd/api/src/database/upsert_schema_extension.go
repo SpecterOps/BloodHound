@@ -143,8 +143,14 @@ func (s *BloodhoundDB) createExtensionSavedQuery(ctx context.Context, extensionI
 
 func (s *BloodhoundDB) savedQueryReconcileConfig(extensionID int32) reconcileConfig[model.SavedQueryInput, model.SavedQuery, string] {
 	return reconcileConfig[model.SavedQueryInput, model.SavedQuery, string]{
-		getInputKey:    func(input model.SavedQueryInput) string { return input.QueryKey },
-		getExistingKey: func(existing model.SavedQuery) string { return *existing.QueryKey },
+		getInputKey: func(input model.SavedQueryInput) string { return input.QueryKey },
+		getExistingKey: func(existing model.SavedQuery) string {
+			if existing.QueryKey == nil {
+				return ""
+			}
+
+			return *existing.QueryKey
+		},
 		create: func(ctx context.Context, input model.SavedQueryInput) (model.SavedQuery, error) {
 			return s.createExtensionSavedQuery(ctx, extensionID, input)
 		},
