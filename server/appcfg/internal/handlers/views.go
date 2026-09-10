@@ -22,6 +22,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
 
@@ -89,4 +90,14 @@ func BuildParameterListView(parameters services.Parameters) ParameterListView {
 
 func (s ParameterListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+// TODO: I'm not sure if this is correct; will need to test param filtering with integration tests
+// ValidFilters implements params.Filterable, describing the role fields that may
+// be filtered on and the operators each supports. It reproduces the legacy
+// GET /api/v2/roles contract so the filter middleware validates identically.
+func (s ParameterListView) ValidFilters() map[string]params.FilterableField {
+	return map[string]params.FilterableField{
+		"parameter": {Operators: []params.FilterOperator{params.Equals}, IsStringData: true},
+	}
 }

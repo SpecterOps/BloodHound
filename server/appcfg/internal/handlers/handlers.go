@@ -18,11 +18,14 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
@@ -31,6 +34,11 @@ import (
 
 type Service interface {
 	GetDatapipeStatus(context.Context) (services.DatapipeStatus, error)
+	GetApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error)
+	GetAllApplicationConfigurations(ctx context.Context) (services.Parameters, error)
+
+	IsValidKey(parameterKey services.ParameterKey) bool
+	IsProtectedKey(parameterKey services.ParameterKey) bool
 }
 
 type Handlers struct {
@@ -53,6 +61,48 @@ func (s *Handlers) GetDatapipeStatus(response http.ResponseWriter, request *http
 	}
 
 	responses.WriteBasic(ctx, BuildDatapipeStatusView(status), http.StatusOK, response)
+}
+
+func (s *Handlers) GetApplicationConfiguration(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+
+		filterKey = ""
+	)
+
+	if paramFilter, ok := bhCtx.Filters["parameter"]; ok {
+		if len(paramFilter) > 0 && paramFilter[0].Operator == params.Equals {
+			filterKey = paramFilter[0].Value
+		}
+	}
+
+	if filterKey != "" {
+		paramKey := services.ParameterKey(filterKey)
+
+		// Preserving existing behavior, where IsProtectedKey is only applied to
+		// individual config get requests
+		if !s.service.IsValidKey(paramKey) || s.service.IsProtectedKey(paramKey) {
+			responses.WriteError(ctx, http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", paramKey), response)
+			return
+		}
+		param, err := s.service.GetApplicationConfiguration(ctx, services.ParameterKey(filterKey))
+		if err != nil {
+			handleServiceError(ctx, response, err)
+			return
+		}
+
+		responses.WriteBasic(ctx, BuildParameterListView(services.Parameters{param}), http.StatusOK, response)
+		return
+	}
+
+	params, err := s.service.GetAllApplicationConfigurations(ctx)
+	if err != nil {
+		handleServiceError(ctx, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildParameterListView(params), http.StatusOK, response)
 }
 
 func handleServiceError(ctx context.Context, response http.ResponseWriter, err error) {
