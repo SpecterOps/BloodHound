@@ -16,9 +16,11 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
@@ -46,5 +48,45 @@ func BuildDatapipeStatusView(status services.DatapipeStatus) DatapipeStatusView 
 // JSONView marshals the view to the byte slice expected by responses.WriteBasic,
 // satisfying the responses.JSONViewer contract.
 func (s DatapipeStatusView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+type ParameterView struct {
+	ID          int32                 `json:"id"`
+	Key         services.ParameterKey `json:"key"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Value       types.JSONBObject     `json:"value"`
+	CreatedAt   time.Time             `json:"created_at"`
+	UpdatedAt   time.Time             `json:"updated_at"`
+	DeletedAt   sql.NullTime          `json:"deleted_at"`
+}
+
+type ParameterListView []ParameterView
+
+func BuildParameterView(parameter services.Parameter) ParameterView {
+	return ParameterView{
+		ID:          parameter.ID,
+		Key:         parameter.Key,
+		Name:        parameter.Name,
+		Description: parameter.Description,
+		Value:       parameter.Value,
+		CreatedAt:   parameter.CreatedAt,
+		UpdatedAt:   parameter.UpdatedAt,
+		DeletedAt:   parameter.DeletedAt,
+	}
+}
+
+func BuildParameterListView(parameters services.Parameters) ParameterListView {
+	var parametersView = []ParameterView{}
+
+	for _, parameter := range parameters {
+		parametersView = append(parametersView, BuildParameterView(parameter))
+	}
+
+	return parametersView
+}
+
+func (s ParameterListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
