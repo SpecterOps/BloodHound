@@ -7827,7 +7827,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. ZIP bundles must contain `schema.json` and may include `pz_rules.json` and `saved_queries.json`.\n",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",

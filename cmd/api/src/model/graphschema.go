@@ -985,10 +985,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 
 			selectorSeeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
 			for _, seedPayload := range rulePayload.Seeds {
-				selectorSeeds = append(selectorSeeds, SelectorSeedInput{
-					Type:  seedPayload.Type,
-					Value: seedPayload.Value,
-				})
+				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))
 			}
 
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{

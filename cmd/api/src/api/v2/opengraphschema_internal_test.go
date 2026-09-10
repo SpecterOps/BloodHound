@@ -55,7 +55,8 @@ const validSavedQueryJSON = `{
 	"query_key": "all-domain-admins",
 	"name": "All Domain Admins",
 	"query": "MATCH (n) RETURN n LIMIT 1",
-	"description": "example"
+	"description": "example",
+	"category": "administration"
 }`
 
 // validSavedQueriesJSON is a minimal saved queries component.
@@ -128,14 +129,15 @@ func newExtensionZipWithDuplicate(t *testing.T, name, content string) []byte {
 
 func TestExtractBundleFromZip(t *testing.T) {
 	var tests = []struct {
-		name             string
-		archive          []byte
-		wantErrText      string
-		wantSchemaName   string
-		wantHasSchema    bool
-		wantHasPZRules   bool
-		wantHasSavedQrys bool
-		wantQueryKey     string
+		name                string
+		archive             []byte
+		wantErrText         string
+		wantSchemaName      string
+		wantHasSchema       bool
+		wantHasPZRules      bool
+		wantHasSavedQrys    bool
+		wantSavedQueriesNil bool
+		wantSavedQuery      *model.SavedQueryPayload
 	}{
 		{
 			name:           "valid zip with only schema.json yields a schema-only bundle",
@@ -178,7 +180,13 @@ func TestExtractBundleFromZip(t *testing.T) {
 			wantHasSchema:    true,
 			wantHasPZRules:   true,
 			wantHasSavedQrys: true,
-			wantQueryKey:     "all-domain-admins",
+			wantSavedQuery: &model.SavedQueryPayload{
+				QueryKey:    "all-domain-admins",
+				Name:        "All Domain Admins",
+				Query:       "MATCH (n) RETURN n LIMIT 1",
+				Description: "example",
+				Category:    "administration",
+			},
 		},
 		{
 			name:           "missing schema.json is an extractor error",
@@ -212,6 +220,26 @@ func TestExtractBundleFromZip(t *testing.T) {
 			wantErrText: "duplicate component \"schema.json\" in zip archive",
 		},
 		{
+			name:                "duplicate null saved query components are rejected",
+			archive:             newExtensionZipWithDuplicate(t, "saved_queries.json", `{"queries": null}`),
+			wantErrText:         "duplicate component \"saved_queries.json\" in zip archive",
+			wantHasSavedQrys:    true,
+			wantSavedQueriesNil: true,
+		},
+		{
+			name:             "duplicate empty saved query components are rejected",
+			archive:          newExtensionZipWithDuplicate(t, "saved_queries.json", `{"queries": []}`),
+			wantErrText:      "duplicate component \"saved_queries.json\" in zip archive",
+			wantHasSavedQrys: true,
+		},
+		{
+			name:                "duplicate saved query components with missing queries are rejected",
+			archive:             newExtensionZipWithDuplicate(t, "saved_queries.json", `{}`),
+			wantErrText:         "duplicate component \"saved_queries.json\" in zip archive",
+			wantHasSavedQrys:    true,
+			wantSavedQueriesNil: true,
+		},
+		{
 			name:        "schema.json embedding pz_rules is rejected in a bundle",
 			archive:     newExtensionZip(t, map[string]string{"schema.json": validSchemaWithEmbeddedPZRulesJSON}),
 			wantErrText: "schema.json must not embed optional components: pz_rules.json",
@@ -243,9 +271,14 @@ func TestExtractBundleFromZip(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantHasPZRules, extension.PZRules != nil)
 			assert.Equal(t, tt.wantHasSavedQrys, extension.SavedQueries != nil)
-			if tt.wantQueryKey != "" {
-				require.NotEmpty(t, *extension.SavedQueries)
-				assert.Equal(t, tt.wantQueryKey, (*extension.SavedQueries)[0].QueryKey)
+			if tt.wantHasSavedQrys {
+				require.NotNil(t, extension.SavedQueries)
+				assert.Equal(t, tt.wantSavedQueriesNil, *extension.SavedQueries == nil)
+			}
+			if tt.wantSavedQuery != nil {
+				require.NotNil(t, extension.SavedQueries)
+				require.Len(t, *extension.SavedQueries, 1)
+				assert.Equal(t, *tt.wantSavedQuery, (*extension.SavedQueries)[0])
 			}
 		})
 	}
@@ -258,6 +291,20 @@ func TestExtractExtensionDataFromJSON(t *testing.T) {
 		assert.Equal(t, "TestExtension", extension.GraphSchemaExtension.Name)
 		assert.Nil(t, extension.PZRules)
 		assert.Nil(t, extension.SavedQueries)
+	})
+
+	t.Run("schema with saved queries preserves every query field", func(t *testing.T) {
+		extension, err := extractExtensionDataFromJSON(bytes.NewReader([]byte(validSchemaWithEmbeddedSavedQueriesJSON)))
+		require.NoError(t, err)
+		require.NotNil(t, extension.SavedQueries)
+		require.Len(t, *extension.SavedQueries, 1)
+		assert.Equal(t, model.SavedQueryPayload{
+			QueryKey:    "all-domain-admins",
+			Name:        "All Domain Admins",
+			Query:       "MATCH (n) RETURN n LIMIT 1",
+			Description: "example",
+			Category:    "administration",
+		}, (*extension.SavedQueries)[0])
 	})
 
 	t.Run("schema with findings is valid without pz_rules", func(t *testing.T) {
