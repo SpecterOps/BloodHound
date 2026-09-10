@@ -208,6 +208,11 @@ func TestParseConfiguration_Storage(t *testing.T) {
 					"provider": "local",
 					"prefix": ""
 				}
+			},
+			"experiments": {
+				"name": "experiment-bucket",
+				"region": "us-west-2",
+				"prefix": "experiments"
 			}
 		}
 	}`))
@@ -222,6 +227,11 @@ func TestParseConfiguration_Storage(t *testing.T) {
 	assert.Equal(t, config.FileServiceConfiguration{
 		Provider: "local",
 	}, configuration.Storage.FileServices["work"])
+	assert.Equal(t, config.ExperimentStorage{
+		Name:   "experiment-bucket",
+		Region: "us-west-2",
+		Prefix: "experiments",
+	}, configuration.Storage.ExperimentStorage)
 }
 
 func TestParseConfiguration_DefaultAdminEnabled(t *testing.T) {
