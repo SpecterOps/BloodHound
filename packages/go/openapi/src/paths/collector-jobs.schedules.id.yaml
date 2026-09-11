@@ -22,6 +22,7 @@ parameters:
     schema:
       type: integer
       format: int64
+
 get:
   operationId: GetCollectorJobSchedule
   summary: Get a collector job schedule
@@ -57,6 +58,7 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 patch:
   operationId: UpdateCollectorJobSchedule
   summary: Update a collector job schedule
@@ -119,6 +121,7 @@ patch:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 delete:
   operationId: DeleteCollectorJobSchedule
   summary: Delete a collector job schedule

@@ -17,6 +17,7 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.collector-job-id.yaml'
+
 get:
   operationId: GetCollectorJob
   summary: Get a live collector job
@@ -52,6 +53,7 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 delete:
   operationId: CancelCollectorJob
   summary: Cancel a live collector job

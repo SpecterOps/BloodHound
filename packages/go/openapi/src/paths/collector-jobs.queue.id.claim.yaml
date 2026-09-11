@@ -17,6 +17,7 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.collector-job-id.yaml'
+    
 post:
   operationId: ClaimCollectorJob
   summary: Claim a collector job

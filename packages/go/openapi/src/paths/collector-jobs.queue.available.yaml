@@ -16,6 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
 get:
   operationId: ListAvailableCollectorJobs
   summary: List collector jobs available to the authenticated collector

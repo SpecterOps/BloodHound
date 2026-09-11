@@ -16,6 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
 get:
   operationId: GetCurrentCollectorJob
   summary: Get the authenticated collector's current job

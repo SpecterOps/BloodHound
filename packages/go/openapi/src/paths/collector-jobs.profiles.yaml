@@ -16,6 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
 get:
   operationId: ListCollectorJobProfiles
   summary: List collector job profiles
@@ -76,6 +77,7 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 post:
   operationId: CreateCollectorJobProfile
   summary: Create a collector job profile

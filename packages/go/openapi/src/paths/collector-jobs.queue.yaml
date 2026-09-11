@@ -16,6 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
 get:
   operationId: ListCollectorJobs
   summary: List live collector jobs
@@ -113,6 +114,7 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 post:
   operationId: CreateCollectorJob
   summary: Enqueue a collector job

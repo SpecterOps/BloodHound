@@ -16,6 +16,7 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
+
 get:
   operationId: ListCollectorJobSchedules
   summary: List collector job schedules
@@ -80,6 +81,7 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
 post:
   operationId: CreateCollectorJobSchedule
   summary: Create a collector job schedule
