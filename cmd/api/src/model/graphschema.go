@@ -324,10 +324,11 @@ type SchemaFinding struct {
 	ID                int32
 	Type              SchemaFindingType
 	SchemaExtensionId int32
-	EnvironmentId     int32
-	KindId            int32
-	Name              string
-	DisplayName       string
+	// EnvironmentId stores the environment kind ID (DAWGs `kind` table)
+	EnvironmentId int32
+	KindId        int32
+	Name          string
+	DisplayName   string
 	// PZ Variant Display Title
 	PZDisplayName null.String
 	CreatedAt     time.Time
