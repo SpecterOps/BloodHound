@@ -92,7 +92,6 @@ func (s ParameterListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// TODO: I'm not sure if this is correct; will need to test param filtering with integration tests
 // ValidFilters implements params.Filterable, describing the role fields that may
 // be filtered on and the operators each supports. It reproduces the legacy
 // GET /api/v2/roles contract so the filter middleware validates identically.
