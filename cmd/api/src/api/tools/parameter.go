@@ -24,18 +24,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
-type ListAppConfigParametersResponse struct {
-	Data appcfg.Parameters `json:"data"`
-}
-
-func (s ToolContainer) GetApplicationConfigurations(response http.ResponseWriter, request *http.Request) {
-	if cfgParameters, err := s.db.GetAllConfigurationParameters(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), cfgParameters, http.StatusOK, response)
-	}
-}
-
 func (s ToolContainer) SetApplicationParameter(response http.ResponseWriter, request *http.Request) {
 	var appConfig appcfg.AppConfigUpdateRequest
 
