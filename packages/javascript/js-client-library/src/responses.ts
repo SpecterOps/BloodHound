@@ -375,6 +375,8 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 // ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
 // ---------------------------------------------------------------------------
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------
