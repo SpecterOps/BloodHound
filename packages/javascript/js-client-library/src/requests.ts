@@ -388,8 +388,8 @@ export interface CreateCollectorJobProfileRequest {
     job_type_id: number;
     params: Record<string, unknown>;
     scope_client_id?: string;
-    secret_id: string;
-    schedule_ids?: string[];
+    secret_id?: string;
+    schedule_ids?: number[];
 }
 
 export interface UpdateCollectorJobProfileRequest {
@@ -397,5 +397,5 @@ export interface UpdateCollectorJobProfileRequest {
     params?: Record<string, unknown>;
     scope_client_id?: string;
     secret_id?: string;
-    schedule_ids?: string[];
+    schedule_ids?: number[];
 }
