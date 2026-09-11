@@ -21,6 +21,7 @@ package appcfg_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -358,18 +359,27 @@ func TestGetAppConfigs(t *testing.T) {
 		assert.NotEmpty(t, envelope.Errors)
 	})
 
-	t.Run("returns 400 bad request with malformed search", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config?parameter=notacomparator%3Ahelloworld", nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+token)
-		resp, err := http.DefaultClient.Do(req)
-		require.NoError(t, err)
+	for _, query := range []string{
+		"/api/v2/config?parameter=notacomparator%3Ahelloworld",
+		"/api/v2/config?parameter=neq%3Aauth.password_expiration_window",
+		"/api/v2/config?blah=eq%3Aauth.password_expiration_window",
+		"/api/v2/config?parameter=eq%3Ainvalid_key",
+		"/api/v2/config?parameter=eq%3Aeula.custom_text",
+	} {
+		t.Run(fmt.Sprintf("returns 400 bad request with bad search - %s", query), func(t *testing.T) {
 
-		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+query, nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+token)
+			resp, err := http.DefaultClient.Do(req)
+			require.NoError(t, err)
 
-		var envelope api.ErrorWrapper
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
-		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
-		assert.NotEmpty(t, envelope.Errors)
-	})
+			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+			var envelope api.ErrorWrapper
+			require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+			assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+			assert.NotEmpty(t, envelope.Errors)
+		})
+	}
 }
