@@ -1005,6 +1005,19 @@ export type RelationshipDetailsWithInfo = RelationshipDetails & {
     info?: RelationshipKindInfo;
 };
 
+// While this only has one currently, there will be more in the future, so we're doing this now to make that easier.
+export enum CollectorJobSecretType {
+    AuthKey = 'auth_key',
+}
+
+export interface CollectorJobSecret {
+    id: string;
+    type: CollectorJobSecretType;
+    key_id: string;
+    display_key_id: string;
+    created_at: string;
+}
+
 export interface CollectorJobProfileMinimal {
     id: number;
     name: string;

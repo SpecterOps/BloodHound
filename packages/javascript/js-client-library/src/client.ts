@@ -23,6 +23,7 @@ import {
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
+    CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
@@ -76,6 +77,7 @@ import {
     BasicResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
@@ -90,6 +92,7 @@ import {
     GetClientResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
+    GetCollectorJobSecretResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -832,6 +835,12 @@ class BHEAPIClient {
             { job_profile_id: profileId },
             options
         );
+
+    getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+
+    createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
 
     /* clients */
 
