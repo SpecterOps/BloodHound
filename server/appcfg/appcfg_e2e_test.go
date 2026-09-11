@@ -21,16 +21,19 @@ package appcfg_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
@@ -248,4 +251,157 @@ func TestGetDatapipeStatus(t *testing.T) {
 		assert.False(t, envelope.Data.LastCompleteAnalysisAt.IsZero(), "last_complete_analysis_at should be set")
 		assert.False(t, envelope.Data.LastCompleteOptimizeAt.IsZero(), "last_complete_optimize_at should be set")
 	})
+}
+
+// # Application Configuration Tests
+
+type getConfigsResponseEnvelope struct {
+	Data []appcfg.Parameter `json:"data"`
+}
+
+func TestGetAppConfigs(t *testing.T) {
+	var (
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+			// Register the appcfg module using the new architecture
+			modules.Register(modules.Deps{
+				Router:              routerInst,
+				Pool:                db.Pool(),
+				Graph:               &graph.DatabaseSwitch{},
+				RateLimitMiddleware: noopRateLimit,
+				DogTags:             testDogTags(),
+			})
+		})
+		db     = harness.DB
+		server = harness.Server
+	)
+
+	// Create a test user and get a valid JWT token for authentication
+	var (
+		user = model.User{
+			PrincipalName: "test-admin@example.com",
+			EmailAddress:  null.StringFrom("test-admin@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
+		}
+		token                  = servertest.MintJWT(t, ctx, db, harness.Auther, user)
+		lackingPermissionsUser = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		lackingPermissionsToken = servertest.MintJWT(t, ctx, db, harness.Auther, lackingPermissionsUser)
+	)
+
+	t.Run("returns 200 OK with all seeded configs", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope getConfigsResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		// Minimal assertions to avoid live data changes breaking tests
+		assert.Equal(t, "auth.password_expiration_window", string(envelope.Data[0].Key))
+		assert.Equal(t, "Local Auth Password Expiry Window", envelope.Data[0].Name)
+		assert.NotEmpty(t, envelope.Data[0].ID)
+		assert.NotEmpty(t, envelope.Data[0].CreatedAt)
+		assert.Empty(t, envelope.Data[0].DeletedAt)
+		assert.NotEmpty(t, envelope.Data[0].UpdatedAt)
+		assert.NotEmpty(t, envelope.Data[0].Value)
+	})
+
+	t.Run("get specific config returns OK", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config?parameter=eq%3Aauth.password_expiration_window", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope getConfigsResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		// Minimal assertions to avoid live data changes breaking tests
+		assert.Len(t, envelope.Data, 1)
+		assert.Equal(t, "auth.password_expiration_window", string(envelope.Data[0].Key))
+		assert.Equal(t, "Local Auth Password Expiry Window", envelope.Data[0].Name)
+		assert.NotEmpty(t, envelope.Data[0].ID)
+		assert.NotEmpty(t, envelope.Data[0].CreatedAt)
+		assert.Empty(t, envelope.Data[0].DeletedAt)
+		assert.NotEmpty(t, envelope.Data[0].UpdatedAt)
+		assert.NotEmpty(t, envelope.Data[0].Value)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 401 Unauthorized when no auth token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config", nil)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 403 Unauthorized when user hasn't sufficient permissions", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+lackingPermissionsToken)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusForbidden, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	for _, query := range []string{
+		"/api/v2/config?parameter=notacomparator%3Ahelloworld",
+		"/api/v2/config?parameter=neq%3Aauth.password_expiration_window",
+		"/api/v2/config?blah=eq%3Aauth.password_expiration_window",
+		"/api/v2/config?parameter=eq%3Ainvalid_key",
+		"/api/v2/config?parameter=eq%3Aeula.custom_text",
+	} {
+		t.Run(fmt.Sprintf("returns 400 bad request with bad search - %s", query), func(t *testing.T) {
+
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+query, nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+token)
+			resp, err := http.DefaultClient.Do(req)
+			require.NoError(t, err)
+
+			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+			var envelope api.ErrorWrapper
+			require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+			assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+			assert.NotEmpty(t, envelope.Errors)
+		})
+	}
 }
