@@ -182,7 +182,6 @@ func teardownIntegrationTest(t *testing.T, suite *IntegrationTestSuite) {
 }
 
 func TestIngestionCoordinator(t *testing.T) {
-	t.Parallel()
 
 	type args struct {
 		batchSize     int
