@@ -26,11 +26,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {
-	var appConfig appcfg.Parameters
-	return appConfig, CheckError(s.db.WithContext(ctx).Find(&appConfig))
-}
-
 func (s *BloodhoundDB) GetConfigurationParameter(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error) {
 	var parameter appcfg.Parameter
 	return parameter, CheckError(s.db.WithContext(ctx).First(&parameter, "key = ?", parameterKey))

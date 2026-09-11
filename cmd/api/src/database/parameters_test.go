@@ -128,21 +128,6 @@ func TestParameters_GetConfigurationParameter(t *testing.T) {
 	})
 }
 
-func TestParameters_GetAllConfigurationParameter(t *testing.T) {
-	var (
-		testCtx = context.Background()
-		dbInst  = integration.SetupDB(t)
-	)
-	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
-	require.Nil(t, err)
-
-	for _, parameter := range parameters {
-		if !parameter.IsProtectedKey(parameter.Key) {
-			require.True(t, parameter.IsValidKey(parameter.Key))
-		}
-	}
-}
-
 func TestParameters_GetEULACustomText(t *testing.T) {
 	var (
 		db            = integration.SetupDB(t)

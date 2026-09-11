@@ -209,9 +209,6 @@ type Parameters []Parameter
 // ParameterService is a contract which defines expected functionality for fetching and setting Parameter from an
 // abstract backend storage.
 type ParameterService interface {
-	// GetAllConfigurationParameters gets all available runtime Parameters for the application.
-	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
-
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
 	GetConfigurationParameter(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
 
