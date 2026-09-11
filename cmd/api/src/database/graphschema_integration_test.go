@@ -4293,7 +4293,6 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 }
 
 func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
-	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 

@@ -65,7 +65,6 @@ func assertCustomNodeKindAbsent(t *testing.T, testSuite IntegrationTestSuite, ki
 }
 
 func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
-	t.Parallel()
 
 	type testSetupData struct {
 		input           model.GraphExtensionInput
@@ -858,7 +857,6 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 

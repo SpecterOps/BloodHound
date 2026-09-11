@@ -31,7 +31,6 @@ import (
 )
 
 func TestDatabase_DeleteAssetGroupHistory(t *testing.T) {
-	t.Parallel()
 	var (
 		testCtx   = context.Background()
 		testActor = model.User{

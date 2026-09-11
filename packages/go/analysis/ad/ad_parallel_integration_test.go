@@ -38,7 +38,6 @@ import (
 // the cert template requires DNS in the SubjectAltName, while regular User
 // enrollees are filtered out by filterUserDNSResults.
 func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
