@@ -41,12 +41,6 @@ type Parameter struct {
 	DeletedAt sql.NullTime
 }
 
-// Map is a convenience function for mapping the data stored in the Value Parameter struct member onto
-// a richer type provided by the given value.
-func (s *Parameter) Map(value any) error {
-	return s.Value.Map(value)
-}
-
 // TODO: this and IsProtectedKey don't need to have Parameter receivers or be public
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
