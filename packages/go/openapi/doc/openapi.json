@@ -22596,6 +22596,95 @@
           }
         }
       }
+    },
+    "/api/v2/collector-job-secrets": {
+      "post": {
+        "operationId": "CreateCollectorJobSecret",
+        "summary": "Create Collector Job Secret Reference",
+        "description": "Creates a reference to collector credential material held by an external secret\nmanager. The write-only value is never stored in BloodHound or returned by the API.\n",
+        "tags": [
+          "Collector Jobs",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "key_id",
+                  "display_key_id",
+                  "value"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "auth_key"
+                    ]
+                  },
+                  "key_id": {
+                    "type": "string"
+                  },
+                  "display_key_id": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "writeOnly": true,
+                    "description": "Secret material forwarded to the external secret manager and never persisted or returned by BloodHound."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "secret"
+                      ],
+                      "properties": {
+                        "secret": {
+                          "$ref": "#/components/schemas/model.collector-job-secret"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -27827,6 +27916,41 @@
           },
           "next_attempt_at": {
             "$ref": "#/components/schemas/null.time.response"
+          }
+        }
+      },
+      "model.collector-job-secret": {
+        "type": "object",
+        "description": "Reference to collector credentials held externally, secret values are never stored.",
+        "required": [
+          "id",
+          "type",
+          "key_id",
+          "display_key_id",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "auth_key"
+            ]
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Identifier redeemed by the collector against external secret manager."
+          },
+          "display_key_id": {
+            "type": "string",
+            "description": "Operator-facing identifier for the referenced key."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
