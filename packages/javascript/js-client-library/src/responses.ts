@@ -30,6 +30,7 @@ import {
     CollectorJobHistory,
     CollectorJobProfile,
     CollectorJobSchedule,
+    CollectorJobSecret,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -369,10 +370,16 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
+// ---------------------------------------------------------------------------
+//  Collectors - Clients
+// ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
 export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
 
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
@@ -381,6 +388,13 @@ export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: 
 
 export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
 
+export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Support Bundles (Management Operations)
+// ---------------------------------------------------------------------------
 export enum ManagementOperationStatus {
     QUEUED = 'queued',
     RUNNING = 'running',
@@ -421,6 +435,7 @@ export type SupportBundleDownloadURLResponse = BasicResponse<{
     file_name: string;
     size: number;
 }>;
+// ---------------------------------------------------------------------------
 
 export type EdgeType = {
     id: number;

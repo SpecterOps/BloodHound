@@ -24,6 +24,7 @@ import {
     AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
+    CollectorJobSecret,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -399,3 +400,10 @@ export interface UpdateCollectorJobProfileRequest {
     secret_id?: string;
     schedule_ids?: number[];
 }
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
+    value: string;
+};
