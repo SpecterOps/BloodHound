@@ -279,10 +279,17 @@ func TestGetAppConfigs(t *testing.T) {
 	// Create a test user and get a valid JWT token for authentication
 	var (
 		user = model.User{
+			PrincipalName: "test-admin@example.com",
+			EmailAddress:  null.StringFrom("test-admin@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
+		}
+		token                  = servertest.MintJWT(t, ctx, db, harness.Auther, user)
+		lackingPermissionsUser = model.User{
 			PrincipalName: "test-user@example.com",
 			EmailAddress:  null.StringFrom("test-user@example.com"),
 		}
-		token = servertest.MintJWT(t, ctx, db, harness.Auther, user)
+		lackingPermissionsToken = servertest.MintJWT(t, ctx, db, harness.Auther, lackingPermissionsUser)
 	)
 
 	t.Run("returns 200 OK with all seeded configs", func(t *testing.T) {
@@ -356,6 +363,21 @@ func TestGetAppConfigs(t *testing.T) {
 		var envelope api.ErrorWrapper
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
 		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 403 Unauthorized when user hasn't sufficient permissions", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+lackingPermissionsToken)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusForbidden, envelope.HTTPStatus)
 		assert.NotEmpty(t, envelope.Errors)
 	})
 
