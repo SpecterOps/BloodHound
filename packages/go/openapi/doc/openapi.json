@@ -22685,6 +22685,45 @@
           }
         }
       }
+    },
+    "/api/v2/collector-job-secrets/{collector_job_secret_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/path.collector-job-secret-id"
+        }
+      ],
+      "delete": {
+        "operationId": "DeleteCollectorJobSecret",
+        "summary": "Delete Collector Job Secret Reference",
+        "description": "Deletes a collector credential reference and detaches profiles that reference\nit. Existing job snapshots are preserved.\n",
+        "tags": [
+          "Collector Jobs",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -22975,6 +23014,17 @@
       "path.alert-webhook-id": {
         "name": "alert_webhook_id",
         "description": "ID of an alert webhook.",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "description": "uuidv4"
+        }
+      },
+      "path.collector-job-secret-id": {
+        "name": "collector_job_secret_id",
+        "description": "ID of a collector job secret reference.",
         "in": "path",
         "required": true,
         "schema": {
