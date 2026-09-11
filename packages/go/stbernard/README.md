@@ -1,0 +1,110 @@
+# St Bernard
+
+## A BloodHound Swiss Army Knife
+
+St Bernard is a multi-purpose tool for working with BloodHound repositories. It handles running builds, tests, code analysis,
+dependency syncing, and much more!
+
+```
+$ go tool stbernard -h
+
+A BloodHound Swiss Army Knife
+
+Usage:  stbernard [OPTIONS] COMMAND
+
+Options:
+  -v          Verbose output
+  -vv         Debug output
+
+Commands:
+  envdump     Dump your environment variables
+  deps        Ensure workspace dependencies are up to date
+  modsync     Sync all modules in current workspace
+  generate    Run code generation in current workspace
+  show        Show current project info
+  analysis    Run static analyzers
+  test        Run tests for entire workspace
+  build       Build commands in current workspace
+  cover       Collect coverage reports
+  license     Check all supported files for expected license header and add one if missing
+  dora        DORA metrics collection and reporting
+```
+
+### Usage
+
+St Bernard can be run most easily with `go tool`:
+
+```
+$ go tool stbernard
+```
+
+You can find current usage help and available commands by passing the `-h` or `-help` flag. If you'd like to know what additional options are supported by a specific subcommand, you can run the subcommand with `-h` or `-help` to get subcommand specific options:
+
+```
+$ go tool stbernard test -h
+```
+
+The options available to stbernard should be used _before_ the subcommand. Subcommand options always come after the subcommand:
+
+```
+$ go tool stbernard -vv test -g
+```
+
+### DORA Metrics
+
+St Bernard includes automated DORA (DevOps Research and Assessment) metrics collection and reporting.
+
+#### Automated Quarterly Reports
+
+The repository includes a GitHub Actions workflow that automatically generates quarterly DORA metrics reports:
+
+- **Schedule**: Runs on the 5th of February, May, August, and November
+- **Reports**: Most recent complete fiscal quarter (Feb/May/Aug/Nov start)
+- **Artifacts**: Text and JSON reports retained for 90 days
+- **Summary**: Metrics displayed in GitHub Actions summary view
+
+**Manual Trigger:**
+1. Navigate to **Actions** → **DORA Metrics** in GitHub
+2. Click **Run workflow**
+3. Optionally specify custom date range
+
+**View Results:**
+- Check the workflow run summary for formatted report
+- Download artifacts for detailed analysis
+
+#### Local Usage
+
+```bash
+# Collect data for a time period
+stbernard dora collect -start 2026-02-01 -end 2026-04-30
+
+# Generate report
+stbernard dora report -start 2026-02-01 -end 2026-04-30
+
+# Generate quarterly trends across multiple years
+stbernard dora trends -years 2024,2025,2026 -period quarters
+
+# View all available options
+stbernard dora -help
+```
+
+**Authentication:**
+Use GitHub CLI (`gh auth login`) or set `GITHUB_TOKEN` environment variable.
+
+For detailed documentation, see `docs/dora-metrics/` and `packages/go/stbernard/dora/README.md`.
+
+### Configuration
+
+St Bernard does not use a bespoke configuration file. A generic `yarn-workspaces.json` file is used to convey important yarn directories as they cannot be easily inferred the way other paths are.
+
+The following environment variables are supported:
+
+-   `SB_LOG_LEVEL`: takes a level name from among `debug`, `info`, `warn`, `error`, and `fatal`
+-   `SB_COVERAGE_PATH`: allows setting a path other than `./tmp/coverage` to store Go coverage files in
+-   Pass-through of any tool specific environment variables, such as for changing the Go path for caching purposes. Some pass-through variables have sane defaults defined, but will be overridden if you set the environment variables yourself.
+
+### Contributing
+
+St Bernard is a tool for BloodHound devs. If you think of something you want to see added, feel free to create a pull request. New subcommands can be added fairly easily by observing an existing subcommand and changing out the details as needed, then registering the new subcommand in `command/command.go`. Additional packages are used to group useful tools that multiple subcommands could make use of or for better code structuring.
+
+A lot of work went into making this tool as approachable as possible, but we will always strive to make it better.

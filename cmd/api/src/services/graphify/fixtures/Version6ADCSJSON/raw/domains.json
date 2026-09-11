@@ -1,0 +1,152 @@
+{
+  "data": [
+    {
+      "GPOChanges": {
+        "LocalAdmins": [],
+        "RemoteDesktopUsers": [],
+        "DcomUsers": [],
+        "PSRemoteUsers": [],
+        "AffectedComputers": []
+      },
+      "Properties": { "collected": true },
+      "ChildObjects": [],
+      "Trusts": [],
+      "Links": [],
+      "Aces": [],
+      "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": null
+    },
+    {
+      "GPOChanges": {
+        "LocalAdmins": [],
+        "RemoteDesktopUsers": [],
+        "DcomUsers": [],
+        "PSRemoteUsers": [],
+        "AffectedComputers": [
+          {
+            "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1000",
+            "ObjectType": "Computer"
+          },
+          {
+            "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266-1103",
+            "ObjectType": "Computer"
+          }
+        ]
+      },
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "ESC1.LOCAL",
+        "distinguishedname": "DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "highvalue": true,
+        "description": null,
+        "whencreated": 1664419044,
+        "functionallevel": "2016"
+      },
+      "ChildObjects": [],
+      "Trusts": [],
+      "Links": [
+        { "IsEnforced": false, "GUID": "C8C7B7E0-C0F7-4FAC-8CCB-4B7C1CD03996" }
+      ],
+      "Aces": [
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "AllExtendedRights",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "AllExtendedRights",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-9",
+          "PrincipalType": "Group",
+          "RightName": "GetChanges",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-9",
+          "PrincipalType": "Group",
+          "RightName": "GetChangesInFilteredSet",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GetChangesAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GetChanges",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GetChangesInFilteredSet",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-498",
+          "PrincipalType": "Group",
+          "RightName": "GetChanges",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-516",
+          "PrincipalType": "Group",
+          "RightName": "GetChangesAll",
+          "IsInherited": false
+        }
+      ],
+      "ObjectIdentifier": "S-1-5-21-909015691-3030120388-2582151266",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": null
+    }
+  ],
+  "meta": { "methods": 521215, "type": "domains", "count": 2, "version": 6 }
+}

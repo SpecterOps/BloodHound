@@ -1,0 +1,90 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package bhapi
+
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+
+	"log"
+	"log/slog"
+	"net/http"
+
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+)
+
+// Daemon holds data relevant to the API daemon
+type Daemon struct {
+	cfg    config.Configuration
+	server *http.Server
+}
+
+// NewDaemon creates a new API daemon
+func NewDaemon(cfg config.Configuration, handler http.Handler) Daemon {
+	return Daemon{
+		cfg: cfg,
+		server: &http.Server{
+			Addr:     cfg.BindAddress,
+			Handler:  handler,
+			ErrorLog: log.Default(),
+			TLSConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CipherSuites: []uint16{
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_AES_128_GCM_SHA256,
+					tls.TLS_AES_256_GCM_SHA384,
+					tls.TLS_CHACHA20_POLY1305_SHA256,
+				},
+			},
+		},
+	}
+}
+
+// Name returns the name of the daemon
+func (s Daemon) Name() string {
+	return "API Daemon"
+}
+
+// Start begins the daemon and waits for a stop signal in the exit channel
+func (s Daemon) Start(ctx context.Context) {
+	if s.cfg.TLS.Enabled() {
+		if err := s.server.ListenAndServeTLS(s.cfg.TLS.CertFile, s.cfg.TLS.KeyFile); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
+			}
+		}
+	} else {
+		if err := s.server.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				slog.ErrorContext(ctx, "HTTP server listen error", attr.Error(err))
+			}
+		}
+	}
+}
+
+// Stop passes in a stop signal to the exit channel, thereby killing the daemon
+func (s Daemon) Stop(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
+}

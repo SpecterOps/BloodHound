@@ -1,0 +1,182 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
+import { Typography } from 'doodle-ui';
+import { useCombobox } from 'downshift';
+import { useRef } from 'react';
+import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
+import { SearchValue } from '../../views/Explore/ExploreSearch/types';
+import NodeIcon from '../NodeIcon';
+import SearchResultItem from '../SearchResultItem';
+
+const ExploreSearchCombobox: React.FC<{
+    labelText: string;
+    // Overrides the accessible name when several inputs share one visible label and assistive tech
+    // needs to tell them apart. Must contain labelText so the spoken name still matches what is on
+    // screen (WCAG 2.5.3 Label in Name). Defaults to labelText.
+    ariaLabel?: string;
+    // Attaches to the input's root element, which excludes the results dropdown rendered alongside
+    // it. Lets a caller reference the field box on its own — e.g. as an HTML5 drag image.
+    inputContainerRef?: React.Ref<HTMLDivElement>;
+    inputValue: string;
+    autoFocus?: boolean;
+    selectedItem: SearchValue | null;
+    handleNodeEdited: (edit: string) => any;
+    handleNodeSelected: (selection: SearchValue) => any;
+    disabled?: boolean;
+    variant?: TextFieldVariants;
+    errorMessage?: string;
+}> = ({
+    labelText,
+    ariaLabel,
+    inputContainerRef,
+    inputValue,
+    selectedItem,
+    handleNodeEdited,
+    handleNodeSelected,
+    autoFocus,
+    disabled = false,
+    variant = 'outlined',
+    errorMessage,
+}) => {
+    const theme = useTheme();
+    const searchNodesRef = useRef<HTMLInputElement>();
+
+    const { keyword, type } = useKeywordAndTypeValues(inputValue);
+    const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
+
+    const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
+        items: data || [],
+        inputValue,
+        selectedItem,
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) {
+                handleNodeSelected(selectedItem);
+            }
+        },
+        itemToString: (item) => item?.name || item?.objectid || '',
+    });
+
+    const disabledText: string = getEmptyResultsText(
+        isLoading,
+        isFetching,
+        isError,
+        error,
+        inputValue,
+        type,
+        keyword,
+        data
+    );
+
+    const downshiftInputProps = {
+        ...getInputProps({
+            onFocus: openMenu,
+            refKey: 'inputRef',
+            onChange: (e) => {
+                handleNodeEdited(e.currentTarget.value);
+            },
+        }),
+    };
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <TextField
+                ref={inputContainerRef}
+                placeholder={labelText}
+                variant={variant}
+                size='small'
+                fullWidth
+                disabled={disabled}
+                inputProps={{
+                    'aria-label': ariaLabel ?? labelText,
+                }}
+                InputProps={{
+                    style: {
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
+                    },
+                    autoFocus,
+                    startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
+                }}
+                {...downshiftInputProps}
+                inputRef={(node) => {
+                    downshiftInputProps.inputRef(node);
+                    searchNodesRef.current = node;
+                }}
+                data-testid='explore_search_input-search'
+            />
+            {errorMessage && (
+                <Typography variant='caption' className='text-error'>
+                    {errorMessage}
+                </Typography>
+            )}
+            <div
+                style={{
+                    position: 'absolute',
+                    marginTop: '1rem',
+                    zIndex: 1300,
+                }}>
+                <Paper style={{ display: isOpen ? 'inherit' : 'none' }} className='rounded-lg'>
+                    <List
+                        {...getMenuProps()}
+                        dense
+                        style={{
+                            width: '100%',
+                        }}
+                        role='listbox'
+                        data-testid='explore_search_result-list'>
+                        {disabledText ? (
+                            <ListItem
+                                dense
+                                className='text-[#616161] dark:text-[#868686]' // To do: Tokenize when available
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: disabledText,
+                                    item: {
+                                        objectid: '',
+                                    },
+                                    style: { opacity: 0.6 },
+                                })}>
+                                <ListItemText primary={disabledText} />
+                            </ListItem>
+                        ) : (
+                            data?.map((item: SearchResult, index: any) => {
+                                return (
+                                    <SearchResultItem
+                                        item={{
+                                            label: item.name,
+                                            objectId: item.objectid,
+                                            kind: item.type,
+                                        }}
+                                        index={index}
+                                        key={index}
+                                        highlightedIndex={highlightedIndex}
+                                        keyword={keyword}
+                                        getItemProps={getItemProps}
+                                    />
+                                );
+                            })
+                        )}
+                    </List>
+                </Paper>
+            </div>
+        </div>
+    );
+};
+
+export default ExploreSearchCombobox;

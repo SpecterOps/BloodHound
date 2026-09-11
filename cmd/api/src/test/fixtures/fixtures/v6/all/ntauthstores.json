@@ -1,0 +1,73 @@
+{
+  "data": [
+    {
+      "Properties": {
+        "domain": "ESC1.LOCAL",
+        "name": "NTAUTHCERTIFICATES@ESC1.LOCAL",
+        "distinguishedname": "CN=NTAUTHCERTIFICATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=ESC1,DC=LOCAL",
+        "domainsid": "S-1-5-21-909015691-3030120388-2582151266",
+        "certthumbprints": ["5F0143662A7EA16E8DB90E44D0F1F1FC87B1E703"],
+        "description": null,
+        "whencreated": 1664426237
+      },
+      "DomainSID": "S-1-5-21-909015691-3030120388-2582151266",
+      "Aces": [
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "ESC1.LOCAL-S-1-5-32-544",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-519",
+          "PrincipalType": "Group",
+          "RightName": "GenericAll",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteDacl",
+          "IsInherited": true
+        },
+        {
+          "PrincipalSID": "S-1-5-21-909015691-3030120388-2582151266-512",
+          "PrincipalType": "Group",
+          "RightName": "WriteOwner",
+          "IsInherited": true
+        }
+      ],
+      "ObjectIdentifier": "722A8BB3-AEF5-49C7-9C8C-C1C97A219007",
+      "IsDeleted": false,
+      "IsACLProtected": false,
+      "ContainedBy": {
+        "ObjectIdentifier": "A18A3A99-3E4C-46DD-9C90-E5542FA4EC84",
+        "ObjectType": "Container"
+      }
+    }
+  ],
+  "meta": {
+    "methods": 521215,
+    "type": "ntauthstores",
+    "count": 1,
+    "version": 6
+  }
+}

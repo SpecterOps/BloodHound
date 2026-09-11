@@ -1,0 +1,2011 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package v2_test
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"reflect"
+	"testing"
+	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+)
+
+func TestGetADDataQualityStats_Failure(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	domainSID := "S-1-5-21-3130019616-2776909439-2417379446"
+	endpoint := "/api/v2/ad-domains/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		DomainSid string
+		Params    url.Values
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected api.ErrorWrapper
+	}{
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"sort_by": []string{"invalidColumn"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsNotSortable}},
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"start": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"end": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"limit": []string{"invalidLimit"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, []string{"invalidLimit"})}},
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"skip": []string{"invalidSkip"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, []string{"invalidSkip"})}},
+			},
+		},
+		{
+			Input{
+				"dbError",
+				url.Values{},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.DomainSid, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/ad-domains/{domain_id}/data-quality-stats", resources.GetADDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.HTTPStatus {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.HTTPStatus)
+			}
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, len(tc.Expected.Errors), 1)
+			if !reflect.DeepEqual(body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"], tc.Expected.Errors[0].Message) {
+				t.Errorf("For input: %v, got %v, want %v", tc.Input, body, tc.Expected.Errors[0].Message)
+			}
+		}
+	}
+}
+
+func TestGetADDataQualityStats_Success(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	domainSID := "S-1-5-21-3130019616-2776909439-2417379446"
+	endpoint := "/api/v2/ad-domains/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetADDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityStats{}, 0, nil).AnyTimes()
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		DomainSid string
+		Params    url.Values
+	}
+
+	type Expected struct {
+		Code int
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected Expected
+	}{
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"sort_by": []string{"-updated_at"},
+					"limit":   []string{"1"},
+					"start":   []string{"2022-03-23T07:20:50.52Z"},
+					"end":     []string{"2022-04-23T07:20:50.52Z"},
+					"skip":    []string{"0"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"sort_by": []string{"updated_at"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"start": []string{"2022-03-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"end": []string{"2022-04-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"limit": []string{"2"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				domainSID,
+				url.Values{
+					"skip": []string{"1"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.DomainSid, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/ad-domains/{domain_id}/data-quality-stats", resources.GetADDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.Code {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
+			}
+		}
+	}
+}
+
+func TestGetAzureDataQualityStats_Failure(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	tenantID := "7ac5533e-9881-4e0f-b51c-000000000000"
+	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		TenantID string
+		Params   url.Values
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected api.ErrorWrapper
+	}{
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"sort_by": []string{"invalidColumn"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsNotSortable}},
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"start": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"end": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"limit": []string{"invalidLimit"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, []string{"invalidLimit"})}},
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"skip": []string{"invalidSkip"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, []string{"invalidSkip"})}},
+			},
+		},
+		{
+			Input{
+				"dbError",
+				url.Values{},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.TenantID, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/azure-tenants/{tenant_id}/data-quality-stats", resources.GetAzureDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.HTTPStatus {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.HTTPStatus)
+			}
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, len(tc.Expected.Errors), 1)
+			if !reflect.DeepEqual(body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"], tc.Expected.Errors[0].Message) {
+				t.Errorf("For input: %v, got %v, want %v", tc.Input, body, tc.Expected.Errors[0].Message)
+			}
+		}
+	}
+}
+
+func TestGetAzureDataQualityStats_Success(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	tenantID := "S-1-5-21-3130019616-2776909439-2417379446"
+	endpoint := "/api/v2/azure-tenants/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetAzureDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityStats{}, 0, nil).AnyTimes()
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		TenantID string
+		Params   url.Values
+	}
+
+	type Expected struct {
+		Code int
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected Expected
+	}{
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"sort_by": []string{"-updated_at"},
+					"limit":   []string{"1"},
+					"start":   []string{"2022-03-23T07:20:50.52Z"},
+					"end":     []string{"2022-04-23T07:20:50.52Z"},
+					"skip":    []string{"0"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"sort_by": []string{"updated_at"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"start": []string{"2022-03-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"end": []string{"2022-04-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"limit": []string{"2"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				tenantID,
+				url.Values{
+					"skip": []string{"1"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.TenantID, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/azure-tenants/{tenant_id}/data-quality-stats", resources.GetAzureDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.Code {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
+			}
+		}
+	}
+}
+
+func TestGetDataQualityStats_Failure(t *testing.T) {
+	environmentID := "environment-1"
+	endpoint := "/api/v2/data-quality-stats%s"
+	user := setupUser()
+	userCtx := setupUserCtx(user)
+	etacError := errors.New("etac error")
+
+	type Input struct {
+		Params  url.Values
+		Context context.Context
+	}
+
+	type mockResources struct {
+		Database *mocks.MockDatabase
+	}
+
+	defaultResources := func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+		return v2.Resources{
+			DB:      mock.Database,
+			DogTags: dogtags.NewTestService(dogtags.TestOverrides{}),
+		}
+	}
+
+	var cases = []struct {
+		Name     string
+		Input    Input
+		Setup    func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected api.ErrorWrapper
+	}{
+		{
+			Name: "NoEnvironmentID",
+			Input: Input{
+				Params:  url.Values{},
+				Context: userCtx,
+			},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: v2.ErrNoEnvironmentId}},
+			},
+		},
+		{
+			Name: "UnknownUser",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				Context: context.Background(),
+			},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: v2.ErrUnknownUser}},
+			},
+		},
+		{
+			Name: "CheckUserETACAccessError",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return(nil, etacError)
+
+				return v2.Resources{
+					DB: mock.Database,
+					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
+						Bools: map[dogtags.BoolDogTag]bool{
+							dogtags.ETAC_ENABLED: true,
+						},
+					}),
+				}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: etacError.Error()}},
+			},
+		},
+		{
+			Name: "NoEnvironmentAccess",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return([]model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "other-environment"},
+				}, nil)
+
+				return v2.Resources{
+					DB: mock.Database,
+					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
+						Bools: map[dogtags.BoolDogTag]bool{
+							dogtags.ETAC_ENABLED: true,
+						},
+					}),
+				}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusForbidden,
+				Errors:     []api.ErrorDetails{{Message: v2.ErrNoAccess}},
+			},
+		},
+		{
+			Name: "EnvironmentIDNotFound",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, database.ErrNotFound)
+
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusNotFound,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsResourceNotFound}},
+			},
+		},
+		{
+			Name: "NonSortableColumn",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"metric_name"},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsNotSortable}},
+			},
+		},
+		{
+			Name: "EmptySortByParameter",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{""},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseEmptySortParameter}},
+			},
+		},
+		{
+			Name: "InvalidStartTime",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"start":                         []string{"invalidRFC3339"},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Name: "InvalidEndTime",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"end":                           []string{"invalidRFC3339"},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Name: "InvalidLimit",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"limit":                         []string{"invalidLimit"},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, []string{"invalidLimit"})}},
+			},
+		},
+		{
+			Name: "InvalidSkip",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"skip":                          []string{"invalidSkip"},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, []string{"invalidSkip"})}},
+			},
+		},
+		{
+			Name: "DatabaseError",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				Context: userCtx,
+			},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, fmt.Errorf("db error"))
+
+				return defaultResources(mockCtrl, mock)
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mock := mockResources{
+				Database: mocks.NewMockDatabase(mockCtrl),
+			}
+			resources := tc.Setup(mockCtrl, mock)
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+			req = req.WithContext(tc.Input.Context)
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats", resources.GetDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.HTTPStatus {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.HTTPStatus)
+			}
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, len(tc.Expected.Errors), 1)
+			if !reflect.DeepEqual(body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"], tc.Expected.Errors[0].Message) {
+				t.Errorf("For input: %v, got %v, want %v", tc.Input, body, tc.Expected.Errors[0].Message)
+			}
+		})
+	}
+
+}
+
+func TestGetDataQualityStats_Success(t *testing.T) {
+	environmentID := "environment-1"
+	endpoint := "/api/v2/data-quality-stats%s"
+	etacEnabled := dogtags.TestOverrides{
+		Bools: map[dogtags.BoolDogTag]bool{
+			dogtags.ETAC_ENABLED: true,
+		},
+	}
+
+	type Input struct {
+		Params           url.Values
+		User             model.User
+		DogTagsOverrides dogtags.TestOverrides
+	}
+
+	type Expected struct {
+		Code int
+	}
+
+	var cases = []struct {
+		Name     string
+		Input    Input
+		Setup    func(mockDB *mocks.MockDatabase, user model.User)
+		Expected Expected
+	}{
+		{
+			Name: "AllQueryParams",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"-updated_at"},
+					"limit":                         []string{"1"},
+					"start":                         []string{"2022-03-23T07:20:50.52Z"},
+					"end":                           []string{"2022-04-23T07:20:50.52Z"},
+					"skip":                          []string{"0"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "SortByUpdatedAtAscending",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"updated_at"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "SortByCreatedAtAscending",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"created_at"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "SortByCreatedAtDescending",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"sort_by":                       []string{"-created_at"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "StartTime",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"start":                         []string{"2022-03-23T07:20:50.52Z"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "EndTime",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"end":                           []string{"2022-04-23T07:20:50.52Z"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "Limit",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"limit":                         []string{"2"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "Skip",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+					"skip":                          []string{"1"},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "DefaultOptionalParams",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "ETACDisabledSkipsAccessCheck",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "ETACEnabledWithAllEnvironmentsSkipsAccessCheck",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				User: func() model.User {
+					user := setupUser()
+					user.AllEnvironments = true
+					return user
+				}(),
+				DogTagsOverrides: etacEnabled,
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Name: "ETACEnabledWithEnvironmentAccessChecksAccessThenFetchesStats",
+			Input: Input{
+				Params: url.Values{
+					api.QueryParameterEnvironmentId: []string{environmentID},
+				},
+				DogTagsOverrides: etacEnabled,
+			},
+			Setup: func(mockDB *mocks.MockDatabase, user model.User) {
+				successfulAccessCheck := mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return([]model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: environmentID},
+				}, nil).Times(1)
+				successfulStatsFetch := mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil).Times(1)
+				gomock.InOrder(successfulAccessCheck, successfulStatsFetch)
+			},
+			Expected: Expected{
+				Code: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			user := tc.Input.User
+			if user.PrincipalName == "" {
+				user = setupUser()
+			}
+
+			mockDB := mocks.NewMockDatabase(mockCtrl)
+			if tc.Setup == nil {
+				mockDB.EXPECT().GetDataQualityStats(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityStats{}, 0, nil).Times(1)
+			} else {
+				tc.Setup(mockDB, user)
+			}
+
+			resources := v2.Resources{
+				DB:      mockDB,
+				DogTags: dogtags.NewTestService(tc.Input.DogTagsOverrides),
+			}
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+			req = req.WithContext(setupUserCtx(user))
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats", resources.GetDataQualityStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.Code {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
+			}
+		})
+	}
+
+}
+
+func TestGetPlatformAggregateStats_Failure(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/platform/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		TenantID string
+		Params   url.Values
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected api.ErrorWrapper
+	}{
+		{
+			Input{
+				"invalidPlatform",
+				url.Values{},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidPlatformId, "invalidPlatform")}},
+			},
+		},
+		// AD
+		{
+			Input{
+				"ad",
+				url.Values{
+					"sort_by": []string{"invalidColumn"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsNotSortable}},
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"start": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"end": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"limit": []string{"invalidLimit"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, []string{"invalidLimit"})}},
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"skip": []string{"invalidSkip"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, []string{"invalidSkip"})}},
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"db_error": []string{"dbError"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+		// Azure
+		{
+			Input{
+				"azure",
+				url.Values{
+					"sort_by": []string{"invalidColumn"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsNotSortable}},
+			},
+		},
+		{
+			Input{
+				"azure",
+				url.Values{
+					"start": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				"azure",
+				url.Values{
+					"end": []string{"invalidRFC3339"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Input{
+				"azure",
+				url.Values{
+					"limit": []string{"invalidLimit"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, []string{"invalidLimit"})}},
+			},
+		},
+		{
+			Input{
+				"azure",
+				url.Values{
+					"skip": []string{"invalidSkip"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, []string{"invalidSkip"})}},
+			},
+		},
+		{
+			Input{
+				"azure",
+				url.Values{
+					"db_error": []string{"dbError"},
+				},
+			},
+			api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.TenantID, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/platform/{platform_id}/data-quality-stats", resources.GetPlatformAggregateStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.HTTPStatus {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.HTTPStatus)
+			}
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, len(tc.Expected.Errors), 1)
+			if !reflect.DeepEqual(body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"], tc.Expected.Errors[0].Message) {
+				t.Errorf("For input: %v, got %v, want %v", tc.Input, body, tc.Expected.Errors[0].Message)
+			}
+		}
+	}
+}
+
+func TestGetPlatformAggregateStats_Success(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/platform/%s/data-quality-stats%s"
+
+	mockDB := mocks.NewMockDatabase(mockCtrl)
+	mockDB.EXPECT().GetADDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.ADDataQualityAggregations{}, 0, nil).AnyTimes()
+	mockDB.EXPECT().GetAzureDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AzureDataQualityAggregations{}, 0, nil).AnyTimes()
+
+	resources := v2.Resources{DB: mockDB}
+
+	type Input struct {
+		TenantID string
+		Params   url.Values
+	}
+
+	type Expected struct {
+		Code int
+	}
+
+	var cases = []struct {
+		Input    Input
+		Expected Expected
+	}{
+		// AD
+		{
+			Input{
+				"ad",
+				url.Values{
+					"sort_by": []string{"-updated_at"},
+					"limit":   []string{"1"},
+					"start":   []string{"2022-03-23T07:20:50.52Z"},
+					"end":     []string{"2022-04-23T07:20:50.52Z"},
+					"skip":    []string{"0"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"sort_by": []string{"updated_at"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"start": []string{"2022-03-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"end": []string{"2022-04-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"limit": []string{"2"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"skip": []string{"1"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		// Azure
+		{
+			Input{
+				"ad",
+				url.Values{
+					"sort_by": []string{"-updated_at"},
+					"limit":   []string{"1"},
+					"start":   []string{"2022-03-23T07:20:50.52Z"},
+					"end":     []string{"2022-04-23T07:20:50.52Z"},
+					"skip":    []string{"0"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"sort_by": []string{"updated_at"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"start": []string{"2022-03-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"end": []string{"2022-04-23T07:20:50.52Z"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"limit": []string{"2"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+		{
+			Input{
+				"ad",
+				url.Values{
+					"skip": []string{"1"},
+				},
+			},
+			Expected{
+				Code: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+		if req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, tc.Input.TenantID, params), nil); err != nil {
+			t.Fatal(err)
+		} else {
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/platform/{platform_id}/data-quality-stats", resources.GetPlatformAggregateStats).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			if status := rr.Code; status != tc.Expected.Code {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
+			}
+		}
+	}
+}
+
+func TestGetDataQualityAggregations_Failure(t *testing.T) {
+	var (
+		endpoint                         = "/api/v2/data-quality-stats-aggregations%s"
+		testSchemaEnvironmentKindIDParam = "schema_environment_kind_id"
+		testSchemaExtensionIDParam       = "schema_extension_id"
+	)
+
+	type Input struct {
+		Params url.Values
+	}
+	type mockResources struct {
+		Database *mocks.MockDatabase
+	}
+	defaultResources := func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+		return v2.Resources{DB: mock.Database}
+	}
+
+	var cases = []struct {
+		Name     string
+		Input    Input
+		Setup    func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected api.ErrorWrapper
+	}{
+		{
+			Name:  "missing required schema_environment_kind_id returns bad request",
+			Input: Input{Params: url.Values{}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, testSchemaEnvironmentKindIDParam)}},
+			},
+		},
+		{
+			Name: "non-integer schema_environment_kind_id returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"abc"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidIntegerQueryParameter, testSchemaEnvironmentKindIDParam)}},
+			},
+		},
+		{
+			Name: "invalid sort column returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"invalidColumn"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf("%s: %s", api.ErrResponseDetailsColumnNotSortable, "invalidColumn")}},
+			},
+		},
+		{
+			Name: "invalid skip returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"skip":                           []string{"-1"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidSkip, -1)}},
+			},
+		},
+		{
+			Name: "invalid limit returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"limit":                          []string{"-1"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(utils.ErrorInvalidLimit, -1)}},
+			},
+		},
+		{
+			Name: "non-integer schema_extension_id returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"abc"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(v2.FmtErrInvalidIntegerQueryParameter, testSchemaExtensionIDParam)}},
+			},
+		},
+		{
+			Name: "nonexistent schema_extension_id returns not found",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"999"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, database.ErrNotFound)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusNotFound,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsResourceNotFound}},
+			},
+		},
+		{
+			Name: "database error returns internal server error",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, 0, fmt.Errorf("db error"))
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusInternalServerError,
+				Errors:     []api.ErrorDetails{{Message: api.ErrorResponseDetailsInternalServerError}},
+			},
+		},
+		{
+			Name: "invalid start returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"invalidRFC3339"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+		{
+			Name: "invalid end returns bad request",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"end":                            []string{"invalidRFC3339"},
+			}},
+			Setup: defaultResources,
+			Expected: api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: fmt.Sprintf(api.ErrorInvalidRFC3339, []string{"invalidRFC3339"})}},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mock := mockResources{
+				Database: mocks.NewMockDatabase(mockCtrl),
+			}
+			resources := tc.Setup(mockCtrl, mock)
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equalf(t, tc.Expected.HTTPStatus, rr.Code, "wrong status code; body=%s", rr.Body.String())
+
+			var body any
+			if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+				t.Fatal("failed to unmarshal response body")
+			}
+
+			require.Equal(t, 1, len(tc.Expected.Errors))
+			require.Equal(t, tc.Expected.Errors[0].Message, body.(map[string]any)["errors"].([]any)[0].(map[string]any)["message"])
+		})
+	}
+}
+
+func TestGetDataQualityAggregations_Success(t *testing.T) {
+	var (
+		endpoint                         = "/api/v2/data-quality-stats-aggregations%s"
+		testSchemaEnvironmentKindIDParam = "schema_environment_kind_id"
+		testSchemaExtensionIDParam       = "schema_extension_id"
+	)
+
+	type Input struct {
+		Params url.Values
+	}
+	type Expected struct {
+		Code int
+	}
+	type mockResources struct {
+		Database *mocks.MockDatabase
+	}
+
+	var cases = []struct {
+		Name       string
+		Input      Input
+		Setup      func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources
+		Expected   Expected
+		AssertBody func(t *testing.T, body map[string]any)
+	}{
+		{
+			Name:  "minimal required filter",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with sort, limit, and skip",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"-created_at"},
+				"limit":                          []string{"1"},
+				"skip":                           []string{"0"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with existing schema_extension_id",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				testSchemaExtensionIDParam:       []string{"42"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetGraphSchemaExtensionById(gomock.Any(), gomock.Any()).Return(model.GraphSchemaExtension{}, nil)
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with start and end injects inclusive created_at window",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"2022-03-23T07:20:50.52Z"},
+				"end":                            []string{"2022-04-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, filters model.Filters, _ model.Sort, _ int, _ int) (model.DataQualityAggregations, int, error) {
+						createdAt := filters["created_at"]
+						require.Len(t, createdAt, 2)
+						require.Equal(t, model.GreaterThanOrEquals, createdAt[0].Operator)
+						require.Equal(t, "2022-03-23T07:20:50.52Z", createdAt[0].Value)
+						require.False(t, createdAt[0].IsStringData)
+						require.Equal(t, model.LessThanOrEquals, createdAt[1].Operator)
+						require.Equal(t, "2022-04-23T07:20:50.52Z", createdAt[1].Value)
+						require.False(t, createdAt[1].IsStringData)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with start only",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"start":                          []string{"2022-03-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "with end only",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"end":                            []string{"2022-04-23T07:20:50.52Z"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name:  "default window when start and end omitted",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.DataQualityAggregations{}, 0, nil)
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "descending sort direction is passed to the database",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"sort_by":                        []string{"-created_at"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, sort model.Sort, _ int, _ int) (model.DataQualityAggregations, int, error) {
+						require.Len(t, sort, 1)
+						require.Equal(t, "created_at", sort[0].Column)
+						require.Equal(t, model.DescendingSortDirection, sort[0].Direction)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name:  "default skip and limit are passed to the database when omitted",
+			Input: Input{Params: url.Values{testSchemaEnvironmentKindIDParam: []string{"100"}}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
+						require.Equal(t, 0, skip)
+						require.Equal(t, 1000, limit)
+						return model.DataQualityAggregations{}, 0, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+		},
+		{
+			Name: "skip and limit keep correct order in both database call and response",
+			Input: Input{Params: url.Values{
+				testSchemaEnvironmentKindIDParam: []string{"100"},
+				"skip":                           []string{"3"},
+				"limit":                          []string{"7"},
+			}},
+			Setup: func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
+				mock.Database.EXPECT().GetDataQualityAggregations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, _ model.Filters, _ model.Sort, skip int, limit int) (model.DataQualityAggregations, int, error) {
+						require.Equal(t, 3, skip)
+						require.Equal(t, 7, limit)
+						return model.DataQualityAggregations{}, 42, nil
+					})
+				return v2.Resources{DB: mock.Database}
+			},
+			Expected: Expected{Code: http.StatusOK},
+			AssertBody: func(t *testing.T, body map[string]any) {
+				require.Equal(t, float64(3), body["skip"])
+				require.Equal(t, float64(7), body["limit"])
+				require.Equal(t, float64(42), body["count"])
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mock := mockResources{
+				Database: mocks.NewMockDatabase(mockCtrl),
+			}
+			resources := tc.Setup(mockCtrl, mock)
+			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
+			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
+			require.NoError(t, err)
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).Methods("GET")
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equalf(t, tc.Expected.Code, rr.Code, "wrong status code; body=%s", rr.Body.String())
+
+			if tc.AssertBody != nil {
+				var body map[string]any
+				require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+				tc.AssertBody(t, body)
+			}
+		})
+	}
+}
+
+// TestResources_GetDatabaseCompleteness_ResponseKeys drives the read transaction delegate with a graph
+// holding a known session completeness and a known, different local group completeness, so that the two
+// values cannot be transposed in the response without failing the assertion.
+func TestResources_GetDatabaseCompleteness_ResponseKeys(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctrl          = gomock.NewController(t)
+		mockGraph     = graphmocks.NewMockDatabase(ctrl)
+		mockTx        = graphmocks.NewMockTransaction(ctrl)
+		userQuery     = graphmocks.NewMockNodeQuery(ctrl)
+		computerQuery = graphmocks.NewMockNodeQuery(ctrl)
+		relQuery      = graphmocks.NewMockRelationshipQuery(ctrl)
+		lastLogon     = time.Now()
+	)
+
+	newActiveNode := func(id graph.ID, nodeKind graph.Kind) *graph.Node {
+		return graph.NewNode(id, graph.AsProperties(graph.PropertyMap{
+			common.Enabled:         true,
+			common.OperatingSystem: "Windows Server 2022",
+			ad.LastLogonTimestamp:  lastLogon,
+		}), nodeKind)
+	}
+
+	nodeCursor := func(nodes ...*graph.Node) graph.Cursor[*graph.Node] {
+		cursor := graphmocks.NewMockCursor[*graph.Node](ctrl)
+		channel := make(chan *graph.Node, len(nodes))
+
+		for _, node := range nodes {
+			channel <- node
+		}
+		close(channel)
+
+		cursor.EXPECT().Chan().Return(channel).AnyTimes()
+		cursor.EXPECT().Error().Return(nil).AnyTimes()
+
+		return cursor
+	}
+
+	relationshipCursor := func(relationships ...*graph.Relationship) graph.Cursor[*graph.Relationship] {
+		cursor := graphmocks.NewMockCursor[*graph.Relationship](ctrl)
+		channel := make(chan *graph.Relationship, len(relationships))
+
+		for _, relationship := range relationships {
+			channel <- relationship
+		}
+		close(channel)
+
+		cursor.EXPECT().Chan().Return(channel).AnyTimes()
+		cursor.EXPECT().Error().Return(nil).AnyTimes()
+
+		return cursor
+	}
+
+	// Four active users, one of which has a session: session completeness is 0.25.
+	userQuery.EXPECT().Filterf(gomock.Any()).Return(userQuery)
+	userQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+		return delegate(nodeCursor(
+			newActiveNode(graph.ID(1), ad.User),
+			newActiveNode(graph.ID(2), ad.User),
+			newActiveNode(graph.ID(3), ad.User),
+			newActiveNode(graph.ID(4), ad.User),
+		))
+	})
+
+	// Two active computers, one of which has an admin: local group completeness is 0.5.
+	computerQuery.EXPECT().Filterf(gomock.Any()).Return(computerQuery)
+	computerQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+		return delegate(nodeCursor(
+			newActiveNode(graph.ID(5), ad.Computer),
+			newActiveNode(graph.ID(6), ad.Computer),
+		))
+	})
+
+	gomock.InOrder(
+		mockTx.EXPECT().Nodes().Return(userQuery),
+		mockTx.EXPECT().Nodes().Return(computerQuery),
+	)
+
+	relQuery.EXPECT().Filterf(gomock.Any()).Return(relQuery).Times(2)
+	gomock.InOrder(
+		relQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Relationship]) error) error {
+			return delegate(relationshipCursor(&graph.Relationship{StartID: graph.ID(5), EndID: graph.ID(1), Kind: ad.HasSession}))
+		}),
+		relQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Relationship]) error) error {
+			return delegate(relationshipCursor(&graph.Relationship{StartID: graph.ID(1), EndID: graph.ID(5), Kind: ad.AdminTo}))
+		}),
+	)
+	mockTx.EXPECT().Relationships().Return(relQuery).Times(2)
+
+	mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate func(tx graph.Transaction) error, _ ...graph.TransactionOption) error {
+		return delegate(mockTx)
+	})
+
+	var (
+		resources = v2.Resources{Graph: mockGraph}
+		request   = &http.Request{URL: &url.URL{Path: "/api/v2/completeness"}, Method: http.MethodGet}
+		response  = httptest.NewRecorder()
+		router    = mux.NewRouter()
+	)
+
+	router.HandleFunc("/api/v2/completeness", resources.GetDatabaseCompleteness).Methods(request.Method)
+	router.ServeHTTP(response, request)
+
+	status, _, body := test.ProcessResponse(t, response)
+
+	assert.Equal(t, http.StatusOK, status)
+	assert.JSONEq(t, `{"data":{"SessionCompleteness":0.25,"LocalGroupCompleteness":0.5}}`, body)
+}
+
+func TestResources_GetDatabaseCompleteness(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockGraph *graphmocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/completeness",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"Error getting quality stat: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "Success - OK",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/completeness",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockGraph: graphmocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := v2.Resources{
+				Graph: mocks.mockGraph,
+			}
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/completeness", resources.GetDatabaseCompleteness).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}

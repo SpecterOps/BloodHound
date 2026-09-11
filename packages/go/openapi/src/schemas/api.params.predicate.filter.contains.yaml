@@ -1,0 +1,24 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+type: string
+pattern: "^(in|nin):(\\w+)(,\\s*\\w+)*$"
+description: |
+  The contains predicate checks a property against the values in a given comma separated list.
+  - `in` checks if the property matches an element in the given comma separated list.
+    - `in:Contains,GetChangesAll,MemberOf`
+  - `nin` checks if the property does not match an element in the given comma separated list.
+    - `nin:LocalToComputer,MemberOfLocalGroup`

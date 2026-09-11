@@ -1,0 +1,232 @@
+{
+    "style": {
+        "font-family": "sans-serif",
+        "background-color": "#ffffff",
+        "background-image": "",
+        "background-size": "100%",
+        "node-color": "#ffffff",
+        "border-width": 4,
+        "border-color": "#000000",
+        "radius": 50,
+        "node-padding": 5,
+        "node-margin": 2,
+        "outside-position": "auto",
+        "node-icon-image": "",
+        "node-background-image": "",
+        "icon-position": "inside",
+        "icon-size": 64,
+        "caption-position": "inside",
+        "caption-max-width": 200,
+        "caption-color": "#000000",
+        "caption-font-size": 50,
+        "caption-font-weight": "normal",
+        "label-position": "inside",
+        "label-display": "pill",
+        "label-color": "#000000",
+        "label-background-color": "#ffffff",
+        "label-border-color": "#000000",
+        "label-border-width": 4,
+        "label-font-size": 40,
+        "label-padding": 5,
+        "label-margin": 4,
+        "directionality": "directed",
+        "detail-position": "inline",
+        "detail-orientation": "parallel",
+        "arrow-width": 5,
+        "arrow-color": "#000000",
+        "margin-start": 5,
+        "margin-end": 5,
+        "margin-peer": 20,
+        "attachment-start": "normal",
+        "attachment-end": "normal",
+        "relationship-icon-image": "",
+        "type-color": "#000000",
+        "type-background-color": "#ffffff",
+        "type-border-color": "#000000",
+        "type-border-width": 0,
+        "type-font-size": 16,
+        "type-padding": 5,
+        "property-position": "outside",
+        "property-alignment": "colon",
+        "property-color": "#000000",
+        "property-font-size": 16,
+        "property-font-weight": "normal"
+    },
+    "nodes": [
+        {
+            "id": "n0",
+            "position": {
+                "x": -344,
+                "y": -102
+            },
+            "caption": "Domain",
+            "labels": [],
+            "properties": {},
+            "style": {}
+        },
+        {
+            "id": "n1",
+            "position": {
+                "x": -74.5,
+                "y": -212
+            },
+            "caption": "OU A",
+            "style": {
+                "border-color": "#a4dd00"
+            },
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n2",
+            "position": {
+                "x": -74.5,
+                "y": -18
+            },
+            "caption": "OU B",
+            "style": {
+                "border-color": "#68ccca"
+            },
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n3",
+            "position": {
+                "x": 159.89878614780434,
+                "y": -307.6729739378793
+            },
+            "caption": "User A",
+            "style": {
+                "border-color": "#a4dd00"
+            },
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n4",
+            "position": {
+                "x": 159.89878614780434,
+                "y": -151
+            },
+            "caption": "OU C",
+            "style": {},
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n5",
+            "position": {
+                "x": 374.5,
+                "y": -151
+            },
+            "caption": "User B",
+            "style": {
+                "border-color": "#a4dd00"
+            },
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n6",
+            "position": {
+                "x": 159.89878614780434,
+                "y": -18
+            },
+            "caption": "OU D",
+            "style": {},
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n7",
+            "position": {
+                "x": 374.5,
+                "y": -18
+            },
+            "caption": "OU E",
+            "style": {},
+            "labels": [],
+            "properties": {}
+        },
+        {
+            "id": "n8",
+            "position": {
+                "x": 589.1012138521957,
+                "y": -18
+            },
+            "caption": "User C",
+            "style": {
+                "border-color": "#68ccca"
+            },
+            "labels": [],
+            "properties": {}
+        }
+    ],
+    "relationships": [
+        {
+            "id": "n0",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n1"
+        },
+        {
+            "id": "n1",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n0",
+            "toId": "n2"
+        },
+        {
+            "id": "n2",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n1",
+            "toId": "n3"
+        },
+        {
+            "id": "n3",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n1",
+            "toId": "n4"
+        },
+        {
+            "id": "n4",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n4",
+            "toId": "n5"
+        },
+        {
+            "id": "n5",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n2",
+            "toId": "n6"
+        },
+        {
+            "id": "n6",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n6",
+            "toId": "n7"
+        },
+        {
+            "id": "n7",
+            "type": "Contains",
+            "style": {},
+            "properties": {},
+            "fromId": "n7",
+            "toId": "n8"
+        }
+    ]
+}

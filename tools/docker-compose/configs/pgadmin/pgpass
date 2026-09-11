@@ -1,0 +1,2 @@
+#hostname:port:database:username:password
+app-db:5432:bloodhound:bloodhound:bloodhoundcommunityedition

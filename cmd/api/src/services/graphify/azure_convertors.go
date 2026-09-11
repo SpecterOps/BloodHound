@@ -1,0 +1,1018 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package graphify
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log/slog"
+	"strings"
+	"time"
+
+	"github.com/bloodhoundad/azurehound/v2/enums"
+	"github.com/bloodhoundad/azurehound/v2/models"
+	azureModels "github.com/bloodhoundad/azurehound/v2/models/azure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+)
+
+const (
+	SerialError                   = "Error deserializing Azure data"
+	ExtractError                  = "Failed to extract directory object type from Azure directory object"
+	PrincipalTypeServicePrincipal = "ServicePrincipal"
+	PrincipalTypeUser             = "User"
+)
+
+func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
+	switch kind {
+	case enums.KindAZApp:
+		return convertAzureApp
+	case enums.KindAZFederatedIdentityCredential:
+		return convertAzureAppFIC
+	case enums.KindAZAppOwner:
+		return convertAzureAppOwner
+	case enums.KindAZAppRoleAssignment:
+		return convertAzureAppRoleAssignment
+	case enums.KindAZDevice:
+		return convertAzureDevice
+	case enums.KindAZFunctionApp:
+		return convertAzureFunctionApp
+	case enums.KindAZFunctionAppRoleAssignment:
+		return convertAzureFunctionAppRoleAssignment
+	case enums.KindAZGroup:
+		return convertAzureGroup
+	case enums.KindAZGroupMember:
+		return convertAzureGroupMember
+	case enums.KindAZGroupOwner:
+		return convertAzureGroupOwner
+	case enums.KindAZKeyVault:
+		return convertAzureKeyVault
+	case enums.KindAZKeyVaultAccessPolicy:
+		return convertAzureKeyVaultAccessPolicy
+	case enums.KindAZKeyVaultOwner:
+		return convertAzureKeyVaultOwner
+	case enums.KindAZKeyVaultUserAccessAdmin:
+		return convertAzureKeyVaultUserAccessAdmin
+	case enums.KindAZKeyVaultContributor:
+		return convertAzureKeyVaultContributor
+	case enums.KindAZKeyVaultKVContributor:
+		return convertAzureKeyVaultKVContributor
+	case enums.KindAZManagementGroup:
+		return convertAzureManagementGroup
+	case enums.KindAZManagementGroupOwner:
+		return convertAzureManagementGroupOwner
+	case enums.KindAZManagementGroupContributor:
+		return convertAzureManagementGroupContributor
+	case enums.KindAZManagementGroupUserAccessAdmin:
+		return convertAzureManagementGroupUserAccessAdmin
+	case enums.KindAZManagementGroupDescendant:
+		return convertAzureManagementGroupDescendant
+	case enums.KindAZResourceGroup:
+		return convertAzureResourceGroup
+	case enums.KindAZResourceGroupOwner:
+		return convertAzureResourceGroupOwner
+	case enums.KindAZResourceGroupContributor:
+		return convertAzureResourceGroupContributor
+	case enums.KindAZResourceGroupUserAccessAdmin:
+		return convertAzureResourceGroupUserAccessAdmin
+	case enums.KindAZRole:
+		return convertAzureRole
+	case enums.KindAZRoleAssignment:
+		return convertAzureRoleAssignment
+	case enums.KindAZServicePrincipal:
+		return convertAzureServicePrincipal
+	case enums.KindAZServicePrincipalOwner:
+		return convertAzureServicePrincipalOwner
+	case enums.KindAZSubscription:
+		return convertAzureSubscription
+	case enums.KindAZSubscriptionOwner:
+		return convertAzureSubscriptionOwner
+	case enums.KindAZSubscriptionContributor:
+		return convertAzureSubscriptionContributor
+	case enums.KindAZSubscriptionUserAccessAdmin:
+		return convertAzureSubscriptionUserAccessAdmin
+	case enums.KindAZTenant:
+		return convertAzureTenant
+	case enums.KindAZUser:
+		return convertAzureUser
+	case enums.KindAZVM:
+		return convertAzureVirtualMachine
+	case enums.KindAZVMAdminLogin:
+		return convertAzureVirtualMachineAdminLogin
+	case enums.KindAZVMAvereContributor:
+		return convertAzureVirtualMachineAvereContributor
+	case enums.KindAZVMContributor:
+		return convertAzureVirtualMachineContributor
+	case enums.KindAZVMOwner:
+		return convertAzureVirtualMachineOwner
+	case enums.KindAZVMUserAccessAdmin:
+		return convertAzureVirtualMachineUserAccessAdmin
+	case enums.KindAZVMVMContributor:
+		return convertAzureVirtualMachineVMContributor
+	case enums.KindAZManagedCluster:
+		return convertAzureManagedCluster
+	case enums.KindAZManagedClusterRoleAssignment:
+		return convertAzureManagedClusterRoleAssignment
+	case enums.KindAZVMScaleSet:
+		return convertAzureVMScaleSet
+	case enums.KindAZVMScaleSetRoleAssignment:
+		return convertAzureVMScaleSetRoleAssignment
+	case enums.KindAZContainerRegistry:
+		return convertAzureContainerRegistry
+	case enums.KindAZContainerRegistryRoleAssignment:
+		return convertAzureContainerRegistryRoleAssignment
+	case enums.KindAZWebApp:
+		return convertAzureWebApp
+	case enums.KindAZWebAppRoleAssignment:
+		return convertAzureWebAppRoleAssignment
+	case enums.KindAZLogicApp:
+		return convertAzureLogicApp
+	case enums.KindAZLogicAppRoleAssignment:
+		return convertAzureLogicAppRoleAssignment
+	case enums.KindAZAutomationAccount:
+		return convertAzureAutomationAccount
+	case enums.KindAZAutomationAccountRoleAssignment:
+		return convertAzureAutomationAccountRoleAssignment
+	case enums.KindAZRoleManagementPolicyAssignment:
+		return convertAzureRoleManagementPolicyAssignment
+	case enums.KindAZRoleEligibilityScheduleInstance:
+		return convertAzureRoleEligibilityScheduleInstance
+	default:
+		// TODO: we should probably have a hook or something to log the unknown type
+		return func(rm json.RawMessage, cd *ConvertedAzureData, now time.Time) {}
+	}
+}
+
+func convertAzureApp(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.App
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "application"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZAppToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAZAppRelationships(data)...)
+	}
+}
+
+func convertAzureVMScaleSet(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VMScaleSet
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine scale set"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZVMScaleSetToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAZVMScaleSetRelationships(data)...)
+	}
+}
+
+func convertAzureVMScaleSetRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine scale set role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVMScaleSetRoleAssignment(data)...)
+	}
+}
+
+func convertAzureAppOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.AppOwners
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "app owner"),
+			attr.Error(err),
+		)
+	} else {
+		for _, raw := range data.Owners {
+			var (
+				owner azureModels.DirectoryObject
+			)
+			if err := json.Unmarshal(raw.Owner, &owner); err != nil {
+				slog.Error(
+					SerialError,
+					slog.String("type", "app owner"),
+					attr.Error(err),
+				)
+			} else if ownerType, err := ein.ExtractTypeFromDirectoryObject(owner); errors.Is(err, ein.ErrInvalidType) {
+				slog.Warn(
+					ExtractError,
+					slog.String("type", "app owner"),
+					attr.Error(err),
+				)
+			} else if err != nil {
+				slog.Error(
+					ExtractError,
+					slog.String("type", "app owner"),
+					attr.Error(err),
+				)
+			} else {
+				converted.RelProps = append(converted.RelProps, ein.ConvertAzureOwnerToRel(owner, ownerType, azure.App, data.AppId))
+			}
+		}
+	}
+}
+
+func convertAzureAppFIC(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.AppFICs
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "app federated identity credential wrapper"),
+			attr.Error(err),
+		)
+	} else {
+		for _, rawFIC := range data.FICs {
+			var (
+				federatedIdentifyCredential models.FICData
+			)
+			if err := json.Unmarshal(rawFIC.FIC, &federatedIdentifyCredential); err != nil {
+				slog.Error(
+					SerialError,
+					slog.String("type", "app federated identity credential data"),
+					attr.Error(err),
+				)
+			} else {
+				node, rel := ein.ConvertAppFederatedIdentityCredential(federatedIdentifyCredential, rawFIC.AppId, data.TenantName, data.TenantId)
+				converted.NodeProps = append(converted.NodeProps, node)
+				converted.RelProps = append(converted.RelProps, rel)
+			}
+		}
+	}
+}
+
+func convertAzureAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AppRoleAssignment
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "app role assignment"),
+			attr.Error(err),
+		)
+	} else if data.AppId == azure.MSGraphAppUniversalID && data.PrincipalType == PrincipalTypeServicePrincipal {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureAppRoleAssignmentToNodes(data)...)
+		if rel := ein.ConvertAzureAppRoleAssignmentToRel(data); rel.IsValid() {
+			converted.RelProps = append(converted.RelProps, rel)
+		}
+	}
+}
+
+func convertAzureDevice(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.Device
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "device"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAZDeviceToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAZDeviceRelationships(data)...)
+	}
+}
+
+func convertAzureFunctionApp(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.FunctionApp
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "function app"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureFunctionAppToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureFunctionAppToRels(data)...)
+	}
+}
+
+func convertAzureFunctionAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "function app role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureFunctionAppRoleAssignmentToRels(data)...)
+	}
+}
+
+func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.Group
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "group"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroupToNode(data, ingestTime))
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupToRel(data))
+	}
+}
+
+func convertAzureGroupMember(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.GroupMembers
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "group members"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupMembersToRels(data)...)
+	}
+}
+
+func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.GroupOwners
+	)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "group owners"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureKeyVault(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.KeyVault
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "keyvault"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureKeyVault(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertAzureKeyVaultAccessPolicy(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.KeyVaultAccessPolicy
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "key vault access policy"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultAccessPolicy(data)...)
+	}
+}
+
+func convertAzureKeyVaultContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.KeyVaultContributors
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "keyvault contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultContributor(data)...)
+	}
+}
+
+func convertAzureKeyVaultKVContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.KeyVaultKVContributors
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "keyvault kvcontributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultKVContributor(data)...)
+	}
+}
+
+func convertAzureKeyVaultOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.KeyVaultOwners
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "keyvault owner"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultOwnerToRels(data)...)
+	}
+}
+
+func convertAzureKeyVaultUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.KeyVaultUserAccessAdmins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "keyvault user access admin"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureKeyVaultUserAccessAdminToRels(data)...)
+	}
+}
+
+func convertAzureManagementGroupDescendant(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data azureModels.DescendantInfo
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group descendant list"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupDescendantToRel(data))
+	}
+}
+
+func convertAzureManagementGroupOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagementGroupOwners
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group owner"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureManagementGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagementGroupContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupContributorToRels(data)...)
+	}
+}
+
+func convertAzureManagementGroupUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagementGroupUserAccessAdmins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group user access admin"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagementGroupUserAccessAdminToRels(data)...)
+	}
+}
+
+func convertAzureManagementGroup(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagementGroup
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "management group"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureManagementGroup(data, ingestTime)
+		converted.RelProps = append(converted.RelProps, rel)
+		converted.NodeProps = append(converted.NodeProps, node)
+	}
+}
+
+func convertAzureResourceGroup(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ResourceGroup
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "resource group"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureResourceGroup(data, ingestTime)
+		converted.RelProps = append(converted.RelProps, rel)
+		converted.NodeProps = append(converted.NodeProps, node)
+	}
+}
+
+func convertAzureResourceGroupOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ResourceGroupOwners
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "resource group owner"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureResourceGroupContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ResourceGroupContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "resource group contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupContributorToRels(data)...)
+	}
+}
+
+func convertAzureResourceGroupUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ResourceGroupUserAccessAdmins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "resource group user access admin"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureResourceGroupUserAccessAdminToRels(data)...)
+	}
+}
+
+func convertAzureRole(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.Role
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "role"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureRole(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertAzureRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.RoleAssignments
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "role assignment"),
+			attr.Error(err),
+		)
+	} else {
+		for _, raw := range data.RoleAssignments {
+			var (
+				// RoleDefinitionId is uppercased only for the AZRole node/edge
+				// identity; the raw value stays lowercase for case-sensitive
+				// role-constant matching downstream.
+				roleObjectId = strings.ToUpper(fmt.Sprintf("%s@%s", raw.RoleDefinitionId, data.TenantId))
+			)
+
+			converted.RelProps = append(converted.RelProps, ein.ConvertAzureRoleAssignmentToRels(raw, data, roleObjectId)...)
+		}
+	}
+}
+
+func convertAzureServicePrincipal(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ServicePrincipal
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "service principal"),
+			attr.Error(err),
+		)
+	} else {
+		nodes, rels := ein.ConvertAzureServicePrincipal(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, nodes...)
+		converted.RelProps = append(converted.RelProps, rels...)
+	}
+}
+
+func convertAzureServicePrincipalOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var (
+		data models.ServicePrincipalOwners
+	)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "service principal owners"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureServicePrincipalOwnerToRels(data)...)
+	}
+}
+
+func convertAzureSubscription(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data azureModels.Subscription
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "subscription"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureSubscription(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertAzureSubscriptionOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.SubscriptionOwners
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "subscription owner"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionOwnerToRels(data)...)
+	}
+}
+
+func convertAzureSubscriptionContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.SubscriptionContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "subscription contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionContributorToRels(data)...)
+	}
+}
+
+func convertAzureSubscriptionUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.SubscriptionUserAccessAdmins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "subscription user access admin"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureSubscriptionUserAccessAdminToRels(data)...)
+	}
+}
+
+func convertAzureTenant(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.Tenant
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "tenant"),
+			attr.Error(err),
+		)
+	} else {
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureTenantToNode(data, ingestTime))
+	}
+}
+
+func convertAzureUser(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.User
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "user"),
+			attr.Error(err),
+		)
+	} else {
+		node, rel := ein.ConvertAzureUser(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertAzureVirtualMachine(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachine
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine"),
+			attr.Error(err),
+		)
+	} else {
+		node, rels := ein.ConvertAzureVirtualMachine(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rels...)
+	}
+}
+
+func convertAzureVirtualMachineAdminLogin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineAdminLogins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine admin login"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineAdminLoginToRels(data)...)
+	}
+}
+
+func convertAzureVirtualMachineAvereContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineAvereContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine avere contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineAvereContributorToRels(data)...)
+	}
+}
+
+func convertAzureVirtualMachineContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineContributorToRels(data)...)
+	}
+}
+
+func convertAzureVirtualMachineVMContributor(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineVMContributors
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine vm contributor"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineVMContributorToRels(data)...)
+	}
+}
+
+func convertAzureVirtualMachineOwner(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineOwners
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine owner"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineOwnerToRels(data)...)
+	}
+}
+
+func convertAzureVirtualMachineUserAccessAdmin(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.VirtualMachineUserAccessAdmins
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "virtual machine user access admin"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureVirtualMachineUserAccessAdminToRels(data)...)
+	}
+}
+
+func convertAzureManagedCluster(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ManagedCluster
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "managed cluster"),
+			attr.Error(err),
+		)
+	} else {
+		// data.SubscriptionId from the collector is already "/subscriptions/<guid>";
+		// normalize so we do not emit a doubled "/subscriptions//subscriptions/" prefix.
+		subscriptionBase := strings.TrimSuffix(data.SubscriptionId, "/")
+		if !strings.HasPrefix(strings.ToLower(subscriptionBase), "/subscriptions/") {
+			subscriptionBase = "/subscriptions/" + subscriptionBase
+		}
+		NodeResourceGroupID := fmt.Sprintf("%s/resourcegroups/%s", subscriptionBase, data.Properties.NodeResourceGroup)
+
+		node, rels := ein.ConvertAzureManagedCluster(data, NodeResourceGroupID, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rels...)
+	}
+}
+
+func convertAzureManagedClusterRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "managed cluster role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureManagedClusterRoleAssignmentToRels(data)...)
+	}
+}
+
+func convertAzureContainerRegistry(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.ContainerRegistry
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "container registry"),
+			attr.Error(err),
+		)
+	} else {
+		node, rels := ein.ConvertAzureContainerRegistry(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, rels...)
+	}
+}
+
+func convertAzureWebApp(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.WebApp
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "web app"),
+			attr.Error(err),
+		)
+	} else {
+		node, relationships := ein.ConvertAzureWebApp(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, relationships...)
+	}
+}
+
+func convertAzureContainerRegistryRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "container registry role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureContainerRegistryRoleAssignment(data)...)
+	}
+}
+
+func convertAzureWebAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "web app role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureWebAppRoleAssignment(data)...)
+	}
+}
+
+func convertAzureLogicApp(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.LogicApp
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "logic app"),
+			attr.Error(err),
+		)
+	} else {
+		node, relationships := ein.ConvertAzureLogicApp(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, relationships...)
+	}
+}
+
+func convertAzureLogicAppRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "logic app role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureLogicAppRoleAssignment(data)...)
+	}
+}
+
+func convertAzureAutomationAccount(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AutomationAccount
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "automation account"),
+			attr.Error(err),
+		)
+	} else {
+		node, relationships := ein.ConvertAzureAutomationAccount(data, ingestTime)
+		converted.NodeProps = append(converted.NodeProps, node)
+		converted.RelProps = append(converted.RelProps, relationships...)
+	}
+}
+
+func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.AzureRoleAssignments
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "automation account role assignments"),
+			attr.Error(err),
+		)
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureAutomationAccountRoleAssignment(data)...)
+	}
+}
+
+// convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter
+func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.RoleManagementPolicyAssignment
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "role management policy assignments"),
+			attr.Error(err),
+		)
+	} else {
+		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data)
+		converted.NodeProps = append(converted.NodeProps, nodes)
+		converted.RelProps = append(converted.RelProps, relationships...)
+	}
+}
+
+func convertAzureRoleEligibilityScheduleInstance(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.RoleEligibilityScheduleInstance
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(
+			SerialError,
+			slog.String("type", "role eligibility schedule instance"),
+			attr.Error(err),
+		)
+	} else {
+		relProps := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(data)
+		converted.RelProps = append(converted.RelProps, relProps...)
+	}
+}

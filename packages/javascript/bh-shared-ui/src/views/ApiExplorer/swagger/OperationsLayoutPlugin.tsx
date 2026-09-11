@@ -1,0 +1,89 @@
+// Copyright 2023 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { Skeleton, Typography } from 'doodle-ui';
+import { PageWithTitle } from '../../../components';
+import DocumentationLinks from '../../../components/DocumentationLinks';
+
+type Props = {
+    getComponent: (
+        name: string,
+        isContainer?: boolean,
+        options?: { failSilently: boolean }
+    ) => React.JSXElementConstructor<any>;
+    specSelectors: {
+        specStr: () => string;
+        loadingStatus: () => string;
+        isOAS3: () => boolean;
+        isSwagger2: () => boolean;
+    };
+};
+
+function CustomLayout(props: Props) {
+    const { getComponent, specSelectors } = props;
+    const VersionPragmaFilter = getComponent('VersionPragmaFilter', true);
+    const FilterContainer = getComponent('FilterContainer', true);
+    const Operations = getComponent('operations', true);
+    const Models = getComponent('Models', true);
+    const Errors = getComponent('errors', true);
+    const SvgAssets = getComponent('SvgAssets');
+
+    const isOAS3 = specSelectors.isOAS3();
+    const isSwagger2 = specSelectors.isSwagger2();
+    const isReady = () => specSelectors.loadingStatus() === 'success';
+
+    return (
+        <PageWithTitle
+            title='API Explorer'
+            data-testid='api-explorer'
+            className='api-explorer'
+            pageDescription={
+                <Typography variant='body2'>
+                    Review and understand the API endpoints available that power BloodHound. To learn how to use the
+                    API, see {DocumentationLinks.apiUsageLink}. <br /> <br /> <b>*[EXPERIMENTAL]</b> – Endpoints labeled
+                    as "Experimental" are under active development, such as for Early Access functionality. Breaking
+                    changes may occur until the experimental flag is removed.
+                </Typography>
+            }>
+            {!isReady() ? (
+                <div className='grid gap-8'>
+                    <Typography variant='h1'>
+                        <Skeleton className='h-10' />
+                    </Typography>
+                    <Skeleton className='h-40' />
+                    <Skeleton className='h-20' />
+                </div>
+            ) : (
+                <div className='swagger-ui'>
+                    <SvgAssets />
+                    <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
+                        <FilterContainer />
+                        <Operations />
+                        <Models />
+                    </VersionPragmaFilter>
+                </div>
+            )}
+        </PageWithTitle>
+    );
+}
+
+export const OperationsLayoutPlugin = () => {
+    return {
+        components: {
+            OperationsLayout: CustomLayout,
+        },
+    };
+};

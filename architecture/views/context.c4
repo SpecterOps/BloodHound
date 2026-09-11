@@ -1,0 +1,32 @@
+// BloodHound Community Edition - System Context View
+// Shows BloodHound CE and its interactions with external actors and systems.
+
+views {
+
+  view context of bloodhound {
+    title 'System Context'
+    description 'High-level view of BloodHound CE, its users, and the external systems it interacts with.'
+
+    include
+      *,
+      securityOperator,
+      apiConsumer,
+      sharpHound,
+      azureHound,
+      activeDirectory,
+      azureAd
+
+    style * {
+      color secondary
+    }
+
+    style securityOperator, apiConsumer {
+      color amber
+    }
+
+    style sharpHound, azureHound, activeDirectory, azureAd {
+      color muted
+    }
+  }
+}
+

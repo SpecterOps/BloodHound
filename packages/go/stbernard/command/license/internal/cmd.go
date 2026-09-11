@@ -1,0 +1,235 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+package license
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io/fs"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"runtime"
+	"slices"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+)
+
+type Args struct {
+	// BaseBranchName defines which base branch should be compared against for deriving
+	// the changeset of the current branch
+	BaseBranchName string
+	// DryRun will make license not make any changes, just print the files to be changed
+	DryRun bool
+	// ChangesOnlyMode makes license run across the current changeset instead of the whole codebase
+	ChangesOnlyMode bool
+}
+
+func Run(env environment.Environment, args Args) error {
+	var (
+		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256"}
+		ignorePaths = []string{
+			filepath.Join("tools", "docker-compose", "configs", "pgadmin", "pgpass"),
+			"justfile",
+			filepath.Join("cmd", "api", "src", "api", "static", "assets"),
+			filepath.Join("cmd", "api", "src", "cmd", "testidp", "samlidp"),
+			filepath.Join("cmd", "ui", "playwright"),
+		}
+		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
+		now                  = time.Now()
+		baseBranchName       = args.BaseBranchName
+		branchChangeset      = map[string]bool{}
+
+		// Concurrency primitives
+		errs       []error
+		wg         = &sync.WaitGroup{}
+		errsMu     = &sync.Mutex{}
+		numWorkers = runtime.NumCPU()
+		pathChan   = make(chan string, numWorkers)
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if args.ChangesOnlyMode {
+		var err error
+		branchChangeset, err = getBranchDiff(ctx, baseBranchName)
+		if err != nil {
+			return fmt.Errorf("could not load branch changeset from git: %w", err)
+		}
+
+		slog.Debug("Loaded branch changeset", slog.Int("size", len(branchChangeset)))
+	}
+
+	wrkPaths, err := workspace.FindPaths(env)
+	if err != nil {
+		return fmt.Errorf("failed to find workspace paths: %w", err)
+	}
+
+	licensePath := filepath.Join(wrkPaths.Root, "LICENSE")
+
+	// Make sure root LICENSE FILE exists
+	if _, err := os.Stat(licensePath); errors.Is(err, os.ErrNotExist) {
+		if err := os.WriteFile(licensePath, []byte(licenseContent), 0o644); err != nil {
+			return fmt.Errorf("failed to write root license file: %w", err)
+		}
+	} else if err != nil {
+		return fmt.Errorf("failed to check for root license file: %w", err)
+	} else if err := writeLicenseHeaderFile(licensePath); err != nil {
+		return fmt.Errorf("failed to write LICENSE.header: %w", err)
+	}
+
+	// worker pool pattern for handling files
+	for range numWorkers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			// Ranging over a channel will end when the channel is closed, so this is a nice simplification
+			for path := range pathChan {
+				result, err := isHeaderPresent(path)
+				if err != nil {
+					errsMu.Lock()
+					errs = append(errs, err)
+					errsMu.Unlock()
+					// explicitly continue to process files since we want to process as much as possible even if some errors occur
+					continue
+				}
+
+				if !result {
+					if args.DryRun {
+						slog.Debug("Would process file", slog.String("path", path))
+						continue
+					}
+
+					if err := processFile(path); err != nil {
+						errsMu.Lock()
+						errs = append(errs, err)
+						errsMu.Unlock()
+						// explicitly continue to process files since we want to process as much as possible even if some errors occur
+						continue
+					}
+				}
+			}
+		}()
+	}
+
+	err = filepath.Walk(wrkPaths.Root, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Get relative path for consistent matching
+		relPath, err := filepath.Rel(wrkPaths.Root, path)
+		if err != nil {
+			return err
+		}
+
+		// Check if the current path contains one of our ignored paths
+		ignorePath := slices.ContainsFunc(ignorePaths, func(igPath string) bool {
+			// Use HasPrefix for more precise matching
+			return strings.HasPrefix(relPath, igPath) || relPath == igPath
+		})
+
+		// Always prune ignored directories so filepath.Walk does not descend into them.
+		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
+			return filepath.SkipDir
+		}
+
+		if ignorePath {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+
+			// Shortcut out without skipping directory (support specific file ignores)
+			return nil
+		}
+
+		// ignore files that are in the ignore list
+		ext := filepath.Ext(path)
+		// if there is no extension, use the filename as the extension
+		if ext == "" {
+			ext = filepath.Base(path)
+		}
+
+		// Ensure we're not trying to scan a symbolic link or directory
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink || info.IsDir() {
+			slog.Debug("Skipped file: not a regular file", slog.String("path", relPath))
+			return nil
+		}
+
+		// Ensure we're not scanning a file in the list of disallowed extensions
+		if slices.Contains(disallowedExtensions, ext) {
+			slog.Debug("Skipped file: disallowed extension", slog.String("path", relPath))
+			return nil
+		}
+
+		// Ensure we're only scanning a file listed in the current changeset, unless in full mode
+		_, inChangeset := branchChangeset[relPath]
+		if args.ChangesOnlyMode && !inChangeset {
+			slog.Debug("Skipped file: not in changeset", slog.String("path", relPath))
+			return nil
+		}
+
+		pathChan <- path
+
+		return nil
+	})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("error walking the path: %w", err))
+	}
+
+	// close path channel to signal we're done sending values
+	close(pathChan)
+	// block main until all the goroutines in done state
+	wg.Wait()
+	diff := time.Since(now)
+
+	slog.Info("Running scans on bhce", slog.Duration("execution_time", diff))
+	return errors.Join(errs...)
+}
+
+func processFile(path string) error {
+	switch filepath.Ext(path) {
+	case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".jsx", ".cue", ".scss":
+		return writeFile(path, generateLicenseHeader("//"))
+	case ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
+		return writeFile(path, generateLicenseHeader("#"))
+	case ".sql":
+		return writeFile(path, generateLicenseHeader("--"))
+	case ".xml", ".html", ".svg":
+		return writeFile(path, generateLicenseHeader("<!--"))
+	case ".css":
+		return writeFile(path, generateLicenseHeader("/*"))
+	case ".cs":
+		return writeFile(path, generateLicenseHeader("/*"))
+	default:
+		slog.Warn("Unknown extension", slog.String("path", path))
+		return nil
+	}
+}
+
+func writeLicenseHeaderFile(licensePath string) error {
+	formattedHeader := generateLicenseHeader("")
+	// Cut final \n for better formatting with MockGen
+	formattedHeader, _ = strings.CutSuffix(formattedHeader, "\n")
+	return os.WriteFile(licensePath+".header", []byte(formattedHeader), 0o644)
+}

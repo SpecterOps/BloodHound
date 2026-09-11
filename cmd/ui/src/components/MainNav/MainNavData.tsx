@@ -1,0 +1,196 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+    AppIcon,
+    isFeatureFlagEnabled,
+    MainNavData,
+    Permission,
+    ROUTE_PRIVILEGE_ZONES,
+    useFeatureFlags,
+    useFileUploadDialogContext,
+    useKeybindings,
+    usePermissions,
+    useSubNavRoutes,
+} from 'bh-shared-ui';
+import { Switch } from 'doodle-ui';
+import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
+import { setDarkMode } from 'src/ducks/global/actions.ts';
+
+import * as routes from 'src/routes/constants';
+import { adminSections } from 'src/routes/constants';
+import { useAppDispatch, useAppSelector } from 'src/store';
+
+export const useMainNavLogoData = (): MainNavData['logo'] => {
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
+    const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
+    const soImageUrlLightMode = '/img/banner-so-light-mode.png';
+    return {
+        project: {
+            route: routes.ROUTE_EXPLORE,
+            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
+        },
+        specterOps: {
+            image: {
+                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
+                dimensions: { height: 25, width: 110 },
+                altText: 'SpecterOps Text Logo',
+            },
+        },
+    };
+};
+
+export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
+    const authState = useAppSelector((state) => state.auth);
+    const { checkPermission } = usePermissions();
+    const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const hasPermissionToUpload = checkPermission(Permission.GRAPH_DB_INGEST_MANAGE);
+    const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
+    const { data: featureFlags, isSuccess: areFeatureFlagsLoaded } = useFeatureFlags({
+        enabled: enableFeatureFlagRequests,
+    });
+    const isTierFlagEnabled = isFeatureFlagEnabled('tier_management_engine', featureFlags);
+    const { setShowFileIngestDialog } = useFileUploadDialogContext();
+
+    const primaryList: MainNavData['primaryList'] = [
+        {
+            label: 'Explore',
+            icon: <AppIcon.LineChart size={24} />,
+            route: routes.ROUTE_EXPLORE,
+            testId: 'global_nav-explore',
+        },
+        ...(areFeatureFlagsLoaded && isTierFlagEnabled
+            ? [
+                  {
+                      label: 'Privilege Zones',
+                      icon: <AppIcon.Diamond size={24} />,
+                      route: ROUTE_PRIVILEGE_ZONES,
+                      testId: 'global_nav-privilege-zones',
+                  },
+              ]
+            : []),
+        ...(areFeatureFlagsLoaded && !isTierFlagEnabled
+            ? [
+                  {
+                      label: 'Group Management',
+                      icon: <AppIcon.Diamond size={24} />,
+                      route: routes.ROUTE_GROUP_MANAGEMENT,
+                      testId: 'global_nav-group-management',
+                  },
+              ]
+            : []),
+        ...(hasPermissionToUpload
+            ? [
+                  {
+                      label: 'Quick Upload',
+                      icon: <AppIcon.Upload size={24} />,
+                      onClick: () => setShowFileIngestDialog(true),
+                      testId: 'quick-file-ingest',
+                  },
+              ]
+            : []),
+    ];
+
+    return primaryList;
+};
+
+export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
+    const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const dispatch = useAppDispatch();
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const { routes: adminRoutes } = useSubNavRoutes(adminSections, isFullyAuthenticated);
+
+    const handleLogout = () => {
+        dispatch(logout());
+    };
+
+    const handleToggleDarkMode = () => {
+        dispatch(setDarkMode(!darkMode));
+    };
+
+    useKeybindings({
+        KeyM: () => {
+            if (isFullyAuthenticated) handleToggleDarkMode();
+        },
+    });
+
+    const secondaryList: MainNavData['secondaryList'] = [
+        {
+            label: 'Profile',
+            icon: <AppIcon.User size={24} />,
+            route: routes.ROUTE_MY_PROFILE,
+            testId: 'global_nav-my-profile',
+        },
+        {
+            label: 'Download Collectors',
+            icon: <AppIcon.Download size={24} />,
+            route: routes.ROUTE_DOWNLOAD_COLLECTORS,
+            testId: 'global_nav-download-collectors',
+        },
+        {
+            label: 'Administration',
+            icon: <AppIcon.UserCog size={24} />,
+            subNav: adminRoutes,
+            testId: 'global_nav-administration',
+        },
+        {
+            label: 'API Explorer',
+            icon: <AppIcon.Compass size={24} />,
+            route: routes.ROUTE_API_EXPLORER,
+            testId: 'global_nav-api-explorer',
+        },
+        {
+            label: 'Docs and Support',
+            icon: <AppIcon.FileMagnifyingGlass size={24} />,
+            route: routes.LINK_DOCS_AND_SUPPORT,
+            target: '_blank',
+            testId: 'global_nav-support',
+        },
+        {
+            label: 'Try BH Enterprise',
+            icon: <AppIcon.BHLogo size={32} className='-mx-1' />,
+            route: routes.LINK_BH_ENTERPRISE,
+            target: '_blank',
+            testId: 'global_nav-bhe',
+        },
+        {
+            label: 'Dark Mode',
+            control: (
+                /* 
+                 `inert` is a native property that tells screen readers to 
+                 disregard this non-interactive, presentational button. 
+                 It is unavailable in React 18 (enabled in v19), so this spread
+                 workaround applies the property without triggering type errors
+                */
+                <div ref={(node) => node?.setAttribute('inert', '')}>
+                    <Switch checked={darkMode} />
+                </div>
+            ),
+            icon: <AppIcon.EclipseCircle size={24} />,
+            onClick: handleToggleDarkMode,
+            testId: 'global_nav-dark-mode',
+        },
+        {
+            label: 'Log Out',
+            icon: <AppIcon.Logout size={24} />,
+            onClick: handleLogout,
+            testId: 'global_nav-logout',
+        },
+    ];
+
+    return secondaryList;
+};

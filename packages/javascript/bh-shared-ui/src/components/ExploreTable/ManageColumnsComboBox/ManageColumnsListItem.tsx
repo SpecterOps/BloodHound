@@ -1,0 +1,91 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { CheckboxWithLabel } from 'doodle-ui';
+import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
+import { cn } from '../../../utils';
+import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
+import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
+
+type ManageColumnsListItemProps = {
+    isSelected?: boolean;
+    item: ManageColumnsComboBoxOption;
+    onClick:
+        | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['removeSelectedItem']
+        | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['addSelectedItem'];
+    itemProps: ReturnType<UseComboboxPropGetters<ManageColumnsComboBoxOption>['getItemProps']>;
+    onPinClick: (item: ManageColumnsComboBoxOption) => void;
+};
+
+const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClick }: ManageColumnsListItemProps) => (
+    <li
+        role='button' // eslint-disable-line
+        tabIndex={0}
+        className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
+        {...itemProps}
+        onClick={(e) => {
+            e.stopPropagation();
+            onClick(item);
+        }}
+        onKeyDown={adaptClickHandlerToKeyDown((event) => {
+            event.stopPropagation();
+            onClick(item);
+        })}>
+        <div className='w-full text-left flex justify-between items-center'>
+            <div className='flex justify-between items-center'>
+                <CheckboxWithLabel
+                    label={item.value}
+                    ref={(checkbox) => {
+                        checkbox?.setAttribute('inert', '');
+                    }}
+                    disabled
+                    role='presentation'
+                    className={cn('mr-2 *:text-white', {
+                        '*:bg-primary dark:border-none': isSelected,
+                        'dark:border-white': !isSelected,
+                    })}
+                    style={{
+                        opacity: 'initial',
+                    }}
+                    checked={isSelected}
+                />
+            </div>
+        </div>
+        <div>
+            <FontAwesomeIcon
+                color={item.isPinned ? 'grey' : 'var(--neutral-4)'}
+                icon={faThumbTack}
+                role='button'
+                tabIndex={0}
+                aria-label={item.isPinned ? 'Unpin column' : 'Pin column'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onPinClick(item);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onPinClick(item);
+                    }
+                }}
+            />
+        </div>
+    </li>
+);
+
+export default ManageColumnsListItem;

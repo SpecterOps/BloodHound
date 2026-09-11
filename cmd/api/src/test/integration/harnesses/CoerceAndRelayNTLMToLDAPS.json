@@ -1,0 +1,530 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 985.0688239400811,
+        "y": 273.0585513250778
+      },
+      "caption": "Group1",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "ObjectID": "Domain1-S-1-5-11"
+      },
+      "style": {
+        "node-color": "#fcdc00"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 273.0585513250778
+      },
+      "caption": "Computer2",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "WebclientRunning": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 985.0688239400811,
+        "y": 50.00000000000001
+      },
+      "caption": "Computer1",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "LDAPSEPA": "False",
+        "LDAPSAvailable": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 50.00000000000001
+      },
+      "caption": "Domain1",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "FunctionalLevel": "2016"
+      },
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 75,
+        "y": 796.3263907055361
+      },
+      "caption": "Group2",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "ObjectID": "Domain3-S-1-5-11"
+      },
+      "style": {
+        "node-color": "#fcdc00",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 985.0688239400811,
+        "y": 437.96189312891397
+      },
+      "caption": "Group3",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "ObjectID": "Domain1-S-1-5-10"
+      },
+      "style": {
+        "node-color": "#fcdc00",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 579.2038579814107
+      },
+      "caption": "Computer4",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "WebclientRunning": "False"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "right"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 384.9479743382408,
+        "y": 796.3263907055361
+      },
+      "caption": "Computer3",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "WebclientRunning": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "right"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 1010.8007835933784
+      },
+      "caption": "Group4",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "ObjectID": "S-1-2-3-4-525",
+        "Name": "PROTECTED USERS@DOMAIN1"
+      },
+      "style": {
+        "node-color": "#fcdc00",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 712.8486337368786
+      },
+      "caption": "Computer5",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "WebclientRunning": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "right"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 2177.673192624303,
+        "y": 50.00000000000001
+      },
+      "caption": "Computer6",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-6",
+        "LDAPSEPA": "False",
+        "LDAPSAvailable": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 2679.930890018658,
+        "y": 50.00000000000001
+      },
+      "caption": "Domain2",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-6",
+        "FunctionalLevel": "2008"
+      },
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 2177.673192624303,
+        "y": 231.53438754250686
+      },
+      "caption": "Group5",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-6",
+        "ObjectID": "Domain2-S-1-5-11"
+      },
+      "style": {
+        "node-color": "#fcdc00"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 2679.930890018658,
+        "y": 231.53438754250686
+      },
+      "caption": "Computer7",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-6",
+        "WebclientRunning": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 2679.930890018658,
+        "y": 498.82393905344253
+      },
+      "caption": "Group6",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-6",
+        "ObjectID": "S-1-2-3-6-525",
+        "Name": "PROTECTED USERS@DOMAIN2"
+      },
+      "style": {
+        "node-color": "#fcdc00",
+        "outside-position": "bottom"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 75,
+        "y": 50
+      },
+      "caption": "Computer8",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "LDAPSEPA": "False"
+      },
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 384.9479743382408,
+        "y": 50.00000000000001
+      },
+      "caption": "Domain3",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5"
+      },
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 75,
+        "y": 194.13036513343783
+      },
+      "caption": "Computer9",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "LDAPSEPA": "True",
+        "LDAPSAvailable": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": 75,
+        "y": 338.26073026687567
+      },
+      "caption": "Computer10",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "LDAPSEPA": "False",
+        "LDAPSAvailable": "False"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n19",
+      "position": {
+        "x": 75,
+        "y": 482.3910954003135
+      },
+      "caption": "Computer11",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "LDAPSEPA": "True",
+        "LDAPSAvailable": "False"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": 75,
+        "y": 626.5214605337512
+      },
+      "caption": "Computer12",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-5",
+        "LDAPSAvailable": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "left"
+      }
+    },
+    {
+      "id": "n21",
+      "position": {
+        "x": 1487.3265213344364,
+        "y": 437.96189312891397
+      },
+      "caption": "Computer13",
+      "labels": [],
+      "properties": {
+        "DomainSID": "S-1-2-3-4",
+        "WebclientRunning": "True",
+        "RestrictOutboundNTLM": "True"
+      },
+      "style": {
+        "node-color": "#f44e3b",
+        "outside-position": "right"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n0",
+      "toId": "n1",
+      "type": "CoerceAndRelayNTLMToLDAPS",
+      "properties": {},
+      "style": {
+        "arrow-color": "#aea1ff"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n9",
+      "toId": "n8",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n10",
+      "toId": "n11",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n12",
+      "toId": "n13",
+      "type": "CoerceAndRelayNTLMToLDAPS",
+      "properties": {},
+      "style": {
+        "arrow-color": "#aea1ff"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n13",
+      "toId": "n14",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n1",
+      "toId": "n14",
+      "type": "MemberOf",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n15",
+      "toId": "n16",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "fromId": "n17",
+      "toId": "n16",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n18",
+      "toId": "n16",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n19",
+      "toId": "n16",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "fromId": "n20",
+      "toId": "n16",
+      "type": "DCFor",
+      "properties": {},
+      "style": {}
+    }
+  ]
+}

@@ -1,0 +1,327 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 937.6311130170297,
+        "y": 695.2866578599735
+      },
+      "caption": "Tenant",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 248.8842776487846,
+        "y": 289.78633189697996
+      },
+      "caption": "App",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 756.4375185711353,
+        "y": 315.1910853426716
+      },
+      "caption": "Device",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 255.68444349148558,
+        "y": 1089.0087510835158
+      },
+      "caption": "Group",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 77.49967403700654,
+        "y": 461.17093550875825
+      },
+      "caption": "Mgmt Group",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 14.768517921321859,
+        "y": 695.2866578599735
+      },
+      "caption": "Resource Group",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 888.5003691213661,
+        "y": 461.17093550875825
+      },
+      "caption": "Key Vault",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 562.4383338686557,
+        "y": 1156.7303401460863
+      },
+      "caption": "Role",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 539.6055003653842,
+        "y": 230.48934919954252
+      },
+      "caption": "Service Principal",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 77.49967403700657,
+        "y": 929.402380211189
+      },
+      "caption": "Sub",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 483,
+        "y": 695.2866578599735
+      },
+      "caption": "User",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 842.9027843412815,
+        "y": 994.8041141675951
+      },
+      "caption": "VM",
+      "style": {},
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "AZOwner",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n1"
+    },
+    {
+      "id": "n1",
+      "type": "AzOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n2"
+    },
+    {
+      "id": "n2",
+      "type": "AzExecuteCommand",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n2"
+    },
+    {
+      "id": "n3",
+      "type": "AZOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n3"
+    },
+    {
+      "id": "n4",
+      "type": "AZOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n4"
+    },
+    {
+      "id": "n5",
+      "type": "AZOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n5"
+    },
+    {
+      "id": "n6",
+      "type": "AZOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n6"
+    },
+    {
+      "id": "n7",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n7"
+    },
+    {
+      "id": "n8",
+      "type": "AZHasRole",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n7"
+    },
+    {
+      "id": "n9",
+      "type": "AZOwner",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n8"
+    },
+    {
+      "id": "n10",
+      "type": "AZRunsAs",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n8"
+    },
+    {
+      "id": "n11",
+      "type": "AZOwns",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n9"
+    },
+    {
+      "id": "n12",
+      "type": "AZPrivilegedRoleAdmin",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n0"
+    },
+    {
+      "id": "n13",
+      "type": "AZContains",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n10"
+    },
+    {
+      "id": "n14",
+      "type": "AZContains",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n11"
+    },
+    {
+      "id": "n15",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n11"
+    },
+    {
+      "id": "n16",
+      "type": "AZContributor",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n11"
+    }
+  ]
+}

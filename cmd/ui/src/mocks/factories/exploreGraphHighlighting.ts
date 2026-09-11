@@ -1,0 +1,363 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { MultiDirectedGraph } from 'graphology';
+
+const testNodes = {
+    '104': {
+        label: '$N31000-BBHT9IVGI4SP@WRAITH.CORP',
+        kind: 'User',
+        kinds: ['Base', 'User'],
+        objectId: 'S-1-5-21-3702535222-3822678775-2090119576-1143',
+        isTierZero: false,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '190': {
+        label: 'USER@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '0059CED1-7362-4506-AD56-DAEEFAAE8628',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '191': {
+        label: 'USEREMAIL@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: 'DA2D7CF7-325E-4029-8168-18A0EACF2A0C',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '193': {
+        label: 'EFS@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '7E43AF6D-951D-48E7-8CC0-6546742A222F',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '195': {
+        label: 'USERSIGNATURE@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '5EFC7529-63B5-4524-8EFC-8B99A8275CED',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '199': {
+        label: 'USERNOEMAILNOSEC@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '22A32FDF-278D-44C2-8000-1F2AEECC117F',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '200': {
+        label: 'USERNOSANFLAGS@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '13AA88AA-7AEA-4325-A9EA-55A12AB45FD2',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '201': {
+        label: 'USERV2@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '545E2256-6CE8-4EC8-8196-C7A180243EFF',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '202': {
+        label: 'MYTEMPLATE@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '73473DD3-86B2-494C-8A92-8E214873B890',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '203': {
+        label: 'EXTMAIL@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '59B53E94-6DD2-4EC4-AB97-576327BACFEE',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '204': {
+        label: 'USERNOUPN@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '6685875C-5565-460B-822F-57586AF0AB76',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '214': {
+        label: 'USEREMAILNOSEC@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '035A964D-8533-4110-8A98-E3CAF15920EC',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '220': {
+        label: 'CLIENTAUTH@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '9CC41FA5-7C15-4D50-949C-38C17BEB6F7C',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '224': {
+        label: 'COMPUTERV2@WRAITH.CORP',
+        kind: 'CertTemplate',
+        kinds: ['Base', 'CertTemplate', 'Tag_Tier_Zero'],
+        objectId: '9FD91BB3-DB77-4509-B458-6F5D2E6EBF7F',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '1204': {
+        label: 'WRAITH-EXTCA01-CA@WRAITH.CORP',
+        kind: 'EnterpriseCA',
+        kinds: ['EnterpriseCA', 'Base', 'Tag_Tier_Zero'],
+        objectId: '4F334FEC-0BCE-46A0-AF60-F1C481829440',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '1205': {
+        label: 'WRAITH-EXTCA02-CA@WRAITH.CORP',
+        kind: 'EnterpriseCA',
+        kinds: ['EnterpriseCA', 'Base', 'Tag_Tier_Zero'],
+        objectId: '396FFDC9-079C-4AB1-9816-ACEED046BCDD',
+        isTierZero: true,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '1434': {
+        label: 'DOMAIN USERS@WRAITH.CORP',
+        kind: 'Group',
+        kinds: ['Group', 'Base'],
+        objectId: 'S-1-5-21-3702535222-3822678775-2090119576-513',
+        isTierZero: false,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+    '1451': {
+        label: 'AUTHENTICATED USERS@WRAITH.CORP',
+        kind: 'Group',
+        kinds: ['Group', 'Base'],
+        objectId: 'WRAITH.CORP-S-1-5-11',
+        isTierZero: false,
+        isOwnedObject: false,
+        lastSeen: '',
+    },
+};
+
+const testEdges = [
+    {
+        source: '1434',
+        target: '1451',
+        label: 'MemberOf',
+        kind: 'MemberOf',
+        lastSeen: '',
+        exploreGraphId: 'rel_40049',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '190',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_728',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '191',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_731',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '193',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_739',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '195',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_744',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '199',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_753',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '200',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_756',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1451',
+        target: '201',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_758',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '201',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_760',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '202',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_763',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '203',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_766',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '204',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_769',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '214',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_796',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1434',
+        target: '220',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_812',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1451',
+        target: '224',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_820',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1451',
+        target: '1204',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_8402',
+        data: { lastseen: '' },
+    },
+    {
+        source: '1451',
+        target: '1205',
+        label: 'Enroll',
+        kind: 'Enroll',
+        lastSeen: '',
+        exploreGraphId: 'rel_8403',
+        data: { lastseen: '' },
+    },
+    {
+        source: '104',
+        target: '1434',
+        label: 'MemberOf',
+        kind: 'MemberOf',
+        lastSeen: '',
+        exploreGraphId: 'rel_9480',
+        data: { lastseen: '' },
+    },
+];
+
+export const buildTestGraph = () => {
+    const graph = new MultiDirectedGraph();
+    for (const [key] of Object.entries(testNodes)) {
+        graph.addNode(key);
+    }
+    testEdges.forEach((edgeItem) => {
+        graph.addDirectedEdgeWithKey(
+            `${edgeItem.source}_${edgeItem.kind}_${edgeItem.target}`,
+            edgeItem.source,
+            edgeItem.target
+        );
+    });
+
+    return graph;
+};

@@ -1,0 +1,995 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 2108.1858772570004,
+        "y": 2555.736538757399
+      },
+      "caption": "Domain",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 1712.635185268036,
+        "y": 2273.231824786215
+      },
+      "caption": "NTAuthStore1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 1712.635185268036,
+        "y": 2428.987863580507
+      },
+      "caption": "RootCA1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 716.139199599668,
+        "y": 2273.231824786215
+      },
+      "caption": "CertTemplate1",
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 1226.5598172962673,
+        "y": 2273.231824786215
+      },
+      "caption": "EnterpriseCA1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 2555.736538757399
+      },
+      "caption": "Computer1",
+      "labels": [],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 1712.6351852680357,
+        "y": 1911.643860110281
+      },
+      "caption": "NTAuthStore2",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 1712.6351852680357,
+        "y": 2067.399898904573
+      },
+      "caption": "RootCA2",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 716.1391995996682,
+        "y": 1911.643860110281
+      },
+      "caption": "CertTemplate2",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 1226.559817296267,
+        "y": 1911.643860110281
+      },
+      "caption": "EnterpriseCA3",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 2194.148574081465
+      },
+      "caption": "Computer2",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 1712.635185268034,
+        "y": 1550.055895434347
+      },
+      "caption": "NTAuthStore3",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 1712.635185268034,
+        "y": 1705.811934228639
+      },
+      "caption": "RootCA3",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 716.1391995996676,
+        "y": 1550.055895434347
+      },
+      "caption": "CertTemplate3",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 1226.5598172962664,
+        "y": 1550.055895434347
+      },
+      "caption": "EnterpriseCA3",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 1832.560609405531
+      },
+      "caption": "Computer3",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 1712.6351852680327,
+        "y": 1188.4679307584129
+      },
+      "caption": "NTAuthStore4",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": 1712.6351852680327,
+        "y": 1344.223969552705
+      },
+      "caption": "RootCA4",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n19",
+      "position": {
+        "x": 716.1391995996671,
+        "y": 1188.4679307584129
+      },
+      "caption": "CertTemplate4",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": 1226.559817296265,
+        "y": 1188.4679307584129
+      },
+      "caption": "EnterpriseCA4",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n21",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 1470.972644729597
+      },
+      "caption": "Computer4",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n22",
+      "position": {
+        "x": 1712.635185268034,
+        "y": 826.8799660824791
+      },
+      "caption": "NTAuthStore5",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n23",
+      "position": {
+        "x": 1712.635185268034,
+        "y": 982.6360048767712
+      },
+      "caption": "RootCA5",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n24",
+      "position": {
+        "x": 716.139199599668,
+        "y": 826.8799660824791
+      },
+      "caption": "CertTemplate5",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n25",
+      "position": {
+        "x": 1226.559817296266,
+        "y": 826.8799660824791
+      },
+      "caption": "EnterpriseCA5",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n26",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 1109.384680053663
+      },
+      "caption": "Computer5",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n27",
+      "position": {
+        "x": 1712.6351852680348,
+        "y": 465.29200140654484
+      },
+      "caption": "NTAuthStore6",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n28",
+      "position": {
+        "x": 1712.6351852680348,
+        "y": 621.048040200837
+      },
+      "caption": "RootCA6",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n29",
+      "position": {
+        "x": 716.1391995996673,
+        "y": 465.29200140654484
+      },
+      "caption": "CertTemplate6",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n30",
+      "position": {
+        "x": 1226.559817296267,
+        "y": 465.29200140654484
+      },
+      "caption": "EnterpriseCA6",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n31",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 747.796715377729
+      },
+      "caption": "Computer6",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n32",
+      "position": {
+        "x": 1712.635185268036,
+        "y": 103.70403673061017
+      },
+      "caption": "NTAuthStore7",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n33",
+      "position": {
+        "x": 1712.635185268036,
+        "y": 259.46007552490255
+      },
+      "caption": "RootCA7",
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n34",
+      "position": {
+        "x": 716.139199599668,
+        "y": 103.70403673061017
+      },
+      "caption": "CertTemplate7",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {
+        "AuthenticationEnabled": "True",
+        "RequireManagerApproval": "False",
+        "SchemaVersion": "1"
+      }
+    },
+    {
+      "id": "n35",
+      "position": {
+        "x": 1226.5598172962682,
+        "y": 103.70403673061017
+      },
+      "caption": "EnterpriseCA7",
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n36",
+      "position": {
+        "x": 344.93375733553313,
+        "y": 386.208750701795
+      },
+      "caption": "Computer7",
+      "style": {
+        "node-color": "#f44e3b",
+        "border-color": "#000000"
+      },
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n1",
+      "toId": "n0",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n3",
+      "toId": "n5",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n2",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n5",
+      "toId": "n1",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n6",
+      "fromId": "n6",
+      "toId": "n5",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "type": "GenericAll",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n3"
+    },
+    {
+      "id": "n9",
+      "type": "RootCAFor",
+      "fromId": "n8",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n10",
+      "type": "NTAuthStoreFor",
+      "fromId": "n7",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n11",
+      "type": "PublishedTo",
+      "fromId": "n9",
+      "toId": "n10",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n12",
+      "type": "IssuedSignedBy",
+      "fromId": "n10",
+      "toId": "n8",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n13",
+      "type": "TrustedForNTAuth",
+      "fromId": "n10",
+      "toId": "n7",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n15",
+      "type": "GenericAll",
+      "fromId": "n11",
+      "toId": "n9",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n16",
+      "type": "ADCSESC4",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n0"
+    },
+    {
+      "id": "n17",
+      "type": "RootCAFor",
+      "fromId": "n13",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n18",
+      "type": "NTAuthStoreFor",
+      "fromId": "n12",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n20",
+      "type": "IssuedSignedBy",
+      "fromId": "n15",
+      "toId": "n13",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n21",
+      "type": "TrustedForNTAuth",
+      "fromId": "n15",
+      "toId": "n12",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n22",
+      "type": "Enroll",
+      "fromId": "n16",
+      "toId": "n15",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n23",
+      "type": "GenericAll",
+      "fromId": "n16",
+      "toId": "n14",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n24",
+      "type": "RootCAFor",
+      "fromId": "n18",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n25",
+      "type": "NTAuthStoreFor",
+      "fromId": "n17",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n26",
+      "type": "PublishedTo",
+      "fromId": "n19",
+      "toId": "n20",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n28",
+      "type": "TrustedForNTAuth",
+      "fromId": "n20",
+      "toId": "n17",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n29",
+      "type": "Enroll",
+      "fromId": "n21",
+      "toId": "n20",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n30",
+      "type": "GenericAll",
+      "fromId": "n21",
+      "toId": "n19",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n31",
+      "type": "RootCAFor",
+      "fromId": "n23",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n32",
+      "type": "NTAuthStoreFor",
+      "fromId": "n22",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n33",
+      "type": "PublishedTo",
+      "fromId": "n24",
+      "toId": "n25",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n34",
+      "type": "IssuedSignedBy",
+      "fromId": "n25",
+      "toId": "n23",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n36",
+      "type": "Enroll",
+      "fromId": "n26",
+      "toId": "n25",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n37",
+      "type": "GenericAll",
+      "fromId": "n26",
+      "toId": "n24",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n39",
+      "type": "NTAuthStoreFor",
+      "fromId": "n27",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n40",
+      "type": "PublishedTo",
+      "fromId": "n29",
+      "toId": "n30",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n41",
+      "type": "IssuedSignedBy",
+      "fromId": "n30",
+      "toId": "n28",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n42",
+      "type": "TrustedForNTAuth",
+      "fromId": "n30",
+      "toId": "n27",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n43",
+      "type": "Enroll",
+      "fromId": "n31",
+      "toId": "n30",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n44",
+      "type": "GenericAll",
+      "fromId": "n31",
+      "toId": "n29",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n46",
+      "type": "RootCAFor",
+      "fromId": "n33",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n48",
+      "type": "PublishedTo",
+      "fromId": "n34",
+      "toId": "n35",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n49",
+      "type": "IssuedSignedBy",
+      "fromId": "n35",
+      "toId": "n33",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n50",
+      "type": "TrustedForNTAuth",
+      "fromId": "n35",
+      "toId": "n32",
+      "style": {
+        "arrow-color": "#000000"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n51",
+      "type": "Enroll",
+      "fromId": "n36",
+      "toId": "n35",
+      "style": {},
+      "properties": {}
+    },
+    {
+      "id": "n52",
+      "type": "GenericAll",
+      "fromId": "n36",
+      "toId": "n34",
+      "style": {},
+      "properties": {}
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+get:
+  operationId: ListAvailableClientJobs
+  summary: List available client jobs
+  description: |
+    Endpoint for clients to get next available jobs.
+
+    Note: caller must be a client. For users, this endpoint will return a 404 as
+    they are not expected or allowed to call this endpoint.
+  tags:
+    - Jobs
+    - Enterprise
+  parameters:
+    - name: sort_by
+      description: Sortable columns are `event_id`, `execution_time`, `status`, `start_time`,
+        `end_time`, `log_path`, `domain_controller`, `event_title`, `last_ingest`,
+        `id`, `created_at`, `updated_at`, and `deleted_at`.
+      in: query
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - $ref: './../parameters/query.clients.job.log-path.yaml'
+    - $ref: './../parameters/query.clients.job.session-collection.yaml'
+    - $ref: './../parameters/query.clients.job.local-group-collection.yaml'
+    - $ref: './../parameters/query.clients.job.cert-services-collection.yaml'
+    - $ref: './../parameters/query.clients.job.ca-registry-collection.yaml'
+    - $ref: './../parameters/query.clients.job.dc-registry-collection.yaml'
+    - $ref: './../parameters/query.clients.job.ad-structure-collection.yaml'
+    - $ref: './../parameters/query.clients.job.domain-controller.yaml'
+    - $ref: './../parameters/query.clients.job.status.yaml'
+    - $ref: './../parameters/query.clients.job.event-title.yaml'
+    - $ref: './../parameters/query.clients.job.client-id.yaml'
+    - $ref: './../parameters/query.clients.job.event-id.yaml'
+    - $ref: './../parameters/query.clients.job.execution-time.yaml'
+    - $ref: './../parameters/query.clients.job.start-time.yaml'
+    - $ref: './../parameters/query.clients.job.end-time.yaml'
+    - $ref: './../parameters/query.clients.job.last-ingest.yaml'
+    - $ref: './../parameters/query.clients.hydrate-ous.yaml'
+    - $ref: './../parameters/query.clients.hydrate-domains.yaml'
+    - $ref: './../parameters/query.created-at.yaml'
+    - $ref: './../parameters/query.updated-at.yaml'
+    - $ref: './../parameters/query.deleted-at.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: './../schemas/model.client-scheduled-job-display.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
