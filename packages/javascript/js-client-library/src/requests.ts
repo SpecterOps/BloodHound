@@ -24,6 +24,7 @@ import {
     AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
+    CollectorJobSecret,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -382,3 +383,10 @@ export interface AlertRetryRequest {
     channel_id: string;
     event_id: string;
 }
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
+    value: string;
+};
