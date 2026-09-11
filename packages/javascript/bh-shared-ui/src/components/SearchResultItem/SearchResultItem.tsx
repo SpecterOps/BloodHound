@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, ListItem, ListItemText } from '@mui/material';
+import { ListItem, ListItemText } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { cn } from '../../utils';
 import HighlightedText from '../HighlightedText';
@@ -25,6 +26,7 @@ export type NodeSearchResult = {
     objectId: string;
     kind: string;
     id?: string;
+    distinguishedName?: string;
 };
 
 const SearchResultItem: FC<{
@@ -51,13 +53,9 @@ const SearchResultItem: FC<{
             tabIndex={0}
             {...getItemProps({ item, index })}>
             <ListItemText
+                disableTypography
                 primary={
-                    <Box
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}>
+                    <div className='flex items-start whitespace-nowrap'>
                         <NodeIcon
                             nodeType={item.kind}
                             className={cn(
@@ -67,21 +65,24 @@ const SearchResultItem: FC<{
                                 }
                             )}
                         />
-                        <Box
-                            style={{
-                                flexGrow: 1,
-                                marginRight: '1em',
-                            }}>
+                        <div className='flex flex-col'>
                             <HighlightedText text={item.label || item.objectId} search={keyword} />
-                        </Box>
-                    </Box>
+                            {item.distinguishedName && (
+                                <Typography
+                                    variant='caption'
+                                    className={cn(
+                                        // TODO: Tokenize when available
+                                        'text-[#505050] dark:text-[#CDCDCD] group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
+                                        {
+                                            'text-inherit': highlightedIndex === index,
+                                        }
+                                    )}>
+                                    {item.distinguishedName}
+                                </Typography>
+                            )}
+                        </div>
+                    </div>
                 }
-                primaryTypographyProps={{
-                    style: {
-                        whiteSpace: 'nowrap',
-                        verticalAlign: 'center',
-                    },
-                }}
             />
         </ListItem>
     );

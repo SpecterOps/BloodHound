@@ -162,6 +162,7 @@ const ExploreSearchCombobox: React.FC<{
                                             label: item.name,
                                             objectId: item.objectid,
                                             kind: item.type,
+                                            distinguishedName: item.distinguishedname,
                                         }}
                                         index={index}
                                         key={index}
