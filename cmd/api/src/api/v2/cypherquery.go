@@ -36,7 +36,7 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
-const auditLogOutcomeTimeout = time.Second
+const auditLogOutcomeTimeout = time.Second * 30
 
 var errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 
