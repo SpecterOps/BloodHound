@@ -3672,7 +3672,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					KindId:            1,
 					Type:              model.SchemaFindingTypeRelationship,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3696,7 +3696,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 					PZDisplayName:     null.StringFrom("zone display name"),
@@ -3719,7 +3719,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3751,7 +3751,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3782,7 +3782,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3835,7 +3835,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding1 := model.SchemaFinding{
 					SchemaExtensionId: createdExtension.ID,
 					KindId:            edgeKind.ID,
-					EnvironmentId:     createdEnvironment.ID,
+					EnvironmentId:     createdEnvironment.EnvironmentKindId,
 					Name:              "Finding_1",
 					DisplayName:       "Finding 1",
 				}
@@ -3844,7 +3844,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding2 := model.SchemaFinding{
 					SchemaExtensionId: createdExtension.ID,
 					KindId:            edgeKind.ID,
-					EnvironmentId:     createdEnvironment.ID,
+					EnvironmentId:     createdEnvironment.EnvironmentKindId,
 					Name:              "Finding_2",
 					DisplayName:       "Finding 2",
 				}
@@ -3911,7 +3911,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 			SchemaExtensionId: extension.ID,
 			KindId:            nodeKind.ID,
 			Type:              model.SchemaFindingTypeRelationship,
-			EnvironmentId:     environment.ID,
+			EnvironmentId:     environment.EnvironmentKindId,
 			Name:              "finding",
 			DisplayName:       "display name",
 		})
@@ -4310,7 +4310,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 		SchemaExtensionId: extension.ID,
 		Type:              model.SchemaFindingTypeRelationship,
 		KindId:            edgeKind.ID,
-		EnvironmentId:     environment.ID,
+		EnvironmentId:     environment.EnvironmentKindId,
 		Name:              "CascadeTestFinding",
 		DisplayName:       "Cascade Test Finding",
 	})
@@ -4385,12 +4385,12 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		require.NoError(t, err)
 
 		extensionId := ext.ID
-		environmentId := env.ID
+		environmentKindId := env.EnvironmentKindId
 		if i%3 == 0 {
 			extensionId = ext2.ID
-			environmentId = env2.ID
+			environmentKindId = env2.EnvironmentKindId
 		}
-		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "", "")
+		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentKindId, "F_"+strconv.Itoa(i), "", "")
 		require.NoError(t, err)
 		finding.Kind = graph.StringKind(kindName)
 
@@ -4848,7 +4848,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			Type:              model.SchemaFindingTypeRelationship,
 			SchemaExtensionId: ext.ID,
 			KindId:            int32(relKind.ID),
-			EnvironmentId:     env.ID,
+			EnvironmentId:     env.EnvironmentKindId,
 			Name:              "TestFinding",
 			DisplayName:       "Original Display Name",
 		})
