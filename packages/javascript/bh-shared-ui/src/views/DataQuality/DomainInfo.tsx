@@ -17,24 +17,13 @@
 import { faChartPie, faSignInAlt, faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { ActiveDirectoryQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { useActiveDirectoryDataQualityStatsQuery, useActiveDirectoryPlatformsDataQualityStatsQuery } from '../../hooks';
+import { CANVAS_MUI_TABLE_CLASS } from '../../styles';
 import LoadContainer from './LoadContainer';
-
-const useStyles = makeStyles((theme) => ({
-    print: {
-        '@media print': {
-            display: 'none',
-        },
-    },
-    container: {
-        backgroundColor: theme.palette.neutral.secondary,
-    },
-}));
 
 export const DomainMap = {
     users: { displayText: 'Users', kind: ActiveDirectoryNodeKind.User },
@@ -111,10 +100,9 @@ const Layout: React.FC<{
     stats: ActiveDirectoryQualityStat | null;
     isLoading: boolean;
 }> = ({ stats, isLoading }) => {
-    const classes = useStyles();
     return (
         <Box position='relative'>
-            <TableContainer component={Paper} className={classes.container}>
+            <TableContainer component={Paper} className={CANVAS_MUI_TABLE_CLASS} elevation={0}>
                 <Table>
                     <TableBody>
                         {Object.keys(DomainMap).map((key) => {
@@ -136,7 +124,11 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
+            <TableContainer
+                style={{ marginTop: '16px' }}
+                component={Paper}
+                className={CANVAS_MUI_TABLE_CLASS}
+                elevation={0}>
                 <Table>
                     <TableBody>
                         <LoadContainer
@@ -162,7 +154,11 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer style={{ marginTop: '16px' }} component={Paper} className={classes.container}>
+            <TableContainer
+                style={{ marginTop: '16px' }}
+                component={Paper}
+                className={CANVAS_MUI_TABLE_CLASS}
+                elevation={0}>
                 <Table>
                     <TableBody>
                         <LoadContainer

@@ -30,6 +30,7 @@ import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useOwnedTagId, usePZPathParams } from '../../../../hooks';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../../styles';
 import { apiClient, cn } from '../../../../utils';
 import { useRuleFormContext } from './RuleFormContext';
 
@@ -90,7 +91,8 @@ export const SeedSelectionPreview: FC<{ seeds: SelectorSeedRequest[]; ruleType: 
     }, [directObjects, expandedObjects, cypherQueryYieldsNoResults, dispatch, sampleResultsFetched]);
 
     return (
-        <Card className='xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]'>
+        <Card
+            className={`${OUTLINED_CANVAS_SURFACE_CLASS} xl:max-w-[26rem] sm:w-96 md:w-96 lg:w-lg grow max-lg:mb-10 2xl:max-w-full min-h-[36rem]`}>
             <CardHeader className='pl-6 pr-6 first:py-6 text-xl font-bold'>
                 <div className='flex justify-between items-center min-h-10'>
                     <span>Sample Results</span>

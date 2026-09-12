@@ -31,6 +31,7 @@ import {
 import { useState } from 'react';
 import ExploreSearchCombobox from '../../../../components/ExploreSearchCombobox';
 import NodeIcon from '../../../../components/NodeIcon';
+import { CANVAS_SURFACE_CLASS, CANVAS_TABLE_ROW_CLASS, OUTLINED_CANVAS_SURFACE_CLASS } from '../../../../styles';
 import { SearchValue } from '../../../Explore';
 import { useRuleFormContext } from './RuleFormContext';
 
@@ -48,7 +49,7 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
     };
 
     return (
-        <Card className='min-h-[33rem] h-[33rem]'>
+        <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} min-h-[33rem] h-[33rem]`}>
             <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                 <div className='flex justify-between'>
                     <span>Object Rule</span>
@@ -73,9 +74,12 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
                 </div>
                 <div className='h-[350px] overflow-auto'>
                     <Table className='w-full table-fixed' role='table' aria-label='Selected Objects'>
-                        <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
+                        <TableBody
+                            className={`${CANVAS_SURFACE_CLASS} first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-neutral-900`}>
                             {selectedObjects.map((node, index) => (
-                                <TableRow key={node.objectid + index} className='p-0 *:p-0 *:h-12'>
+                                <TableRow
+                                    key={node.objectid + index}
+                                    className={`${CANVAS_TABLE_ROW_CLASS} p-0 *:p-0 *:h-12`}>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
                                         <TextButton
                                             onClick={() => handleDeleteNode(node)}

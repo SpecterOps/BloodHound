@@ -16,6 +16,7 @@
 
 import { Switch } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../styles';
 import { cn } from '../utils';
 
 type CardWithSwitchProps = {
@@ -36,11 +37,7 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({
     disableSwitch = false,
 }) => {
     return (
-        <div
-            className={cn('p-4 border rounded-lg', {
-                'bg-neutral-2 border-transparent shadow-outer-1': isEnabled,
-                'bg-neutral-2/30 border-neutral-3 shadow-none': !isEnabled,
-            })}>
+        <div className={cn(OUTLINED_CANVAS_SURFACE_CLASS, 'p-4 rounded-lg')}>
             <div className='flex justify-between mb-4'>
                 <h4 className='font-bold text-lg'>{title}</h4>
                 <Switch

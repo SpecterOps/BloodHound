@@ -38,6 +38,7 @@ import { Control } from 'react-hook-form';
 import { DeleteConfirmationDialog } from '../../../../components';
 import { encodeCypherQuery, useDeleteRule, usePZPathParams } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../../styles';
 import { cn, useAppNavigate } from '../../../../utils';
 import PrivilegeZonesCypherEditor from '../../PrivilegeZonesCypherEditor';
 import { handleError } from '../utils';
@@ -112,7 +113,7 @@ const SeedSelection: FC<{
                         </FormItem>
                     )}
                 />
-                <Card className='mb-5 pl-4 px-4 py-2'>
+                <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} mb-5 pl-4 px-4 py-2`}>
                     <CardHeader className='text-xl font-bold'>
                         <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
                             Rule Type

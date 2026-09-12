@@ -22,6 +22,7 @@ import { useLocation } from 'react-router-dom';
 import { TagLabelPrefix } from '../../../constants';
 import { useCypherSchema } from '../../../hooks/useGraphKinds';
 import { usePZPathParams } from '../../../hooks/usePZParams';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../styles';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { useRuleFormContext } from '../Save/RuleForm/RuleFormContext';
@@ -92,7 +93,7 @@ export const PrivilegeZonesCypherEditor: FC<{
     }, [cypherQuery, onChange]);
 
     return (
-        <Card className='mb-8'>
+        <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} mb-8`}>
             <CardHeader>
                 <div className='flex justify-between items-center px-6 pt-3'>
                     <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Rule'}</CardTitle>

@@ -115,6 +115,22 @@ describe('<DetailsAccordion />', () => {
         expect(header).toHaveClass('border-primary');
     });
 
+    it('replaces the default item surface styling when itemClassName is provided', () => {
+        render(
+            <DetailsAccordion<Item>
+                Header={Header}
+                Content={Content}
+                getKey={(item) => item.title}
+                itemClassName='custom-surface'
+                items={[{ title: 'Custom', description: 'Surface' }]}
+            />
+        );
+
+        const item = screen.getByTestId('Custom');
+        expect(item).toHaveClass('custom-surface');
+        expect(item).not.toHaveClass('bg-neutral-light-2');
+    });
+
     it('disables items via itemDisabled and hides the chevron icon visually', () => {
         render(
             <DetailsAccordion<Item>
