@@ -18,7 +18,9 @@ put:
   description: |
     **Experimental** - Upserts the OpenGraph extension.
 
-    The request body may be a JSON extension payload or a ZIP bundle. ZIP bundles must contain `schema.json` and may include `pz_rules.json` and `saved_queries.json`.
+    The request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{"rules":[...]}`) and `saved_queries.json` (`{"queries":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.
+
+    Each recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.
   tags:
     - OpenGraph (Experimental)
     - Community
@@ -96,6 +98,12 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+              queries:
+                - query_key: all-node-kind-1
+                  name: All Node Kind 1
+                  query: MATCH (n:OGE_Node_Kind_1) RETURN n
+                  description: Lists all OGE_Node_Kind_1 nodes.
+                  category: Asset Management
           Active Directory:
             summary: Active Directory Example
             description: An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.

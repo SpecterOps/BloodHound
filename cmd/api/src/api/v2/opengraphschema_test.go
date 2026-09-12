@@ -97,6 +97,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					},
 				},
 			},
+			SavedQueries: &model.SavedQueriesPayload{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
+				},
+			},
 		}
 		serviceGraphExtension = model.GraphExtensionInput{
 			ExtensionInput: model.ExtensionInput{
@@ -143,6 +152,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						ShortRemediation: "do x",
 						LongRemediation:  "do x but better",
 					},
+				},
+			},
+			SavedQueriesInput: model.SavedQueriesInput{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
 				},
 			},
 		}
@@ -387,16 +405,26 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			args: args{
 				func() *http.Request {
 					var (
-						zipBuffer     bytes.Buffer
-						jsonPayload   []byte
-						zipWriter     *zip.Writer
-						schemaWriter  io.Writer
-						pzRulesWriter io.Writer
-						request       *http.Request
-						err           error
+						schemaExtension       = graphExtension
+						savedQueriesComponent = struct {
+							SavedQueries *model.SavedQueriesPayload `json:"queries"`
+						}{SavedQueries: graphExtension.SavedQueries}
+						zipBuffer           bytes.Buffer
+						jsonPayload         []byte
+						savedQueriesPayload []byte
+						zipWriter           *zip.Writer
+						schemaWriter        io.Writer
+						pzRulesWriter       io.Writer
+						savedQueriesWriter  io.Writer
+						request             *http.Request
+						err                 error
 					)
 
-					jsonPayload, err = json.Marshal(graphExtension)
+					schemaExtension.SavedQueries = nil
+					schemaExtension.PZRules = nil
+					jsonPayload, err = json.Marshal(schemaExtension)
+					require.NoError(t, err)
+					savedQueriesPayload, err = json.Marshal(savedQueriesComponent)
 					require.NoError(t, err)
 
 					zipWriter = zip.NewWriter(&zipBuffer)
@@ -417,6 +445,10 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 							}]
 						}]
 					}`))
+					require.NoError(t, err)
+					savedQueriesWriter, err = zipWriter.Create("saved_queries.json")
+					require.NoError(t, err)
+					_, err = savedQueriesWriter.Write(savedQueriesPayload)
 					require.NoError(t, err)
 					require.NoError(t, zipWriter.Close())
 
