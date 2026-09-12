@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { NodeDetails } from 'js-client-library';
+import { AssetGroupTagTypeLabel, AssetGroupTagTypeOwned, AssetGroupTagTypeZone, NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
@@ -74,6 +74,48 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoContent', () => {
+    it('displays all associated custom labels in the object information section', async () => {
+        server.use(
+            rest.get('/api/v2/features', (_req, res, ctx) => {
+                return res(ctx.json({ data: [{ key: 'tier_management_engine', enabled: true }] }));
+            }),
+            rest.get('/api/v2/asset-group-tags', (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            tags: [
+                                { id: 1, name: 'Tier Zero', type: AssetGroupTagTypeZone },
+                                { id: 2, name: 'Crown Jewels', type: AssetGroupTagTypeLabel },
+                                { id: 3, name: 'Incident Response', type: AssetGroupTagTypeLabel },
+                                { id: 4, name: 'Owned', type: AssetGroupTagTypeOwned },
+                                { id: 5, name: 'Not Associated', type: AssetGroupTagTypeLabel },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        const selectedNode = {
+            node_id: 1,
+            kinds: [
+                { name: 'CustomUser', node_kind_id: 1 },
+                { name: 'Tag_Tier_Zero', node_kind_id: 2 },
+                { name: 'Tag_Crown_Jewels', node_kind_id: 3 },
+                { name: 'Tag_Incident_Response', node_kind_id: 4 },
+                { name: 'Tag_Owned', node_kind_id: 5 },
+            ],
+            properties: { objectid: 'test-user' },
+        };
+
+        render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Labels:')).toBeInTheDocument();
+        expect(screen.getByText('Crown Jewels, Incident Response')).toBeInTheDocument();
+        expect(screen.queryByText('Owned')).not.toBeInTheDocument();
+        expect(screen.queryByText('Not Associated')).not.toBeInTheDocument();
+    });
+
     it('AZRole information panel will not display a section for PIM Assignments', async () => {
         const testId = '1';
         const nodeType = AzureNodeKind.Role;
