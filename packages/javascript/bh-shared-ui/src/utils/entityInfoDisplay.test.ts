@@ -31,11 +31,43 @@ import {
     formatDateString,
     formatList,
     formatNumber,
+    formatPotentiallyUnknownLabel,
     formatPrimitive,
+    formatRelationshipKind,
     getEntityName,
     NoEntitySelectedHeader,
+    privilegeZonePropertyDisplayNames,
     validateProperty,
 } from './entityInfoDisplay';
+
+describe('Formatting privilege zone graph labels', () => {
+    it.each([
+        ['PZ_InZone', 'In Zone'],
+        ['PZ_PartOfZone', 'Part Of Zone'],
+        ['CustomEdge', 'CustomEdge'],
+    ])('formats relationship kind %s as %s', (kind, expected) => {
+        expect(formatRelationshipKind(kind)).toBe(expected);
+    });
+
+    it.each([
+        ['environment_name', 'Environment Name'],
+        ['member_count', 'Member Count'],
+        ['custom_property', 'Custom Property'],
+    ])('keeps generic property %s formatted as %s', (property, expected) => {
+        expect(formatPotentiallyUnknownLabel(property)).toBe(expected);
+    });
+
+    it.each([
+        ['relationship', 'Relationship'],
+        ['source_object', 'Source object'],
+        ['zone_name', 'Zone'],
+        ['environment_name', 'Environment'],
+        ['member_count', 'Members in environment'],
+        ['source', 'Source'],
+    ])('formats privilege zone property %s as %s', (property, expected) => {
+        expect(formatPotentiallyUnknownLabel(property, privilegeZonePropertyDisplayNames)).toBe(expected);
+    });
+});
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
@@ -186,4 +218,16 @@ describe('Evaluating the entity display name from a given entity', () => {
             })
         ).toBe('foo');
     });
+    it.each(['PZ_PrivilegeZone', 'PZ_PrivilegeZoneEnvironment'])(
+        'should use the standard name for %s entities',
+        (kind) => {
+            expect(
+                getEntityName({
+                    node_id: 1,
+                    kinds: [{ name: kind, node_kind_id: 1 }],
+                    properties: { name: 'TIER ZERO', displayname: 'Tier Zero' },
+                })
+            ).toBe('TIER ZERO');
+        }
+    );
 });

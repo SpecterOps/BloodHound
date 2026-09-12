@@ -202,3 +202,49 @@ func TestUnifiedGraph_AddPathSet(t *testing.T) {
 		require.Equal(t, len(testGraph.Edges), len(testGraph.Edges))
 	})
 }
+
+func TestFromDAWGSRelationship(t *testing.T) {
+	testCases := []struct {
+		name          string
+		kind          string
+		expectedLabel string
+	}{
+		{name: "privilege zone membership", kind: "PZ_InZone", expectedLabel: "In Zone"},
+		{name: "privilege zone rollup", kind: "PZ_PartOfZone", expectedLabel: "Part Of Zone"},
+		{name: "unmapped relationship", kind: "CustomEdge", expectedLabel: "CustomEdge"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			relationship := &graph.Relationship{
+				ID:         1,
+				StartID:    2,
+				EndID:      3,
+				Kind:       graph.StringKind(testCase.kind),
+				Properties: graph.NewProperties(),
+			}
+
+			result := FromDAWGSRelationship(false)(relationship)
+
+			require.Equal(t, testCase.kind, result.Kind)
+			require.Equal(t, testCase.expectedLabel, result.Label)
+		})
+	}
+}
+
+func TestFromDAWGSNode_PrivilegeZonesUseStandardName(t *testing.T) {
+	t.Parallel()
+
+	node := &graph.Node{
+		Kinds: graph.Kinds{graph.StringKind("PZ_PrivilegeZone")},
+		Properties: graph.AsProperties(map[string]any{
+			common.Name.String():        "TIER ZERO",
+			common.DisplayName.String(): "Tier Zero",
+			common.ObjectID.String():    "pz:1",
+		}),
+	}
+
+	result := FromDAWGSNode(nil, node, false)
+
+	require.Equal(t, "TIER ZERO", result.Label)
+}

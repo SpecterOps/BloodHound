@@ -16,7 +16,7 @@
 import { RelationshipDetails, RelationshipDetailsWithInfo } from 'js-client-library';
 import React, { HTMLProps } from 'react';
 import { RoleBasedFilterBadge } from '../../../components/RoleBasedFilterBadge';
-import { cn } from '../../../utils';
+import { cn, formatRelationshipKind } from '../../../utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
 import Header from './EdgeInfoHeader';
@@ -37,7 +37,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ className, selectedEdge }) 
             <RoleBasedFilterBadge />
             <>
                 <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
-                    <Header name={selectedEdge.kind.name} />
+                    <Header name={formatRelationshipKind(selectedEdge.kind.name)} />
                 </div>
                 <div className='bg-neutral-2 mt-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                     <EdgeInfoContent selectedEdge={selectedEdge} />

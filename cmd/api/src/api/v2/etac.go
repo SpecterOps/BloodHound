@@ -142,21 +142,38 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 
 	filteredResponse := model.UnifiedGraph{}
 	filteredNodes := make(map[string]model.UnifiedNode)
+	accessibleNodeIDs := make(map[string]struct{})
 
 	environmentKeys := []string{ad.DomainSID.String(), azure.TenantID.String(), graphschema.EnvironmentIDKey}
 
-	// filter nodes based on environment access
+	// Resolve directly accessible environment-scoped nodes first.
 	for id, node := range graphResponse.Nodes {
-		include := false
 		for _, key := range environmentKeys {
 			if val, ok := node.Properties[key]; ok {
 				if envStr, ok := val.(string); ok && slices.Contains(accessList, envStr) {
-					include = true
+					accessibleNodeIDs[id] = struct{}{}
 					break
 				}
 			}
 		}
+	}
 
+	// Canonical Privilege Zone nodes span environments. Expose one only when this
+	// response also contains an authorized environment-specific zone connected to it.
+	for _, edge := range graphResponse.Edges {
+		if edge.Kind != "PZ_PartOfZone" {
+			continue
+		}
+		if _, accessible := accessibleNodeIDs[edge.Source]; accessible {
+			if node, present := graphResponse.Nodes[edge.Target]; present && slices.Contains(node.Kinds, "PZ_PrivilegeZone") {
+				accessibleNodeIDs[edge.Target] = struct{}{}
+			}
+		}
+	}
+
+	// Filter nodes based on resolved environment access.
+	for id, node := range graphResponse.Nodes {
+		_, include := accessibleNodeIDs[id]
 		if include {
 			// user has access, we keep original node
 			filteredNodes[id] = node

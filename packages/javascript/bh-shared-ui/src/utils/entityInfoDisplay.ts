@@ -36,13 +36,32 @@ import { MappedStringLiteral } from '../types';
 import { EntityKinds } from './content';
 import { LuxonFormat } from './datetime';
 
-export const formatPotentiallyUnknownLabel = (propKey: string) => {
-    const { kind, isKnownProperty } = validateProperty(propKey);
-
-    return isKnownProperty ? getFieldLabel(kind!, propKey) : `${startCase(propKey)}`;
+const privilegeZoneRelationshipDisplayNames: Record<string, string> = {
+    PZ_InZone: 'In Zone',
+    PZ_PartOfZone: 'Part Of Zone',
 };
 
-export const formatObjectInfoFields = (props: any): EntityField[] => {
+export const privilegeZonePropertyDisplayNames: Record<string, string> = {
+    relationship: 'Relationship',
+    source_object: 'Source object',
+    zone_name: 'Zone',
+    environment_name: 'Environment',
+    member_count: 'Members in environment',
+    source: 'Source',
+};
+
+export const formatRelationshipKind = (kind: string): string => privilegeZoneRelationshipDisplayNames[kind] ?? kind;
+
+export const formatPotentiallyUnknownLabel = (propKey: string, propertyDisplayNames: Record<string, string> = {}) => {
+    const { kind, isKnownProperty } = validateProperty(propKey);
+
+    return isKnownProperty ? getFieldLabel(kind!, propKey) : propertyDisplayNames[propKey] ?? `${startCase(propKey)}`;
+};
+
+export const formatObjectInfoFields = (
+    props: any,
+    propertyDisplayNames: Record<string, string> = {}
+): EntityField[] => {
     let mappedFields: EntityField[] = [];
     const propKeys = Object.keys(props || {});
 
@@ -65,7 +84,7 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallyUnknownLabel(key)}:`,
+            label: `${formatPotentiallyUnknownLabel(key, propertyDisplayNames)}:`,
             value: value,
             keyprop: key,
         });

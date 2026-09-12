@@ -16,7 +16,7 @@
 import { NodeDetails, RelationshipDetails } from 'js-client-library';
 import { FC, useEffect } from 'react';
 import { usePreviousValue } from '../../../hooks';
-import { EntityField, formatObjectInfoFields } from '../../../utils';
+import { EntityField, formatObjectInfoFields, privilegeZonePropertyDisplayNames } from '../../../utils';
 import { FieldsContainer, ObjectInfoFields } from '../fragments';
 import { useObjectInfoPanelContext } from '../providers';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
@@ -48,12 +48,16 @@ const EdgeObjectInformation: FC<EdgeObjectInformationProps> = ({ selectedEdge, s
         value: targetNode?.properties.name || targetNode?.properties.objectid || '',
     };
 
+    const isPrivilegeZoneRelationship = ['PZ_InZone', 'PZ_PartOfZone'].includes(selectedEdge.kind.name);
     const formattedObjectFields: EntityField[] = [
         sourceNodeField,
         targetNodeField,
-        ...formatObjectInfoFields({
-            ...selectedEdge.properties,
-        }),
+        ...formatObjectInfoFields(
+            {
+                ...selectedEdge.properties,
+            },
+            isPrivilegeZoneRelationship ? privilegeZonePropertyDisplayNames : undefined
+        ),
     ];
 
     const sectionLabel = 'Relationship Information';

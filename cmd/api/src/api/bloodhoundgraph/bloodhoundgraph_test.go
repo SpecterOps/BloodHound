@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -135,4 +136,31 @@ func TestSetFontIcon(t *testing.T) {
 		assert.Equal(t, "/ui/meta.png", node.Image)
 		assert.Nil(t, node.FontIcon)
 	})
+}
+
+func TestNodeToBloodHoundGraph_PrivilegeZonesUseStandardName(t *testing.T) {
+	t.Parallel()
+
+	node := &graph.Node{
+		Kinds: graph.Kinds{graph.StringKind("PZ_PrivilegeZoneEnvironment")},
+		Properties: graph.AsProperties(map[string]any{
+			common.Name.String():        "TIER ZERO IN PHANTOM.CORP",
+			common.DisplayName.String(): "Tier Zero in PHANTOM.CORP",
+			common.ObjectID.String():    "pz:1:env",
+		}),
+	}
+
+	result := NodeToBloodHoundGraph(nil, node)
+
+	require.NotNil(t, result.Label)
+	require.Equal(t, "TIER ZERO IN PHANTOM.CORP", result.Label.Text)
+}
+
+func TestRelationshipToBloodHoundGraph_PrivilegeZoneLabel(t *testing.T) {
+	t.Parallel()
+
+	result := RelationshipToBloodHoundGraph(&graph.Relationship{Kind: graph.StringKind("PZ_InZone")})
+
+	require.NotNil(t, result.Label)
+	require.Equal(t, "In Zone", result.Label.Text)
 }
