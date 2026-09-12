@@ -791,6 +791,9 @@ func TestEntityDetails(t *testing.T) {
 				assert.Equal(t, graphAzure.AddSecret, edge.Kind)
 				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AppAdminRole.ID, harness.AZAddSecretHarness.CloudAppAdminRole.ID}, edge.StartID))
 				assert.True(t, slices.Contains([]graph.ID{harness.AZAddSecretHarness.AZApp.ID, harness.AZAddSecretHarness.AZServicePrincipal.ID}, edge.EndID))
+				// Regression for #943: the managed-identity service principal, whose credentials
+				// are Azure-managed, must never be the target of an AZAddSecret edge.
+				assert.NotEqual(t, harness.AZAddSecretHarness.AZManagedIdentitySP.ID, edge.EndID)
 			}
 		})
 	})
