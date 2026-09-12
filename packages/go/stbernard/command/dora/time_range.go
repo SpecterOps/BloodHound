@@ -62,6 +62,10 @@ func resolveTimeRange(
 		return startTime, endTime, nil
 	}
 
+	if endDate != "" && startDate == "" {
+		return time.Time{}, time.Time{}, fmt.Errorf("end date requires start date")
+	}
+
 	if startDate != "" {
 		startTime, err := time.Parse(time.DateOnly, startDate)
 		if err != nil {
@@ -86,6 +90,10 @@ func resolveTimeRange(
 		}
 
 		return startTime, endTime, nil
+	}
+
+	if days <= 0 {
+		return time.Time{}, time.Time{}, fmt.Errorf("days must be greater than zero")
 	}
 
 	startTime := referenceTime.AddDate(0, 0, -days)

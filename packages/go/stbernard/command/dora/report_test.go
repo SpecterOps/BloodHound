@@ -283,6 +283,23 @@ func TestResolveTimeRange(t *testing.T) {
 			fiscalStartMonth: 2,
 			expectedError:    "start date (2026-05-01) cannot be after end date (2026-04-30)",
 		},
+		{
+			name:             "end date requires start date",
+			endDate:          "2026-04-30",
+			fiscalStartMonth: 2,
+			expectedError:    "end date requires start date",
+		},
+		{
+			name:             "zero days is invalid",
+			fiscalStartMonth: 2,
+			expectedError:    "days must be greater than zero",
+		},
+		{
+			name:             "negative days is invalid",
+			days:             -1,
+			fiscalStartMonth: 2,
+			expectedError:    "days must be greater than zero",
+		},
 	}
 
 	for _, testCase := range testCases {
