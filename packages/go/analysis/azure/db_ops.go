@@ -20,9 +20,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, sourceKind graph.Kind, objectID string) (graph.PathSet, error) {
@@ -546,6 +548,46 @@ func ListAppFederatedIdentityCredentials(ctx context.Context, db graph.Database,
 			return err
 		} else {
 			nodes, err = FetchApplicationFederatedIdentityCredentialList(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
+func ListSyncedIdentityPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = ops.TraversePaths(tx, ops.TraversalPlan{
+				Root:      node,
+				Direction: graph.DirectionOutbound,
+				BranchQuery: func() graph.Criteria {
+					return query.KindIn(query.Relationship(), ad.SyncedToADUser)
+				},
+			})
+			return err
+		}
+	})
+}
+
+func ListSyncedIdentities(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+				Root:      node,
+				Direction: graph.DirectionOutbound,
+				BranchQuery: func() graph.Criteria {
+					return query.KindIn(query.Relationship(), ad.SyncedToADUser)
+				},
+				Skip:  skip,
+				Limit: limit,
+			})
 			return err
 		}
 	})
