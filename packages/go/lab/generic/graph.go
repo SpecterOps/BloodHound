@@ -29,6 +29,7 @@ import (
 )
 
 var excludedProperties = map[string]struct{}{
+	"firstseen":     {},
 	"lastseen":      {},
 	"lastcollected": {},
 }
