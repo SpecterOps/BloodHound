@@ -59,6 +59,10 @@ func (s NTLMCache) GetLdapCacheForDomain(domainSid string) (LDAPSigningCache, bo
 	return cache, ok
 }
 
+// NewNTLMCache builds the NTLM caches used by the NTLM relay analysis, including
+// the set of computers that are unrestricted for outbound NTLM traffic. Computers
+// whose restrictoutboundntlm property is missing are excluded (fail closed) to
+// avoid false positives in the attack path.
 func NewNTLMCache(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (NTLMCache, error) {
 	var (
 		ntlmCache                   = NTLMCache{}
