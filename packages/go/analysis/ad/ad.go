@@ -724,6 +724,8 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			pathSet, err = GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx, db, edge)
+		default:
+			err = fmt.Errorf("no edge composition handler for kind %s", edge.Kind.String())
 		}
 		return err
 	}); err != nil {
