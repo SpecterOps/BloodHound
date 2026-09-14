@@ -384,6 +384,23 @@ export interface AlertRetryRequest {
     event_id: string;
 }
 
+export interface CreateCollectorJobProfileRequest {
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
+export interface UpdateCollectorJobProfileRequest {
+    name?: string;
+    params?: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
 // ---------------------------------------------------------------------------
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ import (
 
 type SavedQueriesData interface {
 	GetSavedQuery(ctx context.Context, savedQueryID int64) (model.SavedQuery, error)
+	GetSavedQueriesByExtensionID(ctx context.Context, schemaExtensionID int32) (model.SavedQueries, error)
 	ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error)
 	CreateSavedQuery(ctx context.Context, userID uuid.UUID, name string, query string, description string, schemaExtensionID *int32, queryKey *string, category string) (model.SavedQuery, error)
 	UpdateSavedQuery(ctx context.Context, savedQuery model.SavedQuery) (model.SavedQuery, error)
@@ -45,6 +46,15 @@ func (s *BloodhoundDB) GetSavedQuery(ctx context.Context, savedQueryID int64) (m
 	savedQuery := model.SavedQuery{}
 	result := s.db.WithContext(ctx).First(&savedQuery, savedQueryID)
 	return savedQuery, CheckError(result)
+}
+
+func (s *BloodhoundDB) GetSavedQueriesByExtensionID(ctx context.Context, schemaExtensionID int32) (model.SavedQueries, error) {
+	var (
+		savedQueries = model.SavedQueries{}
+		queryResult  = s.db.WithContext(ctx).Where("schema_extension_id = ?", schemaExtensionID).Find(&savedQueries)
+	)
+
+	return savedQueries, CheckError(queryResult)
 }
 
 func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userID uuid.UUID, order string, filter model.SQLFilter, skip, limit int) ([]model.ScopedSavedQuery, int, error) {

@@ -111,10 +111,10 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 			},
 		},
 		{
-			name: "error_-_invalid_environment_kind",
+			name: "success_-_auto_registers_environment_kind",
 			args: args{
-				name:                 "BadEnvKindFinding",
-				displayName:          "Bad Env Kind Finding",
+				name:                 "EnvKindFinding",
+				displayName:          "Env Kind Finding",
 				relationshipKindName: "TestRelationshipKind",
 				environmentKindName:  "KindThatDoesNotExist",
 			},
@@ -128,8 +128,11 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 			},
 			assert: func(t *testing.T, db *database.BloodhoundDB, finding model.SchemaFinding, err error, args args) {
 				t.Helper()
-				require.ErrorContains(t, err, "error retrieving environment kind 'KindThatDoesNotExist'")
-				assert.Zero(t, finding.ID)
+				require.NoError(t, err)
+				environmentKinds, err := db.GetKindsByIDs(context.Background(), finding.EnvironmentId)
+				require.NoError(t, err)
+				require.Len(t, environmentKinds, 1)
+				assert.Equal(t, args.environmentKindName, environmentKinds[0].Name)
 			},
 		},
 	}
@@ -276,7 +279,7 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 			},
 		},
 		{
-			name: "error_-_invalid_environment_kind",
+			name: "success_-_auto_registers_environment_kind",
 			args: args{
 				newDisplayName:       "Updated Display",
 				relationshipKindName: "TestRelationshipKind",
@@ -315,8 +318,11 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 			},
 			assert: func(t *testing.T, db *database.BloodhoundDB, existing model.SchemaFinding, updated model.SchemaFinding, err error, args args) {
 				t.Helper()
-				require.ErrorContains(t, err, "error retrieving environment kind 'NonExistentEnvKind'")
-				assert.Zero(t, updated.ID)
+				require.NoError(t, err)
+				environmentKinds, err := db.GetKindsByIDs(context.Background(), updated.EnvironmentId)
+				require.NoError(t, err)
+				require.Len(t, environmentKinds, 1)
+				assert.Equal(t, args.environmentKindName, environmentKinds[0].Name)
 			},
 		},
 	}

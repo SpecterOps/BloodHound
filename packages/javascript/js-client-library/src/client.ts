@@ -23,6 +23,7 @@ import {
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
+    CreateCollectorJobProfileRequest,
     CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
@@ -47,6 +48,7 @@ import {
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
+    UpdateCollectorJobProfileRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -75,6 +77,7 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CollectorJobProfileResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
     CreateCollectorJobSecretResponse,
@@ -833,6 +836,23 @@ class BHEAPIClient {
         this.baseClient.post<RunCollectorJobProfileResponse>(
             '/api/v2/collector-job-queue',
             { job_profile_id: profileId },
+            options
+        );
+
+    createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+
+    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    updateCollectorJobProfile = (
+        profileId: number,
+        payload: UpdateCollectorJobProfileRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<CollectorJobProfileResponse>(
+            `/api/v2/collector-job-profiles/${profileId}`,
+            payload,
             options
         );
 

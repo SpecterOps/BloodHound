@@ -70,23 +70,6 @@ properties:
           type: boolean
         info:
           $ref: './model.graph-extension.kind-info-definition.yaml'
-  #properties:
-  #  type: array
-  #  items:
-  #    type: object
-  #    properties:
-  #      name:
-  #        type: string
-  #        example: UserPrincipalName
-  #      display_name:
-  #        type: string
-  #        example: User Principal Name
-  #      data_type:
-  #        type: string
-  #        example: string
-  #      description:
-  #        type: string
-  #        example: An Active Directory User Principal Name
   environments:
     type: array
     items:
@@ -136,6 +119,8 @@ properties:
   pz_rules:
     type: object
     description: Optional privilege-zone rules component.
+    required:
+      - rules
     properties:
       rules:
         type: array
@@ -157,24 +142,35 @@ properties:
                     type: integer
                   value:
                     type: string
-  saved_queries:
-    type: object
-    description: Optional saved queries component.
-    properties:
-      queries:
-        type: array
-        items:
-          type: object
-          properties:
-            query_key:
-              type: string
-              example: all-domain-admins
-            name:
-              type: string
-              example: All Domain Admins
-            query:
-              type: string
-              example: MATCH (n) RETURN n LIMIT 1
-            description:
-              type: string
-              example: Returns all domain admin nodes.
+  queries:
+    type: array
+    description: |
+      Declares the extension's desired saved queries. Omitting this property or
+      providing an empty array removes existing saved queries associated with the extension.
+    items:
+      type: object
+      required:
+        - query_key
+        - name
+        - query
+      properties:
+        query_key:
+          type: string
+          description: A stable identifier for reconciling the saved query.
+          example: critical-assets
+        name:
+          type: string
+          description: The saved query's display name.
+          example: Critical Assets
+        query:
+          type: string
+          description: Extension-provided saved queries must be read-only; updating clauses are not supported.
+          example: MATCH (n) RETURN n
+        description:
+          type: string
+          description: An optional description of the saved query.
+          example: Lists all critical assets.
+        category:
+          type: string
+          description: An optional category for grouping the saved query.
+          example: Asset Management
