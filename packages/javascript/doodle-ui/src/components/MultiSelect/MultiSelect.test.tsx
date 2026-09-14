@@ -326,20 +326,17 @@ describe('MultiSelect', () => {
         expect(trigger).not.toHaveClass('bg-primary');
     });
 
-    it('forwards dataAnalytics to the trigger button for Pendo trackable ID data-analytics ', () => {
+    it('forwards data-analytics to the trigger button for custom Pendo trackable ID', () => {
         render(
             <MultiSelect
                 options={options}
                 value={[]}
                 onValueChange={vi.fn()}
                 placeholder='All Items'
-                dataAnalytics='findings-table-severity-filter'
+                data-analytics='pendo-test-id'
             />
         );
 
-        expect(screen.getByRole('button', { name: 'All Items' })).toHaveAttribute(
-            'data-analytics',
-            'findings-table-severity-filter'
-        );
+        expect(screen.getByRole('button', { name: 'All Items' })).toHaveAttribute('data-analytics', 'pendo-test-id');
     });
 });

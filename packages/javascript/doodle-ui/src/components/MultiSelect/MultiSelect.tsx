@@ -91,7 +91,7 @@ const MultiSelectTrigger = React.forwardRef<HTMLButtonElement, MultiSelectTrigge
 MultiSelectTrigger.displayName = 'MultiSelectTrigger';
 
 interface MultiSelectProps {
-    dataAnalytics?: string;
+    'data-analytics'?: string;
     options: MultiSelectOption[];
     value: string[];
     onValueChange: (values: string[]) => void;
@@ -189,7 +189,7 @@ const MultiSelectStateRow = ({ children }: { children: React.ReactNode }) => (
  * MultiSelect Doodle Component
  */
 const MultiSelect = ({
-    dataAnalytics,
+    'data-analytics': dataAnalytics,
     options,
     value,
     onValueChange,
