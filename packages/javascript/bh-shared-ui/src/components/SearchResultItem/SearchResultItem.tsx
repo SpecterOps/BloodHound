@@ -65,9 +65,9 @@ const SearchResultItem: FC<{
                                     variant='caption'
                                     className={cn(
                                         // TODO: Tokenize when available
-                                        'text-[#505050] dark:text-[#CDCDCD] group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
+                                        'text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
                                         {
-                                            'text-inherit': highlightedIndex === index,
+                                            'text-common-white dark:text-common-dark': highlightedIndex === index,
                                         }
                                     )}>
                                     {item.distinguishedName}
