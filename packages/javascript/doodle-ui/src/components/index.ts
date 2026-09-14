@@ -28,6 +28,7 @@ export * from './DataTable';
 export * from './DatePicker';
 export * from './Dialog';
 export * from './Form';
+export * from './Icon';
 export * from './Input';
 export * from './Label';
 export * from './Link';
