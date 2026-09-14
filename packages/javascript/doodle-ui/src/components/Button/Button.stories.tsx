@@ -80,9 +80,18 @@ Use a Button when a user remains in the current context and triggers an action, 
 
 ### Forms and rendered elements
 
-Button defaults to \`type="button"\`. Set \`type="submit"\` or \`type="reset"\` explicitly when needed in a form.
+Button defaults to \`type="button"\`, preventing it from unintentionally submitting a containing form. Pass \`type="submit"\` when the Button should submit the form:
 
- Use the Base UI \`render\` prop when another element needs to provide the rendered structure. This replaces the former \`asChild\` pattern and avoids nesting interactive elements.
+\`\`\`tsx
+<form onSubmit={handleSubmit}>
+    <Button>Cancel</Button>
+    <Button type='submit'>Save</Button>
+</form>
+\`\`\`
+
+The Cancel Button renders with \`type="button"\`, while the Save Button keeps the supplied \`type="submit"\`. You can also pass \`type="reset"\` when native form reset behavior is intended.
+
+Use the Base UI \`render\` prop when another element needs to provide the rendered structure. This replaces the former \`asChild\` pattern and avoids nesting interactive elements.
 
 ### Deprecated APIs
 
@@ -174,7 +183,7 @@ export const DefaultType: ButtonStory = {
     parameters: {
         docs: {
             description: {
-                story: `Button defaults to \`type="button"\` so it does not unintentionally submit a containing form. Set \`type="submit"\` or \`type="reset"\` explicitly when needed.`,
+                story: `Button defaults to \`type="button"\` so it does not unintentionally submit a containing form. Use the type control to verify that an explicitly supplied \`type="submit"\` or \`type="reset"\` overrides the default.`,
             },
         },
     },
