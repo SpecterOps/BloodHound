@@ -241,12 +241,12 @@ func (_c *MockService_GetDatapipeStatus_Call) RunAndReturn(run func(context1 con
 	return _c
 }
 
-// IsProtectedKey provides a mock function for the type MockService
-func (_mock *MockService) IsProtectedKey(parameterKey services.ParameterKey) bool {
+// IsAPIAllowedKey provides a mock function for the type MockService
+func (_mock *MockService) IsAPIAllowedKey(parameterKey services.ParameterKey) bool {
 	ret := _mock.Called(parameterKey)
 
 	if len(ret) == 0 {
-		panic("no return value specified for IsProtectedKey")
+		panic("no return value specified for IsAPIAllowedKey")
 	}
 
 	var r0 bool
@@ -258,18 +258,18 @@ func (_mock *MockService) IsProtectedKey(parameterKey services.ParameterKey) boo
 	return r0
 }
 
-// MockService_IsProtectedKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsProtectedKey'
-type MockService_IsProtectedKey_Call struct {
+// MockService_IsAPIAllowedKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsAPIAllowedKey'
+type MockService_IsAPIAllowedKey_Call struct {
 	*mock.Call
 }
 
-// IsProtectedKey is a helper method to define mock.On call
+// IsAPIAllowedKey is a helper method to define mock.On call
 //   - parameterKey services.ParameterKey
-func (_e *MockService_Expecter) IsProtectedKey(parameterKey interface{}) *MockService_IsProtectedKey_Call {
-	return &MockService_IsProtectedKey_Call{Call: _e.mock.On("IsProtectedKey", parameterKey)}
+func (_e *MockService_Expecter) IsAPIAllowedKey(parameterKey interface{}) *MockService_IsAPIAllowedKey_Call {
+	return &MockService_IsAPIAllowedKey_Call{Call: _e.mock.On("IsAPIAllowedKey", parameterKey)}
 }
 
-func (_c *MockService_IsProtectedKey_Call) Run(run func(parameterKey services.ParameterKey)) *MockService_IsProtectedKey_Call {
+func (_c *MockService_IsAPIAllowedKey_Call) Run(run func(parameterKey services.ParameterKey)) *MockService_IsAPIAllowedKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 services.ParameterKey
 		if args[0] != nil {
@@ -282,63 +282,12 @@ func (_c *MockService_IsProtectedKey_Call) Run(run func(parameterKey services.Pa
 	return _c
 }
 
-func (_c *MockService_IsProtectedKey_Call) Return(b bool) *MockService_IsProtectedKey_Call {
+func (_c *MockService_IsAPIAllowedKey_Call) Return(b bool) *MockService_IsAPIAllowedKey_Call {
 	_c.Call.Return(b)
 	return _c
 }
 
-func (_c *MockService_IsProtectedKey_Call) RunAndReturn(run func(parameterKey services.ParameterKey) bool) *MockService_IsProtectedKey_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// IsValidKey provides a mock function for the type MockService
-func (_mock *MockService) IsValidKey(parameterKey services.ParameterKey) bool {
-	ret := _mock.Called(parameterKey)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsValidKey")
-	}
-
-	var r0 bool
-	if returnFunc, ok := ret.Get(0).(func(services.ParameterKey) bool); ok {
-		r0 = returnFunc(parameterKey)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-	return r0
-}
-
-// MockService_IsValidKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsValidKey'
-type MockService_IsValidKey_Call struct {
-	*mock.Call
-}
-
-// IsValidKey is a helper method to define mock.On call
-//   - parameterKey services.ParameterKey
-func (_e *MockService_Expecter) IsValidKey(parameterKey interface{}) *MockService_IsValidKey_Call {
-	return &MockService_IsValidKey_Call{Call: _e.mock.On("IsValidKey", parameterKey)}
-}
-
-func (_c *MockService_IsValidKey_Call) Run(run func(parameterKey services.ParameterKey)) *MockService_IsValidKey_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 services.ParameterKey
-		if args[0] != nil {
-			arg0 = args[0].(services.ParameterKey)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *MockService_IsValidKey_Call) Return(b bool) *MockService_IsValidKey_Call {
-	_c.Call.Return(b)
-	return _c
-}
-
-func (_c *MockService_IsValidKey_Call) RunAndReturn(run func(parameterKey services.ParameterKey) bool) *MockService_IsValidKey_Call {
+func (_c *MockService_IsAPIAllowedKey_Call) RunAndReturn(run func(parameterKey services.ParameterKey) bool) *MockService_IsAPIAllowedKey_Call {
 	_c.Call.Return(run)
 	return _c
 }

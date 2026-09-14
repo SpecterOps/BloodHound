@@ -46,23 +46,9 @@ type Parameter struct {
 	DeletedAt sql.NullTime
 }
 
-func (s Service) IsValidKey(parameterKey ParameterKey) bool {
-	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsProtectedKey These keys should not be updatable by users
-func (s Service) IsProtectedKey(parameterKey ParameterKey) bool {
-	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey:
-		return true
-	default:
-		return false
-	}
+func (s Service) IsAPIAllowedKey(key ParameterKey) bool {
+	paramdef, ok := paramTypeDefinitions[key]
+	return ok && paramdef.allowAPIAccess
 }
 
 // Parameters is a collection of Parameter structs.
