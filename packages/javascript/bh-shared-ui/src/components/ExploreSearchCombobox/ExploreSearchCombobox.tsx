@@ -71,8 +71,7 @@ const ExploreSearchCombobox: React.FC<{
         itemToString: (item) => item?.name || item?.objectid || '',
     });
 
-    // A result's distinguished name is shown only when another result has the
-    // same displayed label (`name || objectid`).
+    // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
     const duplicateDisplayNames = useMemo(() => {
         const displayNameCounts = new Map<string, number>();
 

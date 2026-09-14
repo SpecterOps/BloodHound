@@ -33,7 +33,7 @@ function NodeIcon({ nodeType = '', className }: NodeIconProps) {
     return (
         <Tooltip
             tooltip={nodeType}
-            contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast' }}>
+            contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast z-[1400]' }}>
             <div className='inline-block relative mr-1'>
                 <div
                     className={cn(

@@ -57,15 +57,7 @@ const SearchResultItem: FC<{
                 disableTypography
                 primary={
                     <div className='flex items-start whitespace-nowrap'>
-                        <NodeIcon
-                            nodeType={item.kind}
-                            className={cn(
-                                'group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
-                                {
-                                    'text-inherit': highlightedIndex === index,
-                                }
-                            )}
-                        />
+                        <NodeIcon nodeType={item.kind} />
                         <div className='flex flex-col'>
                             <HighlightedText text={item.label || item.objectId} search={keyword} />
                             {showDistinguishedName && item.distinguishedName && (
