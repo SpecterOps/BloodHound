@@ -54,6 +54,7 @@
         "vitest/vite": "7.3.5",
         "vite-node/vite": "7.3.5",
         "ws": "^8.21.0",
-        "js-yaml": "4.3.1"
+        "js-yaml": "4.3.2",
+        "@xmldom/xmldom": "0.8.15"
     }
 }

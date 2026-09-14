@@ -43,7 +43,7 @@ const browsers = [
 ] as const;
 
 const webServer = {
-    command: `yarn dev --host ${hostname} --port ${port || '3000'}`,
+    command: `yarn dev --mode playwright --host ${hostname} --port ${port || '3000'}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

@@ -17,10 +17,10 @@
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton } from 'doodle-ui';
-import { FC, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useKeybindings, useNavExpanded } from '../../hooks';
+import { BREAKPOINTS, useApiVersion, useKeybindings, useMediaQuery, useNavExpanded } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -160,6 +160,8 @@ const MainNavFooter: FC<{
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isExpanded, setIsExpanded] = useNavExpanded();
+    const isExtraLargeViewport = useMediaQuery(`(min-width: ${BREAKPOINTS.xl})`);
+    const previousIsExtraLargeViewport = useRef(isExtraLargeViewport);
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -181,6 +183,13 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     );
 
     useKeybindings(keybindings);
+
+    useEffect(() => {
+        if (previousIsExtraLargeViewport.current === isExtraLargeViewport) return;
+
+        previousIsExtraLargeViewport.current = isExtraLargeViewport;
+        setIsExpanded(isExtraLargeViewport);
+    }, [isExtraLargeViewport, setIsExpanded]);
 
     const handleToggleNav = () => setIsExpanded(!isExpanded);
 
