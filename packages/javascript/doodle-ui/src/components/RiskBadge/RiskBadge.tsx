@@ -60,7 +60,7 @@ export interface RiskBadgeProps
         VariantProps<typeof RiskBadgePropVariants> {
     color?: ColorOptions;
     outlined: boolean;
-    label?: string | React.ReactNode;
+    label?: React.ReactNode;
     labelClassName?: string;
 }
 
