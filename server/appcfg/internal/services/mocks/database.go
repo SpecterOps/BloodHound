@@ -53,6 +53,134 @@ func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 	return &MockDatabase_Expecter{mock: &_m.Mock}
 }
 
+// GetAllConfigurationParameters provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetAllConfigurationParameters(ctx context.Context) (services.Parameters, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllConfigurationParameters")
+	}
+
+	var r0 services.Parameters
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (services.Parameters, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) services.Parameters); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(services.Parameters)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetAllConfigurationParameters_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAllConfigurationParameters'
+type MockDatabase_GetAllConfigurationParameters_Call struct {
+	*mock.Call
+}
+
+// GetAllConfigurationParameters is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockDatabase_Expecter) GetAllConfigurationParameters(ctx interface{}) *MockDatabase_GetAllConfigurationParameters_Call {
+	return &MockDatabase_GetAllConfigurationParameters_Call{Call: _e.mock.On("GetAllConfigurationParameters", ctx)}
+}
+
+func (_c *MockDatabase_GetAllConfigurationParameters_Call) Run(run func(ctx context.Context)) *MockDatabase_GetAllConfigurationParameters_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetAllConfigurationParameters_Call) Return(parameters services.Parameters, err error) *MockDatabase_GetAllConfigurationParameters_Call {
+	_c.Call.Return(parameters, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetAllConfigurationParameters_Call) RunAndReturn(run func(ctx context.Context) (services.Parameters, error)) *MockDatabase_GetAllConfigurationParameters_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetConfigurationParameter provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetConfigurationParameter(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error) {
+	ret := _mock.Called(ctx, parameterKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConfigurationParameter")
+	}
+
+	var r0 services.Parameter
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey) (services.Parameter, error)); ok {
+		return returnFunc(ctx, parameterKey)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey) services.Parameter); ok {
+		r0 = returnFunc(ctx, parameterKey)
+	} else {
+		r0 = ret.Get(0).(services.Parameter)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, services.ParameterKey) error); ok {
+		r1 = returnFunc(ctx, parameterKey)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetConfigurationParameter_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetConfigurationParameter'
+type MockDatabase_GetConfigurationParameter_Call struct {
+	*mock.Call
+}
+
+// GetConfigurationParameter is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parameterKey services.ParameterKey
+func (_e *MockDatabase_Expecter) GetConfigurationParameter(ctx interface{}, parameterKey interface{}) *MockDatabase_GetConfigurationParameter_Call {
+	return &MockDatabase_GetConfigurationParameter_Call{Call: _e.mock.On("GetConfigurationParameter", ctx, parameterKey)}
+}
+
+func (_c *MockDatabase_GetConfigurationParameter_Call) Run(run func(ctx context.Context, parameterKey services.ParameterKey)) *MockDatabase_GetConfigurationParameter_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.ParameterKey
+		if args[1] != nil {
+			arg1 = args[1].(services.ParameterKey)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetConfigurationParameter_Call) Return(parameter services.Parameter, err error) *MockDatabase_GetConfigurationParameter_Call {
+	_c.Call.Return(parameter, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetConfigurationParameter_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error)) *MockDatabase_GetConfigurationParameter_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetDatapipeStatus provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) GetDatapipeStatus(ctx context.Context) (services.DatapipeStatus, error) {
 	ret := _mock.Called(ctx)
@@ -111,26 +239,4 @@ func (_c *MockDatabase_GetDatapipeStatus_Call) Return(datapipeStatus services.Da
 func (_c *MockDatabase_GetDatapipeStatus_Call) RunAndReturn(run func(ctx context.Context) (services.DatapipeStatus, error)) *MockDatabase_GetDatapipeStatus_Call {
 	_c.Call.Return(run)
 	return _c
-}
-
-// Unused; needed to fill interface
-func (_mock *MockDatabase) GetConfigurationParameter(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error) {
-	ret := _mock.Called(ctx, parameterKey)
-
-	if len(ret) < 2 {
-		panic("not enough return values specified for GetConfigurationParameter")
-	}
-
-	return ret.Get(0).(services.Parameter), ret.Error(1)
-}
-
-// Unused; needed to fill interface
-func (_mock *MockDatabase) GetAllConfigurationParameters(ctx context.Context) (services.Parameters, error) {
-	ret := _mock.Called(ctx)
-
-	if len(ret) < 2 {
-		panic("not enough return values specified for GetAllConfigurationParameters")
-	}
-
-	return ret.Get(0).(services.Parameters), ret.Error(1)
 }
