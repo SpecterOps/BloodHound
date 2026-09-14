@@ -44,12 +44,15 @@ const Login: React.FC = () => {
     const [lastPassword, setLastPassword] = useState('');
 
     // When a user is redirected to the login page from an unauthenticated deep link,
-    // AuthenticatedRoute stores the original location in navigation state. Prefer
-    // returning the user to that location after a successful login rather than
-    // always navigating to the home route. Fall back to the home route if the
-    // original location is absent or is the login page itself.
-    const fromPathname = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-    const redirectTo = fromPathname && fromPathname !== ROUTE_LOGIN ? fromPathname : ROUTE_HOME;
+    // AuthenticatedRoute stores the original location (including search and hash) in
+    // navigation state. Prefer returning the user to that full location after a
+    // successful login rather than always navigating to the home route. Fall back to
+    // the home route if the original location is absent or is the login page itself.
+    const from = (location.state as { from?: Location } | null)?.from;
+    const redirectTo =
+        from && from.pathname !== ROUTE_LOGIN
+            ? `${from.pathname}${from.search || ''}${from.hash || ''}`
+            : ROUTE_HOME;
 
     const title = (
         <Helmet>
