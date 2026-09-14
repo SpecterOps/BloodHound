@@ -32,9 +32,13 @@ const (
 	tablePermissions      = "permissions"
 	tableRoles            = "roles"
 	tableRolesPermissions = "roles_permissions"
+	nullFilterValue       = "null"
 )
 
-var validRoleColumns = []string{"id", "name", "description", "created_at", "updated_at"}
+var (
+	validPermissionColumns = []string{"id", "authority", "name", "created_at", "updated_at"}
+	validRoleColumns       = []string{"id", "name", "description", "created_at", "updated_at"}
+)
 
 type queryExecer interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
@@ -206,6 +210,133 @@ var roleColumns = map[string]string{
 	"created_at":  "created_at",
 	"updated_at":  "updated_at",
 	"deleted_at":  "deleted_at",
+}
+
+// permissionColumns maps the API-facing permission fields to their database columns.
+var permissionColumns = map[string]string{
+	"authority":  "authority",
+	"name":       "name",
+	"id":         "id",
+	"created_at": "created_at",
+	"updated_at": "updated_at",
+}
+
+// applyPermissionFilters translates validated permission filters into WHERE expressions.
+func applyPermissionFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters) error {
+	for field, fieldFilters := range queryFilters {
+		column, isKnown := permissionColumns[field]
+		if !isKnown {
+			return fmt.Errorf("permission filter references unknown field %q", field)
+		}
+
+		setOperator := params.FilterAnd
+		if len(fieldFilters) > 0 {
+			setOperator = fieldFilters[0].SetOperator
+		}
+
+		expressions := make([]string, 0, len(fieldFilters))
+		for _, filter := range fieldFilters {
+			if filter.Value == nullFilterValue {
+				switch filter.Operator {
+				case params.Equals:
+					expressions = append(expressions, sb.IsNull(column))
+				case params.NotEquals:
+					expressions = append(expressions, sb.IsNotNull(column))
+				default:
+					return fmt.Errorf("permission filter uses unsupported null operator %q", filter.Operator)
+				}
+
+				continue
+			}
+
+			switch filter.Operator {
+			case params.Equals:
+				expressions = append(expressions, sb.Equal(column, filter.Value))
+			case params.NotEquals:
+				expressions = append(expressions, sb.NotEqual(column, filter.Value))
+			case params.GreaterThan:
+				expressions = append(expressions, sb.GreaterThan(column, filter.Value))
+			case params.GreaterThanOrEquals:
+				expressions = append(expressions, sb.GreaterEqualThan(column, filter.Value))
+			case params.LessThan:
+				expressions = append(expressions, sb.LessThan(column, filter.Value))
+			case params.LessThanOrEquals:
+				expressions = append(expressions, sb.LessEqualThan(column, filter.Value))
+			default:
+				return fmt.Errorf("permission filter uses unsupported operator %q", filter.Operator)
+			}
+		}
+
+		if setOperator == params.FilterOr {
+			sb.Where(sb.Or(expressions...))
+		} else {
+			sb.Where(sb.And(expressions...))
+		}
+	}
+
+	return nil
+}
+
+// buildPermissionOrderBy translates validated sort items into ORDER BY terms.
+func buildPermissionOrderBy(sortItems params.SortItems) ([]string, error) {
+	orderBy := make([]string, 0, len(sortItems))
+	for _, sortItem := range sortItems {
+		column, isKnown := permissionColumns[sortItem.Field]
+		if !isKnown {
+			return nil, fmt.Errorf("permission sort references unknown field %q", sortItem.Field)
+		}
+
+		if sortItem.Direction == params.Descending {
+			orderBy = append(orderBy, column+" DESC")
+		} else {
+			orderBy = append(orderBy, column+" ASC")
+		}
+	}
+
+	return orderBy, nil
+}
+
+// ListPermissions retrieves every permission matching the supplied filters and sort order.
+func (s *Store) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error) {
+	var (
+		permissionSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		permissionRows    pgx.Rows
+		listedPermissions []permission
+		result            = make([]services.Permission, 0)
+		orderBy           []string
+		err               error
+	)
+
+	permissionSB.Select(validPermissionColumns...).From(tablePermissions)
+
+	if err = applyPermissionFilters(permissionSB, queryFilters); err != nil {
+		return nil, err
+	}
+
+	orderBy, err = buildPermissionOrderBy(sortItems)
+	if err != nil {
+		return nil, err
+	}
+	if len(orderBy) > 0 {
+		permissionSB.OrderBy(orderBy...)
+	}
+
+	permissionQuery, permissionArgs := permissionSB.Build()
+	permissionRows, err = s.db.Query(ctx, permissionQuery, permissionArgs...)
+	if err != nil {
+		return nil, err
+	}
+	listedPermissions, err = pgx.CollectRows(permissionRows, pgx.RowToStructByName[permission])
+	if err != nil {
+		return nil, fmt.Errorf("collecting permissions: %s", err)
+	}
+
+	result = make([]services.Permission, 0, len(listedPermissions))
+	for _, listedPermission := range listedPermissions {
+		result = append(result, toPermission(listedPermission))
+	}
+
+	return result, nil
 }
 
 // applyRoleFilters translates the validated query filters into WHERE expressions

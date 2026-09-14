@@ -1035,7 +1035,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`.",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
@@ -1066,9 +1066,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {

@@ -25,12 +25,14 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -285,4 +287,133 @@ func TestHandlers_ListRoles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandlers_ListPermissions(t *testing.T) {
+	type expectedResponse struct {
+		responseCode   int
+		responseBody   func(t *testing.T, body []byte)
+		responseHeader http.Header
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(m *mocks.MockIdentity)
+		expected     expectedResponse
+	}
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		filters       = params.Filters{
+			"authority": {{Field: "authority", Operator: params.Equals, Value: "app", IsStringData: true}},
+		}
+		sortItems = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		expected  = []services.Permission{{ID: 7, Authority: "app", Name: "ManageProviders"}}
+	)
+
+	tests := []testData{
+		{
+			name: "Success: permissions are returned - 200",
+			buildRequest: func() *http.Request {
+				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
+			},
+			setupMocks: func(m *mocks.MockIdentity) {
+				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return(expected, nil)
+			},
+			expected: expectedResponse{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data handlers.PermissionListView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Permissions, 1)
+					assert.Equal(t, expected[0].ID, envelope.Data.Permissions[0].ID)
+					assert.Equal(t, expected[0].Authority, envelope.Data.Permissions[0].Authority)
+					assert.Equal(t, expected[0].Name, envelope.Data.Permissions[0].Name)
+				},
+			},
+		},
+		{
+			name: "Success: no permissions match - 200",
+			buildRequest: func() *http.Request {
+				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
+			},
+			setupMocks: func(m *mocks.MockIdentity) {
+				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return([]services.Permission{}, nil)
+			},
+			expected: expectedResponse{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data handlers.PermissionListView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.Empty(t, envelope.Data.Permissions)
+				},
+			},
+		},
+		{
+			name: "Error: service fails - 500",
+			buildRequest: func() *http.Request {
+				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
+			},
+			setupMocks: func(m *mocks.MockIdentity) {
+				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expectedResponse{responseCode: http.StatusInternalServerError},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
+				recorder     = httptest.NewRecorder()
+			)
+
+			muxRouter.HandleFunc("/api/v2/permissions", handlerSet.ListPermissions).Methods(http.MethodGet)
+			tt.setupMocks(identityMock)
+
+			muxRouter.ServeHTTP(recorder, tt.buildRequest())
+
+			assert.Equal(t, tt.expected.responseCode, recorder.Code)
+			if tt.expected.responseHeader != nil {
+				assert.Equal(t, tt.expected.responseHeader, recorder.Result().Header)
+			}
+			if tt.expected.responseBody != nil {
+				tt.expected.responseBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
+}
+
+func TestPermissionListView_DeletedAtIsNotQueryable(t *testing.T) {
+	var view = handlers.PermissionListView{}
+
+	_, isFilterable := view.ValidFilters()["deleted_at"]
+	assert.False(t, isFilterable)
+	assert.False(t, view.IsSortable("deleted_at"))
+
+	next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		t.Fatal("the request should be rejected by filter middleware")
+	})
+	handler := middleware.FilterMiddleware(view)(next)
+	request := httptest.NewRequest(http.MethodGet, "/api/v2/permissions?deleted_at=eq:null", nil)
+	request = bhctx.SetRequestContext(request, &bhctx.Context{})
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
 }

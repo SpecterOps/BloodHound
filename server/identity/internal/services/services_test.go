@@ -211,3 +211,73 @@ func TestService_ListRoles(t *testing.T) {
 		})
 	}
 }
+
+func TestService_ListPermissions(t *testing.T) {
+	type mock struct {
+		database *mocks.MockDatabase
+	}
+
+	type expected struct {
+		permissions []services.Permission
+		err         error
+	}
+
+	type testData struct {
+		name       string
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		ctx                 = context.Background()
+		queryFilters        = params.Filters{"authority": {{Operator: params.Equals, Value: "app"}}}
+		sortItems           = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		unexpectedErr       = errors.New("connection refused")
+		expectedPermissions = []services.Permission{{ID: 7, Authority: "app", Name: "ManageProviders"}}
+	)
+
+	tests := []testData{
+		{
+			name: "Success: permissions are returned",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListPermissions(ctx, queryFilters, sortItems).Return(expectedPermissions, nil)
+			},
+			expected: expected{permissions: expectedPermissions},
+		},
+		{
+			name: "Success: no permissions match",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListPermissions(ctx, queryFilters, sortItems).Return([]services.Permission{}, nil)
+			},
+			expected: expected{permissions: []services.Permission{}},
+		},
+		{
+			name: "Error: database query fails",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListPermissions(ctx, queryFilters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{err: unexpectedErr},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			testCase.setupMocks(mock{database: databaseMock})
+
+			result, err := svc.ListPermissions(ctx, queryFilters, sortItems)
+			if testCase.expected.err != nil {
+				assert.ErrorIs(t, err, testCase.expected.err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.permissions, result)
+			}
+		})
+	}
+}

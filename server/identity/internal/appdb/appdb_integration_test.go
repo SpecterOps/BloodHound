@@ -197,6 +197,16 @@ func seededRoleCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int 
 	return count
 }
 
+func seededPermissionCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int {
+	t.Helper()
+
+	var count int
+	err := pool.QueryRow(ctx, "SELECT count(*) FROM permissions").Scan(&count)
+	require.NoError(t, err)
+
+	return count
+}
+
 func TestStore_ListRoles_Integration(t *testing.T) {
 	t.Run("returns every seeded role with its permissions", func(t *testing.T) {
 		var (
@@ -313,6 +323,122 @@ func TestStore_ListRoles_Integration(t *testing.T) {
 	})
 }
 
+func TestStore_ListPermissions_Integration(t *testing.T) {
+	type expected struct {
+		assertResponse func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context)
+	}
+
+	type testData struct {
+		name       string
+		buildQuery func(t *testing.T, pool *pgxpool.Pool, ctx context.Context) (params.Filters, params.SortItems)
+		expected   expected
+	}
+
+	const epoch = "2000-01-01T00:00:00Z"
+
+	tests := []testData{
+		{
+			name: "Success: all seeded permissions are returned",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context) {
+				expectedCount := seededPermissionCount(t, ctx, pool)
+				require.NotZero(t, expectedCount, "expected migrations to seed at least one permission")
+				assert.Len(t, permissions, expectedCount)
+			}},
+		},
+		{
+			name: "Success: permissions are sorted by name",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context) {
+				expectedCount := seededPermissionCount(t, ctx, pool)
+				require.Len(t, permissions, expectedCount)
+				for i := 1; i < len(permissions); i++ {
+					assert.LessOrEqual(t, permissions[i-1].Name, permissions[i].Name, "permissions should be sorted by name ascending")
+				}
+			}},
+		},
+		{
+			name: "Success: permissions are filtered by authority",
+			buildQuery: func(t *testing.T, pool *pgxpool.Pool, ctx context.Context) (params.Filters, params.SortItems) {
+				target := seededPermission(t, ctx, pool)
+				return params.Filters{"authority": {{Field: "authority", Operator: params.Equals, Value: target.Authority, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context) {
+				target := seededPermission(t, ctx, pool)
+				require.NotEmpty(t, permissions)
+				for _, permission := range permissions {
+					assert.Equal(t, target.Authority, permission.Authority)
+				}
+			}},
+		},
+		{
+			name: "Success: no permissions match",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, _ *pgxpool.Pool, _ context.Context) {
+				assert.Empty(t, permissions)
+			}},
+		},
+		{
+			name: "Success: created_at supports date comparisons after the epoch",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context) {
+				assert.Len(t, permissions, seededPermissionCount(t, ctx, pool))
+			}},
+		},
+		{
+			name: "Success: created_at supports date comparisons before the epoch",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, _ *pgxpool.Pool, _ context.Context) {
+				assert.Empty(t, permissions)
+			}},
+		},
+		{
+			name: "Success: updated_at supports date comparisons after the epoch",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, pool *pgxpool.Pool, ctx context.Context) {
+				assert.Len(t, permissions, seededPermissionCount(t, ctx, pool))
+			}},
+		},
+		{
+			name: "Success: updated_at supports date comparisons before the epoch",
+			buildQuery: func(_ *testing.T, _ *pgxpool.Pool, _ context.Context) (params.Filters, params.SortItems) {
+				return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, permissions []services.Permission, _ *pgxpool.Pool, _ context.Context) {
+				assert.Empty(t, permissions)
+			}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+			)
+
+			filters, sortItems := tt.buildQuery(t, pool, ctx)
+			permissions, err := store.ListPermissions(ctx, filters, sortItems)
+			require.NoError(t, err)
+			tt.expected.assertResponse(t, permissions, pool, ctx)
+		})
+	}
+}
+
 // addDeprecatedDeletedAtColumn simulates the shape of an upgraded/GORM-era database by
 // adding a deleted_at column that the current migrations do not create and that the
 // Go structs do not model. Reading from such a table with SELECT * would return an
@@ -332,52 +458,70 @@ func addDeprecatedDeletedAtColumn(t *testing.T, ctx context.Context, pool *pgxpo
 // SELECT *. This test fails against the old SELECT * queries and passes against the
 // explicit-column queries.
 func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
-	t.Run("GetRole succeeds when roles has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type testData struct {
+		name       string
+		table      string
+		assertRead func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool)
+	}
 
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
+	tests := []testData{
+		{
+			name:  "Success: GetRole handles a stray deleted_at column",
+			table: "roles",
+			assertRead: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) {
+				expected := seededRole(t, ctx, pool)
+				retrieved, err := store.GetRole(ctx, expected.ID)
+				require.NoError(t, err)
+				assert.Equal(t, expected.ID, retrieved.ID)
+				assert.Equal(t, expected.Name, retrieved.Name)
+			},
+		},
+		{
+			name:  "Success: ListRoles handles a stray deleted_at column",
+			table: "roles",
+			assertRead: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) {
+				expectedCount := seededRoleCount(t, ctx, pool)
+				require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+				roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+				assert.Len(t, roles, expectedCount)
+			},
+		},
+		{
+			name:  "Success: GetPermission handles a stray deleted_at column",
+			table: "permissions",
+			assertRead: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) {
+				expected := seededPermission(t, ctx, pool)
+				retrieved, err := store.GetPermission(ctx, int(expected.ID))
+				require.NoError(t, err)
+				assert.Equal(t, expected.ID, retrieved.ID)
+				assert.Equal(t, expected.Authority, retrieved.Authority)
+				assert.Equal(t, expected.Name, retrieved.Name)
+			},
+		},
+		{
+			name:  "Success: ListPermissions handles a stray deleted_at column",
+			table: "permissions",
+			assertRead: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) {
+				expectedCount := seededPermissionCount(t, ctx, pool)
+				permissions, err := store.ListPermissions(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+				assert.Len(t, permissions, expectedCount)
+			},
+		},
+	}
 
-		expected := seededRole(t, ctx, pool)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		retrieved, err := store.GetRole(ctx, expected.ID)
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Name, retrieved.Name)
-	})
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+			)
 
-	t.Run("ListRoles succeeds when roles has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
-
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
-
-		expectedCount := seededRoleCount(t, ctx, pool)
-		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
-
-		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Len(t, roles, expectedCount)
-	})
-
-	t.Run("GetPermission succeeds when permissions has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
-
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "permissions")
-
-		expected := seededPermission(t, ctx, pool)
-
-		retrieved, err := store.GetPermission(ctx, int(expected.ID))
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Authority, retrieved.Authority)
-		assert.Equal(t, expected.Name, retrieved.Name)
-	})
+			addDeprecatedDeletedAtColumn(t, ctx, pool, tt.table)
+			tt.assertRead(t, ctx, store, pool)
+		})
+	}
 }

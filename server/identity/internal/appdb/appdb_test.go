@@ -63,6 +63,18 @@ const expectedListRolesFilteredSQL = `SELECT id, name, description, created_at, 
 // single greater-than filter on the numeric id column is supplied.
 const expectedListRolesFilteredByIDSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE (id > $1)`
 
+const expectedListPermissionsSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions`
+
+const expectedListPermissionsSortedSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions ORDER BY name ASC`
+
+const expectedListPermissionsFilteredSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions WHERE (authority = $1)`
+
+const expectedListPermissionsFilteredByIDSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions WHERE (id > $1)`
+
+const expectedListPermissionsCreatedAtNullSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions WHERE (created_at IS NULL)`
+
+const expectedListPermissionsCreatedAtNotNullSQL = `SELECT id, authority, name, created_at, updated_at FROM permissions WHERE (created_at IS NOT NULL)`
+
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
 	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
@@ -412,6 +424,141 @@ func TestStore_ListRoles(t *testing.T) {
 			default:
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantResult, result)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestStore_ListPermissions(t *testing.T) {
+	type mock struct {
+		pool pgxmock.PgxPoolIface
+	}
+
+	type expected struct {
+		permissions []services.Permission
+		err         error
+		errContains string
+	}
+
+	type testData struct {
+		name       string
+		filters    params.Filters
+		sortItems  params.SortItems
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		ctx                = context.Background()
+		dbErr              = errors.New("connection refused")
+		createdAt          = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		updatedAt          = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+		expectedPermission = services.Permission{ID: 7, Authority: "app", Name: "ManageProviders", CreatedAt: createdAt, UpdatedAt: updatedAt}
+	)
+
+	expectPermissionRows := func(pool pgxmock.PgxPoolIface, permissions ...services.Permission) *pgxmock.Rows {
+		rows := pool.NewRows(permissionRowColumns())
+		for _, permission := range permissions {
+			rows.AddRow(permission.Authority, permission.Name, permission.ID, permission.CreatedAt, permission.UpdatedAt)
+		}
+		return rows
+	}
+
+	tests := []testData{
+		{
+			name: "Success: every permission is returned",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSQL).WithArgs().WillReturnRows(expectPermissionRows(mock.pool, expectedPermission))
+			},
+			expected: expected{permissions: []services.Permission{expectedPermission}},
+		},
+		{
+			name:      "Success: permissions are sorted by name",
+			sortItems: params.SortItems{{Field: "name", Direction: params.Ascending}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSortedSQL).WithArgs().WillReturnRows(expectPermissionRows(mock.pool, expectedPermission))
+			},
+			expected: expected{permissions: []services.Permission{expectedPermission}},
+		},
+		{
+			name:    "Success: permissions are filtered by authority",
+			filters: params.Filters{"authority": {{Field: "authority", Operator: params.Equals, Value: "app", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsFilteredSQL).WithArgs("app").WillReturnRows(expectPermissionRows(mock.pool, expectedPermission))
+			},
+			expected: expected{permissions: []services.Permission{expectedPermission}},
+		},
+		{
+			name:    "Success: permissions are filtered by ID",
+			filters: params.Filters{"id": {{Field: "id", Operator: params.GreaterThan, Value: "1", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsFilteredByIDSQL).WithArgs("1").WillReturnRows(expectPermissionRows(mock.pool, expectedPermission))
+			},
+			expected: expected{permissions: []services.Permission{expectedPermission}},
+		},
+		{
+			name:    "Success: null equality uses IS NULL",
+			filters: params.Filters{"created_at": {{Operator: params.Equals, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsCreatedAtNullSQL).WithArgs().WillReturnRows(expectPermissionRows(mock.pool))
+			},
+			expected: expected{permissions: []services.Permission{}},
+		},
+		{
+			name:    "Success: null inequality uses IS NOT NULL",
+			filters: params.Filters{"created_at": {{Operator: params.NotEquals, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsCreatedAtNotNullSQL).WithArgs().WillReturnRows(expectPermissionRows(mock.pool))
+			},
+			expected: expected{permissions: []services.Permission{}},
+		},
+		{
+			name:       "Error: filter field is unknown",
+			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name:       "Error: sort field is unknown",
+			sortItems:  params.SortItems{{Field: "nope", Direction: params.Ascending}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name: "Error: database query fails",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSQL).WithArgs().WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr},
+		},
+		{
+			name: "Error: permission rows cannot be collected",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSQL).WithArgs().WillReturnRows(
+					mock.pool.NewRows(permissionRowColumns()).CloseError(dbErr),
+				)
+			},
+			expected: expected{errContains: "collecting permissions:"},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			store, pool := newTestStore(t)
+			testCase.setupMocks(mock{pool: pool})
+
+			permissions, err := store.ListPermissions(ctx, testCase.filters, testCase.sortItems)
+			switch {
+			case testCase.expected.err != nil:
+				assert.ErrorIs(t, err, testCase.expected.err)
+			case testCase.expected.errContains != "":
+				assert.ErrorContains(t, err, testCase.expected.errContains)
+			default:
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.permissions, permissions)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
