@@ -17,7 +17,6 @@
 package handlers_test
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -27,102 +26,133 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	testutils "github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	testifyMock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func newRequestWithVars(t *testing.T, target string, vars map[string]string) *http.Request {
-	t.Helper()
-	req, err := http.NewRequest(http.MethodGet, target, nil)
-	require.NoError(t, err)
-	return mux.SetURLVars(req, vars)
-}
-
 func TestHandlers_GetPermission(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
 	var (
-		unexpectedErr = errors.New("unexpected database failure")
-		expected      = services.Permission{ID: 7, Authority: "app", Name: "ManageProviders"}
+		unexpectedErr      = errors.New("unexpected database failure")
+		expectedPermission = services.Permission{ID: 7, Authority: "app", Name: "ManageProviders"}
 	)
 
-	tests := []struct {
-		name       string
-		rawID      string
-		expect     func(m *mocks.MockIdentity, ctx context.Context)
-		wantStatus int
-		assertBody func(t *testing.T, body []byte)
-	}{
+	tt := []testData{
 		{
-			name:  "returns 200 with the permission view on success",
-			rawID: "7",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetPermission(ctx, 7).Return(expected, nil)
+			name: "Success: permission view is returned - 200",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/7", nil)
 			},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetPermission(testifyMock.Anything, 7).Return(expectedPermission, nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
 				var envelope struct {
 					Data handlers.PermissionView `json:"data"`
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
-				assert.Equal(t, expected.ID, envelope.Data.ID)
-				assert.Equal(t, expected.Authority, envelope.Data.Authority)
-				assert.Equal(t, expected.Name, envelope.Data.Name)
-			},
+				assert.Equal(t, expectedPermission.ID, envelope.Data.ID)
+				assert.Equal(t, expectedPermission.Authority, envelope.Data.Authority)
+				assert.Equal(t, expectedPermission.Name, envelope.Data.Name)
+			}},
 		},
 		{
-			name:       "returns 400 for a malformed permission ID",
-			rawID:      "not-an-int",
-			wantStatus: http.StatusBadRequest,
+			name: "Error: permission ID is malformed - 400",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/not-an-int", nil)
+			},
+			expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
-			name:  "returns 404 when the permission does not exist",
-			rawID: "7",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetPermission(ctx, 7).Return(services.Permission{}, services.ErrNoPermissionFound)
+			name:         "Error: permission does not exist - 404",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/7", nil) },
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetPermission(testifyMock.Anything, 7).Return(services.Permission{}, services.ErrNoPermissionFound)
 			},
-			wantStatus: http.StatusNotFound,
+			expected: expected{responseCode: http.StatusNotFound, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
-			name:  "returns 500 on unexpected service error",
-			rawID: "7",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetPermission(ctx, 7).Return(services.Permission{}, unexpectedErr)
+			name:         "Error: service fails - 500",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/7", nil) },
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetPermission(testifyMock.Anything, 7).Return(services.Permission{}, unexpectedErr)
 			},
-			wantStatus: http.StatusInternalServerError,
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			var (
 				identityMock = mocks.NewMockIdentity(t)
 				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
-				request      = newRequestWithVars(t, "/api/v2/permissions/"+tt.rawID, map[string]string{"permission_id": tt.rawID})
+				request      = testCase.buildRequest()
 			)
+			muxRouter.HandleFunc("/api/v2/permissions/{permission_id}", handlerSet.GetPermission).Methods(http.MethodGet)
 
-			if tt.expect != nil {
-				tt.expect(identityMock, request.Context())
+			if testCase.setupMocks != nil {
+				testCase.setupMocks(mock{identity: identityMock})
 			}
 
-			handlerSet.GetPermission(recorder, request)
+			muxRouter.ServeHTTP(recorder, request)
 
-			assert.Equal(t, tt.wantStatus, recorder.Code)
-			if tt.assertBody != nil {
-				tt.assertBody(t, recorder.Body.Bytes())
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, []byte(body))
 			}
 		})
 	}
 }
 
 func TestHandlers_GetRole(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
 	var (
 		unexpectedErr = errors.New("unexpected database failure")
-		expected      = services.Role{
+		expectedRole  = services.Role{
 			ID:          3,
 			Name:        "Administrator",
 			Description: "Can manage the application",
@@ -130,86 +160,102 @@ func TestHandlers_GetRole(t *testing.T) {
 		}
 	)
 
-	tests := []struct {
-		name       string
-		rawID      string
-		expect     func(m *mocks.MockIdentity, ctx context.Context)
-		wantStatus int
-		assertBody func(t *testing.T, body []byte)
-	}{
+	tt := []testData{
 		{
-			name:  "returns 200 with the role view on success",
-			rawID: "3",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetRole(ctx, int32(3)).Return(expected, nil)
+			name:         "Success: role view is returned - 200",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/3", nil) },
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetRole(testifyMock.Anything, int32(3)).Return(expectedRole, nil)
 			},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
 				var envelope struct {
 					Data handlers.RoleView `json:"data"`
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
-				assert.Equal(t, expected.ID, envelope.Data.ID)
-				assert.Equal(t, expected.Name, envelope.Data.Name)
-				assert.Equal(t, expected.Description, envelope.Data.Description)
+				assert.Equal(t, expectedRole.ID, envelope.Data.ID)
+				assert.Equal(t, expectedRole.Name, envelope.Data.Name)
+				assert.Equal(t, expectedRole.Description, envelope.Data.Description)
 				require.Len(t, envelope.Data.Permissions, 1)
-				assert.Equal(t, expected.Permissions[0].Name, envelope.Data.Permissions[0].Name)
-			},
+				assert.Equal(t, expectedRole.Permissions[0].Name, envelope.Data.Permissions[0].Name)
+			}},
 		},
 		{
-			name:       "returns 400 for a malformed role ID",
-			rawID:      "not-an-int",
-			wantStatus: http.StatusBadRequest,
+			name:         "Error: role ID is malformed - 400",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/not-an-int", nil) },
+			expected:     expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
-			name:  "returns 404 when the role does not exist",
-			rawID: "3",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetRole(ctx, int32(3)).Return(services.Role{}, services.ErrNoRoleFound)
+			name:         "Error: role does not exist - 404",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/3", nil) },
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetRole(testifyMock.Anything, int32(3)).Return(services.Role{}, services.ErrNoRoleFound)
 			},
-			wantStatus: http.StatusNotFound,
+			expected: expected{responseCode: http.StatusNotFound, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 		{
-			name:  "returns 500 on unexpected service error",
-			rawID: "3",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().GetRole(ctx, int32(3)).Return(services.Role{}, unexpectedErr)
+			name:         "Error: service fails - 500",
+			buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/3", nil) },
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().GetRole(testifyMock.Anything, int32(3)).Return(services.Role{}, unexpectedErr)
 			},
-			wantStatus: http.StatusInternalServerError,
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			var (
 				identityMock = mocks.NewMockIdentity(t)
 				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
-				request      = newRequestWithVars(t, "/api/v2/roles/"+tt.rawID, map[string]string{"role_id": tt.rawID})
+				request      = testCase.buildRequest()
 			)
+			muxRouter.HandleFunc("/api/v2/roles/{role_id}", handlerSet.GetRole).Methods(http.MethodGet)
 
-			if tt.expect != nil {
-				tt.expect(identityMock, request.Context())
+			if testCase.setupMocks != nil {
+				testCase.setupMocks(mock{identity: identityMock})
 			}
 
-			handlerSet.GetRole(recorder, request)
+			muxRouter.ServeHTTP(recorder, request)
 
-			assert.Equal(t, tt.wantStatus, recorder.Code)
-			if tt.assertBody != nil {
-				tt.assertBody(t, recorder.Body.Bytes())
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, []byte(body))
 			}
 		})
 	}
 }
 
 func TestHandlers_ListRoles(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
 	var (
 		unexpectedErr = errors.New("unexpected database failure")
 		filters       = params.Filters{
 			"name": {{Field: "name", Operator: params.Equals, Value: "Administrator", IsStringData: true}},
 		}
-		sortItems = params.SortItems{{Field: "name", Direction: params.Ascending}}
-		expected  = []services.Role{
+		sortItems     = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		expectedRoles = []services.Role{
 			{
 				ID:          3,
 				Name:        "Administrator",
@@ -219,78 +265,91 @@ func TestHandlers_ListRoles(t *testing.T) {
 		}
 	)
 
-	tests := []struct {
-		name       string
-		expect     func(m *mocks.MockIdentity, ctx context.Context)
-		wantStatus int
-		assertBody func(t *testing.T, body []byte)
-	}{
+	tt := []testData{
 		{
-			name: "returns 200 with the role list view on success",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(expected, nil)
+			name: "Success: role list view is returned - 200",
+			buildRequest: func() *http.Request {
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/roles", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListRoles(testifyMock.Anything, filters, sortItems).Return(expectedRoles, nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
 				var envelope struct {
 					Data handlers.RoleListView `json:"data"`
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
 				require.Len(t, envelope.Data.Roles, 1)
-				assert.Equal(t, expected[0].ID, envelope.Data.Roles[0].ID)
-				assert.Equal(t, expected[0].Name, envelope.Data.Roles[0].Name)
-			},
+				assert.Equal(t, expectedRoles[0].ID, envelope.Data.Roles[0].ID)
+				assert.Equal(t, expectedRoles[0].Name, envelope.Data.Roles[0].Name)
+			}},
 		},
 		{
-			name: "returns 200 with an empty roles array when no roles match",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().ListRoles(ctx, filters, sortItems).Return([]services.Role{}, nil)
+			name: "Success: no roles match - 200",
+			buildRequest: func() *http.Request {
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/roles", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListRoles(testifyMock.Anything, filters, sortItems).Return([]services.Role{}, nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
 				var envelope struct {
 					Data handlers.RoleListView `json:"data"`
 				}
 				require.NoError(t, json.Unmarshal(body, &envelope))
 				assert.Empty(t, envelope.Data.Roles)
-			},
+			}},
 		},
 		{
-			name: "returns 500 on unexpected service error",
-			expect: func(m *mocks.MockIdentity, ctx context.Context) {
-				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(nil, unexpectedErr)
+			name: "Error: service fails - 500",
+			buildRequest: func() *http.Request {
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/roles", nil)
+				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			wantStatus: http.StatusInternalServerError,
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListRoles(testifyMock.Anything, filters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			var (
 				identityMock = mocks.NewMockIdentity(t)
 				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
-				request      = newRequestWithVars(t, "/api/v2/roles", nil)
+				request      = testCase.buildRequest()
 			)
+			muxRouter.HandleFunc("/api/v2/roles", handlerSet.ListRoles).Methods(http.MethodGet)
 
-			request = bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
-
-			if tt.expect != nil {
-				tt.expect(identityMock, request.Context())
+			if testCase.setupMocks != nil {
+				testCase.setupMocks(mock{identity: identityMock})
 			}
 
-			handlerSet.ListRoles(recorder, request)
+			muxRouter.ServeHTTP(recorder, request)
 
-			assert.Equal(t, tt.wantStatus, recorder.Code)
-			if tt.assertBody != nil {
-				tt.assertBody(t, recorder.Body.Bytes())
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, []byte(body))
 			}
 		})
 	}
 }
 
 func TestHandlers_ListPermissions(t *testing.T) {
-	type expectedResponse struct {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
 		responseCode   int
 		responseBody   func(t *testing.T, body []byte)
 		responseHeader http.Header
@@ -299,8 +358,8 @@ func TestHandlers_ListPermissions(t *testing.T) {
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(m *mocks.MockIdentity)
-		expected     expectedResponse
+		setupMocks   func(mock *mock)
+		expected     expected
 	}
 
 	var (
@@ -308,21 +367,21 @@ func TestHandlers_ListPermissions(t *testing.T) {
 		filters       = params.Filters{
 			"authority": {{Field: "authority", Operator: params.Equals, Value: "app", IsStringData: true}},
 		}
-		sortItems = params.SortItems{{Field: "name", Direction: params.Ascending}}
-		expected  = []services.Permission{{ID: 7, Authority: "app", Name: "ManageProviders"}}
+		sortItems           = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		expectedPermissions = []services.Permission{{ID: 7, Authority: "app", Name: "ManageProviders"}}
 	)
 
-	tests := []testData{
+	tt := []testData{
 		{
 			name: "Success: permissions are returned - 200",
 			buildRequest: func() *http.Request {
-				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/permissions", nil)
 				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			setupMocks: func(m *mocks.MockIdentity) {
-				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return(expected, nil)
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListPermissions(testifyMock.Anything, filters, sortItems).Return(expectedPermissions, nil)
 			},
-			expected: expectedResponse{
+			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody: func(t *testing.T, body []byte) {
@@ -331,22 +390,22 @@ func TestHandlers_ListPermissions(t *testing.T) {
 					}
 					require.NoError(t, json.Unmarshal(body, &envelope))
 					require.Len(t, envelope.Data.Permissions, 1)
-					assert.Equal(t, expected[0].ID, envelope.Data.Permissions[0].ID)
-					assert.Equal(t, expected[0].Authority, envelope.Data.Permissions[0].Authority)
-					assert.Equal(t, expected[0].Name, envelope.Data.Permissions[0].Name)
+					assert.Equal(t, expectedPermissions[0].ID, envelope.Data.Permissions[0].ID)
+					assert.Equal(t, expectedPermissions[0].Authority, envelope.Data.Permissions[0].Authority)
+					assert.Equal(t, expectedPermissions[0].Name, envelope.Data.Permissions[0].Name)
 				},
 			},
 		},
 		{
 			name: "Success: no permissions match - 200",
 			buildRequest: func() *http.Request {
-				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/permissions", nil)
 				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			setupMocks: func(m *mocks.MockIdentity) {
-				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return([]services.Permission{}, nil)
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListPermissions(testifyMock.Anything, filters, sortItems).Return([]services.Permission{}, nil)
 			},
-			expected: expectedResponse{
+			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody: func(t *testing.T, body []byte) {
@@ -361,18 +420,18 @@ func TestHandlers_ListPermissions(t *testing.T) {
 		{
 			name: "Error: service fails - 500",
 			buildRequest: func() *http.Request {
-				request := newRequestWithVars(t, "/api/v2/permissions", nil)
+				request := httptest.NewRequest(http.MethodGet, "/api/v2/permissions", nil)
 				return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
 			},
-			setupMocks: func(m *mocks.MockIdentity) {
-				m.EXPECT().ListPermissions(mock.Anything, filters, sortItems).Return(nil, unexpectedErr)
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListPermissions(testifyMock.Anything, filters, sortItems).Return(nil, unexpectedErr)
 			},
-			expected: expectedResponse{responseCode: http.StatusInternalServerError},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			var (
@@ -383,16 +442,15 @@ func TestHandlers_ListPermissions(t *testing.T) {
 			)
 
 			muxRouter.HandleFunc("/api/v2/permissions", handlerSet.ListPermissions).Methods(http.MethodGet)
-			tt.setupMocks(identityMock)
+			testCase.setupMocks(&mock{identity: identityMock})
 
-			muxRouter.ServeHTTP(recorder, tt.buildRequest())
+			muxRouter.ServeHTTP(recorder, testCase.buildRequest())
 
-			assert.Equal(t, tt.expected.responseCode, recorder.Code)
-			if tt.expected.responseHeader != nil {
-				assert.Equal(t, tt.expected.responseHeader, recorder.Result().Header)
-			}
-			if tt.expected.responseBody != nil {
-				tt.expected.responseBody(t, recorder.Body.Bytes())
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.responseBody != nil {
+				testCase.expected.responseBody(t, []byte(body))
 			}
 		})
 	}
