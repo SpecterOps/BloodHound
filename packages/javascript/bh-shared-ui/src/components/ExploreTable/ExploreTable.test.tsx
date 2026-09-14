@@ -525,34 +525,37 @@ describe('ExploreTable', async () => {
 
         await screen.findByText('10 results');
 
+        const nameColumnHeader = screen.getByRole('button', { name: /name/i });
+        const objectIdColumnHeader = screen.getByRole('button', { name: /object id/i });
+
         // Unsorted first display name cell
         expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
         // Alphabetically sorted first display name cell
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('ADMINISTRATOR@GHOST.CORP');
 
         // Reverse Alphabetically sorted first display name cell
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('ZZZIGNE@PHANTOM.CORP');
 
         // Reset to unsorted
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
         // Unsorted first object id cell
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
 
         // Descending sorted first object id cell
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('PHANTOM.CORP-S-1-5-20');
 
         // Ascending sorted first object id cell
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2845847946-3451170323-4261139666-1106');
 
         // Reset to unsorted
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
     });
 
@@ -704,25 +707,26 @@ describe('ExploreTable', async () => {
         //ensures table is loaded
         await screen.findByText('10 results');
 
+        const nameColumnHeader = screen.getByRole('button', { name: /name/i });
+
         // sort empty visible
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-empty')).toBeVisible();
+        expect(within(nameColumnHeader).getByText('app-icon-sort-empty')).toBeVisible();
 
         //fire sort
-        await user.click(screen.getByText('Name'));
+        nameColumnHeader.focus();
+        await user.keyboard('{Enter}');
 
         //up arrow visible, down arrow removed
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-asc')).toBeVisible();
-        expect(
-            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-empty')
-        ).not.toBeInTheDocument();
+        expect(nameColumnHeader).toHaveFocus();
+        expect(within(nameColumnHeader).getByText('app-icon-sort-asc')).toBeVisible();
+        expect(within(nameColumnHeader).queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
 
         // //fire sort again
-        await user.click(screen.getByText('Name'));
+        await user.keyboard('{Enter}');
 
         //down arrow visible, up arrow removed
-        expect(within(screen.getByRole('button', { name: /name/i })).getByText('app-icon-sort-desc')).toBeVisible();
-        expect(
-            within(screen.getByRole('button', { name: /name/i })).queryByText('app-icon-sort-asc')
-        ).not.toBeInTheDocument();
+        expect(nameColumnHeader).toHaveFocus();
+        expect(within(nameColumnHeader).getByText('app-icon-sort-desc')).toBeVisible();
+        expect(within(nameColumnHeader).queryByText('app-icon-sort-asc')).not.toBeInTheDocument();
     });
 });

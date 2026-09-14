@@ -23,6 +23,8 @@ import {
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
+    CreateCollectorJobProfileRequest,
+    CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
@@ -46,6 +48,7 @@ import {
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
+    UpdateCollectorJobProfileRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -74,8 +77,10 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CollectorJobProfileResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
@@ -90,6 +95,7 @@ import {
     GetClientResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
+    GetCollectorJobSecretResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -832,6 +838,29 @@ class BHEAPIClient {
             { job_profile_id: profileId },
             options
         );
+
+    createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+
+    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    updateCollectorJobProfile = (
+        profileId: number,
+        payload: UpdateCollectorJobProfileRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<CollectorJobProfileResponse>(
+            `/api/v2/collector-job-profiles/${profileId}`,
+            payload,
+            options
+        );
+
+    getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+
+    createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
 
     /* clients */
 
