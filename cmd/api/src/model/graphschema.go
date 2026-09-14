@@ -496,13 +496,17 @@ type GraphExtensionInput struct {
 	SavedQueriesInput         SavedQueriesInput
 }
 
-type PZRulesInput []PZRuleInput
-type PZRuleInput struct {
-	Name        string
-	Description string
-	AutoCertify SelectorAutoCertifyMethod
-	Seeds       []SelectorSeedInput
-}
+type (
+	PZRulesInput []PZRuleInput
+	PZRuleInput  struct {
+		ExtensionRuleId string
+		Name            string
+		Description     string
+		Seeds           []SelectorSeedInput
+		Enabled         bool
+		AllowDisable    bool
+	}
+)
 
 type SelectorSeedInput struct {
 	Type  SelectorType
@@ -634,26 +638,43 @@ func (s GraphExtensionInput) Validate() error {
 	return nil
 }
 
-// Placeholder, may be more to consider here
-func (s PZRulesInput) Validate() error {
-	var ruleNames = make(map[string]any, len(s))
+// Validate performs comprehensive validation on a PZRulesInput payload
+func (s PZRulesInput) Validate(extensionNamespace string) error {
+	ruleNames := make(map[string]struct{}, len(s))
+	ruleIds := make(map[string]struct{}, len(s))
 
 	for _, rule := range s {
+		if strings.TrimPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)) == "" {
+			return fmt.Errorf("privilege zone rule requires a 'key' value")
+		}
 		if strings.TrimSpace(rule.Name) == "" {
-			return errors.New("privilege zone rule name is required")
+			return fmt.Errorf("privilege zone rule name is required")
 		}
 		if _, ok := ruleNames[rule.Name]; ok {
-			return fmt.Errorf("duplicate privilege zone rule: %s", rule.Name)
+			return fmt.Errorf("duplicate privilege zone rule name: %s", rule.Name)
+		}
+		if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
+			return fmt.Errorf("duplicate privilege zone rule key: %s", rule.ExtensionRuleId)
 		}
 		if len(rule.Seeds) == 0 {
 			return fmt.Errorf("privilege zone rule %s requires at least one seed", rule.Name)
 		}
+
+		startingSeedType := rule.Seeds[0].Type
 		for _, seed := range rule.Seeds {
 			if strings.TrimSpace(seed.Value) == "" {
 				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
 			}
+			// Only Cypher selector types are valid for extension creation - will there be more selector types?
+			if seed.Type != SelectorTypeCypher {
+				return fmt.Errorf("privilege zone rule %s has a seed with a forbidden object ID type", rule.Name)
+			}
+			if seed.Type != startingSeedType {
+				return fmt.Errorf("privilege zone rule %s has a seed with a differing type than initial seed", rule.Name)
+			}
 		}
 		ruleNames[rule.Name] = struct{}{}
+		ruleIds[rule.ExtensionRuleId] = struct{}{}
 	}
 	return nil
 }
@@ -687,22 +708,26 @@ func (s SavedQueriesInput) Validate() error {
 	return nil
 }
 
-type RelationshipFindingsInput []RelationshipFindingInput
-type RelationshipFindingInput struct {
-	Name                 string
-	DisplayName          string
-	PZDisplayName        string
-	RelationshipKindName string // edge kind
-	EnvironmentKindName  string
-	RemediationInput     RemediationInput
-}
+type (
+	RelationshipFindingsInput []RelationshipFindingInput
+	RelationshipFindingInput  struct {
+		Name                 string
+		DisplayName          string
+		PZDisplayName        string
+		RelationshipKindName string // edge kind
+		EnvironmentKindName  string
+		RemediationInput     RemediationInput
+	}
+)
 
-type EnvironmentsInput []EnvironmentInput
-type EnvironmentInput struct {
-	EnvironmentKindName string
-	SourceKindName      string
-	PrincipalKinds      []string
-}
+type (
+	EnvironmentsInput []EnvironmentInput
+	EnvironmentInput  struct {
+		EnvironmentKindName string
+		SourceKindName      string
+		PrincipalKinds      []string
+	}
+)
 
 type ExtensionInput struct {
 	Name        string
@@ -718,24 +743,29 @@ func (s ExtensionInput) GetDisplayName() string {
 	return s.Name
 }
 
-type NodesInput []NodeInput
-type NodeInput struct {
-	Name          string
-	DisplayName   string         // human-readable name
-	Description   string         // human-readable description of the node kind
-	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
-	Icon          string         // font-awesome icon for the registered node kind
-	IconColor     string         // icon hex color
-	Info          KindInfoInputs // entity panel definitions for this node kind
-}
+type (
+	NodesInput []NodeInput
+	NodeInput  struct {
+		Name          string
+		DisplayName   string         // human-readable name
+		Description   string         // human-readable description of the node kind
+		IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+		Icon          string         // font-awesome icon for the registered node kind
+		IconColor     string         // icon hex color
+		Info          KindInfoInputs // entity panel definitions for this node kind
+	}
+)
 
-type RelationshipsInput []RelationshipInput
-type RelationshipInput struct {
-	Name          string
-	Description   string
-	IsTraversable bool           // indicates whether the edge-kind is a traversable path
-	Info          KindInfoInputs // entity panel definitions for this relationship kind
-}
+type (
+	RelationshipsInput []RelationshipInput
+	RelationshipInput  struct {
+		Name          string
+		Description   string
+		IsTraversable bool           // indicates whether the edge-kind is a traversable path
+		Info          KindInfoInputs // entity panel definitions for this relationship kind
+	}
+)
+
 type RemediationInput struct {
 	ShortDescription string
 	LongDescription  string
@@ -790,10 +820,13 @@ type SelectorSeedPayload struct {
 
 // PZRulePayload is the JSON shape of a single privilege-zone rule (asset group tag selector) within pz_rules.
 type PZRulePayload struct {
-	Name        string                `json:"name"`
-	Description string                `json:"description,omitempty"`
-	AutoCertify *bool                 `json:"auto_certify,omitempty"`
-	Seeds       []SelectorSeedPayload `json:"seeds"`
+	Name         string                `json:"name"`
+	Description  string                `json:"description,omitempty"`
+	Seeds        []SelectorSeedPayload `json:"seeds"`
+	RuleKey      string                `json:"key"`
+	Enabled      *bool                 `json:"enabled,omitempty"`
+	AllowDisable *bool                 `json:"allow_disable,omitempty"`
+	AutoCertify  *bool                 `json:"auto_certify,omitempty"`
 }
 
 // PZRulesPayload is the "rules" envelope for the pz_rules.json component.
@@ -997,11 +1030,23 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))
 			}
 
+			ruleEnabled := true
+			if rulePayload.Enabled != nil {
+				ruleEnabled = *rulePayload.Enabled
+			}
+
+			ruleAllowDisable := true
+			if rulePayload.AllowDisable != nil {
+				ruleAllowDisable = *rulePayload.AllowDisable
+			}
+
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
-				Name:        rulePayload.Name,
-				Description: rulePayload.Description,
-				AutoCertify: autoCertify,
-				Seeds:       selectorSeeds,
+				ExtensionRuleId: fmt.Sprintf("%s_%s", s.GraphSchemaExtension.Namespace, rulePayload.RuleKey),
+				Name:            rulePayload.Name,
+				Description:     rulePayload.Description,
+				Seeds:           selectorSeeds,
+				Enabled:         ruleEnabled,
+				AllowDisable:    ruleAllowDisable,
 			})
 		}
 	}
