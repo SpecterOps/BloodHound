@@ -30,14 +30,17 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName, targetType }) => {
             </Typography>
             <Typography variant='body2'>
                 For domain and OU objects, affected child users and computers include those contained directly within
-                the domain or OU, as well as those in nested OUs. However, unless the GPO link is enforced, some users
-                and computers may not be affected if GPO inheritance is blocked on a containing OU.
+                the domain or OU, as well as those in nested OUs.
             </Typography>
             <Typography variant='body2'>
                 For site objects, affected computers include the site's domain controllers, and also computers whose IP
                 addresses fall within one of the site's subnets. If the site is the default site, affected computers
                 also include computers that do not map to any other site. Affected users are those who sign in to the
                 affected computers.
+            </Typography>
+            <Typography variant='body2'>
+                Unless the GPO link is enforced, users and computers in a domain or OU that blocks GPO inheritance are
+                not affected by inherited GPOs, including GPOs linked to an AD site.
             </Typography>
         </>
     );
