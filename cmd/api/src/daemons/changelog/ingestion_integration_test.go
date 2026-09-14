@@ -213,7 +213,6 @@ func TestIngestionCoordinator(t *testing.T) {
 						}))
 					require.True(t, coordinator.submit(ctx, change))
 				}
-				time.Sleep(200 * time.Millisecond)
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
 				t.Helper()
@@ -237,7 +236,6 @@ func TestIngestionCoordinator(t *testing.T) {
 						}))
 					require.True(t, coordinator.submit(ctx, change))
 				}
-				time.Sleep(200 * time.Millisecond)
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
 				t.Helper()
@@ -259,7 +257,6 @@ func TestIngestionCoordinator(t *testing.T) {
 						"lastseen": time.Now().UTC(),
 					}))
 				require.True(t, coordinator.submit(ctx, change))
-				time.Sleep(150 * time.Millisecond)
 			},
 			assert: func(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
 				t.Helper()
@@ -312,22 +309,32 @@ func TestIngestionCoordinator(t *testing.T) {
 func assertNodesExist(t *testing.T, suite IntegrationTestSuite, objectIDs []string) {
 	t.Helper()
 
-	var nodeCount int
-	filters := make([]graph.Criteria, 0, len(objectIDs))
-	for _, objectID := range objectIDs {
-		filters = append(filters, query.Equals(query.NodeProperty("objectid"), objectID))
-	}
+	var (
+		nodeCount int
+		readErr   error
+	)
 
-	err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
-		return tx.Nodes().
-			Filter(query.Or(filters...)).
-			Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-				for range cursor.Chan() {
-					nodeCount++
-				}
-				return cursor.Error()
-			})
-	})
-	require.NoError(t, err)
+	require.Eventually(t, func() bool {
+		nodeCount = 0
+		filters := make([]graph.Criteria, 0, len(objectIDs))
+		for _, objectID := range objectIDs {
+			filters = append(filters, query.Equals(query.NodeProperty("objectid"), objectID))
+		}
+
+		readErr = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+			return tx.Nodes().
+				Filter(query.Or(filters...)).
+				Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+					for range cursor.Chan() {
+						nodeCount++
+					}
+					return cursor.Error()
+				})
+		})
+
+		return readErr == nil && nodeCount == len(objectIDs)
+	}, 5*time.Second, 10*time.Millisecond,
+		"timed out waiting for ingested nodes: %v (found %d of %d)", readErr, nodeCount, len(objectIDs))
+	require.NoError(t, readErr)
 	require.Equal(t, len(objectIDs), nodeCount)
 }
