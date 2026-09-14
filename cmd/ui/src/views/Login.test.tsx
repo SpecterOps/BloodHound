@@ -57,7 +57,7 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-const renderLogin = (locationState?: { from?: { pathname?: string } }) => {
+const renderLogin = (locationState?: { from?: Partial<Location> }) => {
     const initialState: DeepPartial<AppState> = {
         auth: {
             ...authSlice.initialState,
@@ -110,6 +110,17 @@ describe('Login', () => {
         expect(mockNavigate).toHaveBeenCalledWith(
             expect.objectContaining({
                 to: '/',
+                replace: true,
+            })
+        );
+    });
+
+    it('preserves the search and hash of the stored deep link location on redirect', async () => {
+        renderLogin({ from: { pathname: '/explore', search: '?sort=name&dir=asc', hash: '#attack-paths' } });
+
+        expect(mockNavigate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                to: '/explore?sort=name&dir=asc#attack-paths',
                 replace: true,
             })
         );
