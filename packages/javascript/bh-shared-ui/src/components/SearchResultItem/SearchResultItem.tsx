@@ -36,7 +36,8 @@ const SearchResultItem: FC<{
     highlightedIndex?: number;
     style?: React.CSSProperties;
     keyword?: string;
-}> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
+    showDistinguishedName?: boolean;
+}> = ({ style, item, index, highlightedIndex, keyword, getItemProps, showDistinguishedName = false }) => {
     return (
         <ListItem
             dense
@@ -67,7 +68,7 @@ const SearchResultItem: FC<{
                         />
                         <div className='flex flex-col'>
                             <HighlightedText text={item.label || item.objectId} search={keyword} />
-                            {item.distinguishedName && (
+                            {showDistinguishedName && item.distinguishedName && (
                                 <Typography
                                     variant='caption'
                                     className={cn(

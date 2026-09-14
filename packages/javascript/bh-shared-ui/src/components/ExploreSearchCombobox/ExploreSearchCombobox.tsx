@@ -17,7 +17,7 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
@@ -70,6 +70,24 @@ const ExploreSearchCombobox: React.FC<{
         },
         itemToString: (item) => item?.name || item?.objectid || '',
     });
+
+    // A result's distinguished name is shown only when another result has the
+    // same displayed label (`name || objectid`).
+    const duplicateDisplayNames = useMemo(() => {
+        const displayNameCounts = new Map<string, number>();
+
+        for (const item of data ?? []) {
+            const displayName = item.name || item.objectid;
+
+            if (displayName) {
+                displayNameCounts.set(displayName, (displayNameCounts.get(displayName) ?? 0) + 1);
+            }
+        }
+
+        return new Set(
+            [...displayNameCounts.entries()].filter(([, count]) => count > 1).map(([displayName]) => displayName)
+        );
+    }, [data]);
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -169,6 +187,7 @@ const ExploreSearchCombobox: React.FC<{
                                         highlightedIndex={highlightedIndex}
                                         keyword={keyword}
                                         getItemProps={getItemProps}
+                                        showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
                                     />
                                 );
                             })

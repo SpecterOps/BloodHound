@@ -36,9 +36,17 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const setup = async (item: NodeSearchResult, keyword?: string) => {
+const setup = async (item: NodeSearchResult, keyword?: string, showDistinguishedName = true) => {
     return await act(async () => {
-        return render(<SearchResultItem item={item} index={0} keyword={keyword} getItemProps={() => ({})} />);
+        return render(
+            <SearchResultItem
+                item={item}
+                index={0}
+                keyword={keyword}
+                getItemProps={() => ({})}
+                showDistinguishedName={showDistinguishedName}
+            />
+        );
     });
 };
 
@@ -73,6 +81,12 @@ describe('SearchResultItem', () => {
     it('does not render a distinguished name line when it is an empty string', async () => {
         const screen = await setup({ ...baseItem, distinguishedName: '' });
         expect(screen.queryByText(/CN=Admin/)).not.toBeInTheDocument();
+    });
+
+    it('does not render the distinguished name when showDistinguishedName is false', async () => {
+        const screen = await setup(baseItem, undefined, false);
+        expect(screen.queryByText(baseItem.distinguishedName as string)).not.toBeInTheDocument();
+        expect(screen.getByText(baseItem.label)).toBeInTheDocument();
     });
 
     it('highlights the matched keyword in the label', async () => {
