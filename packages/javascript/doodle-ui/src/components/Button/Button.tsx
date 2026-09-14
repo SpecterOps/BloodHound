@@ -137,6 +137,7 @@ export const TextButtonVariants = cva(TextButtonBaseClasses, {
     },
 });
 
+// TODO - add type='button' in BED-6062
 type TextButtonBaseProps = Omit<BaseUIButton.Props, 'children' | 'render'> & {
     fontColor?: 'primary' | 'default' | null;
 };

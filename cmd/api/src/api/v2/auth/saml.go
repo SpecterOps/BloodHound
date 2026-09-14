@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	bhceSAML "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 	"github.com/specterops/bloodhound/packages/go/headers"
@@ -488,7 +489,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		)
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
-	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
+	} else if validatedResponse, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):
@@ -509,7 +510,37 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		}
 		// SAML credentials issue scenario (authentication failed)
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response: Failed to parse ACS response %s", err.Error()))
-	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(assertion); err != nil {
+	} else if err := s.db.CreateSAMLConsumedIdentifiers(request.Context(),
+		ssoProvider.ID,
+		validatedResponse.Assertion.Issuer.Value,
+		validatedResponse.ResponseID,
+		validatedResponse.Assertion.ID,
+		bhceSAML.CalculateSAMLTimeExpiry(validatedResponse.ResponseIssueInstant, validatedResponse.Assertion.IssueInstant)); err != nil {
+		switch {
+		case errors.Is(err, database.ErrSAMLIdentifierAlreadyConsumed):
+			slog.WarnContext(
+				request.Context(),
+				"[SAML] Replayed SAML response rejected",
+				slog.String("provider_name", ssoProvider.Name),
+				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
+				slog.String("response_id", validatedResponse.ResponseID),
+				slog.String("assertion_id", validatedResponse.Assertion.ID),
+				attr.Error(err),
+			)
+			// Replay detected, cannot safely create a session
+			api.RedirectToLoginURL(response, request, "Invalid SSO response")
+		default:
+			slog.ErrorContext(
+				request.Context(),
+				"[SAML] Failed to add SAMLResponse and/or assertion IDs to DB",
+				slog.String("provider_name", ssoProvider.Name),
+				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
+				attr.Error(err),
+			)
+			// Technical issues scenario: DB write failed
+			api.RedirectToLoginURL(response, request, "Your SSO connection failed, please try again")
+		}
+	} else if principalName, err := ssoProvider.SAMLProvider.GetSAMLUserPrincipalNameFromAssertion(validatedResponse.Assertion); err != nil {
 		slog.WarnContext(
 			request.Context(),
 			"[SAML] Failed to lookup user for SAML provider",
@@ -520,7 +551,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, "Invalid assertion: no valid email address found")
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, assertion, s.db, s.DogTags); err != nil {
+			if err := jitSAMLUserUpsert(request.Context(), ssoProvider, principalName, validatedResponse.Assertion, s.db, s.DogTags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.WarnContext(
 					request.Context(),

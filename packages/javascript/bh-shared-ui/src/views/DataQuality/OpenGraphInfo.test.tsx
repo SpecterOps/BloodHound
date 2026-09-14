@@ -160,13 +160,14 @@ describe('OpenGraphInfo', () => {
         consoleError.mockRestore();
     });
 
-    it('renders nothing when the response contains no stats', async () => {
+    it('renders the empty-state message when the response contains no stats', async () => {
         respondWith(STATS_URL, []);
 
         const { container } = render(<OpenGraphInfo contextId='env-1' />);
 
         await waitFor(() => expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(0));
         expect(screen.queryByText('Relationships')).not.toBeInTheDocument();
+        expect(await screen.findByText('No data to display')).toBeInTheDocument();
     });
 
     it('renders a row per node stat plus the relationship row when populated', async () => {
@@ -219,6 +220,27 @@ describe('OpenGraphPlatformInfo', () => {
         await waitFor(() => expect(onDataError).toHaveBeenCalled());
         expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(0);
         expect(screen.queryByText('Relationships')).not.toBeInTheDocument();
+        expect(screen.queryByText('No data to display')).not.toBeInTheDocument();
         consoleError.mockRestore();
+    });
+
+    it('renders the empty-state message when the aggregation response contains no stats', async () => {
+        respondWith(AGGREGATION_URL, []);
+
+        const { container } = render(<OpenGraphPlatformInfo contextKindId={101} />);
+
+        await waitFor(() => expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(0));
+        expect(screen.queryByText('Relationships')).not.toBeInTheDocument();
+        expect(await screen.findByText('No data to display')).toBeInTheDocument();
+    });
+
+    it('renders the empty-state message when the aggregation response data is null', async () => {
+        server.use(rest.get(AGGREGATION_URL, (_req, res, ctx) => res(ctx.status(200), ctx.json({ data: null }))));
+
+        const { container } = render(<OpenGraphPlatformInfo contextKindId={101} />);
+
+        await waitFor(() => expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(0));
+        expect(screen.queryByText('Relationships')).not.toBeInTheDocument();
+        expect(await screen.findByText('No data to display')).toBeInTheDocument();
     });
 });

@@ -29,6 +29,7 @@ import (
 	context "context"
 	io "io"
 	reflect "reflect"
+	time "time"
 
 	storage "github.com/specterops/bloodhound/packages/go/storage"
 	gomock "go.uber.org/mock/gomock"
@@ -115,6 +116,21 @@ func (m *MockStorage) Get(ctx context.Context, name string) (io.ReadCloser, stor
 func (mr *MockStorageMockRecorder) Get(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), ctx, name)
+}
+
+// GetPresignedURL mocks base method.
+func (m *MockStorage) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedURL", ctx, name, ttl)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedURL indicates an expected call of GetPresignedURL.
+func (mr *MockStorageMockRecorder) GetPresignedURL(ctx, name, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedURL", reflect.TypeOf((*MockStorage)(nil).GetPresignedURL), ctx, name, ttl)
 }
 
 // List mocks base method.
@@ -255,6 +271,21 @@ func (m *MockFileService) GetFile(ctx context.Context, name string) (io.ReadClos
 func (mr *MockFileServiceMockRecorder) GetFile(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFile", reflect.TypeOf((*MockFileService)(nil).GetFile), ctx, name)
+}
+
+// GetPresignedURL mocks base method.
+func (m *MockFileService) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedURL", ctx, name, ttl)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedURL indicates an expected call of GetPresignedURL.
+func (mr *MockFileServiceMockRecorder) GetPresignedURL(ctx, name, ttl any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedURL", reflect.TypeOf((*MockFileService)(nil).GetPresignedURL), ctx, name, ttl)
 }
 
 // ListFiles mocks base method.

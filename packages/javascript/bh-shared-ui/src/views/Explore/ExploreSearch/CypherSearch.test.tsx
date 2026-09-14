@@ -21,7 +21,7 @@ import { setupServer } from 'msw/node';
 import { cypherTestResponse } from '../../../mocks/factories/explore';
 import { createGraphKinds } from '../../../mocks/factories/graphKinds';
 import { render, waitFor } from '../../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../../utils';
+import { mockCodemirrorLayoutMethods } from '../../../testing';
 import CypherSearch from './CypherSearch';
 
 const mockClearSelectedItem = vi.fn();

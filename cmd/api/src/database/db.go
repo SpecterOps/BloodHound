@@ -46,16 +46,18 @@ var (
 )
 
 var (
-	ErrDuplicateAGName             = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
-	ErrDuplicateAGTagSelectorName  = errors.New("duplicate asset group tag selector name")
-	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
-	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
-	ErrDuplicateEmail              = errors.New("duplicate user email address")
-	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
-	ErrDuplicateKindName           = errors.New("duplicate kind name")
-	ErrDuplicateGlyph              = errors.New("duplicate glyph")
-	ErrPositionOutOfRange          = errors.New("position out of range")
+	ErrDuplicateAGName               = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag                = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName    = errors.New("duplicate asset group tag selector name")
+	ErrDuplicateAGTagSelectorRuleKey = errors.New("duplicate asset group tag selector rule key")
+	ErrDuplicateSSOProviderName      = errors.New("duplicate sso provider name")
+	ErrDuplicateUserPrincipal        = errors.New("duplicate user principal name")
+	ErrDuplicateEmail                = errors.New("duplicate user email address")
+	ErrDuplicateCustomNodeKindName   = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName             = errors.New("duplicate kind name")
+	ErrDuplicateGlyph                = errors.New("duplicate glyph")
+	ErrPositionOutOfRange            = errors.New("position out of range")
+	ErrSAMLIdentifierAlreadyConsumed = errors.New("SAMLResponse or assertion has already been consumed")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -132,6 +134,7 @@ type Database interface {
 	SSOProviderData
 	OIDCProviderData
 	SAMLProviderData
+	SAMLConsumedData
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)

@@ -279,7 +279,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			},
 		},
 		{
-			name: "error_-_finding_has_invalid_environment_kind",
+			name: "success_-_finding_auto_registers_environment_kind",
 			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
 				t.Helper()
 				return testSetupData{
@@ -292,13 +292,49 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 							{Name: "BadFEK_Finding1", DisplayName: "Finding 1", RelationshipKindName: "BadFEK_RK1", EnvironmentKindName: "NonExistentEnvKind", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}},
 						},
 					},
-					wantErrContains: "error retrieving environment kind 'NonExistentEnvKind'",
 				}
 			},
 			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
 				t.Helper()
-				assert.ErrorContains(t, err, setupData.wantErrContains)
-				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
+			},
+		},
+		{
+			name: "success_-_finding_references_environment_kind_from_another_extension",
+			setup: func(t *testing.T, testSuite IntegrationTestSuite) testSetupData {
+				t.Helper()
+
+				providerInput := model.GraphExtensionInput{
+					ExtensionInput: model.ExtensionInput{Name: "EnvironmentProviderExt", DisplayName: "Environment Provider", Version: "1.0.0", Namespace: "ENV_PROVIDER"},
+					NodeKindsInput: model.NodesInput{
+						{Name: "ENV_PROVIDER_Principal", DisplayName: "Principal", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"},
+						{Name: "ENV_PROVIDER_Environment", DisplayName: "Environment", IsDisplayKind: false},
+					},
+					EnvironmentsInput: model.EnvironmentsInput{{
+						EnvironmentKindName: "ENV_PROVIDER_Environment",
+						SourceKindName:      "ENV_PROVIDER_Source",
+						PrincipalKinds:      []string{"ENV_PROVIDER_Principal"},
+					}},
+				}
+				_, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, providerInput)
+				require.NoError(t, err)
+
+				return testSetupData{
+					input: model.GraphExtensionInput{
+						ExtensionInput:            model.ExtensionInput{Name: "FindingConsumerExt", DisplayName: "Finding Consumer", Version: "1.0.0", Namespace: "FINDING_CONSUMER"},
+						NodeKindsInput:            model.NodesInput{{Name: "FINDING_CONSUMER_Principal", DisplayName: "Principal", IsDisplayKind: true, Icon: "user", IconColor: "#2779F5"}},
+						RelationshipKindsInput:    model.RelationshipsInput{{Name: "FINDING_CONSUMER_Relationship", Description: "relationship", IsTraversable: true}},
+						RelationshipFindingsInput: model.RelationshipFindingsInput{{Name: "FINDING_CONSUMER_Finding", DisplayName: "Cross-extension finding", RelationshipKindName: "FINDING_CONSUMER_Relationship", EnvironmentKindName: "ENV_PROVIDER_Environment", RemediationInput: model.RemediationInput{ShortDescription: "sd", LongDescription: "ld", ShortRemediation: "sr", LongRemediation: "lr"}}},
+					},
+				}
+			},
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+				t.Helper()
+				require.NoError(t, err)
+				assert.False(t, updated)
+				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
 		{
@@ -1014,9 +1050,7 @@ func assertFindings(t *testing.T, testSuite IntegrationTestSuite, extensionId in
 		require.Len(t, relKinds, 1)
 		assert.Equalf(t, wantFinding.RelationshipKindName, relKinds[0].Name, "Finding(%v) - relationship kind mismatch", gotFinding.Name)
 
-		findingEnv, err := testSuite.BHDatabase.GetEnvironmentById(testSuite.Context, gotFinding.EnvironmentId)
-		require.NoError(t, err)
-		envKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, findingEnv.EnvironmentKindId)
+		envKinds, err := testSuite.BHDatabase.GetKindsByIDs(testSuite.Context, gotFinding.EnvironmentId)
 		require.NoError(t, err)
 		require.Len(t, envKinds, 1)
 		assert.Equalf(t, wantFinding.EnvironmentKindName, envKinds[0].Name, "Finding(%v) - environment kind mismatch", gotFinding.Name)

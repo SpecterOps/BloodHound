@@ -20,7 +20,8 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
-import { createGraphKinds, cypherTestResponse, encodeCypherQuery, mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { encodeCypherQuery } from 'bh-shared-ui';
+import { createGraphKinds, cypherTestResponse, mockCodemirrorLayoutMethods } from 'bh-shared-ui/testing';
 import { ConfigurationKey, GraphData } from 'js-client-library';
 
 const comboboxLookaheadOptions = {
@@ -141,6 +142,12 @@ const setup = async (exploreSearchTab?: string) => {
 // Example
 
 describe('ExploreSearch rendering per tab', async () => {
+    it('renders hidden h2 with current tab name for screen readers', async () => {
+        await setup();
+        const hiddenHeading = screen.getByRole('heading', { level: 2, name: /search/i });
+        expect(hiddenHeading).toBeInTheDocument();
+        expect(hiddenHeading).toHaveClass('sr-only');
+    });
     it('should render', async () => {
         await setup();
         expect(screen.getByLabelText('Search Nodes')).toBeInTheDocument();
@@ -149,7 +156,6 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('tab', { name: /pathfinding/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /cypher/i })).toBeInTheDocument();
     });
-
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
         await setup('pathfinding');
 

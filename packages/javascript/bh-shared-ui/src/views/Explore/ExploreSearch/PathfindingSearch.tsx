@@ -164,7 +164,7 @@ const PathfindingSearch = ({
                                         handleReorderNodes(index, index + 1);
                                     }
                                 }}
-                                className='cursor-grab text-neutral-400 hover:text-neutral-600 dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'>
+                                className='cursor-grab text-light hover:text-main dark:text-common-white dark:hover:text-neutral-light-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'>
                                 <FontAwesomeIcon icon={faGripVertical} size='sm' />
                             </div>
                             <div
@@ -187,7 +187,7 @@ const PathfindingSearch = ({
                             {node.removable && (
                                 <button
                                     onClick={() => handleRemoveNode(index)}
-                                    className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 z-10'
+                                    className='absolute right-1 top-1/2 -translate-y-1/2 p-1 text-light hover:text-main dark:text-common-white dark:hover:text-neutral-light-5 z-10'
                                     aria-label={`Remove ${node.ariaLabel}`}
                                     title={`Remove ${node.ariaLabel}`}>
                                     <FontAwesomeIcon icon={faTimes} size='sm' />
@@ -199,7 +199,7 @@ const PathfindingSearch = ({
                 {totalNodeCount < maxNodes && (
                     <button
                         onClick={handleAddNode}
-                        className='flex items-center gap-1.5 ml-4 text-xs text-neutral-500 hover:text-neutral-700 dark:text-common-white dark:hover:text-neutral-light-5 py-0.5 cursor-pointer'
+                        className='flex items-center gap-1.5 ml-4 text-xs text-light hover:text-main dark:text-common-white dark:hover:text-neutral-light-5 py-0.5 cursor-pointer'
                         aria-label='Add destination'>
                         <FontAwesomeIcon icon={faPlus} size='xs' />
                         <span>Add Destination</span>

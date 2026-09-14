@@ -31,9 +31,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
-	"github.com/specterops/bloodhound/server/featureflags/internal/handlers/mocks"
+	handlersmocks "github.com/specterops/bloodhound/server/featureflags/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	"github.com/stretchr/testify/assert"
+	testifyMock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,6 +58,19 @@ func withFeatureIDVar(req *http.Request, featureID string) *http.Request {
 }
 
 func TestHandlers_GetAllFlags(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		service *handlersmocks.MockFeatureFlag
+	}
+	type args struct {
+		buildRequest func() *http.Request
+	}
+	type want struct {
+		responseCode int
+		assertBody   func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}
+
 	var (
 		unexpectedErr = errors.New("unexpected database failure")
 		flags         = []services.FeatureFlag{
@@ -67,67 +81,106 @@ func TestHandlers_GetAllFlags(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		svcResult  []services.FeatureFlag
-		svcErr     error
-		wantStatus int
-		assertBody func(t *testing.T, body []byte)
+		args       args
+		setupMocks func(t *testing.T, m *mock)
+		want       want
 	}{
 		{
-			name:       "returns 200 with the feature flags view on success",
-			svcResult:  flags,
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
-				var envelope struct {
-					Data handlers.FeatureFlagsView `json:"data"`
-				}
-				require.NoError(t, json.Unmarshal(body, &envelope))
-				require.Len(t, envelope.Data, 2)
-				assert.Equal(t, int32(1), envelope.Data[0].ID)
-				assert.Equal(t, services.FeatureOpenHoundSupport, envelope.Data[0].Key)
-				assert.True(t, envelope.Data[1].UserUpdatable)
+			name: "Success: returns the feature flags view - 200",
+			args: args{
+				buildRequest: func() *http.Request {
+					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
+				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return(flags, nil)
+			},
+			want: want{
+				responseCode: http.StatusOK,
+				assertBody: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+					var envelope struct {
+						Data handlers.FeatureFlagsView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+					require.Len(t, envelope.Data, 2)
+					assert.Equal(t, int32(1), envelope.Data[0].ID)
+					assert.Equal(t, services.FeatureOpenHoundSupport, envelope.Data[0].Key)
+					assert.True(t, envelope.Data[1].UserUpdatable)
+				},
 			},
 		},
 		{
-			name:       "returns an empty list when the service returns no flags",
-			svcResult:  []services.FeatureFlag{},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
-				var envelope struct {
-					Data handlers.FeatureFlagsView `json:"data"`
-				}
-				require.NoError(t, json.Unmarshal(body, &envelope))
-				assert.Empty(t, envelope.Data)
+			name: "Success: returns an empty list when the service returns no flags - 200",
+			args: args{
+				buildRequest: func() *http.Request {
+					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
+				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return([]services.FeatureFlag{}, nil)
+			},
+			want: want{
+				responseCode: http.StatusOK,
+				assertBody: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+					var envelope struct {
+						Data handlers.FeatureFlagsView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+					assert.Empty(t, envelope.Data)
+				},
 			},
 		},
 		{
-			name:       "returns 500 on unexpected service errors",
-			svcErr:     unexpectedErr,
-			wantStatus: http.StatusInternalServerError,
+			name: "Error: unexpected service error - 500",
+			args: args{
+				buildRequest: func() *http.Request {
+					return httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
+				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().GetAllFlags(testifyMock.Anything).Return(nil, unexpectedErr)
+			},
+			want: want{
+				responseCode: http.StatusInternalServerError,
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var (
-				featureFlagMock = mocks.NewMockFeatureFlag(t)
-				handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
-				recorder        = httptest.NewRecorder()
-				request         = httptest.NewRequest(http.MethodGet, "/api/v2/features", nil)
+				m = &mock{
+					service: handlersmocks.NewMockFeatureFlag(t),
+				}
+				handler  = handlers.NewHandlersContainer(m.service)
+				recorder = httptest.NewRecorder()
+				request  = tt.args.buildRequest()
 			)
-
-			featureFlagMock.EXPECT().GetAllFlags(request.Context()).Return(tt.svcResult, tt.svcErr)
-
-			handlerSet.GetAllFlags(recorder, request)
-
-			assert.Equal(t, tt.wantStatus, recorder.Code)
-			if tt.assertBody != nil {
-				tt.assertBody(t, recorder.Body.Bytes())
+			tt.setupMocks(t, m)
+			handler.GetAllFlags(recorder, request)
+			assert.Equal(t, tt.want.responseCode, recorder.Code)
+			if tt.want.assertBody != nil {
+				tt.want.assertBody(t, recorder)
 			}
 		})
 	}
 }
 
 func TestHandlers_ToggleFlag(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		service *handlersmocks.MockFeatureFlag
+	}
+	type args struct {
+		buildRequest func() *http.Request
+	}
+	type want struct {
+		responseCode int
+		assertBody   func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}
+
 	var (
 		userID     = uuid.Must(uuid.NewV4())
 		toggled    = services.FeatureFlag{ID: 5, Key: services.FeatureAlerts, Name: "Alerts", Enabled: true, UserUpdatable: true}
@@ -135,141 +188,171 @@ func TestHandlers_ToggleFlag(t *testing.T) {
 	)
 
 	tests := []struct {
-		name          string
-		featureID     string
-		authenticated bool
-		expect        func(m *mocks.MockFeatureFlag, ctx context.Context)
-		wantStatus    int
-		assertBody    func(t *testing.T, body []byte)
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mock)
+		want       want
 	}{
 		{
-			name:          "returns 200 OK and the flag view on success",
-			featureID:     "5",
-			authenticated: true,
-			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(toggled, nil)
+			name: "Success: toggles the flag and returns the view - 200",
+			args: args{
+				buildRequest: func() *http.Request {
+					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
+				},
 			},
-			wantStatus: http.StatusOK,
-			assertBody: func(t *testing.T, body []byte) {
-				var envelope struct {
-					Data handlers.FeatureFlagView `json:"data"`
-				}
-				require.NoError(t, json.Unmarshal(body, &envelope))
-				assert.Equal(t, int32(5), envelope.Data.ID)
-				assert.True(t, envelope.Data.Enabled)
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(toggled, nil)
+			},
+			want: want{
+				responseCode: http.StatusOK,
+				assertBody: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+					var envelope struct {
+						Data handlers.FeatureFlagView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+					assert.Equal(t, int32(5), envelope.Data.ID)
+					assert.True(t, envelope.Data.Enabled)
+				},
 			},
 		},
 		{
-			name:          "returns 400 when feature_id is not parseable as an int32",
-			featureID:     "not-a-number",
-			authenticated: true,
-			wantStatus:    http.StatusBadRequest,
+			name: "Error: feature_id is not parseable as an int32 - 400",
+			args: args{
+				buildRequest: func() *http.Request {
+					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/not-a-number/toggle", userID), "not-a-number")
+				},
+			},
+			setupMocks: func(t *testing.T, m *mock) {},
+			want: want{
+				responseCode: http.StatusBadRequest,
+			},
 		},
 		{
-			name:          "returns 404 when the service reports ErrNotFound",
-			featureID:     "5",
-			authenticated: true,
-			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, services.ErrNotFound)
+			name: "Error: service reports ErrNotFound - 404",
+			args: args{
+				buildRequest: func() *http.Request {
+					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
+				},
 			},
-			wantStatus: http.StatusNotFound,
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotFound)
+			},
+			want: want{
+				responseCode: http.StatusNotFound,
+			},
 		},
 		{
-			name:          "returns 403 when the service reports ErrNotUserUpdatable",
-			featureID:     "5",
-			authenticated: true,
-			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
+			name: "Error: service reports ErrNotUserUpdatable - 403",
+			args: args{
+				buildRequest: func() *http.Request {
+					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
+				},
 			},
-			wantStatus: http.StatusForbidden,
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, services.ErrNotUserUpdatable)
+			},
+			want: want{
+				responseCode: http.StatusForbidden,
+			},
 		},
 		{
-			name:          "returns 500 on unexpected service errors",
-			featureID:     "5",
-			authenticated: true,
-			expect: func(m *mocks.MockFeatureFlag, ctx context.Context) {
-				m.EXPECT().ToggleFlag(ctx, int32(5)).Return(services.FeatureFlag{}, serviceErr)
+			name: "Error: unexpected service error - 500",
+			args: args{
+				buildRequest: func() *http.Request {
+					return withFeatureIDVar(newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/5/toggle", userID), "5")
+				},
 			},
-			wantStatus: http.StatusInternalServerError,
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().ToggleFlag(testifyMock.Anything, int32(5)).Return(services.FeatureFlag{}, serviceErr)
+			},
+			want: want{
+				responseCode: http.StatusInternalServerError,
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var (
-				featureFlagMock = mocks.NewMockFeatureFlag(t)
-				handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
-				recorder        = httptest.NewRecorder()
-				request         *http.Request
+				m = &mock{
+					service: handlersmocks.NewMockFeatureFlag(t),
+				}
+				handler  = handlers.NewHandlersContainer(m.service)
+				recorder = httptest.NewRecorder()
+				request  = tt.args.buildRequest()
 			)
-
-			if tt.authenticated {
-				request = newAuthenticatedRequest(t, http.MethodPut, "/api/v2/features/"+tt.featureID+"/toggle", userID)
-			} else {
-				req, err := http.NewRequest(http.MethodPut, "/api/v2/features/"+tt.featureID+"/toggle", nil)
-				require.NoError(t, err)
-				request = req
-			}
-			request = withFeatureIDVar(request, tt.featureID)
-
-			if tt.expect != nil {
-				tt.expect(featureFlagMock, request.Context())
-			}
-
-			handlerSet.ToggleFlag(recorder, request)
-
-			assert.Equal(t, tt.wantStatus, recorder.Code)
-			if tt.assertBody != nil {
-				tt.assertBody(t, recorder.Body.Bytes())
+			tt.setupMocks(t, m)
+			handler.ToggleFlag(recorder, request)
+			assert.Equal(t, tt.want.responseCode, recorder.Code)
+			if tt.want.assertBody != nil {
+				tt.want.assertBody(t, recorder)
 			}
 		})
 	}
 }
 
 func TestHandlers_IsEnabled(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		service *handlersmocks.MockFeatureFlag
+	}
+	type args struct {
+		ctx        context.Context
+		featureKey string
+	}
+	type want struct {
+		enabled bool
+		err     error
+	}
+
 	var (
 		ctx        = context.Background()
 		serviceErr = errors.New("connection refused")
 	)
 
 	tests := []struct {
-		name        string
-		expect      func(m *mocks.MockFeatureFlag)
-		wantEnabled bool
-		wantErr     error
+		name       string
+		args       args
+		setupMocks func(t *testing.T, m *mock)
+		want       want
 	}{
 		{
-			name: "delegates to the service and returns enabled=true",
-			expect: func(m *mocks.MockFeatureFlag) {
-				m.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(true, nil)
+			name: "Success: delegates to the service and returns enabled=true",
+			args: args{ctx: ctx, featureKey: services.FeatureOpenHoundSupport},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(true, nil)
 			},
-			wantEnabled: true,
+			want: want{enabled: true},
 		},
 		{
-			name: "propagates service errors",
-			expect: func(m *mocks.MockFeatureFlag) {
-				m.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(false, serviceErr)
+			name: "Error: propagates service errors",
+			args: args{ctx: ctx, featureKey: services.FeatureOpenHoundSupport},
+			setupMocks: func(t *testing.T, m *mock) {
+				m.service.EXPECT().IsEnabled(ctx, services.FeatureOpenHoundSupport).Return(false, serviceErr)
 			},
-			wantErr: serviceErr,
+			want: want{err: serviceErr},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			var (
-				featureFlagMock = mocks.NewMockFeatureFlag(t)
-				handlerSet      = handlers.NewHandlersContainer(featureFlagMock)
+				m = &mock{
+					service: handlersmocks.NewMockFeatureFlag(t),
+				}
+				handler = handlers.NewHandlersContainer(m.service)
 			)
-
-			tt.expect(featureFlagMock)
-
-			enabled, err := handlerSet.IsEnabled(ctx, services.FeatureOpenHoundSupport)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			tt.setupMocks(t, m)
+			enabled, err := handler.IsEnabled(tt.args.ctx, tt.args.featureKey)
+			if tt.want.err != nil {
+				assert.ErrorIs(t, err, tt.want.err)
 			} else {
 				require.NoError(t, err)
 			}
-			assert.Equal(t, tt.wantEnabled, enabled)
+			assert.Equal(t, tt.want.enabled, enabled)
 		})
 	}
 }

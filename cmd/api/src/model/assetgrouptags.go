@@ -30,9 +30,10 @@ import (
 )
 
 const (
-	AssetGroupActorBloodHound          = "BloodHound"
-	AssetGroupTierZeroPosition         = 1
-	AssetGroupTierHygienePlaceholderId = 0
+	AssetGroupActorBloodHound                   = "BloodHound"
+	AssetGroupActorOpenGraphExtensionManagement = "OpenGraph Extension Management"
+	AssetGroupTierZeroPosition                  = 1
+	AssetGroupTierHygienePlaceholderId          = 0
 )
 
 type SelectorType int
@@ -236,6 +237,8 @@ type AssetGroupTagSelector struct {
 	AutoCertify     SelectorAutoCertifyMethod `json:"auto_certify"`
 	IsDefault       bool                      `json:"is_default"`
 	AllowDisable    bool                      `json:"allow_disable"`
+	RuleKey         null.String               `json:"rule_key"`
+	ExtensionId     null.Int32                `json:"extension_id"`
 
 	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
 }
@@ -252,6 +255,7 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 		"description":        s.Description,
 		"auto_certify":       s.AutoCertify,
 		"is_default":         s.IsDefault,
+		"rule_key":           s.RuleKey.String,
 	}
 }
 

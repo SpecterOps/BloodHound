@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card, CardHeader, CardTitle, DataTable } from 'doodle-ui';
+import { Card, CardHeader, DataTable, Typography } from 'doodle-ui';
 import { useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
 import { useInfiniteScroll } from '../../../hooks';
@@ -81,7 +81,7 @@ const HistoryContent = () => {
             <div data-testid='history-wrapper' className='flex gap-6 mt-4 h-[calc(100%-5rem)]'>
                 <Card className='flex flex-col'>
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
-                        <CardTitle>History Log</CardTitle>
+                        <Typography variant='h2'>History Log</Typography>
                         <div className='flex items-center'>
                             <SearchInput id='search-pz-history' value={search} onInputChange={setSearch} />
                             <FilterDialog setFilters={setFilters} filters={filters} />

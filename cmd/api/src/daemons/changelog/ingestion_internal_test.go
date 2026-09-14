@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -215,7 +216,7 @@ func TestIsDeadlockError(t *testing.T) {
 		},
 		{
 			name:     "pg error with different code",
-			err:      &pgconn.PgError{Code: "23505"},
+			err:      &pgconn.PgError{Code: database.PostgresUniqueViolationCode},
 			expected: false,
 		},
 	}

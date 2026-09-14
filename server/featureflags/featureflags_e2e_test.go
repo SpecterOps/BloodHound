@@ -205,7 +205,7 @@ func assertNoAnalysisRequest(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	assert.Zero(t, count)
 }
 
-func TestGetAllFlags(t *testing.T) {
+func TestE2E_GetAllFlags(t *testing.T) {
 	var (
 		db        = setupFeatureFlagsDB(t)
 		ctx       = context.Background()
@@ -222,34 +222,55 @@ func TestGetAllFlags(t *testing.T) {
 		return req
 	}
 
-	t.Run("returns 200 OK with the seeded flags", func(t *testing.T) {
-		seeded := seedFeatureFlag(t, ctx, db.Pool(), "e2e_get_all_flag", "E2E Get All Flag", true, true)
+	tests := []struct {
+		name           string
+		seedFlag       func(t *testing.T) int32
+		assertResponse func(t *testing.T, resp *http.Response, seededID int32)
+	}{
+		{
+			name: "Success: returns the seeded flags - 200",
+			seedFlag: func(t *testing.T) int32 {
+				t.Helper()
+				return seedFeatureFlag(t, ctx, db.Pool(), "e2e_get_all_flag", "E2E Get All Flag", true, true)
+			},
+			assertResponse: func(t *testing.T, resp *http.Response, seededID int32) {
+				t.Helper()
 
-		resp, err := http.DefaultClient.Do(newGetRequest(t))
-		require.NoError(t, err)
-		defer resp.Body.Close()
+				assert.Equal(t, http.StatusOK, resp.StatusCode)
+				assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+				var envelope featureFlagsEnvelope
+				require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
 
-		var envelope featureFlagsEnvelope
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+				found := false
+				for _, flag := range envelope.Data {
+					if flag.ID == seededID {
+						found = true
+						assert.Equal(t, "e2e_get_all_flag", flag.Key)
+						assert.Equal(t, "E2E Get All Flag", flag.Name)
+						assert.True(t, flag.Enabled)
+						assert.True(t, flag.UserUpdatable)
+					}
+				}
+				assert.True(t, found, "seeded flag should be in the returned list")
+			},
+		},
+	}
 
-		found := false
-		for _, flag := range envelope.Data {
-			if flag.ID == seeded {
-				found = true
-				assert.Equal(t, "e2e_get_all_flag", flag.Key)
-				assert.Equal(t, "E2E Get All Flag", flag.Name)
-				assert.True(t, flag.Enabled)
-				assert.True(t, flag.UserUpdatable)
-			}
-		}
-		assert.True(t, found, "seeded flag should be in the returned list")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			seededID := tt.seedFlag(t)
+
+			resp, err := http.DefaultClient.Do(newGetRequest(t))
+			require.NoError(t, err)
+			defer resp.Body.Close()
+
+			tt.assertResponse(t, resp, seededID)
+		})
+	}
 }
 
-func TestToggleFlag(t *testing.T) {
+func TestE2E_ToggleFlag(t *testing.T) {
 	var (
 		db     = setupFeatureFlagsDB(t)
 		userID = uuid.Must(uuid.NewV4())

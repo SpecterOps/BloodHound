@@ -23,7 +23,15 @@ import {
     RelationshipDetailsWithInfo,
 } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, ParsedQueryItem, parseItemId, REL_ID_PREFIX } from '../../utils';
+import { AzureNodeKind } from '../../graphSchema';
+import {
+    apiClient,
+    entityInformationEndpoints,
+    EntityKinds,
+    ParsedQueryItem,
+    parseItemId,
+    REL_ID_PREFIX,
+} from '../../utils';
 import { escapeCypherString } from '../../utils/cypher';
 import { useExploreParams } from '../useExploreParams';
 
@@ -55,11 +63,58 @@ export const useGetRelationshipById = (id?: number) => {
     });
 };
 
+// The only built in node kinds whose entity endpoints return runtime-derived properties that the generic
+// node-by-id endpoint omits. Each adds a related-node id computed via a relationship traversal at request time:
+// AZApp -> service_principal_id, AZServicePrincipal -> appid, AZFederatedIdentityCredential ->
+// federatedidentitycredentialappid. All other properties (e.g. isTierZero) are derivable from the base node.
+const ENRICHABLE_NODE_KINDS = new Set<EntityKinds>([
+    AzureNodeKind.App,
+    AzureNodeKind.ServicePrincipal,
+    AzureNodeKind.FederatedIdentityCredential,
+]);
+
+const getEnrichableNodeKind = (kinds: NodeDetails['kinds']): EntityKinds | undefined => {
+    for (const kind of kinds) {
+        if (ENRICHABLE_NODE_KINDS.has(kind.name as EntityKinds)) return kind.name as EntityKinds;
+    }
+
+    return undefined;
+};
+
+// The generic node-by-id endpoint does not include the runtime-derived properties (e.g. an AZApp's service
+// principal id) that the kind-specific entity endpoints add. For the enrichable node kinds we fetch those
+// properties from the same endpoints the entity panel relied on previously and merge them into the node
+// properties.
+const enrichBuiltInNodeProperties = async (
+    node: NodeDetails | NodeDetailsWithInfo,
+    signal?: AbortSignal
+): Promise<NodeDetails | NodeDetailsWithInfo> => {
+    const enrichableKind = getEnrichableNodeKind(node.kinds);
+    const objectId = node.properties.objectid;
+
+    if (!enrichableKind || !objectId) return node;
+
+    try {
+        const properties = await entityInformationEndpoints[enrichableKind](objectId, { signal }).then(
+            (res) => res.data.data.props
+        );
+
+        return { ...node, properties: { ...node.properties, ...properties } };
+    } catch (error) {
+        if (signal?.aborted) throw error;
+        return node;
+    }
+};
+
 export const useGetNodeById = (id?: number) => {
     return useQuery({
         queryKey: ['getNodeById', id],
-        queryFn: async () => {
-            return apiClient.getNodeByID(id!, { params: { 'include-info': true } }).then((res) => res.data.data);
+        queryFn: async ({ signal }) => {
+            const node = await apiClient
+                .getNodeByID(id!, { params: { 'include-info': true }, signal })
+                .then((res) => res.data.data);
+
+            return enrichBuiltInNodeProperties(node, signal);
         },
         enabled: !!id,
         retryOnMount: false,

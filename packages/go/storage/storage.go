@@ -98,6 +98,9 @@ type Storage interface {
 
 	// Move moves an object. Is done by a copy and a delete.
 	Move(ctx context.Context, srcName, dstName string, options WriteOptions) error
+
+	// GetPresignedURL returns a presigned url to download the given file from the storage backend.
+	GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error)
 }
 
 // FileService serves as an abstraction to handle files with different storage backends. This serves as
@@ -136,6 +139,9 @@ type FileService interface {
 	// ListFiles lists the files at a given location in the storage backend. This can be done
 	// recursively, or with a limit on the specified directory.
 	ListFiles(ctx context.Context, name string, opts ListOptions) ([]FileInfo, error)
+
+	// GetPresignedURL returns a presigned url to download the given file from the storage backend.
+	GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error)
 }
 
 type StorageFileService struct {
@@ -246,4 +252,8 @@ func MoveFileBetweenServices(
 	}
 
 	return sourceService.DeleteFile(ctx, sourceName)
+}
+
+func (s *StorageFileService) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	return s.Storage.GetPresignedURL(ctx, name, ttl)
 }

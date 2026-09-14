@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { Permission } from 'bh-shared-ui';
+import { createAuthStateWithPermissions } from 'bh-shared-ui/testing';
 import { ClearDatabaseRequest } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';

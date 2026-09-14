@@ -14,19 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../fixtures';
+import { test } from 'bh-playwright-testing';
 
-test.describe('Download Collectors page accessibility', () => {
-    test('download collectors content has no detectable WCAG A/AA violations', async ({
-        page,
-        makeAxeBuilder,
-    }, testInfo) => {
-        await page.goto('/ui/download-collectors');
-
+test.describe('WCAG A/AA Violations - Download Collectors', () => {
+    test('default state', async ({ page, goAndWaitFor, checkA11y }) => {
         // Wait for collector download button to appear
-        await page.getByRole('button', { name: 'Download SharpHound' }).waitFor({ state: 'visible' });
+        await goAndWaitFor('/ui/download-collectors', page.getByRole('button', { name: 'Download SharpHound' }));
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

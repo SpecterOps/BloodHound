@@ -83,17 +83,19 @@ describe('ColumnHeaders', () => {
         it('renders the tooltip icon when tooltipText prop is passed', () => {
             render(<SortableHeader title={'test'} tooltipText='test tooltip text' sortOrder='asc' onSort={vi.fn} />);
 
-            const tooltipIcon = screen.getByRole('img', { name: /more information in tooltip/i });
+            const sortButton = screen.getByRole('button', { name: /sort by test/i });
+            const tooltipIcon = screen.getByTestId('column-header_tooltip-trigger-icon');
 
-            expect(tooltipIcon).toHaveAttribute('tabindex', '0');
-            expect(screen.queryByRole('button', { name: /more information in tooltip/i })).not.toBeInTheDocument();
+            expect(sortButton).toHaveAccessibleDescription('test tooltip text');
+            expect(tooltipIcon).toHaveAttribute('aria-hidden', 'true');
+            expect(tooltipIcon).not.toHaveAttribute('tabindex');
         });
 
         // Not hovered
         it('does not show tooltip text by default', async () => {
             render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
 
-            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('column-header_tooltip-content-text')).not.toBeInTheDocument();
         });
 
         // Hovered
@@ -102,7 +104,7 @@ describe('ColumnHeaders', () => {
 
             render(<SortableHeader title={'test'} tooltipText='test tooltip text' onSort={vi.fn} />);
 
-            expect(screen.queryByText('test tooltip text')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('column-header_tooltip-content-text')).not.toBeInTheDocument();
 
             await user.hover(screen.getByTestId('column-header_tooltip-trigger-icon'));
 

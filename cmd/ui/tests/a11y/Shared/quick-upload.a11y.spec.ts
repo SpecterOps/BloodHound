@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { hideBySelector } from 'bh-playwright-testing/axe';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
+import { hideBySelector, test } from 'bh-playwright-testing';
 
 test.describe('Quick Upload dialog', () => {
     const UPLOAD_FILE = 'tests/a11y/Shared/fixtures/playwright-upload.json';
@@ -49,7 +48,7 @@ test.describe('Quick Upload dialog', () => {
         await hideBySelector(page, '#content-wrapper');
     });
 
-    test('default state', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('default state', async ({ page, checkA11y }) => {
         const dialog = page.getByRole('dialog');
 
         await dialog
@@ -59,29 +58,27 @@ test.describe('Quick Upload dialog', () => {
             .waitFor({ state: 'visible' });
         await dialog.getByText('View File Ingest History', { exact: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
-    test('with files added', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with files added', async ({ page, checkA11y }) => {
         const dialog = page.getByRole('dialog');
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
         await dialog.getByText('playwright-upload.json', { exact: true }).waitFor({ state: 'visible' });
         await dialog.getByRole('button', { name: 'Remove item', exact: true }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
-    test('with completed uploads', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with completed uploads', async ({ page, checkA11y }) => {
         await page.route('**/api/v2/file-upload/start', async (route) => {
             if (route.request().method() !== 'POST') {
                 return route.fallback();
@@ -125,7 +122,9 @@ test.describe('Quick Upload dialog', () => {
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
@@ -138,12 +137,10 @@ test.describe('Quick Upload dialog', () => {
         await dialog.getByText('100%', { exact: true }).waitFor({ state: 'visible' });
         await dialog.getByText('Upload in progress.', { exact: true }).waitFor({ state: 'hidden' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 
-    test('with failed uploads', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('with failed uploads', async ({ page, checkA11y }) => {
         await page.route('**/api/v2/file-upload/start', async (route) => {
             if (route.request().method() !== 'POST') {
                 return route.fallback();
@@ -191,7 +188,9 @@ test.describe('Quick Upload dialog', () => {
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
-        await dialog.locator('div[role="button"].size-full').click();
+        await dialog
+            .getByRole('button', { name: 'Choose JSON or zip/compressed JSON files to upload', exact: true })
+            .click();
 
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(UPLOAD_FILE);
@@ -207,8 +206,6 @@ test.describe('Quick Upload dialog', () => {
         await dialog.getByRole('button', { name: 'Retry upload', exact: true }).waitFor({ state: 'visible' });
         await dialog.getByText('Upload in progress.', { exact: true }).waitFor({ state: 'hidden' });
 
-        const results = await makeAxeBuilder().include('[role="dialog"]').analyze();
-
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y({ include: '[role="dialog"]', failOnIncomplete: true });
     });
 });

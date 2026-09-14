@@ -25,10 +25,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 )
 
 const (
-	pgErrorUniqueViolationCode           = "23505"
 	pgErrorUniqueViolationConstraintName = "pg_type_typname_nsp_index"
 )
 
@@ -85,7 +85,7 @@ func ResolveGraphDriver(ctx context.Context, cfg config.Configuration) (string, 
 	} else {
 		defer pgxConn.Close(ctx)
 		if _, err := pgxConn.Exec(ctx, `create table if not exists database_switch (driver text not null, primary key(driver));`); err != nil {
-			if pgError, ok := errors.AsType[*pgconn.PgError](err); ok && pgError.Code == pgErrorUniqueViolationCode && pgError.ConstraintName == pgErrorUniqueViolationConstraintName {
+			if pgError, ok := errors.AsType[*pgconn.PgError](err); ok && pgError.Code == database.PostgresUniqueViolationCode && pgError.ConstraintName == pgErrorUniqueViolationConstraintName {
 				slog.InfoContext(ctx, "Concurrent database_switch table CREATE; falling back to primary")
 			} else {
 				return "", err
