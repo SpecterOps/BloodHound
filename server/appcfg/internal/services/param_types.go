@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// This file defines the external interface methods allowing
-// access to specific parameter types' values
+// This file has the setup needed for operating on specific config types
+// TODO BED-9745
+
 package services
 
 import (

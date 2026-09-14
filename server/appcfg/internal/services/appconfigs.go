@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// This file contains functions generic to all parameter types
+// This file contains appconfig functionality generic to all parameter types
+
 package services
 
 import (
