@@ -24,6 +24,9 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
 
+permissions:
+  contents: read
+
 jobs:
   run-slow-go-tests:
     name: Run Slow Go Tests

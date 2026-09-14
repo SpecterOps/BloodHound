@@ -176,14 +176,18 @@ on:
       gh_access_token:
         required: true
       ecr_aws_access_key_id:
-        required: true
+        required: false
       ecr_aws_secret_access_key:
-        required: true
+        required: false
+
     outputs:
       image_reference:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
       image_name:
         value: ${{ jobs.build-container-image.outputs.image_name }}
+
+permissions:
+  contents: read
 
 jobs:
   build-container-image:
@@ -213,6 +217,7 @@ jobs:
           sparse-checkout: .github/actions
 
       - name: Configure ECR AWS Credentials
+        if: contains(inputs.container_image_repository_name, '.dkr.ecr.')
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # ratchet:aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
@@ -220,6 +225,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
+        if: contains(inputs.container_image_repository_name, '.dkr.ecr.')
         uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
 
       - id: container-image-metadata
