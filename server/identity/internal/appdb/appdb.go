@@ -302,7 +302,7 @@ func (s *Store) ListPermissions(ctx context.Context, queryFilters params.Filters
 		permissionSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
 		permissionRows    pgx.Rows
 		listedPermissions []permission
-		result            = make([]services.Permission, 0)
+		result            []services.Permission
 		orderBy           []string
 		err               error
 	)
