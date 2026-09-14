@@ -96,7 +96,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
 export interface ButtonProps extends BaseUIButton.Props, VariantProps<typeof ButtonVariants> {}
 
 export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, ButtonProps>(function Button(
-    { className, children, disabled = false, variant, size, fontColor, ...props },
+    { className, children, disabled = false, variant, size, fontColor, type = 'button', ...props },
     ref
 ) {
     return (
@@ -104,6 +104,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
             {...props}
             ref={ref}
             disabled={disabled}
+            type={type}
             className={(state) =>
                 cn(
                     ButtonVariants({ variant, size, fontColor }),
