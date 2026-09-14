@@ -20,7 +20,7 @@ import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 export const Clock: React.FC<BaseSVGProps> = (props) => {
     return (
         <BaseSVG
-            name='circle-check'
+            name='clock'
             width='16'
             height='16'
             viewBox='0 0 16 16'
