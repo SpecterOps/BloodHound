@@ -30,17 +30,15 @@ import (
 // # Param keys
 
 const (
-	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
-	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
-	Neo4jConfigs             ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
-	PruneTTL                 ParameterKey = "prune.ttl"
-	ReconciliationKey        ParameterKey = "analysis.reconciliation"
-	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
-	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
-	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
-
-	// The below keys are not intended to be user updatable
+	PasswordExpirationWindow            ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours                     ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs                        ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey                 ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                            ParameterKey = "prune.ttl"
+	ReconciliationKey                   ParameterKey = "analysis.reconciliation"
+	ScheduledAnalysis                   ParameterKey = "analysis.scheduled"
+	ClientMetricsKey                    ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration                  ParameterKey = "auth.api_token_expiration"
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
 	TierManagementParameterKey          ParameterKey = "analysis.tiering"
