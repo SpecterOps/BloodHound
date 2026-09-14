@@ -86,7 +86,9 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			)
 
 			require.NotPanics(t, func() {
-				identity.Register(&routerInst, pool)
+				identity.Register(&routerInst, pool, func() mux.MiddlewareFunc {
+					return func(next http.Handler) http.Handler { return next }
+				})
 			})
 
 			assert.Equal(t, testCase.expected.routeRegistered, routerInst.MuxRouter().Match(testCase.buildRequest(), &match))
