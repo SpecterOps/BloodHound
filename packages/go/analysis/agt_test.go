@@ -38,6 +38,8 @@ import (
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -298,6 +300,148 @@ func assertGraphKinds(ctx context.Context, graphDB graph.Database, kinds graph.K
 	}
 	_, err := driver.KindMapper().AssertKinds(ctx, kinds)
 	return err
+}
+
+func TestReconcileZoneNode(t *testing.T) {
+	var (
+		suite     = setupIntegrationTestSuite(t)
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("11234567-9012-4567-9012-456789012345")}}
+	)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	var (
+		ctx     = suite.Context
+		db      = suite.BHDatabase
+		graphDB = suite.GraphDB
+	)
+
+	populatedZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile populated zone", "", null.Int32From(20), null.Bool{}, null.String{})
+	require.NoError(t, err)
+	emptyZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile empty zone", "", null.Int32From(21), null.Bool{}, null.String{})
+	require.NoError(t, err)
+	require.NoError(t, assertGraphKinds(ctx, graphDB, graph.Kinds{populatedZone.ToKind(), emptyZone.ToKind()}))
+
+	var (
+		member             *graph.Node
+		staleMember        *graph.Node
+		existingZoneNode   *graph.Node
+		orphanedZoneNodeID graph.ID
+		staleMembershipID  graph.ID
+	)
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if member, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "RECONCILE MEMBER",
+			common.ObjectID: "RECONCILE-MEMBER",
+		}), ad.Entity, ad.User, populatedZone.ToKind()); err != nil {
+			return err
+		}
+		if staleMember, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "RECONCILE STALE MEMBER",
+			common.ObjectID: "RECONCILE-STALE-MEMBER",
+		}), ad.Entity, ad.User); err != nil {
+			return err
+		}
+		if existingZoneNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:        populatedZone.Name,
+			common.DisplayName: populatedZone.Name,
+			common.ObjectID:    zoneNodeObjectID(populatedZone.ID),
+		}), schema.Zone); err != nil {
+			return err
+		}
+		if orphanedZoneNode, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "orphaned zone",
+			common.ObjectID: zoneNodeObjectID(2147483647),
+		}), schema.Zone); err != nil {
+			return err
+		} else {
+			orphanedZoneNodeID = orphanedZoneNode.ID
+		}
+		if staleMembership, err := tx.CreateRelationshipByIDs(staleMember.ID, existingZoneNode.ID, schema.MemberOfZone, graph.NewProperties()); err != nil {
+			return err
+		} else {
+			staleMembershipID = staleMembership.ID
+		}
+
+		return nil
+	}))
+
+	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+
+	zones, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
+	require.NoError(t, err)
+
+	var firstMembershipID graph.ID
+	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		zoneNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), schema.Zone)))
+		if err != nil {
+			return err
+		}
+		require.Len(t, zoneNodes, len(zones))
+
+		zoneNodesByObjectID := make(map[string]*graph.Node, len(zoneNodes))
+		for _, zoneNode := range zoneNodes {
+			objectID, err := zoneNode.Properties.Get(common.ObjectID.String()).String()
+			require.NoError(t, err)
+			zoneNodesByObjectID[objectID] = zoneNode
+		}
+		require.NotContains(t, zoneNodesByObjectID, zoneNodeObjectID(2147483647))
+		require.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone.ID))
+
+		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), schema.MemberOfZone)))
+		if err != nil {
+			return err
+		}
+		for _, membership := range memberships {
+			require.NotEqual(t, staleMembershipID, membership.ID)
+			require.NotEqual(t, orphanedZoneNodeID, membership.EndID)
+			if membership.EndID == existingZoneNode.ID {
+				require.Equal(t, member.ID, membership.StartID)
+				firstMembershipID = membership.ID
+			}
+		}
+		require.NotZero(t, firstMembershipID)
+
+		return nil
+	}))
+
+	// A second reconciliation preserves the existing node and relationship.
+	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
+			query.Kind(query.Relationship(), schema.MemberOfZone),
+			query.Equals(query.StartID(), member.ID),
+			query.Equals(query.EndID(), existingZoneNode.ID),
+		)))
+		if err != nil {
+			return err
+		}
+		require.Len(t, memberships, 1)
+		require.Equal(t, firstMembershipID, memberships[0].ID)
+		return nil
+	}))
+
+	member.DeleteKinds(populatedZone.ToKind())
+	staleMember.AddKinds(populatedZone.ToKind())
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if err := tx.UpdateNode(member); err != nil {
+			return err
+		}
+		return tx.UpdateNode(staleMember)
+	}))
+	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
+			query.Kind(query.Relationship(), schema.MemberOfZone),
+			query.Equals(query.EndID(), existingZoneNode.ID),
+		)))
+		if err != nil {
+			return err
+		}
+		require.Len(t, memberships, 1)
+		require.Equal(t, staleMember.ID, memberships[0].StartID)
+		return nil
+	}))
 }
 
 // TestTagAssetGroupNodesForTag exercises tagAssetGroupNodesForTag end-to-end
