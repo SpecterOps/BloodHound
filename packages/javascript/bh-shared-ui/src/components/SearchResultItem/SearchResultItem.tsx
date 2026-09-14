@@ -65,7 +65,7 @@ const SearchResultItem: FC<{
                                     variant='caption'
                                     className={cn(
                                         // TODO: Tokenize when available
-                                        'text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
+                                        'text-[#505050] dark:text-[#CDCDCD]',
                                         {
                                             'text-common-white dark:text-common-dark': highlightedIndex === index,
                                         }
