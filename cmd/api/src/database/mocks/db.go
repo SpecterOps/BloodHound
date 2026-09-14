@@ -2514,6 +2514,21 @@ func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
 }
 
+// GetSavedQueriesByExtensionID mocks base method.
+func (m *MockDatabase) GetSavedQueriesByExtensionID(ctx context.Context, schemaExtensionID int32) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesByExtensionID", ctx, schemaExtensionID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesByExtensionID indicates an expected call of GetSavedQueriesByExtensionID.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesByExtensionID(ctx, schemaExtensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesByExtensionID", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesByExtensionID), ctx, schemaExtensionID)
+}
+
 // GetSavedQueriesOwnedBy mocks base method.
 func (m *MockDatabase) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
