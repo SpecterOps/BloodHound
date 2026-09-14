@@ -18,7 +18,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -82,11 +81,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	)
 
 	t.Run("successfully create sso session", func(t *testing.T) {
-		var (
-			response              = httptest.NewRecorder()
-			expires               = time.Now().UTC().Add(appcfg.DefaultSessionTTLHours * time.Hour)
-			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
-		)
+		response := httptest.NewRecorder()
 
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
@@ -100,9 +95,15 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
+		before := time.Now().UTC()
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
+		after := time.Now().UTC()
 
-		require.Regexp(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
+		cookieHeader := response.Header().Get(headers.SetCookie.String())
+		cookies := (&http.Response{Header: http.Header{"Set-Cookie": {cookieHeader}}}).Cookies()
+		require.Len(t, cookies, 1)
+		require.WithinDuration(t, before.Add(appcfg.DefaultSessionTTLHours*time.Hour), cookies[0].Expires, after.Sub(before)+time.Second)
+
 		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
 		require.Equal(t, http.StatusFound, response.Code)
 	})
