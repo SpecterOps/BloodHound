@@ -34,7 +34,9 @@ jobs:
     needs: run-slow-go-tests
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
-      container_image_repository_name: docker.io/specterops/bloodhound
+      container_image_repository_name: |
+        docker.io/specterops/bloodhound
+        590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
       build_target: bloodhound
       build_context: .
       image_sbom: true
@@ -71,6 +73,8 @@ jobs:
       ghcr_account: ${{ github.actor }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+      ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
 
   docker-content-trust-sign-image:
     needs: bloodhound-container-image
