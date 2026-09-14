@@ -21,9 +21,12 @@ package services
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type ParameterKey string
@@ -71,4 +74,71 @@ func (s Service) GetApplicationConfiguration(ctx context.Context, parameterKey P
 
 func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
 	return s.db.GetAllConfigurationParameters(ctx)
+}
+
+type GetConfigError struct {
+	Err            error
+	ParameterKey   ParameterKey
+	AppliedDefault bool
+}
+
+func (s GetConfigError) Error() string {
+	return fmt.Sprintf("failed to fetch configuration %s, applied default: %t, error: %v", string(s.ParameterKey), s.AppliedDefault, s.Err)
+}
+
+func (s GetConfigError) Unwrap() error { return s.Err }
+
+func (s GetConfigError) slogWarn(ctx context.Context) {
+	slog.WarnContext(ctx, "Failed to fetch configuration",
+		attr.Error(s.Err),
+		slog.String("parameter_key", string(s.ParameterKey)),
+		slog.Bool("applied_default", s.AppliedDefault),
+	)
+}
+
+// GetConfig returns a parameter of the specified type with the given key.
+// GetConfig returns a GetConfigError without a default if the key is not defined
+// or of the wrong type.
+// If any other fetch problem happens, GetConfig logs a warning and returns the
+// parameter's default value and a GetConfigError.
+// Note once we update to Go 1.27 this can have a Service receiver
+func GetConfig[ParamType any](ctx context.Context, s *Service, key ParameterKey) (ParamType, error) {
+	var result ParamType
+
+	paramDefinition, ok := getParamTypeHydrationRules[ParamType](key)
+	if !ok {
+		return result, GetConfigError{
+			Err:            fmt.Errorf("key did not exist or did not match ParamType"),
+			ParameterKey:   key,
+			AppliedDefault: false,
+		}
+	}
+
+	result = paramDefinition.Default
+
+	// read parameter from the database based on Key
+	// get value, read into ParamType
+	if cfg, err := s.db.GetConfigurationParameter(ctx, key); err != nil {
+		getConfigErr := GetConfigError{
+			Err:            err,
+			ParameterKey:   key,
+			AppliedDefault: true,
+		}
+		getConfigErr.slogWarn(ctx)
+		return result, getConfigErr
+	} else if err := cfg.Map(&result); err != nil {
+		getConfigErr := GetConfigError{
+			Err:            err,
+			ParameterKey:   key,
+			AppliedDefault: true,
+		}
+		getConfigErr.slogWarn(ctx)
+		return result, getConfigErr
+	}
+
+	if paramDefinition.Normalize != nil {
+		paramDefinition.Normalize(&result)
+	}
+
+	return result, nil
 }
