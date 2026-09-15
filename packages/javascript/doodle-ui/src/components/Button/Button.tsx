@@ -249,7 +249,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
 
     return (
         <Tooltip tooltip={tooltip} contentProps={{ side: 'bottom', align: 'start' }}>
-            {iconButton}
+            <span className='inline-flex'>{iconButton}</span>
         </Tooltip>
     );
 });
