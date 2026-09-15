@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faInfo, faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DocsPage } from '@storybook/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
@@ -340,6 +340,7 @@ export const IconButton: IconButtonStory = {
         disabled: false,
         size: 16,
         'aria-label': 'Show information',
+        tooltip: 'Show information',
     },
     argTypes: {
         variant: {
@@ -380,6 +381,10 @@ export const IconButton: IconButtonStory = {
                 },
             },
         },
+        tooltip: {
+            description: 'Optional tooltip displayed for the AppIcon.',
+            control: 'text',
+        },
     },
     parameters: {
         controls: {
@@ -393,7 +398,7 @@ The \`size\` prop sets the icon's width and height in pixels. The button automat
 
 \`\`\`tsx
 <IconButton aria-label='Open filters' size={16}>
-    <FilterIcon />
+    <AppIcon.FilterOutline />
 </IconButton>
 \`\`\`
 
@@ -406,15 +411,14 @@ Use the \`size\` prop to resize the icon and button together. Use \`className\` 
 - Because an icon usually does not provide an accessible name, every \`IconButton\` requires an \`aria-label\`. The label should describe the action performed by the button.
 
 \`\`\`tsx
-<IconButton aria-label='Open settings'>
-    <SettingsIcon />
+<IconButton aria-label='Show information' tooltip='Show information'>
+    <AppIcon.Info />
 </IconButton>
 \`\`\`
 
 Do not use the icon's name as the label when it does not describe the action. For example, prefer \`"Show filter options"\` over \`"Filter icon"\`.
 
-*** Coming Soon *** -
-Tooltip for IconButton`,
+The optional \`tooltip\` is rendered by the non-interactive \`Icon\` component. The surrounding \`IconButton\` remains responsible for button behavior and its required accessible name.`,
             },
         },
     },
@@ -423,7 +427,7 @@ Tooltip for IconButton`,
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
                 <IconButtonComponent {...buttonProps}>
-                    <FontAwesomeIcon icon={faInfo} />
+                    <AppIcon.Info />
                 </IconButtonComponent>
             </div>
             <hr className='mb-10' />
@@ -442,7 +446,7 @@ Tooltip for IconButton`,
                     Secondary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Filter Icon' variant='primary' disabled size={24}>
+                    <IconButtonComponent aria-label='Filter Icon' disabled size={24} variant='primary'>
                         <AppIcon.FilterOutline />
                     </IconButtonComponent>
                     Disabled

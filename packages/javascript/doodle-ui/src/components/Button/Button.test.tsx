@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
-import { Button } from './Button';
+import userEvent from '@testing-library/user-event';
+import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
+import { Button, IconButton } from './Button';
 
 describe('Button', () => {
     it('defaults to type button', () => {
@@ -28,5 +30,35 @@ describe('Button', () => {
         render(<Button type='submit'>Submit</Button>);
 
         expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
+    });
+});
+
+describe('IconButton', () => {
+    it('renders an AppIcon inside a button', () => {
+        const { container } = render(
+            <IconButton aria-label='More information'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        expect(screen.getByRole('button', { name: 'More information' })).toBeDefined();
+        expect(container.querySelector('svg')).not.toBeNull();
+    });
+
+    it('displays its tooltip when hovered', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' tooltip='More information'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'More information' });
+
+        await user.hover(button);
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('More information');
+        expect(button.classList.contains('inline-grid')).toBe(true);
+        expect(button.getAttribute('class')).not.toContain('(state) =>');
     });
 });
