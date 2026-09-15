@@ -862,6 +862,12 @@ paths:
   /api/v2/alert-attempts/retry:
     $ref: './paths/alerts.alert-attempts.retry.yaml'
 
+  # collector jobs
+  /api/v2/collector-job-secrets:
+    $ref: './paths/collector-jobs.collector-job-secrets.yaml'
+  /api/v2/collector-job-secrets/{collector_job_secret_id}:
+    $ref: './paths/collector-jobs.collector-job-secrets.id.yaml'
+
   # graph schema findings
   #/api/v2/extensions-findings:
   #  $ref: './paths/opengraph.extensions.findings.yaml'
