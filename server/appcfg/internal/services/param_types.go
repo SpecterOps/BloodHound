@@ -96,16 +96,12 @@ func (s *ISODuration) UnmarshalJSON(b []byte) error {
 
 // ## Param types list
 
-type POCGraphStorageOptimizationParam struct {
-	AfterBoot          bool `json:"after_boot"`
-	AfterAnalysis      bool `json:"after_analysis"`
-	MinIntervalSeconds int  `json:"min_interval_seconds"`
-}
-
-type POCSupportAccountProvisioningParam struct {
-	Enabled    bool        `json:"enabled,omitempty"`
-	SessionTTL ISODuration `json:"session_ttl,omitempty"`
-}
+// Example:
+// type POCGraphStorageOptimizationParam struct {
+//	AfterBoot          bool `json:"after_boot"`
+//	AfterAnalysis      bool `json:"after_analysis"`
+//	MinIntervalSeconds int  `json:"min_interval_seconds"`
+// }
 
 // # Param definitions
 
@@ -114,8 +110,8 @@ type POCSupportAccountProvisioningParam struct {
 //   - hydrationRules: generic to an individual param type, and determine
 //     how the param is read from the DB:
 type ParamTypeDefinition struct {
-	allowAPIAccess bool // framed such that default value is false = protected
-	hydrationRules any
+	AllowAPIAccess bool // framed such that default value is false = protected
+	HydrationRules any
 }
 
 // ParamTypeHydrationRules determine how a param type is transformed after being read from storage
@@ -146,36 +142,31 @@ var (
 	// IMPORTANT: keep defined keys and allowAPIAccess values in sync with
 	// bhce/cmd/api/src/model/appcfg/parameter.go `IsValidKey and `IsProtectedKey` until
 	// PUT /config has been migrated to onion
-	paramTypeDefinitions = map[ParameterKey]ParamTypeDefinition{
-		GraphStorageOptimizationKey: {
-			allowAPIAccess: false,
-			hydrationRules: ParamTypeHydrationRules[POCGraphStorageOptimizationParam]{
-				Default: POCGraphStorageOptimizationParam{
-					AfterBoot:          false,
-					AfterAnalysis:      false,
-					MinIntervalSeconds: 86400,
-				},
-				Normalize: func(g *POCGraphStorageOptimizationParam) {
-					if g.MinIntervalSeconds < 0 {
-						g.MinIntervalSeconds = 86400
-					}
-				},
-			},
-		},
-		SupportAccountProvisioningKey: {
-			allowAPIAccess: true,
-			hydrationRules: ParamTypeHydrationRules[POCSupportAccountProvisioningParam]{
-				Default: POCSupportAccountProvisioningParam{
-					Enabled:    true,
-					SessionTTL: ISODuration(time.Hour * 2),
-				},
-			},
-		},
+	//
+	// This is exported to allow test overrides
+	ParamTypeDefinitions = map[ParameterKey]ParamTypeDefinition{
+		// Example:
+		// GraphStorageOptimizationKey: {
+		// 	AllowAPIAccess: false,
+		// 	HydrationRules: ParamTypeHydrationRules[POCGraphStorageOptimizationParam]{
+		// 		Default: POCGraphStorageOptimizationParam{
+		// 			AfterBoot:          false,
+		// 			AfterAnalysis:      false,
+		// 			MinIntervalSeconds: 86400,
+		// 		},
+		// 		Normalize: func(g *POCGraphStorageOptimizationParam) {
+		// 			if g.MinIntervalSeconds < 0 {
+		// 				g.MinIntervalSeconds = 86400
+		// 			}
+		// 		},
+		// 	},
+		// },
+
 	}
 )
 
 // getParamTypeHydrationRules returns the specified hydration rule and a bool indicating success
 func getParamTypeHydrationRules[ParamType any](key ParameterKey) (ParamTypeHydrationRules[ParamType], bool) {
-	def, ok := paramTypeDefinitions[key].hydrationRules.(ParamTypeHydrationRules[ParamType])
+	def, ok := ParamTypeDefinitions[key].HydrationRules.(ParamTypeHydrationRules[ParamType])
 	return def, ok
 }
