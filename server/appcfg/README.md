@@ -4,7 +4,7 @@ The `appcfg` module has two parts: datapipe and appconfigs.
 
 ## Datapipe
 
-Datapipe is the background graph processing pipeline, run by the [datapipe daemon](/bhce/cmd/api/src/daemons/datapipe/datapipe.go), which transitions the datapipe through a series of statuses as it executes processing. The `appcfg` module just handles the GET API for datapipe, allowing API access to fetch the current datapipe status.
+Datapipe is the background graph processing pipeline, run by the [datapipe daemon](/cmd/api/src/daemons/datapipe/datapipe.go), which transitions the datapipe through a series of statuses as it executes processing. The `appcfg` module just handles the GET API for datapipe, allowing API access to fetch the current datapipe status.
 
 ### Interface
 
