@@ -42,10 +42,6 @@ type retainedIngestParameterService struct {
 	setErr error
 }
 
-func (s retainedIngestParameterService) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {
-	return nil, nil
-}
-
 func (s retainedIngestParameterService) GetConfigurationParameter(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error) {
 	value, err := types.NewJSONBObject(appcfg.RetainIngestedFilesParameter{
 		Enabled: s.retain,
