@@ -115,69 +115,115 @@ func setUpMockWithParam(t *testing.T, ctx context.Context, paramKey services.Par
 }
 
 func TestService_GetConfig(t *testing.T) {
-	t.Run("test GraphStorageOptimization - basic", func(t *testing.T) {
+	// Consider testing actual param configurations in future rather than fixtures
+	// (once those exist), and making param definition types and vars private
+	// I tend to think exhaustively testing each param will not be worthwhile; but rather
+	// testing one use-case of all supported GetParam functionality (defaults,
+	// custom normalization, etc.)
+
+	var (
+		fixtureKey1 = services.ParameterKey("testKey1")
+		fixtureKey2 = services.ParameterKey("testKey2")
+	)
+
+	type fixtureParam1 struct {
+		AfterBoot          bool `json:"after_boot"`
+		MinIntervalSeconds int  `json:"min_interval_seconds"`
+	}
+
+	type fixtureParam2 struct {
+		Enabled    bool                 `json:"enabled,omitempty"`
+		SessionTTL services.ISODuration `json:"session_ttl,omitempty"`
+	}
+
+	originalDefinitions := services.ParamTypeDefinitions
+	defer func() { services.ParamTypeDefinitions = originalDefinitions }()
+
+	services.ParamTypeDefinitions = map[services.ParameterKey]services.ParamTypeDefinition{
+		services.ParameterKey(fixtureKey1): {
+			AllowAPIAccess: false,
+			HydrationRules: services.ParamTypeHydrationRules[fixtureParam1]{
+				Default: fixtureParam1{
+					AfterBoot:          false,
+					MinIntervalSeconds: 86400,
+				},
+				Normalize: func(g *fixtureParam1) {
+					if g.MinIntervalSeconds < 0 {
+						g.MinIntervalSeconds = 86400
+					}
+				},
+			},
+		},
+		services.ParameterKey(fixtureKey2): {
+			AllowAPIAccess: true,
+			HydrationRules: services.ParamTypeHydrationRules[fixtureParam2]{
+				Default: fixtureParam2{
+					Enabled:    true,
+					SessionTTL: services.ISODuration(time.Hour * 2),
+				},
+			},
+		},
+	}
+
+	t.Run("test happy path", func(t *testing.T) {
 		var (
 			ctx = context.Background()
 		)
-		service := setUpMockWithParam(t, ctx, services.GraphStorageOptimizationKey, map[string]any{
+		service := setUpMockWithParam(t, ctx, fixtureKey1, map[string]any{
 			"after_boot":           true,
-			"after_analysis":       true,
 			"min_interval_seconds": 8000,
 		})
-		parameterVal, err := services.GetConfig[services.POCGraphStorageOptimizationParam](ctx, service, services.GraphStorageOptimizationKey)
+		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.AfterBoot)
-		assert.True(t, parameterVal.AfterAnalysis)
 		assert.Equal(t, 8000, parameterVal.MinIntervalSeconds)
 	})
 
-	t.Run("test GraphStorageOptimization - default for invalid value", func(t *testing.T) {
+	t.Run("default for invalid value", func(t *testing.T) {
 		var (
 			ctx = context.Background()
 		)
-		service := setUpMockWithParam(t, ctx, services.GraphStorageOptimizationKey, map[string]any{
+		service := setUpMockWithParam(t, ctx, fixtureKey1, map[string]any{
 			"after_boot":           true,
 			"after_analysis":       true,
 			"min_interval_seconds": -10,
 		})
-		parameterVal, err := services.GetConfig[services.POCGraphStorageOptimizationParam](ctx, service, services.GraphStorageOptimizationKey)
+		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.AfterBoot)
-		assert.True(t, parameterVal.AfterAnalysis)
 		assert.Equal(t, 86400, parameterVal.MinIntervalSeconds)
 	})
 
-	t.Run("test GraphStorageOptimization - default for error", func(t *testing.T) {
+	t.Run("default for error", func(t *testing.T) {
 		var (
 			ctx = context.Background()
 		)
 		mockDB := mocks.NewMockDatabase(t)
-		mockDB.EXPECT().GetConfigurationParameter(ctx, services.GraphStorageOptimizationKey).Return(services.Parameter{}, dbErr)
+		mockDB.EXPECT().GetConfigurationParameter(ctx, fixtureKey1).Return(services.Parameter{}, dbErr)
 		service := services.NewService(mockDB)
 
-		parameterVal, err := services.GetConfig[services.POCGraphStorageOptimizationParam](ctx, service, services.GraphStorageOptimizationKey)
+		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
 
 		var getConfigError = services.GetConfigError{}
 		require.Error(t, err)
 		require.ErrorAs(t, err, &getConfigError)
 		assert.True(t, getConfigError.AppliedDefault)
-		assert.Equal(t, services.GraphStorageOptimizationKey, getConfigError.ParameterKey)
+		assert.Equal(t, fixtureKey1, getConfigError.ParameterKey)
 		assert.False(t, parameterVal.AfterBoot)
-		assert.False(t, parameterVal.AfterAnalysis)
 		assert.Equal(t, 86400, parameterVal.MinIntervalSeconds)
 	})
 
-	t.Run("test SupportAccountProvisioning - converts ISO duration into duration", func(t *testing.T) {
+	t.Run("converts ISO duration into duration", func(t *testing.T) {
 		var (
 			ctx = context.Background()
 		)
-		service := setUpMockWithParam(t, ctx, services.SupportAccountProvisioningKey, map[string]any{
+		service := setUpMockWithParam(t, ctx, fixtureKey2, map[string]any{
 			"enabled":     true,
 			"session_ttl": "P10D",
 		})
-		parameterVal, err := services.GetConfig[services.POCSupportAccountProvisioningParam](ctx, service, services.SupportAccountProvisioningKey)
+		parameterVal, err := services.GetConfig[fixtureParam2](ctx, service, fixtureKey2)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.Enabled)
@@ -190,12 +236,12 @@ func TestService_GetConfig(t *testing.T) {
 		)
 		mockDB := mocks.NewMockDatabase(t)
 		service := services.NewService(mockDB)
-		_, err := services.GetConfig[services.POCSupportAccountProvisioningParam](ctx, service, services.GraphStorageOptimizationKey)
+		_, err := services.GetConfig[fixtureParam2](ctx, service, fixtureKey1)
 
 		require.Error(t, err)
 		var getConfigError = services.GetConfigError{}
 		require.ErrorAs(t, err, &getConfigError)
 		assert.False(t, getConfigError.AppliedDefault)
-		assert.Equal(t, services.GraphStorageOptimizationKey, getConfigError.ParameterKey)
+		assert.Equal(t, fixtureKey1, getConfigError.ParameterKey)
 	})
 }

@@ -47,8 +47,8 @@ type Parameter struct {
 }
 
 func (s Service) IsAPIAllowedKey(key ParameterKey) bool {
-	paramdef, ok := paramTypeDefinitions[key]
-	return ok && paramdef.allowAPIAccess
+	paramdef, ok := ParamTypeDefinitions[key]
+	return ok && paramdef.AllowAPIAccess
 }
 
 // Parameters is a collection of Parameter structs.
