@@ -305,13 +305,19 @@ func TestGetAppConfigs(t *testing.T) {
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
 
 		// Minimal assertions to avoid live data changes breaking tests
-		assert.Equal(t, "auth.password_expiration_window", string(envelope.Data[0].Key))
-		assert.Equal(t, "Local Auth Password Expiry Window", envelope.Data[0].Name)
-		assert.NotEmpty(t, envelope.Data[0].ID)
-		assert.NotEmpty(t, envelope.Data[0].CreatedAt)
-		assert.Empty(t, envelope.Data[0].DeletedAt)
-		assert.NotEmpty(t, envelope.Data[0].UpdatedAt)
-		assert.NotEmpty(t, envelope.Data[0].Value)
+		found := false
+		for _, item := range envelope.Data {
+			if item.Key == "auth.password_expiration_window" {
+				found = true
+				assert.Equal(t, "Local Auth Password Expiry Window", item.Name)
+				assert.NotEmpty(t, item.ID)
+				assert.NotEmpty(t, item.CreatedAt)
+				assert.Empty(t, item.DeletedAt)
+				assert.NotEmpty(t, item.UpdatedAt)
+				assert.NotEmpty(t, item.Value)
+			}
+		}
+		assert.True(t, found)
 	})
 
 	t.Run("get specific config returns OK", func(t *testing.T) {
