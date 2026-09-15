@@ -16,6 +16,8 @@
 import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { Icon, type IconProps } from '../Icon';
+import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
 const buttonBaseClasses = [
@@ -209,8 +211,9 @@ export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | '
     color?: string;
     className?: BaseUIButton.Props['className'];
     'aria-label': string;
-    children?: React.ReactNode;
+    children?: IconProps['children'];
     size?: number;
+    tooltip?: IconProps['tooltip'];
 }
 
 type IconButtonStyle = React.CSSProperties & {
@@ -218,13 +221,10 @@ type IconButtonStyle = React.CSSProperties & {
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-    { variant = 'default', children, className, color, disabled = false, size = 16, ...props },
+    { variant = 'default', children, className, color, disabled = false, size = 16, tooltip, ...props },
     ref
 ) {
-    // TODO remove/refactor BED-6062
-    // allow for Icon prop and chosing the icon
-    // add tooltip / see Icon component
-    return (
+    const iconButton = (
         <BaseUIButton
             {...props}
             ref={ref}
@@ -239,8 +239,18 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     color,
                 }) as IconButtonStyle
             }>
-            {children}
+            {children && <Icon>{children}</Icon>}
         </BaseUIButton>
+    );
+
+    if (!tooltip) {
+        return iconButton;
+    }
+
+    return (
+        <Tooltip tooltip={tooltip} contentProps={{ side: 'bottom', align: 'start' }}>
+            {iconButton}
+        </Tooltip>
     );
 });
 
