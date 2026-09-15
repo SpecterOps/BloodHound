@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	dbErr = errors.New("database error")
+	ErrDB = errors.New("database error")
 )
 
 func TestService_GetDatapipeStatus(t *testing.T) {
@@ -76,9 +76,9 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 		{
 			name: "propagates database errors",
 			setupMock: func(mockDB *mocks.MockDatabase) {
-				mockDB.On("GetDatapipeStatus", ctx).Return(services.DatapipeStatus{}, dbErr)
+				mockDB.On("GetDatapipeStatus", ctx).Return(services.DatapipeStatus{}, ErrDB)
 			},
-			wantErr: dbErr,
+			wantErr: ErrDB,
 		},
 	}
 
@@ -199,7 +199,7 @@ func TestService_GetConfig(t *testing.T) {
 			ctx = context.Background()
 		)
 		mockDB := mocks.NewMockDatabase(t)
-		mockDB.EXPECT().GetConfigurationParameter(ctx, fixtureKey1).Return(services.Parameter{}, dbErr)
+		mockDB.EXPECT().GetConfigurationParameter(ctx, fixtureKey1).Return(services.Parameter{}, ErrDB)
 		service := services.NewService(mockDB)
 
 		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
