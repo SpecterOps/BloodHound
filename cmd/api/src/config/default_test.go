@@ -28,3 +28,10 @@ func TestNewDefaultConfig(t *testing.T) {
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	require.NotEmpty(t, cfg.Crypto.JWT.SigningKey, "Signing key should not be empty")
 }
+
+func TestNewDefaultConfig_BindsLoopback(t *testing.T) {
+	cfg, err := config.NewDefaultConfiguration()
+	require.Nilf(t, err, "Failed to create default configuration: %v", err)
+	require.Equal(t, "127.0.0.1", cfg.BindAddress, "API bind address should default to loopback")
+	require.Equal(t, "127.0.0.1:2112", cfg.MetricsPort, "Metrics port should default to loopback")
+}
