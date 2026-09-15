@@ -407,3 +407,13 @@ export interface UpdateCollectorJobProfileRequest {
 export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
     value: string;
 };
+
+export interface CreateCollectorJobScheduleRequest {
+    name: string;
+    rrule: string;
+    priority?: number;
+    disabled?: boolean;
+    profile_ids?: number[];
+}
+
+export type UpdateCollectorJobScheduleRequest = Partial<CreateCollectorJobScheduleRequest>;
