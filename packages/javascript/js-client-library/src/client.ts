@@ -24,6 +24,7 @@ import {
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateCollectorJobProfileRequest,
+    CreateCollectorJobScheduleRequest,
     CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
@@ -49,6 +50,7 @@ import {
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
     UpdateCollectorJobProfileRequest,
+    UpdateCollectorJobScheduleRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -80,6 +82,7 @@ import {
     CollectorJobProfileResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobScheduleResponse,
     CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
@@ -134,6 +137,7 @@ import {
     StartFileIngestResponse,
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
+    UpdateCollectorJobScheduleResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
@@ -828,6 +832,20 @@ class BHEAPIClient {
 
     getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+
+    updateCollectorJobSchedule = (
+        scheduleId: number,
+        request: UpdateCollectorJobScheduleRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
+            `/api/v2/collector-job-schedules/${scheduleId}`,
+            request,
+            options
+        );
 
     deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);

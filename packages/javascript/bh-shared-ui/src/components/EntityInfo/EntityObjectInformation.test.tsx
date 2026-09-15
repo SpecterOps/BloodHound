@@ -17,7 +17,7 @@
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { ActiveDirectoryKindProperties, ActiveDirectoryNodeKind } from '../../graphSchema';
 import { mockSourceKindsHandler } from '../../mocks';
 import { act, fireEvent, render, screen, waitFor } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
@@ -137,6 +137,31 @@ describe('EntityObjectInformation', () => {
         await act(async () => new Promise((resolve) => setTimeout(resolve, 50)));
         expect(requestSpy).not.toHaveBeenCalled();
         expect(screen.queryByText('Referenced Computer:')).not.toBeInTheDocument();
+    });
+
+    it('renders explicitly empty property values', async () => {
+        const selectedNode: NodeDetails = {
+            node_id: 1,
+            kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+            properties: {
+                objectid: 'test-object-id',
+                [ActiveDirectoryKindProperties.EffectiveEKUs]: [],
+                emptystring: '',
+                nullvalue: null,
+            },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Effective EKUs:')).toBeInTheDocument();
+        expect(screen.getByText('NONE')).toHaveAttribute('aria-hidden', 'true');
+        expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
+        expect(screen.getByText('Emptystring:')).toBeInTheDocument();
+        expect(screen.getByText('Empty string')).toBeInTheDocument();
+        expect(screen.getByText('Nullvalue:')).toBeInTheDocument();
+        screen.getAllByText('—').forEach((placeholder) => {
+            expect(placeholder).toHaveAttribute('aria-hidden', 'true');
+        });
     });
 
     it('does not throw a React useRef error when a property is named "ref"', async () => {
