@@ -34,21 +34,10 @@ describe('Button', () => {
 });
 
 describe('IconButton', () => {
-    it('renders an AppIcon inside a button', () => {
+    it('renders an AppIcon and defaults the tooltip to its accessible label', async () => {
+        const user = userEvent.setup();
         const { container } = render(
             <IconButton aria-label='More information'>
-                <AppIcon.Info />
-            </IconButton>
-        );
-
-        expect(screen.getByRole('button', { name: 'More information' })).toBeDefined();
-        expect(container.querySelector('svg')).not.toBeNull();
-    });
-
-    it('displays its tooltip when hovered', async () => {
-        const user = userEvent.setup();
-        render(
-            <IconButton aria-label='More information' tooltip='More information'>
                 <AppIcon.Info />
             </IconButton>
         );
@@ -58,6 +47,22 @@ describe('IconButton', () => {
         await user.hover(button);
 
         expect((await screen.findByRole('tooltip')).textContent).toBe('More information');
+        expect(container.querySelector('svg')).not.toBeNull();
+    });
+
+    it('displays its tooltip when hovered', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' tooltip='Additional context'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'More information' });
+
+        await user.hover(button);
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Additional context');
         expect(button.classList.contains('inline-grid')).toBe(true);
         expect(button.getAttribute('class')).not.toContain('(state) =>');
     });

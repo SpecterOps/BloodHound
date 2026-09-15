@@ -46,7 +46,6 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
         <div className='flex justify-between items-center text-sm font-bold'>
             <IconButton
                 aria-label='Collapse All'
-                tooltip='Collapse All'
                 onClick={handleCollapseAll}
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
@@ -60,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 </h6>
             </Tooltip>
             {selectedItem && (
-                <IconButton aria-label='Clear selected item' onClick={clearSelectedItem} tooltip='Clear selected item'>
+                <IconButton aria-label='Clear selected item' onClick={clearSelectedItem}>
                     <FontAwesomeIcon icon={faRemove} />
                 </IconButton>
             )}
