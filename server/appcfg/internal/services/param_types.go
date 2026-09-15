@@ -161,7 +161,26 @@ var (
 		// 		},
 		// 	},
 		// },
-
+		PasswordExpirationWindow:            {AllowAPIAccess: true},
+		Neo4jConfigs:                        {AllowAPIAccess: true},
+		PruneTTL:                            {AllowAPIAccess: true},
+		CitrixRDPSupportKey:                 {AllowAPIAccess: true},
+		ReconciliationKey:                   {AllowAPIAccess: true},
+		ScheduledAnalysis:                   {AllowAPIAccess: true},
+		ClientMetricsKey:                    {AllowAPIAccess: true},
+		APITokenExpiration:                  {AllowAPIAccess: true},
+		TrustedProxiesConfig:                {},
+		FedEULACustomTextKey:                {},
+		TierManagementParameterKey:          {},
+		SessionTTLHours:                     {},
+		StaleClientUpdatedLogicKey:          {},
+		RetainIngestedFilesKey:              {},
+		AGTParameterKey:                     {},
+		TimeoutLimit:                        {},
+		APITokens:                           {},
+		EnvironmentTargetedAccessControlKey: {},
+		SupportAccountProvisioningKey:       {},
+		GraphStorageOptimizationKey:         {},
 	}
 )
 
