@@ -61,6 +61,9 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
+	DataTypeSite           DataType = "sites"
+	DataTypeSiteServer     DataType = "siteservers"
+	DataTypeSiteSubnet     DataType = "sitesubnets"
 	DataTypeOpenGraph      DataType = "opengraph"
 )
 
@@ -83,6 +86,9 @@ func AllOriginalIngestDataTypes() []DataType {
 		DataTypeCertTemplate,
 		DataTypeAzure,
 		DataTypeIssuancePolicy,
+		DataTypeSite,
+		DataTypeSiteServer,
+		DataTypeSiteSubnet,
 	}
 }
 
