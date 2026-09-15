@@ -169,7 +169,7 @@ describe('icon rendering', () => {
     });
 });
 
-describe('ExploreSearchCombobox distinguished name disambiguation', () => {
+describe('ExploreSearchCombobox with duplicate display names', () => {
     const duplicateNameResults = {
         data: [
             {
@@ -201,7 +201,7 @@ describe('ExploreSearchCombobox distinguished name disambiguation', () => {
         );
     });
 
-    it('shows the distinguished name only for results whose display name collides', async () => {
+    it('shows the distinguished name only for results with duplicate display names', async () => {
         const user = userEvent.setup();
         const labelText: string = 'test label';
 
