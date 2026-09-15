@@ -57,6 +57,7 @@ export * from './graphSchema';
 export * from './hooks';
 export * from './providers';
 export * from './routes';
+export * from './styles';
 export * from './types';
 export * from './utils';
 export * from './views';

@@ -17,27 +17,16 @@
 import { faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { Environment, OpenGraphDataQualityStat } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { useOpenGraphDataQualityStatsQuery, useOpenGraphPlatformsDataQualityStatsQuery } from '../../hooks';
+import { CANVAS_MUI_TABLE_CLASS, OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { cn } from '../../utils';
 import LoadContainer from './LoadContainer';
 
-const useStyles = makeStyles((theme) => ({
-    print: {
-        '@media print': {
-            display: 'none',
-        },
-    },
-    container: {
-        backgroundColor: theme.palette.neutral.secondary,
-    },
-}));
-
 const NoDataMessage: React.FC = () => (
-    <div className='flex items-center justify-center h-[400px] bg-neutral-2'>
+    <div className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex items-center justify-center h-[400px]`}>
         <span className='font-bold text-sm text-contrast leading-normal'>No data to display</span>
     </div>
 );
@@ -142,11 +131,9 @@ const Layout: React.FC<{
     isLoading: boolean;
     headers?: boolean;
 }> = ({ nodeStats, relationshipTotalCount, isLoading }) => {
-    const classes = useStyles();
-
     return (
         <Box position='relative'>
-            <TableContainer className={classes.container}>
+            <TableContainer className={CANVAS_MUI_TABLE_CLASS}>
                 <Table>
                     <TableBody>
                         {nodeStats?.map((key: any) => {
@@ -163,7 +150,10 @@ const Layout: React.FC<{
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TableContainer component={Paper} className={cn(classes.container, { 'mt-4': !isLoading })}>
+            <TableContainer
+                component={Paper}
+                className={cn(CANVAS_MUI_TABLE_CLASS, { 'mt-4': !isLoading })}
+                elevation={0}>
                 <Table>
                     <TableBody>
                         <LoadContainer

@@ -29,6 +29,7 @@ import {
 import {
     cn,
     Flag,
+    OUTLINED_CANVAS_SURFACE_CLASS,
     PageWithTitle,
     Permission,
     useAppNavigate,
@@ -53,7 +54,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
     };
 
     return (
-        <div className='bg-neutral-2 shadow-outer-1'>
+        <div className={OUTLINED_CANVAS_SURFACE_CLASS}>
             <div className='p-4 flex justify-between gap-4'>
                 <div className='overflow-hidden'>
                     <Typography variant='h6' component='h2'>
@@ -156,7 +157,7 @@ const EarlyAccessFeatures: FC = () => {
                 }>
                 {!showWarningDialog &&
                     (isLoading ? (
-                        <div className='bg-neutral-2'>
+                        <div className={OUTLINED_CANVAS_SURFACE_CLASS}>
                             <div className='p-4'>
                                 <Typography variant='h6' component='div'>
                                     <Skeleton />
@@ -172,7 +173,7 @@ const EarlyAccessFeatures: FC = () => {
                             An unexpected error occurred. Please refresh this page or try again later.
                         </Alert>
                     ) : data!.filter((flag) => flag.user_updatable).length === 0 ? (
-                        <div className='bg-neutral-2'>
+                        <div className={OUTLINED_CANVAS_SURFACE_CLASS}>
                             <div className='p-4'>
                                 <Typography variant='h2'>No Early Access Features Available</Typography>
                                 <Typography variant='body1'>

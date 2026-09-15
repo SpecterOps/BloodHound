@@ -23,8 +23,8 @@ import {
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
-import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../providers';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { apiClient } from '../../utils';
 import { SubHeader } from '../../views/Explore/fragments';
 import AssetGroupAutocomplete from './AssetGroupAutocomplete';
@@ -41,7 +41,6 @@ const AssetGroupEdit: FC<{
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
     const { addNotification } = useNotifications();
-    const theme = useTheme();
     const queryClient = useQueryClient();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
@@ -94,7 +93,7 @@ const AssetGroupEdit: FC<{
     };
 
     return (
-        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.neutral.secondary}>
+        <Box component={Paper} className={OUTLINED_CANVAS_SURFACE_CLASS} elevation={0} padding={1}>
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
             {isEditable && (
                 <>

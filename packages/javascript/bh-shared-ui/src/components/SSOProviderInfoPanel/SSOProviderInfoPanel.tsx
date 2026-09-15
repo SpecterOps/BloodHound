@@ -19,6 +19,7 @@ import { OIDCProviderInfo, Role, SAMLProviderInfo, SSOProvider } from 'js-client
 import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
 import { useNotifications } from '../../providers';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { apiClient } from '../../utils';
 import { Field, FieldsContainer } from '../../views/Explore/fragments';
 import LabelWithCopy from '../LabelWithCopy';
@@ -132,7 +133,8 @@ const SSOProviderInfoPanel: FC<{
                             {ssoProvider?.name}
                         </h5>
                     </div>
-                    <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto px-4 py-2 shadow-outer-1 rounded'>
+                    <div
+                        className={`${OUTLINED_CANVAS_SURFACE_CLASS} overflow-x-hidden overflow-y-auto px-4 py-2 rounded`}>
                         <div className='font-bold ml-2 text-sm'>Provider Information:</div>
                         <FieldsContainer>
                             {innerInfoPanel}

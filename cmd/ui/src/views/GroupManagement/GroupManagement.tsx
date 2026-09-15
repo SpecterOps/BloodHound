@@ -23,6 +23,7 @@ import {
     ExploreQueryParams,
     GroupManagementContent,
     HIGH_VALUE_LABEL,
+    OUTLINED_CANVAS_SURFACE_CLASS,
     Permission,
     SelectedNode,
     TIER_ZERO_TAG,
@@ -94,7 +95,13 @@ const GroupManagement = () => {
             tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
-            entityPanelComponent={<EntityInfoPanel selectedNode={node} DataTable={EntityInfoDataTable} />}
+            entityPanelComponent={
+                <EntityInfoPanel
+                    selectedNode={node}
+                    DataTable={EntityInfoDataTable}
+                    surfaceClassName={OUTLINED_CANVAS_SURFACE_CLASS}
+                />
+            }
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}

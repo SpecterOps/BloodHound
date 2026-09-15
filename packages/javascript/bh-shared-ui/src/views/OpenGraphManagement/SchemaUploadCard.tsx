@@ -15,10 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Card } from 'doodle-ui';
 import { SchemaUploadDialog } from '../../components/SchemaUploadDialog/SchemaUploadDialog';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 
 export const SchemaUploadCard = () => {
     return (
-        <Card className='flex flex-col p-6 gap-4'>
+        <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col p-6 gap-4`}>
             <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
             <p>
                 Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
