@@ -51,20 +51,6 @@ const (
 	GraphStorageOptimizationKey         ParameterKey = "analysis.graph_storage_optimization"
 )
 
-const (
-	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
-
-	DefaultSessionTTLHours = 8
-
-	DefaultPruneBaseTTL           = time.Hour * 24 * 7
-	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
-
-	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
-	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
-	DefaultExpansionWorkerLimit = 3 // This is the size of the expansion worker pool during tagging
-	DefaultSelectorWorkerLimit  = 7 // This is the size of the selector worker pool during tagging
-)
-
 // Map is a convenience function for mapping the data stored in the Value Parameter struct member onto
 // a richer type provided by the given value.
 func (s *Parameter) Map(value any) error {
