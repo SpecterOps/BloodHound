@@ -503,6 +503,7 @@ type (
 		Name            string
 		Description     string
 		Seeds           []SelectorSeedInput
+		AutoCertify     SelectorAutoCertifyMethod
 		Enabled         bool
 		AllowDisable    bool
 	}
@@ -629,7 +630,7 @@ func (s GraphExtensionInput) Validate() error {
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
 
-	if err := s.PZRulesInput.Validate(); err != nil {
+	if err := s.PZRulesInput.Validate(s.ExtensionInput.Namespace); err != nil {
 		return err
 	} else if err := s.SavedQueriesInput.Validate(); err != nil {
 		return err
@@ -644,7 +645,7 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	ruleIds := make(map[string]struct{}, len(s))
 
 	for _, rule := range s {
-		if strings.TrimPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)) == "" {
+		if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found || strings.TrimSpace(ruleKey) == "" {
 			return fmt.Errorf("privilege zone rule requires a 'key' value")
 		}
 		if strings.TrimSpace(rule.Name) == "" {
@@ -1045,6 +1046,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				Name:            rulePayload.Name,
 				Description:     rulePayload.Description,
 				Seeds:           selectorSeeds,
+				AutoCertify:     autoCertify,
 				Enabled:         ruleEnabled,
 				AllowDisable:    ruleAllowDisable,
 			})
