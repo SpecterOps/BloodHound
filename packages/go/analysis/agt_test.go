@@ -315,9 +315,9 @@ func TestReconcileZoneNode(t *testing.T) {
 		graphDB = suite.GraphDB
 	)
 
-	populatedZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile populated zone", "", null.Int32From(20), null.Bool{}, null.String{})
+	populatedZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile populated zone", "", null.Int32From(2), null.Bool{}, null.String{})
 	require.NoError(t, err)
-	emptyZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile empty zone", "", null.Int32From(21), null.Bool{}, null.String{})
+	emptyZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile empty zone", "", null.Int32From(3), null.Bool{}, null.String{})
 	require.NoError(t, err)
 	require.NoError(t, assertGraphKinds(ctx, graphDB, graph.Kinds{populatedZone.ToKind(), emptyZone.ToKind()}))
 
@@ -345,13 +345,13 @@ func TestReconcileZoneNode(t *testing.T) {
 		if existingZoneNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
 			common.Name:        populatedZone.Name,
 			common.DisplayName: populatedZone.Name,
-			common.ObjectID:    zoneNodeObjectID(populatedZone.ID),
-		}), schema.Zone); err != nil {
+			common.ObjectID:    zoneNodeObjectID(populatedZone),
+		}), schema.Zone, populatedZone.ToKind()); err != nil {
 			return err
 		}
 		if orphanedZoneNode, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
 			common.Name:     "orphaned zone",
-			common.ObjectID: zoneNodeObjectID(2147483647),
+			common.ObjectID: "zone:2147483647",
 		}), schema.Zone); err != nil {
 			return err
 		} else {
@@ -366,7 +366,7 @@ func TestReconcileZoneNode(t *testing.T) {
 		return nil
 	}))
 
-	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 
 	zones, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
 	require.NoError(t, err)
@@ -385,8 +385,8 @@ func TestReconcileZoneNode(t *testing.T) {
 			require.NoError(t, err)
 			zoneNodesByObjectID[objectID] = zoneNode
 		}
-		require.NotContains(t, zoneNodesByObjectID, zoneNodeObjectID(2147483647))
-		require.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone.ID))
+		require.NotContains(t, zoneNodesByObjectID, "zone:2147483647")
+		require.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone))
 
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), schema.MemberOfZone)))
 		if err != nil {
@@ -406,7 +406,7 @@ func TestReconcileZoneNode(t *testing.T) {
 	}))
 
 	// A second reconciliation preserves the existing node and relationship.
-	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
 			query.Kind(query.Relationship(), schema.MemberOfZone),
@@ -429,7 +429,7 @@ func TestReconcileZoneNode(t *testing.T) {
 		}
 		return tx.UpdateNode(staleMember)
 	}))
-	require.NoError(t, reconcileZoneNode(ctx, db, graphDB))
+	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
 			query.Kind(query.Relationship(), schema.MemberOfZone),
