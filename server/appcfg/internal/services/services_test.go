@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	legacyAppcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -243,5 +244,47 @@ func TestService_GetConfig(t *testing.T) {
 		require.ErrorAs(t, err, &getConfigError)
 		assert.False(t, getConfigError.AppliedDefault)
 		assert.Equal(t, fixtureKey1, getConfigError.ParameterKey)
+	})
+}
+
+func TestService_IsAPIAllowedKey_TempMigration(t *testing.T) {
+	// test to ensure that IsAPIAllowedKey continues tracking with legacy functions
+	// while onion migration is in progress
+	// Note: this is limited in that it only is aware of defined keys. New keys
+	// added in the legacy implementation will be missed.
+
+	var (
+		mockDB  = mocks.NewMockDatabase(t)
+		service = services.NewService(mockDB)
+	)
+
+	for key := range services.ParamTypeDefinitions {
+		t.Run("testing "+string(key), func(t *testing.T) {
+			param := legacyAppcfg.Parameter{Key: legacyAppcfg.ParameterKey(key)}
+			legacyIsValid := param.IsValidKey(param.Key)
+			legacyIsProtected := param.IsProtectedKey(param.Key)
+
+			newIsAllowed := service.IsAPIAllowedKey(key)
+
+			assert.Equal(t, newIsAllowed, legacyIsValid)
+			assert.NotEqual(t, newIsAllowed, legacyIsProtected)
+		})
+	}
+}
+
+func TestService_IsAPIAllowedKey(t *testing.T) {
+	// This function is quite trivial. Just sanity testing one true and false case.
+
+	var (
+		mockDB  = mocks.NewMockDatabase(t)
+		service = services.NewService(mockDB)
+	)
+
+	t.Run("true case", func(t *testing.T) {
+		assert.True(t, service.IsAPIAllowedKey(services.PasswordExpirationWindow))
+	})
+
+	t.Run("false case", func(t *testing.T) {
+		assert.False(t, service.IsAPIAllowedKey(services.TrustedProxiesConfig))
 	})
 }
