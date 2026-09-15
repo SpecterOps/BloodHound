@@ -1316,21 +1316,6 @@ func (mr *MockDatabaseMockRecorder) GetAllAuthTokens(ctx, order, filter any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAuthTokens", reflect.TypeOf((*MockDatabase)(nil).GetAllAuthTokens), ctx, order, filter)
 }
 
-// GetAllConfigurationParameters mocks base method.
-func (m *MockDatabase) GetAllConfigurationParameters(ctx context.Context) (appcfg.Parameters, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllConfigurationParameters", ctx)
-	ret0, _ := ret[0].(appcfg.Parameters)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllConfigurationParameters indicates an expected call of GetAllConfigurationParameters.
-func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), ctx)
-}
-
 // GetAllFlags mocks base method.
 func (m *MockDatabase) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()

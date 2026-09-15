@@ -93,6 +93,8 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
@@ -103,6 +105,8 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 }
 
 // IsProtectedKey These keys should not be updatable by users
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey:
@@ -209,9 +213,6 @@ type Parameters []Parameter
 // ParameterService is a contract which defines expected functionality for fetching and setting Parameter from an
 // abstract backend storage.
 type ParameterService interface {
-	// GetAllConfigurationParameters gets all available runtime Parameters for the application.
-	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
-
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
 	GetConfigurationParameter(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
 
