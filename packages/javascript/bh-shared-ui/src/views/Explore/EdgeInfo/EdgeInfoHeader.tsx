@@ -41,7 +41,6 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
         <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
             <IconButton
                 aria-label='Collapse All'
-                tooltip='Collapse All'
                 onClick={handleCollapseAll}
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
@@ -53,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
                 {name}
             </h2>
 
-            <IconButton aria-label='Clear selected item' onClick={clearSelectedItem} tooltip='Clear selected item'>
+            <IconButton aria-label='Clear selected item' onClick={clearSelectedItem}>
                 <FontAwesomeIcon icon={faRemove} />
             </IconButton>
         </div>

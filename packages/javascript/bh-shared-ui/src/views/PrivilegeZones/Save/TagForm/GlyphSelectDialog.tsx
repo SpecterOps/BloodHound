@@ -30,7 +30,6 @@ import {
     IconButton,
     Input,
     TextButton,
-    Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
@@ -150,25 +149,18 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    // TODO BED-6062
-                                    <Tooltip
-                                        tooltip='Clear selection'
-                                        contentProps={{
-                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
-                                        }}>
-                                        <IconButton
-                                            aria-label='Clear selection'
-                                            onClick={handleClear}
-                                            className='focus-visible:rounded-sm'
-                                            aria-describedby='Clear selection'>
-                                            <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
-                                                <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
-                                                <CardContent className='first:pt-0 p-0'>
-                                                    <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                                </CardContent>
-                                            </Card>
-                                        </IconButton>
-                                    </Tooltip>
+                                    <IconButton
+                                        aria-label='Clear Selection'
+                                        onClick={handleClear}
+                                        className='focus-visible:rounded-sm'
+                                        aria-describedby='Clear selection'>
+                                        <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
+                                            <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
+                                            <CardContent className='first:pt-0 p-0'>
+                                                <FontAwesomeIcon icon={selectedIcon} size='2xl' />
+                                            </CardContent>
+                                        </Card>
+                                    </IconButton>
                                 )}
                             </div>
 

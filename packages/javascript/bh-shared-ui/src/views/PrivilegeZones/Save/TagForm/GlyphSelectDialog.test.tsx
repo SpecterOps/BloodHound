@@ -48,6 +48,15 @@ describe('Glyph Select Dialog', () => {
         expect(screen.getAllByText('lightbulb')).toHaveLength(2);
     });
 
+    it('displays a tooltip for clearing the selected icon', async () => {
+        render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
+
+        await user.hover(screen.getByRole('button', { name: 'Clear Selection' }));
+
+        const tooltip = await screen.findByRole('tooltip');
+        expect(tooltip).toHaveTextContent('Clear Selection');
+    });
+
     it('calls the passed in cancel handler when clicking the Cancel button', async () => {
         render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
 

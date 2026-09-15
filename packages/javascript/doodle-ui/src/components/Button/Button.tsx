@@ -221,13 +221,24 @@ type IconButtonStyle = React.CSSProperties & {
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-    { variant = 'default', children, className, color, disabled = false, size = 16, tooltip, ...props },
+    {
+        variant = 'default',
+        'aria-label': ariaLabel,
+        children,
+        className,
+        color,
+        disabled = false,
+        size = 16,
+        tooltip,
+        ...props
+    },
     ref
 ) {
     const iconButton = (
         <BaseUIButton
             {...props}
             ref={ref}
+            aria-label={ariaLabel}
             disabled={disabled}
             className={(state) =>
                 cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
@@ -243,12 +254,8 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         </BaseUIButton>
     );
 
-    if (!tooltip) {
-        return iconButton;
-    }
-
     return (
-        <Tooltip tooltip={tooltip} contentProps={{ side: 'bottom', align: 'start' }}>
+        <Tooltip tooltip={tooltip ?? ariaLabel} contentProps={{ side: 'bottom', align: 'start' }}>
             <span className='inline-flex'>{iconButton}</span>
         </Tooltip>
     );

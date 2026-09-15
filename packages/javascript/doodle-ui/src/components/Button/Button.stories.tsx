@@ -340,7 +340,6 @@ export const IconButton: IconButtonStory = {
         disabled: false,
         size: 16,
         'aria-label': 'Show information',
-        tooltip: 'Show information',
     },
     argTypes: {
         variant: {
@@ -411,7 +410,7 @@ Use the \`size\` prop to resize the icon and button together. Use \`className\` 
 - Because an icon usually does not provide an accessible name, every \`IconButton\` requires an \`aria-label\`. The label should describe the action performed by the button.
 
 \`\`\`tsx
-<IconButton aria-label='Show information' tooltip='Show information'>
+<IconButton aria-label='Show information'>
     <AppIcon.Info />
 </IconButton>
 \`\`\`
