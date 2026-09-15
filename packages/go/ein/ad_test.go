@@ -249,43 +249,68 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 }
 
 func TestConvertComputerToNode(t *testing.T) {
-	var restrictSendingNtlmTraffic uint = 2
+	t.Parallel()
 
-	computer := ein.Computer{
-		IngestBase: ein.IngestBase{
-			Properties: map[string]any{
-				"isdc": true,
-			},
-		},
-		NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
-			APIResult: ein.APIResult{
-				Collected: true,
-			},
-			Result: ein.NTLMRegistryInfo{
-				RestrictSendingNtlmTraffic: &restrictSendingNtlmTraffic,
-			},
-		},
-		IsWebClientRunning: ein.BoolAPIResult{
-			APIResult: ein.APIResult{
-				Collected: true,
-			},
-			Result: true,
-		},
-		SmbInfo: ein.SMBSigningAPIResult{
-			APIResult: ein.APIResult{
-				Collected: true,
-			},
-			Result: ein.SMBSigningResult{
-				SigningEnabled: true,
-			},
-		},
-	}
+	t.Run("RegistryRestrictSendingNtlmTrafficPresent", func(t *testing.T) {
+		var restrictSendingNtlmTraffic uint = 2
 
-	result := ein.ConvertComputerToNode(computer, time.Now())
-	assert.Equal(t, true, result.PropertyMap[ad.IsDC.String()])
-	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
-	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
-	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
+		computer := ein.Computer{
+			IngestBase: ein.IngestBase{
+				Properties: map[string]any{
+					"isdc": true,
+				},
+			},
+			NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
+				APIResult: ein.APIResult{
+					Collected: true,
+				},
+				Result: ein.NTLMRegistryInfo{
+					RestrictSendingNtlmTraffic: &restrictSendingNtlmTraffic,
+				},
+			},
+			IsWebClientRunning: ein.BoolAPIResult{
+				APIResult: ein.APIResult{
+					Collected: true,
+				},
+				Result: true,
+			},
+			SmbInfo: ein.SMBSigningAPIResult{
+				APIResult: ein.APIResult{
+					Collected: true,
+				},
+				Result: ein.SMBSigningResult{
+					SigningEnabled: true,
+				},
+			},
+		}
+
+		result := ein.ConvertComputerToNode(computer, time.Now())
+		assert.Equal(t, true, result.PropertyMap[ad.IsDC.String()])
+		assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
+		assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
+		assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
+	})
+
+	t.Run("RegistryKeyAbsentFailsOpen", func(t *testing.T) {
+		computer := ein.Computer{
+			IngestBase: ein.IngestBase{
+				Properties: map[string]any{},
+			},
+			NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
+				APIResult: ein.APIResult{
+					Collected: true,
+				},
+				Result: ein.NTLMRegistryInfo{},
+			},
+		}
+
+		result := ein.ConvertComputerToNode(computer, time.Now())
+		// A missing RestrictSendingNtlmTraffic key defaults to the Windows default
+		// ("Allow all"), so the derived RestrictOutboundNTLM must be false.
+		val, ok := result.PropertyMap[ad.RestrictOutboundNTLM.String()]
+		assert.True(t, ok, "RestrictOutboundNTLM should be present")
+		assert.Equal(t, false, val)
+	})
 }
 
 func TestParseGroupMiscData(t *testing.T) {

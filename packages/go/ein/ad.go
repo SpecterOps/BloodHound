@@ -94,6 +94,12 @@ func ConvertContainerToNode(item Container, ingestTime time.Time) IngestibleNode
 	}
 }
 
+// ConvertComputerToNode converts a Computer ingest item into an IngestibleNode,
+// mapping collected properties (WebClient, SMB signing, NTLM registry data) onto
+// the node's property map. Most NTLM registry values that are absent are cleared
+// to nil so stale values are not retained across ingests. The derived
+// RestrictOutboundNTLM property is different: a missing RestrictSendingNtlmTraffic
+// registry key maps to the Windows default (false) rather than nil.
 func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
@@ -126,6 +132,12 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 		*/
 		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic != nil {
 			itemProps[ad.RestrictOutboundNTLM.String()] = *item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
+		} else {
+			// A missing registry key means the Windows default ("Allow all"), so
+			// explicitly mark the computer as unrestricted. This lets the analysis
+			// distinguish a collected-but-default computer from one whose registry
+			// data was never collected (which keeps the property absent and fails closed).
+			itemProps[ad.RestrictOutboundNTLM.String()] = false
 		}
 		if item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic != nil {
 			itemProps[ad.RestrictReceivingNTLMTraffic.String()] = *item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
