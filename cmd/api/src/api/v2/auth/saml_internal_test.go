@@ -81,7 +81,10 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	)
 
 	t.Run("successfully create sso session", func(t *testing.T) {
-		response := httptest.NewRecorder()
+		var (
+			response              = httptest.NewRecorder()
+			expectedCookiePattern = `token=.*; Path=/; Expires=.*; Secure; SameSite=Strict`
+		)
 
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
 			require.Equal(t, model.AuditLogActionLoginAttempt, log.Action)
@@ -101,9 +104,11 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		cookieHeader := response.Header().Get(headers.SetCookie.String())
 		cookies := (&http.Response{Header: http.Header{"Set-Cookie": {cookieHeader}}}).Cookies()
-		require.Len(t, cookies, 1)
-		require.WithinDuration(t, before.Add(appcfg.DefaultSessionTTLHours*time.Hour), cookies[0].Expires, after.Sub(before)+time.Second)
+		expectedExpiry := before.Add(appcfg.DefaultSessionTTLHours * time.Hour)
+		tolerance := after.Sub(before) + time.Second
 
+		require.Regexp(t, expectedCookiePattern, cookieHeader)
+		require.WithinDuration(t, expectedExpiry, cookies[0].Expires, tolerance)
 		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
 		require.Equal(t, http.StatusFound, response.Code)
 	})
