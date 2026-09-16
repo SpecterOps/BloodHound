@@ -25,7 +25,7 @@ export function requiredRule<TFieldValues extends FieldValues, TName extends Fie
 type NameRulesOptions = {
     /** Minimum length for the name field. Defaults to {@link MIN_NAME_LENGTH}. */
     minLength?: number;
-    /** Minimum length for the name field. Defaults to {@link MAX_NAME_LENGTH}. */
+    /** Maximum length for the name field. Defaults to {@link MAX_NAME_LENGTH}. */
     maxLength?: number;
     /** Whether to allow underscores and hyphens in the name field. Defaults to true. */
     allowUnderscoreAndHyphen?: boolean;
