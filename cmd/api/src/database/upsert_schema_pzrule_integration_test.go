@@ -27,13 +27,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func pzRule(ruleKey string, name string, description string, autoCertify model.SelectorAutoCertifyMethod, enabled bool, allowDisable bool, seedValue string) model.PZRuleInput {
+func pzRule(ruleKey string, name string, description string, enabled bool, allowDisable bool, seedValue string) model.PZRuleInput {
 	return model.PZRuleInput{
 		ExtensionRuleId: ruleKey,
 		Name:            name,
 		Description:     description,
 		Seeds:           []model.SelectorSeedInput{{Type: model.SelectorTypeCypher, Value: seedValue}},
-		AutoCertify:     autoCertify,
 		Enabled:         enabled,
 		AllowDisable:    allowDisable,
 	}
@@ -109,7 +108,7 @@ func assertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extens
 		assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.UpdatedBy)
 		assert.Equal(t, expectedPZRule.Name, selector.Name)
 		assert.Equal(t, expectedPZRule.Description, selector.Description)
-		assert.Equal(t, expectedPZRule.AutoCertify, selector.AutoCertify)
+		assert.Equal(t, model.SelectorAutoCertifyMethodDisabled, selector.AutoCertify)
 		assert.Equal(t, expectedPZRule.AllowDisable, selector.AllowDisable)
 		assert.Equal(t, !expectedPZRule.Enabled, selector.DisabledAt.Valid)
 		assert.Equal(t, !expectedPZRule.Enabled, selector.DisabledBy.Valid)
@@ -165,8 +164,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 				t.Helper()
 				var (
 					expectedPZRules = model.PZRulesInput{
-						pzRule("PZR_create_one", "Create One", "first created rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:CreateOne) RETURN n"),
-						pzRule("PZR_create_two", "Create Two", "second created rule", model.SelectorAutoCertifyMethodAllMembers, false, false, "MATCH (n:CreateTwo) RETURN n"),
+						pzRule("PZR_create_one", "Create One", "first created rule", true, true, "MATCH (n:CreateOne) RETURN n"),
+						pzRule("PZR_create_two", "Create Two", "second created rule", false, false, "MATCH (n:CreateTwo) RETURN n"),
 					}
 					graphExtensionInput = baseGraphExtensionInput
 				)
@@ -204,8 +203,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 				t.Helper()
 				var (
 					extensionName       = "PZRuleReconcileUpdate"
-					initialPZRules      = model.PZRulesInput{pzRule("PZR_keep", "Keep", "initial rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:Keep) RETURN n")}
-					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep Updated", "updated rule", model.SelectorAutoCertifyMethodAllMembers, false, false, "MATCH (n:KeepUpdated) RETURN n")}
+					initialPZRules      = model.PZRulesInput{pzRule("PZR_keep", "Keep", "initial rule", true, true, "MATCH (n:Keep) RETURN n")}
+					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep Updated", "updated rule", false, false, "MATCH (n:KeepUpdated) RETURN n")}
 					graphExtensionInput = baseGraphExtensionInput
 					extensionID         = upsertExtensionPZRules(t, testSuite, extensionName, initialPZRules...)
 				)
@@ -236,10 +235,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 				var (
 					extensionName  = "PZRuleReconcileDelete"
 					initialPZRules = model.PZRulesInput{
-						pzRule("PZR_keep", "Keep", "retained rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:Keep) RETURN n"),
-						pzRule("PZR_drop", "Drop", "removed rule", model.SelectorAutoCertifyMethodAllMembers, true, true, "MATCH (n:Drop) RETURN n"),
+						pzRule("PZR_keep", "Keep", "retained rule", true, true, "MATCH (n:Keep) RETURN n"),
+						pzRule("PZR_drop", "Drop", "removed rule", true, true, "MATCH (n:Drop) RETURN n"),
 					}
-					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep", "retained rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:Keep) RETURN n")}
+					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep", "retained rule", true, true, "MATCH (n:Keep) RETURN n")}
 					graphExtensionInput = baseGraphExtensionInput
 					extensionID         = upsertExtensionPZRules(t, testSuite, extensionName, initialPZRules...)
 					existingSelectors   = assertExtensionPZRules(t, testSuite, extensionID, initialPZRules...)

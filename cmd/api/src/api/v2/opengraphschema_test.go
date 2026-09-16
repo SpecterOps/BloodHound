@@ -393,7 +393,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						ExtensionRuleId: "TEST_tier_zero_admins",
 						Name:            "Tier Zero Admins",
 						Description:     "Seeds for tier zero",
-						AutoCertify:     model.SelectorAutoCertifyMethodAllMembers,
 						Enabled:         true,
 						AllowDisable:    true,
 						Seeds: []model.SelectorSeedInput{{
@@ -442,7 +441,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 							"key": "tier_zero_admins",
 							"name": "Tier Zero Admins",
 							"description": "Seeds for tier zero",
-							"auto_certify": true,
 							"enabled": true,
 							"allow_disable": true,
 							"seeds": [{

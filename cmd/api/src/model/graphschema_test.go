@@ -1461,7 +1461,6 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 					ExtensionRuleId: "TEST_rule_1",
 					Name:            "Rule 1",
 					Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
-					AutoCertify:     SelectorAutoCertifyMethodDisabled,
 					Enabled:         true,
 					AllowDisable:    true,
 				}},

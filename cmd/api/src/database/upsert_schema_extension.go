@@ -193,7 +193,7 @@ func (s *BloodhoundDB) agtSelectorFromPzRule(ctx context.Context, extensionID in
 		IsDefault:       true,
 		Name:            input.Name,
 		Description:     input.Description,
-		AutoCertify:     input.AutoCertify,
+		AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
 		AllowDisable:    input.AllowDisable,
 		RuleKey:         null.StringFrom(input.ExtensionRuleId),
 		ExtensionId:     null.Int32From(extensionID),

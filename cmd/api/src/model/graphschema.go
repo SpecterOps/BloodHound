@@ -503,7 +503,6 @@ type (
 		Name            string
 		Description     string
 		Seeds           []SelectorSeedInput
-		AutoCertify     SelectorAutoCertifyMethod
 		Enabled         bool
 		AllowDisable    bool
 	}
@@ -822,7 +821,6 @@ type PZRulePayload struct {
 	RuleKey      string                `json:"key"`
 	Enabled      *bool                 `json:"enabled,omitempty"`
 	AllowDisable *bool                 `json:"allow_disable,omitempty"`
-	AutoCertify  *bool                 `json:"auto_certify,omitempty"`
 }
 
 // PZRulesPayload is the "rules" envelope for the pz_rules.json component.
@@ -955,7 +953,6 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			SavedQueriesInput:      make(SavedQueriesInput, 0),
 		}
 		infoInputs    KindInfoInputs
-		autoCertify   SelectorAutoCertifyMethod
 		selectorSeeds []SelectorSeedInput
 		err           error
 	)
@@ -1016,11 +1013,6 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 	if s.PZRules != nil {
 		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(s.PZRules.Rules))
 		for _, rulePayload := range s.PZRules.Rules {
-			autoCertify = SelectorAutoCertifyMethodDisabled
-			if rulePayload.AutoCertify != nil && *rulePayload.AutoCertify {
-				autoCertify = SelectorAutoCertifyMethodAllMembers
-			}
-
 			selectorSeeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
 			for _, seedPayload := range rulePayload.Seeds {
 				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))
@@ -1041,7 +1033,6 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				Name:            rulePayload.Name,
 				Description:     rulePayload.Description,
 				Seeds:           selectorSeeds,
-				AutoCertify:     autoCertify,
 				Enabled:         ruleEnabled,
 				AllowDisable:    ruleAllowDisable,
 			})
