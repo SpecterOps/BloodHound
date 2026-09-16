@@ -1282,7 +1282,8 @@ func renconcileZoneNodes(existingZoneNodes []*graph.Node, zones model.AssetGroup
 		zoneKind, err := getZoneKind(zoneNode)
 		if err != nil {
 			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
-			slog.Warn("Zone node missing kind other than Zone", slog.String("id", zoneNode.ID.String()))
+			name, _ := zoneNode.Properties.GetOrDefault(common.Name.String(), "missing name").String()
+			slog.Warn("Zone node missing kind other than Zone", slog.String("id", zoneNode.ID.String()), slog.String("name", name))
 			continue
 		}
 
