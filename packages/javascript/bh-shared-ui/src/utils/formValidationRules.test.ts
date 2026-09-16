@@ -20,6 +20,64 @@ async function validate(value: string, rules: RegisterOptions<Values, 'value'>) 
 }
 
 describe('requiredRule', () => {
+    it.each(['', '   '])('allows blank values when the condition is false: %#', async (value) => {
+        expect(
+            await validate(
+                value,
+                requiredRule('Required', {
+                    when: () => false,
+                    rejectSpaces: true,
+                })
+            )
+        ).toBeUndefined();
+    });
+
+    it.each(['', '   '])('rejects blank values when the condition is true: %#', async (value) => {
+        expect(
+            await validate(
+                value,
+                requiredRule('Required', {
+                    when: () => true,
+                    rejectSpaces: true,
+                })
+            )
+        ).toBe('Required');
+    });
+
+    it('keeps whitespace-only values valid unless rejectSpaces is enabled', async () => {
+        expect(await validate('   ', requiredRule('Required', { when: () => true }))).toBeUndefined();
+        expect(await validate('', requiredRule('Required', { when: () => true }))).toBe('Required');
+    });
+
+    it('reevaluates the condition against current form values', async () => {
+        const { result } = renderHook(() => {
+            const form = useForm<{ value: string; enabled: boolean }>({
+                defaultValues: { value: '', enabled: false },
+            });
+            form.register(
+                'value',
+                requiredRule<{ value: string; enabled: boolean }, 'value'>('Required', {
+                    when: () => form.getValues('enabled'),
+                })
+            );
+            return form;
+        });
+        await act(async () => {
+            await result.current.trigger('value');
+        });
+        expect(result.current.getFieldState('value').error).toBeUndefined();
+        await act(async () => {
+            result.current.setValue('enabled', true);
+            await result.current.trigger('value');
+        });
+        expect(result.current.getFieldState('value').error?.message).toBe('Required');
+        await act(async () => {
+            result.current.setValue('enabled', false);
+            await result.current.trigger('value');
+        });
+        expect(result.current.getFieldState('value').error).toBeUndefined();
+    });
+
     it.each(['', '   ', '\t', '\n', ' \t\n '])(
         'rejects blank strings when rejectSpaces is enabled: %#',
         async (value) => {

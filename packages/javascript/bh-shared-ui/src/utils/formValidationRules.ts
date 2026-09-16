@@ -16,6 +16,8 @@ function rejectSurroundingWhitespace(label: string) {
 }
 
 type RequiredRuleOptions = {
+    /** Evaluate whether the field is required each time it is validated. */
+    when?: () => boolean;
     /** Reject strings containing only whitespace. Defaults to false. */
     rejectSpaces?: boolean;
 };
@@ -26,9 +28,15 @@ export function requiredRule<TFieldValues extends FieldValues, TName extends Fie
     options?: RequiredRuleOptions
 ): RegisterOptions<TFieldValues, TName> {
     return {
-        required: message,
-        ...(options?.rejectSpaces
-            ? { validate: (value: unknown) => typeof value !== 'string' || !!value.trim() || message }
+        required: options?.when ? false : message,
+        ...(options?.when || options?.rejectSpaces
+            ? {
+                  validate: (value: unknown) => {
+                      if (options.when && !options.when()) return true;
+                      if (!value || (Array.isArray(value) && !value.length)) return message;
+                      return !options.rejectSpaces || typeof value !== 'string' || !!value.trim() || message;
+                  },
+              }
             : {}),
     };
 }
