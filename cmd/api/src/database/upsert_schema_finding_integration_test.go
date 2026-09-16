@@ -29,8 +29,6 @@ import (
 )
 
 func TestCreateFindingWithRemediation(t *testing.T) {
-	t.Parallel()
-
 	type args struct {
 		name                 string
 		displayName          string
@@ -139,7 +137,6 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -160,8 +157,6 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 }
 
 func TestUpdateFindingWithRemediation(t *testing.T) {
-	t.Parallel()
-
 	type args struct {
 		newDisplayName       string
 		newPZDisplayName     string
@@ -329,7 +324,6 @@ func TestUpdateFindingWithRemediation(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 

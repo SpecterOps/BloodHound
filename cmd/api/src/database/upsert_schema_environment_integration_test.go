@@ -29,8 +29,6 @@ import (
 )
 
 func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
-	t.Parallel()
-
 	type args struct {
 		environmentKindName string
 		sourceKindName      string
@@ -132,7 +130,6 @@ func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -150,8 +147,6 @@ func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
 }
 
 func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
-	t.Parallel()
-
 	type args struct {
 		newSourceKindName string
 		newPrincipalKinds []string
@@ -292,7 +287,6 @@ func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			testSuite := setupIntegrationTestSuite(t)
 			defer teardownIntegrationTestSuite(t, &testSuite)
 

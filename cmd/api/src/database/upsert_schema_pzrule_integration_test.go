@@ -127,8 +127,6 @@ func assertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extens
 }
 
 func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
-	t.Parallel()
-
 	type testSetupData struct {
 		graphExtensionInput       model.GraphExtensionInput
 		extensionID               int32
