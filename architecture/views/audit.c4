@@ -1,0 +1,121 @@
+// BloodHound Community Edition - Audit Logging Views
+// C1 through C4 describe the BHCE audit capability only. BHE composition is
+// intentionally modeled in docs/architecture, not here.
+
+views {
+
+  view auditContext of bloodhound {
+    title 'Audit Logging – C1 System Context'
+    description 'BloodHound records eligible API activity from human and programmatic clients in the relational application database.'
+
+    include
+      securityOperator,
+      apiConsumer,
+      bloodhound,
+      bloodhound.postgresql
+
+    style securityOperator, apiConsumer {
+      color amber
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+
+  view auditContainers of bloodhound {
+    title 'Audit Logging – C2 Containers'
+    description 'Audit runs in the Go API server and persists to the shared PostgreSQL application database. Persistence drivers are code-level details, not containers.'
+
+    include
+      securityOperator,
+      apiConsumer,
+      bloodhound.ui,
+      bloodhound.apiServer,
+      bloodhound.postgresql
+
+    style securityOperator, apiConsumer {
+      color amber
+    }
+
+    style bloodhound.apiServer {
+      color primary
+    }
+
+    style bloodhound.ui {
+      color sky
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+
+  view auditComponents of bloodhound.apiServer {
+    title 'Audit Logging – C3 API Server Components'
+    description 'Matched requests run through authentication, audit middleware, and the audit service/store. Legacy GORM writers coexist temporarily, while the GC daemon maintains partitions.'
+
+    include
+      bloodhound.apiServer.httpRouter,
+      bloodhound.apiServer.authMiddleware,
+      bloodhound.apiServer.auditMiddleware,
+      bloodhound.apiServer.restApi,
+      bloodhound.apiServer.auditService,
+      bloodhound.apiServer.auditStore,
+      bloodhound.apiServer.legacyAuditWriter,
+      bloodhound.apiServer.gcDaemon,
+      bloodhound.postgresql
+
+    style bloodhound.apiServer.auditMiddleware {
+      notation 'HTTP middleware'
+      color sky
+    }
+
+    style bloodhound.apiServer.auditService {
+      color primary
+    }
+
+    style bloodhound.apiServer.auditStore {
+      notation 'Audit persistence adapter'
+      color muted
+    }
+
+    style bloodhound.apiServer.gcDaemon {
+      color indigo
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+
+  view auditRequestLifecycle of bloodhound.apiServer {
+    title 'Audit Logging – C4 Request Lifecycle'
+    description 'For a request that reaches audit middleware, intent is written before the route handler and outcome is written after it. Invalid credentials can return from authentication before this lifecycle begins.'
+
+    include
+      apiConsumer,
+      bloodhound.apiServer.httpRouter,
+      bloodhound.apiServer.authMiddleware,
+      bloodhound.apiServer.auditMiddleware,
+      bloodhound.apiServer.restApi,
+      bloodhound.apiServer.auditService,
+      bloodhound.apiServer.auditStore,
+      bloodhound.apiServer.legacyAuditWriter,
+      bloodhound.postgresql
+
+    style apiConsumer {
+      color amber
+    }
+
+    style bloodhound.apiServer.auditMiddleware {
+      notation 'HTTP middleware'
+      color sky
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+
+}

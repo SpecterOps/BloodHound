@@ -19,6 +19,12 @@ model {
       technology 'Go'
     }
 
+    auditMiddleware = component 'Audit Middleware' {
+      #go
+      description 'Post-routing middleware that writes an intent before an eligible route runs and records a best-effort success or failure outcome afterward.'
+      technology 'Go / gorilla/mux'
+    }
+
     authenticator = component 'Authenticator' {
       #go
       description 'Validates credentials for login, manages SAML/OIDC SSO flows, and issues JWT session tokens.'
@@ -39,6 +45,12 @@ model {
       technology 'Go'
     }
 
+    legacyAuditWriter = component 'Legacy Audit Writer' {
+      #go
+      description 'Existing transaction-level and direct GORM audit writers retained during the temporary middleware coexistence period.'
+      technology 'Go / GORM'
+    }
+
     // ─── Background Daemons ────────────────────────────────────
 
     apiDaemon = daemon 'API Daemon' {
@@ -52,7 +64,7 @@ model {
     }
 
     gcDaemon = daemon 'Data Pruning Daemon' {
-      description 'Daily background task that sweeps expired sessions and stale asset-group collections.'
+      description 'Daily background task that sweeps expired sessions and stale asset-group collections, and maintains audit-log partitions.'
       technology 'Go'
     }
 
@@ -111,6 +123,18 @@ model {
       technology 'Go'
     }
 
+    auditService = service 'Audit Service' {
+      #go
+      description 'Creates commit IDs, maps intent/success/failure records, defaults unknown actors, and redacts caller-supplied fields.'
+      technology 'Go'
+    }
+
+    auditStore = component 'Audit Store' {
+      #go
+      description 'pgx-backed adapter that inserts audit records and creates or drops monthly audit-log partitions.'
+      technology 'Go / pgx'
+    }
+
     // ─── Feature Flags ─────────────────────────────────────────
 
     featureFlagClient = component 'Feature Flag Client' {
@@ -134,4 +158,3 @@ model {
     }
   }
 }
-

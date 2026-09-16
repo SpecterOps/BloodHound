@@ -6,6 +6,7 @@ model {
   // ─── External Actor → System ─────────────────────────────────
 
   securityOperator -[sync]-> bloodhound.ui 'Uses web browser'
+  securityOperator -[sync]-> bloodhound 'Uses BloodHound through the web UI'
   apiConsumer -[sync]-> bloodhound.apiServer 'Calls REST API'
 
   // ─── External Data Collectors ────────────────────────────────
@@ -64,7 +65,9 @@ model {
   bloodhound.apiServer.apiDaemon -[uses]-> bloodhound.apiServer.httpRouter 'Serves'
   bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.authMiddleware 'Applies to requests'
   bloodhound.apiServer.authMiddleware -[uses]-> bloodhound.apiServer.authenticator 'Validates credentials'
-  bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.restApi 'Dispatches to handlers'
+  bloodhound.apiServer.authMiddleware -[uses]-> bloodhound.apiServer.auditMiddleware 'Passes accepted or unauthenticated requests'
+  bloodhound.apiServer.auditMiddleware -[uses]-> bloodhound.apiServer.restApi 'Dispatches to matched route handlers'
+  bloodhound.apiServer.auditMiddleware -[uses]-> bloodhound.apiServer.auditService 'Writes intent and outcome lifecycle records'
   bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.authorizer 'Checks permissions'
 
   // REST API → services
@@ -104,6 +107,12 @@ model {
 
   // GC daemon
   bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.databaseClient 'Sweeps expired data'
+  bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.auditStore 'Maintains audit-log partitions'
+
+  // Audit logging
+  bloodhound.apiServer.auditService -[uses]-> bloodhound.apiServer.auditStore 'Persists lifecycle records'
+  bloodhound.apiServer.auditStore -[sync]-> bloodhound.postgresql 'Inserts audit rows and manages partitions'
+  bloodhound.apiServer.legacyAuditWriter -[sync]-> bloodhound.postgresql 'Writes legacy coexistence rows'
 
   // Data access → databases
   bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'
@@ -114,4 +123,3 @@ model {
   bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.featureFlagClient 'Evaluates feature flags'
   bloodhound.apiServer.analysisService -[uses]-> bloodhound.apiServer.featureFlagClient 'Evaluates feature flags'
 }
-
