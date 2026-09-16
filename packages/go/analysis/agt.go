@@ -51,6 +51,14 @@ const AGTBatchNodeUpdateSize = 10000
 
 const zoneNodeObjectIDPrefix = "zone:"
 
+const zoneNodeZoneProperty zoneNodeProperty = "zone"
+
+type zoneNodeProperty string
+
+func (s zoneNodeProperty) String() string {
+	return string(s)
+}
+
 type zoneMembership struct {
 	memberID   graph.ID
 	zoneNodeID graph.ID
@@ -1254,13 +1262,11 @@ func getZoneNodes(ctx context.Context, graphDB graph.Database) ([]*graph.Node, e
 }
 
 func getZoneKind(zoneNode *graph.Node) (graph.Kind, error) {
-	for _, kind := range zoneNode.Kinds {
-		if kind != graphschema.Zone {
-			return kind, nil
-		}
+	if zoneKind, err := zoneNode.Properties.Get(zoneNodeZoneProperty.String()).String(); err != nil {
+		return nil, fmt.Errorf("zone node is missing zone property: %w", err)
+	} else {
+		return graph.StringKind(zoneKind), nil
 	}
-
-	return nil, fmt.Errorf("zone node is missing zone type")
 }
 
 /*
@@ -1283,7 +1289,7 @@ func renconcileZoneNodes(existingZoneNodes []*graph.Node, zones model.AssetGroup
 		if err != nil {
 			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
 			name, _ := zoneNode.Properties.GetOrDefault(common.Name.String(), "missing name").String()
-			slog.Warn("Zone node missing kind other than Zone",
+			slog.Warn("Zone node missing zone property",
 				slog.String("id", zoneNode.ID.String()),
 				slog.String("name", name))
 			continue
@@ -1301,10 +1307,11 @@ func renconcileZoneNodes(existingZoneNodes []*graph.Node, zones model.AssetGroup
 	for _, zone := range zones {
 		if _, found := zoneNodesByTagID[zone.ID]; !found {
 			zoneNodesToCreate = append(zoneNodesToCreate, graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.Name:        zone.Name,
-				common.DisplayName: zone.Name,
-				common.ObjectID:    zoneNodeObjectID(zone),
-			}), graphschema.Zone, zone.ToKind()))
+				common.Name:          zone.Name,
+				common.DisplayName:   zone.Name,
+				common.ObjectID:      zoneNodeObjectID(zone),
+				zoneNodeZoneProperty: zone.ToKind().String(),
+			}), graphschema.Zone))
 		}
 	}
 

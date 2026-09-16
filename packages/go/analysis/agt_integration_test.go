@@ -344,10 +344,11 @@ func TestReconcileZoneNode(t *testing.T) {
 			return err
 		}
 		if existingZoneNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
-			common.Name:        populatedZone.Name,
-			common.DisplayName: populatedZone.Name,
-			common.ObjectID:    zoneNodeObjectID(populatedZone),
-		}), schema.Zone, populatedZone.ToKind()); err != nil {
+			common.Name:          populatedZone.Name,
+			common.DisplayName:   populatedZone.Name,
+			common.ObjectID:      zoneNodeObjectID(populatedZone),
+			zoneNodeZoneProperty: populatedZone.ToKind().String(),
+		}), schema.Zone); err != nil {
 			return err
 		}
 		if orphanedZoneNode, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
@@ -388,6 +389,10 @@ func TestReconcileZoneNode(t *testing.T) {
 		}
 		assert.NotContains(t, zoneNodesByObjectID, "zone:2147483647")
 		assert.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone))
+		assert.Equal(t, populatedZone.ToKind().String(), existingZoneNode.Properties.Get(zoneNodeZoneProperty.String()).Any())
+		assert.Equal(t, graph.Kinds{schema.Zone}, existingZoneNode.Kinds)
+		assert.Equal(t, emptyZone.ToKind().String(), zoneNodesByObjectID[zoneNodeObjectID(emptyZone)].Properties.Get(zoneNodeZoneProperty.String()).Any())
+		assert.Equal(t, graph.Kinds{schema.Zone}, zoneNodesByObjectID[zoneNodeObjectID(emptyZone)].Kinds)
 
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), schema.MemberOfZone)))
 		if err != nil {

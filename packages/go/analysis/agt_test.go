@@ -28,8 +28,7 @@ import (
 
 func TestGetZoneKind(t *testing.T) {
 	var (
-		zoneKind      = graph.StringKind("Zone_Test")
-		secondaryKind = graph.StringKind("Zone_Secondary")
+		zoneKind = graph.StringKind("Zone_Test")
 	)
 
 	t.Parallel()
@@ -41,19 +40,16 @@ func TestGetZoneKind(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:         "returns the non-zone kind",
-			zoneNode:     graph.NewNode(1, graph.NewProperties(), graphschema.Zone, zoneKind),
+			name: "returns the kind named by the zone property",
+			zoneNode: graph.NewNode(1, graph.AsProperties(graph.PropertyMap{
+				zoneNodeZoneProperty: zoneKind.String(),
+			}), graphschema.Zone),
 			expectedKind: zoneKind,
 		},
 		{
-			name:         "returns the first non-zone kind",
-			zoneNode:     graph.NewNode(1, graph.NewProperties(), graphschema.Zone, zoneKind, secondaryKind),
-			expectedKind: zoneKind,
-		},
-		{
-			name:          "returns an error when the zone kind is missing",
+			name:          "returns an error when the zone property is missing",
 			zoneNode:      graph.NewNode(1, graph.NewProperties(), graphschema.Zone),
-			expectedError: "zone node is missing zone type",
+			expectedError: "zone node is missing zone property: property zone: property not found",
 		},
 	}
 
@@ -86,9 +82,15 @@ func TestRenconcileZoneNodes(t *testing.T) {
 		}
 		zones = model.AssetGroupTags{existingZone, missingZone}
 
-		existingZoneNode  = graph.NewNode(101, graph.NewProperties(), graphschema.Zone, existingZone.ToKind())
-		duplicateZoneNode = graph.NewNode(102, graph.NewProperties(), graphschema.Zone, existingZone.ToKind())
-		orphanedZoneNode  = graph.NewNode(103, graph.NewProperties(), graphschema.Zone, graph.StringKind("Orphaned_Zone"))
+		existingZoneNode = graph.NewNode(101, graph.AsProperties(graph.PropertyMap{
+			zoneNodeZoneProperty: existingZone.ToKind().String(),
+		}), graphschema.Zone)
+		duplicateZoneNode = graph.NewNode(102, graph.AsProperties(graph.PropertyMap{
+			zoneNodeZoneProperty: existingZone.ToKind().String(),
+		}), graphschema.Zone)
+		orphanedZoneNode = graph.NewNode(103, graph.AsProperties(graph.PropertyMap{
+			zoneNodeZoneProperty: "Tag_Orphaned_Zone",
+		}), graphschema.Zone)
 		invalidZoneNode   = graph.NewNode(104, graph.NewProperties(), graphschema.Zone)
 		existingZoneNodes = []*graph.Node{
 			existingZoneNode,
@@ -105,10 +107,11 @@ func TestRenconcileZoneNodes(t *testing.T) {
 	assert.Equal(t, []graph.ID{duplicateZoneNode.ID, orphanedZoneNode.ID, invalidZoneNode.ID}, zoneNodeIDsToDelete)
 	if assert.Len(t, zoneNodesToCreate, 1) {
 		expectedZoneNode := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.Name:        missingZone.Name,
-			common.DisplayName: missingZone.Name,
-			common.ObjectID:    zoneNodeObjectID(missingZone),
-		}), graphschema.Zone, missingZone.ToKind())
+			common.Name:          missingZone.Name,
+			common.DisplayName:   missingZone.Name,
+			common.ObjectID:      zoneNodeObjectID(missingZone),
+			zoneNodeZoneProperty: missingZone.ToKind().String(),
+		}), graphschema.Zone)
 		assert.Equal(t, expectedZoneNode, zoneNodesToCreate[0])
 	}
 }
