@@ -154,6 +154,10 @@ func SelectUsersCandidateFilter(node *graph.Node) bool {
 	return node.Kinds.ContainsOneOf(ad.User)
 }
 
+func SelectSitesCandidateFilter(node *graph.Node) bool {
+	return node.Kinds.ContainsOneOf(ad.Site)
+}
+
 func SelectComputersCandidateFilter(node *graph.Node) bool {
 	return node.Kinds.ContainsOneOf(ad.Computer)
 }

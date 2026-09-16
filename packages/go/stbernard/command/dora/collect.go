@@ -45,13 +45,21 @@ func (s *command) runCollect() error {
 	defaultDays := parseDefaultPeriod(config.Metrics.DefaultPeriod)
 
 	var (
-		cmd        = flag.NewFlagSet("dora collect", flag.ExitOnError)
-		daysFlag   int
-		deployFlag bool
-		commitFlag bool
+		cmd             = flag.NewFlagSet("dora collect", flag.ExitOnError)
+		daysFlag        int
+		startFlag       string
+		endFlag         string
+		lastQuarterFlag bool
+		fiscalStartFlag int
+		deployFlag      bool
+		commitFlag      bool
 	)
 
 	cmd.IntVar(&daysFlag, "days", defaultDays, fmt.Sprintf("Number of days to collect data for (default: %s from config)", config.Metrics.DefaultPeriod))
+	cmd.StringVar(&startFlag, "start", "", "Start date (YYYY-MM-DD) - overrides -days")
+	cmd.StringVar(&endFlag, "end", "", "End date (YYYY-MM-DD) - defaults to now")
+	cmd.BoolVar(&lastQuarterFlag, "last-quarter", false, "Collect the last complete fiscal quarter")
+	cmd.IntVar(&fiscalStartFlag, "fiscal-start", 2, "Fiscal year start month (1=Jan, 2=Feb, etc.) - used with -last-quarter")
 	cmd.BoolVar(&deployFlag, "deployments", false, "Collect deployment data only")
 	cmd.BoolVar(&commitFlag, "commits", false, "Collect commit data only")
 
@@ -69,6 +77,10 @@ func (s *command) runCollect() error {
 		fmt.Fprintf(w, "  %s dora collect\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Collect last 365 days\n")
 		fmt.Fprintf(w, "  %s dora collect -days 365\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect the last complete fiscal quarter\n")
+		fmt.Fprintf(w, "  %s dora collect -last-quarter\n\n", filepath.Base(os.Args[0]))
+		fmt.Fprintf(w, "  # Collect a specific date range\n")
+		fmt.Fprintf(w, "  %s dora collect -start 2026-02-01 -end 2026-04-30\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Collect only deployments\n")
 		fmt.Fprintf(w, "  %s dora collect -deployments\n\n", filepath.Base(os.Args[0]))
 		fmt.Fprintf(w, "  # Collect commits only\n")
@@ -102,9 +114,17 @@ func (s *command) runCollect() error {
 	// Create collector
 	collector := dora.NewGitHubCollector(&config, s.env)
 
-	// Calculate time range
-	endTime := time.Now()
-	startTime := endTime.AddDate(0, 0, -daysFlag)
+	startTime, endTime, err := resolveTimeRange(
+		daysFlag,
+		startFlag,
+		endFlag,
+		lastQuarterFlag,
+		fiscalStartFlag,
+		time.Now(),
+	)
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 
