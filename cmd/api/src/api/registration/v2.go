@@ -84,7 +84,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
 
 		// User management for all BloodHound users
-		routerInst.GET("/api/v2/bloodhound-users", managementResource.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers),
+		// GET /api/v2/bloodhound-users is served by the identity slice (server/identity).
 		routerInst.POST("/api/v2/bloodhound-users", managementResource.CreateUser).RequirePermissions(permissions.AuthManageUsers),
 		routerInst.GET("/api/v2/bloodhound-users-minimal", managementResource.ListActiveUsersMinimal).RequirePermissions(permissions.AuthReadUsersMinimal), // returns user data without any sensitive information.
 

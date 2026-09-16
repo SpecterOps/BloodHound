@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -379,5 +380,136 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 		assert.Equal(t, expected.ID, retrieved.ID)
 		assert.Equal(t, expected.Authority, retrieved.Authority)
 		assert.Equal(t, expected.Name, retrieved.Name)
+	})
+}
+
+// seedUser inserts a user row directly via the pool with every non-defaulted
+// column populated so the strict pgx scanners in ListUsers do not encounter
+// NULLs, and returns its generated id.
+func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string, supportAccount bool) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, now(), false, true, false, $6, now(), now())`,
+		id.String(), principalName, principalName+"-first", principalName+"-last", principalName+"@example.com", supportAccount,
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
+// seedUserRole associates a seeded user with an existing role via the join table.
+func seedUserRole(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, roleID int32) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx, `INSERT INTO users_roles (user_id, role_id) VALUES ($1, $2)`, userID.String(), roleID)
+	require.NoError(t, err)
+}
+
+// seedETAC inserts an environment-targeted access control row for a user. It
+// intentionally omits updated_at so the nullable-timestamp scan path is covered.
+func seedETAC(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, environmentID string) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO environment_targeted_access_control (user_id, environment_id, created_at) VALUES ($1, $2, now())`,
+		userID.String(), environmentID,
+	)
+	require.NoError(t, err)
+}
+
+// seedAuthSecret inserts an auth secret for a user, letting the id sequence default.
+func seedAuthSecret(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID) {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO auth_secrets (user_id, digest, digest_method, expires_at, totp_secret, totp_activated, created_at, updated_at)
+		 VALUES ($1, 'digest', 'argon2', now(), '', false, now(), now())`,
+		userID.String(),
+	)
+	require.NoError(t, err)
+}
+
+func TestStore_ListUsers_Integration(t *testing.T) {
+	t.Run("returns non-support users with preloaded associations", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			role        = seededRole(t, ctx, pool)
+		)
+
+		secretUserID := seedUser(t, ctx, pool, "list-users-secret", false)
+		seedUserRole(t, ctx, pool, secretUserID, role.ID)
+		seedETAC(t, ctx, pool, secretUserID, "env-list-users")
+		seedAuthSecret(t, ctx, pool, secretUserID)
+
+		ssoUserID := seedUser(t, ctx, pool, "list-users-sso", false)
+		supportUserID := seedUser(t, ctx, pool, "list-users-support", true)
+
+		users, err := store.ListUsers(ctx, params.Filters{}, params.SortItems{})
+		require.NoError(t, err)
+
+		byID := make(map[uuid.UUID]services.User, len(users))
+		for _, user := range users {
+			byID[user.ID] = user
+		}
+
+		_, hasSupport := byID[supportUserID]
+		assert.False(t, hasSupport, "support accounts must be excluded from the list")
+
+		secretUser, ok := byID[secretUserID]
+		require.True(t, ok, "expected the seeded secret user to be returned")
+		require.NotEmpty(t, secretUser.Roles, "expected the seeded user to preload its role")
+		assert.NotEmpty(t, secretUser.Roles[0].Permissions, "expected the preloaded role to carry its permissions")
+		require.Len(t, secretUser.EnvironmentTargetedAccessControl, 1)
+		assert.Equal(t, "env-list-users", secretUser.EnvironmentTargetedAccessControl[0].EnvironmentID)
+		require.NotNil(t, secretUser.AuthSecret, "expected the seeded user to preload its auth secret")
+		assert.Equal(t, "argon2", secretUser.AuthSecret.DigestMethod)
+
+		ssoUser, ok := byID[ssoUserID]
+		require.True(t, ok, "expected the seeded sso user to be returned")
+		assert.Nil(t, ssoUser.AuthSecret, "expected the user without a secret to have a nil AuthSecret")
+		assert.Empty(t, ssoUser.Roles)
+		assert.Empty(t, ssoUser.EnvironmentTargetedAccessControl)
+	})
+
+	t.Run("returns users filtered by principal_name", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			principal   = "filter-target-user"
+		)
+
+		seedUser(t, ctx, pool, principal, false)
+		seedUser(t, ctx, pool, "filter-other-user", false)
+
+		users, err := store.ListUsers(ctx, params.Filters{
+			"principal_name": {{Field: "principal_name", Operator: params.Equals, Value: principal, SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		require.Len(t, users, 1)
+		assert.Equal(t, principal, users[0].PrincipalName)
+	})
+
+	t.Run("returns users sorted by principal_name ascending", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		seedUser(t, ctx, pool, "zzz-sort-user", false)
+		seedUser(t, ctx, pool, "aaa-sort-user", false)
+
+		users, err := store.ListUsers(ctx, params.Filters{}, params.SortItems{{Field: "principal_name", Direction: params.Ascending}})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(users), 2)
+
+		for i := 1; i < len(users); i++ {
+			assert.LessOrEqual(t, users[i-1].PrincipalName, users[i].PrincipalName, "users should be sorted by principal_name ascending")
+		}
 	})
 }

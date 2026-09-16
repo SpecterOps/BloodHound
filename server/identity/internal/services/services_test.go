@@ -18,6 +18,7 @@ package services_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -202,6 +203,70 @@ func TestService_ListRoles(t *testing.T) {
 			databaseMock.EXPECT().ListRoles(ctx, queryFilters, sortItems).Return(tt.dbResult, tt.dbErr)
 
 			result, err := svc.ListRoles(ctx, queryFilters, sortItems)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantResult, result)
+			}
+		})
+	}
+}
+
+func TestService_ListUsers(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		queryFilters  = params.Filters{"email_address": {{Operator: params.Equals, Value: "ada@example.com"}}}
+		sortItems     = params.SortItems{{Field: "principal_name", Direction: params.Ascending}}
+		unexpectedErr = errors.New("connection refused")
+		expected      = []services.User{
+			{
+				PrincipalName: "ada",
+				EmailAddress:  sql.NullString{String: "ada@example.com", Valid: true},
+				FirstName:     sql.NullString{String: "Ada", Valid: true},
+				Roles: []services.Role{
+					{ID: 3, Name: "Administrator"},
+				},
+				CreatedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				UpdatedAt: time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
+			},
+		}
+	)
+
+	tests := []struct {
+		name       string
+		dbResult   []services.User
+		dbErr      error
+		wantResult []services.User
+		wantErr    error
+	}{
+		{
+			name:       "returns the users on success",
+			dbResult:   expected,
+			wantResult: expected,
+		},
+		{
+			name:       "returns an empty slice when no users match",
+			dbResult:   []services.User{},
+			wantResult: []services.User{},
+		},
+		{
+			name:    "propagates unexpected database errors",
+			dbErr:   unexpectedErr,
+			wantErr: unexpectedErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			databaseMock.EXPECT().ListUsers(ctx, queryFilters, sortItems).Return(tt.dbResult, tt.dbErr)
+
+			result, err := svc.ListUsers(ctx, queryFilters, sortItems)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 			} else {

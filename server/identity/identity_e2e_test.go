@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -151,12 +152,60 @@ func newListRolesHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	var (
 		handlerSet = newIdentityHandlers(db)
 		roleList   = handlers.RoleListView{}
-		handler    = middleware.FilterMiddleware(roleList)(
-			middleware.SortMiddleware(roleList)(http.HandlerFunc(handlerSet.ListRoles)),
+		// Sort wraps filter (sort runs first) to mirror the production route's
+		// WithSort-before-WithFilters ordering (see routes.Register).
+		handler = middleware.SortMiddleware(roleList)(
+			middleware.FilterMiddleware(roleList)(http.HandlerFunc(handlerSet.ListRoles)),
 		)
 	)
 
 	return handler.ServeHTTP
+}
+
+// listUsersResponseEnvelope is the JSON envelope shape returned by the
+// GET /api/v2/bloodhound-users handler.
+type listUsersResponseEnvelope struct {
+	Data struct {
+		Users []struct {
+			PrincipalName string  `json:"principal_name"`
+			EmailAddress  *string `json:"email_address"`
+			FirstName     *string `json:"first_name"`
+		} `json:"users"`
+	} `json:"data"`
+}
+
+// newListUsersHandler wires the identity slice's ListUsers handler backed by the
+// given database, wrapped in the same filter and sort middleware the route
+// applies in production (see routes.Register), so this exercises the full
+// request path the handler relies on.
+func newListUsersHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	var (
+		handlerSet = newIdentityHandlers(db)
+		userList   = handlers.UserListView{}
+		// Sort wraps filter (sort runs first) to mirror the production route's
+		// WithSort-before-WithFilters ordering (see routes.Register).
+		handler = middleware.SortMiddleware(userList)(
+			middleware.FilterMiddleware(userList)(http.HandlerFunc(handlerSet.ListUsers)),
+		)
+	)
+
+	return handler.ServeHTTP
+}
+
+// seedUser inserts a user row directly via the pool with every non-defaulted
+// column populated so the strict pgx scanners in ListUsers do not encounter
+// NULLs. It returns the seeded principal name for convenience.
+func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string, supportAccount bool) string {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES (gen_random_uuid(), $1, $2, $3, $4, now(), false, true, false, $5, now(), now())`,
+		principalName, principalName+"-first", principalName+"-last", principalName+"@example.com", supportAccount,
+	)
+	require.NoError(t, err)
+
+	return principalName
 }
 
 func TestGetPermission(t *testing.T) {
@@ -370,5 +419,168 @@ func TestListRoles(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
+	})
+
+	t.Run("returns the sort error when both the sort and filter are invalid", func(t *testing.T) {
+		// Sort is validated before filters, matching the legacy handler, so an
+		// invalid sort takes precedence over an invalid filter in the response.
+		query := url.Values{}
+		query.Add("sort_by", "invalidColumn")
+		query.Add("foo", "eq:bar")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
+		assert.NotContains(t, recorder.Body.String(), api.ErrorResponseDetailsColumnNotFilterable)
+	})
+}
+
+func TestListUsers(t *testing.T) {
+	var (
+		db      = setupIdentityDB(t)
+		ctx     = context.Background()
+		handler = newListUsersHandler(db)
+	)
+
+	// Seed two regular users and one support account. The support account must
+	// never appear in the response, mirroring the legacy support_account = false
+	// filter the migrated handler applies.
+	adaPrincipal := seedUser(t, ctx, db.Pool(), "e2e-ada", false)
+	borisPrincipal := seedUser(t, ctx, db.Pool(), "e2e-boris", false)
+	supportPrincipal := seedUser(t, ctx, db.Pool(), "e2e-support", true)
+
+	newRequest := func(t *testing.T, query url.Values) *http.Request {
+		t.Helper()
+		reqCtx := context.WithValue(ctx, bhctx.ValueKey, &bhctx.Context{})
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, "/api/v2/bloodhound-users", nil)
+		require.NoError(t, err)
+		req.URL.RawQuery = query.Encode()
+		return req
+	}
+
+	principalsIn := func(envelope listUsersResponseEnvelope) []string {
+		names := make([]string, 0, len(envelope.Data.Users))
+		for _, user := range envelope.Data.Users {
+			names = append(names, user.PrincipalName)
+		}
+		return names
+	}
+
+	t.Run("returns 200 OK with regular users and excludes support accounts", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, url.Values{}))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listUsersResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+
+		names := principalsIn(envelope)
+		assert.Contains(t, names, adaPrincipal)
+		assert.Contains(t, names, borisPrincipal)
+		assert.NotContains(t, names, supportPrincipal, "support accounts must be excluded from the list")
+	})
+
+	t.Run("returns 200 OK with users sorted by principal_name ascending", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("sort_by", "principal_name")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listUsersResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		for i := 1; i < len(envelope.Data.Users); i++ {
+			assert.LessOrEqual(t, envelope.Data.Users[i-1].PrincipalName, envelope.Data.Users[i].PrincipalName, "users should be sorted by principal_name ascending")
+		}
+	})
+
+	t.Run("returns 200 OK with users filtered by email_address", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("email_address", "eq:"+adaPrincipal+"@example.com")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+
+		var envelope listUsersResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		require.Len(t, envelope.Data.Users, 1)
+		assert.Equal(t, adaPrincipal, envelope.Data.Users[0].PrincipalName)
+	})
+
+	t.Run("returns 400 Bad Request for a non-sortable column", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("sort_by", "invalidColumn")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
+	})
+
+	t.Run("returns 400 Bad Request when sorting by the phantom deleted_at column", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("sort_by", "deleted_at")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
+	})
+
+	t.Run("returns 400 Bad Request for a non-filterable column", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("foo", "eq:bar")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsColumnNotFilterable)
+	})
+
+	t.Run("returns 400 Bad Request for a malformed filter predicate", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("email_address", "invalidPredicate:foo")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
+	})
+
+	t.Run("returns 400 Bad Request for an unsupported filter predicate", func(t *testing.T) {
+		query := url.Values{}
+		query.Add("first_name", "gt:0")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
+	})
+
+	t.Run("returns the sort error when both the sort and filter are invalid", func(t *testing.T) {
+		// Sort is validated before filters, matching the legacy handler, so an
+		// invalid sort takes precedence over an invalid filter in the response.
+		query := url.Values{}
+		query.Add("sort_by", "invalidColumn")
+		query.Add("foo", "eq:bar")
+
+		recorder := httptest.NewRecorder()
+		handler(recorder, newRequest(t, query))
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
+		assert.NotContains(t, recorder.Body.String(), api.ErrorResponseDetailsColumnNotFilterable)
 	})
 }

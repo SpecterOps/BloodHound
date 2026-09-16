@@ -24,6 +24,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/params"
 )
 
@@ -52,10 +53,57 @@ type Role struct {
 // ErrNoRoleFound indicates that no role with the given ID was found.
 var ErrNoRoleFound = errors.New("no role was found")
 
+// AuthSecret is the credential material associated with a user. It mirrors the
+// fields the legacy model.AuthSecret exposed on the wire; secret material such
+// as the digest and TOTP secret is intentionally omitted from the domain type.
+type AuthSecret struct {
+	ID            int32
+	DigestMethod  string
+	ExpiresAt     time.Time
+	TOTPActivated bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     sql.NullTime
+}
+
+// EnvironmentAccessControl is a single environment-targeted access control entry
+// scoping a user to a specific environment.
+type EnvironmentAccessControl struct {
+	ID            int64
+	UserID        string
+	EnvironmentID string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     sql.NullTime
+}
+
+// User is the identity domain representation of a BloodHound user together with
+// the associations the list endpoint returns: assigned roles (with their
+// permissions), environment-targeted access control entries and the auth secret.
+type User struct {
+	ID                               uuid.UUID
+	SSOProviderID                    sql.NullInt32
+	FirstName                        sql.NullString
+	LastName                         sql.NullString
+	EmailAddress                     sql.NullString
+	PrincipalName                    string
+	LastLogin                        time.Time
+	IsDisabled                       bool
+	AllEnvironments                  bool
+	EULAAccepted                     bool
+	Roles                            []Role
+	EnvironmentTargetedAccessControl []EnvironmentAccessControl
+	AuthSecret                       *AuthSecret
+	CreatedAt                        time.Time
+	UpdatedAt                        time.Time
+	DeletedAt                        sql.NullTime
+}
+
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
+	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error)
 }
 
 type Service struct {
@@ -76,4 +124,8 @@ func (s *Service) GetPermission(ctx context.Context, id int) (Permission, error)
 
 func (s *Service) ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error) {
 	return s.db.ListRoles(ctx, queryFilters, sortItems)
+}
+
+func (s *Service) ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error) {
+	return s.db.ListUsers(ctx, queryFilters, sortItems)
 }

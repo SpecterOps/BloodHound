@@ -30,9 +30,15 @@ func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
 		permissions = auth.Permissions()
 		roleList    = handlers.RoleListView{}
+		userList    = handlers.UserListView{}
 	)
 
-	routerInst.GET("/api/v2/roles", handler.ListRoles).RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
+	// Sort is validated before filters (WithSort before WithFilters) so that a request with both an
+	// invalid sort and an invalid filter surfaces the sort error, matching the legacy handler's order.
+	routerInst.GET("/api/v2/roles", handler.ListRoles).RequirePermissions(permissions.AuthManageSelf).WithSort(roleList).WithFilters(roleList)
 	routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole).RequirePermissions(permissions.AuthManageSelf)
 	routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission).RequirePermissions(permissions.AuthManageSelf)
+	// Sort is validated before filters (WithSort before WithFilters) so that a request with both an
+	// invalid sort and an invalid filter surfaces the sort error, matching the legacy handler's order.
+	routerInst.GET("/api/v2/bloodhound-users", handler.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers).WithSort(userList).WithFilters(userList)
 }
