@@ -577,3 +577,6 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;
