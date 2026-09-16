@@ -657,22 +657,17 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 		if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
 			return fmt.Errorf("duplicate privilege zone rule key: %s", rule.ExtensionRuleId)
 		}
-		if len(rule.Seeds) == 0 {
-			return fmt.Errorf("privilege zone rule %s requires at least one seed", rule.Name)
+		if len(rule.Seeds) != 1 {
+			return fmt.Errorf("privilege zone rule %s requires exactly one seed", rule.Name)
 		}
 
-		startingSeedType := rule.Seeds[0].Type
-		for _, seed := range rule.Seeds {
-			if strings.TrimSpace(seed.Value) == "" {
-				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
-			}
-			// Only Cypher selector types are valid for extension creation - will there be more selector types?
-			if seed.Type != SelectorTypeCypher {
-				return fmt.Errorf("privilege zone rule %s has a seed with a forbidden object ID type", rule.Name)
-			}
-			if seed.Type != startingSeedType {
-				return fmt.Errorf("privilege zone rule %s has a seed with a differing type than initial seed", rule.Name)
-			}
+		seed := rule.Seeds[0]
+		if strings.TrimSpace(seed.Value) == "" {
+			return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
+		}
+		// Only Cypher selector types are valid for extension creation
+		if seed.Type != SelectorTypeCypher {
+			return fmt.Errorf("privilege zone rule %s must be of cypher type", rule.Name)
 		}
 		ruleNames[rule.Name] = struct{}{}
 		ruleIds[rule.ExtensionRuleId] = struct{}{}

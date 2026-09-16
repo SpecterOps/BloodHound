@@ -27,17 +27,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func pzRule(ruleKey string, name string, description string, autoCertify model.SelectorAutoCertifyMethod, enabled bool, allowDisable bool, seedValues ...string) model.PZRuleInput {
-	selectorSeeds := make([]model.SelectorSeedInput, 0, len(seedValues))
-	for _, seedValue := range seedValues {
-		selectorSeeds = append(selectorSeeds, model.SelectorSeedInput{Type: model.SelectorTypeCypher, Value: seedValue})
-	}
-
+func pzRule(ruleKey string, name string, description string, autoCertify model.SelectorAutoCertifyMethod, enabled bool, allowDisable bool, seedValue string) model.PZRuleInput {
 	return model.PZRuleInput{
 		ExtensionRuleId: ruleKey,
 		Name:            name,
 		Description:     description,
-		Seeds:           selectorSeeds,
+		Seeds:           []model.SelectorSeedInput{{Type: model.SelectorTypeCypher, Value: seedValue}},
 		AutoCertify:     autoCertify,
 		Enabled:         enabled,
 		AllowDisable:    allowDisable,
@@ -77,8 +72,21 @@ func upsertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extens
 func assertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extensionID int32, expectedPZRules ...model.PZRuleInput) map[string]model.AssetGroupTagSelector {
 	t.Helper()
 
-	expectedPZRulesByKey := make(map[string]model.PZRuleInput, len(expectedPZRules))
-	selectorsByKey := make(map[string]model.AssetGroupTagSelector, len(expectedPZRules))
+	var (
+		expectedPZRulesByKey   = make(map[string]model.PZRuleInput, len(expectedPZRules))
+		selectorsByKey         = make(map[string]model.AssetGroupTagSelector, len(expectedPZRules))
+		tierZeroAssetGroupTags model.AssetGroupTags
+		err                    error
+	)
+
+	tierZeroAssetGroupTags, err = testSuite.BHDatabase.GetAssetGroupTags(testSuite.Context, model.SQLFilter{
+		SQLString: "type = ? AND position = ?",
+		Params:    []any{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition},
+	})
+	require.NoError(t, err)
+	require.Len(t, tierZeroAssetGroupTags, 1)
+	tierZeroAssetGroupTagID := tierZeroAssetGroupTags[0].ID
+
 	for _, expectedPZRule := range expectedPZRules {
 		expectedPZRulesByKey[expectedPZRule.ExtensionRuleId] = expectedPZRule
 	}
@@ -94,7 +102,7 @@ func assertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extens
 
 		selector, err = testSuite.BHDatabase.GetAssetGroupTagSelectorBySelectorId(testSuite.Context, selector.ID)
 		require.NoError(t, err)
-		assert.Equal(t, model.AssetGroupTierZeroPosition, selector.AssetGroupTagId)
+		assert.Equal(t, tierZeroAssetGroupTagID, selector.AssetGroupTagId)
 		assert.True(t, selector.ExtensionId.Valid)
 		assert.Equal(t, extensionID, selector.ExtensionId.Int32)
 		assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.CreatedBy)
@@ -157,7 +165,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 				t.Helper()
 				var (
 					expectedPZRules = model.PZRulesInput{
-						pzRule("PZR_create_one", "Create One", "first created rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:CreateOne) RETURN n", "MATCH (n:CreateOneChild) RETURN n"),
+						pzRule("PZR_create_one", "Create One", "first created rule", model.SelectorAutoCertifyMethodDisabled, true, true, "MATCH (n:CreateOne) RETURN n"),
 						pzRule("PZR_create_two", "Create Two", "second created rule", model.SelectorAutoCertifyMethodAllMembers, false, false, "MATCH (n:CreateTwo) RETURN n"),
 					}
 					graphExtensionInput = baseGraphExtensionInput
