@@ -22,6 +22,7 @@ import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, 
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
+import { getDuplicateDisplayNames } from './utils';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
@@ -72,21 +73,7 @@ const ExploreSearchCombobox: React.FC<{
     });
 
     // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
-    const duplicateDisplayNames = useMemo(() => {
-        const displayNameCounts = new Map<string, number>();
-
-        for (const item of data ?? []) {
-            const displayName = item.name || item.objectid;
-
-            if (displayName) {
-                displayNameCounts.set(displayName, (displayNameCounts.get(displayName) ?? 0) + 1);
-            }
-        }
-
-        return new Set(
-            [...displayNameCounts.entries()].filter(([, count]) => count > 1).map(([displayName]) => displayName)
-        );
-    }, [data]);
+    const duplicateDisplayNames = useMemo(() => getDuplicateDisplayNames(data ?? []), [data]);
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
