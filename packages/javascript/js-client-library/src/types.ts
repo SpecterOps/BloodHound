@@ -1022,6 +1022,8 @@ export interface CollectorJobType {
     id: number;
     key: string;
     display_name: string;
+    icon: string;
+    icon_color: string;
     params_version: string;
     params_schema: Record<string, unknown>;
     backoff_strategy: 'exponential' | 'fixed';
