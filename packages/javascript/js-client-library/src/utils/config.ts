@@ -78,7 +78,7 @@ export type TieringConfiguration = {
     value: {
         tier_limit: number;
         label_limit: number;
-        multi_tier_analysis_enabled: boolean;
+        enabled: boolean;
     };
 };
 

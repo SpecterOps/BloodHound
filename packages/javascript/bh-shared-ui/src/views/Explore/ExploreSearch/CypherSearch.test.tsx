@@ -112,7 +112,7 @@ describe('CypherSearch', () => {
                             value: {
                                 tier_limit: 3,
                                 label_limit: 10,
-                                multi_tier_analysis_enabled: true,
+                                enabled: true,
                             },
                             id: 8,
                         },

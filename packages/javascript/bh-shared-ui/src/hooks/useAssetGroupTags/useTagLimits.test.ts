@@ -35,7 +35,7 @@ describe('useTagLimits', () => {
                         //How many zones can be created?
                         tier_limit: 1,
                         label_limit: 10,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',
@@ -76,7 +76,7 @@ describe('useTagLimits', () => {
                         //How many zones can be created?
                         tier_limit: 3,
                         label_limit: 10,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',
@@ -117,7 +117,7 @@ describe('useTagLimits', () => {
                         tier_limit: 1,
                         //How many labels can be created?
                         label_limit: 1,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',
@@ -158,7 +158,7 @@ describe('useTagLimits', () => {
                         tier_limit: 1,
                         //How many labels can be created?
                         label_limit: 3,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',
@@ -202,7 +202,7 @@ describe('useTagLimits', () => {
                         //How many zones can be created?
                         tier_limit: 10,
                         label_limit: 10,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',
@@ -243,7 +243,7 @@ describe('useTagLimits', () => {
                         tier_limit: 10,
                         //How many labels can be created?
                         label_limit: 10,
-                        multi_tier_analysis_enabled: true,
+                        enabled: true,
                     },
                     id: 8,
                     created_at: '2025-11-03T17:03:28.42299Z',

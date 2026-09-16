@@ -70,7 +70,7 @@ const handlers = [
                 data: [
                     {
                         key: ConfigurationKey.Tiering,
-                        value: { multi_tier_analysis_enabled: true, tier_limit: 1, label_limit: 0 },
+                        value: { enabled: true, tier_limit: 1, label_limit: 0 },
                     },
                 ],
             })

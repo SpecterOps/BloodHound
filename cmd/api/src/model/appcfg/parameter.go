@@ -413,9 +413,9 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 }
 
 type TieringParameters struct {
-	TierLimit                int  `json:"tier_limit,omitempty"`
-	LabelLimit               int  `json:"label_limit,omitempty"`
-	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
+	TierLimit  int  `json:"tier_limit,omitempty"`
+	LabelLimit int  `json:"label_limit,omitempty"`
+	Enabled    bool `json:"enabled,omitempty"`
 }
 
 type AGTParameters struct {

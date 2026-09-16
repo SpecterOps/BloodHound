@@ -83,7 +83,7 @@ const zoneHandlers = [
                 data: [
                     {
                         key: ConfigurationKey.Tiering,
-                        value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+                        value: { enabled: true, tier_limit: 3, label_limit: 10 },
                     },
                 ],
             })
