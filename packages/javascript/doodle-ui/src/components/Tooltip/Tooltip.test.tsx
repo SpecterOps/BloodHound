@@ -19,7 +19,7 @@ import userEvent from '@testing-library/user-event';
 import { Tooltip } from './Tooltip';
 
 describe('Tooltip', () => {
-    it('renders above dialogs', async () => {
+    it('applies the default overlay z-index', async () => {
         const user = userEvent.setup();
         render(
             <Tooltip tooltip='Helpful context'>
@@ -29,6 +29,6 @@ describe('Tooltip', () => {
 
         await user.hover(screen.getByRole('button', { name: 'Show tooltip' }));
 
-        expect((await screen.findByRole('tooltip')).parentElement?.classList.contains('z-tooltip')).toBe(true);
+        expect((await screen.findByRole('tooltip')).parentElement?.classList.contains('z-50')).toBe(true);
     });
 });
