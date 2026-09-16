@@ -161,6 +161,7 @@ func (s *BloodhoundDB) pzRulesReconcileConfig(extensionID int32) reconcileConfig
 			} else {
 				if !input.Enabled && existing.DisabledAt.Valid {
 					selector.DisabledAt = existing.DisabledAt
+					selector.DisabledBy = existing.DisabledBy
 				}
 				return s.UpdateOpenGraphAssetGroupTagSelector(ctx, extensionID, selector)
 			}
