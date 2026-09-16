@@ -170,7 +170,7 @@ func (s awsS3OperationDiagnostic) finish(err error) {
 func logAWSConfigurationLoading(ctx context.Context, bucketConfiguration config.BucketConfiguration) {
 	slog.LogAttrs(
 		ctx,
-		slog.LevelInfo,
+		slog.LevelDebug,
 		"S3 ingest diagnostic: loading AWS configuration",
 		s3IngestDiagnosticAttributes(
 			slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
@@ -182,7 +182,7 @@ func logAWSConfigurationLoading(ctx context.Context, bucketConfiguration config.
 func logS3ClientInitialized(ctx context.Context, bucketConfiguration config.BucketConfiguration) {
 	slog.LogAttrs(
 		ctx,
-		slog.LevelInfo,
+		slog.LevelDebug,
 		"S3 ingest diagnostic: S3 client initialized",
 		s3IngestDiagnosticAttributes(
 			slog.String("bucket", strings.TrimSpace(bucketConfiguration.Name)),
@@ -211,7 +211,7 @@ func logFileServiceInitialized(ctx context.Context, bucketConfiguration config.B
 
 	slog.LogAttrs(
 		ctx,
-		slog.LevelInfo,
+		slog.LevelDebug,
 		"S3 ingest diagnostic: file service initialized",
 		s3IngestDiagnosticAttributes(attributes...)...,
 	)

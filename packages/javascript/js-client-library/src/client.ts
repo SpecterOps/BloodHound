@@ -16,12 +16,16 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
+    AlertRetryRequest,
     ClearDatabaseRequest,
     CreateAlertRequest,
     CreateAssetGroupRequest,
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
+    CreateCollectorJobProfileRequest,
+    CreateCollectorJobScheduleRequest,
+    CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
@@ -45,6 +49,8 @@ import {
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
+    UpdateCollectorJobProfileRequest,
+    UpdateCollectorJobScheduleRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -73,8 +79,11 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CollectorJobProfileResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobScheduleResponse,
+    CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
@@ -87,6 +96,9 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobProfilesResponse,
+    GetCollectorJobScheduleResponse,
+    GetCollectorJobSecretResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -95,6 +107,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -115,13 +128,16 @@ import {
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
+    RetryAlertAttemptResponse,
     RotateWebhookSecretResponse,
+    RunCollectorJobProfileResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
+    UpdateCollectorJobScheduleResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
@@ -793,6 +809,76 @@ class BHEAPIClient {
     /* ingest */
 
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+
+    /* collector job profiles */
+
+    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+            ...options,
+            params: {
+                ...options?.params,
+                job_profile_id: `eq:${profileId}`,
+                sort_by: '-recorded_at',
+                skip: 0,
+                limit: 1,
+            },
+        });
+
+    getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+
+    updateCollectorJobSchedule = (
+        scheduleId: number,
+        request: UpdateCollectorJobScheduleRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
+            `/api/v2/collector-job-schedules/${scheduleId}`,
+            request,
+            options
+        );
+
+    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.post<RunCollectorJobProfileResponse>(
+            '/api/v2/collector-job-queue',
+            { job_profile_id: profileId },
+            options
+        );
+
+    createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+
+    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    updateCollectorJobProfile = (
+        profileId: number,
+        payload: UpdateCollectorJobProfileRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<CollectorJobProfileResponse>(
+            `/api/v2/collector-job-profiles/${profileId}`,
+            payload,
+            options
+        );
+
+    getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+
+    createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
 
     /* clients */
 
@@ -2909,6 +2995,9 @@ class BHEAPIClient {
             },
             paramsSerializer: { indexes: null },
         });
+
+    retryAlertAttempt = (payload: AlertRetryRequest, options?: RequestOptions) =>
+        this.baseClient.post<RetryAlertAttemptResponse>('api/v2/alert-attempts/retry', payload, options);
 }
 
 export default BHEAPIClient;

@@ -611,18 +611,18 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueries(ctx, savedQueries any) *g
 }
 
 // CreateSavedQuery mocks base method.
-func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string) (model.SavedQuery, error) {
+func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string, schemaExtensionID *int32, queryKey *string, category string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSavedQuery", ctx, userID, name, query, description)
+	ret := m.ctrl.Call(m, "CreateSavedQuery", ctx, userID, name, query, description, schemaExtensionID, queryKey, category)
 	ret0, _ := ret[0].(model.SavedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSavedQuery indicates an expected call of CreateSavedQuery.
-func (mr *MockDatabaseMockRecorder) CreateSavedQuery(ctx, userID, name, query, description any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSavedQuery(ctx, userID, name, query, description, schemaExtensionID, queryKey, category any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), ctx, userID, name, query, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), ctx, userID, name, query, description, schemaExtensionID, queryKey, category)
 }
 
 // CreateSavedQueryPermissionToPublic mocks base method.
@@ -2512,6 +2512,21 @@ func (m *MockDatabase) GetSSOProviderUsers(ctx context.Context, id int) (model.U
 func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
+}
+
+// GetSavedQueriesByExtensionID mocks base method.
+func (m *MockDatabase) GetSavedQueriesByExtensionID(ctx context.Context, schemaExtensionID int32) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesByExtensionID", ctx, schemaExtensionID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesByExtensionID indicates an expected call of GetSavedQueriesByExtensionID.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesByExtensionID(ctx, schemaExtensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesByExtensionID", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesByExtensionID), ctx, schemaExtensionID)
 }
 
 // GetSavedQueriesOwnedBy mocks base method.
