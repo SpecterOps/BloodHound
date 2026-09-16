@@ -29,7 +29,6 @@ import (
 )
 
 func TestEntityDetails(t *testing.T) {
-	t.Parallel()
 
 	var (
 		suite              = setupIntegrationTestSuite(t)
