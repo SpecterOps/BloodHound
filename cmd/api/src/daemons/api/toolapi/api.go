@@ -96,6 +96,7 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Get("/analysis/schedule", toolContainer.GetScheduledAnalysisConfiguration)
 	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
+	router.Get("/parameters", toolContainer.GetApplicationConfigurations)
 	router.Put("/parameters", toolContainer.SetApplicationParameter)
 
 	router.Put("/ingest/retention/enable", ingestControl.EnableIngestFileRetention)
