@@ -29,6 +29,7 @@ import (
 )
 
 func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
+
 	type args struct {
 		environmentKindName string
 		sourceKindName      string
@@ -147,6 +148,7 @@ func TestCreateEnvironmentWithPrincipalKinds(t *testing.T) {
 }
 
 func TestUpdateEnvironmentWithPrincipalKinds(t *testing.T) {
+
 	type args struct {
 		newSourceKindName string
 		newPrincipalKinds []string

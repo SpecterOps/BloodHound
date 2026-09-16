@@ -29,6 +29,7 @@ import (
 )
 
 func TestCreateFindingWithRemediation(t *testing.T) {
+
 	type args struct {
 		name                 string
 		displayName          string
@@ -157,6 +158,7 @@ func TestCreateFindingWithRemediation(t *testing.T) {
 }
 
 func TestUpdateFindingWithRemediation(t *testing.T) {
+
 	type args struct {
 		newDisplayName       string
 		newPZDisplayName     string

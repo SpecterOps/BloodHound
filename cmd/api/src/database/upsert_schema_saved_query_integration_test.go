@@ -118,6 +118,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 			}
 		}
 	)
+
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
