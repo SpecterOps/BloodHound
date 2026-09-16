@@ -31,6 +31,7 @@ import {
     CollectorJobProfile,
     CollectorJobSchedule,
     CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -381,6 +382,8 @@ export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobP
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
