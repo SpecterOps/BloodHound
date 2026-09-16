@@ -1283,7 +1283,9 @@ func renconcileZoneNodes(existingZoneNodes []*graph.Node, zones model.AssetGroup
 		if err != nil {
 			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
 			name, _ := zoneNode.Properties.GetOrDefault(common.Name.String(), "missing name").String()
-			slog.Warn("Zone node missing kind other than Zone", slog.String("id", zoneNode.ID.String()), slog.String("name", name))
+			slog.Warn("Zone node missing kind other than Zone",
+				slog.String("id", zoneNode.ID.String()),
+				slog.String("name", name))
 			continue
 		}
 
@@ -1396,10 +1398,13 @@ func reconcileMemberOfZoneEdges(existingEdges []*graph.Relationship, expectedMem
 	return edgeIDsToDelete, edgesToCreate
 }
 
-func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) error {
+/*
+Returns a set of expected memberships and a slice of existing MemberOfZone edges
+*/
+func getExpectedMembershipsAndExistingEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) (map[zoneMembership]struct{}, []*graph.Relationship, error) {
 	var (
-		existingEdges       []*graph.Relationship
 		expectedMemberships = make(map[zoneMembership]struct{})
+		existingEdges       []*graph.Relationship
 		err                 error
 	)
 
@@ -1414,7 +1419,7 @@ func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Databas
 
 			memberIDs, err := ops.FetchNodeIDs(tx.Nodes().Filter(query.And(
 				query.Kind(query.Node(), zoneKind),
-				query.Not(query.Kind(query.Node(), graphschema.Zone)),
+				query.Not(query.Kind(query.Node(), graphschema.Zone, graphschema.Meta)),
 			)))
 			if err != nil {
 				return err
@@ -1431,7 +1436,18 @@ func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Databas
 
 		return nil
 	}); err != nil {
-		return fmt.Errorf("read zone memberships: %w", err)
+		return nil, nil, fmt.Errorf("read zone memberships: %w", err)
+	}
+
+	return expectedMemberships, existingEdges, nil
+}
+
+func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) error {
+
+	expectedMemberships, existingEdges, err := getExpectedMembershipsAndExistingEdges(ctx, graphDB, zoneNodes)
+
+	if err != nil {
+		return err
 	}
 
 	edgeIDsToDelete, edgesToCreate := reconcileMemberOfZoneEdges(existingEdges, expectedMemberships)
