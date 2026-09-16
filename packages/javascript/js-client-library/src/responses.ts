@@ -525,7 +525,7 @@ export type UnifiedFinding = {
     first_seen: string;
     last_seen: string;
     prioritization_rank?: number | null;
-    is_cross_platform: boolean;
+    is_cross_platform?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
