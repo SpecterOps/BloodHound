@@ -579,7 +579,7 @@ func criticalFailureCases() []genericIngestAssertion {
 		{
 			name:            "no closing } on payload",
 			rawPayload:      `{"nodes": []`,
-			criticalErrMsgs: []string{"error decoding graph object: EOF"},
+			criticalErrMsgs: []string{"error decoding graph object: unexpected end of JSON input"},
 		},
 		{
 			name:            "nodes array is not opened properly with '['",
