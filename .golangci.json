@@ -18,6 +18,7 @@
       "errcheck"
     ],
     "enable": [
+      "integrationparallel",
       "revive",
       "sloglint",
       "staticcheck"
@@ -74,6 +75,12 @@
       ]
     },
     "settings": {
+      "custom": {
+        "integrationparallel": {
+          "description": "Disallow t.Parallel in integration tests.",
+          "type": "module"
+        }
+      },
       "staticcheck": {
         "checks": [
           "all",
@@ -106,6 +113,7 @@
   "run": {
     "build-tags": [
       "integration",
+      "slow_integration",
       "serial_integration"
     ]
   },
