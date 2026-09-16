@@ -1570,5 +1570,5 @@ func generateZoneNodesAndMemberEdges(ctx context.Context, db database.Database, 
 }
 
 func zoneNodeObjectID(zone model.AssetGroupTag) string {
-	return zoneNodeObjectIDPrefix + zone.Name
+	return zoneNodeObjectIDPrefix + strconv.Itoa(zone.ID)
 }
