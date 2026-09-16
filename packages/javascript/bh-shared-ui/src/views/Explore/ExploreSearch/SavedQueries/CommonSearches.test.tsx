@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { vi } from 'vitest';
+import { SavedQueriesContext } from '../../providers';
 import CommonSearches from './CommonSearches';
 
 const server = setupServer(
@@ -38,11 +39,48 @@ const server = setupServer(
                         query: 'match (n) return n limit 5',
                         name: 'me save a query 2',
                         id: 2,
+                        category: 'User Reports',
+                    },
+                    {
+                        user_id: '00000000-0000-0000-0000-000000000000',
+                        query: 'match (n:CustomAsset) return n',
+                        name: 'Find Custom Assets',
+                        description: 'Returns assets supplied by an OpenGraph extension',
+                        category: 'Asset Management',
+                        extension_id: 42,
+                        id: 3,
+                    },
+                    {
+                        user_id: 'abcdefgh',
+                        query: 'match (n:Other) return n',
+                        name: 'Find Other Assets',
+                        category: 'Asset Management',
+                        extension_id: 43,
+                        id: 4,
+                    },
+                    {
+                        user_id: 'abcdefgh',
+                        query: 'match (n:Other) return n',
+                        name: 'Find Uncategorized Assets',
+                        extension_id: 42,
+                        id: 5,
                     },
                 ],
             })
         );
     }),
+    rest.get('/api/v2/extensions', (_req, res, ctx) =>
+        res(
+            ctx.json({
+                data: {
+                    extensions: [
+                        { id: 42, name: 'Asset Explorer' },
+                        { id: 43, name: 'Other Extension' },
+                    ],
+                },
+            })
+        )
+    ),
     rest.delete('/api/v2/saved-queries/:id', (req, res, ctx) => {
         return res(ctx.status(201));
     }),
@@ -133,7 +171,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeVisible();
 
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(6);
 
         await user.click(ulElement.children[0]);
 
@@ -162,7 +200,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeVisible();
 
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(6);
 
         //select Azure
         await user.click(ulElement.children[2]);
@@ -194,7 +232,7 @@ describe('CommonSearches', () => {
         await user.click(testPlatforms);
         const testListBox = await screen.findByRole('listbox');
         const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(ulElement.children).toHaveLength(6);
 
         //select AD
         await user.click(ulElement.children[1]);
@@ -205,6 +243,112 @@ describe('CommonSearches', () => {
         //Axure query not present
         const adText = screen.queryByText(/All members of high privileged roles/i);
         expect(adText).toBeNull();
+    });
+
+    it('groups extension queries by category and filters them as an extension source', async () => {
+        const user = userEvent.setup();
+
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
+
+        expect(await screen.findByText('Find Custom Assets')).toBeInTheDocument();
+        expect(await screen.findByText('Asset Explorer')).toBeInTheDocument();
+        expect(screen.getAllByText('Asset Management')).toHaveLength(2);
+        expect(screen.getAllByText('Uncategorized')).toHaveLength(2);
+        expect(screen.getByText('Other Extension')).toBeInTheDocument();
+
+        await user.click(screen.getByLabelText('Source'));
+        await user.click(await screen.findByRole('option', { name: 'Extension' }));
+
+        expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+        expect(screen.queryByText(/all domain admins/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
+    });
+
+    it('filters extension platforms, limits categories to that platform, and clears incompatible selections', async () => {
+        const user = userEvent.setup();
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
+
+        expect(await screen.findByText('Find Custom Assets')).toBeInTheDocument();
+        await user.click(screen.getByLabelText('Platforms'));
+        await user.click(await screen.findByRole('option', { name: 'Asset Explorer' }));
+        expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+        expect(screen.getByText('Find Uncategorized Assets')).toBeInTheDocument();
+        expect(screen.queryByText('Find Other Assets')).not.toBeInTheDocument();
+        expect(screen.queryByText('me save a query 1')).not.toBeInTheDocument();
+
+        await user.click(screen.getByLabelText('Categories'));
+        expect(screen.getByRole('option', { name: 'Asset Management' })).toBeInTheDocument();
+        expect(screen.getByRole('option', { name: 'Uncategorized' })).toBeInTheDocument();
+        expect(screen.queryByRole('option', { name: 'User Reports' })).not.toBeInTheDocument();
+        await user.click(screen.getByRole('option', { name: 'Uncategorized' }));
+        expect(screen.getByText('Find Uncategorized Assets')).toBeInTheDocument();
+        expect(screen.queryByText('Find Custom Assets')).not.toBeInTheDocument();
+
+        await user.click(screen.getByLabelText('Platforms'));
+        await user.click(screen.getByRole('option', { name: 'Saved Queries' }));
+        expect(screen.getByText('me save a query 1')).toBeInTheDocument();
+        expect(screen.getByText('me save a query 2')).toBeInTheDocument();
+    });
+
+    it('prevents deleting selected extension queries', async () => {
+        const user = userEvent.setup();
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <SavedQueriesContext.Provider
+                    value={{
+                        selected: { query: 'match (n:CustomAsset) return n', id: 3 },
+                        selectedQuery: {
+                            id: 3,
+                            name: 'Find Custom Assets',
+                            description: '',
+                            query: 'match (n:CustomAsset) return n',
+                            schema_extension_id: 42,
+                            canEdit: true,
+                        },
+                        showSaveQueryDialog: false,
+                        saveAction: undefined,
+                        setSelected: vi.fn(),
+                        setShowSaveQueryDialog: vi.fn(),
+                        setSaveAction: vi.fn(),
+                        runQuery: vi.fn(),
+                        editQuery: vi.fn(),
+                    }}>
+                    <CommonSearches
+                        onSetCypherQuery={vi.fn()}
+                        onPerformCypherSearch={vi.fn()}
+                        onToggleCommonQueries={vi.fn()}
+                        showCommonQueries={true}
+                    />
+                </SavedQueriesContext.Provider>
+            </QueryClientProvider>
+        );
+
+        await user.click(await screen.findByText('Find Custom Assets'));
+        expect(screen.queryByRole('button', { name: 'delete' })).not.toBeInTheDocument();
+        expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
+        expect(
+            within(screen.getByTestId('list-sections')).getAllByRole('button', { name: /Extension-managed query/ })
+        ).toHaveLength(3);
+        await user.hover(screen.getByRole('button', { name: 'Extension-managed query: Find Custom Assets' }));
+        expect(await screen.findByRole('tooltip')).toHaveTextContent('managed by an extension');
     });
 
     //Toggle switch - test visibility

@@ -76,6 +76,8 @@ export type QueryLineItem = {
     query: string;
     canEdit?: boolean;
     user_id?: string;
+    category?: string;
+    schema_extension_id?: number | null;
 };
 
 export type QuerySearchType = {

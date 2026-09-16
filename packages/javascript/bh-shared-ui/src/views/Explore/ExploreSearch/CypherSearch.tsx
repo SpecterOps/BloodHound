@@ -242,7 +242,12 @@ const CypherSearchInner = ({
 
     const handleClickSave = () => {
         if (selectedQuery) {
-            if (selectedQuery.canEdit) {
+            if (selectedQuery.schema_extension_id != null) {
+                setMessageState({
+                    showMessage: true,
+                    message: 'This query is managed by an extension and cannot be updated. Save as a new query instead',
+                });
+            } else if (selectedQuery.canEdit) {
                 //save existing
                 setSelected({ query: cypherQuery, id: selectedQuery.id });
                 setSaveAction('edit');
