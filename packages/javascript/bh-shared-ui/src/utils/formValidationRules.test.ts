@@ -20,6 +20,66 @@ async function validate(value: string, rules: RegisterOptions<Values, 'value'>) 
 }
 
 describe('requiredRule', () => {
+    it.each([' value', 'value ', '   ', '\tvalue', 'value\n'])(
+        'rejects surrounding whitespace when enabled: %#',
+        async (value) => {
+            expect(
+                await validate(
+                    value,
+                    requiredRule('Key is required', {
+                        shouldRejectSurroundingWhitespace: true,
+                        label: 'Key',
+                    })
+                )
+            ).toBe('Key does not allow leading or trailing spaces');
+        }
+    );
+
+    it('preserves the required message for an empty value with whitespace validation enabled', async () => {
+        expect(
+            await validate(
+                '',
+                requiredRule('Key is required', {
+                    shouldRejectSurroundingWhitespace: true,
+                })
+            )
+        ).toBe('Key is required');
+    });
+
+    it('uses a default label when none is supplied', async () => {
+        expect(
+            await validate(
+                ' value ',
+                requiredRule('Required', {
+                    shouldRejectSurroundingWhitespace: true,
+                })
+            )
+        ).toBe('Field does not allow leading or trailing spaces');
+    });
+
+    it('allows interior spaces with whitespace validation enabled', async () => {
+        expect(
+            await validate(
+                'two words',
+                requiredRule('Required', {
+                    shouldRejectSurroundingWhitespace: true,
+                })
+            )
+        ).toBeUndefined();
+    });
+
+    it('preserves existing behavior when whitespace validation is omitted or disabled', async () => {
+        expect(await validate(' value ', requiredRule('Required'))).toBeUndefined();
+        expect(
+            await validate(
+                ' value ',
+                requiredRule('Required', {
+                    shouldRejectSurroundingWhitespace: false,
+                })
+            )
+        ).toBeUndefined();
+    });
+
     it('reports the supplied message for an empty value', async () => {
         expect(await validate('', requiredRule('Service is required'))).toBe('Service is required');
     });

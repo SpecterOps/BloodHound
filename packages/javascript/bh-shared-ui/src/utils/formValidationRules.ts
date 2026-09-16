@@ -15,11 +15,23 @@ function rejectSurroundingWhitespace(label: string) {
             : true;
 }
 
+type RequiredRuleOptions = {
+    shouldRejectSurroundingWhitespace?: boolean;
+    /** Label used in the whitespace validation message. Defaults to "Field". */
+    label?: string;
+};
+
 /** Shared required-field rule. See the note at the top of the file for info on why this is a function. */
 export function requiredRule<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>>(
-    message: string
+    message: string,
+    options?: RequiredRuleOptions
 ): RegisterOptions<TFieldValues, TName> {
-    return { required: message };
+    return {
+        required: message,
+        ...(options?.shouldRejectSurroundingWhitespace
+            ? { validate: rejectSurroundingWhitespace(options.label ?? 'Field') }
+            : {}),
+    };
 }
 
 type NameRulesOptions = {
