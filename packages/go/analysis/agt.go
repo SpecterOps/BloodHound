@@ -1175,6 +1175,8 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, tagErrs...)
 		}
 
+		// TODO: put this behind findings prioritization flag?
+		// Note: findings prioritization flag does not exist in BHCE, only BHE
 		if err := generateZoneNodesAndMemberEdges(ctx, db, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
