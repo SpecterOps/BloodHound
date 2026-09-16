@@ -110,10 +110,10 @@ func ConvertSiteToNode(item Site, ingestTime time.Time) IngestibleNode {
 
 // ConvertComputerToNode converts a Computer ingest item into an IngestibleNode,
 // mapping collected properties (WebClient, SMB signing, NTLM registry data) onto
-// the node's property map. Most NTLM registry values that are absent are cleared
-// to nil so stale values are not retained across ingests. The derived
-// RestrictOutboundNTLM property is different: a missing RestrictSendingNtlmTraffic
-// registry key maps to the Windows default (false) rather than nil.
+// the node's property map. Registry values that are absent are cleared to nil so
+// stale values are not retained across ingests, except for the derived
+// RestrictOutboundNTLM property: a missing RestrictSendingNtlmTraffic registry key
+// maps to the Windows default (false) rather than nil.
 func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
@@ -127,7 +127,6 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 
 	if item.NTLMRegistryData.Collected {
 		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
-		itemProps[ad.RestrictOutboundNTLM.String()] = nil
 		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
 		itemProps[ad.RequireSecuritySignature.String()] = nil
 		itemProps[ad.EnableSecuritySignature.String()] = nil
