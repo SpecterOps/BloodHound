@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ListItem, ListItemText } from '@mui/material';
-import { Typography } from 'doodle-ui';
+import { Tooltip, Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { cn } from '../../utils';
 import HighlightedText from '../HighlightedText';
@@ -43,7 +43,7 @@ const SearchResultItem: FC<{
             dense
             style={style}
             className={cn(
-                'group cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
+                'w-[584px] cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
                 {
                     'bg-secondary text-common-white dark:bg-secondary-variant-2 dark:text-common-dark':
                         highlightedIndex === index,
@@ -56,22 +56,36 @@ const SearchResultItem: FC<{
             <ListItemText
                 disableTypography
                 primary={
-                    <div className='flex items-start whitespace-nowrap'>
+                    <div className='flex items-center min-w-0'>
                         <NodeIcon nodeType={item.kind} />
-                        <div className='flex flex-col'>
-                            <HighlightedText text={item.label || item.objectId} search={keyword} />
+                        <div className='flex flex-col min-w-0 flex-1'>
+                            <Tooltip
+                                tooltip={item.label || item.objectId}
+                                contentProps={{
+                                    className: 'z-[1400] max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0',
+                                }}>
+                                <div className='truncate'>
+                                    <HighlightedText text={item.label || item.objectId} search={keyword} />
+                                </div>
+                            </Tooltip>
                             {showDistinguishedName && item.distinguishedName && (
-                                <Typography
-                                    variant='caption'
-                                    className={cn(
-                                        // TODO: Tokenize when available
-                                        'text-[#505050] dark:text-[#CDCDCD]',
-                                        {
-                                            'text-common-white dark:text-common-dark': highlightedIndex === index,
-                                        }
-                                    )}>
-                                    {item.distinguishedName}
-                                </Typography>
+                                <Tooltip
+                                    tooltip={item.distinguishedName}
+                                    contentProps={{
+                                        className: 'z-[1400] max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0',
+                                    }}>
+                                    <Typography
+                                        variant='caption'
+                                        className={cn(
+                                            // TODO: Tokenize when available
+                                            'truncate text-[#505050] dark:text-[#CDCDCD]',
+                                            {
+                                                'text-common-white dark:text-common-dark': highlightedIndex === index,
+                                            }
+                                        )}>
+                                        {item.distinguishedName}
+                                    </Typography>
+                                </Tooltip>
                             )}
                         </div>
                     </div>
