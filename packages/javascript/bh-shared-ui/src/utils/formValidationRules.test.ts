@@ -20,72 +20,41 @@ async function validate(value: string, rules: RegisterOptions<Values, 'value'>) 
 }
 
 describe('requiredRule', () => {
-    it.each([' value', 'value ', '   ', '\tvalue', 'value\n'])(
-        'rejects surrounding whitespace when enabled: %#',
+    it.each(['', '   ', '\t', '\n', ' \t\n '])(
+        'rejects blank strings when rejectSpaces is enabled: %#',
         async (value) => {
-            expect(
-                await validate(
-                    value,
-                    requiredRule('Key is required', {
-                        shouldRejectSurroundingWhitespace: true,
-                        label: 'Key',
-                    })
-                )
-            ).toBe('Key does not allow leading or trailing spaces');
+            expect(await validate(value, requiredRule('Key is required', { rejectSpaces: true }))).toBe(
+                'Key is required'
+            );
         }
     );
 
-    it('preserves the required message for an empty value with whitespace validation enabled', async () => {
-        expect(
-            await validate(
-                '',
-                requiredRule('Key is required', {
-                    shouldRejectSurroundingWhitespace: true,
-                })
-            )
-        ).toBe('Key is required');
-    });
+    it.each(['value', ' value', 'value ', 'two words', '\tvalue\n'])(
+        'accepts nonblank strings without trimming them: %#',
+        async (value) => {
+            expect(await validate(value, requiredRule('Key is required', { rejectSpaces: true }))).toBeUndefined();
+        }
+    );
 
-    it('uses a default label when none is supplied', async () => {
-        expect(
-            await validate(
-                ' value ',
-                requiredRule('Required', {
-                    shouldRejectSurroundingWhitespace: true,
-                })
-            )
-        ).toBe('Field does not allow leading or trailing spaces');
-    });
-
-    it('allows interior spaces with whitespace validation enabled', async () => {
-        expect(
-            await validate(
-                'two words',
-                requiredRule('Required', {
-                    shouldRejectSurroundingWhitespace: true,
-                })
-            )
-        ).toBeUndefined();
-    });
-
-    it('preserves existing behavior when whitespace validation is omitted or disabled', async () => {
-        expect(await validate(' value ', requiredRule('Required'))).toBeUndefined();
-        expect(
-            await validate(
-                ' value ',
-                requiredRule('Required', {
-                    shouldRejectSurroundingWhitespace: false,
-                })
-            )
-        ).toBeUndefined();
+    it('preserves existing behavior when rejectSpaces is omitted or disabled', async () => {
+        expect(await validate('   ', requiredRule('Required'))).toBeUndefined();
+        expect(await validate('   ', requiredRule('Required', { rejectSpaces: false }))).toBeUndefined();
     });
 
     it('reports the supplied message for an empty value', async () => {
         expect(await validate('', requiredRule('Service is required'))).toBe('Service is required');
     });
 
-    it('accepts a populated value', async () => {
-        expect(await validate('aws', requiredRule('Service is required'))).toBeUndefined();
+    it('does not apply string validation to other value types', async () => {
+        const { result } = renderHook(() => {
+            const form = useForm<{ count: number }>({ defaultValues: { count: 0 } });
+            form.register('count', requiredRule('Count is required', { rejectSpaces: true }));
+            return form;
+        });
+        await act(async () => {
+            await result.current.trigger('count');
+        });
+        expect(result.current.getFieldState('count').error).toBeUndefined();
     });
 });
 
