@@ -303,6 +303,7 @@ func assertGraphKinds(ctx context.Context, graphDB graph.Database, kinds graph.K
 }
 
 func TestReconcileZoneNode(t *testing.T) {
+	t.Parallel()
 	var (
 		suite     = setupIntegrationTestSuite(t)
 		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("11234567-9012-4567-9012-456789012345")}}
@@ -366,7 +367,7 @@ func TestReconcileZoneNode(t *testing.T) {
 		return nil
 	}))
 
-	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
+	assert.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 
 	zones, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
 	require.NoError(t, err)
@@ -377,36 +378,36 @@ func TestReconcileZoneNode(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		require.Len(t, zoneNodes, len(zones))
+		assert.Len(t, zoneNodes, len(zones))
 
 		zoneNodesByObjectID := make(map[string]*graph.Node, len(zoneNodes))
 		for _, zoneNode := range zoneNodes {
 			objectID, err := zoneNode.Properties.Get(common.ObjectID.String()).String()
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			zoneNodesByObjectID[objectID] = zoneNode
 		}
-		require.NotContains(t, zoneNodesByObjectID, "zone:2147483647")
-		require.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone))
+		assert.NotContains(t, zoneNodesByObjectID, "zone:2147483647")
+		assert.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone))
 
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), schema.MemberOfZone)))
 		if err != nil {
 			return err
 		}
 		for _, membership := range memberships {
-			require.NotEqual(t, staleMembershipID, membership.ID)
-			require.NotEqual(t, orphanedZoneNodeID, membership.EndID)
+			assert.NotEqual(t, staleMembershipID, membership.ID)
+			assert.NotEqual(t, orphanedZoneNodeID, membership.EndID)
 			if membership.EndID == existingZoneNode.ID {
-				require.Equal(t, member.ID, membership.StartID)
+				assert.Equal(t, member.ID, membership.StartID)
 				firstMembershipID = membership.ID
 			}
 		}
-		require.NotZero(t, firstMembershipID)
+		assert.NotZero(t, firstMembershipID)
 
 		return nil
 	}))
 
 	// A second reconciliation preserves the existing node and relationship.
-	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
+	assert.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
 			query.Kind(query.Relationship(), schema.MemberOfZone),
@@ -416,8 +417,9 @@ func TestReconcileZoneNode(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		require.Len(t, memberships, 1)
-		require.Equal(t, firstMembershipID, memberships[0].ID)
+		if assert.Len(t, memberships, 1) {
+			assert.Equal(t, firstMembershipID, memberships[0].ID)
+		}
 		return nil
 	}))
 
@@ -429,7 +431,7 @@ func TestReconcileZoneNode(t *testing.T) {
 		}
 		return tx.UpdateNode(staleMember)
 	}))
-	require.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
+	assert.NoError(t, generateZoneNodesAndMemberEdges(ctx, db, graphDB))
 	require.NoError(t, graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		memberships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
 			query.Kind(query.Relationship(), schema.MemberOfZone),
@@ -438,8 +440,9 @@ func TestReconcileZoneNode(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		require.Len(t, memberships, 1)
-		require.Equal(t, staleMember.ID, memberships[0].StartID)
+		if assert.Len(t, memberships, 1) {
+			assert.Equal(t, staleMember.ID, memberships[0].StartID)
+		}
 		return nil
 	}))
 }

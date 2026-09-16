@@ -1309,7 +1309,7 @@ func renconcileZoneNodes(existingZoneNodes []*graph.Node, zones model.AssetGroup
 }
 
 /*
-Returns a slice of nodes containing the zone nodes
+Returns a slice of nodes containing the zone nodes for the graph
 */
 func createAndDeleteZoneNodes(ctx context.Context, graphDB graph.Database, zones model.AssetGroupTags) ([]*graph.Node, error) {
 	var (
@@ -1357,11 +1357,11 @@ func createAndDeleteZoneNodes(ctx context.Context, graphDB graph.Database, zones
 /*
 Returns a slice of edge IDs to delete and a slice of zoneMemberships to create edges for
 */
-func reconcileMemberOfZoneEdges(existingEdges []*graph.Relationship, expectedMemberships map[zoneMembership]struct{}) ([]graph.ID, []zoneMembership) {
+func reconcileMemberOfZoneEdges(existingEdges []*graph.Relationship, expectedMemberships map[zoneMembership]struct{}) ([]graph.ID, []*graph.Relationship) {
 	var (
 		existingMembershipSet = make(map[zoneMembership]struct{}, len(existingEdges))
 		edgeIDsToDelete       []graph.ID
-		membershipsToCreate   []zoneMembership
+		edgesToCreate         []*graph.Relationship
 	)
 
 	for _, existingMembership := range existingEdges {
@@ -1382,11 +1382,17 @@ func reconcileMemberOfZoneEdges(existingEdges []*graph.Relationship, expectedMem
 
 	for membership := range expectedMemberships {
 		if _, found := existingMembershipSet[membership]; !found {
-			membershipsToCreate = append(membershipsToCreate, membership)
+			relationship := &graph.Relationship{
+				StartID:    membership.memberID,
+				EndID:      membership.zoneNodeID,
+				Kind:       graphschema.MemberOfZone,
+				Properties: graph.NewProperties(),
+			}
+			edgesToCreate = append(edgesToCreate, relationship)
 		}
 	}
 
-	return edgeIDsToDelete, membershipsToCreate
+	return edgeIDsToDelete, edgesToCreate
 }
 
 func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) error {
@@ -1427,9 +1433,9 @@ func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Databas
 		return fmt.Errorf("read zone memberships: %w", err)
 	}
 
-	edgeIDsToDelete, membershipsToCreate := reconcileMemberOfZoneEdges(existingEdges, expectedMemberships)
+	edgeIDsToDelete, edgesToCreate := reconcileMemberOfZoneEdges(existingEdges, expectedMemberships)
 
-	if len(edgeIDsToDelete) > 0 || len(membershipsToCreate) > 0 {
+	if len(edgeIDsToDelete) > 0 || len(edgesToCreate) > 0 {
 		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 			for _, membershipID := range edgeIDsToDelete {
 				if err := batch.DeleteRelationship(membershipID); err != nil {
@@ -1437,14 +1443,8 @@ func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Databas
 				}
 			}
 
-			for _, membership := range membershipsToCreate {
-				relationship := &graph.Relationship{
-					StartID:    membership.memberID,
-					EndID:      membership.zoneNodeID,
-					Kind:       graphschema.MemberOfZone,
-					Properties: graph.NewProperties(),
-				}
-				if err := batch.CreateRelationship(relationship); err != nil {
+			for _, edge := range edgesToCreate {
+				if err := batch.CreateRelationship(edge); err != nil {
 					return err
 				}
 			}
@@ -1458,7 +1458,7 @@ func createAndDeleteMemberOfZoneEdges(ctx context.Context, graphDB graph.Databas
 	slog.InfoContext(
 		ctx,
 		"AGT: Creating and deleting MemberOfZone edges",
-		slog.Int("member_of_zone_relationships_created", len(membershipsToCreate)),
+		slog.Int("member_of_zone_relationships_created", len(edgesToCreate)),
 		slog.Int("member_of_zone_relationships_deleted", len(edgeIDsToDelete)),
 	)
 
