@@ -18,12 +18,12 @@
         "./stubs": "./src/stubs/index.ts"
     },
     "devDependencies": {
-        "@axe-core/playwright": "^4.11.3",
+        "@axe-core/playwright": "^4.13.0",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
         "@playwright/test": "^1.59.1",
         "allure-playwright": "^3.4.3",
-        "axe-core": "^4.11.4",
+        "axe-core": "^4.13.0",
         "dotenv": "^17.4.2",
         "eslint": "^9.26.0",
         "eslint-config-prettier": "^9.1.0",

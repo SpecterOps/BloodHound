@@ -80,7 +80,7 @@ const main = async () => {
     root.render(
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                <ReactQueryDevtools position='bottom-right' />
+                {import.meta.env.MODE !== 'playwright' && <ReactQueryDevtools position='bottom-right' />}
                 <StyledEngineProvider injectFirst>
                     <App />
                 </StyledEngineProvider>

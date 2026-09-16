@@ -26,6 +26,11 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
+    CollectorJobSecret,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -365,8 +370,31 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
+// ---------------------------------------------------------------------------
+//  Collectors - Clients
+// ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Support Bundles (Management Operations)
+// ---------------------------------------------------------------------------
 export enum ManagementOperationStatus {
     QUEUED = 'queued',
     RUNNING = 'running',
@@ -407,6 +435,7 @@ export type SupportBundleDownloadURLResponse = BasicResponse<{
     file_name: string;
     size: number;
 }>;
+// ---------------------------------------------------------------------------
 
 export type EdgeType = {
     id: number;
@@ -473,6 +502,8 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+
 export type UnifiedFinding = {
     id: number;
     severity: string;
@@ -490,7 +521,7 @@ export type UnifiedFinding = {
     target_principal_id: string;
     target_principal_name: string;
     target_principal_kind: string;
-    status: string;
+    status: FindingStatus;
     first_seen: string;
     last_seen: string;
     prioritization_rank?: number | null;
@@ -533,6 +564,7 @@ export type CreateAlertResponse = BasicResponse<AlertPayload>;
 export type UpdateAlertResponse = BasicResponse<AlertPayload>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 
@@ -545,3 +577,6 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;
