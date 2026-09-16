@@ -1,0 +1,111 @@
+name: Image Signing
+
+on:
+  workflow_call:
+    inputs:
+      dockerhub_image_reference:
+        type: string
+        required: true
+        description: >
+          The full reference to the Docker image that needs to be signed,
+          including registry, repository name, and tag/digest (e.g.
+          'organization/image:tag'). This image must already exist in DockerHub
+          and be accessible with the provided credentials.
+    secrets:
+      gh_access_token:
+        required: true
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sign-image:
+    name: Sign Image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: cli
+          - target: enterprise
+    permissions:
+      id-token: write
+    env:
+      COSIGN_YES: "true"
+      DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+      DOCKER_REPOSITORY: ${{ var.DOCKER_REPOSITORY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v4.1.1
+
+      - name: Download Digest Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-digest-${{ matrix.target }}
+          path: ${{ runner.temp }}
+
+      - name: Read Digest
+        id: digest
+        run: |
+          DIGEST="$(cat "${{ runner.temp }}/digest-${{ matrix.target }}.txt")"
+          DIGEST_REF="${}/${}@${DIGEST}"
+          echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Registry
+        run: |
+          echo "$DOCKER_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" --password-stdin
+
+      - name: Sign Image with Cosign Keyless
+        run: |
+          cosign sign --yes "${{ step.digest.outputs.digest_ref }}"
+
+  verify-docker-image-trust:
+    name: Verify Published Image Signature (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    needs:
+      - sign-docker-image
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: cli
+          - target: enterprise
+    env:
+      DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+      DOCKER_REPOSITORY: ${{ vars.DOCKER_REPOSITORY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v4.1.1
+
+      - name: Download Digest Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-digest-${{ matrix.target }}
+          path: ${{ runner.temp }}
+
+      - name: Read Digest
+        id: digest
+        run: |
+          DIGEST="$(cat "${{ runner.temp }}/digest-${{ matrix.target }}.txt")"
+          DIGEST_REF="${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}@${DIGEST}"
+          echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Registry
+        run: |
+          echo "$DOCKER_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" --password-stdin
+
+      - name: Verify Fulcio Keyless Signature
+        run: |
+          cosign verify "${{ steps.digest.outputs.digest_ref }}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/.*"
