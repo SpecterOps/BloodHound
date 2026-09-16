@@ -70,7 +70,30 @@ func TestGetZoneKind(t *testing.T) {
 	}
 }
 
-func TestRenconcileZoneNodes(t *testing.T) {
+func TestZoneNodePropertiesMatch(t *testing.T) {
+	var (
+		zone = model.AssetGroupTag{
+			ID:   1,
+			Name: "Zone",
+		}
+		zoneNode = graph.NewNode(101, graph.AsProperties(graph.PropertyMap{
+			common.Name:                     zone.Name,
+			common.DisplayName:              zone.Name,
+			common.ObjectID:                 zoneNodeObjectID(zone),
+			zoneNodeZoneProperty:            zone.ToKind().String(),
+			zoneNodeAssetGroupTagIDProperty: zone.ID,
+		}), graphschema.Zone)
+	)
+
+	t.Parallel()
+
+	assert.True(t, zoneNodePropertiesMatch(zoneNode, zone))
+
+	zoneNode.Properties.Set(common.Name.String(), "Stale Zone Name")
+	assert.False(t, zoneNodePropertiesMatch(zoneNode, zone))
+}
+
+func TestIdentifyZoneNodeChanges(t *testing.T) {
 	var (
 		existingZone = model.AssetGroupTag{
 			ID:   1,
@@ -80,39 +103,59 @@ func TestRenconcileZoneNodes(t *testing.T) {
 			ID:   2,
 			Name: "Missing Zone",
 		}
-		zones = model.AssetGroupTags{existingZone, missingZone}
+		renamedZone = model.AssetGroupTag{
+			ID:   3,
+			Name: "Renamed Zone",
+		}
+		zones = model.AssetGroupTags{existingZone, missingZone, renamedZone}
 
 		existingZoneNode = graph.NewNode(101, graph.AsProperties(graph.PropertyMap{
-			zoneNodeZoneProperty: existingZone.ToKind().String(),
+			common.Name:                     existingZone.Name,
+			common.DisplayName:              existingZone.Name,
+			common.ObjectID:                 zoneNodeObjectID(existingZone),
+			zoneNodeZoneProperty:            existingZone.ToKind().String(),
+			zoneNodeAssetGroupTagIDProperty: existingZone.ID,
 		}), graphschema.Zone)
 		duplicateZoneNode = graph.NewNode(102, graph.AsProperties(graph.PropertyMap{
-			zoneNodeZoneProperty: existingZone.ToKind().String(),
+			zoneNodeAssetGroupTagIDProperty: existingZone.ID,
 		}), graphschema.Zone)
 		orphanedZoneNode = graph.NewNode(103, graph.AsProperties(graph.PropertyMap{
-			zoneNodeZoneProperty: "Tag_Orphaned_Zone",
+			zoneNodeAssetGroupTagIDProperty: 4,
 		}), graphschema.Zone)
-		invalidZoneNode   = graph.NewNode(104, graph.NewProperties(), graphschema.Zone)
+		invalidZoneNode = graph.NewNode(104, graph.NewProperties(), graphschema.Zone)
+		renamedZoneNode = graph.NewNode(105, graph.AsProperties(graph.PropertyMap{
+			common.Name:                     "Old Zone Name",
+			common.DisplayName:              "Old Zone Name",
+			common.ObjectID:                 "zone:Old Zone Name",
+			zoneNodeZoneProperty:            "Tag_Old_Zone_Name",
+			zoneNodeAssetGroupTagIDProperty: renamedZone.ID,
+		}), graphschema.Zone)
 		existingZoneNodes = []*graph.Node{
 			existingZoneNode,
 			duplicateZoneNode,
 			orphanedZoneNode,
 			invalidZoneNode,
+			renamedZoneNode,
 		}
 	)
 
 	t.Parallel()
 
-	zoneNodeIDsToDelete, zoneNodesToCreate := renconcileZoneNodes(existingZoneNodes, zones)
+	zoneNodeIDsToDelete, zoneNodesToCreate, zoneNodesToUpdate := identifyZoneNodeChanges(existingZoneNodes, zones)
 
 	assert.Equal(t, []graph.ID{duplicateZoneNode.ID, orphanedZoneNode.ID, invalidZoneNode.ID}, zoneNodeIDsToDelete)
 	if assert.Len(t, zoneNodesToCreate, 1) {
 		expectedZoneNode := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.Name:          missingZone.Name,
-			common.DisplayName:   missingZone.Name,
-			common.ObjectID:      zoneNodeObjectID(missingZone),
-			zoneNodeZoneProperty: missingZone.ToKind().String(),
+			common.Name:                     missingZone.Name,
+			common.DisplayName:              missingZone.Name,
+			common.ObjectID:                 zoneNodeObjectID(missingZone),
+			zoneNodeZoneProperty:            missingZone.ToKind().String(),
+			zoneNodeAssetGroupTagIDProperty: missingZone.ID,
 		}), graphschema.Zone)
 		assert.Equal(t, expectedZoneNode, zoneNodesToCreate[0])
+	}
+	if assert.Equal(t, []*graph.Node{renamedZoneNode}, zoneNodesToUpdate) {
+		assert.True(t, zoneNodePropertiesMatch(zoneNodesToUpdate[0], renamedZone))
 	}
 }
 
@@ -137,7 +180,7 @@ func TestReconcileMemberOfZoneEdges(t *testing.T) {
 
 	t.Parallel()
 
-	edgeIDsToDelete, edgesToCreate := reconcileMemberOfZoneEdges(existingEdges, expectedMemberships)
+	edgeIDsToDelete, edgesToCreate := identifyMemberOfZoneEdgeChanges(existingEdges, expectedMemberships)
 
 	assert.Equal(t, []graph.ID{duplicateEdge.ID, unexpectedEdge.ID}, edgeIDsToDelete)
 	if assert.Len(t, edgesToCreate, 1) {

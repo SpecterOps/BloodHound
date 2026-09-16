@@ -20,6 +20,7 @@ package analysis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
@@ -89,6 +91,36 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	}
 }
 
+func (s *IntegrationTestSuite) enableFeatureFlag(t *testing.T, key string) {
+	t.Helper()
+
+	featureFlag, err := s.BHDatabase.GetFlagByKey(s.Context, key)
+	require.NoError(t, err)
+
+	featureFlag.Enabled = true
+	require.NoError(t, s.BHDatabase.SetFlag(s.Context, featureFlag))
+}
+
+// createFeatureFlag is a feature flag utility used to create feature flags
+// that don't exist in the BH Database.
+func (s *IntegrationTestSuite) createFeatureFlag(t *testing.T, key string) {
+	t.Helper()
+
+	if _, err := s.BHDatabase.GetFlagByKey(s.Context, key); err == nil {
+		return
+	} else if !errors.Is(err, database.ErrNotFound) {
+		require.NoError(t, err)
+	}
+
+	flag := appcfg.FeatureFlag{
+		Key:           key,
+		Name:          key,
+		Description:   "Integration test feature flag",
+		UserUpdatable: false,
+	}
+	require.NoError(t, s.BHDatabase.SetFlag(s.Context, flag))
+}
+
 // getPostgresConfig reads key/value pairs from the default integration
 // config file and creates a pgtestdb configuration object.
 func getPostgresConfig(t *testing.T) pgtestdb.Config {
@@ -131,13 +163,13 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
+func (s *IntegrationTestSuite) teardownIntegrationTestSuite(t *testing.T) {
 	t.Helper()
 
-	if suite.GraphDB != nil {
-		suite.GraphDB.Close(suite.Context)
+	if s.GraphDB != nil {
+		s.GraphDB.Close(s.Context)
 	}
-	if suite.BHDatabase != nil {
-		suite.BHDatabase.Close(suite.Context)
+	if s.BHDatabase != nil {
+		s.BHDatabase.Close(s.Context)
 	}
 }

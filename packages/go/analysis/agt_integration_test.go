@@ -302,19 +302,19 @@ func assertGraphKinds(ctx context.Context, graphDB graph.Database, kinds graph.K
 	return err
 }
 
-func TestReconcileZoneNode(t *testing.T) {
+func TestGenerateZoneNodesAndMemberEdges(t *testing.T) {
 	t.Parallel()
 	var (
 		suite     = setupIntegrationTestSuite(t)
 		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("11234567-9012-4567-9012-456789012345")}}
+		ctx       = suite.Context
+		db        = suite.BHDatabase
+		graphDB   = suite.GraphDB
 	)
-	defer teardownIntegrationTestSuite(t, &suite)
+	defer suite.teardownIntegrationTestSuite(t)
 
-	var (
-		ctx     = suite.Context
-		db      = suite.BHDatabase
-		graphDB = suite.GraphDB
-	)
+	suite.createFeatureFlag(t, appcfg.FeatureFindingsPrioritizationV0)
+	suite.enableFeatureFlag(t, appcfg.FeatureFindingsPrioritizationV0)
 
 	populatedZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile populated zone", "", null.Int32From(2), null.Bool{}, null.String{})
 	require.NoError(t, err)
@@ -344,10 +344,11 @@ func TestReconcileZoneNode(t *testing.T) {
 			return err
 		}
 		if existingZoneNode, err = tx.CreateNode(graph.AsProperties(graph.PropertyMap{
-			common.Name:          populatedZone.Name,
-			common.DisplayName:   populatedZone.Name,
-			common.ObjectID:      zoneNodeObjectID(populatedZone),
-			zoneNodeZoneProperty: populatedZone.ToKind().String(),
+			common.Name:                     "stale zone name",
+			common.DisplayName:              "stale zone name",
+			common.ObjectID:                 "zone:stale zone name",
+			zoneNodeZoneProperty:            "Tag_stale_zone_name",
+			zoneNodeAssetGroupTagIDProperty: populatedZone.ID,
 		}), schema.Zone); err != nil {
 			return err
 		}
@@ -389,8 +390,13 @@ func TestReconcileZoneNode(t *testing.T) {
 		}
 		assert.NotContains(t, zoneNodesByObjectID, "zone:2147483647")
 		assert.Contains(t, zoneNodesByObjectID, zoneNodeObjectID(emptyZone))
-		assert.Equal(t, populatedZone.ToKind().String(), existingZoneNode.Properties.Get(zoneNodeZoneProperty.String()).Any())
-		assert.Equal(t, graph.Kinds{schema.Zone}, existingZoneNode.Kinds)
+		if updatedZoneNode, found := zoneNodesByObjectID[zoneNodeObjectID(populatedZone)]; assert.True(t, found) {
+			assert.Equal(t, existingZoneNode.ID, updatedZoneNode.ID)
+			assert.Equal(t, populatedZone.Name, updatedZoneNode.Properties.Get(common.Name.String()).Any())
+			assert.Equal(t, populatedZone.Name, updatedZoneNode.Properties.Get(common.DisplayName.String()).Any())
+			assert.Equal(t, populatedZone.ToKind().String(), updatedZoneNode.Properties.Get(zoneNodeZoneProperty.String()).Any())
+			assert.Equal(t, graph.Kinds{schema.Zone}, updatedZoneNode.Kinds)
+		}
 		assert.Equal(t, emptyZone.ToKind().String(), zoneNodesByObjectID[zoneNodeObjectID(emptyZone)].Properties.Get(zoneNodeZoneProperty.String()).Any())
 		assert.Equal(t, graph.Kinds{schema.Zone}, zoneNodesByObjectID[zoneNodeObjectID(emptyZone)].Kinds)
 
@@ -456,7 +462,7 @@ func TestReconcileZoneNode(t *testing.T) {
 // and guards against regressions
 func TestTagAssetGroupNodesForTag(t *testing.T) {
 	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	defer suite.teardownIntegrationTestSuite(t)
 
 	var (
 		testCtx   = suite.Context
@@ -684,7 +690,7 @@ func TestTagAssetGroupNodesForTag(t *testing.T) {
 
 func TestSelectNodes(t *testing.T) {
 	suite := setupIntegrationTestSuite(t)
-	defer teardownIntegrationTestSuite(t, &suite)
+	defer suite.teardownIntegrationTestSuite(t)
 
 	var (
 		testCtx       = suite.Context

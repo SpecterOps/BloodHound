@@ -128,6 +128,10 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureTierManagement)
 }
 
+func GetPrioritizationEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureFindingsPrioritizationV0)
+}
+
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
 func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
