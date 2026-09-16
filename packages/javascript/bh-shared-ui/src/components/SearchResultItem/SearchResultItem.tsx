@@ -43,7 +43,7 @@ const SearchResultItem: FC<{
             dense
             style={style}
             className={cn(
-                'w-[584px] cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
+                'group w-[584px] cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
                 {
                     'bg-secondary text-common-white dark:bg-secondary-variant-2 dark:text-common-dark':
                         highlightedIndex === index,
@@ -62,7 +62,8 @@ const SearchResultItem: FC<{
                             <Tooltip
                                 tooltip={item.label || item.objectId}
                                 contentProps={{
-                                    className: 'z-[1400] max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0',
+                                    className:
+                                        'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
                                 }}>
                                 <div className='truncate'>
                                     <HighlightedText text={item.label || item.objectId} search={keyword} />
@@ -72,13 +73,14 @@ const SearchResultItem: FC<{
                                 <Tooltip
                                     tooltip={item.distinguishedName}
                                     contentProps={{
-                                        className: 'z-[1400] max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0',
+                                        className:
+                                            'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
                                     }}>
                                     <Typography
                                         variant='caption'
                                         className={cn(
                                             // TODO: Tokenize when available
-                                            'truncate text-[#505050] dark:text-[#CDCDCD]',
+                                            'truncate text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
                                             {
                                                 'text-common-white dark:text-common-dark': highlightedIndex === index,
                                             }
