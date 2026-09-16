@@ -1537,6 +1537,15 @@ func TestPZRulesInputValidate(t *testing.T) {
 			}},
 			wantErr: "must be of cypher type",
 		},
+		{
+			name: "error_-_invalid_cypher_seed",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "TEST_rule",
+				Name:            "Rule",
+				Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n RETURN n"}},
+			}},
+			wantErr: "contains invalid Cypher seed",
+		},
 	}
 
 	for _, testCase := range tests {

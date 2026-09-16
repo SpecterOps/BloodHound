@@ -629,6 +629,7 @@ func (s GraphExtensionInput) Validate() error {
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
 
+	// PZ Rules and Saved Query Validation
 	if err := s.PZRulesInput.Validate(s.ExtensionInput.Namespace); err != nil {
 		return err
 	} else if err := s.SavedQueriesInput.Validate(); err != nil {
@@ -646,27 +647,23 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	for _, rule := range s {
 		if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found || strings.TrimSpace(ruleKey) == "" {
 			return fmt.Errorf("privilege zone rule requires a 'key' value")
-		}
-		if strings.TrimSpace(rule.Name) == "" {
+		} else if strings.TrimSpace(rule.Name) == "" {
 			return fmt.Errorf("privilege zone rule name is required")
-		}
-		if _, ok := ruleNames[rule.Name]; ok {
+		} else if _, ok := ruleNames[rule.Name]; ok {
 			return fmt.Errorf("duplicate privilege zone rule name: %s", rule.Name)
-		}
-		if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
+		} else if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
 			return fmt.Errorf("duplicate privilege zone rule key: %s", rule.ExtensionRuleId)
-		}
-		if len(rule.Seeds) != 1 {
+		} else if len(rule.Seeds) != 1 {
 			return fmt.Errorf("privilege zone rule %s requires exactly one seed", rule.Name)
 		}
 
 		seed := rule.Seeds[0]
 		if strings.TrimSpace(seed.Value) == "" {
 			return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
-		}
-		// Only Cypher selector types are valid for extension creation
-		if seed.Type != SelectorTypeCypher {
+		} else if seed.Type != SelectorTypeCypher {
 			return fmt.Errorf("privilege zone rule %s must be of cypher type", rule.Name)
+		} else if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), seed.Value); err != nil {
+			return fmt.Errorf("privilege zone rule %s contains invalid Cypher seed: %w", rule.Name, err)
 		}
 		ruleNames[rule.Name] = struct{}{}
 		ruleIds[rule.ExtensionRuleId] = struct{}{}
