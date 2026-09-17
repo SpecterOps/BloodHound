@@ -24,6 +24,7 @@ import {
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateCollectorJobProfileRequest,
+    CreateCollectorJobScheduleRequest,
     CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
@@ -49,6 +50,7 @@ import {
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
     UpdateCollectorJobProfileRequest,
+    UpdateCollectorJobScheduleRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -80,6 +82,7 @@ import {
     CollectorJobProfileResponse,
     CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobScheduleResponse,
     CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
@@ -134,6 +137,7 @@ import {
     StartFileIngestResponse,
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
+    UpdateCollectorJobScheduleResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
@@ -828,6 +832,20 @@ class BHEAPIClient {
 
     getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+
+    updateCollectorJobSchedule = (
+        scheduleId: number,
+        request: UpdateCollectorJobScheduleRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
+            `/api/v2/collector-job-schedules/${scheduleId}`,
+            request,
+            options
+        );
 
     deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
@@ -1990,6 +2008,21 @@ class BHEAPIClient {
             )
         );
 
+    getGPOSitesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/gpos/${id}/sites`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getGPOControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/controllers`,
@@ -2753,6 +2786,102 @@ class BHEAPIClient {
                         skip,
                         limit,
                         type,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/linked-gpos`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedServersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/siteservers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedSubnetsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/sitesubnets`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteServerV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/siteservers/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteSubnetV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sitesubnets/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
                     },
                 },
                 options

@@ -31,8 +31,6 @@ func TestGetZoneKind(t *testing.T) {
 		zoneKind = graph.StringKind("Zone_Test")
 	)
 
-	t.Parallel()
-
 	testCases := []struct {
 		name          string
 		zoneNode      *graph.Node
