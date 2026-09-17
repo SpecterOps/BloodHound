@@ -25,7 +25,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
@@ -146,4 +149,233 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandlers_GetApplicationConfiguration(t *testing.T) {
+	newRequest := func(t *testing.T) *http.Request {
+		t.Helper()
+
+		req, err := http.NewRequest(http.MethodGet, "/api/v2/config", nil)
+		require.NoError(t, err)
+		return req
+	}
+
+	fixtureValue1, err := types.NewJSONBObject(map[string]any{"count": float64(52)})
+	assert.NoError(t, err)
+	fixtureValue2, err := types.NewJSONBObject(map[string]any{"name": "bestiest pond"})
+	assert.NoError(t, err)
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		fixture1      = services.Parameter{
+			ID:          1,
+			Key:         "pond.lilypads",
+			Name:        "Pond lily pad count",
+			Description: "Number of lily pads allocated to pond",
+			Value:       fixtureValue1,
+		}
+		fixture2 = services.Parameter{
+			ID:          2,
+			Key:         "pond.name",
+			Name:        "name of pond",
+			Description: "The name of this pond",
+			Value:       fixtureValue2,
+		}
+	)
+
+	type happyEnvelope struct {
+		Data handlers.ParameterListView `json:"data"`
+	}
+
+	type errorEnvelope struct {
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	t.Run("Get all params returns 200", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		mockSvc.EXPECT().
+			GetAllApplicationConfigurations(req.Context()).
+			Return(services.Parameters{fixture1, fixture2}, nil).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var envelope = happyEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		require.Len(t, envelope.Data, 2)
+
+		assert.Equal(t, fixture1.Key, envelope.Data[0].Key)
+		assert.Equal(t, int(fixture1.ID), int(envelope.Data[0].ID))
+		assert.Equal(t, fixture1.Name, envelope.Data[0].Name)
+		assert.Equal(t, fixture1.Description, envelope.Data[0].Description)
+		assert.Equal(t, fixture1.Value, envelope.Data[0].Value)
+	})
+
+	t.Run("Get all params returns 500 on unexpected database error", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		mockSvc.EXPECT().
+			GetAllApplicationConfigurations(req.Context()).
+			Return(nil, unexpectedErr).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 200 querying a single param", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixture1.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			GetApplicationConfiguration(req.Context(), services.ParameterKey(filter.Value)).
+			Return(fixture1, nil).
+			Once()
+		mockSvc.EXPECT().
+			IsValidKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			IsProtectedKey(services.ParameterKey(filter.Value)).
+			Return(false).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var envelope = happyEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		require.Len(t, envelope.Data, 1)
+
+		assert.Equal(t, fixture1.Key, envelope.Data[0].Key)
+		assert.Equal(t, int(fixture1.ID), int(envelope.Data[0].ID))
+		assert.Equal(t, fixture1.Name, envelope.Data[0].Name)
+		assert.Equal(t, fixture1.Description, envelope.Data[0].Description)
+		assert.Equal(t, fixture1.Value, envelope.Data[0].Value)
+	})
+
+	t.Run("returns 400 querying a single protected param", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixture1.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			IsValidKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			IsProtectedKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 400 querying a param that doesn't exist", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixture1.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			IsValidKey(services.ParameterKey(filter.Value)).
+			Return(false).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("get single param returns 500 on unexpected error", func(t *testing.T) {
+		var (
+			mockSvc = mocks.NewMockService(t)
+			h       = handlers.NewHandlers(mockSvc)
+			rr      = httptest.NewRecorder()
+			req     = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixture1.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			GetApplicationConfiguration(req.Context(), services.ParameterKey(filter.Value)).
+			Return(services.Parameter{}, unexpectedErr).
+			Once()
+		mockSvc.EXPECT().
+			IsValidKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			IsProtectedKey(services.ParameterKey(filter.Value)).
+			Return(false).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
 }
