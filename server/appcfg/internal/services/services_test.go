@@ -174,7 +174,7 @@ func TestService_GetConfig(t *testing.T) {
 			"after_boot":           true,
 			"min_interval_seconds": 8000,
 		})
-		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
+		parameterVal, err := service.GetConfig[fixtureParam1](ctx, fixtureKey1)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.AfterBoot)
@@ -190,7 +190,7 @@ func TestService_GetConfig(t *testing.T) {
 			"after_analysis":       true,
 			"min_interval_seconds": -10,
 		})
-		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
+		parameterVal, err := service.GetConfig[fixtureParam1](ctx, fixtureKey1)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.AfterBoot)
@@ -205,7 +205,7 @@ func TestService_GetConfig(t *testing.T) {
 		mockDB.EXPECT().GetConfigurationParameter(ctx, fixtureKey1).Return(services.Parameter{}, ErrDB)
 		service := services.NewService(mockDB)
 
-		parameterVal, err := services.GetConfig[fixtureParam1](ctx, service, fixtureKey1)
+		parameterVal, err := service.GetConfig[fixtureParam1](ctx, fixtureKey1)
 
 		var getConfigError = services.GetConfigError{}
 		require.Error(t, err)
@@ -224,7 +224,7 @@ func TestService_GetConfig(t *testing.T) {
 			"enabled":     true,
 			"session_ttl": "P10D",
 		})
-		parameterVal, err := services.GetConfig[fixtureParam2](ctx, service, fixtureKey2)
+		parameterVal, err := service.GetConfig[fixtureParam2](ctx, fixtureKey2)
 
 		require.NoError(t, err)
 		assert.True(t, parameterVal.Enabled)
@@ -237,7 +237,7 @@ func TestService_GetConfig(t *testing.T) {
 		)
 		mockDB := mocks.NewMockDatabase(t)
 		service := services.NewService(mockDB)
-		_, err := services.GetConfig[fixtureParam2](ctx, service, fixtureKey1)
+		_, err := service.GetConfig[fixtureParam2](ctx, fixtureKey1)
 
 		require.Error(t, err)
 		var getConfigError = services.GetConfigError{}

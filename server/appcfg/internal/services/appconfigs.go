@@ -87,8 +87,7 @@ func (s GetConfigError) slogWarn(ctx context.Context) {
 // or of the wrong type.
 // If any other fetch problem happens, GetConfig logs a warning and returns the
 // parameter's default value and a GetConfigError.
-// Note once we update to Go 1.27 this can have a Service receiver
-func GetConfig[ParamType any](ctx context.Context, s *Service, key ParameterKey) (ParamType, error) {
+func (s *Service) GetConfig[ParamType any](ctx context.Context, key ParameterKey) (ParamType, error) {
 	var result ParamType
 
 	paramDefinition, ok := getParamTypeHydrationRules[ParamType](key)
