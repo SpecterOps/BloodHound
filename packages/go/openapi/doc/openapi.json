@@ -26408,6 +26408,15 @@
               },
               "description": {
                 "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "category": {
+                "type": "string",
+                "readOnly": true
               }
             }
           }
