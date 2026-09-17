@@ -93,8 +93,8 @@ func (s *ISODuration) UnmarshalJSON(b []byte) error {
 
 //   - AllowAPIAccess: determines whether http API get/set operations
 //     will be allowed on this key
-//   - HydrationRules: generic to an individual param type, and determine
-//     how the param is read from the DB:
+//   - HydrationRules: generic to an individual param type, and determines
+//     how the param is read from the DB
 type ParamTypeDefinition struct {
 	AllowAPIAccess bool // framed such that default value is false = protected
 	HydrationRules any
@@ -104,10 +104,10 @@ type ParamTypeDefinition struct {
 //   - Default: the value applied when the DB has no value, an incorrect
 //     value type, or encounters an error
 //   - Normalize: an optional function to alter the received value to (for
-//     instance) correct an out-of-bounds value.
+//     instance) correct an out-of-bounds value
 type ParamTypeHydrationRules[ParamType any] struct {
-	Normalize func(*ParamType)
 	Default   ParamType
+	Normalize func(*ParamType)
 }
 
 var (
