@@ -119,7 +119,7 @@ func GetConfig[ParamType any](ctx context.Context, s *Service, key ParameterKey)
 			AppliedDefault: true,
 		}
 		getConfigErr.slogWarn(ctx)
-		return result, getConfigErr
+		return paramDefinition.Default, getConfigErr
 	}
 
 	if paramDefinition.Normalize != nil {
