@@ -115,7 +115,7 @@ func assertExtensionPZRules(t *testing.T, testSuite IntegrationTestSuite, extens
 		if !expectedPZRule.Enabled {
 			assert.Equal(t, model.AssetGroupActorOpenGraphExtensionManagement, selector.DisabledBy.String)
 		}
-		assert.Len(t, selector.Seeds, len(expectedPZRule.Seeds))
+		require.Len(t, selector.Seeds, len(expectedPZRule.Seeds))
 		for index, expectedSeed := range expectedPZRule.Seeds {
 			assert.Equal(t, expectedSeed.Type, selector.Seeds[index].Type)
 			assert.Equal(t, expectedSeed.Value, selector.Seeds[index].Value)
