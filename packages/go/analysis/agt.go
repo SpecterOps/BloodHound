@@ -1301,12 +1301,20 @@ func zoneNodePropertiesMatch(zoneNode *graph.Node, zone model.AssetGroupTag) boo
 	}
 }
 
-func setZoneNodeProperties(zoneNode *graph.Node, zone model.AssetGroupTag) {
-	zoneNode.Properties.Set(common.Name.String(), zone.Name)
-	zoneNode.Properties.Set(common.DisplayName.String(), zone.Name)
-	zoneNode.Properties.Set(common.ObjectID.String(), zoneNodeObjectID(zone))
-	zoneNode.Properties.Set(zoneNodeZoneProperty.String(), zone.ToKind().String())
-	zoneNode.Properties.Set(zoneNodeAssetGroupTagIDProperty.String(), zone.ID)
+func zoneNodePropertyMap(zone model.AssetGroupTag) graph.PropertyMap {
+	return graph.PropertyMap{
+		common.Name:                     zone.Name,
+		common.DisplayName:              zone.Name,
+		common.ObjectID:                 zoneNodeObjectID(zone),
+		zoneNodeZoneProperty:            zone.ToKind().String(),
+		zoneNodeAssetGroupTagIDProperty: zone.ID,
+	}
+}
+
+func updateZoneNodeProperties(zoneNode *graph.Node, zone model.AssetGroupTag) {
+	for propertyName, propertyValue := range zoneNodePropertyMap(zone) {
+		zoneNode.Properties.Set(propertyName.String(), propertyValue)
+	}
 }
 
 // identifyZoneNodeChanges returns the zone node IDs to delete and the zone nodes to create or update.
@@ -1350,12 +1358,10 @@ func identifyZoneNodeChanges(existingZoneNodes []*graph.Node, zones model.AssetG
 
 	for _, zone := range zones {
 		if zoneNode, found := zoneNodesByTagID[zone.ID]; !found {
-			node := graph.PrepareNode(graph.NewProperties(), graphschema.Zone)
-			setZoneNodeProperties(node, zone)
-
+			node := graph.PrepareNode(graph.AsProperties(zoneNodePropertyMap(zone)), graphschema.Zone)
 			zoneNodesToCreate = append(zoneNodesToCreate, node)
 		} else if !zoneNodePropertiesMatch(zoneNode, zone) {
-			setZoneNodeProperties(zoneNode, zone)
+			updateZoneNodeProperties(zoneNode, zone)
 			zoneNodesToUpdate = append(zoneNodesToUpdate, zoneNode)
 		}
 	}
