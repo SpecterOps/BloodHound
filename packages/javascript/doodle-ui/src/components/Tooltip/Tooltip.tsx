@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import * as React from 'react';
+import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { cn } from '../utils';
 
 const TooltipProvider = TooltipPrimitive.Provider;
@@ -28,30 +29,14 @@ type TriggerProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigg
 
 const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Trigger>, TriggerProps>(
     (props, ref) => {
-        const { className, ...rest } = props;
-        const asChild = !!props.children;
+        const { asChild = !!props.children, className, ...rest } = props;
         return (
             <TooltipPrimitive.Trigger
                 ref={ref}
                 className={cn('focus:outline-none focus-visible:focus-ring', className)}
                 asChild={asChild}
                 {...rest}>
-                {asChild ? (
-                    props.children
-                ) : (
-                    <span
-                        className='border rounded-full border-neutral-dark-1 text-neutral-dark-1 dark:border-neutral-light-1 dark:text-neutral-light-1 size-3 grid grid-rows-7 grid-cols-7'
-                        role='img'>
-                        <span
-                            className='bg-neutral-dark-1 dark:bg-neutral-light-1 col-start-4 row-start-2'
-                            role='img'
-                        />
-                        <span
-                            className='bg-neutral-dark-1 dark:bg-neutral-light-1 col-start-4 row-start-4 row-end-7'
-                            role='img'
-                        />
-                    </span>
-                )}
+                {props.children ?? <AppIcon.Info size={16} aria-hidden='true' />}
             </TooltipPrimitive.Trigger>
         );
     }
@@ -77,8 +62,10 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 ref={ref}
                 sideOffset={sideOffset}
                 className={cn(
-                    'TooltipContent',
-                    'z-[1500] overflow-hidden rounded-md border bg-neutral-light-2 px-3 py-1.5 text-xs text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+                    'text-main rounded-md border bg-neutral-light-2 dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-md',
+                    'z-50 overflow-hidden animate-in fade-in-0 zoom-in-95',
+                    'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+                    'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
                     className,
                     widthOptions[contentWidth]
                 )}
@@ -113,6 +100,7 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         contentWidth,
         contentProps = {},
     } = props;
+    const defaultTriggerLabel = !props.children && typeof tooltip === 'string' ? tooltip : undefined;
 
     return (
         <TooltipProvider>
@@ -122,12 +110,13 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
                 onOpenChange={onOpenChange}
                 delayDuration={delayDuration}
                 {...rootProps}>
-                <TooltipTrigger children={props.children} {...triggerProps} />
+                <TooltipTrigger
+                    children={props.children}
+                    aria-label={triggerProps['aria-label'] ?? defaultTriggerLabel}
+                    {...triggerProps}
+                />
                 <TooltipPortal>
-                    <TooltipContent
-                        contentWidth={contentWidth}
-                        {...contentProps}
-                        className={cn('dark:text-black', contentProps.className)}>
+                    <TooltipContent contentWidth={contentWidth} {...contentProps}>
                         {tooltip}
                     </TooltipContent>
                 </TooltipPortal>
