@@ -174,17 +174,11 @@ type listUsersResponseEnvelope struct {
 	} `json:"data"`
 }
 
-// newListUsersHandler wires the identity slice's ListUsers handler backed by the
-// given database, wrapped in the same filter and sort middleware the route
-// applies in production (see routes.Register), so this exercises the full
-// request path the handler relies on.
 func newListUsersHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	var (
 		handlerSet = newIdentityHandlers(db)
 		userList   = handlers.UserListView{}
-		// Sort wraps filter (sort runs first) to mirror the production route's
-		// WithSort-before-WithFilters ordering (see routes.Register).
-		handler = middleware.SortMiddleware(userList)(
+		handler    = middleware.SortMiddleware(userList)(
 			middleware.FilterMiddleware(userList)(http.HandlerFunc(handlerSet.ListUsers)),
 		)
 	)
@@ -422,8 +416,6 @@ func TestListRoles(t *testing.T) {
 	})
 
 	t.Run("returns the sort error when both the sort and filter are invalid", func(t *testing.T) {
-		// Sort is validated before filters, matching the legacy handler, so an
-		// invalid sort takes precedence over an invalid filter in the response.
 		query := url.Values{}
 		query.Add("sort_by", "invalidColumn")
 		query.Add("foo", "eq:bar")
@@ -447,9 +439,9 @@ func TestListUsers(t *testing.T) {
 	// Seed two regular users and one support account. The support account must
 	// never appear in the response, mirroring the legacy support_account = false
 	// filter the migrated handler applies.
-	adaPrincipal := seedUser(t, ctx, db.Pool(), "e2e-ada", false)
-	borisPrincipal := seedUser(t, ctx, db.Pool(), "e2e-boris", false)
-	supportPrincipal := seedUser(t, ctx, db.Pool(), "e2e-support", true)
+	userA := seedUser(t, ctx, db.Pool(), "user-a", false)
+	userB := seedUser(t, ctx, db.Pool(), "user-b", false)
+	supportUser := seedUser(t, ctx, db.Pool(), "support", true)
 
 	newRequest := func(t *testing.T, query url.Values) *http.Request {
 		t.Helper()
@@ -478,9 +470,9 @@ func TestListUsers(t *testing.T) {
 		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
 
 		names := principalsIn(envelope)
-		assert.Contains(t, names, adaPrincipal)
-		assert.Contains(t, names, borisPrincipal)
-		assert.NotContains(t, names, supportPrincipal, "support accounts must be excluded from the list")
+		assert.Contains(t, names, userA)
+		assert.Contains(t, names, userB)
+		assert.NotContains(t, names, supportUser, "support accounts must be excluded from the list")
 	})
 
 	t.Run("returns 200 OK with users sorted by principal_name ascending", func(t *testing.T) {
@@ -501,7 +493,7 @@ func TestListUsers(t *testing.T) {
 
 	t.Run("returns 200 OK with users filtered by email_address", func(t *testing.T) {
 		query := url.Values{}
-		query.Add("email_address", "eq:"+adaPrincipal+"@example.com")
+		query.Add("email_address", "eq:"+userA+"@example.com")
 
 		recorder := httptest.NewRecorder()
 		handler(recorder, newRequest(t, query))
@@ -511,7 +503,7 @@ func TestListUsers(t *testing.T) {
 		var envelope listUsersResponseEnvelope
 		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
 		require.Len(t, envelope.Data.Users, 1)
-		assert.Equal(t, adaPrincipal, envelope.Data.Users[0].PrincipalName)
+		assert.Equal(t, userA, envelope.Data.Users[0].PrincipalName)
 	})
 
 	t.Run("returns 400 Bad Request for a non-sortable column", func(t *testing.T) {

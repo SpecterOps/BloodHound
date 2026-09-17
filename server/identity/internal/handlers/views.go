@@ -151,9 +151,6 @@ func (s RoleListView) IsSortable(field string) bool {
 	}
 }
 
-// AuthSecretView is the JSON shape returned by the identity handlers for a user's
-// auth secret. It reproduces the legacy model.AuthSecret contract, omitting the
-// secret material (digest and TOTP secret) that was never on the wire.
 type AuthSecretView struct {
 	DigestMethod  string       `json:"digest_method"`
 	ExpiresAt     time.Time    `json:"expires_at"`
@@ -164,8 +161,6 @@ type AuthSecretView struct {
 	DeletedAt     sql.NullTime `json:"deleted_at"`
 }
 
-// BuildAuthSecretView projects a services.AuthSecret into the view type nested
-// under a user in the handlers' JSON envelope.
 func BuildAuthSecretView(authSecret services.AuthSecret) AuthSecretView {
 	return AuthSecretView{
 		DigestMethod:  authSecret.DigestMethod,
@@ -178,9 +173,6 @@ func BuildAuthSecretView(authSecret services.AuthSecret) AuthSecretView {
 	}
 }
 
-// EnvironmentAccessControlView is the JSON shape returned by the identity
-// handlers for a single environment-targeted access control entry. It reproduces
-// the legacy model.EnvironmentTargetedAccessControl contract.
 type EnvironmentAccessControlView struct {
 	UserID        string       `json:"user_id"`
 	EnvironmentID string       `json:"environment_id"`
@@ -190,8 +182,6 @@ type EnvironmentAccessControlView struct {
 	DeletedAt     sql.NullTime `json:"deleted_at"`
 }
 
-// BuildEnvironmentAccessControlView projects a services.EnvironmentAccessControl
-// into the view type nested under a user in the handlers' JSON envelope.
 func BuildEnvironmentAccessControlView(control services.EnvironmentAccessControl) EnvironmentAccessControlView {
 	return EnvironmentAccessControlView{
 		UserID:        control.UserID,
@@ -203,12 +193,6 @@ func BuildEnvironmentAccessControlView(control services.EnvironmentAccessControl
 	}
 }
 
-// UserView is the JSON shape returned by the identity handlers for a user. It is
-// decoupled from services.User so the wire format can evolve independently of the
-// domain model. The nullable fields use pointer types so they marshal to a bare
-// value or null, matching the legacy null.String/null.Int32 contract without
-// coupling the slice to the cmd/api null package. The AuthSecret key retains its
-// legacy capitalization because the legacy model.User field carried no json tag.
 type UserView struct {
 	SSOProviderID                    *int32                         `json:"sso_provider_id"`
 	AuthSecret                       *AuthSecretView                `json:"AuthSecret"`
@@ -228,8 +212,6 @@ type UserView struct {
 	DeletedAt                        sql.NullTime                   `json:"deleted_at"`
 }
 
-// BuildUserView projects a services.User into the view type the handlers return
-// in their JSON envelope.
 func BuildUserView(user services.User) UserView {
 	var (
 		roles      = make([]RoleView, 0, len(user.Roles))
@@ -270,8 +252,6 @@ func BuildUserView(user services.User) UserView {
 	}
 }
 
-// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
-// satisfying the responses.JSONViewer contract.
 func (s UserView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
@@ -294,16 +274,10 @@ func nullInt32ToPtr(value sql.NullInt32) *int32 {
 	return &value.Int32
 }
 
-// UserListView is the JSON shape returned by the identity handlers for a list of
-// users. It wraps the users under a "users" key so the payload matches the
-// data.users envelope the GET /api/v2/bloodhound-users and /api/v2/bhe-users
-// endpoints have always returned.
 type UserListView struct {
 	Users []UserView `json:"users"`
 }
 
-// BuildUserListView projects a slice of services.User into the list view the
-// handlers return in their JSON envelope.
 func BuildUserListView(users []services.User) UserListView {
 	var views = make([]UserView, 0, len(users))
 	for _, user := range users {
@@ -313,18 +287,10 @@ func BuildUserListView(users []services.User) UserListView {
 	return UserListView{Users: views}
 }
 
-// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
-// satisfying the responses.JSONViewer contract.
 func (s UserListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// ValidFilters implements params.Filterable, describing the user fields that may
-// be filtered on and the operators each supports. It reproduces the legacy
-// GET /api/v2/bloodhound-users contract so the filter middleware validates
-// identically, with the exception of deleted_at: the users table has no
-// deleted_at column, so filtering on it is rejected with a 400 rather than
-// silently accepted.
 func (s UserListView) ValidFilters() map[string]params.FilterableField {
 	var (
 		equalityOperators = []params.FilterOperator{params.Equals, params.NotEquals}
@@ -350,10 +316,6 @@ func (s UserListView) ValidFilters() map[string]params.FilterableField {
 	}
 }
 
-// IsSortable implements params.Sortable, reporting the user fields the sort
-// middleware may order on. It reproduces the legacy GET /api/v2/bloodhound-users
-// contract, with the exception of deleted_at: the users table has no deleted_at
-// column, so sorting on it is rejected with a 400 rather than silently accepted.
 func (s UserListView) IsSortable(field string) bool {
 	switch field {
 	case "first_name", "last_name", "email_address", "principal_name", "last_login", "created_at", "updated_at":

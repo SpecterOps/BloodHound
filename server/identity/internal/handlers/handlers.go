@@ -115,10 +115,7 @@ func (s *Handlers) ListRoles(response http.ResponseWriter, request *http.Request
 	responses.WriteBasic(ctx, BuildRoleListView(roles), http.StatusOK, response)
 }
 
-// ListUsers returns the users matching the filters and ordering parsed from the
-// request query parameters. The filter and sort middleware validate the query
-// parameters against UserListView and enrich the context before this handler
-// runs, so it reads the parsed values directly from the BloodHound context.
+// ListUsers returns the users matching the filters and ordering parsed from the request query parameters.
 func (s *Handlers) ListUsers(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx   = request.Context()

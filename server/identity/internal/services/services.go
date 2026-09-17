@@ -53,9 +53,7 @@ type Role struct {
 // ErrNoRoleFound indicates that no role with the given ID was found.
 var ErrNoRoleFound = errors.New("no role was found")
 
-// AuthSecret is the credential material associated with a user. It mirrors the
-// fields the legacy model.AuthSecret exposed on the wire; secret material such
-// as the digest and TOTP secret is intentionally omitted from the domain type.
+// AuthSecret is the credential material associated with a user.
 type AuthSecret struct {
 	ID            int32
 	DigestMethod  string
@@ -77,9 +75,7 @@ type EnvironmentAccessControl struct {
 	DeletedAt     sql.NullTime
 }
 
-// User is the identity domain representation of a BloodHound user together with
-// the associations the list endpoint returns: assigned roles (with their
-// permissions), environment-targeted access control entries and the auth secret.
+// User is the identity domain representation of a BloodHound user.
 type User struct {
 	ID                               uuid.UUID
 	SSOProviderID                    sql.NullInt32
