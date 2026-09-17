@@ -37,8 +37,7 @@ type Service interface {
 	GetApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error)
 	GetAllApplicationConfigurations(ctx context.Context) (services.Parameters, error)
 
-	IsValidKey(parameterKey services.ParameterKey) bool
-	IsProtectedKey(parameterKey services.ParameterKey) bool
+	IsAPIAllowedKey(parameterKey services.ParameterKey) bool
 }
 
 type Handlers struct {
@@ -82,7 +81,7 @@ func (s *Handlers) GetApplicationConfiguration(response http.ResponseWriter, req
 
 		// Preserving existing behavior, where IsProtectedKey is only applied to
 		// individual config get requests
-		if !s.service.IsValidKey(paramKey) || s.service.IsProtectedKey(paramKey) {
+		if !s.service.IsAPIAllowedKey(paramKey) {
 			responses.WriteError(ctx, http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", paramKey), response)
 			return
 		}

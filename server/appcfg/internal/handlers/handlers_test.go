@@ -261,12 +261,8 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 			Return(fixture1, nil).
 			Once()
 		mockSvc.EXPECT().
-			IsValidKey(services.ParameterKey(filter.Value)).
+			IsAPIAllowedKey(services.ParameterKey(filter.Value)).
 			Return(true).
-			Once()
-		mockSvc.EXPECT().
-			IsProtectedKey(services.ParameterKey(filter.Value)).
-			Return(false).
 			Once()
 
 		h.GetApplicationConfiguration(rr, req)
@@ -299,39 +295,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
 
 		mockSvc.EXPECT().
-			IsValidKey(services.ParameterKey(filter.Value)).
-			Return(true).
-			Once()
-		mockSvc.EXPECT().
-			IsProtectedKey(services.ParameterKey(filter.Value)).
-			Return(true).
-			Once()
-
-		h.GetApplicationConfiguration(rr, req)
-
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		var envelope = errorEnvelope{}
-		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
-		assert.NotEmpty(t, envelope.Errors)
-	})
-
-	t.Run("returns 400 querying a param that doesn't exist", func(t *testing.T) {
-		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
-		)
-
-		filter := params.Filter{
-			Field:    "parameter",
-			Operator: "eq",
-			Value:    string(fixture1.Key),
-		}
-		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
-
-		mockSvc.EXPECT().
-			IsValidKey(services.ParameterKey(filter.Value)).
+			IsAPIAllowedKey(services.ParameterKey(filter.Value)).
 			Return(false).
 			Once()
 
@@ -363,12 +327,8 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 			Return(services.Parameter{}, unexpectedErr).
 			Once()
 		mockSvc.EXPECT().
-			IsValidKey(services.ParameterKey(filter.Value)).
+			IsAPIAllowedKey(services.ParameterKey(filter.Value)).
 			Return(true).
-			Once()
-		mockSvc.EXPECT().
-			IsProtectedKey(services.ParameterKey(filter.Value)).
-			Return(false).
 			Once()
 
 		h.GetApplicationConfiguration(rr, req)
