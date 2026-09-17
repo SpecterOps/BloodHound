@@ -122,6 +122,7 @@ export default {
                 'status-indeterminate-fill': 'var(--status-indeterminate-fill)',
 
                 'bhe-main': 'var(--bhe-main)',
+                'brand-orange': 'var(--brand-orange)',
                 // 'sp-main': 'var(--sp-main)',
                 'bhce-main': 'var(--bhce-main)',
                 'logo-neutral': 'var(--logo-neutral)',
@@ -239,7 +240,8 @@ export default {
                 // icon: 'var(--icon)',
                 // 'icon-contrast': 'var(--icon-contrast)',
                 'icon-disabled': 'var(--icon-disabled)',
-                // divider: 'var(--divider)',
+                border: 'var(--border)',
+                divider: 'var(--divider)',
 
                 // 'risk-critical': 'var(--risk-critical)',
                 // 'risk-high': 'var(--risk-high)',

@@ -297,6 +297,7 @@ export const elevation = {
 };
 
 export const light = {
+    'brand-orange': '#BF360C',
     'bhce-main': '#E02F35',
     primary: {
         main: '#2C2677',
@@ -385,6 +386,7 @@ export const text = {
 };
 
 export const dark = {
+    'brand-orange': '#FF7043',
     'bhce-main': '#F35857',
     primary: {
         main: '#A1A0FF',

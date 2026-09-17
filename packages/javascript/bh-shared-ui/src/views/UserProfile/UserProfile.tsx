@@ -132,9 +132,8 @@ const UserProfile = () => {
                                 <Grid item xs={3}>
                                     <Typography variant='body1'>API Key Management</Typography>
                                 </Grid>
-                                <Grid item xs={2}>
+                                <Grid item xs={9}>
                                     <Button
-                                        style={{ width: '100%' }}
                                         onClick={() => setUserTokenManagementDialogOpen(true)}
                                         data-testid='my-profile_button-api-key-management'>
                                         API Key Management
@@ -148,9 +147,8 @@ const UserProfile = () => {
                                     <Grid item xs={3}>
                                         <Typography variant='body1'>Password</Typography>
                                     </Grid>
-                                    <Grid item xs={2}>
+                                    <Grid item xs={9}>
                                         <Button
-                                            style={{ width: '100%' }}
                                             onClick={() => setChangePasswordDialogOpen(true)}
                                             data-testid='my-profile_button-reset-password'>
                                             Reset Password

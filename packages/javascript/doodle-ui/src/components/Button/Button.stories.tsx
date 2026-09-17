@@ -67,6 +67,7 @@ Use a Button when a user remains in the current context and triggers an action, 
 
 - Use primary for the main action in a section or workflow.
 - Use secondary for supporting actions such as Cancel or Back.
+- Use tertiary for destructive actions such as Delete or Remove.
 - Use TextButton for lower-emphasis text actions.
 - Use IconButton for icon-only actions.
 
@@ -110,7 +111,7 @@ Using the correct element provides expected keyboard behavior and helps assistiv
         },
         variant: {
             // TODO - remove transparent option
-            options: ['primary', 'secondary'],
+            options: ['primary', 'secondary', 'tertiary'],
             control: 'select',
         },
         // TODO - remove fontColor
@@ -125,8 +126,9 @@ Using the correct element provides expected keyboard behavior and helps assistiv
         },
         size: {
             options: ['small', 'medium', 'large'],
-            control: 'select',
-            description: 'deprecated',
+            control: false,
+            description:
+                '**Deprecated:** Contained buttons use uniform geometry. This prop is retained for legacy transparent and icon variants.',
             table: {
                 category: 'Deprecated',
             },
@@ -266,6 +268,32 @@ export const Secondary: ButtonStory = {
                 </Button>
             </div>
         </>
+    ),
+};
+
+export const Tertiary: ButtonStory = {
+    args: {
+        variant: 'tertiary',
+        children: 'Delete',
+        disabled: false,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: `Use the tertiary variant for destructive actions such as Delete or Remove. Pair the visual treatment with explicit action text and a confirmation pattern when the outcome is difficult to reverse.`,
+            },
+        },
+    },
+    render: ({ variant, children, ...buttonProps }) => (
+        <div className='flex items-center gap-4'>
+            <Button variant={variant} {...buttonProps}>
+                <FontAwesomeIcon icon={faTrash} />
+                {children}
+            </Button>
+            <Button variant='tertiary' disabled>
+                Disabled
+            </Button>
+        </div>
     ),
 };
 
