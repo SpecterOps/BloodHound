@@ -33,7 +33,8 @@ export function requiredRule<TFieldValues extends FieldValues, TName extends Fie
             ? {
                   validate: (value: unknown) => {
                       if (options.when && !options.when()) return true;
-                      if (!value || (Array.isArray(value) && !value.length)) return message;
+                      if (value == null || value === '' || value === false || (Array.isArray(value) && !value.length))
+                          return message;
                       return !options.rejectSpaces || typeof value !== 'string' || !!value.trim() || message;
                   },
               }
