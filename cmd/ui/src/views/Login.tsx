@@ -50,9 +50,7 @@ const Login: React.FC = () => {
     // the home route if the original location is absent or is the login page itself.
     const from = (location.state as { from?: Location } | null)?.from;
     const redirectTo =
-        from && from.pathname !== ROUTE_LOGIN
-            ? `${from.pathname}${from.search || ''}${from.hash || ''}`
-            : ROUTE_HOME;
+        from && from.pathname !== ROUTE_LOGIN ? `${from.pathname}${from.search || ''}${from.hash || ''}` : ROUTE_HOME;
 
     const title = (
         <Helmet>

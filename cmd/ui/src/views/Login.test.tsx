@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DeepPartial } from 'bh-shared-ui';
 import { configureStore } from '@reduxjs/toolkit';
 import { render } from '@testing-library/react';
+import { DeepPartial } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { authSlice } from 'src/ducks/auth/authSlice';
+import { initialState } from 'src/ducks/auth/authSlice';
 import { AppState, rootReducer } from 'src/store';
 import Login from 'src/views/Login';
 
@@ -58,14 +58,14 @@ afterEach(() => {
 afterAll(() => server.close());
 
 const renderLogin = (locationState?: { from?: Partial<Location> }) => {
-    const initialState: DeepPartial<AppState> = {
+    const preloaded: DeepPartial<AppState> = {
         auth: {
-            ...authSlice.initialState,
+            ...initialState,
             sessionToken: 'test-token',
             user: {},
         },
     };
-    const store = configureStore({ reducer: rootReducer, preloadedState: initialState });
+    const store = configureStore({ reducer: rootReducer, preloadedState: preloaded });
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
     return render(
