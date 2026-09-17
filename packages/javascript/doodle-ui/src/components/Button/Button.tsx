@@ -34,7 +34,7 @@ const containedButtonStateClasses = [
 ];
 
 const containedPrimaryClasses = [
-    'bg-primary text-text-contrast',
+    'border border-transparent bg-primary text-text-contrast',
     ...containedButtonStateClasses,
     'disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
 ];
@@ -81,7 +81,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
              * @deprecated Use TextButton instead.
              */
             transparent: [
-                'border border-transparent-btn-border bg-transparent text-main',
+                'rounded-3xl border border-transparent-btn-border bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
                 'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
             ],

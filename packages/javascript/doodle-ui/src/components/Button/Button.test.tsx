@@ -24,7 +24,7 @@ expect.extend(matchers);
 
 describe('Button', () => {
     it.each([
-        ['primary', 'bg-primary text-text-contrast'],
+        ['primary', 'border border-transparent bg-primary text-text-contrast'],
         ['secondary', 'border-border bg-elevation-1 text-text-main'],
         ['tertiary', 'border-brand-orange bg-elevation-1 text-text-main'],
     ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
@@ -50,6 +50,7 @@ describe('Button', () => {
     });
 
     it('keeps deprecated variants free of contained-button geometry', () => {
+        expect(ButtonVariants({ variant: 'transparent' })).toContain('rounded-3xl');
         expect(ButtonVariants({ variant: 'transparent' })).not.toContain('rounded p-2');
         expect(ButtonVariants({ variant: 'icon' })).not.toContain('rounded p-2');
     });
