@@ -37,6 +37,9 @@ export type DetailsAccordionProps<T extends Record<string, unknown>> = {
     /** Predicate to determine if an item is disabled (default: always `false`) */
     itemDisabled?: (item: T) => boolean;
 
+    /** Optional surface classes that replace the default item surface styling */
+    itemClassName?: string;
+
     /** Component to render the header of each item */
     Header: ComponentType<T>;
 
@@ -79,6 +82,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
     getKey,
     items,
     itemDisabled = () => false,
+    itemClassName,
     Header,
     openIndex,
 }: DetailsAccordionProps<T>) => {
@@ -103,7 +107,10 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
 
                 return (
                     <AccordionItem
-                        className='bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
+                        className={
+                            itemClassName ??
+                            'bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
+                        }
                         disabled={isDisabled}
                         key={key}
                         value={String(idx)}

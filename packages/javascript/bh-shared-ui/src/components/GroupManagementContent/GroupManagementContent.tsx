@@ -22,6 +22,7 @@ import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-
 import { FC, HTMLProps, ReactNode, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import useRoleBasedFiltering from '../../hooks/useRoleBasedFiltering';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { apiClient } from '../../utils/api';
 import AssetGroupEdit from '../AssetGroupEdit/AssetGroupEdit';
 import AssetGroupFilters from '../AssetGroupFilters';
@@ -152,7 +153,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <div className='mb-2'>
-                        <Grid container className='bg-neutral-2'>
+                        <Grid container className={OUTLINED_CANVAS_SURFACE_CLASS}>
                             <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography className='font-medium text-sm uppercase'>Group:</Typography>
                             </Grid>

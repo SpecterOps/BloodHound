@@ -93,4 +93,11 @@ describe('EntityInfoPanel', async () => {
         expect(entityHeaderTitle).toBeInTheDocument();
         expect(selectObjectMessage).toBeInTheDocument();
     });
+
+    it('should remove default shadows when a custom surface class is provided', () => {
+        const { container } = render(<EntityInfoPanel {...testProps} surfaceClassName='custom-surface' />);
+
+        expect(container.querySelectorAll('.custom-surface')).toHaveLength(2);
+        expect(container.querySelectorAll('.shadow-outer-1')).toHaveLength(0);
+    });
 });

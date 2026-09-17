@@ -17,6 +17,7 @@ import { Card, CardContent, CardFooter, CardTitle } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { LuxonFormat } from '../../..';
 import { AppIcon } from '../../../components';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../styles';
 import { useHistoryTableContext } from './HistoryTableContext';
 
 const HistoryNote = () => {
@@ -24,7 +25,7 @@ const HistoryNote = () => {
 
     return (
         <div>
-            <Card className='flex justify-center mb-4 p-4 h-14'>
+            <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex justify-center mb-4 p-4 h-14`}>
                 <CardTitle className='flex items-center gap-2'>
                     <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
                     Note
@@ -32,7 +33,7 @@ const HistoryNote = () => {
             </Card>
 
             {selected && (
-                <Card className='p-4'>
+                <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} p-4`}>
                     <CardContent>
                         <p className='text-xl'>{selected.note}</p>
                     </CardContent>

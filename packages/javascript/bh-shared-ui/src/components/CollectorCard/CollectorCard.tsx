@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Link, Paper } from '@mui/material';
 import { Button, Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 
 interface CollectorCardProps {
     collectorType: CommunityCollectorType;
@@ -53,7 +54,7 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     };
 
     return (
-        <Paper>
+        <Paper className={OUTLINED_CANVAS_SURFACE_CLASS} elevation={0}>
             <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
                 <Box overflow='hidden'>
                     <Typography variant='h3'>

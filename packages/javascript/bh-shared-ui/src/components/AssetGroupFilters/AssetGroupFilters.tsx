@@ -31,7 +31,7 @@ import { Button, Typography } from 'doodle-ui';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
-import { useTheme } from '../../hooks/useTheme';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../styles';
 import { cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
@@ -48,8 +48,6 @@ interface Props {
 
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
-    const theme = useTheme();
-
     const handleClearFilters = () => {
         for (const filter of FILTERABLE_PARAMS) {
             handleFilterChange(filter, '');
@@ -62,7 +60,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
         <Box
             p={1}
             component={Paper}
-            bgcolor={theme.neutral.secondary}
+            className={OUTLINED_CANVAS_SURFACE_CLASS}
             elevation={0}
             marginBottom={1}
             data-testid='asset-group-filters-container'>

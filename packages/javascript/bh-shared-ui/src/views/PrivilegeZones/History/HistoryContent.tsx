@@ -18,6 +18,7 @@ import { Card, CardHeader, DataTable, Typography } from 'doodle-ui';
 import { useState } from 'react';
 import { SearchInput } from '../../../components/SearchInput';
 import { useInfiniteScroll } from '../../../hooks';
+import { CANVAS_TABLE_ROW_CLASS, OUTLINED_CANVAS_SURFACE_CLASS } from '../../../styles';
 import { measureElement } from '../utils';
 import { FilterDialog } from './FilterDialog';
 import HistoryNote from './HistoryNote';
@@ -32,7 +33,7 @@ const tableProps: DataTableProps['TableProps'] = {
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm text-base',
+    className: 'sticky top-0 z-10 bg-neutral-2 text-base',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
@@ -79,7 +80,7 @@ const HistoryContent = () => {
                 cleared.
             </p>
             <div data-testid='history-wrapper' className='flex gap-6 mt-4 h-[calc(100%-5rem)]'>
-                <Card className='flex flex-col'>
+                <Card className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col`}>
                     <CardHeader className='flex-row ml-3 justify-between items-center'>
                         <Typography variant='h2'>History Log</Typography>
                         <div className='flex items-center'>
@@ -97,6 +98,7 @@ const HistoryContent = () => {
                         <DataTable
                             aria-label='History Log Table'
                             data={records}
+                            TableBodyRowProps={{ className: CANVAS_TABLE_ROW_CLASS }}
                             TableHeaderProps={tableHeaderProps}
                             TableHeadProps={tableHeadProps}
                             TableProps={tableProps}

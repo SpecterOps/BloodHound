@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Container } from '@mui/material';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from 'bh-shared-ui';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { addSnackbar } from 'src/ducks/global/actions';
@@ -41,7 +42,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
     return (
         <div className='flex justify-center items-center h-full'>
             <Container maxWidth='sm'>
-                <div className='bg-neutral-2 shadow-outer-1 px-16 pb-16 pt-8'>
+                <div className={`${OUTLINED_CANVAS_SURFACE_CLASS} px-16 pb-16 pt-8`}>
                     <div className='h-full w-auto text-center box-border p-16'>
                         <img
                             src={`${import.meta.env.BASE_URL}${imageUrl}`}

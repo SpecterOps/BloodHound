@@ -33,6 +33,7 @@ import { Typography } from 'doodle-ui';
 import { AssetGroup, AssetGroupMember, AssetGroupMemberParams } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import { CANVAS_MUI_TABLE_CLASS } from '../../styles';
 import { apiClient, cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
@@ -90,7 +91,7 @@ const AssetGroupMemberList: FC<{
     };
 
     return (
-        <TableContainer className='max-h-full bg-neutral-2' component={Paper} elevation={0}>
+        <TableContainer className={`${CANVAS_MUI_TABLE_CLASS} max-h-full`} component={Paper} elevation={0}>
             <Table stickyHeader className='h-full relative'>
                 <colgroup>
                     <col width='80%' />
@@ -159,7 +160,8 @@ const AssetGroupMemberRow: FC<{
     return (
         <TableRow
             onClick={handleClick}
-            className={cn({ 'hover:bg-neutral-4 cursor-pointer': !disabled, 'opacity-50': disabled })}>
+            hover={!disabled}
+            className={cn({ 'cursor-pointer': !disabled, 'opacity-50': disabled })}>
             <TableCell>
                 <Box className='flex items-center w-full'>
                     <NodeIcon nodeType={member.primary_kind} />

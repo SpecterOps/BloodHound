@@ -15,7 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Alert, Box, Link, Paper, Skeleton } from '@mui/material';
-import { CollectorCardList, DocumentationLinks, PageWithTitle, apiClient, useFeatureFlag } from 'bh-shared-ui';
+import {
+    CollectorCardList,
+    DocumentationLinks,
+    OUTLINED_CANVAS_SURFACE_CLASS,
+    PageWithTitle,
+    apiClient,
+    useFeatureFlag,
+} from 'bh-shared-ui';
 import { Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 import fileDownload from 'js-file-download';
@@ -112,7 +119,7 @@ const DownloadCollectors = () => {
                 <Box>
                     <Typography variant='h2'>SharpHound</Typography>
                     {sharpHoundCollectorsQuery.isLoading ? (
-                        <Paper>
+                        <Paper className={OUTLINED_CANVAS_SURFACE_CLASS} elevation={0}>
                             <Box p={2}>
                                 <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
@@ -146,7 +153,7 @@ const DownloadCollectors = () => {
                 <Box>
                     <Typography variant='h2'>AzureHound</Typography>
                     {azureHoundCollectorsQuery.isLoading ? (
-                        <Paper>
+                        <Paper className={OUTLINED_CANVAS_SURFACE_CLASS} elevation={0}>
                             <Box p={2}>
                                 <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
@@ -180,7 +187,7 @@ const DownloadCollectors = () => {
                 {openHoundEnabled?.enabled && (
                     <Box>
                         <Typography variant='h2'>OpenHound</Typography>
-                        <Paper>
+                        <Paper className={OUTLINED_CANVAS_SURFACE_CLASS} elevation={0}>
                             <Box p={2}>
                                 <Typography variant='body1'>
                                     <Link href={openHoundHref} target='_blank'>

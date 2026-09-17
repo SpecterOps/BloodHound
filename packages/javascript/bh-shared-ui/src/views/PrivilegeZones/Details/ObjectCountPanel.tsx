@@ -18,13 +18,17 @@ import { Badge, Card, Skeleton } from 'doodle-ui';
 import { FC } from 'react';
 import { NodeIcon } from '../../../components';
 import { useObjectCounts } from '../../../hooks/useAssetGroupTags/useObjectCounts';
+import { OUTLINED_CANVAS_SURFACE_CLASS } from '../../../styles';
 
 const ObjectCountPanel: FC = () => {
     const objectsCountQuery = useObjectCounts();
 
     if (objectsCountQuery.isLoading) {
         return (
-            <Card tabIndex={0} className='flex flex-col p-6 select-none' data-testid='privilege-zones_object-counts'>
+            <Card
+                tabIndex={0}
+                className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col p-6 select-none`}
+                data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
                     <Skeleton className='h-8 w-16' />
@@ -39,7 +43,10 @@ const ObjectCountPanel: FC = () => {
         );
     } else if (objectsCountQuery.isError) {
         return (
-            <Card tabIndex={0} className='flex flex-col p-6 select-none' data-testid='privilege-zones_object-counts'>
+            <Card
+                tabIndex={0}
+                className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col p-6 select-none`}
+                data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
                     <Badge label={'0'} />
@@ -54,7 +61,7 @@ const ObjectCountPanel: FC = () => {
         return (
             <Card
                 tabIndex={0}
-                className='flex flex-col p-6 select-none overflow-y-auto '
+                className={`${OUTLINED_CANVAS_SURFACE_CLASS} flex flex-col p-6 select-none overflow-y-auto`}
                 data-testid='privilege-zones_object-counts'>
                 <div className='flex justify-between items-center'>
                     <p>Total Count</p>
