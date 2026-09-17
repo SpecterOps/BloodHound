@@ -30,67 +30,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
-// calculateLastFiscalQuarter returns the start and end dates of the most recent complete fiscal quarter
-// based on the fiscal year start month (1=Jan, 2=Feb, etc.)
-func calculateLastFiscalQuarter(fiscalStartMonth int) (time.Time, time.Time) {
-	return calculateLastFiscalQuarterAt(fiscalStartMonth, time.Now())
-}
-
-func calculateLastFiscalQuarterAt(fiscalStartMonth int, referenceTime time.Time) (time.Time, time.Time) {
-	currentYear := referenceTime.Year()
-
-	// Use absolute month arithmetic (months since year 0)
-	// This eliminates wraparound branches and simplifies year calculations
-	currentMonthAbs := currentYear*12 + int(referenceTime.Month())
-	fiscalStartMonthAbs := currentYear*12 + fiscalStartMonth
-
-	// If we haven't reached this year's fiscal start, use last year's
-	if currentMonthAbs < fiscalStartMonthAbs {
-		fiscalStartMonthAbs -= 12
-	}
-
-	// Calculate months into current fiscal year
-	monthsIntoFY := currentMonthAbs - fiscalStartMonthAbs
-
-	// Determine last completed quarter (0-3)
-	// Subtract 1 because we want the *completed* quarter
-	completedQuarterInFY := (monthsIntoFY - 1) / 3
-	if completedQuarterInFY < 0 {
-		// We're in Q1, so last complete quarter is Q4 of previous FY
-		completedQuarterInFY = 3
-		fiscalStartMonthAbs -= 12
-	}
-
-	// Calculate absolute month for quarter start
-	quarterStartAbs := fiscalStartMonthAbs + (completedQuarterInFY * 3)
-
-	// Convert back to year/month
-	startYear := quarterStartAbs / 12
-	quarterStartMonth := quarterStartAbs % 12
-	if quarterStartMonth == 0 {
-		quarterStartMonth = 12
-		startYear--
-	}
-
-	// Start of quarter (first day, 00:00:00 UTC)
-	start := time.Date(startYear, time.Month(quarterStartMonth), 1, 0, 0, 0, 0, time.UTC)
-
-	// End of quarter (last second of third month)
-	quarterEndAbs := quarterStartAbs + 2
-	endYear := quarterEndAbs / 12
-	endMonth := quarterEndAbs % 12
-	if endMonth == 0 {
-		endMonth = 12
-		endYear--
-	}
-
-	// Last second of the last day of the month
-	endMonthStart := time.Date(endYear, time.Month(endMonth)+1, 1, 0, 0, 0, 0, time.UTC)
-	end := endMonthStart.Add(-time.Second)
-
-	return start, end
-}
-
 // parseDefaultPeriod converts a period string to number of days
 // Supports:
 //   - Days: "30d", "90d", "30", "90days"
@@ -217,41 +156,16 @@ func (s *command) runReport() error {
 		return fmt.Errorf("unsupported format: %s (supported: terminal, json)", formatFlag)
 	}
 
-	// Calculate time range based on flags
-	var startTime, endTime time.Time
-
-	if lastQuarterFlag {
-		// Calculate the last complete fiscal quarter
-		startTime, endTime = calculateLastFiscalQuarter(fiscalStartFlag)
-	} else if startFlag != "" {
-		// Parse start date
-		parsedStart, err := time.Parse("2006-01-02", startFlag)
-		if err != nil {
-			return fmt.Errorf("invalid start date format (use YYYY-MM-DD): %w", err)
-		}
-		startTime = parsedStart
-
-		// Parse end date or default to now
-		if endFlag != "" {
-			parsedEnd, err := time.Parse("2006-01-02", endFlag)
-			if err != nil {
-				return fmt.Errorf("invalid end date format (use YYYY-MM-DD): %w", err)
-			}
-			// Set to end of day (23:59:59)
-			endTime = parsedEnd.Add(24*time.Hour - time.Second)
-		} else {
-			endTime = time.Now()
-		}
-	} else {
-		// Use days-based calculation (default)
-		endTime = time.Now()
-		startTime = endTime.AddDate(0, 0, -daysFlag)
-	}
-
-	// Validate time range
-	if startTime.After(endTime) {
-		return fmt.Errorf("start date (%s) cannot be after end date (%s)",
-			startTime.Format("2006-01-02"), endTime.Format("2006-01-02"))
+	startTime, endTime, err := resolveTimeRange(
+		daysFlag,
+		startFlag,
+		endFlag,
+		lastQuarterFlag,
+		fiscalStartFlag,
+		time.Now(),
+	)
+	if err != nil {
+		return err
 	}
 
 	// Create storage
