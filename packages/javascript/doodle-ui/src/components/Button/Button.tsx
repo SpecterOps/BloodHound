@@ -16,6 +16,8 @@
 import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { Icon, type IconProps } from '../Icon';
+import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
 const buttonBaseClasses = [
@@ -96,7 +98,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
 export interface ButtonProps extends BaseUIButton.Props, VariantProps<typeof ButtonVariants> {}
 
 export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, ButtonProps>(function Button(
-    { className, children, disabled = false, variant, size, fontColor, ...props },
+    { className, children, disabled = false, variant, size, fontColor, type = 'button', ...props },
     ref
 ) {
     return (
@@ -104,6 +106,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
             {...props}
             ref={ref}
             disabled={disabled}
+            type={type}
             className={(state) =>
                 cn(
                     ButtonVariants({ variant, size, fontColor }),
@@ -208,8 +211,9 @@ export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | '
     color?: string;
     className?: BaseUIButton.Props['className'];
     'aria-label': string;
-    children?: React.ReactNode;
+    children?: IconProps['children'];
     size?: number;
+    tooltip?: IconProps['tooltip'];
 }
 
 type IconButtonStyle = React.CSSProperties & {
@@ -217,16 +221,24 @@ type IconButtonStyle = React.CSSProperties & {
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-    { variant = 'default', children, className, color, disabled = false, size = 16, ...props },
+    {
+        variant = 'default',
+        'aria-label': ariaLabel,
+        children,
+        className,
+        color,
+        disabled = false,
+        size = 16,
+        tooltip,
+        ...props
+    },
     ref
 ) {
-    // TODO remove/refactor BED-6062
-    // allow for Icon prop and chosing the icon
-    // add tooltip / see Icon component
-    return (
+    const iconButton = (
         <BaseUIButton
             {...props}
             ref={ref}
+            aria-label={ariaLabel}
             disabled={disabled}
             className={(state) =>
                 cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
@@ -238,8 +250,14 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     color,
                 }) as IconButtonStyle
             }>
-            {children}
+            {children && <Icon>{children}</Icon>}
         </BaseUIButton>
+    );
+
+    return (
+        <Tooltip tooltip={tooltip ?? ariaLabel} contentProps={{ side: 'bottom', align: 'start' }}>
+            <span className='inline-flex'>{iconButton}</span>
+        </Tooltip>
     );
 });
 

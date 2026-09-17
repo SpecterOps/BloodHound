@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Tooltip } from 'doodle-ui';
+import { IconButton, Tooltip } from 'doodle-ui';
 import React from 'react';
-import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
 import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
@@ -28,7 +27,6 @@ export interface HeaderProps {
     name: string;
     nodeType?: EntityKinds | string;
 }
-// TODO - refactor in BED-6062
 const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
@@ -45,14 +43,13 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     };
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
-            <Icon
-                tip='Collapse All'
+        <div className='flex justify-between items-center text-sm font-bold'>
+            <IconButton
+                aria-label='Collapse All'
                 onClick={handleCollapseAll}
-                className='box-border text-contrast'
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
-            </Icon>
+            </IconButton>
             {isHidden ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
             <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
                 <h6
@@ -62,9 +59,9 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 </h6>
             </Tooltip>
             {selectedItem && (
-                <Icon className='box-border text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+                <IconButton aria-label='Clear selected item' onClick={clearSelectedItem}>
                     <FontAwesomeIcon icon={faRemove} />
-                </Icon>
+                </IconButton>
             )}
         </div>
     );
