@@ -29,7 +29,8 @@
         "mocks",
         "third_party$",
         "builtin$",
-        "examples$"
+        "examples$",
+        "node_modules"
       ],
       "presets": [
         "comments",

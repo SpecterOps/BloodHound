@@ -239,5 +239,80 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			})
 		}
 	})
+}
 
+func TestStore_GetConfigurationParameter_Integration(t *testing.T) {
+	t.Run("returns ErrNotFound when no parameter row exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		_, err = store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		assert.ErrorIs(t, err, services.ErrNotFound)
+	})
+
+	t.Run("returns an existing parameter", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		var (
+			expectedKey         = services.ParameterKey("auth.password_expiration_window")
+			expectedName        = "Local Auth Password Expiry Window"
+			expectedDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
+		)
+
+		parameter, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		require.NoError(t, err)
+		assert.NotEmpty(t, parameter.ID)
+		assert.Equal(t, expectedKey, parameter.Key)
+		assert.Equal(t, expectedName, parameter.Name)
+		assert.Equal(t, expectedDescription, parameter.Description)
+		assert.NotEmpty(t, parameter.CreatedAt)
+		assert.NotEmpty(t, parameter.UpdatedAt)
+		assert.NotEmpty(t, parameter.Value)
+
+	})
+}
+
+func TestStore_GetAllConfigurationParameters_Integration(t *testing.T) {
+	t.Run("returns empty array when no parameter rows exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, parameters, 0)
+	})
+
+	t.Run("returns default parameters", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		require.NoError(t, err)
+
+		assert.Greater(t, len(parameters), 10)
+		assert.NotEmpty(t, parameters[0].ID)
+		assert.NotEmpty(t, parameters[0].Name)
+		assert.NotEmpty(t, parameters[0])
+		assert.NotEmpty(t, parameters[0].CreatedAt)
+		assert.Empty(t, parameters[0].DeletedAt)
+		assert.NotEmpty(t, parameters[0].UpdatedAt)
+		assert.NotEmpty(t, parameters[0].Value)
+	})
 }
