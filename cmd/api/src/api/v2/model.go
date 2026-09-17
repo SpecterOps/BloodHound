@@ -38,10 +38,6 @@ type ListPermissionsResponse struct {
 	Permissions model.Permissions `json:"permissions"`
 }
 
-type ListUsersResponse struct {
-	Users model.Users `json:"users"`
-}
-
 type ListTokensResponse struct {
 	Tokens model.AuthTokens `json:"tokens"`
 }

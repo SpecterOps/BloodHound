@@ -51,6 +51,7 @@ func TestRegister(t *testing.T) {
 		{http.MethodGet, "/api/v2/roles"},
 		{http.MethodGet, "/api/v2/roles/1"},
 		{http.MethodGet, "/api/v2/permissions/1"},
+		{http.MethodGet, "/api/v2/bloodhound-users"},
 	} {
 		req := httptest.NewRequest(tc.method, tc.path, nil)
 		var match mux.RouteMatch
@@ -81,6 +82,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		{http.MethodGet, "/api/v2/roles"},
 		{http.MethodGet, "/api/v2/roles/1"},
 		{http.MethodGet, "/api/v2/permissions/1"},
+		{http.MethodGet, "/api/v2/bloodhound-users"},
 	} {
 		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
 			var (

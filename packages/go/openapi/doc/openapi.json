@@ -1193,7 +1193,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1218,9 +1218,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -1576,7 +1573,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are first_name, last_name, email_address, principal_name, last_login, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are first_name, last_name, email_address, principal_name, last_login, created_at, updated_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1629,9 +1626,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
