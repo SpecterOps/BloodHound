@@ -31,7 +31,7 @@ import {
     Input,
     TextButton,
 } from 'doodle-ui';
-import React, { FC, forwardRef, useEffect, useState } from 'react';
+import React, { FC, forwardRef, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';
 import { IconList, freeIconsList } from '../../../../utils';
@@ -114,6 +114,7 @@ const GlyphSelectDialog: React.FC<{
 }> = ({ open, onCancel, onSelect, selected }) => {
     const [selectedIcon, setSelectedIcon] = useState<IconName | undefined>(selected);
     const [query, setQuery] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> | undefined = (e) =>
         setQuery(e.target.value.toLowerCase());
@@ -135,7 +136,12 @@ const GlyphSelectDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                <DialogContent maxWidth='lg'>
+                <DialogContent
+                    maxWidth='lg'
+                    onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        searchInputRef.current?.focus();
+                    }}>
                     <DialogTitle className='text-lg'>Select a Glyph</DialogTitle>
                     <DialogDescription className='text-lg'>
                         The selected glyph will apply to all nodes tagged in this Zone for displaying in the Explore
@@ -152,8 +158,7 @@ const GlyphSelectDialog: React.FC<{
                                     <IconButton
                                         aria-label='Clear Selection'
                                         onClick={handleClear}
-                                        className='focus-visible:rounded-sm'
-                                        aria-describedby='Clear selection'>
+                                        className='focus-visible:rounded-sm'>
                                         <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
                                             <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
                                             <CardContent className='first:pt-0 p-0'>
@@ -167,10 +172,10 @@ const GlyphSelectDialog: React.FC<{
                             <span className='relative flex items-center w-64 self-end'>
                                 <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
                                 <Input
+                                    ref={searchInputRef}
                                     placeholder='Search'
                                     variant='outlined'
                                     onChange={handleChange}
-                                    autoFocus
                                     className='pl-8'
                                 />
                             </span>
