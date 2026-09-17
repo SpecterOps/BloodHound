@@ -243,8 +243,6 @@ func TestContainsOnlyCypherSelectorErrors(t *testing.T) {
 		objectSelectorErr = errors.New("object selector failure")
 	)
 
-	t.Parallel()
-
 	testCases := []struct {
 		name     string
 		errs     []error
@@ -284,7 +282,7 @@ func TestContainsOnlyCypherSelectorErrors(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
+
 			require.Equal(t, testCase.expected, ContainsOnlyCypherSelectorErrors(testCase.errs))
 		})
 	}
@@ -303,7 +301,7 @@ func assertGraphKinds(ctx context.Context, graphDB graph.Database, kinds graph.K
 }
 
 func TestGenerateZoneNodesAndMemberEdges(t *testing.T) {
-	t.Parallel()
+
 	var (
 		suite     = setupIntegrationTestSuite(t)
 		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("11234567-9012-4567-9012-456789012345")}}
