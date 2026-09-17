@@ -1176,7 +1176,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, tagErrs...)
 		}
 
-		if appcfg.GetPrioritizationEnabled(ctx, db) {
+		if appcfg.GetZoneNodeEnabled(ctx, db) {
 			if err := generateZoneNodesAndMemberEdges(ctx, db, graphDB); err != nil {
 				slog.ErrorContext(
 					ctx,

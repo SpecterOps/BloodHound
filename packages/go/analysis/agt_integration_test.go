@@ -313,8 +313,7 @@ func TestGenerateZoneNodesAndMemberEdges(t *testing.T) {
 	)
 	defer suite.teardownIntegrationTestSuite(t)
 
-	suite.createFeatureFlag(t, appcfg.FeatureFindingsPrioritizationV0)
-	suite.enableFeatureFlag(t, appcfg.FeatureFindingsPrioritizationV0)
+	suite.enableFeatureFlag(t, appcfg.FeatureZoneNode)
 
 	populatedZone, err := db.CreateAssetGroupTag(ctx, model.AssetGroupTagTypeTier, testActor, "reconcile populated zone", "", null.Int32From(2), null.Bool{}, null.String{})
 	require.NoError(t, err)
