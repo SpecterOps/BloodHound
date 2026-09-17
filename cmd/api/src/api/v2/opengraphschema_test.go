@@ -437,7 +437,8 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					pzRulesWriter, err = zipWriter.Create("pz_rules.json")
 					require.NoError(t, err)
 					_, err = pzRulesWriter.Write([]byte(`{
-						"rules": [{
+						"pz_rules": [
+							{
 							"key": "tier_zero_admins",
 							"name": "Tier Zero Admins",
 							"description": "Seeds for tier zero",
@@ -447,7 +448,8 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 								"type": 2,
 								"value": "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n"
 							}]
-						}]
+							}
+						]
 					}`))
 					require.NoError(t, err)
 					savedQueriesWriter, err = zipWriter.Create("saved_queries.json")

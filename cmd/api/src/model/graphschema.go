@@ -820,10 +820,8 @@ type PZRulePayload struct {
 	AllowDisable *bool                 `json:"allow_disable,omitempty"`
 }
 
-// PZRulesPayload is the "rules" envelope for the pz_rules.json component.
-type PZRulesPayload struct {
-	Rules []PZRulePayload `json:"rules"`
-}
+// PZRulesPayload is the list of privilege-zone rules in the pz_rules component.
+type PZRulesPayload []PZRulePayload
 
 type GraphSchemaExtensionPayload struct {
 	Name        string `json:"name"`
@@ -1008,8 +1006,8 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 
 	// Optional components are only mapped when present
 	if s.PZRules != nil {
-		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(s.PZRules.Rules))
-		for _, rulePayload := range s.PZRules.Rules {
+		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(*s.PZRules))
+		for _, rulePayload := range *s.PZRules {
 			selectorSeeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
 			for _, seedPayload := range rulePayload.Seeds {
 				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))

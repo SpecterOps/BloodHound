@@ -1441,14 +1441,14 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 			args: args{
 				payload: GraphExtensionPayload{
 					GraphSchemaExtension: GraphSchemaExtensionPayload{Namespace: "TEST"},
-					PZRules: &PZRulesPayload{Rules: []PZRulePayload{{
+					PZRules: &PZRulesPayload{{
 						RuleKey: "rule_1",
 						Name:    "Rule 1",
 						Seeds: []SelectorSeedPayload{{
 							Type:  SelectorTypeCypher,
 							Value: "MATCH (n) RETURN n",
 						}},
-					}}},
+					}},
 				},
 			},
 			want: GraphExtensionInput{

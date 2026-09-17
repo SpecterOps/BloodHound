@@ -142,7 +142,7 @@ func openBundleComponent(file *zip.File) (io.ReadCloser, error) {
 func validateZipBundle(payload model.GraphExtensionPayload) error {
 	if len(payload.GraphRelationshipFindings) > 0 && payload.PZRules == nil {
 		return fmt.Errorf("extension declares relationship findings and requires a %q component", bundleFileNamePzRules)
-	} else if len(payload.GraphRelationshipFindings) > 0 && len(payload.PZRules.Rules) == 0 {
+	} else if len(payload.GraphRelationshipFindings) > 0 && len(*payload.PZRules) == 0 {
 		return fmt.Errorf("extension declares relationship findings and %q must contain at least one rule", bundleFileNamePzRules)
 	}
 	return nil
@@ -162,18 +162,27 @@ func extractExtensionDataFromJSON(payload io.Reader) (model.GraphExtensionPayloa
 	return graphExtension, nil
 }
 
-// extractPZRulesFromJSON - extracts a model.PZRulesPayload from the incoming payload. Will return an error if the
-// decoder fails to decode the payload.
-func extractPZRulesFromJSON(payload io.Reader) (model.PZRulesPayload, error) {
-	var pzRules model.PZRulesPayload
+// extractPZRulesFromJSON extracts PZ rules from the incoming component payload. It returns an error if the decoder
+// fails to decode the payload.
+func extractPZRulesFromJSON(payload io.Reader) (*model.PZRulesPayload, error) {
+	var (
+		// Contains the json tag for unmarshalling.
+		graphExtension model.GraphExtensionPayload
+		// Saves a non-nil slice to the extension payload, which determines whether the file has been seen.
+		nilPZRules model.PZRulesPayload
+	)
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
-		return pzRules, fmt.Errorf("failed to normalize %s: %w", bundleFileNamePzRules, err)
-	} else if err = json.NewDecoder(normFile).Decode(&pzRules); err != nil {
-		return pzRules, fmt.Errorf("unable to decode %s: %w", bundleFileNamePzRules, err)
+		return nil, fmt.Errorf("failed to normalize %s: %w", bundleFileNamePzRules, err)
+	} else if err = json.NewDecoder(normFile).Decode(&graphExtension); err != nil {
+		return nil, fmt.Errorf("unable to decode %s: %w", bundleFileNamePzRules, err)
 	}
 
-	return pzRules, nil
+	if graphExtension.PZRules == nil {
+		graphExtension.PZRules = &nilPZRules
+	}
+
+	return graphExtension.PZRules, nil
 }
 
 // extractSavedQueriesFromJSON - extracts saved queries from the incoming payload. Will return an error if the decoder
@@ -285,7 +294,7 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 			if rules, err := extractPZRulesFromJSON(reader); err != nil {
 				return err
 			} else {
-				extension.PZRules = &rules
+				extension.PZRules = rules
 			}
 		}
 	case bundleFileNameSavedQueries:
