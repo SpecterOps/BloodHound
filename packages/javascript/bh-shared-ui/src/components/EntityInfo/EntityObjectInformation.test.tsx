@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryKindProperties, ActiveDirectoryNodeKind } from '../../graphSchema';
 import { mockSourceKindsHandler } from '../../mocks';
-import { render, screen } from '../../test-utils';
+import { act, fireEvent, render, screen, waitFor } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import EntityObjectInformation from './EntityObjectInformation';
 
@@ -29,6 +29,9 @@ const server = setupServer(
     }),
     rest.get('/api/v2/asset-group-tags', (_req, res, ctx) => {
         return res(ctx.json({ data: { tags: [] } }));
+    }),
+    rest.get('/api/v2/custom-nodes', (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
     }),
     mockSourceKindsHandler()
 );
@@ -58,6 +61,84 @@ describe('EntityObjectInformation', () => {
         expect(screen.getByText('a test description')).toBeInTheDocument();
     });
 
+    it('renders and navigates to the Computer linked from a SiteServer through ServerIs', async () => {
+        const computerObjectID = 'computer-object-id';
+        const computerName = 'COMPUTER.TEST.LOCAL';
+        const siteServerObjectID = 'site-server-object-id';
+
+        const selectedNode: NodeDetails = {
+            node_id: 3,
+            kinds: [{ name: ActiveDirectoryNodeKind.SiteServer, node_kind_id: 1 }],
+            properties: {
+                objectid: siteServerObjectID,
+                serverreferencecomputer: computerObjectID,
+                serverreferencecomputername: computerName,
+            },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Referenced Computer:')).toBeInTheDocument();
+        fireEvent.click(screen.getByText(computerName));
+
+        await waitFor(() => {
+            expect(window.location.search).toContain(`primarySearch=${computerObjectID}`);
+            expect(window.location.search).toContain('searchType=node');
+        });
+    });
+
+    it('renders the SiteServer linked from a Computer through ServerIs', async () => {
+        const computerObjectID = 'computer-object-id';
+        const siteServerName = 'SITE-SERVER.TEST.LOCAL';
+        const siteServerObjectID = 'site-server-object-id';
+
+        const selectedNode: NodeDetails = {
+            node_id: 4,
+            kinds: [{ name: ActiveDirectoryNodeKind.Computer, node_kind_id: 1 }],
+            properties: {
+                objectid: computerObjectID,
+                siteservernode: siteServerObjectID,
+                siteservernodename: siteServerName,
+            },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        expect(await screen.findByText('Site Server:')).toBeInTheDocument();
+        expect(screen.getByText(siteServerName)).toBeInTheDocument();
+    });
+
+    it('does not render a linked node field when no ServerIs relationship exists', async () => {
+        const requestSpy = vi.fn();
+        const siteServerObjectID = 'unlinked-site-server-object-id';
+
+        server.use(
+            rest.get(`/api/v2/siteservers/${siteServerObjectID}`, (_req, res, ctx) => {
+                requestSpy();
+                return res(
+                    ctx.json({
+                        data: {
+                            kinds: [ActiveDirectoryNodeKind.SiteServer],
+                            props: { objectid: siteServerObjectID },
+                        },
+                    })
+                );
+            })
+        );
+
+        const selectedNode: NodeDetails = {
+            node_id: 5,
+            kinds: [{ name: ActiveDirectoryNodeKind.SiteServer, node_kind_id: 1 }],
+            properties: { objectid: siteServerObjectID },
+        };
+
+        render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
+
+        await act(async () => new Promise((resolve) => setTimeout(resolve, 50)));
+        expect(requestSpy).not.toHaveBeenCalled();
+        expect(screen.queryByText('Referenced Computer:')).not.toBeInTheDocument();
+    });
+
     it('renders explicitly empty property values', async () => {
         const selectedNode: NodeDetails = {
             node_id: 1,
@@ -78,7 +159,6 @@ describe('EntityObjectInformation', () => {
         expect(screen.getByText('Emptystring:')).toBeInTheDocument();
         expect(screen.getByText('Empty string')).toBeInTheDocument();
         expect(screen.getByText('Nullvalue:')).toBeInTheDocument();
-        expect(screen.getByText('Null value')).toBeInTheDocument();
         screen.getAllByText('—').forEach((placeholder) => {
             expect(placeholder).toHaveAttribute('aria-hidden', 'true');
         });

@@ -82,7 +82,6 @@ func assertSavedQueryConstraintError(t *testing.T, err error, expectedConstraint
 }
 
 func TestSavedQueries_CreateSavedQuery(t *testing.T) {
-	t.Parallel()
 
 	var (
 		suite          = setupIntegrationTestSuite(t)
@@ -389,7 +388,6 @@ func TestSavedQueries_CreateSavedQuery(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			setupData := testCase.setup(t, suite)
 			created := testCase.assert(t, suite, setupData)
