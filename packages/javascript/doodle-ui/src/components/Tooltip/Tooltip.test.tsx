@@ -19,6 +19,17 @@ import userEvent from '@testing-library/user-event';
 import { Tooltip } from './Tooltip';
 
 describe('Tooltip', () => {
+    it('uses AppIcon.Info as the default trigger', () => {
+        const { container } = render(<Tooltip tooltip='Helpful context' />);
+
+        expect(screen.getByRole('button', { name: 'Helpful context' })).not.toBeNull();
+        expect(container.querySelector('svg')).not.toBeNull();
+        expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+        expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 24 24');
+        expect(container.querySelector('svg')?.getAttribute('width')).toBe('16');
+        expect(container.querySelector('svg')?.getAttribute('height')).toBe('16');
+    });
+
     it('applies the default overlay z-index', async () => {
         const user = userEvent.setup();
         render(
@@ -29,6 +40,9 @@ describe('Tooltip', () => {
 
         await user.hover(screen.getByRole('button', { name: 'Show tooltip' }));
 
-        expect((await screen.findByRole('tooltip')).parentElement?.classList.contains('z-50')).toBe(true);
+        const tooltipContent = (await screen.findByRole('tooltip')).parentElement;
+
+        expect(tooltipContent?.classList.contains('z-[1700]')).toBe(true);
+        expect(tooltipContent?.classList.contains('dark:border-0')).toBe(true);
     });
 });

@@ -436,8 +436,7 @@ export const TagForm: FC = () => {
                                                             'Enables Analysis to produce Attack Path Findings for the Zone.'
                                                         }
                                                         contentProps={{
-                                                            className:
-                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            className: 'max-w-80',
                                                             side: 'right',
                                                             align: 'end',
                                                         }}
@@ -524,8 +523,7 @@ export const TagForm: FC = () => {
                                                                 'Require manual review and approval of object membership in the Zone.'
                                                             }
                                                             contentProps={{
-                                                                className:
-                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                                className: 'max-w-80',
                                                                 side: 'right',
                                                                 align: 'end',
                                                             }}
@@ -561,8 +559,7 @@ export const TagForm: FC = () => {
                                                                 'Custom glyphs visually mark nodes in the graph for quick context.'
                                                             }
                                                             contentProps={{
-                                                                className:
-                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                                className: 'max-w-80',
                                                                 side: 'right',
                                                                 align: 'end',
                                                             }}
