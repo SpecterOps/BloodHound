@@ -31,32 +31,67 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRegister(t *testing.T) {
-	t.Run("successfully registers identity routes", func(t *testing.T) {
-		var (
-			cfg        = config.Configuration{}
-			authorizer = auth.NewAuthorizer(nil)
-			routerInst = router.NewRouter(cfg, authorizer, "")
-			pool       = new(pgxpool.Pool)
-		)
+func TestRegister_RegistersRoutes(t *testing.T) {
+	type expected struct {
+		routeRegistered bool
+	}
 
-		// Should not panic
-		require.NotPanics(t, func() {
-			identity.Register(&routerInst, pool)
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		expected     expected
+	}
+
+	tests := []testData{
+		{
+			name: "Success: GET /api/v2/roles is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/roles", nil)
+			},
+			expected: expected{routeRegistered: true},
+		},
+		{
+			name: "Success: GET /api/v2/roles/{role_id} is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/roles/1", nil)
+			},
+			expected: expected{routeRegistered: true},
+		},
+		{
+			name: "Success: GET /api/v2/permissions is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/permissions", nil)
+			},
+			expected: expected{routeRegistered: true},
+		},
+		{
+			name: "Success: GET /api/v2/permissions/{permission_id} is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/1", nil)
+			},
+			expected: expected{routeRegistered: true},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				cfg        = config.Configuration{}
+				authorizer = auth.NewAuthorizer(nil)
+				routerInst = router.NewRouter(cfg, authorizer, "")
+				pool       = new(pgxpool.Pool)
+				match      mux.RouteMatch
+			)
+
+			require.NotPanics(t, func() {
+				identity.Register(&routerInst, pool, func() mux.MiddlewareFunc {
+					return func(next http.Handler) http.Handler { return next }
+				})
+			})
+
+			assert.Equal(t, testCase.expected.routeRegistered, routerInst.MuxRouter().Match(testCase.buildRequest(), &match))
 		})
-
-		// Verify routes are registered
-		var (
-			muxRouter = routerInst.MuxRouter()
-			match     mux.RouteMatch
-		)
-
-		// Test GET /api/v2/roles/{role_id} route
-		getRoleRequest := httptest.NewRequest(http.MethodGet, "/api/v2/roles/1", nil)
-		assert.True(t, muxRouter.Match(getRoleRequest, &match), "GET /api/v2/roles/{role_id} route should be registered")
-
-		// Test GET /api/v2/permissions/{permission_id} route
-		getPermissionRequest := httptest.NewRequest(http.MethodGet, "/api/v2/permissions/1", nil)
-		assert.True(t, muxRouter.Match(getPermissionRequest, &match), "GET /api/v2/permissions/{permission_id} route should be registered")
-	})
+	}
 }

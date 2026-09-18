@@ -17,6 +17,7 @@
 package identity
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
@@ -26,14 +27,13 @@ import (
 )
 
 // Register builds the identity store -> service -> handler chain and attaches
-// the identity routes to the provided router. It is called from the modules
-// registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+// the identity routes to the provided router.
+func Register(routerInst *router.Router, pool *pgxpool.Pool, rateLimit func() mux.MiddlewareFunc) {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
-	routes.Register(routerInst, handlerSet)
+	routes.Register(routerInst, handlerSet, rateLimit)
 }
