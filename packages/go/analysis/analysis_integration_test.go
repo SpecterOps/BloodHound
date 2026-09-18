@@ -99,6 +99,16 @@ func (s *IntegrationTestSuite) enableFeatureFlag(t *testing.T, key string) {
 	require.NoError(t, s.BHDatabase.SetFlag(s.Context, featureFlag))
 }
 
+func (s *IntegrationTestSuite) disableFeatureFlag(t *testing.T, key string) {
+	t.Helper()
+
+	featureFlag, err := s.BHDatabase.GetFlagByKey(s.Context, key)
+	require.NoError(t, err)
+
+	featureFlag.Enabled = false
+	require.NoError(t, s.BHDatabase.SetFlag(s.Context, featureFlag))
+}
+
 // getPostgresConfig reads key/value pairs from the default integration
 // config file and creates a pgtestdb configuration object.
 func getPostgresConfig(t *testing.T) pgtestdb.Config {

@@ -300,6 +300,37 @@ func assertGraphKinds(ctx context.Context, graphDB graph.Database, kinds graph.K
 	return err
 }
 
+func TestTagAssetGroupsAndTierZeroDeletesZoneNodesWhenFeatureDisabled(t *testing.T) {
+	var (
+		suite   = setupIntegrationTestSuite(t)
+		ctx     = suite.Context
+		db      = suite.BHDatabase
+		graphDB = suite.GraphDB
+	)
+	defer suite.teardownIntegrationTestSuite(t)
+
+	suite.enableFeatureFlag(t, appcfg.FeatureTierManagement)
+	suite.disableFeatureFlag(t, appcfg.FeatureZoneNode)
+
+	require.NoError(t, graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		_, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "zone node to delete",
+			common.ObjectID: "zone:delete-when-disabled",
+		}), schema.Zone)
+		return err
+	}))
+
+	zoneNodes, err := getZoneNodes(ctx, graphDB)
+	require.NoError(t, err)
+	require.Len(t, zoneNodes, 1)
+
+	assert.Empty(t, TagAssetGroupsAndTierZero(ctx, db, graphDB))
+
+	zoneNodes, err = getZoneNodes(ctx, graphDB)
+	require.NoError(t, err)
+	assert.Empty(t, zoneNodes)
+}
+
 func TestGenerateZoneNodesAndMemberEdges(t *testing.T) {
 
 	var (
