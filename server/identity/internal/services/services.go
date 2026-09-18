@@ -56,6 +56,7 @@ type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
+	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error)
 }
 
 type Service struct {
@@ -76,4 +77,8 @@ func (s *Service) GetPermission(ctx context.Context, id int) (Permission, error)
 
 func (s *Service) ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error) {
 	return s.db.ListRoles(ctx, queryFilters, sortItems)
+}
+
+func (s *Service) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error) {
+	return s.db.ListPermissions(ctx, queryFilters, sortItems)
 }
