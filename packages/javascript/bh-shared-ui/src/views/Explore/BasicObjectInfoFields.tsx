@@ -37,6 +37,7 @@ interface BasicObjectInfoFieldsProps {
         siteservernodename?: string;
         federatedidentitycredentialappid?: string;
     };
+    labels?: string[];
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
     nodeType?: string;
     zone?: string;
@@ -77,20 +78,22 @@ const RelatedKindField = (
 
 const basicObjectFields = [
     'zone',
+    'labels',
     'nodeType',
     'isTierZero',
     'isOwnedObject',
     CommonKindProperties.DisplayName,
     CommonKindProperties.ObjectID,
-] satisfies (KnownNodeProperties | CommonKindProperties | 'zone')[];
+] satisfies (KnownNodeProperties | CommonKindProperties | 'zone' | 'labels')[];
 
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
     properties: props,
     handleSourceNodeSelected,
+    labels,
     nodeType,
     zone,
 }): JSX.Element => {
-    const fieldValues = { ...props, nodeType, zone };
+    const fieldValues = { ...props, labels: labels?.join(', '), nodeType, zone };
     return (
         <>
             {basicObjectFields.map((field) => {
