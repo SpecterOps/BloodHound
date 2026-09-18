@@ -1180,7 +1180,17 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			if err := generateZoneNodesAndMemberEdges(ctx, db, graphDB); err != nil {
 				slog.ErrorContext(
 					ctx,
-					"Failed reconciling zone nodes",
+					"Failed generating zone nodes and member of zone edges",
+					attr.Error(err),
+				)
+				errs = append(errs, err)
+			}
+		} else {
+			// Passing no zones to delete all zone nodes
+			if _, err := reconcileZoneNodes(ctx, graphDB, nil); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed deleting zone nodes",
 					attr.Error(err),
 				)
 				errs = append(errs, err)
