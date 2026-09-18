@@ -1176,7 +1176,14 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, tagErrs...)
 		}
 
-		if appcfg.GetZoneNodeEnabled(ctx, db) {
+		if enabled, err := appcfg.GetZoneNodeEnabled(ctx, db); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error getting zone node feature flag",
+				attr.Error(err),
+			)
+			errs = append(errs, err)
+		} else if enabled {
 			if err := generateZoneNodesAndMemberEdges(ctx, db, graphDB); err != nil {
 				slog.ErrorContext(
 					ctx,
@@ -1196,6 +1203,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 				errs = append(errs, err)
 			}
 		}
+
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
 		if err := clearAssetGroupTags(ctx, db, graphDB); err != nil {
