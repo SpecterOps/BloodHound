@@ -211,7 +211,23 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 
 				startObjID = rel.Source.Value
 				endObjID   = rel.Target.Value
+
+				// Identity kinds are used to locate the nodes a relationship attaches to.
+				// Endpoints resolved against pre-existing nodes via property/name matching
+				// (e.g., an OpenGraph edge targeting a base AD or Azure node) carry the
+				// resolved node's kind filter, so the write targets that node's identity
+				// space. All other endpoints fall back to the ingest batch's source kind.
+				startIdentityKind = sourceKind
+				endIdentityKind   = sourceKind
 			)
+
+			if rel.Source.Resolved {
+				startIdentityKind = rel.Source.Kind
+			}
+
+			if rel.Target.Resolved {
+				endIdentityKind = rel.Target.Kind
+			}
 
 			if !batch.UseRawObjectIDs {
 				startObjID = strings.ToUpper(startObjID)
@@ -224,12 +240,12 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 					common.LastSeen: batch.IngestTime,
 				}), startKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
-				StartIdentityKind:       sourceKind,
+				StartIdentityKind:       startIdentityKind,
 				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: endObjID,
 					common.LastSeen: batch.IngestTime,
 				}), endKinds...),
-				EndIdentityKind:       sourceKind,
+				EndIdentityKind:       endIdentityKind,
 				EndIdentityProperties: []string{common.ObjectID.String()},
 				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
 			}
