@@ -23,6 +23,7 @@ const meta = {
     component: Icon,
     tags: ['autodocs'],
     args: {
+        'aria-label': 'Information',
         children: <AppIcon.Info size={24} />,
     },
     argTypes: {
@@ -30,15 +31,25 @@ const meta = {
             control: false,
             description: 'An AppIcon supplied by the consuming application.',
         },
-        tooltip: {
+        'aria-label': {
             control: 'text',
-            description: 'Optional tooltip content describing the icon.',
+            description: 'Required accessible label describing the icon.',
         },
     },
     parameters: {
         docs: {
             description: {
-                component: `Icon renders an \`AppIcon\` supplied by the consuming application without adding button semantics. BloodHound consumers should use \`AppIcon\` from \`bh-shared-ui\`. Use Icon for visual or informational icons, and add a tooltip when supporting context is useful. For an icon that performs an action, place the \`AppIcon\` inside \`IconButton\` instead.`,
+                component: `Icon renders an \`AppIcon\` supplied by the consuming application without adding button semantics. BloodHound consumers should use \`AppIcon\` from \`bh-shared-ui\`.
+
+Every Icon requires an \`aria-label\`. Icon applies the label to its child so the rendered SVG has an accessible name, and always displays the same label in a tooltip. The label should describe what the icon communicates, rather than its visual shape.
+
+\`\`\`tsx
+<Icon aria-label='Information about saved queries'>
+    <AppIcon.Info />
+</Icon>
+\`\`\`
+
+Use Icon for visual or informational icons. For an icon that performs an action, render the \`AppIcon\` inside \`IconButton\` instead. \`IconButton\` forwards its required \`aria-label\` to the internal Icon, which uses it for the tooltip.`,
             },
         },
     },
@@ -49,9 +60,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const WithTooltip: Story = {
+export const Filter: Story = {
     args: {
+        'aria-label': 'Filter options',
         children: <AppIcon.FilterOutline size={24} />,
-        tooltip: 'Filter options',
     },
 };

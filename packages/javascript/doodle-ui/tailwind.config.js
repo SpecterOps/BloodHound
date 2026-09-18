@@ -20,5 +20,5 @@ export default {
     presets: [DoodleUIPreset],
     plugins: [DoodleUIPlugin],
     darkMode: ['class'],
-    content: ['./src/**/*.tsx', '.storybook/preview.tsx'],
+    content: ['./src/**/*.{ts,tsx}', '.storybook/preview.tsx'],
 };

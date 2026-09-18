@@ -13,14 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DocsPage } from '@storybook/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
 import { useTheme } from '@storybook/theming';
-import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Button, IconButton as IconButtonComponent, TextButton as TextButtonComponent } from './Button';
+import { Button, TextButton as TextButtonComponent } from './Button';
 
 const ButtonDocsPage = () => {
     const theme = useTheme();
@@ -152,7 +151,6 @@ Using the correct element provides expected keyboard behavior and helps assistiv
 export default meta;
 type ButtonStory = StoryObj<typeof meta>;
 type TextButtonStory = StoryObj<typeof TextButtonComponent>;
-type IconButtonStory = StoryObj<typeof IconButtonComponent>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const DefaultType: ButtonStory = {
@@ -329,127 +327,6 @@ Use TextButton for lower-emphasis actions that keep the user in the current cont
                     <FontAwesomeIcon icon={faListUl} />
                     Disabled
                 </TextButtonComponent>
-            </div>
-        </>
-    ),
-};
-
-export const IconButton: IconButtonStory = {
-    args: {
-        variant: 'default',
-        disabled: false,
-        size: 16,
-        'aria-label': 'Show information',
-    },
-    argTypes: {
-        variant: {
-            options: ['default', 'primary', 'secondary'],
-            control: 'select',
-        },
-        children: {
-            control: false,
-            table: {
-                disable: true,
-            },
-        },
-        'aria-label': {
-            description: 'Required accessible name describing the action performed by the icon button.',
-            control: 'text',
-            table: {
-                category: 'Accessibility',
-                type: {
-                    summary: 'string',
-                },
-            },
-        },
-        size: {
-            description:
-                'Sets the icon width and height in pixels. Defaults to 16. The square button resizes with the icon.',
-            control: {
-                type: 'number',
-                min: 8,
-                step: 1,
-            },
-            table: {
-                category: 'Appearance',
-                defaultValue: {
-                    summary: '16',
-                },
-                type: {
-                    summary: 'number',
-                },
-            },
-        },
-        tooltip: {
-            description: 'Optional tooltip displayed for the AppIcon.',
-            control: 'text',
-        },
-    },
-    parameters: {
-        controls: {
-            exclude: ['fontColor'],
-        },
-        docs: {
-            description: {
-                story: `### Sizing
-
-The \`size\` prop sets the icon's width and height in pixels. The button automatically resizes around the icon while preserving its square shape and consistent padding.
-
-\`\`\`tsx
-<IconButton aria-label='Open filters' size={16}>
-    <AppIcon.FilterOutline />
-</IconButton>
-\`\`\`
-
-The default icon size is \`16px\`. By default, the button adds \`8px\` of padding on every side, so its total width and height are the icon size plus \`16px\`. For example, \`size={16}\` produces a \`32px × 32px\` button.
-
-Use the \`size\` prop to resize the icon and button together. Use \`className\` only when you need to override spacing or other presentation.
-
-### Accessible label
-
-- Because an icon usually does not provide an accessible name, every \`IconButton\` requires an \`aria-label\`. The label should describe the action performed by the button.
-
-\`\`\`tsx
-<IconButton aria-label='Show information'>
-    <AppIcon.Info />
-</IconButton>
-\`\`\`
-
-Do not use the icon's name as the label when it does not describe the action. For example, prefer \`"Show filter options"\` over \`"Filter icon"\`.
-
-The optional \`tooltip\` is rendered by the non-interactive \`Icon\` component. The surrounding \`IconButton\` remains responsible for button behavior and its required accessible name.`,
-            },
-        },
-    },
-    render: ({ ...buttonProps }) => (
-        <>
-            {/* Storybook controls affect only this button */}
-            <div className='flex justify-center mb-10'>
-                <IconButtonComponent {...buttonProps}>
-                    <AppIcon.Info />
-                </IconButtonComponent>
-            </div>
-            <hr className='mb-10' />
-            {/* These buttons remain static */}
-            <div className='flex items-center gap-4'>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Trash Icon' size={18}>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </IconButtonComponent>
-                    Primary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Filter' size={24} variant='secondary'>
-                        <AppIcon.FilterOutline />
-                    </IconButtonComponent>
-                    Secondary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Filter Icon' disabled size={24} variant='primary'>
-                        <AppIcon.FilterOutline />
-                    </IconButtonComponent>
-                    Disabled
-                </div>
             </div>
         </>
     ),
