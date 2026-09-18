@@ -112,7 +112,7 @@
         "luxon": "^3.7.1",
         "nanoid": "^3.3.18",
         "pinst": "^3.0.0",
-        "postcss": "8.5.20",
+        "postcss": "8.5.23",
         "prettier": "3.3.1",
         "prettier-plugin-organize-imports": "^4.2.0",
         "storybook": "^8.3.6",
