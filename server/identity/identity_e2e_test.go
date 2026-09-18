@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
@@ -142,6 +143,14 @@ type listRolesResponseEnvelope struct {
 	} `json:"data"`
 }
 
+// listPermissionsResponseEnvelope is the JSON envelope shape returned by the
+// GET /api/v2/permissions handler.
+type listPermissionsResponseEnvelope struct {
+	Data struct {
+		Permissions model.Permissions `json:"permissions"`
+	} `json:"data"`
+}
+
 // newListRolesHandler wires the identity slice's ListRoles handler backed by
 // the given database, wrapped in the same filter and sort middleware the route
 // applies in production (see routes.Register). The middleware parses and
@@ -159,63 +168,112 @@ func newListRolesHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	return handler.ServeHTTP
 }
 
-func TestGetPermission(t *testing.T) {
+// newListPermissionsHandler wires the identity slice's ListPermissions handler
+// through the production filter and sort middleware.
+func newListPermissionsHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	var (
+		handlerSet     = newIdentityHandlers(db)
+		permissionList = handlers.PermissionListView{}
+		handler        = middleware.FilterMiddleware(permissionList)(
+			middleware.SortMiddleware(permissionList)(http.HandlerFunc(handlerSet.ListPermissions)),
+		)
+	)
+
+	return handler.ServeHTTP
+}
+
+func TestIdentity_GetPermission(t *testing.T) {
+	type mock struct {
+		handler http.Handler
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		expected     expected
+	}
+
 	var (
 		db          = setupIdentityDB(t)
 		ctx         = context.Background()
 		handlerSet  = newIdentityHandlers(db)
-		handler     = handlerSet.GetPermission
-		permissions model.Permissions
+		muxRouter   = mux.NewRouter()
+		permissions []services.Permission
 		err         error
 	)
 
-	permissions, err = db.GetAllPermissions(ctx, "", model.SQLFilter{})
+	permissions, err = appdb.NewStore(db.Pool()).ListPermissions(ctx, params.Filters{}, params.SortItems{})
 	require.NoError(t, err)
 	require.NotEmpty(t, permissions, "expected migrations to seed at least one permission")
 	seededPermission := permissions[0]
+	muxRouter.HandleFunc("/api/v2/permissions/{permission_id}", handlerSet.GetPermission).Methods(http.MethodGet)
+	testMock := mock{handler: muxRouter}
 
-	newRequest := func(t *testing.T, permissionID string) *http.Request {
-		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/api/v2/permissions/"+permissionID, nil)
-		require.NoError(t, err)
-		return mux.SetURLVars(req, map[string]string{"permission_id": permissionID})
+	tt := []testData{
+		{
+			name: "Success: seeded permission is returned - 200",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/"+fmt.Sprintf("%d", seededPermission.ID), nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+				var envelope permissionResponseEnvelope
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Equal(t, seededPermission.ID, envelope.Data.ID)
+				assert.Equal(t, seededPermission.Authority, envelope.Data.Authority)
+				assert.Equal(t, seededPermission.Name, envelope.Data.Name)
+				assert.True(t, seededPermission.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded permission")
+				assert.True(t, seededPermission.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded permission")
+				assert.Equal(t, seededPermission.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded permission")
+			}},
+		},
+		{name: "Error: permission does not exist - 404", buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/99999999", nil) }, expected: expected{responseCode: http.StatusNotFound, responseHeader: http.Header{"Content-Type": []string{"application/json"}}}},
+		{name: "Error: permission ID is malformed - 400", buildRequest: func() *http.Request {
+			return httptest.NewRequest(http.MethodGet, "/api/v2/permissions/not-an-int", nil)
+		}, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}}},
 	}
 
-	t.Run("returns 200 OK with the permission for a valid ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, fmt.Sprintf("%d", seededPermission.ID)))
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			testMock.handler.ServeHTTP(recorder, testCase.buildRequest())
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
-
-		var envelope permissionResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		assert.Equal(t, seededPermission.ID, envelope.Data.ID)
-		assert.Equal(t, seededPermission.Authority, envelope.Data.Authority)
-		assert.Equal(t, seededPermission.Name, envelope.Data.Name)
-		assert.True(t, seededPermission.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded permission")
-		assert.True(t, seededPermission.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded permission")
-		assert.Equal(t, seededPermission.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded permission")
-	})
-
-	t.Run("returns 404 Not Found when the permission does not exist", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, "99999999"))
-		assert.Equal(t, http.StatusNotFound, recorder.Code)
-	})
-
-	t.Run("returns 400 Bad Request for a malformed permission ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, "not-an-int"))
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-	})
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.responseHeader, recorder.Result().Header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
 }
 
-func TestGetRole(t *testing.T) {
+func TestIdentity_GetRole(t *testing.T) {
+	type mock struct {
+		handler http.Handler
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		expected     expected
+	}
+
 	var (
 		db         = setupIdentityDB(t)
 		ctx        = context.Background()
 		handlerSet = newIdentityHandlers(db)
-		handler    = handlerSet.GetRole
+		muxRouter  = mux.NewRouter()
 		roles      model.Roles
 		err        error
 	)
@@ -224,44 +282,61 @@ func TestGetRole(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, roles, "expected migrations to seed at least one role")
 	seededRole := roles[0]
+	muxRouter.HandleFunc("/api/v2/roles/{role_id}", handlerSet.GetRole).Methods(http.MethodGet)
+	testMock := mock{handler: muxRouter}
 
-	newRequest := func(t *testing.T, roleID string) *http.Request {
-		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/api/v2/roles/"+roleID, nil)
-		require.NoError(t, err)
-		return mux.SetURLVars(req, map[string]string{"role_id": roleID})
+	tt := []testData{
+		{
+			name: "Success: seeded role is returned - 200",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/roles/"+fmt.Sprintf("%d", seededRole.ID), nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+				var envelope roleResponseEnvelope
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				assert.Equal(t, seededRole.ID, envelope.Data.ID)
+				assert.Equal(t, seededRole.Name, envelope.Data.Name)
+				assert.NotEmpty(t, envelope.Data.Permissions, "expected the role to preload its permissions")
+				assert.True(t, seededRole.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded role")
+				assert.True(t, seededRole.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded role")
+				assert.Equal(t, seededRole.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded role")
+			}},
+		},
+		{name: "Error: role does not exist - 404", buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/99999999", nil) }, expected: expected{responseCode: http.StatusNotFound, responseHeader: http.Header{"Content-Type": []string{"application/json"}}}},
+		{name: "Error: role ID is malformed - 400", buildRequest: func() *http.Request { return httptest.NewRequest(http.MethodGet, "/api/v2/roles/not-an-int", nil) }, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}}},
 	}
 
-	t.Run("returns 200 OK with the role for a valid ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, fmt.Sprintf("%d", seededRole.ID)))
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			testMock.handler.ServeHTTP(recorder, testCase.buildRequest())
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
-
-		var envelope roleResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		assert.Equal(t, seededRole.ID, envelope.Data.ID)
-		assert.Equal(t, seededRole.Name, envelope.Data.Name)
-		assert.NotEmpty(t, envelope.Data.Permissions, "expected the role to preload its permissions")
-		assert.True(t, seededRole.CreatedAt.Equal(envelope.Data.CreatedAt), "created_at should match the seeded role")
-		assert.True(t, seededRole.UpdatedAt.Equal(envelope.Data.UpdatedAt), "updated_at should match the seeded role")
-		assert.Equal(t, seededRole.DeletedAt.Valid, envelope.Data.DeletedAt.Valid, "deleted_at validity should match the seeded role")
-	})
-
-	t.Run("returns 404 Not Found when the role does not exist", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, "99999999"))
-		assert.Equal(t, http.StatusNotFound, recorder.Code)
-	})
-
-	t.Run("returns 400 Bad Request for a malformed role ID", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, "not-an-int"))
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-	})
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.responseHeader, recorder.Result().Header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
 }
 
-func TestListRoles(t *testing.T) {
+func TestIdentity_ListRoles(t *testing.T) {
+	type mock struct {
+		handler http.Handler
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func(t *testing.T) *http.Request
+		expected     expected
+	}
+
 	var (
 		db      = setupIdentityDB(t)
 		ctx     = context.Background()
@@ -274,6 +349,7 @@ func TestListRoles(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, roles, "expected migrations to seed at least one role")
 	seededRole := roles[0]
+	testMock := mock{handler: http.HandlerFunc(handler)}
 
 	newRequest := func(t *testing.T, query url.Values) *http.Request {
 		t.Helper()
@@ -284,91 +360,223 @@ func TestListRoles(t *testing.T) {
 		return req
 	}
 
-	t.Run("returns 200 OK with all seeded roles", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, url.Values{}))
+	tt := []testData{
+		{name: "Success: all seeded roles are returned - 200", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{}) }, expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			var envelope listRolesResponseEnvelope
+			require.NoError(t, json.Unmarshal(body, &envelope))
+			require.Len(t, envelope.Data.Roles, len(roles))
+			assert.NotEmpty(t, envelope.Data.Roles[0].Permissions, "expected roles to preload their permissions")
+		}}},
+		{name: "Success: roles are sorted by name - 200", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"sort_by": {"name"}}) }, expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			var envelope listRolesResponseEnvelope
+			require.NoError(t, json.Unmarshal(body, &envelope))
+			require.Len(t, envelope.Data.Roles, len(roles))
+			for i := 1; i < len(envelope.Data.Roles); i++ {
+				assert.LessOrEqual(t, envelope.Data.Roles[i-1].Name, envelope.Data.Roles[i].Name, "roles should be sorted by name ascending")
+			}
+		}}},
+		{name: "Success: roles are filtered by name - 200", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"name": {"eq:" + seededRole.Name}}) }, expected: expected{responseCode: http.StatusOK, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			var envelope listRolesResponseEnvelope
+			require.NoError(t, json.Unmarshal(body, &envelope))
+			require.Len(t, envelope.Data.Roles, 1)
+			assert.Equal(t, seededRole.Name, envelope.Data.Roles[0].Name)
+		}}},
+		{name: "Error: sort column is not supported - 400", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"sort_by": {"invalidColumn"}}) }, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) { assert.Contains(t, string(body), api.ErrorResponseDetailsNotSortable) }}},
+		{name: "Error: filter column is not supported - 400", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"foo": {"eq:bar"}}) }, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			assert.Contains(t, string(body), api.ErrorResponseDetailsColumnNotFilterable)
+		}}},
+		{name: "Error: filter predicate is malformed - 400", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"name": {"invalidPredicate:foo"}}) }, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			assert.Contains(t, string(body), api.ErrorResponseDetailsBadQueryParameterFilters)
+		}}},
+		{name: "Error: filter predicate is not supported - 400", buildRequest: func(t *testing.T) *http.Request { return newRequest(t, url.Values{"name": {"gt:0"}}) }, expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, assertBody: func(t *testing.T, body []byte) {
+			assert.Contains(t, string(body), api.ErrorResponseDetailsFilterPredicateNotSupported)
+		}}},
+	}
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			testMock.handler.ServeHTTP(recorder, testCase.buildRequest(t))
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.responseHeader, recorder.Result().Header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
+}
 
-		var envelope listRolesResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		require.Len(t, envelope.Data.Roles, len(roles))
-		assert.NotEmpty(t, envelope.Data.Roles[0].Permissions, "expected roles to preload their permissions")
-	})
+func TestIdentity_ListPermissions(t *testing.T) {
+	type mock struct {
+		handler http.Handler
+	}
 
-	t.Run("returns 200 OK with roles sorted by name ascending", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("sort_by", "name")
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
 
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
+	type testData struct {
+		name         string
+		buildRequest func(t *testing.T) *http.Request
+		expected     expected
+	}
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
+	var (
+		db          = setupIdentityDB(t)
+		ctx         = context.Background()
+		handler     = newListPermissionsHandler(db)
+		permissions []services.Permission
+		err         error
+	)
 
-		var envelope listRolesResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		require.Len(t, envelope.Data.Roles, len(roles))
-		for i := 1; i < len(envelope.Data.Roles); i++ {
-			assert.LessOrEqual(t, envelope.Data.Roles[i-1].Name, envelope.Data.Roles[i].Name, "roles should be sorted by name ascending")
-		}
-	})
+	permissions, err = appdb.NewStore(db.Pool()).ListPermissions(ctx, params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}})
+	require.NoError(t, err)
+	require.NotEmpty(t, permissions, "expected migrations to seed at least one permission")
+	seededPermission := permissions[0]
+	testMock := mock{handler: http.HandlerFunc(handler)}
 
-	t.Run("returns 200 OK with roles filtered by name", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("name", "eq:"+seededRole.Name)
+	newRequest := func(t *testing.T, query url.Values) *http.Request {
+		t.Helper()
+		reqCtx := context.WithValue(ctx, bhctx.ValueKey, &bhctx.Context{})
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, "/api/v2/permissions", nil)
+		require.NoError(t, err)
+		req.URL.RawQuery = query.Encode()
+		return req
+	}
 
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
+	tt := []testData{
+		{
+			name: "Success: all seeded permissions are returned - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listPermissionsResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.Len(t, envelope.Data.Permissions, len(permissions))
+				},
+			},
+		},
+		{
+			name: "Success: permissions are sorted by name - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"name"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listPermissionsResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Permissions, len(permissions))
+					for i := 1; i < len(envelope.Data.Permissions); i++ {
+						assert.LessOrEqual(t, envelope.Data.Permissions[i-1].Name, envelope.Data.Permissions[i].Name, "permissions should be sorted by name ascending")
+					}
+				},
+			},
+		},
+		{
+			name: "Success: permissions are filtered by authority - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"authority": {"eq:" + seededPermission.Authority}})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listPermissionsResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.NotEmpty(t, envelope.Data.Permissions)
+					for _, permission := range envelope.Data.Permissions {
+						assert.Equal(t, seededPermission.Authority, permission.Authority)
+					}
+				},
+			},
+		},
+		{
+			name: "Success: no permissions match - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"name": {"eq:does-not-exist"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listPermissionsResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.Empty(t, envelope.Data.Permissions)
+				},
+			},
+		},
+		{
+			name: "Error: sort column is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"invalidColumn"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsNotSortable)
+				},
+			},
+		},
+		{
+			name: "Error: filter column is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"foo": {"eq:bar"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+		},
+		{
+			name: "Error: filter predicate is malformed - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"name": {"invalidPredicate:foo"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsBadQueryParameterFilters)
+				},
+			},
+		},
+		{
+			name: "Error: filter predicate is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"authority": {"gt:app"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsFilterPredicateNotSupported)
+				},
+			},
+		},
+	}
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			testMock.handler.ServeHTTP(recorder, testCase.buildRequest(t))
 
-		var envelope listRolesResponseEnvelope
-		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
-		require.Len(t, envelope.Data.Roles, 1)
-		assert.Equal(t, seededRole.Name, envelope.Data.Roles[0].Name)
-	})
-
-	t.Run("returns 400 Bad Request for a non-sortable column", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("sort_by", "invalidColumn")
-
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
-
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsNotSortable)
-	})
-
-	t.Run("returns 400 Bad Request for a non-filterable column", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("foo", "eq:bar")
-
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
-
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsColumnNotFilterable)
-	})
-
-	t.Run("returns 400 Bad Request for a malformed filter predicate", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("name", "invalidPredicate:foo")
-
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
-
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
-	})
-
-	t.Run("returns 400 Bad Request for an unsupported filter predicate", func(t *testing.T) {
-		query := url.Values{}
-		query.Add("name", "gt:0")
-
-		recorder := httptest.NewRecorder()
-		handler(recorder, newRequest(t, query))
-
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
-	})
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.responseHeader, recorder.Result().Header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
 }

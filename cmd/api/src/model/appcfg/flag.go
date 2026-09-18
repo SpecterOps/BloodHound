@@ -54,6 +54,7 @@ const (
 	FeatureUseRawObjectID               = "use_raw_object_id"
 	FeatureOpenGraphDataQuality         = "opengraph_data_quality"
 	FeatureFindingsPrioritizationV0     = "findings_prioritization_v0"
+	FeatureZoneNode                     = "zone_node"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
@@ -126,6 +127,10 @@ func GetFlagEnabled(ctx context.Context, service GetFlagByKeyer, key string) boo
 // TODO Cleanup after Tiering GA
 func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureTierManagement)
+}
+
+func GetZoneNodeEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureZoneNode)
 }
 
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
