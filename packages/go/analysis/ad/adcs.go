@@ -142,6 +142,33 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
+			"Post-processing ADCSESC16",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC16(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC16 missing property",
+				attr.Error(err),
+			)
+		} else if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC16",
+				attr.Error(err),
+			)
+		}
+		return nil
+	})
+
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
 			"Post-processing GoldenCert",
 			attr.Namespace("analysis"),
 			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
