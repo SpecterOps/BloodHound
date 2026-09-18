@@ -19,16 +19,18 @@ import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName 
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from 'react-query';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
+import { ROUTE_HOME, ROUTE_LOGIN, ROUTE_USER_DISABLED } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
+
+    const location = useLocation();
 
     const queryClient = useQueryClient();
 
@@ -40,6 +42,15 @@ const Login: React.FC = () => {
     const [lastUsername, setLastUsername] = useState('');
 
     const [lastPassword, setLastPassword] = useState('');
+
+    // When a user is redirected to the login page from an unauthenticated deep link,
+    // AuthenticatedRoute stores the original location (including search and hash) in
+    // navigation state. Prefer returning the user to that full location after a
+    // successful login rather than always navigating to the home route. Fall back to
+    // the home route if the original location is absent or is the login page itself.
+    const from = (location.state as { from?: Location } | null)?.from;
+    const redirectTo =
+        from && from.pathname !== ROUTE_LOGIN ? `${from.pathname}${from.search || ''}${from.hash || ''}` : ROUTE_HOME;
 
     const title = (
         <Helmet>
@@ -81,7 +92,7 @@ const Login: React.FC = () => {
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
+    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={redirectTo} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (
