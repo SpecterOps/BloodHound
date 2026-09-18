@@ -17,6 +17,7 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"testing"
 
 	"golang.org/x/crypto/argon2"
@@ -83,5 +84,48 @@ func TestArgon2Digest_Validate(t *testing.T) {
 		t.Fatalf(`Expected content "This is a test." to validate against digest: %s`, digestMCFormatString)
 	} else if valid := digest.Validate("This should fail."); valid {
 		t.Fatalf(`Expected content "This should fail." to fail validation against digest: %s`, digestMCFormatString)
+	}
+}
+
+func TestArgon2Digest_Validate_NonStandardDigestLength(t *testing.T) {
+	const content = "This is a test."
+
+	salt := make([]byte, Argon2SaltByteLength)
+	if _, err := rand.Read(salt); err != nil {
+		t.Fatalf("Unexpected error while generating salt: %v", err)
+	}
+
+	for _, digestLength := range []uint32{8, 32} {
+		digest := Argon2Digest{
+			DigestVariant:   Argon2idVariant,
+			Version:         argon2.Version,
+			MemoryKibibytes: 1024,
+			NumIterations:   1,
+			NumThreads:      1,
+			Salt:            salt,
+			Digest:          argon2.IDKey([]byte(content), salt, 1, 1024, 1, digestLength),
+		}
+
+		if valid := digest.Validate(content); !valid {
+			t.Fatalf("Expected digest of length %d to validate content %q", digestLength, content)
+		} else if valid := digest.Validate("This should fail."); valid {
+			t.Fatalf("Expected digest of length %d to reject incorrect content", digestLength)
+		}
+	}
+}
+
+func TestArgon2Digest_Validate_EmptyDigest(t *testing.T) {
+	digest := Argon2Digest{
+		DigestVariant:   Argon2idVariant,
+		Version:         argon2.Version,
+		MemoryKibibytes: 1024,
+		NumIterations:   1,
+		NumThreads:      1,
+		Salt:            make([]byte, Argon2SaltByteLength),
+		Digest:          []byte{},
+	}
+
+	if valid := digest.Validate("anything"); valid {
+		t.Fatalf("Expected empty digest to fail validation")
 	}
 }
