@@ -74,7 +74,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 	type testCase struct {
 		name   string
 		setup  func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
-		assert func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error)
+		assert func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error)
 	}
 
 	tests := []testCase{
@@ -90,7 +90,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: model.ErrDuplicateSchemaNodeKindName.Error(),
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -109,7 +109,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: model.ErrDuplicateSchemaRelationshipKindName.Error(),
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -138,7 +138,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: model.ErrGraphExtensionBuiltIn.Error(),
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 			},
@@ -157,7 +157,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving environment kind 'NonExistent': entity not found",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -180,7 +180,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -203,7 +203,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving environment kind 'NonExistent2': entity not found",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -226,7 +226,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -249,7 +249,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving principal kind 'unknownKind': entity not found",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -272,7 +272,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "error retrieving relationship kind 'NonExistentRelKind'",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.ErrorContains(t, err, setupData.wantErrContains)
 				assertExtensionDoesNotExist(t, testSuite, setupData.input.ExtensionInput.Name)
@@ -294,10 +294,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -330,10 +330,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -349,10 +349,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -402,10 +402,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -496,10 +496,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -526,10 +526,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -549,10 +549,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -577,10 +577,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -596,10 +596,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 			},
 		},
@@ -620,10 +620,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 
 				icons, err := testSuite.BHDatabase.GetCustomNodeKinds(testSuite.Context)
 				require.NoError(t, err)
@@ -658,7 +658,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "duplicate",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.Error(t, err)
 				assert.ErrorContains(t, err, setupData.wantErrContains)
@@ -683,7 +683,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					wantErrContains: "duplicate",
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				assert.Error(t, err)
 				assert.ErrorContains(t, err, setupData.wantErrContains)
@@ -704,17 +704,17 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 						},
 					}},
 				}
-				updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, input)
+				result, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, input)
 				require.NoError(t, err)
-				require.False(t, updated)
+				require.False(t, result.ExtensionExisted)
 				return testSetupData{input: input}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				setupData.input.NodeKindsInput[0].Info = model.KindInfoInputs{}
-				updatedAgain, updateErr := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
+				updatedResult, updateErr := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
 				require.NoError(t, updateErr)
-				require.True(t, updatedAgain)
+				require.True(t, updatedResult.ExtensionExisted)
 				extensions, _, getExtErr := testSuite.BHDatabase.GetGraphSchemaExtensions(testSuite.Context, model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: setupData.input.ExtensionInput.Name}}}, model.Sort{}, 0, 1)
 				require.NoError(t, getExtErr)
 				nodeKinds, getNodeErr := testSuite.BHDatabase.GetGraphSchemaNodeKindsByExtensionId(testSuite.Context, extensions[0].ID)
@@ -745,10 +745,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 				assertCustomNodeKindAbsent(t, testSuite, "StartedAsDispNodeKind")
 			},
@@ -774,10 +774,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 				assertCustomNodeKindPresent(t, testSuite, "StartedAsNonDispNodeKind")
 			},
@@ -806,10 +806,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 				// The dropped non-display kind should now be stubbed into custom_node_kinds.
 				assertCustomNodeKindPresent(t, testSuite, "NonDisplayKindToDrop")
@@ -842,10 +842,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 					},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertGraphExtension(t, testSuite, setupData.input)
 				// verify the schema_node_kind_id FK is nulled
 				assertCustomNodeKindPresent(t, testSuite, "NodeKindToRemove")
@@ -863,8 +863,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtension(t *testing.T) {
 			defer teardownIntegrationTestSuite(t, &testSuite)
 
 			setupData := testCase.setup(t, testSuite)
-			updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
-			testCase.assert(t, testSuite, setupData, updated, err)
+			result, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.input)
+			testCase.assert(t, testSuite, setupData, result, err)
 		})
 	}
 }

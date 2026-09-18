@@ -29,47 +29,47 @@ import (
 // updates the in memory kinds map.
 func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	var (
-		err          error
-		schemaExists bool
+		err    error
+		result model.GraphExtensionUpsertResult
 	)
 
 	if err = openGraphExtension.Validate(); err != nil {
-		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 	}
 
 	// Separated due to markdown needing a stateful and long lived validation object.
 	for _, nodeKind := range openGraphExtension.NodeKindsInput {
 		if err = s.validateKindInfoMarkdown(nodeKind.Info); err != nil {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 	}
 	for _, relationshipKind := range openGraphExtension.RelationshipKindsInput {
 		if err = s.validateKindInfoMarkdown(relationshipKind.Info); err != nil {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 	}
 	for _, finding := range openGraphExtension.RelationshipFindingsInput {
 		if err = s.validateRemediationMarkdown(finding.RemediationInput); err != nil {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 	}
 
-	if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+	if result, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
 		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		// Translate kind info database errors to validation errors
 		if errors.Is(err, model.ErrKindInfoKindNotFound) ||
 			errors.Is(err, model.ErrKindInfoDuplicatePosition) ||
 			errors.Is(err, model.ErrKindInfoDuplicateInfoKey) {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
-		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
+		return false, fmt.Errorf("graph schema upsert error: %w", err)
 	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
-		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
+		return false, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
-	return schemaExists, nil
+	return result.ExtensionExisted, nil
 }
 
 // validateKindInfoMarkdown runs markdown safety validation over each kind-info entry's content.

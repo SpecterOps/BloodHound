@@ -251,7 +251,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - UpsertOpenGraphExtension error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("test error"))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{ExtensionExisted: false}, fmt.Errorf("test error"))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
@@ -266,7 +266,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
@@ -281,7 +281,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "fail - graph kinds refresh error",
 			fields: fields{
 				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(false, nil)
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(fmt.Errorf("test error"))
@@ -346,7 +346,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								RemediationInput:     model.RemediationInput{},
 							},
 						},
-					}).Return(false, nil)
+					}).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
@@ -440,7 +440,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "success_-_safe_kind_info_markdown_inserted",
 			fields: fields{
 				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
 				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
@@ -506,7 +506,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			name: "success - safe remediation markdown inserted",
 			fields: fields{
 				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(false, nil)
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), gomock.Any()).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
 				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
@@ -594,7 +594,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								RemediationInput:     model.RemediationInput{},
 							},
 						},
-					}).Return(true, nil)
+					}).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)

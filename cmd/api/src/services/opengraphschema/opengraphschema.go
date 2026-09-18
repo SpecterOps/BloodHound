@@ -26,7 +26,7 @@ import (
 //
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/opengraphschema.go -package=mocks . OpenGraphSchemaRepository
 type OpenGraphSchemaRepository interface {
-	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error)
+	UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (model.GraphExtensionUpsertResult, error)
 	GetGraphSchemaExtensions(ctx context.Context, extensionFilters model.Filters, sort model.Sort, skip, limit int) (model.GraphSchemaExtensions, int, error)
 	DeleteGraphSchemaExtension(ctx context.Context, extensionID int32) error
 	GetEnvironmentsFiltered(ctx context.Context, filters model.Filters) ([]model.SchemaEnvironment, error)

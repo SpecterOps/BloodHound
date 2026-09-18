@@ -36,14 +36,18 @@ const CustomNodeIconType = "font-awesome"
 // in place with their IDs preserved, and new rows are created. All mutations run inside a single
 // transaction that rolls back on any error.
 //
-// Returns true if the extension already existed before this call, false if it was newly created.
+// Returns the persisted extension and reconciliation results after a successful commit.
 // Returns ErrGraphExtensionBuiltIn if the named extension is a built-in and cannot be modified.
-func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
+func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (model.GraphExtensionUpsertResult, error) {
 	var (
-		err                 error
-		schemaExists        bool
-		extension           model.GraphSchemaExtension
-		reconciledNodeKinds kindReconcileResult[model.GraphSchemaNodeKind]
+		err                         error
+		schemaExists                bool
+		extension                   model.GraphSchemaExtension
+		reconciledNodeKinds         kindReconcileResult[model.GraphSchemaNodeKind]
+		reconciledRelationshipKinds kindReconcileResult[model.GraphSchemaRelationshipKind]
+		reconciledEnvironments      model.ReconcileResult[model.SchemaEnvironment]
+		reconciledFindings          model.ReconcileResult[model.SchemaFinding]
+		reconciledSavedQueries      model.ReconcileResult[model.SavedQuery]
 
 		tx                      = s.db.WithContext(ctx).Begin()
 		bloodhoundDBTransaction = BloodhoundDB{db: tx, idResolver: s.idResolver}
@@ -54,35 +58,44 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	}()
 
 	if err = tx.Error; err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed creating pgsql transaction: %w", err)
 	} else if extension, schemaExists, err = bloodhoundDBTransaction.findOrCreateExtension(ctx, graphExtensionInput.ExtensionInput); err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to find or create opengraph extension: %w", err)
 	} else if existingNodeKinds, err := bloodhoundDBTransaction.GetGraphSchemaNodeKindsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing node kinds: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing node kinds: %w", err)
 	} else if reconciledNodeKinds, err = bloodhoundDBTransaction.reconcileNodeKinds(ctx, extension.ID, graphExtensionInput.NodeKindsInput, existingNodeKinds); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile node kinds: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile node kinds: %w", err)
 	} else if err := bloodhoundDBTransaction.upsertCustomIcons(ctx, append(append(model.GraphSchemaNodeKinds{}, reconciledNodeKinds.Kinds.Created...), reconciledNodeKinds.Kinds.Updated...)); err != nil {
-		return schemaExists, fmt.Errorf("failed to upsert custom node icons: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to upsert custom node icons: %w", err)
 	} else if existingRelationshipKinds, err := bloodhoundDBTransaction.GetGraphSchemaRelationshipKindsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing relationship kinds: %w", err)
-	} else if _, err := bloodhoundDBTransaction.reconcileRelationshipKinds(ctx, extension.ID, graphExtensionInput.RelationshipKindsInput, existingRelationshipKinds); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile relationship kinds: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing relationship kinds: %w", err)
+	} else if reconciledRelationshipKinds, err = bloodhoundDBTransaction.reconcileRelationshipKinds(ctx, extension.ID, graphExtensionInput.RelationshipKindsInput, existingRelationshipKinds); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile relationship kinds: %w", err)
 	} else if existingEnvironments, err := bloodhoundDBTransaction.GetEnvironmentsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing environments: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.EnvironmentsInput, existingEnvironments, bloodhoundDBTransaction.environmentReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile environments: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing environments: %w", err)
+	} else if reconciledEnvironments, err = reconcile(ctx, graphExtensionInput.EnvironmentsInput, existingEnvironments, bloodhoundDBTransaction.environmentReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile environments: %w", err)
 	} else if existingFindings, err := bloodhoundDBTransaction.GetSchemaFindingsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing findings: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile findings: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing findings: %w", err)
+	} else if reconciledFindings, err = reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile findings: %w", err)
 	} else if existingSavedQueries, err := bloodhoundDBTransaction.GetSavedQueriesByExtensionID(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing saved queries: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile saved queries: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing saved queries: %w", err)
+	} else if reconciledSavedQueries, err = reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile saved queries: %w", err)
 	} else if err = tx.Commit().Error; err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, err
 	} else {
-		return schemaExists, nil
+		return model.GraphExtensionUpsertResult{
+			ExtensionExisted:           schemaExists,
+			Extension:                  extension,
+			NodeKindsResult:            reconciledNodeKinds.Kinds,
+			RelationshipKindsResult:    reconciledRelationshipKinds.Kinds,
+			KindInfosResult:            mergeReconcileResults(reconciledNodeKinds.KindInfo, reconciledRelationshipKinds.KindInfo),
+			EnvironmentsResult:         reconciledEnvironments,
+			RelationshipFindingsResult: reconciledFindings,
+			SavedQueriesResult:         reconciledSavedQueries,
+		}, nil
 	}
 }
 
