@@ -107,7 +107,7 @@ post:
             priority:
               type: integer
               format: int32
-              default: 0
+              default: 1
             disabled:
               type: boolean
               default: false
