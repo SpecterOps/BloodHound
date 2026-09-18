@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '../../../../test-utils';
+import { render, screen, waitFor } from '../../../../test-utils';
 import GlyphSelectDialog from './GlyphSelectDialog';
 
 const onCancel = vi.fn();
@@ -48,10 +48,37 @@ describe('Glyph Select Dialog', () => {
         expect(screen.getAllByText('lightbulb')).toHaveLength(2);
     });
 
+    it('focuses the search input without opening the clear-selection tooltip when reopened', async () => {
+        const { rerender } = render(
+            <GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />
+        );
+
+        const searchInput = screen.getByPlaceholderText('Search');
+
+        await waitFor(() => expect(document.activeElement).toBe(searchInput));
+        expect(screen.queryByRole('tooltip')).toBeNull();
+
+        rerender(<GlyphSelectDialog selected={'lightbulb'} open={false} onCancel={onCancel} onSelect={onSelect} />);
+        rerender(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
+
+        const reopenedSearchInput = await screen.findByPlaceholderText('Search');
+        await waitFor(() => expect(document.activeElement).toBe(reopenedSearchInput));
+        expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
     it('displays a tooltip for clearing the selected icon', async () => {
         render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
 
-        await user.hover(screen.getByRole('button', { name: 'Clear Selection' }));
+        const clearSelectionButton = screen.getByRole('button', { name: 'Clear Selection' });
+
+        expect(clearSelectionButton).toHaveClass('bg-transparent', 'text-inherit', '!shadow-none');
+        expect(clearSelectionButton).not.toHaveClass('bg-primary');
+        expect(clearSelectionButton.style.getPropertyValue('--icon-button-icon-size')).toBe('64px');
+
+        const selectedIconCard = clearSelectionButton.querySelector('[aria-label="Clear Selection"]');
+
+        expect(selectedIconCard).not.toBeNull();
+        await user.hover(selectedIconCard!);
 
         const tooltip = await screen.findByRole('tooltip');
         expect(tooltip).toHaveTextContent('Clear Selection');

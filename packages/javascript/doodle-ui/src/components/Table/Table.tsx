@@ -20,7 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Cell, Header } from '@tanstack/react-table';
-import { IconButton } from '../Button';
+import { IconButton } from '../IconButton';
 import { cn } from '../utils';
 
 const Table = React.forwardRef<

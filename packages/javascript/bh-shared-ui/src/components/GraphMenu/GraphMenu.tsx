@@ -22,15 +22,14 @@ import { FC, ReactNode } from 'react';
 const GraphMenu: FC<{
     label: string;
     icon: IconDefinition;
-    tooltip?: string;
     children: ReactNode;
-}> = ({ children, label, icon, tooltip }) => {
+}> = ({ children, label, icon }) => {
     const testId = `explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`;
 
     return (
         <Menu>
             <MenuTrigger asChild>
-                <IconButton aria-label={label} data-testid={testId} tooltip={tooltip}>
+                <IconButton aria-label={label} data-testid={testId}>
                     <FontAwesomeIcon icon={icon} />
                 </IconButton>
             </MenuTrigger>

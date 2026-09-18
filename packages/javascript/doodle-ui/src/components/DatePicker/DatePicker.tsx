@@ -17,8 +17,8 @@ import { faCalendarDay } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
-import { IconButton } from '../Button';
 import { Calendar, CalendarProps } from '../Calendar';
+import { IconButton } from '../IconButton';
 import { Input, InputProps } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { cn } from '../utils';

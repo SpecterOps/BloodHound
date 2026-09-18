@@ -395,7 +395,7 @@ const CypherSearchInner = ({
                                     }),
                                     'group px-1.5'
                                 )}>
-                                <Icon tooltip='Learn more about Cypher (opens in a new tab)'>
+                                <Icon aria-label='Learn more about Cypher (opens in a new tab)'>
                                     <AppIcon.Info size={24} />
                                 </Icon>
                             </a>
