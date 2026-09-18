@@ -8456,7 +8456,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are user_id, name, query, id, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are user_id, name, query, id, extension_id, category, created_at, updated_at, deleted_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -8478,6 +8478,20 @@
           },
           {
             "name": "user_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "extension_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "category",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -26436,6 +26450,15 @@
               },
               "description": {
                 "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "category": {
+                "type": "string",
+                "readOnly": true
               }
             }
           }
