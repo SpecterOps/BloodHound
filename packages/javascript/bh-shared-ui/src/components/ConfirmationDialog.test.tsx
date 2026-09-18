@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../test-utils';
+import { cleanup, render, screen, waitFor } from '../test-utils';
 import ConfirmationDialog from './ConfirmationDialog';
 
 describe('ConfirmationDialog', () => {
@@ -24,6 +24,7 @@ describe('ConfirmationDialog', () => {
     const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
+        vi.clearAllMocks();
         render(
             <ConfirmationDialog
                 open={true}
@@ -55,5 +56,54 @@ describe('ConfirmationDialog', () => {
 
         expect(testonCancel).toHaveBeenCalledTimes(0);
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it('should render custom button text and icons on the left', async () => {
+        cleanup();
+        render(
+            <ConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onCancel={testonCancel}
+                text='text-test'
+                title='title-test'
+                cancelText='Go back'
+                confirmText='Continue'
+                cancelIcon={<svg data-testid='cancel-icon' />}
+                confirmIcon={<svg data-testid='confirm-icon' />}
+            />
+        );
+        await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+
+        const cancelButton = screen.getByTestId('confirmation-dialog_button-no');
+        const confirmButton = screen.getByTestId('confirmation-dialog_button-yes');
+
+        expect(cancelButton).toHaveTextContent('Go back');
+        expect(confirmButton).toHaveTextContent('Continue');
+        expect(cancelButton.firstElementChild).toHaveAttribute('data-testid', 'cancel-icon');
+        expect(confirmButton.firstElementChild).toHaveAttribute('data-testid', 'confirm-icon');
+    });
+
+    it('should render custom button icons on the right', async () => {
+        cleanup();
+        render(
+            <ConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onCancel={testonCancel}
+                text='text-test'
+                title='title-test'
+                cancelIcon={<svg data-testid='cancel-icon' />}
+                confirmIcon={<svg data-testid='confirm-icon' />}
+                iconPosition='right'
+            />
+        );
+        await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+
+        const cancelButton = screen.getByTestId('confirmation-dialog_button-no');
+        const confirmButton = screen.getByTestId('confirmation-dialog_button-yes');
+
+        expect(cancelButton.lastElementChild).toHaveAttribute('data-testid', 'cancel-icon');
+        expect(confirmButton.lastElementChild).toHaveAttribute('data-testid', 'confirm-icon');
     });
 });

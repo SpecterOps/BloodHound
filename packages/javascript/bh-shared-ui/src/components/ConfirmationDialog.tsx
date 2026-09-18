@@ -71,6 +71,14 @@ const ConfirmationDialog: React.FC<{
         }, 1000);
     }, [onConfirm]);
 
+    const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
+        <>
+            {iconPosition === 'left' ? icon : null}
+            {buttonText}
+            {iconPosition === 'right' ? icon : null}
+        </>
+    );
+
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
@@ -98,17 +106,13 @@ const ConfirmationDialog: React.FC<{
                             onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>
-                            {cancelIcon && iconPosition === 'left' && cancelIcon}
-                            {cancelText}
-                            {cancelIcon && iconPosition === 'right' && cancelIcon}
+                            {renderButtonContent(cancelText, cancelIcon)}
                         </Button>
                         <Button
                             onClick={handleConfirm}
                             disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
-                            {confirmIcon && iconPosition === 'left' && confirmIcon}
-                            {confirmText}
-                            {confirmIcon && iconPosition === 'right' && confirmIcon}
+                            {renderButtonContent(confirmText, confirmIcon)}
                         </Button>
                     </DialogActions>
                 </DialogContent>
