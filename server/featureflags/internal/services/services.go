@@ -36,11 +36,13 @@ const (
 	FeatureAlerts                     = "alerts"
 	FeatureFindingsPrioritizationV0   = appcfg.FeatureFindingsPrioritizationV0
 	FeatureArtifactExpirationCleanup  = "artifact_expiration_cleanup"
+	FeatureZoneNode                   = "zone_node"
 )
 
 // Request source values used by the feature flags slice.
 const (
 	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
+	ZoneNodeFlagRequestSource       = "zone-node-feature-flag-toggle"
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
@@ -144,6 +146,16 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
 		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
+			flag.Enabled = !flag.Enabled
+
+			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {
+				return flag, errors.Join(err, rollbackErr)
+			}
+
+			return flag, err
+		}
+	} else if flag.Key == FeatureZoneNode {
+		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, ZoneNodeFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			flag.Enabled = !flag.Enabled
 
 			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {
