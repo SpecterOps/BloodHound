@@ -240,6 +240,8 @@ func TestIdentity_GetPermission(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			recorder := httptest.NewRecorder()
 			testMock.handler.ServeHTTP(recorder, testCase.buildRequest())
 
@@ -308,6 +310,8 @@ func TestIdentity_GetRole(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			recorder := httptest.NewRecorder()
 			testMock.handler.ServeHTTP(recorder, testCase.buildRequest())
 
@@ -395,6 +399,8 @@ func TestIdentity_ListRoles(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			recorder := httptest.NewRecorder()
 			testMock.handler.ServeHTTP(recorder, testCase.buildRequest(t))
 			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
@@ -569,6 +575,8 @@ func TestIdentity_ListPermissions(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			recorder := httptest.NewRecorder()
 			testMock.handler.ServeHTTP(recorder, testCase.buildRequest(t))
 
