@@ -47,7 +47,9 @@ func (s SavedQueries) IsSortable(column string) bool {
 		"id",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"category",
+		"extension_id":
 		return true
 	default:
 		return false
@@ -56,10 +58,12 @@ func (s SavedQueries) IsSortable(column string) bool {
 
 func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"user_id":     {Equals, NotEquals},
-		"name":        {Equals, NotEquals, ApproximatelyEquals},
-		"query":       {Equals, NotEquals},
-		"description": {Equals, NotEquals, ApproximatelyEquals},
+		"user_id":      {Equals, NotEquals},
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"query":        {Equals, NotEquals},
+		"description":  {Equals, NotEquals, ApproximatelyEquals},
+		"category":     {Equals, NotEquals},
+		"extension_id": {Equals, NotEquals},
 	}
 }
 
@@ -93,7 +97,8 @@ func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
 		"query",
-		"description":
+		"description",
+		"category":
 		return true
 	default:
 		return false
