@@ -49,6 +49,22 @@ import (
 
 const AGTBatchNodeUpdateSize = 10000
 
+const zoneNodeObjectIDPrefix = "zone:"
+
+const zoneNodeZoneProperty zoneNodeProperty = "zone"
+const zoneNodeAssetGroupTagIDProperty zoneNodeProperty = "asset_group_tag_id"
+
+type zoneNodeProperty string
+
+func (s zoneNodeProperty) String() string {
+	return string(s)
+}
+
+type zoneMembership struct {
+	memberID   graph.ID
+	zoneNodeID graph.ID
+}
+
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
 	*graph.Node
@@ -1120,7 +1136,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 }
 
 // TODO Cleanup tieringEnabled after Tiering GA
-func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database) []error {
+func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDB graph.Database) []error {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -1134,7 +1150,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
-		if err := clearSystemTags(ctx, graphDb); err != nil {
+		if err := clearSystemTags(ctx, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"AGT: wiping old system tags",
@@ -1143,7 +1159,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
+		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"AGT: migrating custom selector names failed",
@@ -1152,16 +1168,45 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if selectErrs := selectAssetGroupNodes(ctx, db, graphDb); len(selectErrs) > 0 {
+		if selectErrs := selectAssetGroupNodes(ctx, db, graphDB); len(selectErrs) > 0 {
 			errs = append(errs, selectErrs...)
 		}
 
-		if tagErrs := tagAssetGroupNodes(ctx, db, graphDb); len(tagErrs) > 0 {
+		if tagErrs := tagAssetGroupNodes(ctx, db, graphDB); len(tagErrs) > 0 {
 			errs = append(errs, tagErrs...)
 		}
+
+		if enabled, err := appcfg.GetZoneNodeEnabled(ctx, db); err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Error getting zone node feature flag",
+				attr.Error(err),
+			)
+			errs = append(errs, err)
+		} else if enabled {
+			if err := generateZoneNodesAndMemberEdges(ctx, db, graphDB); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed generating zone nodes and member of zone edges",
+					attr.Error(err),
+				)
+				errs = append(errs, err)
+			}
+		} else {
+			// Passing no zones to delete all zone nodes
+			if _, err := reconcileZoneNodes(ctx, graphDB, nil); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed deleting zone nodes",
+					attr.Error(err),
+				)
+				errs = append(errs, err)
+			}
+		}
+
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
-		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
+		if err := clearAssetGroupTags(ctx, db, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"AGT: clearing tags failed",
@@ -1170,14 +1215,14 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if err := clearSystemTags(ctx, graphDb); err != nil {
+		if err := clearSystemTags(ctx, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Failed clearing system tags",
 				attr.Error(err),
 			)
 			errs = append(errs, err)
-		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
+		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Failed updating asset group isolation tags",
@@ -1186,7 +1231,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
+		if err := tagActiveDirectoryTierZero(ctx, db, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Failed tagging Active Directory attack path roots",
@@ -1195,7 +1240,7 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
+		if err := parallelTagAzureTierZero(ctx, graphDB); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Failed tagging Azure attack path roots",
@@ -1206,4 +1251,348 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 	}
 
 	return errs
+}
+
+func getZones(ctx context.Context, db database.Database) (model.AssetGroupTags, error) {
+	if fetchedZones, err := db.GetAssetGroupTags(ctx, model.SQLFilter{
+		SQLString: "type = ?",
+		Params:    []any{model.AssetGroupTagTypeTier},
+	}); err != nil {
+		return nil, fmt.Errorf("get zones: %w", err)
+	} else {
+		return fetchedZones, nil
+	}
+}
+
+func getZoneNodes(ctx context.Context, graphDB graph.Database) ([]*graph.Node, error) {
+	var zoneNodes []*graph.Node
+
+	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if fetchedZoneNodes, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), graphschema.Zone))); err != nil {
+			return err
+		} else {
+			zoneNodes = fetchedZoneNodes.Slice()
+		}
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("get zone nodes: %w", err)
+	}
+
+	return zoneNodes, nil
+}
+
+func getZoneKind(zoneNode *graph.Node) (graph.Kind, error) {
+	if zoneKind, err := zoneNode.Properties.Get(zoneNodeZoneProperty.String()).String(); err != nil {
+		return nil, fmt.Errorf("zone node is missing zone property: %w", err)
+	} else {
+		return graph.StringKind(zoneKind), nil
+	}
+}
+
+func getZoneAssetGroupTagID(zoneNode *graph.Node) (int, error) {
+	if assetGroupTagID, err := zoneNode.Properties.Get(zoneNodeAssetGroupTagIDProperty.String()).Int(); err != nil {
+		return 0, fmt.Errorf("zone node is missing asset group tag ID property: %w", err)
+	} else {
+		return assetGroupTagID, nil
+	}
+}
+
+func zoneNodePropertiesMatch(zoneNode *graph.Node, zone model.AssetGroupTag) bool {
+	var expectedStringProperties = map[string]string{
+		common.Name.String():          zone.Name,
+		common.DisplayName.String():   zone.Name,
+		common.ObjectID.String():      zoneNodeObjectID(zone),
+		zoneNodeZoneProperty.String(): zone.ToKind().String(),
+	}
+
+	for propertyName, expectedValue := range expectedStringProperties {
+		if actualValue, err := zoneNode.Properties.Get(propertyName).String(); err != nil || actualValue != expectedValue {
+			return false
+		}
+	}
+
+	if assetGroupTagID, err := getZoneAssetGroupTagID(zoneNode); err != nil {
+		return false
+	} else {
+		return assetGroupTagID == zone.ID
+	}
+}
+
+func zoneNodePropertyMap(zone model.AssetGroupTag) graph.PropertyMap {
+	return graph.PropertyMap{
+		common.Name:                     zone.Name,
+		common.DisplayName:              zone.Name,
+		common.ObjectID:                 zoneNodeObjectID(zone),
+		zoneNodeZoneProperty:            zone.ToKind().String(),
+		zoneNodeAssetGroupTagIDProperty: zone.ID,
+	}
+}
+
+func updateZoneNodeProperties(zoneNode *graph.Node, zone model.AssetGroupTag) {
+	for propertyName, propertyValue := range zoneNodePropertyMap(zone) {
+		zoneNode.Properties.Set(propertyName.String(), propertyValue)
+	}
+}
+
+// identifyZoneNodeChanges returns the zone node IDs to delete and the zone nodes to create or update.
+func identifyZoneNodeChanges(existingZoneNodes []*graph.Node, zones model.AssetGroupTags) ([]graph.ID, []*graph.Node, []*graph.Node) {
+	var (
+		zoneNodesByTagID    = make(map[int]*graph.Node)
+		zoneNodeIDsToDelete []graph.ID
+		zoneNodesToCreate   []*graph.Node
+		zoneNodesToUpdate   []*graph.Node
+	)
+
+	zonesByID := make(map[int]model.AssetGroupTag, len(zones))
+	for _, zone := range zones {
+		zonesByID[zone.ID] = zone
+	}
+
+	for _, zoneNode := range existingZoneNodes {
+		assetGroupTagID, err := getZoneAssetGroupTagID(zoneNode)
+		if err != nil {
+			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
+
+			name, _ := zoneNode.Properties.GetOrDefault(common.Name.String(), "missing name").String()
+			slog.Warn("Zone node missing asset group tag ID property",
+				slog.String("id", zoneNode.ID.String()),
+				slog.String("name", name))
+			continue
+		}
+
+		if _, found := zonesByID[assetGroupTagID]; !found {
+			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
+			continue
+		}
+
+		if _, duplicate := zoneNodesByTagID[assetGroupTagID]; duplicate {
+			zoneNodeIDsToDelete = append(zoneNodeIDsToDelete, zoneNode.ID)
+			continue
+		}
+
+		zoneNodesByTagID[assetGroupTagID] = zoneNode
+	}
+
+	for _, zone := range zones {
+		if zoneNode, found := zoneNodesByTagID[zone.ID]; !found {
+			node := graph.PrepareNode(graph.AsProperties(zoneNodePropertyMap(zone)), graphschema.Zone)
+			zoneNodesToCreate = append(zoneNodesToCreate, node)
+		} else if !zoneNodePropertiesMatch(zoneNode, zone) {
+			updateZoneNodeProperties(zoneNode, zone)
+			zoneNodesToUpdate = append(zoneNodesToUpdate, zoneNode)
+		}
+	}
+
+	return zoneNodeIDsToDelete, zoneNodesToCreate, zoneNodesToUpdate
+}
+
+// reconcileZoneNodes applies the changes needed to synchronize the graph's zone nodes with the asset group tags.
+func reconcileZoneNodes(ctx context.Context, graphDB graph.Database, zones model.AssetGroupTags) ([]*graph.Node, error) {
+	var (
+		existingZoneNodes []*graph.Node
+		err               error
+	)
+
+	if existingZoneNodes, err = getZoneNodes(ctx, graphDB); err != nil {
+		return nil, err
+	}
+
+	zoneNodeIDsToDelete, zoneNodesToCreate, zoneNodesToUpdate := identifyZoneNodeChanges(existingZoneNodes, zones)
+
+	if len(zoneNodeIDsToDelete) > 0 || len(zoneNodesToCreate) > 0 || len(zoneNodesToUpdate) > 0 {
+		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+			for _, zoneNodeID := range zoneNodeIDsToDelete {
+				if err := batch.DeleteNode(zoneNodeID); err != nil {
+					return err
+				}
+			}
+
+			for _, zoneNode := range zoneNodesToCreate {
+				if err := batch.CreateNode(zoneNode); err != nil {
+					return err
+				}
+			}
+
+			if len(zoneNodesToUpdate) > 0 {
+				if err := batch.UpdateNodes(zoneNodesToUpdate); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return nil, fmt.Errorf("creating, updating, and deleting nodes: %w", err)
+		}
+	}
+
+	slog.InfoContext(
+		ctx,
+		"AGT: Reconciling zone nodes",
+		slog.Int("zone_nodes_created", len(zoneNodesToCreate)),
+		slog.Int("zone_nodes_deleted", len(zoneNodeIDsToDelete)),
+		slog.Int("zone_nodes_updated", len(zoneNodesToUpdate)),
+	)
+
+	// Need to query the DB to get any newly created zone nodes with their database ID
+	return getZoneNodes(ctx, graphDB)
+}
+
+/*
+Returns a slice of edge IDs to delete and a slice of zoneMemberships to create edges for
+*/
+func identifyMemberOfZoneEdgeChanges(existingEdges []*graph.Relationship, expectedMemberships map[zoneMembership]struct{}) ([]graph.ID, []*graph.Relationship) {
+	var (
+		existingMembershipSet = make(map[zoneMembership]struct{}, len(existingEdges))
+		edgeIDsToDelete       []graph.ID
+		edgesToCreate         []*graph.Relationship
+	)
+
+	for _, existingMembership := range existingEdges {
+		membership := zoneMembership{
+			memberID:   existingMembership.StartID,
+			zoneNodeID: existingMembership.EndID,
+		}
+
+		_, expected := expectedMemberships[membership]
+		_, duplicate := existingMembershipSet[membership]
+		if !expected || duplicate {
+			edgeIDsToDelete = append(edgeIDsToDelete, existingMembership.ID)
+			continue
+		}
+
+		existingMembershipSet[membership] = struct{}{}
+	}
+
+	for membership := range expectedMemberships {
+		if _, found := existingMembershipSet[membership]; !found {
+			relationship := &graph.Relationship{
+				StartID:    membership.memberID,
+				EndID:      membership.zoneNodeID,
+				Kind:       graphschema.MemberOfZone,
+				Properties: graph.NewProperties(),
+			}
+			edgesToCreate = append(edgesToCreate, relationship)
+		}
+	}
+
+	return edgeIDsToDelete, edgesToCreate
+}
+
+/*
+Returns a set of expected memberships and a slice of existing MemberOfZone edges
+*/
+func getExpectedMembershipsAndExistingEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) (map[zoneMembership]struct{}, []*graph.Relationship, error) {
+	var (
+		expectedMemberships = make(map[zoneMembership]struct{})
+		existingEdges       []*graph.Relationship
+		err                 error
+	)
+
+	if err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+
+		for _, zoneNode := range zoneNodes {
+
+			zoneKind, err := getZoneKind(zoneNode)
+			if err != nil {
+				return err
+			}
+
+			memberIDs, err := ops.FetchNodeIDs(tx.Nodes().Filter(query.And(
+				query.Kind(query.Node(), zoneKind),
+				query.Not(query.Kind(query.Node(), graphschema.Zone, graphschema.Meta)),
+			)))
+			if err != nil {
+				return err
+			}
+
+			for _, memberID := range memberIDs {
+				expectedMemberships[zoneMembership{memberID: memberID, zoneNodeID: zoneNode.ID}] = struct{}{}
+			}
+		}
+
+		if existingEdges, err = ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), graphschema.MemberOfZone))); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, nil, fmt.Errorf("read zone memberships: %w", err)
+	}
+
+	return expectedMemberships, existingEdges, nil
+}
+
+func reconcileMemberOfZoneEdges(ctx context.Context, graphDB graph.Database, zoneNodes []*graph.Node) error {
+
+	expectedMemberships, existingEdges, err := getExpectedMembershipsAndExistingEdges(ctx, graphDB, zoneNodes)
+
+	if err != nil {
+		return err
+	}
+
+	edgeIDsToDelete, edgesToCreate := identifyMemberOfZoneEdgeChanges(existingEdges, expectedMemberships)
+
+	if len(edgeIDsToDelete) > 0 || len(edgesToCreate) > 0 {
+		if err := graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
+			for _, membershipID := range edgeIDsToDelete {
+				if err := batch.DeleteRelationship(membershipID); err != nil {
+					return err
+				}
+			}
+
+			for _, edge := range edgesToCreate {
+				if err := batch.CreateRelationship(edge); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return fmt.Errorf("creating and deleting edges: %w", err)
+		}
+	}
+
+	slog.InfoContext(
+		ctx,
+		"AGT: Creating and deleting MemberOfZone edges",
+		slog.Int("member_of_zone_relationships_created", len(edgesToCreate)),
+		slog.Int("member_of_zone_relationships_deleted", len(edgeIDsToDelete)),
+	)
+
+	return nil
+}
+
+func generateZoneNodesAndMemberEdges(ctx context.Context, db database.Database, graphDB graph.Database) error {
+	defer measure.ContextMeasure(
+		ctx,
+		slog.LevelInfo,
+		"Generating Zone-Nodes and MemberOfZone Edges",
+		attr.Namespace("analysis"),
+		attr.Function("generateZoneNodesAndMemberEdges"),
+	)()
+
+	var (
+		zones     model.AssetGroupTags
+		zoneNodes []*graph.Node
+		err       error
+	)
+
+	if zones, err = getZones(ctx, db); err != nil {
+		return err
+	}
+
+	if zoneNodes, err = reconcileZoneNodes(ctx, graphDB, zones); err != nil {
+		return err
+	}
+
+	if err = reconcileMemberOfZoneEdges(ctx, graphDB, zoneNodes); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func zoneNodeObjectID(zone model.AssetGroupTag) string {
+	return zoneNodeObjectIDPrefix + strconv.Itoa(zone.ID)
 }

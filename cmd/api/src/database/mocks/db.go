@@ -1377,21 +1377,6 @@ func (mr *MockDatabaseMockRecorder) GetAllIngestTasks(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).GetAllIngestTasks), ctx)
 }
 
-// GetAllPermissions mocks base method.
-func (m *MockDatabase) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllPermissions", ctx, order, filter)
-	ret0, _ := ret[0].(model.Permissions)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllPermissions indicates an expected call of GetAllPermissions.
-func (mr *MockDatabaseMockRecorder) GetAllPermissions(ctx, order, filter any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), ctx, order, filter)
-}
-
 // GetAllRoles mocks base method.
 func (m *MockDatabase) GetAllRoles(ctx context.Context, order string, filter model.SQLFilter) (model.Roles, error) {
 	m.ctrl.T.Helper()

@@ -89,6 +89,26 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 	}
 }
 
+func (s *IntegrationTestSuite) enableFeatureFlag(t *testing.T, key string) {
+	t.Helper()
+
+	featureFlag, err := s.BHDatabase.GetFlagByKey(s.Context, key)
+	require.NoError(t, err)
+
+	featureFlag.Enabled = true
+	require.NoError(t, s.BHDatabase.SetFlag(s.Context, featureFlag))
+}
+
+func (s *IntegrationTestSuite) disableFeatureFlag(t *testing.T, key string) {
+	t.Helper()
+
+	featureFlag, err := s.BHDatabase.GetFlagByKey(s.Context, key)
+	require.NoError(t, err)
+
+	featureFlag.Enabled = false
+	require.NoError(t, s.BHDatabase.SetFlag(s.Context, featureFlag))
+}
+
 // getPostgresConfig reads key/value pairs from the default integration
 // config file and creates a pgtestdb configuration object.
 func getPostgresConfig(t *testing.T) pgtestdb.Config {
@@ -131,13 +151,13 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
+func (s *IntegrationTestSuite) teardownIntegrationTestSuite(t *testing.T) {
 	t.Helper()
 
-	if suite.GraphDB != nil {
-		suite.GraphDB.Close(suite.Context)
+	if s.GraphDB != nil {
+		s.GraphDB.Close(s.Context)
 	}
-	if suite.BHDatabase != nil {
-		suite.BHDatabase.Close(suite.Context)
+	if s.BHDatabase != nil {
+		s.BHDatabase.Close(s.Context)
 	}
 }

@@ -31,6 +31,7 @@ import {
     CollectorJobProfile,
     CollectorJobSchedule,
     CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -382,6 +383,8 @@ export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobP
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
+
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
 export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
@@ -525,6 +528,7 @@ export type UnifiedFinding = {
     first_seen: string;
     last_seen: string;
     prioritization_rank?: number | null;
+    is_cross_platform?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;

@@ -34,10 +34,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-type ListPermissionsResponse struct {
-	Permissions model.Permissions `json:"permissions"`
-}
-
 type ListUsersResponse struct {
 	Users model.Users `json:"users"`
 }
