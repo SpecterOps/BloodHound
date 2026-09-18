@@ -21,7 +21,6 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.
@@ -130,17 +129,8 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 	return GetFlagEnabled(ctx, service, FeatureTierManagement)
 }
 
-func GetZoneNodeEnabled(ctx context.Context, service GetFlagByKeyer) (bool, error) {
-	key := FeatureZoneNode
-
-	if flag, err := service.GetFlagByKey(ctx, key); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch feature flag",
-			slog.String("key", key),
-			attr.Error(err))
-		return false, err
-	} else {
-		return flag.Enabled, nil
-	}
+func GetZoneNodeEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	return GetFlagEnabled(ctx, service, FeatureZoneNode)
 }
 
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
