@@ -24,7 +24,7 @@ import {
     DialogTitle,
     Input,
 } from 'doodle-ui';
-import React, { useCallback, useState } from 'react';
+import React, { ReactNode, useCallback, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
     open: boolean;
@@ -35,7 +35,26 @@ const ConfirmationDialog: React.FC<{
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, title, text, onCancel, isLoading, error, challengeTxt = '', onConfirm }) => {
+    cancelIcon?: ReactNode;
+    confirmIcon?: ReactNode;
+    iconPosition?: 'left' | 'right';
+    cancelText?: string;
+    confirmText?: string;
+}> = ({
+    open,
+    title,
+    text,
+    onCancel,
+    isLoading,
+    error,
+    challengeTxt = '',
+    onConfirm,
+    cancelIcon,
+    confirmIcon,
+    iconPosition = 'left',
+    cancelText = 'Cancel',
+    confirmText = 'Confirm',
+}) => {
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
@@ -79,13 +98,17 @@ const ConfirmationDialog: React.FC<{
                             onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>
-                            Cancel
+                            {cancelIcon && iconPosition === 'left' && cancelIcon}
+                            {cancelText}
+                            {cancelIcon && iconPosition === 'right' && cancelIcon}
                         </Button>
                         <Button
                             onClick={handleConfirm}
                             disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
-                            Confirm
+                            {confirmIcon && iconPosition === 'left' && confirmIcon}
+                            {confirmText}
+                            {confirmIcon && iconPosition === 'right' && confirmIcon}
                         </Button>
                     </DialogActions>
                 </DialogContent>
