@@ -134,7 +134,9 @@ func GetZoneNodeEnabled(ctx context.Context, service GetFlagByKeyer) (bool, erro
 	key := FeatureZoneNode
 
 	if flag, err := service.GetFlagByKey(ctx, key); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch feature flag", slog.String("key", key), attr.Error(err))
+		slog.WarnContext(ctx, "Failed to fetch feature flag",
+			slog.String("key", key),
+			attr.Error(err))
 		return false, err
 	} else {
 		return flag.Enabled, nil
