@@ -634,7 +634,7 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", gomock.Cond(func(sqlFilter model.SQLFilter) bool {
-		if !assert.Contains(t, sqlFilter.SQLString, "first_name = 'a'") {
+		if !assert.Contains(t, sqlFilter.SQLString, "first_name = E'a'") {
 			return false
 		}
 		if !assert.Contains(t, sqlFilter.SQLString, "support_account = false") {
@@ -2699,7 +2699,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2936,7 +2936,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3012,8 +3012,8 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	// The filters are stored in a map before parsing, which means we don't know what order the resulted SQLFilter will be in.
 	// Mock out both possibilities to catch both cases.
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a' and user_id = '" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "' and name = 'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = E'a' and user_id = E'" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "' and name = E'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3096,7 +3096,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -3116,7 +3116,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -3136,7 +3136,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,
