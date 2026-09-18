@@ -14,21 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { IndicatorType } from '../types';
 import { cn } from '../utils';
-
-export type StatusType = 'good' | 'bad' | 'pending';
 
 type Props = {
     label?: string;
     pulse?: boolean;
-    status: StatusType;
+    status: IndicatorType;
 };
 
-const STATUS_COLORS: Record<StatusType, string> = {
+const STATUS_COLORS = {
     good: 'fill-[#BCD3A8]', // Light Olive Green
     bad: 'fill-[#D9442E]', // Red
     pending: 'fill-[#5CC3AD]', // Aqua Green
-};
+} as const satisfies Record<IndicatorType, string>;
 
 /**
  * Displays a colored circle and label corresponding to a given status value and type.

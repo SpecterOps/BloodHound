@@ -28,6 +28,25 @@ import (
 	"gorm.io/gorm"
 )
 
+type AgiData interface {
+	CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error)
+	UpdateAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
+	DeleteAssetGroup(ctx context.Context, assetGroup model.AssetGroup) error
+	GetAllAssetGroups(ctx context.Context, order string, filter model.SQLFilter) (model.AssetGroups, error)
+	GetAssetGroup(ctx context.Context, id int32) (model.AssetGroup, error)
+
+	SweepAssetGroupCollections(ctx context.Context)
+	GetAssetGroupCollections(ctx context.Context, assetGroupID int32, order string, filter model.SQLFilter) (model.AssetGroupCollections, error)
+	CreateAssetGroupCollection(ctx context.Context, collection model.AssetGroupCollection, entries model.AssetGroupCollectionEntries) error
+	GetLatestAssetGroupCollection(ctx context.Context, assetGroupID int32) (model.AssetGroupCollection, error)
+	GetTimeRangedAssetGroupCollections(ctx context.Context, assetGroupID int32, from int64, to int64, order string) (model.AssetGroupCollections, error)
+
+	GetAssetGroupSelector(ctx context.Context, id int32) (model.AssetGroupSelector, error)
+	DeleteAssetGroupSelector(ctx context.Context, selector model.AssetGroupSelector) error
+	UpdateAssetGroupSelectors(ctx context.Context, assetGroup model.AssetGroup, selectorSpecs []model.AssetGroupSelectorSpec, systemSelector bool) (model.UpdatedAssetGroupSelectors, error)
+	DeleteAssetGroupSelectorsForAssetGroups(ctx context.Context, assetGroupIds []int) error
+}
+
 func (s *BloodhoundDB) CreateAssetGroup(ctx context.Context, name, tag string, systemGroup bool) (model.AssetGroup, error) {
 	var (
 		assetGroup = model.AssetGroup{

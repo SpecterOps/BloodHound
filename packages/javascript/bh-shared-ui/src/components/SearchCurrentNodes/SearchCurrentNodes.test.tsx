@@ -19,9 +19,9 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render } from '../../test-utils';
 import SearchCurrentNodes, { NO_RESULTS_TEXT } from './SearchCurrentNodes';
-import { GraphNodes } from './types';
+import { GraphRecords } from './types';
 
-const nodes: GraphNodes = {
+const nodes: GraphRecords = {
     '1': {
         label: 'computer_node',
         kind: 'Computer',
@@ -45,6 +45,16 @@ const nodes: GraphNodes = {
         isTierZero: false,
         isOwnedObject: false,
         lastSeen: '',
+    },
+    rel_2_MemberOf_3: {
+        label: {
+            text: 'MemberOf',
+        },
+        id1: '2',
+        id2: '3',
+        end2: {
+            arrow: true,
+        },
     },
 };
 

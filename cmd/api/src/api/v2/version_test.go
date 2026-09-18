@@ -50,4 +50,5 @@ func TestGetVersion(t *testing.T) {
 	router.ServeHTTP(response, req)
 	require.Equal(t, http.StatusOK, response.Code)
 	assert.Contains(t, response.Body.String(), "v2")
+	assert.Contains(t, response.Body.String(), "community")
 }

@@ -16,8 +16,25 @@
 
 package ein
 
+import (
+	"fmt"
+
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/graph"
+)
+
 const (
 	SerialError           = "error deserializing %s: %v"
 	ExtractError          = "failed to extract owner id/type from directory object: %v"
 	AccessAllowedCallback = "AccessAllowedCallback"
 )
+
+func ParseKind(rawKind string) (graph.Kind, error) {
+	for kind := range graphschema.ValidKinds {
+		if kind.String() == rawKind {
+			return kind, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown kind %s", rawKind)
+}

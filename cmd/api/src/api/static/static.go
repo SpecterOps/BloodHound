@@ -17,7 +17,6 @@
 package static
 
 import (
-	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -70,12 +70,13 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		assetPath = cfg.IndexPath
 	}
 
-	if fin, err := fetchAsset(cfg, assetPath); err != nil {
+	if assetFile, err := fetchAsset(cfg, assetPath); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if fileInfo, err := fin.Stat(); err != nil || fileInfo == nil {
+	} else if fileInfo, err := assetFile.Stat(); err != nil || fileInfo == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		assetFile.Close()
 	} else {
-		defer fin.Close()
+		defer assetFile.Close()
 
 		var (
 			assetExtension = filepath.Ext(fileInfo.Name())
@@ -90,8 +91,13 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 		response.Header().Set(headers.ContentType.String(), contentType)
 		response.Header().Set(headers.StrictTransportSecurity.String(), utils.HSTSSetting)
 
-		if _, err := io.Copy(response, fin); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Failed flushing static file content for asset %s to client: %v", assetPath, err))
+		if _, err := io.Copy(response, assetFile); err != nil {
+			slog.ErrorContext(
+				request.Context(),
+				"Failed flushing static file content to client",
+				slog.String("asset_path", assetPath),
+				attr.Error(err),
+			)
 		}
 	}
 }

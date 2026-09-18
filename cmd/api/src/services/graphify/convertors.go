@@ -23,13 +23,18 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
-func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
-	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData, useRawObjectIDs bool) error {
+	objectID := entity.ID
+	if !useRawObjectIDs {
+		objectID = strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+	}
 
 	node := ein.IngestibleNode{
 		ObjectID:    objectID,
@@ -44,9 +49,9 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	// If a "objectid" is present in the property map, verify it matches the top-level ID
 	if rawID, ok := node.PropertyMap["objectid"]; ok {
 		if propertyID, ok := rawID.(string); ok && !strings.EqualFold(propertyID, objectID) {
-			slog.Warn("objectid in property map does not match top-level id of node; skipping.",
-				slog.Any("properties.objectid", propertyID),
-				slog.String("expected objectid", objectID),
+			slog.Warn("The objectid in property map does not match top-level id of node; skipping.",
+				slog.String("properties_objectid", propertyID),
+				slog.String("expected_objectid", objectID),
 			)
 			return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
 		}
@@ -58,6 +63,33 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 		node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
 	}
 
+	// BloodHound convention: environment IDs are uppercased (based on flag)
+	if !useRawObjectIDs {
+		if envID, ok := node.PropertyMap[graphschema.EnvironmentIDKey]; ok {
+			if envIDStr, ok := envID.(string); ok {
+				node.PropertyMap[graphschema.EnvironmentIDKey] = strings.ToUpper(envIDStr)
+			}
+		}
+	}
+
+	// if a domain is generically-ingested; it needs this property uppercased to
+	// be consistent with the traditional sharphound ingestion code path, which
+	// always uppercases domain SIDs regardless of useRawObjectIDs
+	if domainSID, ok := node.PropertyMap[ad.DomainSID.String()]; ok {
+		if domainSIDStr, ok := domainSID.(string); ok {
+			node.PropertyMap[ad.DomainSID.String()] = strings.ToUpper(domainSIDStr)
+		}
+	}
+
+	// if a tenant is generically-ingested; it needs this property uppercased to
+	// be consistent with the traditional azurehound ingestion code path, which
+	// always uppercases tenant IDs regardless of useRawObjectIDs
+	if tenantID, ok := node.PropertyMap[azure.TenantID.String()]; ok {
+		if tenantIDStr, ok := tenantID.(string); ok {
+			node.PropertyMap[azure.TenantID.String()] = strings.ToUpper(tenantIDStr)
+		}
+	}
+
 	converted.NodeProps = append(converted.NodeProps, node)
 	return nil
 }
@@ -65,14 +97,16 @@ func ConvertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 func ConvertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.Start.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
-			Kind:    graph.StringKind(entity.Start.Kind),
+			Value:    entity.Start.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:     graph.StringKind(entity.Start.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.Start.PropertyMatchers),
 		},
 		ein.IngestibleEndpoint{
-			Value:   strings.ToUpper(entity.End.Value),
-			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
-			Kind:    graph.StringKind(entity.End.Kind),
+			Value:    entity.End.Value,
+			MatchBy:  ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:     graph.StringKind(entity.End.Kind),
+			Matchers: ein.PropertyMatchersToMatchExpressions(entity.End.PropertyMatchers),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
@@ -173,6 +207,7 @@ func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time)
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
+	converted.NodeProps = append(converted.NodeProps, ein.ParseGPOData(gpo))
 }
 
 func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
@@ -296,5 +331,42 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 
 	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.IssuancePolicy); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)
+	}
+}
+
+func convertSiteData(site ein.Site, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertSiteToNode(site, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, site.Aces, site.ObjectIdentifier, ad.Site)...)
+
+	if rel := ein.ParseObjectContainer(site.IngestBase, ad.Site); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+
+	if len(site.ChildObjects) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(site.ChildObjects, site.ObjectIdentifier, ad.Site)...)
+	}
+
+	if len(site.Links) > 0 {
+		converted.RelProps = append(converted.RelProps, ein.ParseGpLinks(site.Links, site.ObjectIdentifier, ad.Site)...)
+	}
+}
+
+func convertSiteServerData(siteServer ein.SiteServer, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(siteServer.IngestBase, ad.SiteServer, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps, ein.ParseSiteServerData(siteServer)...)
+
+	if rel := ein.ParseObjectContainer(siteServer.IngestBase, ad.SiteServer); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+}
+
+func convertSiteSubnetData(siteSubnet ein.SiteSubnet, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(siteSubnet), ad.SiteSubnet, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+
+	if rel := ein.ParseObjectContainer(ein.IngestBase(siteSubnet), ad.SiteSubnet); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
 	}
 }

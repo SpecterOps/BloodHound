@@ -5,7 +5,7 @@
     "go.buildFlags": ["-tags=integration,serial_integration,slow_integration"],
     "go.lintOnSave": "package",
     "go.lintTool": "golangci-lint-v2",
-    "go.lintFlags": ["--path-mode=abs", "--config", ".golangci.json"],
+    "go.lintFlags": ["--path-mode=abs"],
     "go.formatTool": "goimports",
     "go.testEnvVars": {
         "INTEGRATION_CONFIG_PATH": "${workspaceFolder}/local-harnesses/integration.config.json"
@@ -14,6 +14,5 @@
     "go.useLanguageServer": true,
     "gopls": {
         "ui.semanticTokens": true
-    },
-    "python.analysis.extraPaths": ["./packages/python/beagle"]
+    }
 }

@@ -21,8 +21,8 @@ post:
   summary: Delete your BloodHound data
   description:
     Wipes your BloodHound data permanently. Specify the data to delete in the request body.
-    Possible data includes collected graph data, custom high value selectors, file ingest history,
-    and data quality history.
+    Possible data includes collected graph data, relationships of specific types, custom high value selectors,
+    file ingest history, and data quality history.
   tags:
     - Database
     - Community
@@ -35,12 +35,35 @@ post:
           properties:
             deleteCollectedGraphData:
               type: boolean
+              description: >
+                When true, deletes all collected graph nodes and edges. Cannot be combined with
+                deleteSourceKinds or deleteRelationships.
+            deleteSourceKinds:
+              type: array
+              description: >
+                A list of source kind IDs (from the source_kinds table) whose associated graph nodes and source kind
+                records will be deleted. Use 0 as a special value to delete all "sourceless" nodes - nodes
+                that exist in the graph but are not attributed to any source kind. Non-existent IDs will result in a 400 error.
+              items:
+                type: integer
+            deleteRelationships:
+              type: array
+              description: >
+                A list of relationship kind names (e.g. "HasSession") whose edges will be deleted from the graph.
+                Each value must be a valid, known relationship kind. Cannot be combined with deleteCollectedGraphData.
+              items:
+                type: string
             deleteFileIngestHistory:
               type: boolean
+              description: When true, deletes all file ingest job history records.
             deleteDataQualityHistory:
               type: boolean
+              description: When true, deletes all data quality history records.
             deleteAssetGroupSelectors:
               type: array
+              description: >
+                A list of asset group IDs whose custom selectors will be deleted.
+                Triggers a re-analysis after deletion.
               items:
                 type: integer
   responses:

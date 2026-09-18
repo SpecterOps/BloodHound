@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
+import { useTheme } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
@@ -30,10 +31,11 @@ import {
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { getNodeRadius } from 'src/rendering/utils/utils';
+import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
+import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
@@ -91,6 +93,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const theme = useTheme();
+    const isExploreGraphHighlight = useAppSelector((state) => state.global.view.isExploreGraphHighlight);
+    const isExploreGraphLabelClip = useAppSelector((state) => state.global.view.isExploreGraphLabelClip);
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -103,45 +109,41 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
-    useImperativeHandle(
-        sigmaChartRef,
-        () => {
-            return {
-                zoomTo: (id: string) => {
-                    const node = sigma.getNodeDisplayData(id);
+    useImperativeHandle(sigmaChartRef, () => {
+        return {
+            zoomTo: (id: string) => {
+                const node = sigma.getNodeDisplayData(id);
 
-                    if (node) {
-                        sigma.getCamera().animate(
-                            {
-                                x: node?.x,
-                                y: node?.y,
-                                ratio: 1,
-                            },
-                            {
-                                easing: 'quadraticOut',
-                            },
-                            () => {
-                                sigma.scheduleRefresh();
-                            }
-                        );
-                    }
-                },
-                resetCamera: () => {
-                    resetCamera(sigma);
-                },
+                if (node) {
+                    sigma.getCamera().animate(
+                        {
+                            x: node?.x,
+                            y: node?.y,
+                            ratio: 1,
+                        },
+                        {
+                            easing: 'quadraticOut',
+                        },
+                        () => {
+                            sigma.scheduleRefresh();
+                        }
+                    );
+                }
+            },
+            resetCamera: () => {
+                resetCamera(sigma);
+            },
 
-                runSequentialLayout: () => {
-                    sequentialLayout(graph);
-                    resetCamera(sigma);
-                },
-                runStandardLayout: () => {
-                    standardLayout(graph);
-                    resetCamera(sigma);
-                },
-            };
-        },
-        [sigma, graph]
-    );
+            runSequentialLayout: () => {
+                sequentialLayout(graph);
+                resetCamera(sigma);
+            },
+            runStandardLayout: () => {
+                standardLayout(graph);
+                resetCamera(sigma);
+            },
+        };
+    }, [sigma, graph]);
 
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
@@ -243,6 +245,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 // Prevent zoom when node is double clicked
                 preventAllDefaults(event);
             },
+            doubleClick: (event) => {
+                // Prevent zoom when graph is double clicked
+                preventAllDefaults(event);
+            },
             clickNode: (event) => {
                 if (draggedMeta.cancelNextClick) {
                     // Click handler is skipped, canceling the click. State is unset
@@ -274,23 +280,68 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
+    const isHighlightedItemInGraph = useMemo(
+        () => getIsHighlightedItemInGraph(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
+
+    const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
+        () => getFullPathHighlightedEntities(graph, highlightedItem),
+        [graph, highlightedItem]
+    );
+
     useEffect(() => {
+        const bgColor = theme.neutral.primary;
+        // dimFactor is how much of the original color shows through (1 = full, 0 = fully hidden).
+        // Equivalent to 1 - nodeBlend from the old CPU-blend approach: dark 1-0.5=0.5, light 1-0.8=0.2.
+        const nodeDimFactor = darkMode ? 0.5 : 0.2;
+        const edgeBlend = darkMode ? 0.6 : 0.9;
+        const labelDimFactor = darkMode ? 0.3 : 0.1;
+
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedNodeIds.has(node) &&
+                    isHighlightedItemInGraph;
+
                 return {
                     ...data,
                     highlighted: node === highlightedItem,
+                    isExploreGraphLabelClip,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    // Always pass the canvas background color so the shader can dim toward it.
+                    graphBgColor: bgColor,
+                    ...(isDimmed && {
+                        labelDimFactor,
+                        dimFactor: nodeDimFactor,
+                        // Keep label background dimmed — labels are rendered on canvas 2D, not by the shader.
+                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 1 - nodeDimFactor),
+                    }),
                 };
             },
             edgeReducer: (edge, data) => {
                 const camera = sigma.getCamera();
+                const isDimmed =
+                    isExploreGraphHighlight !== false &&
+                    !!highlightedItem &&
+                    !highlightedEdgeIds.has(edge) &&
+                    isHighlightedItemInGraph;
+
                 const newData: Attributes = {
                     ...data,
                     hidden: false,
                     highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                    isDimmed,
+                    backgroundColor: bgColor,
+                    ...(isDimmed && {
+                        labelDimFactor,
+                        color: blendHexColors(data.color, bgColor, edgeBlend),
+                    }),
                 };
 
                 if (data.type === 'curved') {
@@ -302,7 +353,20 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
+    }, [
+        curvedEdgeReducer,
+        darkMode,
+        highlightedEdgeIds,
+        highlightedItem,
+        highlightedNodeIds,
+        selfEdgeReducer,
+        setSettings,
+        sigma,
+        theme.neutral.primary,
+        isHighlightedItemInGraph,
+        isExploreGraphHighlight,
+        isExploreGraphLabelClip,
+    ]);
 
     // Toggle off edge labels when dragging a node to avoid performance hit
     useLayoutEffect(() => {

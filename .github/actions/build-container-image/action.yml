@@ -13,20 +13,20 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
----
 name: Build and Publish Container Image
-
 description: |-
+
   This composite action builds a container image based on the specified Dockerfile and metadata.
   It can optionally push the built image to a container registry.
   Ensure you have the necessary Docker and QEMU setup steps in your workflow for cross-platform builds.
-
 inputs:
+
   dockerhub_account:
     required: true
     description: |-
       The DockerHub username or account name used for authentication.
       This account must have permissions to push images to the specified repositories.
+
 
       Example: 'organization_name' or 'username'
   dockerhub_token:
@@ -148,7 +148,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
       name: Authenticate with DockerHub Registry
       if: ${{ inputs.dockerhub_account != '' }}
       with:
@@ -156,7 +156,7 @@ runs:
         username: ${{ inputs.dockerhub_account }}
         password: ${{ inputs.dockerhub_token }}
 
-    - uses: docker/login-action@v3
+    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
       name: Authenticate with GitHub Container Registry
       if: ${{ inputs.ghcr_account != '' }}
       with:
@@ -165,13 +165,13 @@ runs:
         password: ${{ inputs.ghcr_token }}
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # ratchet:docker/setup-qemu-action@v3
 
     - name: Set up buildx
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # ratchet:docker/setup-buildx-action@v3
 
     - name: Build
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # ratchet:docker/build-push-action@v6
       with:
         platforms: ${{ inputs.build_platforms }}
         build-args: ${{ inputs.build_args }}

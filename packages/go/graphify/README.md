@@ -10,12 +10,9 @@ The following environment variables are required:
 
 The following flags are required:
 
-- `-path`: Specifies the input directory for the consumed files.
-
-The following flags are supported:
-
-- `-outpath`: Specifies the output directory for generic ingestible graph files. These files will output with static names e.g. ingested.json & analyzed.json. Default is `{root}/tmp/`.
+-   `-path`: Specifies the directory where files should be consumed from and written to
+    -   This path should include a `raw` directory containing raw sharphound files, and will write out a directory each for `ingested` and `analyzed` files.
 
 ## Usage
 
-Example: `just bh-graphify cmd/api/src/test/fixtures/fixtures/v6/ingest /tmp/`
+Example: `just bh-graphify cmd/api/src/services/graphify/fixtures/Version6JSON`

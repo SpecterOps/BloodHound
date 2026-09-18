@@ -14,44 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonProps } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Button, ButtonProps } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
+import { cn } from '../../utils';
 
-const useStyles = makeStyles((theme) => ({
-    button: {
-        fontSize: '1rem',
-        height: '1rem',
-        lineHeight: '1rem',
-        padding: theme.spacing(1.5),
-        border: 'none',
-        boxSizing: 'initial',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: theme.palette.neutral.secondary,
-        color: theme.palette.color.primary,
-        textTransform: 'capitalize',
-        minWidth: 'initial',
-        '&:hover': {
-            backgroundColor: theme.palette.neutral.tertiary,
-            '@media (hover: none)': {
-                backgroundColor: theme.palette.neutral.tertiary,
-            },
-        },
-    },
-}));
-
-export interface GraphButtonProps extends ButtonProps {
+export interface GraphButtonProps extends Omit<ButtonProps, 'children'> {
     displayText: string | ReactNode;
 }
 
 const GraphButton: FC<GraphButtonProps> = (props) => {
-    const { displayText } = props;
-    const attributes = { ...props };
-    delete attributes.displayText;
-    const styles = useStyles();
+    const { displayText, className, ...attributes } = props;
 
     return (
-        <Button {...attributes} disableRipple classes={{ root: styles.button }}>
+        <Button
+            {...attributes}
+            className={cn(
+                'box-content h-4 min-w-0 rounded p-3 text-base font-medium leading-4 capitalize',
+                'bg-[#F4F4F4] text-[#1D1B20] dark:bg-[#222222] dark:text-white',
+                'hover:bg-[#E3E7EA] hover:no-underline dark:hover:bg-[#272727]',
+                className
+            )}>
             {displayText}
         </Button>
     );

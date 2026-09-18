@@ -19,24 +19,19 @@ package azure
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
-func NewSubscriptionEntityDetails(node *graph.Node) SubscriptionDetails {
-	return SubscriptionDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func SubscriptionEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (SubscriptionDetails, error) {
+func SubscriptionEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (SubscriptionDetails, error) {
 	var details SubscriptionDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewSubscriptionEntityDetails(node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if hydrateCounts {
 				details, err = PopulateSubscriptionEntityDetailsCounts(tx, node, details)
 			}
@@ -48,7 +43,7 @@ func SubscriptionEntityDetails(ctx context.Context, db graph.Database, objectID 
 func PopulateSubscriptionEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details SubscriptionDetails) (SubscriptionDetails, error) {
 	var descendentKinds = GetDescendentKinds(azure.Subscription)
 
-	if descendents, err := FetchEntityDescendentCounts(tx, node, 0, 0, descendentKinds...); err != nil {
+	if descendents, err := FetchEntityDescendentCounts(tx, node, descendentKinds...); err != nil {
 		return details, err
 	} else {
 		details.Descendents = descendents

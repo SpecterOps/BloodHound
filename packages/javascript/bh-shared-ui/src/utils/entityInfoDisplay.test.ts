@@ -14,19 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../graphSchema';
 import {
-    ADSpecificTimeProperties,
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    AzureKindProperties,
+    CommonKindProperties,
+} from '../graphSchema';
+import {
     AD_NEVER_VALUE,
     AD_UNKNOWN_VALUE,
+    ADSpecificTimeProperties,
     DATE_FIELDS,
+    EMPTY_ARRAY_DISPLAY,
+    EMPTY_VALUE_DISPLAY,
     EntityField,
     formatADSpecificTime,
     formatBoolean,
     formatDateString,
     formatList,
     formatNumber,
+    formatObjectInfoFields,
     formatPrimitive,
+    getEntityName,
+    NoEntitySelectedHeader,
     validateProperty,
 } from './entityInfoDisplay';
 
@@ -111,9 +121,14 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016', null, 'any_other_field')).toEqual('2016');
         expect(formatPrimitive('2016', null, 'any_other_field')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
 
-        // With no field supplied, parse as a date
-        expect(formatPrimitive('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatPrimitive('2016')).not.toEqual('2016');
+        // With no field supplied, do not parse as a date
+        expect(formatPrimitive('2016')).toEqual('2016');
+        expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
+    });
+
+    it('renders empty strings and null values with an explicit placeholder', () => {
+        expect(formatPrimitive('')).toEqual(EMPTY_VALUE_DISPLAY);
+        expect(formatPrimitive(null)).toEqual(EMPTY_VALUE_DISPLAY);
     });
 });
 
@@ -124,6 +139,31 @@ describe('Formatting list properties', () => {
             label: 'test',
         };
         expect(formatList(testEntityField)).toEqual(['test', '5', 'FALSE']);
+    });
+
+    it('renders an empty list as NONE', () => {
+        const testEntityField: EntityField = {
+            value: [],
+            label: 'test',
+        };
+
+        expect(formatList(testEntityField)).toEqual([EMPTY_ARRAY_DISPLAY]);
+    });
+});
+
+describe('Formatting object information fields', () => {
+    it('preserves explicitly set empty arrays, empty strings, and null values', () => {
+        const formattedFields = formatObjectInfoFields({
+            [ActiveDirectoryKindProperties.EffectiveEKUs]: [],
+            emptystring: '',
+            nullvalue: null,
+        });
+
+        expect(formattedFields).toEqual([
+            { kind: 'ad', keyprop: 'effectiveekus', label: 'Effective EKUs:', value: [] },
+            { kind: null, keyprop: 'emptystring', label: 'Emptystring:', value: '' },
+            { kind: null, keyprop: 'nullvalue', label: 'Nullvalue:', value: null },
+        ]);
     });
 });
 
@@ -145,5 +185,38 @@ describe('validating a node property against the shared generated schema', () =>
     });
     it('should return an object denoting that the property is not in the schema when it is unrecognized', () => {
         expect(validateProperty('notInSchema')).toEqual({ isKnownProperty: false, kind: null });
+    });
+});
+
+describe('Evaluating the entity display name from a given entity', () => {
+    it('should handle an undefined entity', () => {
+        expect(getEntityName(undefined)).toBe(NoEntitySelectedHeader);
+    });
+    it('should handle an entity that has an empty name property', () => {
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { name: '' },
+            })
+        ).toBe('Name not found');
+    });
+    it('should handle an entity that has no name property', () => {
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: {},
+            })
+        ).toBe('Name not found');
+    });
+    it('should handle the well formed entities', () => {
+        expect(
+            getEntityName({
+                node_id: 1,
+                kinds: [{ name: ActiveDirectoryNodeKind.User, node_kind_id: 1 }],
+                properties: { name: 'foo' },
+            })
+        ).toBe('foo');
     });
 });

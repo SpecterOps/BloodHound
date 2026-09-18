@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { entityRelationshipEndpoints } from '../../../utils/content';
-import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
     ExploreGraphQuery,
@@ -24,6 +23,27 @@ import {
     ExploreGraphQueryOptions,
     sharedGraphQueryOptions,
 } from './utils';
+
+const parseItemId = (itemId: string) => {
+    // Edge identifiers can be either `rel_<sourceNodeId>_<edgeKind>_<targetNodeId>`...
+    const match = itemId.match(/^(?:rel_)?(\d+)_(.+)_(\d+)$/);
+    if (match) {
+        const [, sourceId, edgeType, targetId] = match;
+        return {
+            itemType: 'edge',
+            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId}  RETURN p LIMIT 1`,
+            sourceId,
+            targetId,
+            edgeType,
+        };
+    }
+
+    // otherwise it is a node identifier
+    return {
+        itemType: 'node',
+        cypherQuery: `MATCH (n) WHERE ID(n) = ${itemId} RETURN n LIMIT 1`,
+    };
+};
 
 const relationshipSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { relationshipQueryType, relationshipQueryItemId, searchType } = paramOptions;
@@ -55,7 +75,9 @@ const getRelationshipErrorMessage = (): ExploreGraphQueryError => {
     return { message: 'Query failed. Please try again.', key: 'nodeRelationshipGraphQuery' };
 };
 
-export const relationshipSearchQuery: ExploreGraphQuery = {
-    getQueryConfig: relationshipSearchGraphQuery,
-    getErrorMessage: getRelationshipErrorMessage,
+export const relationshipSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+    return {
+        getQueryConfig: () => relationshipSearchGraphQuery(paramOptions),
+        getErrorMessage: getRelationshipErrorMessage,
+    };
 };

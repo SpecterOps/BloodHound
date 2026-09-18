@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
+import { DoodleUIPlugin, DoodleUIPreset } from '../../packages/javascript/doodle-ui/src/tailwind';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -22,19 +22,22 @@ export default {
         extend: {
             spacing: {
                 'nav-width': '3.5rem',
-                'subnav-width': '14rem',
+                'subnav-collapsed': '4rem',
+                'subnav-expanded': '18rem',
                 'nav-width-expanded': '17.5rem',
             },
             zIndex: {
+                navToggle: '1401',
                 nav: '1400',
+                subNav: '1399',
             },
         },
     },
     content: [
         './index.html',
         './src/**/*.{js,ts,jsx,tsx}',
-        './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js',
-        './node_modules/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
+        '../../packages/javascript/doodle-ui/src/**/*.{js,ts,jsx,tsx}',
+        '../../packages/javascript/bh-shared-ui/src/**/*.{js,ts,jsx,tsx}',
     ],
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],

@@ -24,7 +24,7 @@ import { useState } from 'react';
 import { cypherTestResponse } from '../../mocks';
 import { render } from '../../test-utils';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
-const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--primary)]';
+const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]';
 
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();
@@ -41,25 +41,18 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(ctx.status(200), ctx.json({ data: [{ key: 'explore_table_view', enabled: true }] }));
     }),
-
-    rest.get('/api/v2/features', (req, res, ctx) => {
+    rest.get('/api/v2/nodes/:id', (req, res, ctx) => {
         return res(ctx.status(200));
+    }),
+    rest.get('/api/v2/config', (_req, res, ctx) => {
+        return res(ctx.status(200), ctx.json({ data: [] }));
     }),
     rest.get('/api/v2/custom-nodes', (req, res, ctx) => {
         return res(ctx.status(200));
     })
 );
 
-beforeAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-        value: 800,
-    });
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-        value: 800,
-    });
-
-    server.listen();
-});
+beforeAll(() => server.listen());
 
 const jsonToCsvArgs = [
     [
@@ -76,6 +69,7 @@ const jsonToCsvArgs = [
             isTierZero: true,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'CERTMAN@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.292Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -111,6 +105,7 @@ const jsonToCsvArgs = [
             isTierZero: true,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'ALICE@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.292Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -147,6 +142,7 @@ const jsonToCsvArgs = [
             isTierZero: false,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'T1_TONYMONTANA@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.306Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -181,6 +177,7 @@ const jsonToCsvArgs = [
             isTierZero: false,
             isaclprotected: false,
             kind: 'User',
+            kinds: ['User'],
             label: 'ZZZIGNE@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.292Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -215,6 +212,7 @@ const jsonToCsvArgs = [
             isTierZero: false,
             isaclprotected: false,
             kind: 'User',
+            kinds: ['User'],
             label: 'SVC_SHS@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.292Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -242,6 +240,7 @@ const jsonToCsvArgs = [
             isOwnedObject: false,
             isTierZero: false,
             kind: 'User',
+            kinds: ['User'],
             label: 'NETWORK SERVICE@PHANTOM.CORP',
             lastSeen: '2025-07-09T00:28:46.055264963Z',
             lastcollected: '2025-07-09T00:28:46.055264963Z',
@@ -263,6 +262,7 @@ const jsonToCsvArgs = [
             isTierZero: true,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'TOM@GHOST.CORP',
             lastSeen: '2025-07-09T00:28:46.525Z',
             lastcollected: '2025-07-09T00:28:46.504907963Z',
@@ -298,6 +298,7 @@ const jsonToCsvArgs = [
             isTierZero: true,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'WALTER@GHOST.CORP',
             lastSeen: '2025-07-09T00:28:46.525Z',
             lastcollected: '2025-07-09T00:28:46.504907963Z',
@@ -333,6 +334,7 @@ const jsonToCsvArgs = [
             isTierZero: true,
             isaclprotected: true,
             kind: 'User',
+            kinds: ['User'],
             label: 'ADMINISTRATOR@GHOST.CORP',
             lastSeen: '2025-07-09T00:28:46.525Z',
             lastcollected: '2025-07-09T00:28:46.504907963Z',
@@ -368,6 +370,7 @@ const jsonToCsvArgs = [
             isTierZero: false,
             isaclprotected: false,
             kind: 'User',
+            kinds: ['User'],
             label: 'GUEST@GHOST.CORP',
             lastSeen: '2025-07-09T00:28:46.525Z',
             lastcollected: '2025-07-09T00:28:46.504907963Z',
@@ -433,6 +436,15 @@ const jsonToCsvArgs = [
     },
 ];
 
+const jsonToCsvSelectedColumnsArgs = [
+    jsonToCsvArgs[0],
+    {
+        emptyFieldValue: '',
+        preventCsvInjection: true,
+        keys: ['kind', 'label', 'objectId', 'isTierZero'],
+    },
+];
+
 const WrappedExploreTable = () => {
     const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
         kind: true,
@@ -440,6 +452,7 @@ const WrappedExploreTable = () => {
         label: true,
         objectId: true,
     });
+    const handleChangedPinnedColumns = () => {};
 
     return (
         <ExploreTable
@@ -453,6 +466,7 @@ const WrappedExploreTable = () => {
             onKebabMenuClick={(row) => {
                 kebabCallbackSpy(row);
             }}
+            onChangePinnedColumns={handleChangedPinnedColumns}
         />
     );
 };
@@ -511,34 +525,37 @@ describe('ExploreTable', async () => {
 
         await screen.findByText('10 results');
 
+        const nameColumnHeader = screen.getByRole('button', { name: /name/i });
+        const objectIdColumnHeader = screen.getByRole('button', { name: /object id/i });
+
         // Unsorted first display name cell
         expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
         // Alphabetically sorted first display name cell
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('ADMINISTRATOR@GHOST.CORP');
 
         // Reverse Alphabetically sorted first display name cell
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('ZZZIGNE@PHANTOM.CORP');
 
         // Reset to unsorted
-        await user.click(screen.getByText('Name'));
+        await user.click(nameColumnHeader);
         expect(getFirstCellOfType('label')).toHaveTextContent('CERTMAN@PHANTOM.CORP');
 
         // Unsorted first object id cell
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
 
         // Descending sorted first object id cell
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('PHANTOM.CORP-S-1-5-20');
 
         // Ascending sorted first object id cell
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2845847946-3451170323-4261139666-1106');
 
         // Reset to unsorted
-        await user.click(screen.getByText('Object ID'));
+        await user.click(objectIdColumnHeader);
         expect(getFirstCellOfType('objectId')).toHaveTextContent('S-1-5-21-2697957641-2271029196-387917394-2201');
     });
 
@@ -554,15 +571,41 @@ describe('ExploreTable', async () => {
         expect(container.className).toContain('h-[calc(100%');
     });
 
-    it('Download button causes the json2csv function to be called', async () => {
+    it('Download button opens a menu and selecting "All Columns" calls json2csv with all columns', async () => {
         const { user } = await setup();
+
+        await screen.findByText('10 results');
 
         expect(json2csv).not.toBeCalled();
         const downloadButton = screen.getByTestId('download-button');
 
         await user.click(downloadButton);
 
+        const allButton = screen.getByRole('menuitem', { name: 'All Columns' });
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
+
+        expect(allButton).toBeInTheDocument();
+        expect(selectedButton).toBeInTheDocument();
+
+        await user.click(allButton);
+
         expect(json2csv).toBeCalledWith(...jsonToCsvArgs);
+    });
+
+    it('Download button opens a menu and selecting "Selected Columns" calls json2csv with selected columns only', async () => {
+        const { user } = await setup();
+
+        await screen.findByText('10 results');
+
+        expect(json2csv).not.toBeCalled();
+
+        const downloadButton = screen.getByTestId('download-button');
+        await user.click(downloadButton);
+
+        const selectedButton = screen.getByRole('menuitem', { name: 'Selected Columns' });
+        await user.click(selectedButton);
+
+        expect(json2csv).toBeCalledWith(...jsonToCsvSelectedColumnsArgs);
     });
 
     it('Close button click causes the callback function to be called', async () => {
@@ -630,6 +673,17 @@ describe('ExploreTable', async () => {
     });
 
     it('Kebab menu click causes the callback function to be called with the correct parameters', async () => {
+        Object.defineProperty(window, 'innerHeight', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            writable: true,
+            value: 100, // Set your desired mock height
+        });
+
         const { user } = await setup();
 
         expect(kebabCallbackSpy).not.toBeCalled();
@@ -645,5 +699,34 @@ describe('ExploreTable', async () => {
             x: 0,
             y: 0,
         });
+    });
+
+    it('Sort arrow is visible and direction is correct', async () => {
+        const { user } = await setup();
+
+        //ensures table is loaded
+        await screen.findByText('10 results');
+
+        const nameColumnHeader = screen.getByRole('button', { name: /name/i });
+
+        // sort empty visible
+        expect(within(nameColumnHeader).getByText('app-icon-sort-empty')).toBeVisible();
+
+        //fire sort
+        nameColumnHeader.focus();
+        await user.keyboard('{Enter}');
+
+        //up arrow visible, down arrow removed
+        expect(nameColumnHeader).toHaveFocus();
+        expect(within(nameColumnHeader).getByText('app-icon-sort-asc')).toBeVisible();
+        expect(within(nameColumnHeader).queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
+
+        // //fire sort again
+        await user.keyboard('{Enter}');
+
+        //down arrow visible, up arrow removed
+        expect(nameColumnHeader).toHaveFocus();
+        expect(within(nameColumnHeader).getByText('app-icon-sort-desc')).toBeVisible();
+        expect(within(nameColumnHeader).queryByText('app-icon-sort-asc')).not.toBeInTheDocument();
     });
 });

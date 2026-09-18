@@ -18,12 +18,11 @@ package ad
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -33,29 +32,26 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, expandedGroups impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	results := cardinality.NewBitmap64()
-	if publishedCertTemplates := cache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
+	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		ecaEnrollers := cache.GetEnterpriseCAEnrollers(enterpriseCA.ID)
+		ecaEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
 		for _, certTemplate := range publishedCertTemplates {
-			if valid, err := isCertTemplateValidForEsc1(certTemplate); err != nil {
-				slog.WarnContext(ctx, fmt.Sprintf("Error validating cert template %d: %v", certTemplate.ID, err))
-				continue
-			} else if !valid {
+			if !isCertTemplateValidForEsc1(ctx, certTemplate) {
 				continue
 			} else {
-				results.Or(CalculateCrossProductNodeSets(tx, expandedGroups, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
+				results.Or(CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(certTemplate.ID), ecaEnrollers))
 			}
 		}
 	}
 
-	results.Each(func(value uint64) bool {
-		for _, domain := range targetDomains.Slice() {
-			channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-				FromID: graph.ID(value),
-				ToID:   domain.ID,
+	results.Each(func(source uint64) bool {
+		for _, domain := range certChains.Domains.Slice() {
+			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+				FromID: graph.ID(source),
+				ToID:   graph.ID(domain),
 				Kind:   ad.ADCSESC1,
 			})
 		}
@@ -64,27 +60,32 @@ func PostADCSESC1(ctx context.Context, tx graph.Transaction, outC chan<- analysi
 	return nil
 }
 
-func isCertTemplateValidForEsc1(ct *graph.Node) (bool, error) {
+func isCertTemplateValidForEsc1(ctx context.Context, ct *graph.Node) bool {
 	if reqManagerApproval, err := ct.Properties.Get(ad.RequiresManagerApproval.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if reqManagerApproval {
-		return false, nil
+		return false
 	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !authenticationEnabled {
-		return false, nil
+		return false
 	} else if enrolleeSuppliesSubject, err := ct.Properties.Get(ad.EnrolleeSuppliesSubject.String()).Bool(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if !enrolleeSuppliesSubject {
-		return false, nil
+		return false
 	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
+		logPropertyLookupFailure(ctx, ct, err)
+		return false
 	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
+		return false
 	} else {
-		return true, nil
+		return true
 	}
 }
 
@@ -177,7 +178,7 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
 		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
 		path1EnterpriseCAs = cardinality.NewBitmap64()
@@ -284,16 +285,30 @@ func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship
 			query.KindIn(query.End(), ad.EnterpriseCA),
 			query.KindIn(query.Relationship(), ad.HostsCAService),
 		))); err != nil {
-			slog.Error(fmt.Sprintf("Error getting hostscaservice edge to enterprise ca for computer %d : %v", startNode.ID, err))
+			slog.Error(
+				"Error getting hostscaservice edge to enterprise ca for computer",
+				slog.Uint64("start_node_id", uint64(startNode.ID)),
+				attr.Error(err),
+			)
 		} else {
 			for _, ecaPath := range ecaPaths {
 				eca := ecaPath.Terminal()
 				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
 				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
-					slog.Error(fmt.Sprintf("Error getting eca %d path to domain %d via trusted for auth: %v", eca.ID, targetDomainNode.ID, err))
+					slog.Error(
+						"Error getting enterprise ca path to domain via trusted for auth",
+						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
+						attr.Error(err),
+					)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {

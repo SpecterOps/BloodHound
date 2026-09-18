@@ -16,6 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { apiClient } from 'bh-shared-ui';
+import { mockGetConfigurationHandler } from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -48,6 +49,21 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
 describe('AssetGroupMenuItem', async () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
@@ -84,7 +100,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());
@@ -164,14 +181,29 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
+            const { container } = render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
 
-            expect(document.body.firstChild).toBeEmptyDOMElement();
+            expect(container.textContent).toBe('');
         });
     });
 
     describe('removing from an asset group', () => {
         const server = setupServer(
+            rest.get('/api/v2/nodes/:nodeId', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            node_id: parseInt(req.params.nodeId as string),
+                            kinds: [{ node_kind_id: 1, name: 'User' }],
+                            properties: {
+                                objectid: req.params.nodeId,
+                                name: 'foo',
+                                lastSeen: '',
+                            },
+                        },
+                    })
+                );
+            }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
@@ -207,7 +239,8 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
-            })
+            }),
+            mockGetConfigurationHandler()
         );
 
         beforeAll(() => server.listen());

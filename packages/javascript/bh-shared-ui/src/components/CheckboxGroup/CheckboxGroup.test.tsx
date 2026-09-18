@@ -18,13 +18,15 @@ import userEvent from '@testing-library/user-event';
 import { act, render, screen } from '../../test-utils';
 import CheckboxGroup, { CheckboxGroupProps } from './CheckboxGroup';
 
+const options = [
+    { name: 'test-option 1', label: 'Test Option 1' },
+    { name: 'test-option 2', label: 'Test Option 2' },
+    { name: 'test-option 3', label: 'Test Option 3' },
+];
 const checkboxOptions: CheckboxGroupProps = {
-    options: [
-        { name: 'test-option 1', label: 'Test Option 1' },
-        { name: 'test-option 2', label: 'Test Option 2' },
-        { name: 'test-option 3', label: 'Test Option 3' },
-    ],
+    options,
     groupTitle: 'Test Options',
+
     handleCheckboxFilter: vi.fn(),
 };
 

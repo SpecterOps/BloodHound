@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GlyphIconInfo, apiClient } from 'bh-shared-ui';
+import { apiClient } from 'bh-shared-ui';
 import identity from 'lodash/identity';
 import throttle from 'lodash/throttle';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -120,8 +120,6 @@ type ThemedGlyph = {
         backgroundColor: string;
         color: string;
     };
-    tierZeroGlyph: GlyphIconInfo;
-    ownedObjectGlyph: GlyphIconInfo;
 };
 
 export type ThemedOptions = {
@@ -140,6 +138,8 @@ export type NodeParams = {
     highlighted?: boolean;
     image?: string;
     label?: string;
+    source?: string;
+    kind?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
     hidden?: boolean;
@@ -158,6 +158,7 @@ export enum EdgeDirection {
 
 export type EdgeParams = {
     size: number;
+    color?: string;
     type: string;
     label: string;
     exploreGraphId: string;

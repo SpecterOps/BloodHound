@@ -14,15 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { Alert, Box, Skeleton } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { ActiveDirectoryKindProperties } from '../../../graphSchema';
 import { EdgeInfoItems, useEdgeInfoItems } from '../../../hooks/useExploreGraph/useEdgeInfoItems';
 import VirtualizedNodeList, { NormalizedNodeItem } from '../../VirtualizedNodeList';
 
 type ACLInheritanceListProps = {
-    sourceDBId: number;
-    targetDBId: number;
+    sourceDBId: number | undefined;
+    targetDBId: number | undefined;
     edgeName: string;
     inheritanceHash: string;
 };

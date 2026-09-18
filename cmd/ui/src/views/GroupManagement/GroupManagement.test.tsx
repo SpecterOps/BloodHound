@@ -15,16 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { DeepPartial, NoEntitySelectedHeader, NoEntitySelectedMessage, Permission } from 'bh-shared-ui';
 import {
-    DeepPartial,
-    NoEntitySelectedHeader,
-    NoEntitySelectedMessage,
-    Permission,
     createAuthStateWithPermissions,
     createMockAssetGroup,
     createMockAssetGroupMembers,
     createMockMemberCounts,
-} from 'bh-shared-ui';
+} from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMockDomain } from 'src/mocks/factories/initial';
@@ -70,7 +67,18 @@ const server = setupServer(
             ctx.json({
                 data: {
                     edges: [],
-                    nodes: [],
+                    nodes: {
+                        '1': {
+                            label: 'USER_00001@TESTLAB.LOCAL',
+                            kind: 'User',
+                            kinds: ['User', 'Base'],
+                            objectId: '00000-00001',
+                            lastSeen: '',
+                            isTierZero: false,
+                            isOwnedObject: false,
+                            properties: { objectid: '00000-00001', name: 'USER_00001@TESTLAB.LOCAL' },
+                        },
+                    },
                 },
             })
         );
@@ -111,12 +119,12 @@ describe('GroupManagement', () => {
     it('displays default text for domain selector when globalDomain is null', async () => {
         const { screen } = await setup();
 
-        expect(screen.getByTestId('data-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('data-quality_context-selector')).toBeInTheDocument();
     });
 
     it('renders an edit form for the selected asset group when a user has graph write permissions', async () => {
         const { screen } = await setup();
-        const input = screen.getByRole('combobox');
+        const input = screen.getByTestId('group-management_asset-group-edit-combobox');
         expect(input).toBeInTheDocument();
     });
 
@@ -130,8 +138,9 @@ describe('GroupManagement', () => {
                 );
             })
         );
+
         const { screen } = await setup();
-        const input = screen.queryByRole('combobox');
+        const input = screen.queryByTestId('group-management_asset-group-edit-combobox');
         expect(input).toBeNull();
     });
 
@@ -157,6 +166,7 @@ describe('GroupManagement', () => {
         const entityPanel = screen.getByTestId('explore_entity-information-panel');
 
         await user.click(listItem);
+
         const header = await waitFor(() => screen.getByText('Object Information'));
 
         expect(header).toBeInTheDocument();

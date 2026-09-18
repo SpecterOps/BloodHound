@@ -16,6 +16,7 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { mockGetConfigurationHandler, mockKindsHandler } from '../../mocks/handlers';
 import { act, renderHook, waitFor } from '../../test-utils';
 import { usePathfindingSearch } from './usePathfindingSearch';
 
@@ -28,7 +29,9 @@ const server = setupServer(
         const searchTerm = url.searchParams.get('q');
 
         return res(ctx.json({ data: [{ name: searchTerm, objectid: searchTerm }] }));
-    })
+    }),
+    mockKindsHandler(),
+    mockGetConfigurationHandler()
 );
 
 beforeAll(() => server.listen());

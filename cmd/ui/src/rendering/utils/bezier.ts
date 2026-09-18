@@ -87,7 +87,12 @@ export const bezier = {
     },
 
     getLineLength: (start: Coordinates, end: Coordinates): number => {
-        return Math.sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y));
+        const distanceSquared = bezier.getDistanceSquared(start, end);
+        return Math.sqrt(distanceSquared);
+    },
+
+    getDistanceSquared: (start: Coordinates, end: Coordinates): number => {
+        return (end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y);
     },
 
     calculateCurveHeight: (
@@ -126,5 +131,35 @@ export const bezier = {
     ): Coordinates => {
         const midpoint = bezier.getMidpoint(sourceCoordinates, targetCoordinates);
         return bezier.getOffsetVertex(sourceCoordinates, targetCoordinates, midpoint, height);
+    },
+
+    // Approximates a t-value for an arbitrary curve that lies at a specified distance from a target point, using a binary
+    // search with a set number of iterations. Depending on the curve and target, this could potentially converge to many
+    // different points along the curve, so callers should use the low and high arguments to constrain the search to a range with
+    // the desired intersection.
+    getTAtDistance: (
+        curveEvaluation: (t: number) => Coordinates,
+        target: Coordinates,
+        distance: number,
+        low: number,
+        high: number,
+        iterations: number = 10
+    ): number => {
+        let mid = (low + high) / 2;
+        const targetDistanceSquared = distance * distance;
+
+        for (let i = 0; i < iterations; i++) {
+            mid = (low + high) / 2;
+
+            const coords = curveEvaluation(mid);
+            const actualDistanceSquared = bezier.getDistanceSquared(coords, target);
+
+            if (actualDistanceSquared > targetDistanceSquared) {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        return mid;
     },
 };

@@ -14,11 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ConfigurationPayload, parseTieringConfiguration, RequestOptions } from 'js-client-library';
+import {
+    ConfigurationPayload,
+    parseAPITokenExpirationConfiguration,
+    parseAPITokensConfiguration,
+    parseSupportAccountConfiguration,
+    parseTieringConfiguration,
+    parseTimeoutLimitConfiguration,
+    RequestOptions,
+} from 'js-client-library';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
 
-const configurationKeys = {
+export const configurationKeys = {
     all: ['configuration'] as const,
 };
 
@@ -40,6 +48,30 @@ export const usePrivilegeZoneAnalysis = () => {
     return isLoading ? undefined : privilegeZoneAnalysisEnabled;
 };
 
+export const useAPITokensConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const apiTokensConfig = parseAPITokensConfiguration(data)?.value.enabled;
+
+    return apiTokensConfig;
+};
+
+export const useAPITokenExpirationConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const apiTokenExpirationConfig = parseAPITokenExpirationConfiguration(data)?.value;
+
+    return {
+        enabled: apiTokenExpirationConfig?.enabled ?? false,
+        expiration_period: String(apiTokenExpirationConfig?.expiration_period ?? 90),
+    };
+};
+
+export const useTimeoutLimitConfiguration = () => {
+    const { data } = useGetConfiguration();
+    const timeoutLimitConfig = parseTimeoutLimitConfiguration(data)?.value.enabled;
+
+    return timeoutLimitConfig;
+};
+
 const updateConfiguration = (payload: ConfigurationPayload, options?: RequestOptions) => {
     return apiClient.updateConfiguration(payload, options).then((res) => res.data);
 };
@@ -52,4 +84,13 @@ export const useUpdateConfiguration = () => {
             queryClient.invalidateQueries(configurationKeys.all);
         },
     });
+};
+
+/**
+ * Returns whether JIT support account creation is enabled or disabled for the environment
+ * @returns {boolean | undefined}
+ */
+export const useSupportAccountConfiguration = (): boolean | undefined => {
+    const { data } = useGetConfiguration();
+    return parseSupportAccountConfiguration(data)?.value.enabled;
 };

@@ -18,4 +18,5 @@ export { default as CypherSearch } from './CypherSearch';
 export { default as GraphViewErrorAlert } from './GraphViewErrorAlert';
 export { default as NodeSearch } from './NodeSearch';
 export { default as PathfindingSearch } from './PathfindingSearch';
+export * from './SavedQueries';
 export * from './types';

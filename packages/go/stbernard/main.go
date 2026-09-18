@@ -20,11 +20,12 @@ package main
 
 import (
 	"errors"
-	"fmt"
+
 	"log/slog"
 	"os"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
@@ -33,7 +34,10 @@ import (
 func main() {
 	env, err := environment.NewEnvironment()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Could not init environment: %v", err))
+		slog.Error(
+			"Could not init environment",
+			attr.Error(err),
+		)
 		os.Exit(1)
 	}
 
@@ -46,7 +50,11 @@ func main() {
 	}
 
 	if lvl, err := bhlog.ParseLevel(rawLvl); err != nil {
-		slog.Error(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
+		slog.Error(
+			"Could not parse log level from environment variable",
+			slog.String("env_name", environment.LogLevelVarName),
+			attr.Error(err),
+		)
 	} else {
 		level.SetGlobalLevel(lvl)
 	}
@@ -58,12 +66,22 @@ func main() {
 		// No need to exit 1 if help was requested
 		return
 	} else if err != nil {
-		slog.Error(fmt.Sprintf("Error while parsing command: %v", err))
+		slog.Error(
+			"Error while parsing command",
+			attr.Error(err),
+		)
 		os.Exit(1)
 	} else if err := cmd.Run(); err != nil {
-		slog.Error(fmt.Sprintf("Failed to run command `%s`: %v", cmd.Name(), err))
+		slog.Error(
+			"Failed to run command",
+			slog.String("command", cmd.Name()),
+			attr.Error(err),
+		)
 		os.Exit(1)
 	} else {
-		slog.Info(fmt.Sprintf("Command `%s` completed successfully", cmd.Name()))
+		slog.Info(
+			"Command completed successfully",
+			slog.String("command", cmd.Name()),
+		)
 	}
 }

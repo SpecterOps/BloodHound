@@ -1,8 +1,8 @@
 # CalculateCrossProductNodeSets
 
-CalculateCrossProductNodeSets finds the _cross product nodes_, which are the membership intersection of of two or more node sets.
+CalculateCrossProductNodeSets finds the _cross product nodes_, which are the membership intersection of two or more node sets.
 
-The function is required for post-processed edges that requires a principal to have two or more permissions (edges) in the environment. 
+The function is required for post-processed edges that requires a principal to have two or more permissions (edges) in the environment.
 
 ## Example: DCSync
 
@@ -23,4 +23,3 @@ The primary motivation for having this shortcutting for the special groups is th
 ![ADCSESC1 harness diagram](../../../../cmd/api/src/test/integration/harnesses/adcsesc1-authusers.svg)
 
 In real envrionments, the Group1 group would likely have a lot of members. If we did not have this shortcutting in place, it would be all the members of Group1 that would get an ADCSESC1 edge and potentially appear as individual findings in BHE. Creating the ADCSESC1 edge from Group1 is more logical as it is Group1 that has the permission that enables the attack. It also ensures we create an ADCSESC1 edge in case the group is empty.
-

@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input } from '@bloodhoundenterprise/doodleui';
-import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, Input } from 'doodle-ui';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { ReactNode, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
-import { defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
+import { DEFAULT_PINNED_COLUMN_KEYS, defaultColumns, makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -28,13 +28,17 @@ type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
     disabled?: boolean;
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns?: (items: string[]) => void;
     selectedColumns: Record<string, boolean>;
+    onResetColumnSize?: () => void;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
+    onChangePinnedColumns,
     disabled,
     selectedColumns: selectedColumnsProp,
+    onResetColumnSize,
 }: ManageColumnsComboBoxProps) => {
     const ref = useRef<HTMLDivElement>(null);
 
@@ -63,6 +67,7 @@ export const ManageColumnsComboBox = ({
     }, [allColumns, selectedColumnMap, inputValue]);
 
     const handleResetDefault = () => {
+        onChangePinnedColumns && onChangePinnedColumns([...DEFAULT_PINNED_COLUMN_KEYS]);
         onChange([...initialColumns]);
     };
 
@@ -80,7 +85,7 @@ export const ManageColumnsComboBox = ({
         },
     });
 
-    const { getMenuProps, getInputProps, getItemProps, getComboboxProps } = useCombobox({
+    const { getMenuProps, getInputProps, getItemProps } = useCombobox({
         items: unselectedColumns,
         itemToString: (column) => column?.value || '',
         defaultHighlightedIndex: 0, // after selection, highlight the first item.
@@ -118,38 +123,52 @@ export const ManageColumnsComboBox = ({
         setIsOpen(true);
     };
 
+    const handlePinClick = (item: ManageColumnsComboBoxOption) => {
+        const pinnedArr = pinnedColumns.map((item) => item.id);
+
+        if (pinnedArr.includes(item.id)) {
+            pinnedArr.splice(pinnedArr.indexOf(item.id), 1);
+        } else {
+            pinnedArr.push(item.id);
+        }
+
+        onChangePinnedColumns && onChangePinnedColumns(pinnedArr);
+    };
+
     return (
         <>
             <div className='mb-1'>
-                <Button
-                    disabled={disabled}
-                    onClick={handleManageColumnsClick}
-                    className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
+                <Button disabled={disabled} onClick={handleManageColumnsClick}>
                     Columns
                 </Button>
             </div>
 
-            <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-3`} ref={ref}>
-                <div className='w-[400px] shadow-md border-1 bg-white dark:bg-neutral-dark-5' {...getComboboxProps()}>
+            <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-16`} ref={ref}>
+                <div className='w-[420px] shadow-md border-1 bg-white dark:bg-neutral-dark-5 rounded-md'>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input
-                                className='border-0 focus:outline-none rounded-none border-black bg-inherit'
+                                variant='outlined'
+                                aria-label='Filter columns'
                                 {...getInputProps(getDropdownProps())}
                             />
-                            <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                            <FontAwesomeIcon icon={faSearch} className='absolute right-2 pointer-events-none' />
                         </div>
                     </div>
                     <div className='flex justify-between p-2 border-w-10 border-y border-solid border-neutral-950'>
-                        <button className='flex items-center focus:outline-none' onClick={handleSelectAll}>
+                        <button className='flex items-center' onClick={handleSelectAll}>
                             <FontAwesomeIcon icon={shouldSelectAll ? faPlus : faMinus} className='mr-2' />{' '}
                             {shouldSelectAll ? 'Select All' : 'Clear All'}
                         </button>
-                        <button className='flex items-center focus:outline-none' onClick={handleResetDefault}>
+                        <button onClick={onResetColumnSize}>
+                            <FontAwesomeIcon icon={faArrowsLeftRight} className='mr-2' />
+                            Reset Size
+                        </button>
+                        <button className='flex items-center' onClick={handleResetDefault}>
                             <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
                         </button>
                     </div>
-                    <ul className={`w-inherit max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
+                    <ul className={`w-inherit max-h-60 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
                             ...pinnedColumns.map((column, index) => {
                                 const isSelected = selectedColumnMap[column.id];
@@ -161,6 +180,7 @@ export const ManageColumnsComboBox = ({
                                         item={column}
                                         onClick={isSelected ? removeSelectedItem : addSelectedItem}
                                         itemProps={getItemProps({ item: column, index })}
+                                        onPinClick={handlePinClick}
                                     />
                                 );
                             }),
@@ -173,6 +193,7 @@ export const ManageColumnsComboBox = ({
                                             item={column}
                                             onClick={removeSelectedItem}
                                             itemProps={getItemProps({ item: column, index })}
+                                            onPinClick={handlePinClick}
                                         />
                                     );
                                 }
@@ -186,6 +207,7 @@ export const ManageColumnsComboBox = ({
                                     item={column}
                                     onClick={addSelectedItem}
                                     itemProps={getItemProps({ item: column, index })}
+                                    onPinClick={handlePinClick}
                                 />
                             )),
                         ]}

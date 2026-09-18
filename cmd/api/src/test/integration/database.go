@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 package integration
 
 import (
@@ -25,6 +27,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -39,34 +42,40 @@ import (
 // OpenDatabase opens a new database connection and returns a BHCE database interface
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func OpenDatabase(t *testing.T) database.Database {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
 		t.Fatalf("Failed loading integration test config: %v", err)
-	} else if db, err := setupPGTestDB(t, cfg); err != nil {
+	} else if db, dbPool, err := setupPGTestDB(t, cfg); err != nil {
 		t.Fatalf("Failed to setup pgtestdb: %v", err)
 	} else {
-		return database.NewBloodhoundDB(db, auth.NewIdentityResolver())
+		return database.NewBloodhoundDB(db, dbPool, auth.NewIdentityResolver(), cfg)
 	}
 
 	return nil
 }
 
-func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, error) {
+func setupPGTestDB(t *testing.T, cfg config.Configuration) (*gorm.DB, *pgxpool.Pool, error) {
 	t.Helper()
 
 	var (
 		connConf = pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
 	)
 
-	return database.OpenDatabase(connConf.URL())
+	cfg.Database.Connection = connConf.URL()
+
+	return database.OpenDatabase(cfg.Database)
 }
 
 // GetPostgresConfig reads key/value pairs from the default integration
 // config file and creates a pgtestdb configuration object.
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func GetPostgresConfig(cfg config.Configuration) pgtestdb.Config {
 	environmentMap := make(map[string]string)
 	for _, entry := range strings.Fields(cfg.Database.Connection) {
@@ -114,7 +123,9 @@ func OpenCache(t *testing.T) cache.Cache {
 // SetupDB sets up a new database connection and prepares the DB with migrations
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
 func SetupDB(t *testing.T) database.Database {
 	dbInst := OpenDatabase(t)
 	if err := Prepare(context.Background(), dbInst); err != nil {
@@ -128,6 +139,8 @@ func Prepare(ctx context.Context, db database.Database) error {
 		return fmt.Errorf("failed to clear database: %v", err)
 	} else if err := db.Migrate(ctx); err != nil {
 		return fmt.Errorf("failed to migrate database: %v", err)
+	} else if err := db.PopulateExtensionData(ctx); err != nil {
+		return fmt.Errorf("failed to populate extension data: %v", err)
 	}
 
 	return nil
@@ -136,17 +149,34 @@ func Prepare(ctx context.Context, db database.Database) error {
 // SetupTestMigrator opens a database connection and returns a migrator for testing
 //
 // Deprecated: this suite of integration utils is deprecated and should be avoided
-// See latest testing guidance for more details.
-func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *migration.Migrator, error) {
+// Integration tests should be updated to reflect the latest standards.
+// See commit https://github.com/SpecterOps/BloodHound/commit/a6cc43013fd769b97cc52cbc60b2314494054c9a#diff-e6bcb50873ade3cf33cef4e3e0ff566fb8ac1367b4ade36f4511bc2172a760e1
+// for implementation guidance. Additional detailed information can be found in Confluence.
+func SetupTestMigrator(t *testing.T, sources ...migration.Source) (*gorm.DB, *pgxpool.Pool, *migration.Migrator, error) {
 	if cfg, err := utils.LoadIntegrationTestConfig(); err != nil {
-		return nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
-	} else if db, err := setupPGTestDB(t, cfg); err != nil {
-		return nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to load integration test config: %w", err)
+	} else if db, pool, err := setupPGTestDB(t, cfg); err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+		return nil, nil, nil, fmt.Errorf("failed to setup pgtestdb: %v", err)
 	} else {
+		migrator, err := migration.NewMigrator(db)
+		if err != nil {
+			// shut down resources
+			if sqlDB, sqlDBErr := db.DB(); sqlDBErr == nil {
+				_ = sqlDB.Close()
+			}
+
+			if pool != nil {
+				pool.Close()
+			}
+
+			return nil, nil, nil, fmt.Errorf("failed to create migrator: %w", err)
+		}
+		migrator.Sources = sources
+
 		OpenGraphDB(t, graphschema.DefaultGraphSchema()).Close(context.Background())
-		return db, &migration.Migrator{
-			Sources: sources,
-			DB:      db,
-		}, nil
+		return db, pool, migrator, nil
 	}
 }

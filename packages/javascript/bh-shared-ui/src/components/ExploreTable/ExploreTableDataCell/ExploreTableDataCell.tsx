@@ -25,14 +25,14 @@ const FALLBACK_STRING = '--';
 const ExploreTableDataCell = ({ value, columnKey }: { value: EntityField['value']; columnKey: string }) => {
     if (columnKey === 'kind') {
         return (
-            <div className='flex justify-center'>
+            <div className='flex pl-8 -outline-offset-4'>
                 <NodeIcon nodeType={value?.toString() || ''} />
             </div>
         );
     }
     if (typeof value === 'boolean') {
         return (
-            <div className='flex justify-center items-center pb-1 pt-1'>
+            <div className='flex items-center pb-1 pt-1 pl-8'>
                 <FontAwesomeIcon
                     icon={value ? faCheck : faXmark}
                     className={cn(

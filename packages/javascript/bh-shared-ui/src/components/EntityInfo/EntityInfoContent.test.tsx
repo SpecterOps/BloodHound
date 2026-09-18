@@ -13,11 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityKinds } from '../../utils';
+import { mockSourceKindsHandler } from '../../mocks';
+import { render, screen, waitFor } from '../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
 import { EntityInfoDataTableGraphed } from '../EntityInfoDataTableGraphed/EntityInfoDataTableGraphed';
 import EntityInfoContent from './EntityInfoContent';
@@ -45,45 +46,26 @@ const server = setupServer(
             })
         );
     }),
-    rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    nodes: {
-                        '42': {
-                            kind: 'Unknown',
-                            properties: { objectid: 'unknown kind' },
-                        },
-                    },
-                },
-            })
-        );
-    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
             })
         );
-    })
+    }),
+    rest.get('/api/v2/asset-group-tags', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    mockSourceKindsHandler()
 );
 
-const EntityInfoContentWithProvider = ({
-    testId,
-    nodeType,
-    databaseId,
-}: {
-    testId: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
-}) => (
+const EntityInfoContentWithProvider = ({ selectedNode }: { selectedNode: NodeDetails }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent
-            id={testId}
-            nodeType={nodeType}
-            databaseId={databaseId}
-            DataTable={EntityInfoDataTableGraphed}
-        />
+        <EntityInfoContent selectedNode={selectedNode} DataTable={EntityInfoDataTableGraphed} />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -95,48 +77,16 @@ describe('EntityInfoContent', () => {
     it('AZRole information panel will not display a section for PIM Assignments', async () => {
         const testId = '1';
         const nodeType = AzureNodeKind.Role;
+        const selectedNode = {
+            node_id: 1,
+            kinds: [{ name: nodeType, node_kind_id: 1 }],
+            properties: { objectid: testId },
+        };
 
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+        render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
+        // Wait for all section loading spinners to finish before asserting absence,
+        // so the assertion runs only after EntityInfoList finishes loading its data tables.
+        await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
         expect(screen.queryByText('PIM Assignments')).not.toBeInTheDocument();
-    });
-});
-
-describe('EntityObjectInformation', () => {
-    it('Calls the `Base` endpoint for a LocalGroup type node', async () => {
-        const testId = '1';
-        const nodeType = ActiveDirectoryNodeKind.LocalGroup;
-
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
-
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
-
-        const objectInfoSectionTitle = await screen.findByText(/object information/i);
-        expect(objectInfoSectionTitle).toBeInTheDocument();
-
-        expect(await screen.findByText('test')).toBeInTheDocument();
-    });
-
-    it('Calls the `Base` endpoint for a LocalUser type node', async () => {
-        const testId = '1';
-        const nodeType = ActiveDirectoryNodeKind.LocalUser;
-
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
-
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
-
-        expect(await screen.findByText('test')).toBeInTheDocument();
-    });
-
-    it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
-        const testId = '1';
-        const nodeType = 'Unknown';
-        const databaseId = '42';
-
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} databaseId={databaseId} />);
-
-        await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
-
-        expect(await screen.findByText('unknown kind')).toBeInTheDocument();
     });
 });

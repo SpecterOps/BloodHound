@@ -14,19 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isGraphResponse, transformToFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
+import { isGraphResponse, transformFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
+import { FlatGraphResponse, GraphData, GraphResponse } from 'js-client-library';
 import { useMemo } from 'react';
 
 export const normalizeGraphDataForSigma = (
     graphData: GraphResponse | FlatGraphResponse | undefined
-): FlatGraphResponse | undefined => {
+): GraphData | undefined => {
     if (!graphData) return;
 
     if (isGraphResponse(graphData)) {
-        return transformToFlatGraphResponse(graphData);
+        return graphData.data;
     } else {
-        return graphData;
+        return transformFlatGraphResponse(graphData);
     }
 };
 

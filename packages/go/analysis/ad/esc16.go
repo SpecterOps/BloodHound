@@ -23,8 +23,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
-	"github.com/specterops/bloodhound/packages/go/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -38,7 +37,9 @@ import (
 // that when disabled in Enterprise CA settings allows ESC16 exploitation
 const szOID_NTDS_CA_SECURITY_EXT = "1.3.6.1.4.1.311.25.2"
 
-func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, groupExpansions impact.PathAggregator, enterpriseCA *graph.Node, targetDomains *graph.NodeSet, cache ADCSCache) error {
+func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+	enterpriseCA := certChains.EnterpriseCA
+
 	if isUserSpecifiesSanEnabledCollected, err := enterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
@@ -68,17 +69,17 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- analys
 			} else if !valid {
 				continue
 			} else {
-				enrollers := CalculateCrossProductNodeSets(tx, groupExpansions, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
+				enrollers := CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
 
 				if filteredEnrollers, err := filterUserDNSResults(tx, enrollers, publishedCertTemplate); err != nil {
 					slog.WarnContext(ctx, fmt.Sprintf("Error filtering users in ESC16: %v", err))
 					continue
 				} else {
 					filteredEnrollers.Each(func(value uint64) bool {
-						for _, domain := range targetDomains.Slice() {
-							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+						for _, domain := range certChains.Domains.Slice() {
+							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 								FromID: graph.ID(value),
-								ToID:   domain.ID,
+								ToID:   graph.ID(domain),
 								Kind:   ad.ADCSESC16,
 							})
 						}
@@ -138,7 +139,7 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
+		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
 		lock               = &sync.Mutex{}
 		paths              = graph.PathSet{}
 		path1Segments      = map[graph.ID][]*graph.PathSegment{}

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Box, Grid, TextField, Typography } from '@mui/material';
+import { Box, Grid, TextField } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import React, { useState } from 'react';
 
 interface OneTimePasscodeFormProps {
@@ -67,7 +67,7 @@ const OneTimePasscodeForm: React.FC<OneTimePasscodeFormProps> = ({ onSubmit, onC
                     <Box mt={2}>
                         <Button
                             onClick={onCancel}
-                            variant='tertiary'
+                            variant='secondary'
                             size='large'
                             type='button'
                             style={{ width: '100%' }}

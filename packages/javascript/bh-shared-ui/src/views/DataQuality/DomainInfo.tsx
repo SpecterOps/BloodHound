@@ -16,10 +16,10 @@
 
 import { faChartPie, faSignInAlt, faStream, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Paper, Table, TableBody, TableContainer } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { ActiveDirectoryQualityStat } from 'js-client-library';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NodeIcon } from '../../components';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { useActiveDirectoryDataQualityStatsQuery, useActiveDirectoryPlatformsDataQualityStatsQuery } from '../../hooks';
@@ -54,6 +54,9 @@ export const DomainMap = {
     ntauthstores: { displayText: 'NTAuthStores', kind: ActiveDirectoryNodeKind.NTAuthStore },
     certtemplates: { displayText: 'CertTemplates', kind: ActiveDirectoryNodeKind.CertTemplate },
     issuancepolicies: { displayText: 'IssuancePolicies', kind: ActiveDirectoryNodeKind.IssuancePolicy },
+    sites: { displayText: 'Sites', kind: ActiveDirectoryNodeKind.Site },
+    siteservers: { displayText: 'SiteServers', kind: ActiveDirectoryNodeKind.SiteServer },
+    sitesubnets: { displayText: 'SiteSubnets', kind: ActiveDirectoryNodeKind.SiteSubnet },
     containers: {
         displayText: 'Containers',
         kind: ActiveDirectoryNodeKind.Container,
@@ -64,78 +67,58 @@ export const DomainMap = {
     },
 };
 
-export const DomainInfo: React.FC<{ contextId: string; headers?: boolean; onDataError?: () => void }> = ({
+export const DomainInfo: React.FC<{ contextId: string; onDataError?: () => void }> = ({
     contextId,
-    headers = false,
     onDataError = () => {},
 }) => {
-    const { data, isLoading, isError } = useActiveDirectoryDataQualityStatsQuery(contextId);
-    const [domainData, setDomainData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setDomainData(data);
-    }, [data, contextId]);
-
-    useEffect(() => {
-        if (isError) onDataError();
-    }, [isError, onDataError]);
-
-    if (isLoading || !domainData) {
-        return <Layout stats={null} headers={headers} loading={true} />;
-    }
-
-    if (isError) {
-        return <Layout stats={null} headers={headers} loading={false} />;
-    }
-
-    const stats = domainData.data[0];
-
-    return <Layout stats={stats} headers={headers} loading={false} />;
-};
-
-export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
-    const { data, isLoading, isError } = useActiveDirectoryPlatformsDataQualityStatsQuery();
-    const [adPlatformData, setAdPlatformData] = useState(data || null);
-
-    useEffect(() => {
-        if (data && data.data) setAdPlatformData(data);
-    }, [data]);
+    const { data: domainData, isLoading, isError } = useActiveDirectoryDataQualityStatsQuery(contextId);
 
     useEffect(() => {
         if (isError) onDataError();
     }, [isError, onDataError]);
 
     if (isLoading) {
-        return <Layout stats={null} loading={true} />;
+        return <Layout stats={null} isLoading={true} />;
     }
 
-    if (isError || !adPlatformData) {
-        return <Layout stats={null} loading={false} />;
+    if (isError || !domainData || !domainData.data.length) {
+        return null;
+    }
+
+    const stats = domainData.data[0];
+
+    return <Layout stats={stats} isLoading={false} />;
+};
+
+export const ActiveDirectoryPlatformInfo: React.FC<{ onDataError?: () => void }> = ({ onDataError = () => {} }) => {
+    const { data: adPlatformData, isLoading, isError } = useActiveDirectoryPlatformsDataQualityStatsQuery();
+
+    useEffect(() => {
+        if (isError) onDataError();
+    }, [isError, onDataError]);
+
+    if (isLoading) {
+        return <Layout stats={null} isLoading={true} />;
+    }
+
+    if (isError || !adPlatformData || !adPlatformData.data.length) {
+        return null;
     }
 
     const stats = adPlatformData.data[0];
 
-    return <Layout stats={stats} loading={false} />;
+    return <Layout stats={stats} isLoading={false} />;
 };
 
 const Layout: React.FC<{
     stats: ActiveDirectoryQualityStat | null;
-    loading: boolean;
-    headers?: boolean;
-}> = ({ stats, loading, headers }) => {
+    isLoading: boolean;
+}> = ({ stats, isLoading }) => {
     const classes = useStyles();
     return (
         <Box position='relative'>
             <TableContainer component={Paper} className={classes.container}>
                 <Table>
-                    {headers && (
-                        <TableHead className={classes.print}>
-                            <TableRow>
-                                <TableCell align={'left'}>Item</TableCell>
-                                <TableCell align={'right'}>Result</TableCell>
-                            </TableRow>
-                        </TableHead>
-                    )}
                     <TableBody>
                         {Object.keys(DomainMap).map((key) => {
                             if (key === 'domains' && stats?.domains === undefined) return null;
@@ -149,7 +132,7 @@ const Layout: React.FC<{
                                     icon={<NodeIcon nodeType={mapValue.kind} />}
                                     display={mapValue.displayText}
                                     value={value}
-                                    loading={loading}
+                                    isLoading={isLoading}
                                 />
                             );
                         })}
@@ -163,21 +146,21 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faSignInAlt} />}
                             display='Sessions'
                             value={stats?.sessions}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faStream} />}
-                            display='ACLs'
+                            display='ACEs'
                             value={stats?.acls}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
 
                         <LoadContainer
                             icon={<FontAwesomeIcon icon={faUsers} />}
                             display='Relationships'
                             value={stats?.relationships}
-                            loading={loading}
+                            isLoading={isLoading}
                         />
                     </TableBody>
                 </Table>
@@ -189,7 +172,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Group Completeness'
                             value={stats?.local_group_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
 
@@ -197,7 +180,7 @@ const Layout: React.FC<{
                             icon={<FontAwesomeIcon icon={faChartPie} />}
                             display='Session Completeness'
                             value={stats?.session_completeness}
-                            loading={loading}
+                            isLoading={isLoading}
                             type='percent'
                         />
                     </TableBody>

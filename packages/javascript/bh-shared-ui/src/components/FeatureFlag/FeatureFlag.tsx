@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFeatureFlag } from '../../hooks/useFeatureFlags';
+import { FORBIDDEN, useFeatureFlag } from '../../hooks/useFeatureFlags';
 
 type FeatureFlagProps = {
     flagKey: string;
@@ -39,7 +39,10 @@ const FeatureFlag = ({
 
     if (isError) {
         console.error(error);
-        return errorFallback;
+
+        // Forbidden status means user can't fetch features;
+        // Treat forbidden like disabled
+        return error.status === FORBIDDEN ? disabled : errorFallback;
     }
 
     if (flag === undefined) {

@@ -15,5 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './explore';
+export * from './graphKinds';
 export * from './initial';
-export * as tierMocks from './zoneManagement';
+export * as zoneMocks from './privilegeZones';

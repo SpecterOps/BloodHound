@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AxiosError } from 'axios';
 import { RequestOptions } from 'js-client-library';
 import { UseQueryOptions, useMutation, useQuery, useQueryClient } from 'react-query';
 import { apiClient } from '../utils';
+
+export const FORBIDDEN = 403;
 
 export type Flag = {
     id: number;
@@ -37,16 +40,30 @@ export const getFeatureFlags = (options?: RequestOptions): Promise<Flag[]> => {
     return apiClient.getFeatureFlags(options).then((response) => response.data.data);
 };
 
+/**
+ * Checks if a feature flag is enabled by its key.
+ * @param featureFlag - The key of the feature flag to check
+ * @param featureFlags - Array of feature flags to search through
+ * @returns True if the feature flag is enabled, false if disabled or not found
+ */
+export const isFeatureFlagEnabled = (featureFlag: string, featureFlags: Flag[] = []): boolean => {
+    return featureFlags.find((flag) => flag.key === featureFlag)?.enabled ?? false;
+};
+
 export const toggleFeatureFlag = (flagId: string | number, options?: RequestOptions) => {
     return apiClient.toggleFeatureFlag(flagId, options).then((response) => response.data);
 };
 
-type QueryOptions<T> = Omit<UseQueryOptions<Flag[], unknown, T | undefined, string[]>, 'queryFn'>;
+type QueryOptions<T> = Omit<UseQueryOptions<Flag[], AxiosError, T | undefined, string[]>, 'queryFn'>;
 
 export function useFeatureFlags<T = Flag[]>(options?: QueryOptions<T>) {
     const { queryKey, ...rest } = options ?? {};
 
-    return useQuery(featureFlagKeys.getKey(options?.queryKey), ({ signal }) => getFeatureFlags({ signal }), rest);
+    return useQuery({
+        ...rest,
+        queryKey: featureFlagKeys.getKey(options?.queryKey),
+        queryFn: ({ signal }) => getFeatureFlags({ signal }),
+    });
 }
 
 export function useFeatureFlag(flagKey: string, options?: Omit<QueryOptions<Flag | undefined>, 'select'>) {

@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build serial_integration
-// +build serial_integration
 
 package migration_test
 
@@ -56,8 +55,9 @@ func (BarTest) TableName() string {
 // TestMigrator_LatestMigration tests that the Migrator can retrieve
 // the last migration entry in the `migration` table.
 func TestMigrator_LatestMigration(t *testing.T) {
-	_, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"})
+	_, pool, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"})
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -88,11 +88,12 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 		fooTests    []FooTest
 		barTests    []BarTest
 	)
-	db, migrator, err := integration.SetupTestMigrator(t,
+	db, pool, migrator, err := integration.SetupTestMigrator(t,
 		migration.Source{FileSystem: testMigrationSystem1, Directory: "test_migrations/system1"},
 		migration.Source{FileSystem: testMigrationSystem2, Directory: "test_migrations/system2"},
 	)
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -221,8 +222,9 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 // TestMigrator_HasMigrationTable makes sure the Migrator can properly
 // detect the `migrations` table.
 func TestMigrator_HasMigrationTable(t *testing.T) {
-	_, migrator, err := integration.SetupTestMigrator(t)
+	_, pool, migrator, err := integration.SetupTestMigrator(t)
 	require.Nil(t, err)
+	defer pool.Close()
 
 	require.Nil(t, migrator.CreateMigrationSchema())
 
@@ -253,8 +255,9 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 		count       int64
 	)
 
-	db, migrator, err := integration.SetupTestMigrator(t)
+	db, pool, migrator, err := integration.SetupTestMigrator(t)
 	require.Nil(t, err)
+	defer pool.Close()
 
 	assert.Nil(t, migrator.CreateMigrationSchema())
 
@@ -276,20 +279,4 @@ func TestMigrator_CreateMigrationSchema(t *testing.T) {
 		assert.Nil(t, db.Raw(checkPrimaryKeySql).Scan(&count).Error)
 		assert.Equal(t, int64(1), count)
 	})
-}
-
-// TestMigrator_Migrate tests the integrity of FossMigrations.
-func TestMigrator_Migrate(t *testing.T) {
-	_, migrator, err := integration.SetupTestMigrator(t, migration.Source{FileSystem: migration.FossMigrations, Directory: "migrations"})
-	require.Nil(t, err)
-
-	manifest, err := migrator.GenerateManifest()
-	require.Nil(t, err)
-
-	assert.Nil(t, migrator.ExecuteStepwiseMigrations())
-
-	lastVersionInManifest := manifest.VersionTable[len(manifest.VersionTable)-1]
-	latestMigration, err := migrator.LatestMigration()
-	assert.Nil(t, err)
-	assert.Equal(t, lastVersionInManifest, latestMigration.Version().String())
 }

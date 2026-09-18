@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Typography } from '@mui/material';
 import React from 'react';
+import HiddenEntityIcon from '../../../components/HiddenEntityIcon';
 import Icon from '../../../components/Icon';
 import { useExploreParams, useExploreSelectedItem } from '../../../hooks';
-import { useHeaderStyles } from '../InfoStyles';
 import { useObjectInfoPanelContext } from '../providers';
 
 export interface HeaderProps {
@@ -27,10 +26,9 @@ export interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
-    const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
-    const { clearSelectedItem, selectedItem } = useExploreSelectedItem();
+    const { clearSelectedItem, isHidden } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -40,29 +38,23 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     };
 
     return (
-        <div className={styles.header}>
-            {selectedItem ? (
-                <Icon className={styles.icon} click={clearSelectedItem} tip='Clear selected item'>
-                    <FontAwesomeIcon icon={faRemove} />
-                </Icon>
-            ) : (
-                <div className='w-3' />
-            )}
-
-            <Typography
-                data-testid='explore_edge-information-pane_header-text'
-                variant='h6'
-                noWrap
-                className={styles.headerText}>
-                {name}
-            </Typography>
-
+        <div className='flex justify-between items-center text-sm font-bold'>
             <Icon
                 tip='Collapse All'
-                click={handleCollapseAll}
-                className={styles.icon}
+                onClick={handleCollapseAll}
+                className='h-10 box-border text-contrast px-4'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
+            </Icon>
+
+            {isHidden && <HiddenEntityIcon />}
+
+            <h2 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
+                {name}
+            </h2>
+
+            <Icon className='h-10 box-border px-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+                <FontAwesomeIcon icon={faRemove} />
             </Icon>
         </div>
     );

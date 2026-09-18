@@ -91,12 +91,19 @@ get:
                               type: integer
                             finding_count_decrease:
                               type: integer
-                            finding_impact_count:
+                            impact_count:
                               type: integer
                               nullable: true
-                            finding_exposure_count:
+                            exposure_count:
                               type: integer
                               nullable: true
+                            archived_count:
+                              type: integer
+                              description: |
+                                Total number of findings of this type that were
+                                archived (deleted during analysis reconciliation)
+                                within the requested time window. Summed across
+                                all snapshots in the window.
                       total_finding_count_start:
                         type: integer
                       total_finding_count_end:

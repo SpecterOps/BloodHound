@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
@@ -22,63 +23,62 @@ const Abuse: FC = () => {
         <>
             <Typography variant='body2'>This depends on what the target object is:</Typography>
             <Typography variant='body2'>
-                <Typography fontWeight='fontWeightBold'>Key Vault</Typography>: You can read secrets and alter access
-                policies (grant yourself access to read secrets)
+                <strong>Key Vault</strong>: You can read secrets and alter access policies (grant yourself access to
+                read secrets)
             </Typography>
             <Typography variant='body2'>
-                <Typography fontWeight='fontWeightBold'>Automation Account</Typography>: You can create a new runbook
-                that runs as the Automation Account, and edit existing runbooks. Runbooks can be used to authenticate as
-                the Automation Account and abuse privileges held by the Automation Account. If the Automation Account is
-                using a 'RunAs' account, you can gather the certificate used to login and impersonate that account.
+                <strong>Automation Account</strong>: You can create a new runbook that runs as the Automation Account,
+                and edit existing runbooks. Runbooks can be used to authenticate as the Automation Account and abuse
+                privileges held by the Automation Account. If the Automation Account is using a 'RunAs' account, you can
+                gather the certificate used to login and impersonate that account.
             </Typography>
             <Typography variant='body2'>
-                <Typography fontWeight='fontWeightBold'>Virtual Machine</Typography>: Run SYSTEM commands on the VM
+                <strong>Virtual Machine</strong>: Run SYSTEM commands on the VM
             </Typography>
             <Typography variant='body2'>
-                <Typography fontWeight='fontWeightBold'>Resource Group</Typography>: NOT abusable, and not collected by
-                AzureHound
+                <strong>Resource Group</strong>: NOT abusable, and not collected by AzureHound
             </Typography>
 
             <Typography variant='body2'>Via PowerZure:</Typography>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurekeyvaultcontent'>
                 Get-AzureKeyVaultContent
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#export-azurekeyvaultcontent'>
                 Export-AzureKeyVaultContent
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurerunascertificate'>
                 Get-AzureRunAsCertificate
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#get-azurerunbookcontent'>
                 Get-AzureRunbookContent
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='http://Invoke-AzureRunCommand'>
+            <Link target='_blank' rel='noopener noreferrer' href='http://Invoke-AzureRunCommand'>
                 Invoke-AzureRunCommand
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='http://Invoke-AzureRunMSBuild'>
+            <Link target='_blank' rel='noopener noreferrer' href='http://Invoke-AzureRunMSBuild'>
                 Invoke-AzureRunMSBuild
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://powerzure.readthedocs.io/en/latest/Functions/operational.html#invoke-azurerunprogram'>
                 Invoke-AzureRunProgram
             </Link>

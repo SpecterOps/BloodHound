@@ -19,7 +19,7 @@ parameters:
 post:
   operationId: RunCypherQuery
   summary: Run a cypher query
-  description: Runs a manual cypher query directly against the database
+  description: Runs a manual cypher query directly against the database. 
   tags:
     - Cypher
     - Community

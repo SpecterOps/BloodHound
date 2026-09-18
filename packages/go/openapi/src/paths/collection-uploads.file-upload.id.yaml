@@ -27,6 +27,12 @@ parameters:
         - application/zip
         - application/zip-compressed
         - application/x-zip-compressed
+  - name: X-File-Upload-Name
+    description: File upload name header, used to specify the name of the file being uploaded to improve error reporting.
+    in: header
+    required: false
+    schema:
+      type: string
   - name: file_upload_job_id
     description: The ID for the file upload job.
     in: path

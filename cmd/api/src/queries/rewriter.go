@@ -20,6 +20,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/cypher/models/walk"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (
@@ -57,17 +58,17 @@ func (s *Rewriter) Enter(node cypher.SyntaxNode) {
 				s.HasRelationshipTypeShortcut = true
 				typedNode.Kinds = append(azure.PathfindingRelationships(), ad.PathfindingRelationships()...)
 
+				return
+
 			case azureAttackPathsRelationshipShortcutType:
 				s.HasRelationshipTypeShortcut = true
-				typedNode.Kinds = azure.PathfindingRelationships()
+				typedNode.Kinds = typedNode.Kinds.Remove(graph.StringKind(azureAttackPathsRelationshipShortcutType))
+				typedNode.Kinds = typedNode.Kinds.Concatenate(azure.PathfindingRelationships())
 
 			case adAttackPathsRelationshipShortcutType:
 				s.HasRelationshipTypeShortcut = true
-				typedNode.Kinds = ad.PathfindingRelationships()
-			}
-
-			if s.HasRelationshipTypeShortcut {
-				break
+				typedNode.Kinds = typedNode.Kinds.Remove(graph.StringKind(adAttackPathsRelationshipShortcutType))
+				typedNode.Kinds = typedNode.Kinds.Concatenate(ad.PathfindingRelationships())
 			}
 		}
 	}

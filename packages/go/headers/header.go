@@ -29,4 +29,5 @@ const (
 	RequestDate Header = "RequestDate"
 	RequestID   Header = "RequestID"
 	Signature   Header = "Signature" // https://www.ietf.org/archive/id/draft-ietf-httpbis-message-signatures-04.html#name-the-signature-http-header
+	XCodename   Header = "X-Codename"
 )

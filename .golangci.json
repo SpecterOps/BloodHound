@@ -18,6 +18,8 @@
       "errcheck"
     ],
     "enable": [
+      "integrationparallel",
+      "revive",
       "sloglint",
       "staticcheck"
     ],
@@ -27,7 +29,8 @@
         "mocks",
         "third_party$",
         "builtin$",
-        "examples$"
+        "examples$",
+        "node_modules"
       ],
       "presets": [
         "comments",
@@ -61,10 +64,24 @@
             "unused"
           ],
           "path": "dawgs/util/size/(.+)"
+        },
+        {
+          "path": "packages/go/bhlog/measure/measure\\.go",
+          "text": "message should be a string literal or a constant"
+        },
+        {
+          "path-except": "server/",
+          "linters": ["revive"]
         }
       ]
     },
     "settings": {
+      "custom": {
+        "integrationparallel": {
+          "description": "Disallow t.Parallel in integration tests.",
+          "type": "module"
+        }
+      },
       "staticcheck": {
         "checks": [
           "all",
@@ -76,12 +93,28 @@
         "enable": [
           "nilness"
         ]
+      },
+      "revive": {
+        "rules": [
+          {
+            "name": "receiver-naming"
+          }
+        ]
+      },
+      "sloglint": {
+        "kv-only": false,
+        "attr-only": true,
+        "static-msg": true,
+        "msg-style": "capitalized",
+        "key-naming-case": "snake",
+        "args-on-sep-lines": true
       }
     }
   },
   "run": {
     "build-tags": [
       "integration",
+      "slow_integration",
       "serial_integration"
     ]
   },

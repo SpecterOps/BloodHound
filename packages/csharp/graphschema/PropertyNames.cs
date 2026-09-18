@@ -1,5 +1,5 @@
 /*
-    Copyright 2025 Specter Ops, Inc.
+    Copyright 2026 Specter Ops, Inc.
     
     Licensed under the Apache License, Version 2.0
     you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ public static readonly string OperatingSystem = "operatingsystem";
 public static readonly string SystemTags = "system_tags";
 public static readonly string UserTags = "user_tags";
 public static readonly string LastSeen = "lastseen";
+public static readonly string FirstSeen = "firstseen";
 public static readonly string LastCollected = "lastcollected";
 public static readonly string WhenCreated = "whencreated";
 public static readonly string Enabled = "enabled";
@@ -91,6 +92,8 @@ public static readonly string CertificateMappingMethodsRaw = "certificatemapping
 public static readonly string CertificateMappingMethods = "certificatemappingmethods";
 public static readonly string StrongCertificateBindingEnforcementRaw = "strongcertificatebindingenforcementraw";
 public static readonly string StrongCertificateBindingEnforcement = "strongcertificatebindingenforcement";
+public static readonly string VulnerableNetlogonSecurityDescriptor = "vulnerablenetlogonsecuritydescriptor";
+public static readonly string VulnerableNetlogonSecurityDescriptorCollected = "vulnerablenetlogonsecuritydescriptorcollected";
 public static readonly string EKUs = "ekus";
 public static readonly string SubjectAltRequireUPN = "subjectaltrequireupn";
 public static readonly string SubjectAltRequireDNS = "subjectaltrequiredns";
@@ -151,6 +154,8 @@ public static readonly string GMSA = "gmsa";
 public static readonly string MSA = "msa";
 public static readonly string DoesAnyAceGrantOwnerRights = "doesanyacegrantownerrights";
 public static readonly string DoesAnyInheritedAceGrantOwnerRights = "doesanyinheritedacegrantownerrights";
+public static readonly string CustomExplicitDenyAcesCount = "customexplicitdenyacescount";
+public static readonly string CustomInheritedDenyAcesCount = "custominheriteddenyacescount";
 public static readonly string ADCSWebEnrollmentHTTP = "adcswebenrollmenthttp";
 public static readonly string ADCSWebEnrollmentHTTPS = "adcswebenrollmenthttps";
 public static readonly string ADCSWebEnrollmentHTTPSEPA = "adcswebenrollmenthttpsepa";
@@ -177,6 +182,12 @@ public static readonly string NetBIOS = "netbios";
 public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string DisabledExtensions = "disabledextensions";
 public static readonly string DisabledExtensionsCollected = "disabledextensionscollected";
+public static readonly string ServicePrincipalNames = "serviceprincipalnames";
+public static readonly string ServerReference = "serverreference";
+public static readonly string SiteObject = "siteobject";
+public static readonly string ObjectClass = "objectclass";
+public static readonly string GPOStatusRaw = "gpostatusraw";
+public static readonly string GPOStatus = "gpostatus";
 
 }
 }

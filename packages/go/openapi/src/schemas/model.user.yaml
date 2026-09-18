@@ -62,6 +62,3 @@ allOf:
       eula_accepted:
         type: boolean
         readOnly: true
-      all_environments:
-        type: boolean
-        readOnly: true

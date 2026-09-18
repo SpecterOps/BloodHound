@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { makeStyles } from '@mui/styles';
+import { HTMLProps } from 'react';
 
 export const groupSpecialFormat = (sourceType: string | undefined, sourceName: string | undefined) => {
     if (!sourceType || !sourceName) return 'This entity has';
@@ -44,18 +44,5 @@ export const typeFormat = (type: string | undefined): string => {
     }
 };
 
-export const useHelpTextStyles = makeStyles((theme) => ({
-    containsCodeEl: {
-        '& code': {
-            backgroundColor: theme.palette.neutral.tertiary,
-            padding: '2px .5ch',
-            fontWeight: 'normal',
-            fontSize: '.875em',
-            borderRadius: '3px',
-            display: 'inline',
-
-            overflowWrap: 'break-word',
-            whiteSpace: 'pre-wrap',
-        },
-    },
-}));
+export const hasChildCodeElementsClasses: HTMLProps<HTMLElement>['className'] =
+    '[&_code]:bg-neutral-3 [&_code]:py-[2px] [&_code]:px-[0.5ch] [&_code]:font-normal [&_code]:text-sm [&_code]:rounded [&_code]:inline [&_code]:break-words [&_code]:whitespace-pre-wrap';

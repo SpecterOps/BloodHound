@@ -38,8 +38,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	api_mocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
@@ -57,7 +57,7 @@ func TestLoginFailure(t *testing.T) {
 	// 	},
 	// }
 
-	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	goCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	req1 := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,
@@ -200,7 +200,7 @@ func TestLoginSuccess(t *testing.T) {
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 
 	endpoint := "/api/v2/auth/login"
-	goCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	goCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	input := api.LoginRequest{
 		LoginMethod: auth.ProviderTypeSecret,

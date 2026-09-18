@@ -14,21 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import {
-    Alert,
-    Box,
-    DialogActions,
-    DialogContent,
-    FormHelperText,
-    Grid,
-    TextField,
-    Typography,
-    useTheme,
-} from '@mui/material';
+import { Alert, Box, DialogActions, DialogContent, FormHelperText, Grid, TextField } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import { Role, SSOProvider, UpsertSAMLProviderFormInputs } from 'js-client-library';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTheme } from '../../../hooks/useTheme';
+import { Roles, getRoleId } from '../../../utils/roles';
 import SSOProviderConfigForm, { maybeBackfillSSOProviderConfig } from '../SSOProviderConfigForm';
 
 const UpsertSAMLProviderForm: FC<{
@@ -40,7 +32,7 @@ const UpsertSAMLProviderForm: FC<{
 }> = ({ error, onClose, oldSSOProvider, onSubmit, roles }) => {
     const theme = useTheme();
 
-    const readOnlyRoleId = useMemo(() => roles?.find((role) => role.name === 'Read-Only')?.id, [roles]);
+    const readOnlyRoleId = useMemo(() => getRoleId(Roles.READ_ONLY, roles), [roles]);
 
     const {
         control,
@@ -86,7 +78,7 @@ const UpsertSAMLProviderForm: FC<{
     };
 
     return (
-        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' noValidate onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -101,12 +93,14 @@ const UpsertSAMLProviderForm: FC<{
                                         'SAML Provider Name must be a valid URL slug (e.g., "saml-provider", "test-idp-01", "any-old-slug")',
                                 },
                             }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'name'}
+                                    inputRef={ref}
+                                    id='name'
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='name'
                                     label='SAML Provider Name'
                                     error={!!errors.name}
@@ -123,9 +117,9 @@ const UpsertSAMLProviderForm: FC<{
                             name='metadata'
                             rules={{ required: !oldSSOProvider && 'Metadata is required' }}
                             render={({ field }) => (
-                                <Box p={1} borderRadius={4} bgcolor={theme.palette.neutral.tertiary}>
+                                <Box p={1} borderRadius={4} bgcolor={theme.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
-                                        <Button variant='secondary'>
+                                        <Button ref={field.ref} variant='secondary'>
                                             <label htmlFor='saml-provider-input'>Choose File</label>
                                             <input
                                                 id='saml-provider-input'
@@ -173,7 +167,7 @@ const UpsertSAMLProviderForm: FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={handleClose}
                     data-testid='create-saml-provider-dialog_button-close'>
                     Cancel

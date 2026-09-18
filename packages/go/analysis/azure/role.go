@@ -23,6 +23,7 @@ import (
 	"slices"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
@@ -30,20 +31,14 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
-func NewRoleEntityDetails(node *graph.Node) RoleDetails {
-	return RoleDetails{
-		Node: FromGraphNode(node),
-	}
-}
-
-func RoleEntityDetails(ctx context.Context, db graph.Database, objectID string, hydrateCounts bool) (RoleDetails, error) {
+func RoleEntityDetails(ctx context.Context, db graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, objectID string, hydrateCounts bool) (RoleDetails, error) {
 	var details RoleDetails
 
 	return details, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
 			return err
 		} else {
-			details = NewRoleEntityDetails(node)
+			details.Node = FromGraphNode(primaryDisplayKinds, node)
 			if hydrateCounts {
 				if details, err = PopulateRoleEntityApprovers(tx, node, details); err != nil {
 					return err
@@ -100,16 +95,23 @@ func (s RoleAssignmentMap) HasRole(id graph.ID, roleTemplateIDs ...string) bool 
 }
 
 type RoleAssignments struct {
-	Principals                    graph.NodeKindSet
-	RoleMap                       map[string]cardinality.Duplex[uint64]
-	RoleAssignableGroupMembership cardinality.Duplex[uint64]
+	// The following fields are used in external tests. These would be better served by internal tests
+	// so that the members don't need to be exported.
+	TenantPrincipals graph.NodeKindSet
+	RoleMap          map[string]cardinality.Duplex[uint64]
+
+	users                         cardinality.Duplex[uint64]
+	usersWithAnyRole              cardinality.Duplex[uint64]
+	usersWithoutRoles             cardinality.Duplex[uint64]
+	servicePrincipals             cardinality.Duplex[uint64]
+	roleAssignableGroupMembership cardinality.Duplex[uint64]
 }
 
 func (s RoleAssignments) GetNodeKindSet(bm cardinality.Duplex[uint64]) graph.NodeKindSet {
 	result := graph.NewNodeKindSet()
 
 	bm.Each(func(nextID uint64) bool {
-		node := s.Principals.GetNode(graph.ID(nextID))
+		node := s.TenantPrincipals.GetNode(graph.ID(nextID))
 		result.Add(node)
 
 		return true
@@ -122,30 +124,31 @@ func (s RoleAssignments) GetNodeSet(bm cardinality.Duplex[uint64]) graph.NodeSet
 	return s.GetNodeKindSet(bm).AllNodes()
 }
 
+func (s RoleAssignments) ServicePrincipals() cardinality.Duplex[uint64] {
+	return s.servicePrincipals
+}
+
 func (s RoleAssignments) Users() cardinality.Duplex[uint64] {
-	return s.Principals.Get(azure.User).IDBitmap()
+	return s.users
 }
 
 func (s RoleAssignments) UsersWithAnyRole() cardinality.Duplex[uint64] {
-	users := s.Users()
-
-	principalsWithRoles := cardinality.NewBitmap64()
-	for _, bitmap := range s.RoleMap {
-		principalsWithRoles.Or(bitmap)
-	}
-	principalsWithRoles.And(users)
-	return principalsWithRoles
+	return s.usersWithAnyRole
 }
 
 func (s RoleAssignments) UsersWithoutRoles() cardinality.Duplex[uint64] {
-	result := s.Users()
-	result.AndNot(s.UsersWithAnyRole())
-	return result
+	return s.usersWithoutRoles
 }
 
 func (s RoleAssignments) UsersWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
 	result := s.PrincipalsWithRole(roleTemplateIDs...)
 	result.And(s.Users())
+	return result
+}
+
+func (s RoleAssignments) ServicePrincipalsWithRole(roleTemplateIDs ...string) cardinality.Duplex[uint64] {
+	result := s.PrincipalsWithRole(roleTemplateIDs...)
+	result.And(s.ServicePrincipals())
 	return result
 }
 
@@ -157,7 +160,7 @@ func (s RoleAssignments) UsersWithRolesExclusive(roleTemplateIDs ...string) card
 
 func (s RoleAssignments) UsersWithRoleAssignableGroupMembership() cardinality.Duplex[uint64] {
 	// this field is a bitmap of all user IDs who are members of role assignable groups.
-	return s.RoleAssignableGroupMembership
+	return s.roleAssignableGroupMembership
 }
 
 // PrincipalsWithRole returns a roaring bitmap of principals that have been assigned one or more of the matching roles from list of role template IDs
@@ -205,38 +208,71 @@ func (s RoleAssignments) NodeHasRole(id graph.ID, roleTemplateIDs ...string) boo
 	return false
 }
 
-func initTenantRoleAssignments(tx graph.Transaction, tenant *graph.Node) (RoleAssignments, error) {
-	if !IsTenantNode(tenant) {
-		return RoleAssignments{}, fmt.Errorf("cannot initialize tenant role assignments - node %d must be of kind %s", tenant.ID, azure.Tenant)
-	} else if roleMembers, err := TenantPrincipals(tx, tenant); err != nil && !graph.IsErrNotFound(err) {
-		return RoleAssignments{}, err
-	} else {
-		return RoleAssignments{
-			Principals:                    roleMembers.KindSet(),
-			RoleMap:                       make(map[string]cardinality.Duplex[uint64]),
-			RoleAssignableGroupMembership: cardinality.NewBitmap64(),
-		}, nil
+func NewTenantRoleAssignments(tenant *graph.Node, tenantPrincipals graph.NodeKindSet, roleAssignableGroupMembership cardinality.Duplex[uint64], roleMap map[string]cardinality.Duplex[uint64]) RoleAssignments {
+	var (
+		users             = tenantPrincipals.Get(azure.User).IDBitmap()
+		usersWithAnyRole  = cardinality.NewBitmap64()
+		usersWithoutRoles = cardinality.NewBitmap64()
+		servicePrincipals = tenantPrincipals.Get(azure.ServicePrincipal).IDBitmap()
+	)
+
+	// Calculate users with any role first
+	for _, bitmap := range roleMap {
+		usersWithAnyRole.Or(bitmap)
+	}
+
+	usersWithAnyRole.And(users)
+
+	// Calculate users without roles next
+	usersWithoutRoles.Or(users)
+	usersWithoutRoles.AndNot(usersWithAnyRole)
+
+	slog.Info("Tenant Role Assignment Details",
+		slog.Uint64("num_users", users.Cardinality()),
+		slog.Uint64("num_service_principals", servicePrincipals.Cardinality()),
+	)
+
+	return RoleAssignments{
+		TenantPrincipals:              tenantPrincipals,
+		users:                         users,
+		usersWithAnyRole:              usersWithAnyRole,
+		usersWithoutRoles:             usersWithoutRoles,
+		servicePrincipals:             servicePrincipals,
+		RoleMap:                       roleMap,
+		roleAssignableGroupMembership: roleAssignableGroupMembership,
 	}
 }
 
-func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph.Node) (RoleAssignments, error) {
+func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph.Node) (RoleAssignments, error) {
 	var roleAssignments RoleAssignments
-	return roleAssignments, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if fetchedRoleAssignments, err := initTenantRoleAssignments(tx, tenant); err != nil {
+
+	if !IsTenantNode(tenant) {
+		return RoleAssignments{}, fmt.Errorf("cannot initialize tenant role assignments - node %d must be of kind %s", tenant.ID, azure.Tenant)
+	}
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if tenantPrincipalsNodeSet, err := TenantPrincipals(tx, tenant); err != nil && !graph.IsErrNotFound(err) {
 			return err
 		} else if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
+			var (
+				tenantPrincipalsNodeKindSet   = tenantPrincipalsNodeSet.KindSet()
+				roleAssignableGroupMembership = cardinality.NewBitmap64()
+				roleMap                       = map[string]cardinality.Duplex[uint64]{}
+			)
+
 			// for each of the role assignable groups returned, fetch the users who are members
-			for _, group := range fetchedRoleAssignments.Principals.Get(azure.Group) {
+			for _, group := range tenantPrincipalsNodeKindSet.Get(azure.Group) {
 				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
 					return err
 				} else {
 					// set all users who have role assignable group membership
-					fetchedRoleAssignments.RoleAssignableGroupMembership.Or(members.IDBitmap())
+					roleAssignableGroupMembership.Or(members.IDBitmap())
 				}
 			}
-			return roles.KindSet().EachNode(func(node *graph.Node) error {
+
+			for _, node := range roles {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
 						return err
@@ -246,13 +282,18 @@ func TenantRoleAssignments(ctx context.Context, db graph.Database, tenant *graph
 						return err
 					}
 				} else {
-					fetchedRoleAssignments.RoleMap[roleTemplateID] = members.IDBitmap()
+					roleMap[roleTemplateID] = members.IDBitmap()
 				}
-				roleAssignments = fetchedRoleAssignments
-				return nil
-			})
+			}
+
+			roleAssignments = NewTenantRoleAssignments(tenant, tenantPrincipalsNodeKindSet, roleAssignableGroupMembership, roleMap)
+			return nil
 		}
-	})
+	}); err != nil {
+		return RoleAssignments{}, err
+	}
+
+	return roleAssignments, nil
 }
 
 // RoleMembers returns the NodeSet of members for a given set of roles
@@ -299,7 +340,7 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 // RoleMembersWithGrants returns the NodeSet of members for a given set of roles, including those members who may be able to grant themselves one of the given roles
 // NOTE: The current implementation also includes the role nodes in the returned set. It may be worth considering removing those nodes from the set if doing so doesn't break tier zero/high value assignment
 func RoleMembersWithGrants(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...string) (graph.NodeSet, error) {
-	defer measure.LogAndMeasure(slog.LevelInfo, "RoleMembersWithGrants", "tenant_id", tenant.ID)()
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "RoleMembersWithGrants", slog.Int64("tenant_id", tenant.ID.Int64()))()
 
 	if tenantRoles, err := TenantRoles(tx, tenant, roleTemplateIDs...); err != nil {
 		return nil, err

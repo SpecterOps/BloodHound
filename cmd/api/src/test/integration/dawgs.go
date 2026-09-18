@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
@@ -56,10 +57,12 @@ func OpenGraphDB(t *testing.T, schema graph.Schema) graph.Database {
 	switch cfg.GraphDriver {
 	case pg.DriverName:
 		connConf := pgtestdb.Custom(t, GetPostgresConfig(cfg), pgtestdb.NoopMigrator{})
-		pool, err := pg.NewPool(connConf.URL())
+		cfg.Database.Connection = connConf.URL()
+
+		pool, err := dbpool.NewDawgsPool(cfg.Database)
 		test.RequireNilErrf(t, err, "Failed to create new pgx pool: %v", err)
 		graphDatabase, err = dawgs.Open(context.Background(), cfg.GraphDriver, dawgs.Config{
-			ConnectionString: connConf.URL(),
+			ConnectionString: cfg.Database.PostgreSQLConnectionString(),
 			Pool:             pool,
 		})
 		test.RequireNilErrf(t, err, "Failed connecting to graph database: %v", err)

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { getEmptyResultsText, getKeywordAndTypeValues } from './useSearch';
+import { getEmptyResultsText } from './useSearch';
 
 describe('Getting the text for the disabled item display for a search when there are no results', () => {
     describe('Loading states', () => {
@@ -80,38 +80,6 @@ describe('Getting the text for the disabled item display for a search when there
             expect(getEmptyResultsText(false, false, false, {}, 'test', undefined, 'test', [])).toEqual(
                 'No results found for "test"'
             );
-        });
-    });
-});
-
-describe('Parsing the debounced input for type and keyword values', () => {
-    test('`undefined` input is provided', () => {
-        expect(getKeywordAndTypeValues(undefined)).toEqual({ keyword: '', type: undefined });
-    });
-
-    test('Empty input is provided', () => {
-        expect(getKeywordAndTypeValues('')).toEqual({ keyword: '', type: undefined });
-    });
-
-    test('Input does not contain a type', () => {
-        expect(getKeywordAndTypeValues('test')).toEqual({ keyword: 'test', type: undefined });
-    });
-
-    test('Input contains an invalid type', () => {
-        expect(getKeywordAndTypeValues('NotValid:test')).toEqual({ keyword: 'test', type: undefined });
-    });
-
-    it('Will parse an incorrectly cased type and return/use the correct casing for the data fetching', () => {
-        expect(getKeywordAndTypeValues('CoMpUtEr:test')).toEqual({
-            keyword: 'test',
-            type: ActiveDirectoryNodeKind.Computer,
-        });
-    });
-
-    it('Will ignore colons after the first and use them as part of the keyword search', () => {
-        expect(getKeywordAndTypeValues('computer:user:domain:ou:gpo:test')).toEqual({
-            keyword: 'user:domain:ou:gpo:test',
-            type: ActiveDirectoryNodeKind.Computer,
         });
     });
 });

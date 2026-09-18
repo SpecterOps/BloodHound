@@ -37,3 +37,8 @@ allOf:
         type: string
         format: date-time
         readOnly: true
+      created_by:
+        description: The ID of the user who created the token
+        readOnly: true
+        allOf:
+          - $ref: './null.uuid.yaml'

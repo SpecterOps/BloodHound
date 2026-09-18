@@ -38,7 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -106,9 +106,9 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	const endpoint = "/api/v2/sso-providers"
 
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		reqCtx            = &ctx.Context{Host: &url.URL{}}
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		reqCtx               = &bhctx.Context{Host: &url.URL{}}
 
 		oidcProvider = model.OIDCProvider{
 			SSOProviderID: 1,
@@ -225,9 +225,9 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	var (
-		ssoDeleteURL      = "/api/v2/sso-providers/%s"
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		ssoDeleteURL         = "/api/v2/sso-providers/%s"
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
 	t.Run("successfully delete an SSOProvider", func(t *testing.T) {
@@ -266,7 +266,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	t.Run("error user cannot delete their own SSO provider", func(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithContext(&ctx.Context{AuthCtx: bhceauth.Context{
+			WithContext(&bhctx.Context{AuthCtx: bhceauth.Context{
 				Owner: model.User{SSOProviderID: null.Int32From(1)},
 			}}).
 			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
@@ -317,9 +317,9 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 
 func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
 	var (
-		mockCtrl  = gomock.NewController(t)
-		_, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		testCtx   = context.Background()
+		mockCtrl     = gomock.NewController(t)
+		_, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		testCtx      = context.Background()
 
 		dbRoles = model.Roles{
 			{Name: "God Role", Serial: model.Serial{ID: 1}},
@@ -459,7 +459,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 				}
 				req = mux.SetURLVars(req, vars)
 
-				req = req.WithContext(ctx.Set(req.Context(), &ctx.Context{Host: &url.URL{Host: "loremipsum"}}))
+				req = req.WithContext(bhctx.Set(req.Context(), &bhctx.Context{Host: &url.URL{Host: "loremipsum"}}))
 
 				return req
 			},
@@ -505,7 +505,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
@@ -559,10 +559,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -583,10 +583,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -608,10 +608,10 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
@@ -641,7 +641,7 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()

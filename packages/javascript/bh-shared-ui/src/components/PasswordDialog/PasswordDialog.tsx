@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Alert,
     AlertTitle,
@@ -27,6 +26,7 @@ import {
     Grid,
     TextField,
 } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import React, { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -109,7 +109,7 @@ const PasswordDialog: React.FC<{
                 'data-testid': 'password-dialog',
             }}>
             <DialogTitle>{'Change Password'}</DialogTitle>
-            <form autoComplete='off' onSubmit={handleSubmit(handleOnSave)}>
+            <form autoComplete='off' noValidate onSubmit={handleSubmit(handleOnSave)}>
                 <DialogContent>
                     <Grid container spacing={2}>
                         {!!errors.password && (
@@ -128,13 +128,15 @@ const PasswordDialog: React.FC<{
                                     rules={{
                                         required: 'Current password is required',
                                     }}
-                                    render={({ field }) => (
+                                    render={({ field: { ref, ...field } }) => (
                                         <TextField
                                             {...field}
+                                            inputRef={ref}
                                             variant='standard'
                                             id='currentPassword'
                                             label='Current Password'
                                             type='password'
+                                            required
                                             fullWidth
                                             error={!!errors.currentPassword}
                                             helperText={errors.currentPassword?.message}
@@ -155,13 +157,15 @@ const PasswordDialog: React.FC<{
                                         getValues('currentPassword') !== value ||
                                         'New password must not match current password',
                                 }}
-                                render={({ field }) => (
+                                render={({ field: { ref, ...field } }) => (
                                     <TextField
                                         {...field}
+                                        inputRef={ref}
                                         variant='standard'
                                         id='password'
                                         label='New Password'
                                         type='password'
+                                        required
                                         fullWidth
                                         error={!!errors.password}
                                         helperText={errors.password?.message}
@@ -178,13 +182,15 @@ const PasswordDialog: React.FC<{
                                     required: 'Confirmation password is required',
                                     validate: (value) => getValues('password') === value || 'Password does not match',
                                 }}
-                                render={({ field }) => (
+                                render={({ field: { ref, ...field } }) => (
                                     <TextField
                                         {...field}
+                                        inputRef={ref}
                                         variant='standard'
                                         id='confirmPassword'
                                         label='New Password Confirmation'
                                         type='password'
+                                        required
                                         fullWidth
                                         error={!!errors.confirmPassword}
                                         helperText={errors.confirmPassword?.message}
@@ -221,7 +227,7 @@ const PasswordDialog: React.FC<{
                 <DialogActions>
                     <Button
                         type='button'
-                        variant='tertiary'
+                        variant='secondary'
                         onClick={onClose}
                         data-testid='password-dialog_button-close'>
                         Cancel

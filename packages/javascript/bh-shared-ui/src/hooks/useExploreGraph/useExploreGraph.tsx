@@ -13,13 +13,16 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
+import { useTimeoutLimitConfiguration } from '../useConfiguration';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
+import { isRelationshipResponse, useGraphItem } from '../useGraphItem';
 import {
-    CypherExploreGraphQuery,
     ExploreGraphQuery,
+    ExploreGraphQueryOptions,
     aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
@@ -30,43 +33,87 @@ import {
 } from './queries';
 
 export function exploreGraphQueryFactory(
-    paramOptions: Partial<ExploreQueryParams>
-): ExploreGraphQuery | CypherExploreGraphQuery {
+    paramOptions: Partial<ExploreQueryParams>,
+    {
+        userSettings,
+        relationshipDetails,
+    }: {
+        userSettings: UserSettings;
+        relationshipDetails?: RelationshipDetailsWithInfo;
+    }
+): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
-            return nodeSearchQuery;
+            return nodeSearchQuery(paramOptions);
         case 'pathfinding':
-            return pathfindingSearchQuery;
+            return pathfindingSearchQuery(paramOptions);
         case 'relationship':
-            return relationshipSearchQuery;
+            return relationshipSearchQuery(paramOptions);
         case 'composition':
-            return compositionSearchQuery;
+            return compositionSearchQuery(paramOptions, relationshipDetails);
         case 'cypher':
-            return cypherSearchQuery;
+            return cypherSearchQuery(paramOptions, userSettings);
         case 'aclinheritance':
-            return aclInheritanceSearchQuery;
+            return aclInheritanceSearchQuery(paramOptions, relationshipDetails);
         default:
             return fallbackQuery;
     }
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = () => {
+export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const params = useExploreParams();
+    const { onError, ...rest } = options;
 
     const { addNotification } = useNotifications();
+    const userSettings = useUserSettings();
 
-    const query = exploreGraphQueryFactory(params);
+    const { data } = useGraphItem(params.relationshipQueryItemId);
+    const relationshipDetails = data && isRelationshipResponse(data) ? data : undefined;
 
-    const queryConfig = query.getQueryConfig(params);
+    const query = exploreGraphQueryFactory(params, { userSettings, relationshipDetails });
+
+    const queryConfig = query.getQueryConfig();
 
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
+            if (onError) {
+                onError(message);
+            }
+
             addNotification(message, key, {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
+        ...rest,
+        ...userSettings,
     });
+};
+
+export type UserSettings = {
+    headers?: {
+        Prefer: string;
+    };
+};
+
+export const useUserSettings = () => {
+    const timeoutLimitEnabled = useTimeoutLimitConfiguration();
+
+    const persistedStateString = localStorage.getItem('persistedState');
+    const persistedState = persistedStateString !== null ? JSON.parse(persistedStateString) : null;
+    const isDisableQueryLimit = persistedState?.global?.view?.timeoutSetting;
+
+    const settings: UserSettings = {
+        headers: { Prefer: '' },
+    };
+
+    if (isDisableQueryLimit && timeoutLimitEnabled === false) {
+        settings.headers = { Prefer: 'wait=-1' };
+    } else {
+        delete settings.headers;
+    }
+
+    return settings;
 };

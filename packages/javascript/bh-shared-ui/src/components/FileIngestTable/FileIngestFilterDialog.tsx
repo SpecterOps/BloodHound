@@ -1,0 +1,161 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+    Dialog,
+    DialogActions,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+    IconButton,
+    TextButton,
+    VisuallyHidden,
+} from 'doodle-ui';
+import isEqual from 'lodash/isEqual';
+import { useRef, useState } from 'react';
+import { useObjectState } from '../../hooks';
+import { FileIngestFilterParams, typedEntries } from '../../utils';
+import { AppIcon } from '../AppIcon';
+import { DateRangeChange, DateRangeInputs } from '../DateRangeInputs';
+import { StatusSelect, UserMinimalSelect } from '../SelectMenus';
+
+type Props = {
+    onConfirm: (filters: FileIngestFilterParams) => void;
+};
+
+export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
+    const [areDatesValid, setAreDatesValid] = useState(true);
+
+    // Manages filter state while selecting option in dialog
+    // Sent to table via onConfirm
+    const filters = useObjectState<FileIngestFilterParams>({});
+
+    // For dirty checking
+    const prevState = useRef(filters.state);
+
+    const clearFilters = () => filters.setState({});
+
+    const selectStatus = (status: string) => {
+        if (status === '-none-') {
+            filters.deleteKeys('status');
+        } else {
+            filters.applyState({ status: parseInt(status, 10) });
+        }
+    };
+
+    const setDateRange = (changed: DateRangeChange) => {
+        const entries = typedEntries(changed);
+        if (entries.length === 0) return;
+        const [key, value] = entries[0];
+
+        if (value === undefined) {
+            filters.deleteKeys(key);
+        } else {
+            filters.applyState(changed);
+        }
+    };
+
+    const selectUser = (user_id: string) => {
+        if (user_id === '-none-') {
+            filters.deleteKeys('user_id');
+        } else {
+            filters.applyState({ user_id });
+        }
+    };
+
+    const isConfirmDisabled = !areDatesValid || isEqual(filters.state, prevState.current);
+
+    // Ensures dirty checking runs on next filter use
+    const updateAndConfirm = () => {
+        prevState.current = filters.state;
+        onConfirm(filters.state);
+    };
+
+    const undoChanges = () => {
+        filters.setState(prevState.current);
+    };
+
+    return (
+        <Dialog onOpenChange={undoChanges}>
+            <DialogTrigger asChild>
+                <IconButton
+                    aria-label='Open file ingest filters'
+                    variant='secondary'
+                    size={24}
+                    data-testid='file_ingest_log-open_filter_dialog'>
+                    <AppIcon.FilterOutline />
+                </IconButton>
+            </DialogTrigger>
+
+            <DialogPortal>
+                <DialogContent
+                    DialogOverlayProps={{
+                        blurBackground: true,
+                    }}>
+                    <DialogTitle className='flex justify-between items-center'>
+                        Filter
+                        <TextButton fontColor='primary' className='font-bold p-0 h-fit text-sm' onClick={clearFilters}>
+                            Clear All
+                        </TextButton>
+                    </DialogTitle>
+
+                    <VisuallyHidden asChild>
+                        <DialogDescription>File Ingest filters</DialogDescription>
+                    </VisuallyHidden>
+
+                    {/* Multiple Descriptions ensures that Dialog gaps still apply */}
+                    <DialogDescription asChild>
+                        <StatusSelect status={filters.state.status} onSelect={selectStatus} />
+                    </DialogDescription>
+
+                    <DialogDescription asChild>
+                        <DateRangeInputs
+                            end={filters.state.end_time}
+                            onChange={setDateRange}
+                            onValidation={setAreDatesValid}
+                            start={filters.state.start_time}
+                        />
+                    </DialogDescription>
+
+                    <DialogDescription asChild>
+                        <UserMinimalSelect user={filters.state.user_id} onSelect={selectUser} />
+                    </DialogDescription>
+
+                    <DialogActions className='text-sm gap-4'>
+                        <DialogClose asChild>
+                            <TextButton data-testid='file_ingest_log-filter_dialog_close' type='button'>
+                                Cancel
+                            </TextButton>
+                        </DialogClose>
+                        <DialogClose asChild>
+                            <TextButton
+                                data-testid='file_ingest_log-filter_dialog_confirm'
+                                fontColor='primary'
+                                disabled={isConfirmDisabled}
+                                onClick={updateAndConfirm}
+                                type='submit'>
+                                Confirm
+                            </TextButton>
+                        </DialogClose>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
+    );
+};

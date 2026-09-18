@@ -19,17 +19,19 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableCellProps,
     TableContainer,
     TableHead,
     TablePagination,
     TableRow,
 } from '@mui/material';
-import React, { CSSProperties } from 'react';
+import React, { HTMLProps } from 'react';
 
 export interface Header {
     label: string;
-    alignment?: 'inherit' | 'left' | 'center' | 'right' | 'justify';
-    verticalAlign?: CSSProperties['verticalAlign'];
+    alignment?: TableCellProps['align'];
+    className?: HTMLProps<HTMLElement>['className'];
+    srOnly?: boolean;
 }
 
 export interface DataTableProps {
@@ -67,7 +69,7 @@ const DataTable: React.FC<DataTableProps> = ({
                         <TableRow>
                             {headers.map((header, index) => (
                                 <TableCell key={index} align={header.alignment}>
-                                    {header.label}
+                                    {header.srOnly ? <span className='sr-only'>{header.label}</span> : header.label}
                                 </TableCell>
                             ))}
                         </TableRow>
@@ -88,7 +90,7 @@ const DataTable: React.FC<DataTableProps> = ({
                                         <TableCell
                                             key={cellIndex}
                                             align={headers[cellIndex]?.alignment}
-                                            sx={{ verticalAlign: headers[cellIndex]?.verticalAlign ?? '' }}>
+                                            className={headers[cellIndex]?.className ?? ''}>
                                             {cell}
                                         </TableCell>
                                     ))}

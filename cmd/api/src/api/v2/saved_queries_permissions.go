@@ -29,7 +29,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
@@ -48,7 +48,13 @@ var (
 )
 
 func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bool, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopeMap) error {
-	if user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
+	hasPrivilegedRole :=
+		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
+			user.Roles.Has(model.Role{Name: auth.RoleUser}) ||
+			user.Roles.Has(model.Role{Name: auth.RolePowerUser})
+
+	if hasPrivilegedRole {
 		if createRequest.Public && savedQueryBelongsToUser {
 			return nil
 		} else if len(createRequest.UserIDs) == 0 && (savedQueryBelongsToUser || dbSavedQueryScope[model.SavedQueryScopePublic]) {
@@ -100,7 +106,7 @@ func (s *SavedQueryPermissionResponse) appendUserId(userId uuid.NullUUID) {
 func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, request *http.Request) {
 	var rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -146,7 +152,7 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 		createRequest   SavedQueryPermissionRequest
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -217,7 +223,7 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 		deleteRequest   DeleteSavedQueryPermissionsRequest
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFromMalformed, request), response)

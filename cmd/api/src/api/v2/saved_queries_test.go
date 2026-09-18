@@ -37,7 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -51,7 +51,7 @@ import (
 
 func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -189,7 +189,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myQuery", "Match(n) return n", "", nil, nil, "").Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -232,7 +232,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myCustomQuery1", "Match(n) return n", "An example description", nil, nil, "").Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -275,11 +275,12 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myCustomQuery1", "Match(n) return n", "An example description", nil, nil, "").Return(model.SavedQuery{
 		UserID:      userId.String(),
 		Name:        fmt.Sprintf("%v", payload["name"]),
 		Query:       fmt.Sprintf("%v", payload["query"]),
 		Description: fmt.Sprintf("%v", payload["description"]),
+		Category:    "extension",
 	}, nil)
 
 	router := mux.NewRouter()
@@ -296,7 +297,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -399,7 +400,7 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.Code)
-	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
@@ -884,7 +885,7 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 
 func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
 	// Setup
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.Role{},
@@ -950,7 +951,7 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.Code)
-	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`, responseBodyWithDefaultTimestamp)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
@@ -1281,7 +1282,7 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 }
 
 func createContextWithOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{
@@ -1296,7 +1297,7 @@ func createContextWithOwnerId(id uuid2.UUID) context.Context {
 }
 
 func createContextWithAdminOwnerId(id uuid2.UUID) context.Context {
-	bhCtx := ctx.Context{
+	bhCtx := bhctx.Context{
 		RequestID: "",
 		AuthCtx: auth.Context{
 			Owner: model.User{
@@ -1401,7 +1402,7 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:  http.StatusBadRequest,
-				responseError: "Code: 400 - errors: id is malformed.",
+				responseError: "Code: 400 - errors: id is malformed",
 			},
 		},
 		{
@@ -1943,6 +1944,68 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 				responseBody: "imported 3 queries",
 			},
 		},
+		{
+			name: "success - json with UTF-8 BOM",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					body, err := json.Marshal(testQuery)
+					require.NoError(t, err)
+					// Prepend UTF-8 BOM
+					bodyWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, body...)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(bodyWithBOM))
+					req.Header.Set("Content-Type", mediatypes.ApplicationJson.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 1 queries",
+			},
+		},
+		{
+			name: "success - zip with UTF-8 BOM in JSON files",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
+				},
+			},
+			args: args{
+				buildRequest: func() (*http.Request, error) {
+					zipBuffer := new(bytes.Buffer)
+					zipWriter := zip.NewWriter(zipBuffer)
+					for _, query := range testQueries {
+						file, err := zipWriter.Create(query.Name)
+						require.NoError(t, err)
+						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
+						// Prepend UTF-8 BOM to JSON content
+						jsonFileWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, jsonFile...)
+						_, err = io.Copy(file, bytes.NewReader(jsonFileWithBOM))
+						require.NoError(t, err)
+					}
+					err = zipWriter.Close()
+					require.NoError(t, err)
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(zipBuffer.Bytes()))
+					req.Header.Set("Content-Type", mediatypes.ApplicationZip.String())
+					require.NoError(t, err)
+					return req, err
+				},
+			},
+			expect: expected{
+				responseCode: http.StatusCreated,
+				responseBody: "imported 3 queries",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2431,7 +2494,7 @@ func TestResources_GetSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

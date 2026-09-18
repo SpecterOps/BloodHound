@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
@@ -31,7 +32,7 @@ const Abuse: FC = () => {
                 Authentication Mechanism Assurance (AMA). See{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://github.com/GhostPack/Certify/wiki/4-%E2%80%90-Escalation-Techniques#managecertificates'>
                     Certify wiki - Escalation Techniques - ManageCertificates
                 </Link>{' '}

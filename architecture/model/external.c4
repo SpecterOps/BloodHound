@@ -1,0 +1,42 @@
+// BloodHound Community Edition - External Systems
+// Systems and actors that exist outside the BHCE codebase.
+
+model {
+
+  // ─── Actors ──────────────────────────────────────────────────────
+
+  securityOperator = actor 'Security Operator' {
+    description 'Uses BloodHound to identify and remediate Active Directory and Azure attack paths.'
+  }
+
+  apiConsumer = actor 'API Consumer' {
+    description 'External tooling or scripts that interact with the BloodHound REST API.'
+  }
+
+  // ─── External Data Collectors ────────────────────────────────────
+
+  sharpHound = externalSystem 'SharpHound' {
+    #external
+    description 'Windows data collector that enumerates Active Directory objects, ACLs, sessions, and group memberships.'
+    technology 'C#'
+  }
+
+  azureHound = externalSystem 'AzureHound' {
+    #external
+    description 'Data collector that enumerates Azure AD / Entra ID objects, roles, and permissions.'
+    technology 'Go'
+  }
+
+  // ─── Target Environments ─────────────────────────────────────────
+
+  activeDirectory = externalSystem 'Active Directory' {
+    #external
+    description 'On-premises Microsoft Active Directory domain environment being assessed.'
+  }
+
+  azureAd = externalSystem 'Azure AD / Entra ID' {
+    #external
+    description 'Microsoft cloud identity service being assessed.'
+  }
+}
+

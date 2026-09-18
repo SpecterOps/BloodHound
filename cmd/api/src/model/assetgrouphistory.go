@@ -22,6 +22,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 )
 
+// AssetGroupHistoryRecordRollingWindow This defines the rolling window in days that the asset group history table will be truncated down to at the end of a successful analysis run
+const AssetGroupHistoryRecordRollingWindow = 90
+
 type AssetGroupHistoryAction string
 
 const (

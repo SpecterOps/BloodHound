@@ -13,287 +13,347 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import {
-    AssetGroupTag,
-    AssetGroupTagMemberListItem,
-    AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
-    AssetGroupTagTypes,
-    AssetGroupTagTypeTier,
-    CreateAssetGroupTagRequest,
-    CreateSelectorRequest,
-    RequestOptions,
-    UpdateAssetGroupTagRequest,
-    UpdateSelectorRequest,
+    AssetGroupTagTypeZone,
+    HighestPrivilegePosition,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    ObjectKey,
+    ObjectsKey,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+    RuleKey,
+    RulesKey,
+    type AssetGroupTag,
+    type AssetGroupTagMemberListItem,
+    type AssetGroupTagSelector,
+    type AssetGroupTagType,
+    type RequestOptions,
 } from 'js-client-library';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
-import { SortOrder } from '../../types';
-import { apiClient } from '../../utils';
-import { createPaginatedFetcher, PageParam } from '../../utils/paginatedFetcher';
+import { useInfiniteQuery, useQuery } from 'react-query';
+import { TagLabelPrefix } from '../../constants';
+import { SortOrderAscending, type SortOrder } from '../../types';
+import { apiClient, type GenericQueryOptions } from '../../utils';
+import { createPaginatedFetcher, type PageParam } from '../../utils/paginatedFetcher';
 import { useFeatureFlag } from '../useFeatureFlags';
+import { isNodeResponse } from '../useGraphItem/useGraphItem';
 
-interface CreateAssetGroupTagParams {
-    values: CreateAssetGroupTagRequest;
-}
+export const privilegeZonesKeys = {
+    all: ['privilege-zones'] as const,
+    tags: () => [...privilegeZonesKeys.all, 'tags'] as const,
+    tagDetail: (tagId: string | number) => [...privilegeZonesKeys.tags(), 'tagId', tagId] as const,
+    rules: () => [...privilegeZonesKeys.all, 'rules'] as const,
+    rulesByTag: (
+        tagId: string | number,
+        sortOrder: SortOrder = undefined,
+        environments: string[] = [],
+        disabled?: boolean,
+        isDefault?: boolean
+    ) => [...privilegeZonesKeys.rules(), 'tag', tagId, sortOrder, ...environments, disabled, isDefault] as const,
+    ruleDetail: (tagId: string | number, ruleId: string | number) =>
+        [...privilegeZonesKeys.rulesByTag(tagId), 'ruleId', ruleId] as const,
+    members: () => [...privilegeZonesKeys.all, 'members'] as const,
+    membersByTag: (
+        tagId: string | number,
+        sortOrder: SortOrder,
+        environments: string[] = [],
+        primary_kind: string = 'all'
+    ) => [...privilegeZonesKeys.members(), 'tag', tagId, primary_kind, sortOrder, ...environments] as const,
+    membersByTagAndRule: (
+        tagId: string | number,
+        ruleId: string | number | undefined,
+        sortOrder: SortOrder,
+        environments: string[] = [],
+        primary_kind: string = 'all'
+    ) => ['tag', tagId, 'rule', ruleId, primary_kind, sortOrder, ...environments] as const,
+    memberDetail: (tagId: string | number, memberId: string | number) =>
+        [...privilegeZonesKeys.tagDetail(tagId), 'memberId', memberId] as const,
 
-export interface UpdateAssetGroupTagParams {
-    tagId: number | string;
-    updatedValues: UpdateAssetGroupTagRequest;
-}
-
-export interface CreateSelectorParams {
-    tagId: string | number;
-    values: CreateSelectorRequest;
-}
-export interface DeleteSelectorParams {
-    tagId: string | number;
-    selectorId: string | number;
-}
-
-export interface PatchSelectorParams extends DeleteSelectorParams {
-    updatedValues: UpdateSelectorRequest;
-}
-
-const PAGE_SIZE = 25;
-
-export const zoneManagementKeys = {
-    all: ['zone-management'] as const,
-    tags: () => [...zoneManagementKeys.all, 'tags'] as const,
-    tagDetail: (tagId: string | number) => [...zoneManagementKeys.tags(), 'tagId', tagId] as const,
-    selectors: () => [...zoneManagementKeys.all, 'selectors'] as const,
-    selectorsByTag: (tagId: string | number) => [...zoneManagementKeys.selectors(), 'tag', tagId] as const,
-    selectorDetail: (tagId: string | number, selectorId: string | number) =>
-        [...zoneManagementKeys.selectorsByTag(tagId), 'selectorId', selectorId] as const,
-    members: () => [...zoneManagementKeys.all, 'members'] as const,
-    membersByTag: (tagId: string | number, sortOrder: SortOrder) =>
-        [...zoneManagementKeys.members(), 'tag', tagId, sortOrder] as const,
-    membersByTagAndSelector: (tagId: string | number, selectorId: string | number | undefined, sortOrder: SortOrder) =>
-        ['tag', tagId, 'selector', selectorId, sortOrder] as const,
+    certifications: (filters: any, search?: string, environments: string[] = []) =>
+        [...privilegeZonesKeys.all, 'certifications', filters, search, ...environments] as const,
 };
 
-export const getAssetGroupTags = () =>
+const tagNameToKind = (tagName: string) => {
+    const underscoredTagName = tagName.split(' ').join('_');
+    return `${TagLabelPrefix}${underscoredTagName}`;
+};
+
+export const getZoneNameFromKinds = (
+    tags: AssetGroupTag[] | undefined,
+    kinds: string[] | undefined
+): string | undefined => {
+    const kindsSet = new Set(kinds);
+
+    const match = tags?.find((tag) => {
+        if (tag.type !== AssetGroupTagTypeZone) return false;
+
+        const tagKind = tagNameToKind(tag.name);
+        return kindsSet.has(tagKind);
+    });
+
+    return match?.name;
+};
+
+export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
+
+export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);
+
+export const isTaggedObject = (
+    node: NodeDetails | RelationshipDetails | RelationshipDetailsWithInfo | NodeDetailsWithInfo | undefined,
+    tag: AssetGroupTag | undefined
+): boolean => {
+    if (!node || !tag || !isNodeResponse(node)) return false;
+
+    const tagKind = tagNameToKind(tag.name);
+    return node.kinds.some((kind) => kind.name === tagKind);
+};
+
+const getAssetGroupTags = (options: RequestOptions) =>
     apiClient
         .getAssetGroupTags({
+            ...options,
             params: {
                 counts: true,
             },
         })
-        .then((res) => {
-            return res.data.data['tags'];
-        });
+        .then((res) => res.data.data.tags);
 
-export const useTagsQuery = (filter?: (value: AssetGroupTag, index: number, array: AssetGroupTag[]) => boolean) =>
-    useQuery({
-        queryKey: zoneManagementKeys.tags(),
-        queryFn: () => getAssetGroupTags(),
-        select: (data) => (filter ? data.filter(filter) : data),
+type useTagQueryOptions = GenericQueryOptions<AssetGroupTag[]>;
+
+export type TagSelect = useTagQueryOptions['select'];
+
+export const useTagsQuery = (queryOptions?: useTagQueryOptions) => {
+    const { data, isLoading, isError } = useFeatureFlag('tier_management_engine');
+
+    const enabled = !isLoading && !isError && data?.enabled;
+
+    return useQuery({
+        queryKey: privilegeZonesKeys.tags() as unknown as string[],
+        queryFn: ({ signal }) => getAssetGroupTags({ signal }),
+        enabled,
+        ...queryOptions,
+    });
+};
+
+const PAGE_SIZE = 25;
+
+const createGetRulesParams = (queryParams: GetRulesQueryParams) => {
+    const params = new URLSearchParams();
+    params.append('skip', queryParams.skip.toString());
+    params.append('limit', queryParams.limit.toString());
+    params.append('sort_by', queryParams.sortBy);
+    params.append('counts', `${queryParams.counts}`);
+
+    if (queryParams.isDefault !== undefined) params.append('is_default', `eq:${queryParams.isDefault}`);
+    if (queryParams.disabled !== undefined) params.append('disabled_at', queryParams.disabled ? 'neq:null' : 'eq:null');
+
+    queryParams.environments.forEach((environment) => {
+        params.append('environments', environment);
     });
 
-export const getAssetGroupTagSelectors = (tagId: string | number, skip: number = 0, limit: number = PAGE_SIZE) =>
-    createPaginatedFetcher(
-        () =>
-            apiClient.getAssetGroupTagSelectors(tagId, {
-                params: {
-                    skip,
-                    limit,
-                    counts: true,
-                },
-            }),
-        'selectors',
-        skip,
-        limit
-    );
+    return params;
+};
 
-export const useSelectorsInfiniteQuery = (tagId: string | number | undefined) =>
+export const getAssetGroupTagRules = (tagId: string | number, queryParams: GetRulesQueryParams) => {
+    const params = createGetRulesParams(queryParams);
+
+    return createPaginatedFetcher(
+        () => apiClient.getAssetGroupTagSelectors(tagId, { params }),
+        RulesKey,
+        queryParams.skip,
+        queryParams.limit
+    );
+};
+
+interface GetRulesQueryParams {
+    skip: number;
+    limit: number;
+    sortBy: string;
+    environments: string[];
+    counts: boolean;
+    isDefault?: boolean;
+    disabled?: boolean;
+}
+
+interface GetRulesParams {
+    sortOrder: SortOrder;
+    disabled?: boolean;
+    counts?: boolean;
+    environments?: string[];
+    isDefault?: boolean;
+}
+
+export const useRulesInfiniteQuery = (tagId: string | number | undefined, params: GetRulesParams, enabled?: boolean) =>
     useInfiniteQuery<{
         items: AssetGroupTagSelector[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.selectorsByTag(tagId!),
+        queryKey: privilegeZonesKeys.rulesByTag(
+            tagId!,
+            params.sortOrder,
+            params.environments,
+            params.disabled,
+            params.isDefault
+        ),
+
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
-            if (!tagId) return Promise.reject('No tag ID provided for selectors request');
-            return getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit);
+            if (!tagId) return Promise.reject('No tag ID provided for rules request');
+
+            return getAssetGroupTagRules(tagId, {
+                skip: pageParam.skip,
+                limit: pageParam.limit,
+                sortBy: params.sortOrder === SortOrderAscending ? 'name' : '-name',
+                environments: params.environments || [],
+                isDefault: params.isDefault,
+                disabled: params.disabled,
+                counts: params.counts ? params.counts : true,
+            });
         },
+
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined,
+
+        enabled: tagId !== undefined && enabled !== undefined ? enabled : true,
     });
 
 export const getAssetGroupTagMembers = (
     tagId: number | string,
     skip = 0,
     limit = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = SortOrderAscending,
+    environments?: string[],
+    primary_kind?: string
 ) =>
     createPaginatedFetcher<AssetGroupTagMemberListItem>(
-        () => apiClient.getAssetGroupTagMembers(tagId, skip, limit, sortOrder === 'asc' ? 'name' : '-name'),
-        'members',
+        () =>
+            apiClient.getAssetGroupTagMembers(
+                tagId,
+                skip,
+                limit,
+                sortOrder === SortOrderAscending ? 'name' : '-name',
+                environments,
+                primary_kind
+            ),
+        ObjectsKey,
         skip,
         limit
     );
 
-export const useTagMembersInfiniteQuery = (tagId: number | string | undefined, sortOrder: SortOrder) =>
+export const useTagMembersInfiniteQuery = (
+    tagId: number | string | undefined,
+    sortOrder: SortOrder,
+    environments?: string[],
+    primary_kind?: string,
+    enabled?: boolean
+) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTag(tagId!, sortOrder),
+        queryKey: privilegeZonesKeys.membersByTag(tagId!, sortOrder, environments, primary_kind),
+
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
             if (!tagId) return Promise.reject('No tag ID provided for tag members request');
-            return getAssetGroupTagMembers(tagId, pageParam.skip, pageParam.limit, sortOrder);
+
+            return getAssetGroupTagMembers(
+                tagId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments,
+                primary_kind
+            );
         },
+
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined,
+
+        enabled: tagId !== undefined && (enabled === undefined ? true : enabled),
     });
 
-export const getAssetGroupSelectorMembers = (
+export const getAssetGroupTagRuleMembers = (
     tagId: number | string,
-    selectorId: number | string,
+    ruleId: number | string,
     skip: number = 0,
     limit: number = PAGE_SIZE,
-    sortOrder: SortOrder = 'asc'
+    sortOrder: SortOrder = SortOrderAscending,
+    environments?: string[],
+    primary_kind?: string
 ) =>
     createPaginatedFetcher(
         () =>
             apiClient.getAssetGroupTagSelectorMembers(
                 tagId,
-                selectorId,
+                ruleId,
                 skip,
                 limit,
-                sortOrder === 'asc' ? 'name' : '-name'
+                sortOrder === SortOrderAscending ? 'name' : '-name',
+                environments,
+                primary_kind
             ),
-        'members',
+        ObjectsKey,
         skip,
         limit
     );
 
-export const useSelectorMembersInfiniteQuery = (
+export const useRuleMembersInfiniteQuery = (
     tagId: number | string | undefined,
-    selectorId: number | string | undefined,
-    sortOrder: SortOrder
+    ruleId: number | string | undefined,
+    sortOrder: SortOrder,
+    environments?: string[],
+    primary_kind?: string,
+    enabled?: boolean
 ) =>
     useInfiniteQuery<{
         items: AssetGroupTagMemberListItem[];
         nextPageParam?: PageParam;
     }>({
-        queryKey: zoneManagementKeys.membersByTagAndSelector(tagId!, selectorId, sortOrder),
+        queryKey: privilegeZonesKeys.membersByTagAndRule(tagId!, ruleId, sortOrder, environments, primary_kind),
         queryFn: ({ pageParam = { skip: 0, limit: PAGE_SIZE } }) => {
-            if (!tagId) return Promise.reject('No tag ID available to get selector members');
-            if (!selectorId) return Promise.reject('No selector ID available to get selector members');
-            return getAssetGroupSelectorMembers(tagId, selectorId, pageParam.skip, pageParam.limit, sortOrder);
+            if (!tagId) return Promise.reject('No tag ID available to get rule members');
+            if (!ruleId) return Promise.reject('No rule ID available to get rule members');
+
+            return getAssetGroupTagRuleMembers(
+                tagId,
+                ruleId,
+                pageParam.skip,
+                pageParam.limit,
+                sortOrder,
+                environments,
+                primary_kind
+            );
         },
+
         getNextPageParam: (lastPage) => lastPage.nextPageParam,
-        enabled: tagId !== undefined && selectorId !== undefined,
+
+        enabled: tagId !== undefined && ruleId !== undefined && (enabled === undefined ? true : enabled),
     });
 
-export const createSelector = async (params: CreateSelectorParams, options?: RequestOptions) => {
-    const { tagId, values } = params;
-
-    const res = await apiClient.createAssetGroupTagSelector(tagId, values, options);
-
-    return res.data.data;
-};
-
-export const useCreateSelector = (tagId: string | number | undefined) => {
-    const queryClient = useQueryClient();
-    return useMutation(createSelector, {
-        onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId!));
-        },
-    });
-};
-
-export const patchSelector = async (params: PatchSelectorParams, options?: RequestOptions) => {
-    const { tagId, selectorId, updatedValues } = params;
-
-    const res = await apiClient.updateAssetGroupTagSelector(tagId, selectorId, updatedValues, options);
-
-    return res.data.data;
-};
-
-export const usePatchSelector = (tagId: string | number) => {
-    const queryClient = useQueryClient();
-    return useMutation(patchSelector, {
-        onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(tagId));
-        },
-    });
-};
-
-export const deleteSelector = async (ids: DeleteSelectorParams, options?: RequestOptions) =>
-    await apiClient.deleteAssetGroupTagSelector(ids.tagId, ids.selectorId, options).then((res) => res.data.data);
-
-export const useDeleteSelector = () => {
-    const queryClient = useQueryClient();
-    return useMutation(deleteSelector, {
-        onSettled: async (_data, _error, variables) => {
-            queryClient.invalidateQueries(zoneManagementKeys.selectorsByTag(variables.tagId));
-            queryClient.invalidateQueries(zoneManagementKeys.selectorDetail(variables.tagId, variables.selectorId));
-        },
-    });
-};
-
-export const useSelectorInfo = (tagId: string, selectorId: string) =>
+export const useMemberInfo = (tagId: string = '', memberId: string = '') =>
     useQuery({
-        queryKey: zoneManagementKeys.selectorDetail(tagId, selectorId),
+        queryKey: privilegeZonesKeys.memberDetail(tagId, memberId),
         queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId, { signal });
-            return response.data.data['selector'];
+            return apiClient.getAssetGroupTagMemberInfo(tagId, memberId, { signal }).then((res) => {
+                return res.data.data[ObjectKey];
+            });
         },
-        enabled: tagId !== '' && selectorId !== '',
+        enabled: tagId !== '' && memberId !== '',
     });
 
-export const createAssetGroupTag = async (params: CreateAssetGroupTagParams, options?: RequestOptions) => {
-    const { values } = params;
-
-    const res = await apiClient.createAssetGroupTag(values, options);
-
-    return res.data.data;
-};
-
-export const useCreateAssetGroupTag = () => {
-    const queryClient = useQueryClient();
-    return useMutation(createAssetGroupTag, {
-        onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.tags());
+export const useRuleInfo = (tagId: string = '', ruleId: string = '') =>
+    useQuery({
+        queryKey: privilegeZonesKeys.ruleDetail(tagId, ruleId),
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.getAssetGroupTagSelector(tagId, ruleId, { signal });
+            return response.data.data[RuleKey];
         },
+        enabled: tagId !== '' && ruleId !== '',
     });
-};
-
-export const patchAssetGroupTag = async (params: UpdateAssetGroupTagParams, options?: RequestOptions) => {
-    const { tagId, updatedValues } = params;
-
-    const res = await apiClient.updateAssetGroupTag(tagId, updatedValues, options);
-
-    return res.data.data;
-};
-
-export const usePatchAssetGroupTag = (tagId: string | number) => {
-    const queryClient = useQueryClient();
-    return useMutation(patchAssetGroupTag, {
-        onSettled: async () => {
-            await queryClient.invalidateQueries(zoneManagementKeys.tags());
-            await queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
-        },
-    });
-};
-
-export const deleteAssetGroupTag = async (tagId: string | number, options?: RequestOptions) =>
-    await apiClient.deleteAssetGroupTag(tagId, options).then((res) => res.data.data);
-
-export const useDeleteAssetGroupTag = () => {
-    const queryClient = useQueryClient();
-    return useMutation(deleteAssetGroupTag, {
-        onSettled: async (_data, _error, tagId) => {
-            queryClient.invalidateQueries(zoneManagementKeys.tags());
-            queryClient.invalidateQueries(zoneManagementKeys.tagDetail(tagId));
-        },
-    });
-};
 
 export const useAssetGroupTagInfo = (tagId: string) =>
     useQuery({
-        queryKey: zoneManagementKeys.tagDetail(tagId),
+        queryKey: privilegeZonesKeys.tagDetail(tagId),
         queryFn: async ({ signal }) => {
             const response = await apiClient.getAssetGroupTag(tagId, { signal });
             return response.data.data.tag;
@@ -301,58 +361,41 @@ export const useAssetGroupTagInfo = (tagId: string) =>
         enabled: tagId !== '',
     });
 
-export const useAssetGroupTags = () => {
-    const { data, isLoading, isError } = useFeatureFlag('tier_management_engine');
-
-    const queryEnabled = !isLoading && !isError && data?.enabled;
-
-    return useQuery({
-        queryKey: zoneManagementKeys.tags(),
-        queryFn: getAssetGroupTags,
-        enabled: queryEnabled,
-    });
-};
-
 export const useOrderedTags = () => {
-    const { isLoading, isError, data } = useAssetGroupTags();
+    const select = (tags: AssetGroupTag[]) =>
+        tags
+            .filter((tag) => tag.type === AssetGroupTagTypeZone)
+            .sort((a, b) => {
+                const aPos = a.position ?? 0;
+                const bPos = b.position ?? 0;
+                return aPos - bPos;
+            });
 
-    const orderedTags = (data ?? [])
-        ?.filter((tag) => tag.type === AssetGroupTagTypeTier)
-        .sort((a, b) => {
-            const aPos = a.position ?? 0;
-            const bPos = b.position ?? 0;
-            return aPos - bPos;
-        });
-
-    return { orderedTags, isLoading, isError };
+    return useTagsQuery({ select });
 };
-
-const HighestPrivilegePosition = 1 as const;
 
 export const useHighestPrivilegeTag = () => {
-    const { orderedTags, isLoading, isError } = useOrderedTags();
-    const tag = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+    const { data: orderedTags, isLoading, isError } = useOrderedTags();
+    const tag = getTierZeroTag(orderedTags ?? []);
 
     return { isLoading, isError, tag };
 };
 
 export const useHighestPrivilegeTagId = () => {
-    const { orderedTags, isLoading, isError } = useOrderedTags();
-    const tagId = orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;
+    const { data: orderedTags, isLoading, isError } = useOrderedTags();
+    const tagId = getTierZeroTag(orderedTags ?? [])?.id;
 
     return { isLoading, isError, tagId };
 };
 
 export const useLabels = () => {
-    const tagsQuery = useAssetGroupTags();
-    const labelTypes: AssetGroupTagTypes[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const labelTypes: AssetGroupTagType[] = [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+    const select = (tags: AssetGroupTag[]) => tags.filter((tag) => labelTypes.includes(tag.type));
 
-    if (tagsQuery.isLoading || tagsQuery.isError) return [];
-
-    return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
+    return useTagsQuery({ select });
 };
 
 export const useOwnedTagId = () => {
-    const tagsQuery = useAssetGroupTags();
-    return tagsQuery.data?.find((tag) => tag.type === AssetGroupTagTypeOwned)?.id;
+    const tagsQuery = useTagsQuery();
+    return getOwnedTag(tagsQuery.data ?? [])?.id;
 };

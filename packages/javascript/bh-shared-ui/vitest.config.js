@@ -20,6 +20,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     resolve: {
         alias: {
+            'doodle-ui': path.resolve(__dirname, '..', 'doodle-ui', 'src'),
             'js-client-library': path.resolve(__dirname, '..', 'js-client-library', 'src'),
         },
     },
@@ -33,5 +34,14 @@ export default defineConfig({
             reportsDirectory: './coverage',
             reporter: ['text-summary', 'json-summary'],
         },
+        reporters: [
+            'default',
+            [
+                'allure-vitest/reporter',
+                {
+                    resultsDir: '../../../allure-results',
+                },
+            ],
+        ],
     },
 });

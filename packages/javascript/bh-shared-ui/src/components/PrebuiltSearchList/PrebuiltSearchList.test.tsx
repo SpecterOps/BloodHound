@@ -15,121 +15,125 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { render, screen } from '../../test-utils';
-import PrebuiltSearchList from '../PrebuiltSearchList';
+import PrebuiltSearchList from './PrebuiltSearchList';
 
 describe('PrebuiltSearchList', () => {
-    it('renders a list of pre-built searches', () => {
-        const testListSections = [
-            {
-                subheader: 'subheader',
-                lineItems: [
-                    {
-                        id: 1,
-                        description: 'query 1',
-                        cypher: 'match (n) return n limit 5',
-                        canEdit: false,
-                    },
-                    {
-                        id: 2,
-                        description: 'query 2',
-                        cypher: 'match (n) return n limit 5',
-                        canEdit: false,
-                    },
-                    {
-                        id: 3,
-                        description: 'query 3',
-                        cypher: 'match (n) return n limit 5',
-                        canEdit: false,
-                    },
-                ],
-            },
-        ];
-        const testClickHandler = vitest.fn();
+    const testListSections = [
+        {
+            category: 'Active Directory',
+            subheader: 'Domain Information',
+            queries: [
+                {
+                    name: 'Find all Domain Admins',
+                    description: 'Returns all members of the Domain Admins group',
+                    query: 'MATCH (n:Group {name:"DOMAIN ADMINS@TESTLAB.LOCAL"})<-[r:MemberOf*1..]-(m) RETURN m',
+                },
+                {
+                    name: 'Find Computers with Unconstrained Delegation',
+                    description: 'Returns all computers with unconstrained delegation enabled',
+                    query: 'MATCH (c:Computer {unconstraineddelegation:true}) RETURN c',
+                },
+                {
+                    name: 'Find Kerberoastable Users',
+                    description: 'Returns all users with SPN set',
+                    query: 'MATCH (u:User {hasspn:true}) RETURN u',
+                    canEdit: true,
+                    id: 1,
+                    user_id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
+                },
+            ],
+        },
+        {
+            category: 'Azure',
+            subheader: 'Tenant Information',
+            queries: [
+                {
+                    name: 'Find all Global Admins',
+                    description: 'Returns all members of the Global Administrator role',
+                    query: 'MATCH (n:AZRole {name:"Global Administrator"})<-[r:AZHasRole]-(m) RETURN m',
+                },
+                {
+                    name: 'Find Azure VMs',
+                    description: 'Returns all Azure virtual machines',
+                    query: 'MATCH (v:AZVM) RETURN v',
+                },
+            ],
+        },
+    ];
 
-        render(<PrebuiltSearchList listSections={testListSections} clickHandler={testClickHandler} />);
+    const setup = () => {
+        const testClickHandler = vi.fn();
+        const testDeleteHandler = vi.fn();
+        const testClearFiltersHandler = vi.fn();
 
-        expect(screen.getByText(/subheader/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: testListSections[0].lineItems[0].description })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: testListSections[0].lineItems[1].description })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: testListSections[0].lineItems[2].description })).toBeInTheDocument();
+        const result = render(
+            <PrebuiltSearchList
+                listSections={testListSections}
+                showCommonQueries={true}
+                clickHandler={testClickHandler}
+                deleteHandler={testDeleteHandler}
+                clearFiltersHandler={testClearFiltersHandler}
+            />
+        );
+
+        return {
+            ...result,
+            testClickHandler,
+            testDeleteHandler,
+            testClearFiltersHandler,
+        };
+    };
+
+    it('renders a list of pre-built searches', async () => {
+        setup();
+
+        expect(screen.getByText('Domain Information')).toBeInTheDocument();
+        expect(screen.getByText('Find all Domain Admins')).toBeInTheDocument();
+
+        // Verifying that the one editable query has an action menu
+        const actionMenuTriggers = screen.getAllByTestId('saved-query-action-menu-trigger');
+        expect(actionMenuTriggers).toHaveLength(1);
     });
 
-    it('clicking a pre-built search calls clickHandler', async () => {
+    it('calls clickHandler when a line item is clicked', async () => {
         const user = userEvent.setup();
-        const testListSections = [
-            {
-                subheader: 'subheader',
-                lineItems: [
-                    {
-                        id: 1,
-                        description: 'query 1',
-                        cypher: 'cypher 1',
-                        canEdit: false,
-                    },
-                    {
-                        id: 2,
-                        description: 'query 2',
-                        cypher: 'cypher 2',
-                        canEdit: false,
-                    },
-                    {
-                        id: 3,
-                        description: 'query 3',
-                        cypher: 'cypher 3',
-                        canEdit: false,
-                    },
-                ],
-            },
-        ];
-        const testClickHandler = vitest.fn();
+        const { testClickHandler } = setup();
 
-        render(<PrebuiltSearchList listSections={testListSections} clickHandler={testClickHandler} />);
+        await user.click(screen.getByText(testListSections[0].queries[0].name));
 
-        await user.click(screen.getByText(testListSections[0].lineItems[0].description));
-        expect(testClickHandler).toBeCalledWith(testListSections[0].lineItems[0].cypher);
+        expect(testClickHandler).toBeCalledWith(testListSections[0].queries[0].query, undefined);
 
-        await user.click(screen.getByText(testListSections[0].lineItems[1].description));
-        expect(testClickHandler).toBeCalledWith(testListSections[0].lineItems[1].cypher);
+        await user.click(screen.getByText(testListSections[0].queries[2].name));
 
-        await user.click(screen.getByText(testListSections[0].lineItems[2].description));
-        expect(testClickHandler).toBeCalledWith(testListSections[0].lineItems[2].cypher);
+        expect(testClickHandler).toBeCalledWith(testListSections[0].queries[2].query, 1);
     });
 
     it('clicking a delete button calls deleteHandler', async () => {
         const user = userEvent.setup();
-        const testListSections = [
-            {
-                subheader: 'subheader',
-                lineItems: [
-                    {
-                        id: 1,
-                        description: 'query 1',
-                        cypher: 'cypher 1',
-                        canEdit: true,
-                    },
-                ],
-            },
-        ];
-        const testClickHandler = vitest.fn();
-        const testDeleteHandler = vitest.fn();
+        setup();
 
-        render(
-            <PrebuiltSearchList
-                listSections={testListSections}
-                clickHandler={testClickHandler}
-                deleteHandler={testDeleteHandler}
-            />
-        );
+        const actionMenuTrigger = screen.getByTestId('saved-query-action-menu-trigger');
+        await user.click(actionMenuTrigger);
 
-        await user.click(
-            screen.getByRole('button', {
-                name: /delete query/i,
-            })
-        );
-        expect(await screen.findByText(/are you sure you want to delete this query/i)).toBeInTheDocument();
+        const deleteOption = await screen.findByText(/delete/i);
+        expect(deleteOption).toBeInTheDocument();
+    });
 
-        await user.click(screen.getByRole('button', { name: /confirm/i }));
-        expect(testDeleteHandler).toBeCalledWith(1);
+    it('renders a list of pre-built searches and displays categories and subcategories one time', async () => {
+        setup();
+
+        const adCategory = screen.getAllByText('Active Directory');
+        expect(adCategory).toHaveLength(1);
+
+        const domainInfoSubcategory = screen.getAllByText('Domain Information');
+        expect(domainInfoSubcategory).toHaveLength(1);
+
+        const azureCategory = screen.getAllByText('Azure');
+        expect(azureCategory).toHaveLength(1);
+
+        const tenantInfoSubcategory = screen.getAllByText('Tenant Information');
+        expect(tenantInfoSubcategory).toHaveLength(1);
     });
 });

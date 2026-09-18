@@ -216,7 +216,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.AZSubscription]: 'fa-key',
     [GraphNodeTypes.AZTenant]: 'fa-cloud',
     [GraphNodeTypes.AZUser]: 'fa-user',
-    [GraphNodeTypes.AZVM]: 'fa-dekstop',
+    [GraphNodeTypes.AZVM]: 'fa-desktop',
     [GraphNodeTypes.AZManagedCluster]: 'fa-cubes',
     [GraphNodeTypes.AZContainerRegistry]: 'fa-box-open',
     [GraphNodeTypes.AZWebApp]: 'fa-object-group',
@@ -236,6 +236,9 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.NTAuthStore]: 'fa-store',
     [GraphNodeTypes.CertTemplate]: 'fa-id-card',
     [GraphNodeTypes.IssuancePolicy]: 'fa-clipboard-check',
+    [GraphNodeTypes.Site]: 'fa-map-signs',
+    [GraphNodeTypes.SiteServer]: 'fa-map-marker',
+    [GraphNodeTypes.SiteSubnet]: 'fa-map',
 };
 
 const setFontIcons = (data: Items): void => {
@@ -246,7 +249,6 @@ const setFontIcons = (data: Items): void => {
 };
 
 export {
-    ICONS,
     applyRelWidths,
     findRootId,
     findRootRelsIds,
@@ -256,6 +258,7 @@ export {
     getLinksIndex,
     getNodesIndex,
     handleLabels,
+    ICONS,
     setFontIcons,
     withLinkImact,
 };

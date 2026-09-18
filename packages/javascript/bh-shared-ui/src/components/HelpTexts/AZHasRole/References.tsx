@@ -19,14 +19,17 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://docs.microsoft.com/en-us/graph/permissions-reference'>
+        <Box className='overflow-x-auto'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://docs.microsoft.com/en-us/graph/permissions-reference'>
                 Microsoft Graph Permission Reference
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://docs.microsoft.com/en-us/azure/role-based-access-control/overview'>
                 Azure role-based access control
             </Link>

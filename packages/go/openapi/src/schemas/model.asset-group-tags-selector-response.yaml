@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
-  - $ref: './model.asset-group-tags-selector-create.yaml'
+  - $ref: './model.asset-group-tags-selector-base.yaml'
   - type: object
     properties:
       id:
@@ -40,3 +40,12 @@ allOf:
         type: boolean
       allow_disable:
         type: boolean
+      rule_key:
+        allOf:
+          - $ref: './null.string.response.yaml'
+        readOnly: true
+      extension_id:
+        type: integer
+        format: int32
+        nullable: true
+        readOnly: true

@@ -15,3 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as GraphControls } from './GraphControls';
+export type { GraphExportAction } from './GraphControls';

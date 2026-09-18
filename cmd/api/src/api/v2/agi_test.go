@@ -32,7 +32,7 @@ import (
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -411,7 +411,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -430,7 +430,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -449,7 +449,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -461,7 +461,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -473,7 +473,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	require.Nil(t, err)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(jsonBody).
@@ -524,7 +524,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 	mockDB.EXPECT().CreateAssetGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.AssetGroup{}, nil)
 
 	requestTemplate.
-		WithContext(&ctx.Context{
+		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
 		WithBody(v2.CreateAssetGroupRequest{Name: "valid_name", Tag: "valid_tag"}).
@@ -619,14 +619,14 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	bheCtx := ctx.Context{
+	bheCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx: auth.Context{
 			Owner:   model.User{},
 			Session: model.UserSession{},
 		},
 	}
-	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = req.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bheCtx.WithRequestID("requestID")))
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	assetGroup := model.AssetGroup{
@@ -662,7 +662,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 
 	// Should receive a call to RequestAnalysis() since this is a Tier Zero Asset group.
 	// Analysis must be run upon updating a T0 AG
-	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String())
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeNoPostProcessing)
 
 	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 
@@ -709,14 +709,14 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	bheCtx := ctx.Context{
+	bheCtx := bhctx.Context{
 		RequestID: "requestID",
 		AuthCtx: auth.Context{
 			Owner:   model.User{},
 			Session: model.UserSession{},
 		},
 	}
-	req = req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bheCtx.WithRequestID("requestID")))
+	req = req.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bheCtx.WithRequestID("requestID")))
 	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupID: "1"})
 
 	assetGroup := model.AssetGroup{
@@ -752,7 +752,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 
 	// NOTE should NOT receive a call to RequestAnalysis() since this is not a Tier Zero Asset group.
 	// Analysis should not be re-run when a non T0 AG is updated
-	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(0)
+	mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeNoPostProcessing).Times(0)
 
 	handlers := v2.Resources{DB: mockDB, GraphQuery: mockGraph}
 
@@ -1219,14 +1219,27 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetPrimaryDisplayKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
+					mockGraph.EXPECT().GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "Node missing base entity kind",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1274,9 +1287,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1310,9 +1322,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "4")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1351,9 +1362,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, model.PaginationQueryParameterLimit, "4")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1394,9 +1404,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.AddQueryParam(input, api.QueryParameterSortBy, "-object_id")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1429,9 +1438,8 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
-					mockDB.EXPECT().
-						GetAssetGroup(gomock.Any(), gomock.Any()).
-						Return(assetGroup, nil)
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
 					mockGraph.EXPECT().
 						GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NodeSet{
@@ -1582,11 +1590,26 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 				},
 			},
 			{
+				Name: "GetPrimaryDisplayKindsError",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
+					mockDB.EXPECT().GetAssetGroup(gomock.Any(), gomock.Any()).Return(assetGroup, nil)
+					mockGraph.EXPECT().GetAssetGroupNodes(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+				},
+			},
+			{
 				Name: "SuccessDataTest",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)
@@ -1623,6 +1646,7 @@ func TestResources_ListAssetGroupMembersCount(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupID, "1")
 				},
 				Setup: func() {
+					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().
 						GetAssetGroup(gomock.Any(), gomock.Any()).
 						Return(assetGroup, nil)

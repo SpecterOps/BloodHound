@@ -17,6 +17,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -25,6 +26,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes
@@ -90,8 +93,46 @@ func (s *Route) RequireUserId() *Route {
 	return s
 }
 
-func (s *Route) CheckFeatureFlag(db database.Database, flagKey string) *Route {
-	s.handler.Use(middleware.FeatureFlagMiddleware(db, flagKey))
+// SupportsETAC wraps the ETAC middleware which allows or denies a user access to an environment (domainid, tenantid), when it is used in a route's path parameter
+func (s *Route) SupportsETAC(db database.Database, dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.SupportsETACMiddleware(db, dogTagsService))
+	return s
+}
+
+func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Route {
+	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(dogTagsService))
+	return s
+}
+
+// featureFlag is the minimal interface for a feature flag, it is not to be exported from this pkg
+type featureFlag interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
+func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
+	s.handler.Use(middleware.FeatureFlagMiddleware(ff, flagKey))
+	return s
+}
+
+// WithFilters wires the query parameter filter middleware onto the route, validating any filters against
+// the supplied params.Filterable definition and enriching the request context with the parsed filters.
+// Query parameters named in additionalIgnoredParameters are skipped during filter parsing.
+func (s *Route) WithFilters(filterable params.Filterable, additionalIgnoredParameters ...string) *Route {
+	s.handler.Use(middleware.FilterMiddleware(filterable, additionalIgnoredParameters...))
+	return s
+}
+
+// WithSort wires the query parameter sort middleware onto the route, validating any sort columns against
+// the supplied params.Sortable definition and enriching the request context with the parsed sort items.
+func (s *Route) WithSort(sortable params.Sortable) *Route {
+	s.handler.Use(middleware.SortMiddleware(sortable))
+	return s
+}
+
+// WithPaging wires the paging middleware onto the route, parsing the skip and limit query parameters
+// according to the supplied params.PagingConfig and enriching the request context with the parsed values.
+func (s *Route) WithPaging(config params.PagingConfig) *Route {
+	s.handler.Use(middleware.PagingMiddleware(config))
 	return s
 }
 
@@ -115,6 +156,12 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 // matches to a valid route.
 func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
+}
+
+// MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
+// matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
+func (s Router) MuxRouter() *mux.Router {
+	return s.mux
 }
 
 func (s Router) Handler() http.Handler {
@@ -165,4 +212,9 @@ func (s Router) DELETE(template string, handlerFunc func(http.ResponseWriter, *h
 
 func (s Router) PATCH(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	return s.HandleFunc(template, handlerFunc).Methods(http.MethodPatch)
+}
+
+func (s *Route) Name(name string) *Route {
+	s.mux.Name(name)
+	return s
 }

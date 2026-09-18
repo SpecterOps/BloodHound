@@ -14,14 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
 import { FC } from 'react';
+
+const AZGroupLink = (
+    <a target='_blank' rel='noopener noreferrer' href='https://bloodhound.specterops.io/resources/nodes/az-group'>
+        AZGroup
+    </a>
+);
+
+const AZServicePrincipalLink = (
+    <a
+        target='_blank'
+        rel='noopener noreferrer'
+        href='https://bloodhound.specterops.io/resources/nodes/az-service-principal'>
+        AZServicePrincipal
+    </a>
+);
+
+const AZDeviceLink = (
+    <a target='_blank' rel='noopener noreferrer' href='https://bloodhound.specterops.io/resources/nodes/az-device'>
+        AZDevice
+    </a>
+);
 
 const General: FC = () => {
     return (
-        <Typography variant='body2'>
-            Object ownership means almost all abuses are possible against the target object.
-        </Typography>
+        <p className='edge-accordion-body2'>
+            AZOwns means an Entra principal has been added as an owner over an Entra asset.
+            <br />
+            <br />
+            AZOwns targets resources in Entra ID (for example {AZGroupLink}, {AZServicePrincipalLink}, and{' '}
+            {AZDeviceLink}) from various object-specific ownership.
+        </p>
     );
 };
 

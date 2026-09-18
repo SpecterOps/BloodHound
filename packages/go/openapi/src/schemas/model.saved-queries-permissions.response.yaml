@@ -17,9 +17,8 @@ type: object
 properties:
   shared_to_user_ids:
     type: array
-    items: {
+    items:
       $ref: './model.components.uuid.yaml'
-    }
   query_id:
     type: integer
     format: int64

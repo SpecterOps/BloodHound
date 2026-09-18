@@ -14,43 +14,63 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faRefresh, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Grid, IconButton, useTheme } from '@mui/material';
+import { IconButton } from '@mui/material';
+import { cn } from '../../utils';
 import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
-import FileValidationStatus from '../FileValidationStatus';
 
 const FileStatusListItem: React.FC<{
     file: FileForIngest;
     onRemove: () => void;
-}> = ({ file, onRemove }) => {
-    const theme = useTheme();
+    onRefresh: (file: FileForIngest) => void;
+    percentCompleted: number;
+}> = ({ file, onRemove, onRefresh, percentCompleted = 0 }) => {
+    const percentWithFallback = file.status === FileStatus.DONE ? 100 : percentCompleted;
+    const hasErrors = !!file?.errors?.length || file.status === FileStatus.FAILURE;
+    const isComplete = file.status === FileStatus.DONE;
+    const clampedPercent = Math.max(0, Math.min(100, Math.round(percentWithFallback ?? 0)));
+    const progressBarWidth = `${percentCompleted}%`;
+
     return (
-        <Grid container width='100%' minHeight={32} fontSize={12} border={1} borderColor={theme.palette.color.primary}>
-            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', paddingLeft: '4px' }}>
-                {file.file.name}
-            </Grid>
-            <Grid item xs={5} sx={{ display: 'flex', alignItems: 'center' }}>
-                <FileValidationStatus file={file} />
-            </Grid>
-            {file.status === FileStatus.READY && (
-                <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'end' }}>
+        <div
+            className={cn('mb-2 relative flex flex-row h-8 justify-between text-sm rounded-lg', {
+                'bg-red-500/10': hasErrors,
+                'bg-purple-300/20': isComplete,
+            })}>
+            <div className='px-3 flex items-center z-10 gap-2 flex-1 leading-none justify-between'>
+                <span>{file.file.name}</span>
+                {!!percentWithFallback && !hasErrors && (
+                    <span className='text-primary dark:text-purple-100'>{clampedPercent}%</span>
+                )}
+                {hasErrors && <span className='text-status-error-text'>Failed to Upload</span>}
+            </div>
+            {!hasErrors && !isComplete && (
+                <div
+                    className='absolute h-8 rounded-lg transition-all bg-purple-300 opacity-20'
+                    style={{ maxWidth: '600px', width: progressBarWidth }}
+                />
+            )}
+
+            <div>
+                {file.status === FileStatus.READY && (
                     <IconButton
                         onClick={onRemove}
-                        sx={{
-                            '&:hover': {
-                                backgroundColor: theme.palette.neutral.quinary,
-                            },
-                            borderRadius: '2px',
-                            width: 28,
-                            height: 28,
-                            margin: '2px',
-                        }}>
+                        aria-label='Remove item'
+                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
                         <FontAwesomeIcon size='xs' icon={faTimes} />
                     </IconButton>
-                </Grid>
-            )}
-        </Grid>
+                )}
+                {file.status === FileStatus.FAILURE && (
+                    <IconButton
+                        onClick={() => onRefresh(file)}
+                        aria-label='Retry upload'
+                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
+                        <FontAwesomeIcon size='xs' icon={faRefresh} />
+                    </IconButton>
+                )}
+            </div>
+        </div>
     );
 };
 

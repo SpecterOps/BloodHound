@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,21 @@ func (m *MockUploadData) CancelAllIngestJobs(ctx context.Context) error {
 func (mr *MockUploadDataMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockUploadData)(nil).CancelAllIngestJobs), ctx)
+}
+
+// CreateCompletedTask mocks base method.
+func (m *MockUploadData) CreateCompletedTask(ctx context.Context, task model.CompletedTask) (model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCompletedTask", ctx, task)
+	ret0, _ := ret[0].(model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCompletedTask indicates an expected call of CreateCompletedTask.
+func (mr *MockUploadDataMockRecorder) CreateCompletedTask(ctx, task any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompletedTask", reflect.TypeOf((*MockUploadData)(nil).CreateCompletedTask), ctx, task)
 }
 
 // CreateCompositionInfo mocks base method.
@@ -159,6 +174,21 @@ func (m *MockUploadData) GetAllIngestJobs(ctx context.Context, skip, limit int, 
 func (mr *MockUploadDataMockRecorder) GetAllIngestJobs(ctx, skip, limit, order, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestJobs", reflect.TypeOf((*MockUploadData)(nil).GetAllIngestJobs), ctx, skip, limit, order, filter)
+}
+
+// GetCompletedTasks mocks base method.
+func (m *MockUploadData) GetCompletedTasks(ctx context.Context, ingestJobId int64) ([]model.CompletedTask, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCompletedTasks", ctx, ingestJobId)
+	ret0, _ := ret[0].([]model.CompletedTask)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCompletedTasks indicates an expected call of GetCompletedTasks.
+func (mr *MockUploadDataMockRecorder) GetCompletedTasks(ctx, ingestJobId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompletedTasks", reflect.TypeOf((*MockUploadData)(nil).GetCompletedTasks), ctx, ingestJobId)
 }
 
 // GetIngestJob mocks base method.

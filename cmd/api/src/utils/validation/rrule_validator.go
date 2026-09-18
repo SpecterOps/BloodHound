@@ -49,19 +49,32 @@ func (s RRuleValidator) Validate(value any) utils.Errors {
 		return append(errs, fmt.Errorf(ErrInvalidRrule, value))
 	}
 
-	//Validate that the rrule is a good rule. We're going to require a DTSTART to keep scheduling consistent.
-	//We're also going to reject UNTIL/COUNT because it will most likely break the pipeline once it's hit without being invalid
 	if rruleStr == "" {
 		return nil
-	} else if _, err := rrule.StrToRRule(rruleStr); err != nil {
-		return append(errs, fmt.Errorf(ErrInvalidRrule, err))
-	} else if strings.Contains(strings.ToUpper(rruleStr), "UNTIL") {
-		return append(errs, fmt.Errorf(ErrInvalidRrule, "until not supported"))
-	} else if strings.Contains(strings.ToUpper(rruleStr), "COUNT") {
-		return append(errs, fmt.Errorf(ErrInvalidRrule, "count not supported"))
-	} else if !strings.Contains(strings.ToUpper(rruleStr), "DTSTART") {
-		return append(errs, fmt.Errorf(ErrInvalidRrule, "dtstart is required"))
+	}
+
+	if _, err := ValidateRRule(rruleStr); err != nil {
+		return append(errs, err)
 	}
 
 	return nil
+}
+
+// ValidateRRule validates that the rrule string is parseable and conforms to scheduling constraints.
+// Valid rules require a DTSTART to keep scheduling consistent.
+// Valid rules must not contain UNTIL or COUNT because they will break the pipeline once exhausted.
+func ValidateRRule(rruleStr string) (*rrule.RRule, error) {
+	var upperRRule = strings.ToUpper(rruleStr)
+
+	if rule, err := rrule.StrToRRule(rruleStr); err != nil {
+		return nil, fmt.Errorf(ErrInvalidRrule, err)
+	} else if strings.Contains(upperRRule, "UNTIL") {
+		return nil, fmt.Errorf(ErrInvalidRrule, "until not supported")
+	} else if strings.Contains(upperRRule, "COUNT") {
+		return nil, fmt.Errorf(ErrInvalidRrule, "count not supported")
+	} else if !strings.Contains(upperRRule, "DTSTART") {
+		return nil, fmt.Errorf(ErrInvalidRrule, "dtstart is required")
+	} else {
+		return rule, nil
+	}
 }

@@ -31,6 +31,7 @@ import AZAddMembers from './AZAddMembers/AZAddMembers';
 import AZAddOwner from './AZAddOwner/AZAddOwner';
 import AZAddSecret from './AZAddSecret/AZAddSecret';
 import AZAppAdmin from './AZAppAdmin/AZAppAdmin';
+import AZAuthenticatesTo from './AZAuthenticatesTo/AZAuthenticatesTo';
 import AZAutomationContributor from './AZAutomationContributor/AZAutomationContributor';
 import AZAvereContributor from './AZAvereContributor/AZAvereContributor';
 import AZCloudAppAdmin from './AZCloudAppAdmin/AZCloudAppAdmin';
@@ -59,6 +60,7 @@ import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEn
 import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
 import AZMemberOf from './AZMemberOf/AZMemberOf';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
+import AZOwner from './AZOwner/AZOwner';
 import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
@@ -118,18 +120,21 @@ import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
 import OwnsLimitedRights from './OwnsLimitedRights/OwnsLimitedRights';
 import OwnsRaw from './OwnsRaw/OwnsRaw';
+import ProtectAdminGroups from './ProtectAdminGroups/ProtectAdminGroups';
 import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
+import ServerIs from './ServerIs/ServerIs';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import WriteAltSecurityIdentities from './WriteAltSecurityIdentities/WriteAltSecurityIdentities';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteOwner from './WriteOwner/WriteOwner';
@@ -137,6 +142,7 @@ import WriteOwnerLimitedRights from './WriteOwnerLimitedRights/WriteOwnerLimited
 import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
+import WritePublicInformation from './WritePublicInformation/WritePublicInformation';
 import WriteSPN from './WriteSPN/WriteSPN';
 
 export type EdgeInfoProps = {
@@ -198,6 +204,7 @@ const EdgeInfoComponents = {
     AZManagedIdentity: AZManagedIdentity,
     AZMemberOf: AZMemberOf,
     AZOwns: AZOwns,
+    AZOwner: AZOwner,
     AZPrivilegedAuthAdmin: AZPrivilegedAuthAdmin,
     AZPrivilegedRoleAdmin: AZPrivilegedRoleAdmin,
     AZResetPassword: AZResetPassword,
@@ -264,6 +271,7 @@ const EdgeInfoComponents = {
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
     WritePKINameFlag: WritePKINameFlag,
     DCFor: DCFor,
+    ServerIs: ServerIs,
     OIDGroupLink: OIDGroupLink,
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
@@ -272,8 +280,12 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
+    ProtectAdminGroups: ProtectAdminGroups,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
     HasTrustKeys: HasTrustKeys,
+    WriteAltSecurityIdentities: WriteAltSecurityIdentities,
+    WritePublicInformation: WritePublicInformation,
+    AZAuthenticatesTo: AZAuthenticatesTo,
 };
 
 export default EdgeInfoComponents;

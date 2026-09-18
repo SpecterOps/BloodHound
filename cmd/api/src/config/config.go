@@ -17,18 +17,25 @@
 package config
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/rds/auth"
+
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
@@ -56,6 +63,94 @@ type DatabaseConfiguration struct {
 	Username              string `json:"username"`
 	Secret                string `json:"secret"`
 	MaxConcurrentSessions int    `json:"max_concurrent_sessions"`
+	EnableRDSIAMAuth      bool   `json:"enable_rds_iam_auth"`
+}
+
+// missingRDSIAMAuthFields returns structured database fields required to build an RDS IAM auth token connection string.
+func (s DatabaseConfiguration) missingRDSIAMAuthFields() []string {
+	var missingFields []string
+
+	if strings.TrimSpace(s.Address) == "" {
+		missingFields = append(missingFields, "addr")
+	}
+
+	if strings.TrimSpace(s.Username) == "" {
+		missingFields = append(missingFields, "username")
+	}
+
+	if strings.TrimSpace(s.Database) == "" {
+		missingFields = append(missingFields, "database")
+	}
+
+	return missingFields
+}
+
+// PostgreSQLConnectionString returns the PostgreSQL connection string represented by this configuration.
+//
+// Control-flow gotchas:
+//   - When RDS IAM auth is enabled, this method is not a pure formatter. It loads AWS configuration,
+//     resolves the database endpoint, and attempts to generate a fresh IAM auth token before considering
+//     the raw Connection override.
+//   - The IAM path requires Address, Username, and Database to be populated because it does not parse those
+//     values out of Connection.
+//   - If IAM token generation fails, the method falls back to the non-IAM behavior: Connection when set,
+//     otherwise a DSN assembled from Username, Secret, Address, and Database.
+func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
+	if s.EnableRDSIAMAuth {
+		if missingConfigFields := s.missingRDSIAMAuthFields(); len(missingConfigFields) > 0 {
+			slog.Error("RDS IAM auth is enabled but required database configuration fields are missing",
+				slog.Any("missing_fields", missingConfigFields),
+				slog.Bool("database_connection_set", s.Connection != ""))
+		} else if awsConfig, err := awsConfig.LoadDefaultConfig(context.TODO()); err != nil {
+			slog.Error("AWS Config Loading Error", slog.String("err", err.Error()))
+		} else {
+			// Must use instance awsInstanceEndpoint with IAM auth
+			awsInstanceEndpoint := s.awsEndpointLookup()
+
+			slog.Debug("Requesting RDS IAM Auth Token")
+
+			if awsAuthenticationToken, err := auth.BuildAuthToken(context.TODO(), awsInstanceEndpoint, awsConfig.Region, s.Username, awsConfig.Credentials); err != nil {
+				slog.Error("RDS IAM Auth Token Request Error", slog.String("err", err.Error()))
+			} else {
+				slog.Debug("RDS IAM Auth Token Created")
+				return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, url.QueryEscape(awsAuthenticationToken), awsInstanceEndpoint, s.Database)
+			}
+		}
+
+		slog.Error("Failed to create IAM auth token. Falling back to default Postgres connection string")
+	}
+
+	if s.Connection != "" {
+		return s.Connection
+	}
+
+	return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
+}
+
+func (s DatabaseConfiguration) Neo4JConnectionString() string {
+	if s.Connection != "" {
+		return s.Connection
+	}
+
+	return fmt.Sprintf("neo4j://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
+}
+
+func (s DatabaseConfiguration) awsEndpointLookup() string {
+	host, port, err := net.SplitHostPort(s.Address)
+	if err != nil {
+		slog.Warn("Missing port in address. Using default port 5432.", slog.String("err", err.Error()))
+		host = s.Address
+		port = "5432"
+	}
+
+	if hostCName, err := net.DefaultResolver.LookupCNAME(context.TODO(), host); err != nil {
+		slog.Warn("Error looking up CNAME for DB host. Using original address.", slog.String("err", err.Error()))
+	} else {
+		host = hostCName
+	}
+
+	// Instance endpoint always returns with a trailing '.'
+	return net.JoinHostPort(strings.TrimSuffix(host, "."), port)
 }
 
 type CollectorManifest struct {
@@ -70,22 +165,6 @@ type CollectorVersion struct {
 }
 
 type CollectorManifests map[string]CollectorManifest
-
-func (s DatabaseConfiguration) PostgreSQLConnectionString() string {
-	if s.Connection == "" {
-		return fmt.Sprintf("postgresql://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
-	}
-
-	return s.Connection
-}
-
-func (s DatabaseConfiguration) Neo4jConnectionString() string {
-	if s.Connection == "" {
-		return fmt.Sprintf("neo4j://%s:%s@%s/%s", s.Username, s.Secret, s.Address, s.Database)
-	}
-
-	return s.Connection
-}
 
 type CryptoConfiguration struct {
 	JWT    JWTConfiguration    `json:"jwt"`
@@ -124,7 +203,13 @@ type SAMLConfiguration struct {
 	ServiceProviderCertificateCAChain string `json:"sp_ca_chain"`
 }
 
+type TeleportConfiguration struct {
+	DialAddress string `json:"dial_address"`
+	WebAddress  string `json:"web_address"`
+}
+
 type DefaultAdminConfiguration struct {
+	Enabled       bool   `json:"enabled"`
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
 	EmailAddress  string `json:"email_address"`
@@ -133,41 +218,70 @@ type DefaultAdminConfiguration struct {
 	ExpireNow     bool   `json:"expire_now"`
 }
 
+type FileServiceConfiguration struct {
+	Provider string `json:"provider"`
+	Prefix   string `json:"prefix"`
+}
+
+type BucketConfiguration struct {
+	Name   string `json:"name"`
+	Region string `json:"region"`
+}
+
+type StorageConfiguration struct {
+	InstanceBucket BucketConfiguration                 `json:"instance_bucket"`
+	FileServices   map[string]FileServiceConfiguration `json:"file_services"`
+}
+
 type Configuration struct {
-	Version                      int                       `json:"version"`
-	BindAddress                  string                    `json:"bind_addr"`
-	SlowQueryThreshold           int64                     `json:"slow_query_threshold"`
-	MaxGraphQueryCacheSize       int                       `json:"max_graphdb_cache_size"`
-	MaxAPICacheSize              int                       `json:"max_api_cache_size"`
-	MetricsPort                  string                    `json:"metrics_port"`
-	RootURL                      serde.URL                 `json:"root_url"`
-	WorkDir                      string                    `json:"work_dir"`
-	LogLevel                     string                    `json:"log_level"`
-	LogPath                      string                    `json:"log_path"`
-	TLS                          TLSConfiguration          `json:"tls"`
-	GraphDriver                  string                    `json:"graph_driver"`
-	Database                     DatabaseConfiguration     `json:"database"`
-	Neo4J                        DatabaseConfiguration     `json:"neo4j"`
-	Crypto                       CryptoConfiguration       `json:"crypto"`
-	SAML                         SAMLConfiguration         `json:"saml"`
-	DefaultAdmin                 DefaultAdminConfiguration `json:"default_admin"`
-	CollectorsBucketURL          serde.URL                 `json:"collectors_bucket_url"`
-	CollectorsBasePath           string                    `json:"collectors_base_path"`
-	DatapipeInterval             int                       `json:"datapipe_interval"`
-	EnableStartupWaitPeriod      bool                      `json:"enable_startup_wait_period"`
-	EnableAPILogging             bool                      `json:"enable_api_logging"`
-	EnableCypherMutations        bool                      `json:"enable_cypher_mutations"`
-	DisableAnalysis              bool                      `json:"disable_analysis"`
-	DisableCypherComplexityLimit bool                      `json:"disable_cypher_complexity_limit"`
-	DisableIngest                bool                      `json:"disable_ingest"`
-	DisableMigrations            bool                      `json:"disable_migrations"`
-	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
-	EnableTextLogger             bool                      `json:"enable_text_logger"`
-	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
+	Version                         int                       `json:"version"`
+	BindAddress                     string                    `json:"bind_addr"`
+	SlowQueryThreshold              int64                     `json:"slow_query_threshold"`
+	MaxGraphQueryCacheSize          int                       `json:"max_graphdb_cache_size"`
+	MaxAPICacheSize                 int                       `json:"max_api_cache_size"`
+	MetricsPort                     string                    `json:"metrics_port"`
+	RootURL                         serde.URL                 `json:"root_url"`
+	WorkDir                         string                    `json:"work_dir"`
+	LogLevel                        string                    `json:"log_level"`
+	LogPath                         string                    `json:"log_path"`
+	TLS                             TLSConfiguration          `json:"tls"`
+	GraphDriver                     string                    `json:"graph_driver"`
+	Database                        DatabaseConfiguration     `json:"database"`
+	Neo4J                           DatabaseConfiguration     `json:"neo4j"`
+	Crypto                          CryptoConfiguration       `json:"crypto"`
+	SAML                            SAMLConfiguration         `json:"saml"`
+	DefaultAdmin                    DefaultAdminConfiguration `json:"default_admin"`
+	CollectorsBucketURL             serde.URL                 `json:"collectors_bucket_url"`
+	CollectorsBasePath              string                    `json:"collectors_base_path"`
+	DatapipeInterval                int                       `json:"datapipe_interval"`
+	EnableStartupWaitPeriod         bool                      `json:"enable_startup_wait_period"`
+	EnableAPILogging                bool                      `json:"enable_api_logging"`
+	EnableCypherMutations           bool                      `json:"enable_cypher_mutations"`
+	DisableAnalysis                 bool                      `json:"disable_analysis"`
+	DisableCypherComplexityLimit    bool                      `json:"disable_cypher_complexity_limit"`
+	DisableIngest                   bool                      `json:"disable_ingest"`
+	DisableMigrations               bool                      `json:"disable_migrations"`
+	GraphQueryMemoryLimit           uint16                    `json:"graph_query_memory_limit"`
+	EnableTextLogger                bool                      `json:"enable_text_logger"`
+	RecreateDefaultAdmin            bool                      `json:"recreate_default_admin"`
+	EnableUserAnalytics             bool                      `json:"enable_user_analytics"`
+	ForceDownloadEmbeddedCollectors bool                      `json:"force_download_embedded_collectors"`
+	EnableAuditLogStdout            bool                      `json:"enable_audit_log_stdout"`
+	EmbeddedExtensionsBasePath      string                    `json:"embedded_extensions_base_path"`
+	Teleport                        TeleportConfiguration     `json:"teleport"`
+	Storage                         StorageConfiguration      `json:"storage"`
+}
+
+func (s Configuration) ScratchDirectory() string {
+	return filepath.Join(s.WorkDir, "ingest_scratch")
 }
 
 func (s Configuration) TempDirectory() string {
 	return filepath.Join(s.WorkDir, "tmp")
+}
+
+func (s Configuration) RetainedFilesDirectory() string {
+	return filepath.Join(s.WorkDir, "retained")
 }
 
 func (s Configuration) ClientLogDirectory() string {
@@ -179,7 +293,7 @@ func (s Configuration) CollectorsDirectory() string {
 }
 
 func WriteConfigurationFile(path string, config Configuration) error {
-	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644); err != nil {
+	if fout, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644); err != nil {
 		return fmt.Errorf("failed opening configuration file %s: %w", path, err)
 	} else {
 		defer fout.Close()
@@ -242,13 +356,13 @@ func SetValuesFromEnv(varPrefix string, target any, env []string) error {
 				cfgKeyPath := strings.TrimPrefix(key, formattedPrefix)
 
 				if err := SetValue(target, cfgKeyPath, valueStr); errors.Is(err, ErrInvalidConfigurationPath) {
-					slog.Warn(fmt.Sprintf("%s", err))
+					slog.Warn("Invalid configuration path", attr.Error(err))
 				} else if err != nil {
 					return err
 				}
 			}
 		} else {
-			slog.Error(fmt.Sprintf("Invalid key/value pair: %+v", kvParts))
+			slog.Error("Invalid key/value pair", slog.String("kv_parts", strings.Join(kvParts, "=")))
 		}
 	}
 
@@ -259,11 +373,11 @@ func getConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	if hasCfgFile, err := HasConfigurationFile(path); err != nil {
 		return Configuration{}, err
 	} else if hasCfgFile {
-		slog.Info(fmt.Sprintf("Reading configuration found at %s", path))
+		slog.Info("Reading configuration found at", slog.String("path", path))
 
 		return ReadConfigurationFile(path)
 	} else {
-		slog.Info(fmt.Sprintf("No configuration file found at %s. Returning defaults.", path))
+		slog.Info("No configuration file found, returning defaults", slog.String("path", path))
 
 		return defaultConfigFunc()
 	}
@@ -279,16 +393,21 @@ func GetConfiguration(path string, defaultConfigFunc func() (Configuration, erro
 	}
 }
 
-func GetTextLoggerEnabled() (bool, error) {
-	if enableTextLogger := os.Getenv(BHAPIEnvironmentVariablePrefix + "_enable_text_logger"); enableTextLogger == "" {
-		return false, nil
-	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
-		return false, fmt.Errorf("failed to parse %s to bool: %v", BHAPIEnvironmentVariablePrefix+"_enable_text_logger", err)
-	} else if enabled {
-		return true, nil
-	}
+func GetTextLoggerEnabled() bool {
+	const env = BHAPIEnvironmentVariablePrefix + "_enable_text_logger"
 
-	return false, nil
+	if enableTextLogger := os.Getenv(env); enableTextLogger == "" {
+		return false
+	} else if enabled, err := strconv.ParseBool(enableTextLogger); err != nil {
+		slog.Warn(
+			"Failed to parse text logger environment variable",
+			slog.String("env_key", env),
+			attr.Error(err),
+		)
+		return false
+	} else {
+		return enabled
+	}
 }
 
 const (
@@ -300,13 +419,13 @@ func (s Configuration) SaveCollectorManifests() (CollectorManifests, error) {
 	manifests := CollectorManifests{}
 
 	if azureHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), azureHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating AzureHound manifest file: %s", err))
+		slog.Error("Error generating AzureHound manifest file", attr.Error(err))
 	} else {
 		manifests[azureHoundCollector] = azureHoundManifest
 	}
 
 	if sharpHoundManifest, err := generateCollectorManifest(filepath.Join(s.CollectorsDirectory(), sharpHoundCollector)); err != nil {
-		slog.Error(fmt.Sprintf("Error generating SharpHound manifest file: %s", err))
+		slog.Error("Error generating SharpHound manifest file", attr.Error(err))
 	} else {
 		manifests[sharpHoundCollector] = sharpHoundManifest
 	}
@@ -351,4 +470,8 @@ func generateCollectorManifest(collectorDir string) (CollectorManifest, error) {
 		Latest:   latestVersion,
 		Versions: collectorVersions,
 	}, nil
+}
+
+func (s Configuration) GetRootURLHost() string {
+	return fmt.Sprintf("%s://%s", s.RootURL.Scheme, s.RootURL.Hostname())
 }

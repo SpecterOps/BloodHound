@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            An attacker may authenticate as the synchronized Entra user using the on-prem user’s credentials, for
-            example by dumping the user’s plain-text credential from memory, key-logging the user’s password, or by
-            changing the on-prem user’s password and authenticating with that new password.
+            An attacker may authenticate as the synchronized Entra user using the on-prem user's credentials, for
+            example by dumping the user's plain-text credential from memory, key-logging the user's password, or by
+            changing the on-prem user's password and authenticating with that new password.
         </Typography>
     );
 };

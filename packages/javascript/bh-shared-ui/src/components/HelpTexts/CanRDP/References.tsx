@@ -19,14 +19,17 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://michael-eder.net/post/2018/native_rdp_pass_the_hash/'>
+        <Box className='overflow-x-auto'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://michael-eder.net/post/2018/native_rdp_pass_the_hash/'>
                 https://michael-eder.net/post/2018/native_rdp_pass_the_hash/
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.kali.org/penetration-testing/passing-hash-remote-desktop/'>
                 https://www.kali.org/penetration-testing/passing-hash-remote-desktop/
             </Link>

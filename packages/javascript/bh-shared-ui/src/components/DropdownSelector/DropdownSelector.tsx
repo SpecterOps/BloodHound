@@ -14,95 +14,74 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import { PopperContentProps } from '@radix-ui/react-popper';
+import { ButtonProps, Popover, PopoverContent, TextButton, Typography } from 'doodle-ui';
 import { FC, useState } from 'react';
+import { cn } from '../../utils';
+import DropdownTrigger from './DropdownTrigger';
+import { optionStyles, popoverContentStyles } from './constants';
 import { DropdownOption } from './types';
 
 const DropdownSelector: FC<{
     options: DropdownOption[];
-    selectedText: string;
-    fullWidth?: boolean;
+    selectedText: JSX.Element | string;
+    caption?: string;
     onChange: (selection: DropdownOption) => void;
-}> = ({ options, selectedText, onChange, fullWidth }) => {
-    const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
+    StartAdornment?: React.FC;
+    align?: PopperContentProps['align'];
+    variant?: ButtonProps['variant'];
+}> = ({ variant, options, selectedText, caption, StartAdornment, align = 'start', onChange }) => {
+    const [open, setOpen] = useState<boolean>(false);
 
-    const handleClick = (e: any) => {
-        setAnchorEl(e.currentTarget);
-    };
+    const handleClose = () => setOpen(false);
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+    const handleOpenChange: (open: boolean) => void = (open) => setOpen(open);
 
     return (
-        <Box p={1}>
-            <Button
-                style={{
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'block',
-                    width: fullWidth ? '100%' : '',
-                    textTransform: 'uppercase',
-                }}
-                onClick={handleClick}
-                data-testid='dropdown_context-selector'>
-                {selectedText}
-            </Button>
-            <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                data-testid='dropdown_context-selector-popover'>
-                {options.map((option) => {
-                    return (
-                        <MenuItem
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: 450,
-                                maxWidth: 450,
-                            }}
-                            key={option.key}
-                            onClick={() => {
-                                onChange(option);
-                                handleClose();
-                            }}>
-                            <Tooltip title={option.value}>
-                                <Typography
-                                    style={{
-                                        overflow: 'hidden',
-                                        textTransform: 'uppercase',
-                                        display: 'inline-block',
-                                        textOverflow: 'ellipsis',
-                                        maxWidth: 350,
+        <Popover open={open} onOpenChange={handleOpenChange}>
+            <div className='flex flex-col'>
+                {caption && (
+                    <Typography variant='caption' id='dropdown-caption'>
+                        {caption}
+                    </Typography>
+                )}
+                <DropdownTrigger
+                    open={open}
+                    selectedText={selectedText}
+                    variant={variant}
+                    StartAdornment={StartAdornment}
+                    aria-describedby={caption ? 'dropdown-caption' : undefined}
+                />
+            </div>
+            <PopoverContent align={align} className={cn(popoverContentStyles, 'w-48')}>
+                <ul>
+                    {options.map((option: DropdownOption) => {
+                        return (
+                            <li key={option.key}>
+                                <TextButton
+                                    className={cn('py-2', optionStyles)}
+                                    data-testid={option.value}
+                                    onClick={() => {
+                                        onChange(option);
+                                        handleClose();
                                     }}>
                                     {option.value}
-                                </Typography>
-                            </Tooltip>
-                            {option.icon && (
-                                <FontAwesomeIcon
-                                    style={{ width: '10%', alignSelf: 'center' }}
-                                    icon={option.icon}
-                                    size='sm'
-                                />
-                            )}
-                        </MenuItem>
-                    );
-                })}
-            </Popover>
-        </Box>
+                                    {option.icon && (
+                                        <FontAwesomeIcon
+                                            style={{ width: '10%', alignSelf: 'center' }}
+                                            icon={option.icon}
+                                            data-testid={`dropdown-icon-${option.icon.iconName}`}
+                                            size='sm'
+                                        />
+                                    )}
+                                </TextButton>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </PopoverContent>
+        </Popover>
     );
 };
 

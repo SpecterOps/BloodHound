@@ -106,10 +106,17 @@ get:
                                 counts:
                                   type: object
                                   properties:
-                                    selectors:
-                                      type: integer
                                     members:
                                       type: integer
+                                      format: int64
+                                    selectors:
+                                      type: integer
+                                    custom_selectors:
+                                      type: integer
+                                    default_selectors:
+                                      type: integer
+                                    disabled_selectors:
+                                      type: integer                                            
     400:
       $ref: './../responses/bad-request.yaml'
     401:

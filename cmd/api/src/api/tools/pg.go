@@ -25,7 +25,10 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
@@ -43,7 +46,7 @@ const (
 )
 
 func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating kinds from Neo4j to PostgreSQL")()
 
 	var (
 		neoNodeKinds graph.Kinds
@@ -116,7 +119,7 @@ func convertNeo4jProperties(properties *graph.Properties) error {
 }
 
 func migrateNodesToNeo4j(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID]graph.ID, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating nodes from PostgreSQL to Neo4j")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating nodes from PostgreSQL to Neo4j")()
 
 	var (
 		nodeBuffer     []*graph.Node
@@ -173,7 +176,7 @@ func migrateNodesToNeo4j(ctx context.Context, neoDB, pgDB graph.Database) (map[g
 }
 
 func migrateNodesToPG(ctx context.Context, neoDB, pgDB graph.Database) (map[graph.ID]graph.ID, error) {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating nodes from Neo4j to PostgreSQL")()
 
 	var (
 		// Start at 2 and assume that the first node of the graph is the graph schema migration information
@@ -212,7 +215,7 @@ func migrateNodesToPG(ctx context.Context, neoDB, pgDB graph.Database) (map[grap
 }
 
 func migrateEdges(ctx context.Context, sourceDB, destinationDB graph.Database, nodeIDMappings map[graph.ID]graph.ID) error {
-	defer measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
+	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelInfo, "Migrating edges from Neo4j to PostgreSQL")()
 
 	return sourceDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
@@ -248,23 +251,25 @@ func migrateEdges(ctx context.Context, sourceDB, destinationDB graph.Database, n
 }
 
 type PGMigrator struct {
+	db                  database.Database
 	graphSchema         graph.Schema
 	graphDBSwitch       *graph.DatabaseSwitch
 	ServerCtx           context.Context
 	migrationCancelFunc func()
 	State               MigratorState
 	lock                *sync.Mutex
-	Cfg                 config.Configuration
+	cfg                 config.Configuration
 }
 
-func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
+func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, db database.Database, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
 	return &PGMigrator{
+		db:            db,
 		graphSchema:   graphSchema,
 		graphDBSwitch: graphDBSwitch,
 		ServerCtx:     serverCtx,
 		State:         StateIdle,
 		lock:          &sync.Mutex{},
-		Cfg:           cfg,
+		cfg:           cfg,
 	}
 }
 
@@ -295,12 +300,16 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 			"error": fmt.Errorf("failed connecting to PostgreSQL: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else if err := pgDB.AssertSchema(request.Context(), s.graphSchema); err != nil {
-		slog.ErrorContext(request.Context(), fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
-	} else if err := SetGraphDriver(request.Context(), s.Cfg, pg.DriverName); err != nil {
+		slog.ErrorContext(request.Context(), "Unable to assert graph schema in PostgreSQL", attr.Error(err))
+	} else if err := SetGraphDriver(request.Context(), s.cfg, pg.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else {
+		if err := s.db.ResetLastGraphOptimizeTime(request.Context()); err != nil {
+			slog.ErrorContext(request.Context(), "Error resetting last graph optimize time", attr.Error(err))
+		}
+
 		s.graphDBSwitch.Switch(pgDB)
 		response.WriteHeader(http.StatusOK)
 
@@ -313,11 +322,15 @@ func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Req
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed connecting to Neo4j: %w", err),
 		}, http.StatusInternalServerError, response)
-	} else if err := SetGraphDriver(request.Context(), s.Cfg, neo4j.DriverName); err != nil {
+	} else if err := SetGraphDriver(request.Context(), s.cfg, neo4j.DriverName); err != nil {
 		api.WriteJSONResponse(request.Context(), map[string]any{
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else {
+		if err := s.db.ResetLastGraphOptimizeTime(request.Context()); err != nil {
+			slog.ErrorContext(request.Context(), "Error resetting last graph optimize time", attr.Error(err))
+		}
+
 		s.graphDBSwitch.Switch(neo4jDB)
 		response.WriteHeader(http.StatusOK)
 
@@ -344,17 +357,17 @@ func (s *PGMigrator) StartMigrationToNeo() error {
 			slog.InfoContext(ctx, "Starting live migration from Neo4j to PostgreSQL")
 
 			if err := neo4jDB.AssertSchema(ctx, s.graphSchema); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to assert graph schema in PostgreSQL", attr.Error(err))
 			} else if nodeIDMappings, err := migrateNodesToNeo4j(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing nodes into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing nodes into PostgreSQL", attr.Error(err))
 			} else if err := migrateEdges(ctx, pgDB, neo4jDB, nodeIDMappings); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing edges into PostgreSQL", attr.Error(err))
 			} else {
 				slog.InfoContext(ctx, "Migration to PostgreSQL completed successfully")
 			}
 
 			if err := s.advanceState(StateIdle, StateMigrating, StateCanceling); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Database migration state management error: %v", err))
+				slog.ErrorContext(ctx, "Database migration state management error", attr.Error(err))
 			}
 		}(migrationCtx)
 	}
@@ -381,19 +394,19 @@ func (s *PGMigrator) StartMigrationToPG() error {
 			slog.InfoContext(ctx, "Starting live migration from Neo4j to PostgreSQL")
 
 			if err := pgDB.AssertSchema(ctx, s.graphSchema); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to assert graph schema in PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to assert graph schema in PostgreSQL", attr.Error(err))
 			} else if err := migrateTypes(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Unable to migrate Neo4j kinds to PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Unable to migrate Neo4j kinds to PostgreSQL", attr.Error(err))
 			} else if nodeIDMappings, err := migrateNodesToPG(ctx, neo4jDB, pgDB); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing nodes into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing nodes into PostgreSQL", attr.Error(err))
 			} else if err := migrateEdges(ctx, neo4jDB, pgDB, nodeIDMappings); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed importing edges into PostgreSQL: %v", err))
+				slog.ErrorContext(ctx, "Failed importing edges into PostgreSQL", attr.Error(err))
 			} else {
 				slog.InfoContext(ctx, "Migration to PostgreSQL completed successfully")
 			}
 
 			if err := s.advanceState(StateIdle, StateMigrating, StateCanceling); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Database migration state management error: %v", err))
+				slog.ErrorContext(ctx, "Database migration state management error", attr.Error(err))
 			}
 		}(migrationCtx)
 	}
@@ -448,12 +461,12 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 }
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
-	if pool, err := pg.NewPool(s.Cfg.Database.PostgreSQLConnectionString()); err != nil {
+	if pool, err := dbpool.NewDawgsPool(s.cfg.Database); err != nil {
 		return nil, err
 	} else {
 		return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
 			GraphQueryMemoryLimit: size.Gibibyte,
-			ConnectionString:      s.Cfg.Database.PostgreSQLConnectionString(),
+			ConnectionString:      s.cfg.Database.PostgreSQLConnectionString(),
 			Pool:                  pool,
 		})
 	}
@@ -462,6 +475,6 @@ func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
 func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 	return dawgs.Open(s.ServerCtx, neo4j.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
-		ConnectionString:      s.Cfg.Neo4J.Neo4jConnectionString(),
+		ConnectionString:      s.cfg.Neo4J.Neo4JConnectionString(),
 	})
 }

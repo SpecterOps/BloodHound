@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, Grid, TextField } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import React, { useState } from 'react';
 import { PASSWD_REQS, testPassword } from '../../utils';
@@ -130,7 +130,7 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSubmit, onCance
                     </Button>
                     <Box mt={2}>
                         <Button
-                            variant='tertiary'
+                            variant='secondary'
                             size='large'
                             type='button'
                             onClick={handleCancel}

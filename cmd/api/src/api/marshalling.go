@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/stream"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 const (
@@ -76,10 +77,20 @@ type ResponseWrapper struct {
 
 func WriteErrorResponse(ctx context.Context, untypedError any, response http.ResponseWriter) {
 	if typedError, ok := untypedError.(*ErrorWrapper); !ok {
-		slog.WarnContext(ctx, fmt.Sprintf("Failure Writing API Error. Status: %v. Message: %v", http.StatusInternalServerError, "Invalid error format returned"))
+		slog.WarnContext(
+			ctx,
+			"Failure writing API error",
+			slog.Int("http_status", http.StatusInternalServerError),
+			slog.String("message", "Invalid error format returned"),
+		)
 		WriteJSONResponse(ctx, "An internal error has occurred that is preventing the service from servicing this request.", http.StatusInternalServerError, response)
 	} else {
-		slog.WarnContext(ctx, fmt.Sprintf("Writing API Error. Status: %v. Message: %v", typedError.HTTPStatus, typedError.Errors))
+		slog.WarnContext(
+			ctx,
+			"Writing API error",
+			slog.Int("http_status", typedError.HTTPStatus),
+			slog.Any("errors", typedError.Errors),
+		)
 		WriteJSONResponse(ctx, typedError, typedError.HTTPStatus, response)
 	}
 }
@@ -89,7 +100,11 @@ func WriteErrorResponse(ctx context.Context, untypedError any, response http.Res
 
 func WriteBasicResponse(ctx context.Context, inputData any, statusCode int, response http.ResponseWriter) {
 	if data, err := ToJSONRawMessage(inputData); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed marshaling data for basic response: %v", err))
+		slog.ErrorContext(
+			ctx,
+			"Failed marshaling data for basic response",
+			attr.Error(err),
+		)
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		WriteJSONResponse(ctx, BasicResponse{
@@ -156,12 +171,22 @@ func WriteResponseWrapperWithTimeWindowAndPagination(ctx context.Context, data a
 func WriteJSONResponse(ctx context.Context, message any, statusCode int, response http.ResponseWriter) {
 	response.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 	if content, err := json.Marshal(message); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to marshal value into JSON for request: %v: for message: %+v", err, message))
+		slog.ErrorContext(
+			ctx,
+			"Failed to marshal value into JSON",
+			attr.Error(err),
+			slog.Any("message", message),
+		)
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
 		response.WriteHeader(statusCode)
 		if written, err := response.Write(content); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write JSON response with %d bytes written and error: %v", written, err))
+			slog.ErrorContext(
+				ctx,
+				"Writing API error, failed to write JSON response",
+				slog.Int("bytes_written", written),
+				attr.Error(err),
+			)
 		}
 	}
 }
@@ -171,7 +196,11 @@ func WriteCSVResponse(ctx context.Context, message model.CSVWriter, statusCode i
 
 	if err := message.WriteCSV(response); err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
-		slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write CSV for request: %v", err))
+		slog.ErrorContext(
+			ctx,
+			"Writing API error, failed to write CSV for request",
+			attr.Error(err),
+		)
 		return
 	}
 
@@ -184,7 +213,12 @@ func WriteBinaryResponse(ctx context.Context, data []byte, filename string, stat
 	response.WriteHeader(statusCode)
 
 	if written, err := response.Write(data); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Writing API Error. Failed to write binary response with %d bytes written and error: %v", written, err))
+		slog.ErrorContext(
+			ctx,
+			"Writing API error, failed to write binary response",
+			slog.Int("bytes_written", written),
+			attr.Error(err),
+		)
 	}
 }
 

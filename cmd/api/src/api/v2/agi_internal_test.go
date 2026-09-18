@@ -74,7 +74,7 @@ func TestParseAGMembersFromNodes_(t *testing.T) {
 				Map: map[string]any{common.ObjectID.String(): "c", common.Name.String(): "c", ad.DomainSID.String(): "c"},
 			},
 		}}
-	members := parseAGMembersFromNodes(nodes, model.AssetGroupSelectors{model.AssetGroupSelector{
+	members := parseAGMembersFromNodes(nil, nodes, model.AssetGroupSelectors{model.AssetGroupSelector{
 		AssetGroupID:   1,
 		Name:           "a",
 		Selector:       "a",
@@ -117,7 +117,7 @@ func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
 		},
 	}
 
-	members := parseAGMembersFromNodes(nodes,
+	members := parseAGMembersFromNodes(nil, nodes,
 		model.AssetGroupSelectors{model.AssetGroupSelector{
 			AssetGroupID:   1,
 			Name:           "a",

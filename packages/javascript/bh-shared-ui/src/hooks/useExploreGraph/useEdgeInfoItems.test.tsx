@@ -133,7 +133,7 @@ describe('useEdgeInfoItems', () => {
             expect(hook.result.current.isLoading).toBe(false);
         });
 
-        await act(() => hook.result.current.nodesArray[0].onClick(0));
+        act(() => hook.result.current.nodesArray[0].onClick && hook.result.current.nodesArray[0].onClick(0));
 
         expect(window.location.search).toContain('primarySearch');
         expect(window.location.search).toContain('searchType');

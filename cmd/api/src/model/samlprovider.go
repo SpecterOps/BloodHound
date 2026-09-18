@@ -18,7 +18,7 @@ package model
 
 import (
 	"errors"
-	"fmt"
+
 	"log/slog"
 	"net/url"
 	"path"
@@ -140,7 +140,10 @@ func assertionFindString(assertion *saml.Assertion, names ...string) (string, er
 							return value.Value, nil
 						}
 					}
-					slog.Warn(fmt.Sprintf("[SAML] Found attribute values for attribute %s however none of the values have an XML type of %s. Choosing the first value.", ObjectIDAttributeNameFormat, XMLTypeString))
+					slog.Warn(
+						"[SAML] Found attribute values however none of the values have an XML type of xs:string. Choosing the first value",
+						slog.String("object_id_attribute_name_format", ObjectIDAttributeNameFormat),
+					)
 					return attribute.Values[0].Value, nil
 				}
 			}
@@ -154,7 +157,17 @@ func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Asse
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
 			for _, value := range attr.Values {
-				slog.Info(fmt.Sprintf("[SAML] Assertion contains attribute: %s - %s=%v", attr.NameFormat, attr.Name, value))
+				slog.Info(
+					"[SAML] Assertion contains attribute",
+					slog.String("name_format", attr.NameFormat),
+					slog.String("name", attr.Name),
+				)
+				slog.Debug(
+					"[SAML] Assertion attribute raw value",
+					slog.String("name_format", attr.NameFormat),
+					slog.String("name", attr.Name),
+					slog.String("value", value.Value),
+				)
 			}
 		}
 	}

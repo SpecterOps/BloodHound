@@ -20,11 +20,10 @@ import {
     DialogActions,
     DialogContent,
     DialogDescription,
-    DialogOverlay,
     DialogPortal,
     DialogTitle,
     Input,
-} from '@bloodhoundenterprise/doodleui';
+} from 'doodle-ui';
 import React, { useCallback, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
@@ -56,38 +55,27 @@ const ConfirmationDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                {/*
-                 *   Sometimes we have a confirmation modal launching over a primary modal
-                 *   (As in UpdateAzurehoundClientDialog -> delete schedule)
-                 *   However, the outer modal is MUI, whose z-index is 1300,
-                 *   While the second ConfirmationModal is Doodle, which uses tailwind z-50.
-                 *   Therefore, the second, more urgent modal, is hidden behind the primary modal.
-                 *   For now, overriding the styles on the confirmation modal and assuming it
-                 *   should have priority over all other modals seems like a reasonable solution.
-                 *   When we remove all MUI dialogs down the road, we may want a prettier solution.
-                 */}
-                <DialogOverlay className='z-[1300]' />
-                <DialogContent className='z-[1400]'>
+                <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
-                        <>
-                            <DialogDescription className='text-sm'>
+                        <DialogDescription asChild className='text-sm'>
+                            <div className='pb-1'>
                                 Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
                                     placeholder={challengeTxt}
-                                    className='border-t-0 border-l-0 border-r-0 rounded-none border-black dark:border-white bg-transparent dark:bg-transparent placeholder-neutral-dark-10 dark:placeholder-neutral-light-10 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2'
+                                    variant='outlined'
                                     onChange={(e) => setChallengeTxtReply(e.target.value)}
                                     value={challengeTxtReply}
                                     data-testid='confirmation-dialog_challenge-text'
                                 />
-                            </DialogDescription>
-                        </>
+                            </div>
+                        </DialogDescription>
                     )}
                     <DialogActions>
-                        {error && <p className='content-center text-[color:#d32f2f] text-xs mt-[3px]'>{error}</p>}
+                        {error && <p className='content-center text-error text-xs mt-[3px]'>{error}</p>}
                         <Button
-                            variant='tertiary'
+                            variant='secondary'
                             onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>

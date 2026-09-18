@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
-import { SubHeader } from '../../views/Explore';
 import { useCollapsibleSectionStyles } from '../../views/Explore/InfoStyles';
+import { SubHeader } from '../../views/Explore/fragments';
 
 const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) => {
     //TODO: Once azure backend changes for counts param are in, utilize response error details
@@ -35,7 +35,7 @@ const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) 
     }
     return (
         <Alert severity='error' icon={false}>
-            <AlertTitle sx={{ fontSize: '0.75rem' }}>{statusMessage}</AlertTitle>
+            <AlertTitle className='text-xs'>{statusMessage}</AlertTitle>
         </Alert>
     );
 };
@@ -73,7 +73,7 @@ export const EntityInfoCollapsibleSection: React.FC<
             TransitionProps={{ unmountOnExit: true }}
             className={styles.accordionRoot}>
             <AccordionSummary
-                expandIcon={<FontAwesomeIcon icon={isExpanded ? faMinus : faPlus} />}
+                expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
                 className={'accordion-summary'}
                 classes={{
                     root: styles.accordionSummary,

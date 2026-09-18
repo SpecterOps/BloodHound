@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Grid, TextField } from '@mui/material';
+import { Button } from 'doodle-ui';
 import React, { useState } from 'react';
 
 interface LoginFormProps {
@@ -73,7 +73,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSSO, loading 
                         <Button
                             size='large'
                             type='button'
-                            variant={'secondary'}
+                            variant='secondary'
                             onClick={onLoginViaSSO}
                             className='w-full'
                             disabled={loading}>

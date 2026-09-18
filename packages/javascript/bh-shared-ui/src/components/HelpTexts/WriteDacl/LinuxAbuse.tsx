@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
+import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
 import { EdgeInfoProps } from '../index';
 
 const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = ({
@@ -40,7 +42,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography component={'pre'}>
                         {
-                            "dacledit.py -action 'write' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguidedName' 'domain'/'controlledUser':'password'"
+                            "dacledit.py -action 'write' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguishedName' 'domain'/'controlledUser':'password'"
                         }
                     </Typography>
 
@@ -61,7 +63,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         It can also be done with pass-the-hash using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
                         . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
@@ -91,7 +96,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography component={'pre'}>
                         {
-                            "dacledit.py -action 'remove' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguidedName' 'domain'/'controlledUser':'password'"
+                            "dacledit.py -action 'remove' -rights 'WriteMembers' -principal 'controlledUser' -target-dn 'groupDistinguishedName' 'domain'/'controlledUser':'password'"
                         }
                     </Typography>
                 </>
@@ -128,7 +133,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         A targeted kerberoast attack can be performed using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/targetedKerberoast'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/targetedKerberoast'>
                             targetedKerberoast.py
                         </Link>
                         .
@@ -164,7 +172,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         It can also be done with pass-the-hash using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
                         . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
@@ -186,7 +197,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         To abuse this permission, use{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
                         .
@@ -201,6 +215,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     <Typography variant='body2'>
                         For other optional parameters, view the pyWhisker documentation.
                     </Typography>
+                    <AdcsEsc14ScenarioALinux />
                 </>
             );
         case 'Computer':
@@ -306,7 +321,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
                             To abuse this permission, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                            <Link
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
                             .
@@ -319,6 +337,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body2'>
                             For other optional parameters, view the pyWhisker documentation.
                         </Typography>
+                        <AdcsEsc14ScenarioALinux />
                     </>
                 );
             } else {
@@ -380,7 +399,10 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
                         <Typography variant='body2'>
                             To abuse this permission, use{' '}
-                            <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                            <Link
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                href='https://github.com/ShutdownRepo/pywhisker'>
                                 pyWhisker
                             </Link>
                             .
@@ -393,6 +415,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         <Typography variant='body2'>
                             For other optional parameters, view the pyWhisker documentation.
                         </Typography>
+                        <AdcsEsc14ScenarioALinux />
                     </>
                 );
             }
@@ -484,13 +507,13 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
                             OUned.py
                         </Link>{' '}
                         tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                             the article associated to the OUned.py tool
                         </Link>
@@ -548,7 +571,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                             pyGPOAbuse.py
                         </Link>{' '}
                         can be used for that purpose.
@@ -617,13 +640,13 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         From a Linux machine, the gPLink manipulation attack vector may be exploited using the{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
                             OUned.py
                         </Link>{' '}
                         tool. For a detailed outline of exploit requirements and implementation, you can refer to{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
                             the article associated to the OUned.py tool
                         </Link>

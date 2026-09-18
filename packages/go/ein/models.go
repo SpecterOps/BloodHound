@@ -16,7 +16,11 @@
 
 package ein
 
-import "github.com/specterops/dawgs/graph"
+import (
+	"slices"
+
+	"github.com/specterops/dawgs/graph"
+)
 
 // Initialize IngestibleRelationship to ensure the RelProps map can't be nil
 func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpoint, rel IngestibleRel) IngestibleRelationship {
@@ -35,17 +39,73 @@ func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpo
 // IngestMatchStrategy defines how a node should be matched during ingestion—
 // either by its object ID (default) or by its name.
 type IngestMatchStrategy string
+type IngestMatchOperator string
 
 const (
-	MatchByID   IngestMatchStrategy = "id"
-	MatchByName IngestMatchStrategy = "name"
+	MatchByID       IngestMatchStrategy = "id"
+	MatchByName     IngestMatchStrategy = "name"
+	MatchByProperty IngestMatchStrategy = "property"
+
+	OperatorEquals           IngestMatchOperator = "equals"
+	OperatorEqualsIgnoreCase IngestMatchOperator = "equals_ignore_case"
 )
+
+func OrIngestMatchStrategyDefault(matchBy IngestMatchStrategy) IngestMatchStrategy {
+	if matchBy == "" {
+		return MatchByID
+	}
+
+	return matchBy
+}
+
+type MatchExpression struct {
+	Key      string
+	Operator IngestMatchOperator
+	Value    any
+}
+
+func SortedMatchExpressions(expressions []MatchExpression) []MatchExpression {
+	return slices.SortedStableFunc(slices.Values(expressions), func(a, b MatchExpression) int {
+		if a.Key > b.Key {
+			return 1
+		}
+
+		if a.Key < b.Key {
+			return -1
+		}
+
+		if a.Operator > b.Operator {
+			return 1
+		}
+
+		if a.Operator < b.Operator {
+			return -1
+		}
+
+		return 0
+	})
+}
+
+func PropertyMatchersToMatchExpressions(matchers []PropertyMatcher) []MatchExpression {
+	expressions := make([]MatchExpression, len(matchers))
+
+	for idx, matcher := range matchers {
+		expressions[idx] = MatchExpression{
+			Key:      matcher.Key,
+			Operator: IngestMatchOperator(matcher.Operator),
+			Value:    matcher.Value,
+		}
+	}
+
+	return expressions
+}
 
 // IngestibleEndpoint represents a node reference in a relationship to be ingested.
 type IngestibleEndpoint struct {
-	Value   string              // The actual lookup value (either objectid or name)
-	MatchBy IngestMatchStrategy // Strategy used to resolve the node
-	Kind    graph.Kind          // Optional kind filter to help disambiguate nodes
+	Value    string              // The actual lookup value (either objectid or name)
+	Matchers []MatchExpression   // Multi-property match expressions
+	MatchBy  IngestMatchStrategy // Strategy used to resolve the node
+	Kind     graph.Kind          // Optional kind filter to help disambiguate nodes
 }
 
 type IngestibleRel struct {

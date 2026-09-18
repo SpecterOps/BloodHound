@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -36,6 +37,7 @@ const (
 
 type command struct {
 	env               environment.Environment
+	fix               bool
 	outputAllSeverity bool
 }
 
@@ -60,6 +62,7 @@ func (s *command) Name() string {
 func (s *command) Parse(cmdIndex int) error {
 	flagSet := flag.NewFlagSet(Name, flag.ExitOnError)
 
+	flagSet.BoolVar(&s.fix, "fix", false, "apply suggested fixes")
 	flagSet.BoolVar(&s.outputAllSeverity, "all", false, "output all severity")
 
 	flagSet.Usage = func() {
@@ -77,13 +80,19 @@ func (s *command) Parse(cmdIndex int) error {
 
 // Run analysis command
 func (s *command) Run() error {
-	if paths, err := workspace.FindPaths(s.env); err != nil {
+	paths, err := workspace.FindPaths(s.env)
+	if err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if err := analyzers.Run(paths, s.env, s.outputAllSeverity); errors.Is(err, analyzers.ErrSeverityExit) {
-		return err
+	}
+
+	err = analyzers.Run(paths, s.env, s.fix, s.outputAllSeverity)
+	if errors.Is(err, analyzers.ErrSeverityExit) {
+		return fmt.Errorf("analyzers found high severity: %w", err)
+	} else if errors.Is(err, analyzers.ErrWarnExit) {
+		slog.Warn("Analysis completed with warnings. Rerun with `-all` to see results.")
 	} else if err != nil {
 		return fmt.Errorf("analyzers incomplete: %w", err)
-	} else {
-		return nil
 	}
+
+	return nil
 }

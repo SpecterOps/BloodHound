@@ -30,11 +30,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -219,7 +220,7 @@ func (s Resources) CreateAssetGroup(response http.ResponseWriter, request *http.
 			api.HandleDatabaseError(request, response, err)
 		}
 	} else {
-		assetGroupURL := *ctx.Get(request.Context()).Host
+		assetGroupURL := *bhctx.Get(request.Context()).Host
 		assetGroupURL.Path = fmt.Sprintf("/api/v2/asset-groups/%d", newAssetGroup.ID)
 		response.Header().Set(headers.Location.String(), assetGroupURL.String())
 
@@ -271,20 +272,28 @@ func (s Resources) UpdateAssetGroupSelectors(response http.ResponseWriter, reque
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if err := s.GraphQuery.UpdateSelectorTags(request.Context(), s.DB, result); err != nil {
-				slog.WarnContext(request.Context(), fmt.Sprintf("Failed updating asset group tags; will be retried upon next analysis run: %v", err))
+				slog.WarnContext(
+					request.Context(),
+					"Failed updating asset group tags; will be retried upon next analysis run",
+					attr.Error(err),
+				)
 			}
 
 			if assetGroup.Tag == model.TierZeroAssetGroupTag {
-				// When T0 asset group selectors are modified, entire analysis must be re-run
+				// When T0 asset group selectors are modified, analysis must be re-run
 				var userId string
-				if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-					slog.WarnContext(request.Context(), "encountered request analysis for unknown user, this shouldn't happen")
+				if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
+					slog.WarnContext(
+						request.Context(),
+						"Encountered request analysis for unknown user, this shouldn't happen",
+						slog.String("user_id", userId),
+					)
 					userId = "unknown-user-update-asset-group-selectors"
 				} else {
 					userId = user.ID.String()
 				}
 
-				if err := s.DB.RequestAnalysis(request.Context(), userId); err != nil {
+				if err := s.DB.RequestAnalysis(request.Context(), userId, model.AnalysisModeNoPostProcessing); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				}
@@ -434,7 +443,10 @@ func (s Resources) getAssetGroupMembers(response http.ResponseWriter, request *h
 		} else if assetGroupNodes, err := s.GraphQuery.GetAssetGroupNodes(request.Context(), assetGroup.Tag, assetGroup.SystemGroup); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error fetching nodes for asset group ID %v: %v", assetGroup.ID, err), request), response)
 			return agMembers, err
-		} else if agMembers, err = parseAGMembersFromNodes(assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
+		} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return agMembers, err
+		} else if agMembers, err = parseAGMembersFromNodes(primaryDisplayKinds, assetGroupNodes, assetGroup.Selectors, int(assetGroup.ID)).SortBy(sortByColumns); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			return agMembers, err
 		} else if agMembers, err = agMembers.Filter(queryFilters); err != nil {
@@ -477,14 +489,17 @@ func (s Resources) ListAssetGroupMemberCountsByKind(response http.ResponseWriter
 	}
 }
 
-func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
+func parseAGMembersFromNodes(primaryDisplayKinds graphschema.PrimaryDisplayKinds, nodes graph.NodeSet, selectors model.AssetGroupSelectors, assetGroupID int) api.AssetGroupMembers {
 	agMembers := api.AssetGroupMembers{}
 	for _, node := range nodes {
 		isCustomMember := false
 		// a member is custom if at least one selector exists for that object ID
 		for _, agSelector := range selectors {
 			if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
+				slog.Warn(
+					"Objectid is missing for node",
+					slog.Uint64("node_id", uint64(node.ID)),
+				)
 			} else if agSelector.Selector == objectId {
 				isCustomMember = true
 			}
@@ -496,14 +511,20 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		)
 
 		if objectId, err := node.Properties.Get(common.ObjectID.String()).String(); err != nil {
-			slog.Warn(fmt.Sprintf("Objectid is missing for node %d", node.ID))
+			slog.Warn(
+				"Objectid is missing for node",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			memberObjectId = ""
 		} else {
 			memberObjectId = objectId
 		}
 
 		if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
-			slog.Warn(fmt.Sprintf("Name is missing for node %d", node.ID))
+			slog.Warn(
+				"Name is missing for node",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			memberName = ""
 		} else {
 			memberName = name
@@ -512,7 +533,7 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 		agMember := api.AssetGroupMember{
 			AssetGroupID: assetGroupID,
 			ObjectID:     memberObjectId,
-			PrimaryKind:  analysis.GetNodeKindDisplayLabel(node),
+			PrimaryKind:  graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node),
 			Kinds:        node.Kinds.Strings(),
 			Name:         memberName,
 			CustomMember: isCustomMember,
@@ -520,20 +541,33 @@ func parseAGMembersFromNodes(nodes graph.NodeSet, selectors model.AssetGroupSele
 
 		if node.Kinds.ContainsOneOf(azure.Entity) {
 			if tenantID, err := node.Properties.Get(azure.TenantID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("%s is missing for node %d", azure.TenantID.String(), node.ID))
+				slog.Warn(
+					"Is missing for node",
+					slog.String("tenant_id", azure.TenantID.String()),
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else {
 				agMember.EnvironmentKind = azure.Tenant.String()
 				agMember.EnvironmentID = tenantID
 			}
 		} else if node.Kinds.ContainsOneOf(ad.Entity) {
 			if domainSID, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-				slog.Warn(fmt.Sprintf("%s is missing for node %d", ad.DomainSID.String(), node.ID))
+				slog.Warn(
+					"Is missing for node",
+					slog.String("domain_sid", ad.DomainSID.String()),
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
 			} else {
 				agMember.EnvironmentKind = ad.Domain.String()
 				agMember.EnvironmentID = domainSID
 			}
 		} else {
-			slog.Warn(fmt.Sprintf("Node %d is missing valid base entity, skipping AG Membership...", node.ID))
+			slog.Warn(
+				"Node is missing valid base entity, skipping AG Membership",
+				slog.Uint64("node_id", uint64(node.ID)),
+			)
 			continue
 		}
 

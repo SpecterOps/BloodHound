@@ -17,10 +17,10 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+	"strings"
 
-	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -56,7 +56,7 @@ func CreateApproverEdge(
 	ctx context.Context,
 	db graph.Database,
 	tenantNode *graph.Node,
-	operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob],
+	operation post.StatTrackedOperation[post.EnsureRelationshipJob],
 ) error {
 	// Extract the tenant's objectid to match against AZRole tenantid properties
 	tenantObjectID, err := tenantNode.Properties.Get(common.ObjectID.String()).String()
@@ -99,7 +99,7 @@ func CreateApproverEdge(
 		if err := operation.Operation.SubmitReader(func(
 			ctx context.Context,
 			tx graph.Transaction,
-			outC chan<- analysis.CreatePostRelationshipJob,
+			outC chan<- post.EnsureRelationshipJob,
 		) error {
 			// Step 3a: Read the primaryApprovers lists (user and group GUIDs)
 			userApproversID, err := fetchedAZRole.Properties.Get(
@@ -146,7 +146,7 @@ func CreateApproverEdge(
 func handleDefaultAdminRoles(
 	ctx context.Context,
 	db graph.Database,
-	outC chan<- analysis.CreatePostRelationshipJob,
+	outC chan<- post.EnsureRelationshipJob,
 	tenantNode, fetchedAZRole *graph.Node,
 ) error {
 	// Step 3b.ii: Find Global Administrator and Privileged Role Administrator roles in this tenant
@@ -172,7 +172,7 @@ func handleDefaultAdminRoles(
 	// Step 3b.iii: Create AZRoleApprover edges from each default admin role to the target AZRole
 	for _, fetchedNode := range fetchedNodes {
 		// Enqueue creation of AZRoleApprover edge: from admin role → target AZRole
-		channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+		channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 			FromID: fetchedNode.ID,
 			ToID:   fetchedAZRole.ID,
 			Kind:   azure.AZRoleApprover,
@@ -196,7 +196,7 @@ func handleDefaultAdminRoles(
 func handlePrincipalApprovers(
 	ctx context.Context,
 	db graph.Database,
-	outC chan<- analysis.CreatePostRelationshipJob,
+	outC chan<- post.EnsureRelationshipJob,
 	principalIDs []string,
 	fetchedAZRole *graph.Node,
 ) error {
@@ -204,29 +204,34 @@ func handlePrincipalApprovers(
 	for _, principalID := range principalIDs {
 		var fetchedNode *graph.Node
 
-		// Step 3c.ii.1: Find the AZUser or AZGroup node with matching objectid
+		// Step 3c.ii.1: Find the AZUser or AZGroup node whose objectid matches the approver GUID,
+		// case-insensitively (collector and node casing may differ). Contains narrows
+		// the scan; EqualFold confirms an exact match.
 		err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			node, err := tx.Nodes().Filterf(func() graph.Criteria {
+			nodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 				return query.And(
 					query.Kind(query.Node(), azure.Entity), // Matches AZUser, AZGroup, etc.
-					query.Equals(query.NodeProperty(common.ObjectID.String()), principalID),
+					query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), principalID),
 				)
-			}).First()
+			}))
 			if err != nil {
 				return err
 			}
-			fetchedNode = node
-			return nil
+			for _, node := range nodes {
+				if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil && strings.EqualFold(objectID, principalID) {
+					fetchedNode = node
+					return nil
+				}
+			}
+			return graph.ErrNoResultsFound
 		})
 		if err != nil {
 			if graph.IsErrNotFound(err) {
 				// Log warning if approver node not found (may have been deleted or not yet ingested)
 				slog.WarnContext(
 					ctx,
-					fmt.Sprintf(
-						"Entity node not found for principal ID: %s, skipping edge creation",
-						principalID,
-					),
+					"Entity node not found for principal ID, skipping edge creation",
+					slog.String("principal_id", principalID),
 				)
 				continue
 			} else {
@@ -235,7 +240,7 @@ func handlePrincipalApprovers(
 		}
 
 		// Step 3c.ii.2: Create AZRoleApprover edge from approver node to target AZRole
-		if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+		if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
 			FromID: fetchedNode.ID,
 			ToID:   fetchedAZRole.ID,
 			Kind:   azure.AZRoleApprover,

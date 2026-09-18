@@ -174,12 +174,16 @@ x-tagGroups:
       - Enterprise CAs
       - NT Auth Stores
       - Cert Templates
+      - Sites
+      - Site Servers
+      - Site Subnets
       - OUs
       - AD Users
       - Groups
       - Data Quality
       - Datapipe
       - Cypher
+      - OpenGraph (Experimental)
   - name: Enterprise Only
     tags:
       - EULA
@@ -188,12 +192,14 @@ x-tagGroups:
       - Client Ingest
       - Clients
       - Jobs
+      - Collector Jobs
       - Tasks
       - Events (Schedules)
       - Attack Paths
       - Risk Posture
+      - Asset Scores
       - Meta Entities
-
+      - Alerts
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -251,6 +257,8 @@ paths:
   # user management
   /api/v2/bloodhound-users:
     $ref: './paths/bh-users.bloodhound-users.yaml'
+  /api/v2/bloodhound-users-minimal:
+    $ref: './paths/bh-users.bloodhound-users-minimal.yaml'
   /api/v2/bloodhound-users/{user_id}:
     $ref: './paths/bh-users.bloodhound-users.id.yaml'
   /api/v2/bloodhound-users/{user_id}/secret:
@@ -282,6 +290,8 @@ paths:
     $ref: './paths/collection-uploads.file-upload.start.yaml'
   /api/v2/file-upload/{file_upload_job_id}:
     $ref: './paths/collection-uploads.file-upload.id.yaml'
+  /api/v2/file-upload/{file_upload_job_id}/completed-tasks:
+    $ref: './paths/collection-uploads.file-upload.id.completed-tasks.yaml'
   /api/v2/file-upload/{file_upload_job_id}/end:
     $ref: './paths/collection-uploads.file-upload.id.end.yaml'
   /api/v2/file-upload/accepted-types:
@@ -296,7 +306,7 @@ paths:
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
-  /api/v2/spec/openapi.yaml:
+  /api/v2/spec:
     $ref: './paths/api-info.spec.yaml'
 
   # search
@@ -346,6 +356,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members/counts:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.counts.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
@@ -356,6 +368,8 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.search.yaml'
   /api/v2/asset-group-tags-history:
     $ref: './paths/asset-isolation.asset-group-tags-history.yaml'
+  /api/v2/asset-group-tags/certifications:
+    $ref: './paths/asset-isolation.asset-group-tags.certifications.yaml'
 
   # graph
   /api/v2/graphs/kinds:
@@ -364,6 +378,10 @@ paths:
     $ref: './paths/graph.pathfinding.yaml'
   /api/v2/graph-search:
     $ref: './paths/graph.graph-search.yaml'
+  /api/v2/relationships/{relationship_id}:
+    $ref: './paths/graph.relationships.id.yaml'
+  /api/v2/nodes/{node_id}:
+    $ref: './paths/graph.nodes.id.yaml'
   /api/v2/graphs/shortest-path:
     $ref: './paths/graph.graphs.shortest-path.yaml'
   /api/v2/graphs/edge-composition:
@@ -373,6 +391,18 @@ paths:
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
+  # opengraph extensions
+  /api/v2/extensions:
+    $ref: './paths/opengraph.extensions.yaml'
+  /api/v2/extensions/{extension_id}:
+    $ref: './paths/opengraph.extension-delete.yaml'
+  /api/v2/extensions-edges:
+    $ref: './paths/graph-schema.edge-kinds.yaml'
+  /api/v2/node-kinds/{node_kind_id}:
+    $ref: './paths/opengraph.node-kind.yaml'
+  /api/v2/relationship-kinds/{relationship_kind_id}:
+    $ref: './paths/opengraph.relationship-kind.yaml'
+
   # cypher
   /api/v2/saved-queries:
     $ref: './paths/cypher.saved-queries.yaml'
@@ -380,13 +410,12 @@ paths:
     $ref: './paths/cypher.saved-queries.id.yaml'
   /api/v2/saved-queries/{saved_query_id}/permissions:
     $ref: './paths/cypher.saved-queries.id.permissions.yaml'
-  # Below endpoints will be uncommented once saved queries is fully ready for release
-  #/api/v2/saved-queries/{saved_query_id}/export:
-  #  $ref: './paths/cypher.saved-queries.export.yaml'
-  #/api/v2/saved-queries/import:
-  #  $ref: './paths/cypher.saved-queries.import.yaml'
-  #/api/v2/saved-queries/export:
-  #  $ref: './paths/cypher.saved-queries.export.multiple.yaml'
+  /api/v2/saved-queries/{saved_query_id}/export:
+    $ref: './paths/cypher.saved-queries.export.yaml'
+  /api/v2/saved-queries/import:
+    $ref: './paths/cypher.saved-queries.import.yaml'
+  /api/v2/saved-queries/export:
+    $ref: './paths/cypher.saved-queries.export.multiple.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 
@@ -485,6 +514,8 @@ paths:
     $ref: './paths/gpos.gpos.id.controllers.yaml'
   /api/v2/gpos/{object_id}/ous:
     $ref: './paths/gpos.gpos.id.ous.yaml'
+  /api/v2/gpos/{object_id}/sites:
+    $ref: './paths/gpos.gpos.id.sites.yaml'
   /api/v2/gpos/{object_id}/tier-zero:
     $ref: './paths/gpos.gpos.id.tier-zero.yaml'
   /api/v2/gpos/{object_id}/users:
@@ -531,6 +562,26 @@ paths:
     $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
   /api/v2/certtemplates/{object_id}/published-to-cas:
     $ref: './paths/certtemplate.certtemplates.id.published-to-cas.yaml'
+
+  # sites
+  /api/v2/sites/{object_id}:
+    $ref: './paths/sites.sites.id.yaml'
+  /api/v2/sites/{object_id}/controllers:
+    $ref: './paths/sites.sites.id.controllers.yaml'
+  /api/v2/sites/{object_id}/linked-gpos:
+    $ref: './paths/sites.sites.id.linked-gpos.yaml'
+  /api/v2/sites/{object_id}/siteservers:
+    $ref: './paths/sites.sites.id.siteservers.yaml'
+  /api/v2/sites/{object_id}/sitesubnets:
+    $ref: './paths/sites.sites.id.sitesubnets.yaml'
+
+  # site servers
+  /api/v2/siteservers/{object_id}:
+    $ref: './paths/siteservers.siteservers.id.yaml'
+
+  # site subnets
+  /api/v2/sitesubnets/{object_id}:
+    $ref: './paths/sitesubnets.sitesubnets.id.yaml'
 
   # ous
   /api/v2/ous/{object_id}:
@@ -599,6 +650,10 @@ paths:
     $ref: './paths/data-quality.azure-tenants.id.data-quality-stats.yaml'
   /api/v2/platform/{platform_id}/data-quality-stats:
     $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
+  /api/v2/data-quality-stats:
+    $ref: './paths/data-quality.data-quality-stats.yaml'
+  /api/v2/data-quality-stats-aggregations:
+    $ref: './paths/data-quality.data-quality-stats-aggregations.yaml'
   /api/v2/clear-database:
     $ref: './paths/data-quality.clear-database.yaml'
 
@@ -680,25 +735,89 @@ paths:
   /api/v2/jobs/{job_id}/log:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
-  #  # tasks (deprecated)
-  #  /api/v2/tasks/available:
-  #    $ref: './paths/tasks/tasks.available.yaml'
-  #  /api/v2/tasks/finished:
-  #    $ref: './paths/tasks/tasks.finished.yaml'
-  #  /api/v2/tasks/end:
-  #    $ref: './paths/tasks/tasks.end.yaml'
-  #  /api/v2/tasks/start:
-  #    $ref: './paths/tasks/tasks.start.yaml'
-  #  /api/v2/tasks:
-  #    $ref: './paths/tasks/tasks.yaml'
-  #  /api/v2/tasks/{task_id}:
-  #    $ref: './paths/tasks/tasks.id.yaml'
-  #  /api/v2/tasks/{task_id}/cancel:
-  #    $ref: './paths/tasks/tasks.id.cancel.yaml'
-  #  /api/v2/tasks/{task_id}/log:
-  #    $ref: './paths/tasks/tasks.id.log.yaml'
-  #  /api/v2/tasks/current:
-  #    $ref: './paths/tasks/tasks.current.yaml'
+  # collector jobs
+#  /api/v2/collector-job-queue:
+#    $ref: './paths/collector-jobs.queue.yaml'
+#  /api/v2/collector-job-queue/available:
+#    $ref: './paths/collector-jobs.queue.available.yaml'
+#  /api/v2/collector-job-queue/current:
+#    $ref: './paths/collector-jobs.queue.current.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}:
+#    $ref: './paths/collector-jobs.queue.id.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/claim:
+#    $ref: './paths/collector-jobs.queue.id.claim.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/start:
+#    $ref: './paths/collector-jobs.queue.id.start.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/heartbeat:
+#    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/ingest:
+#    $ref: './paths/collector-jobs.queue.id.ingest.yaml'
+#  /api/v2/collector-job-queue/{collector_job_id}/end:
+#    $ref: './paths/collector-jobs.queue.id.end.yaml'
+#  /api/v2/collector-job-types:
+#    $ref: './paths/collector-jobs.types.yaml'
+#  /api/v2/collector-job-types/{collector_job_type_id}:
+#    $ref: './paths/collector-jobs.types.id.yaml'
+#  /api/v2/collector-job-profiles:
+#    $ref: './paths/collector-jobs.profiles.yaml'
+#  /api/v2/collector-job-profiles/{collector_job_profile_id}:
+#    $ref: './paths/collector-jobs.profiles.id.yaml'
+#  /api/v2/collector-job-schedules:
+#    $ref: './paths/collector-jobs.schedules.yaml'
+#  /api/v2/collector-job-schedules/{collector_job_schedule_id}:
+#    $ref: './paths/collector-jobs.schedules.id.yaml'
+#  /api/v2/collector-job-secrets:
+#    $ref: './paths/collector-jobs.secrets.yaml'
+#  /api/v2/collector-job-secrets/{collector_job_secret_id}:
+#    $ref: './paths/collector-jobs.secrets.id.yaml'
+#  /api/v2/collector-job-history:
+#    $ref: './paths/collector-jobs.history.yaml'
+#  /api/v2/collector-job-history/{collector_job_id}:
+#    $ref: './paths/collector-jobs.history.id.yaml'
+
+  # management operations
+  /api/v2/clients/{client_id}/management:
+   $ref: './paths/clients.clients.id.management.yaml'
+  /api/v2/clients/{client_id}/artifacts/{artifact_id}:
+   $ref: './paths/clients.clients.id.artifacts.id.yaml'
+  /api/v2/clients/management/available:
+   $ref: './paths/clients.clients.management.available.yaml'
+  /api/v2/clients/management/start:
+   $ref: './paths/clients.clients.management.start.yaml'
+  /api/v2/clients/management/end:
+   $ref: './paths/clients.clients.management.end.yaml'
+  /api/v2/clients/management/artifacts:
+   $ref: './paths/clients.clients.management.artifacts.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}:
+   $ref: './paths/clients.clients.management.artifacts.id.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/parts/{part_number}:
+   $ref: './paths/clients.clients.management.artifacts.id.parts.part-number.yaml'
+  /api/v2/clients/management/artifacts/{artifact_id}/complete:
+   $ref: './paths/clients.clients.management.artifacts.id.complete.yaml'
+  /api/v2/clients/{client_id}/artifacts/{artifact_id}/download-url:
+    $ref: './paths/clients.clients.id.artifacts.id.download-url.yaml'
+  /api/v2/clients/{client_id}/artifacts/{artifact_id}/download:
+    $ref: './paths/clients.clients.id.artifacts.id.download.yaml'
+
+  #  tasks (deprecated)
+  /api/v2/tasks/available:
+    $ref: './paths/tasks.tasks.available.yaml'
+  /api/v2/tasks/finished:
+    $ref: './paths/tasks.tasks.finished.yaml'
+  /api/v2/tasks:
+    $ref: './paths/tasks.tasks.yaml'
+  /api/v2/tasks/current:
+    $ref: './paths/tasks.tasks.current.yaml'
+  /api/v2/tasks/start:
+    $ref: './paths/tasks.tasks.start.yaml'
+  /api/v2/tasks/end:
+    $ref: './paths/tasks.tasks.end.yaml'
+  /api/v2/tasks/{task_id}:
+    $ref: './paths/tasks.tasks.id.yaml'
+  /api/v2/tasks/{task_id}/cancel:
+    $ref: './paths/tasks.tasks.id.cancel.yaml'
+  /api/v2/tasks/{task_id}/log:
+    $ref: './paths/tasks.tasks.id.log.yaml'
 
   # events
   /api/v2/events:
@@ -713,10 +832,14 @@ paths:
     $ref: './paths/attack-paths.attack-paths.finding-trends.yaml'
   /api/v2/attack-path-types:
     $ref: './paths/attack-paths.attack-path-types.yaml'
+  /api/v2/attack-paths/finding-types:
+    $ref: './paths/attack-paths.attack-paths-finding-types.yaml'
   /api/v2/attack-paths:
     $ref: './paths/attack-paths.attack-paths.yaml'
   /api/v2/attack-paths/details:
     $ref: './paths/attack-paths.attack-paths-details.yaml'
+  /api/v2/attack-paths/findings:
+    $ref: './paths/attack-paths.attack-paths-findings.yaml'
   /api/v2/domains/{domain_id}/available-types:
     $ref: './paths/attack-paths.domains.id.available-types.yaml'
   /api/v2/domains/{domain_id}/details:
@@ -732,9 +855,41 @@ paths:
   /api/v2/posture-history/{data_type}:
     $ref: './paths/risk-posture.posture-history.data-type.yaml'
 
+  # asset scores
+  /api/v2/asset-scores/zone-protected-asset-score:
+    $ref: './paths/asset-scores.zone-protected-asset-score.yaml'
+
   # meta entity
   /api/v2/meta/{object_id}:
     $ref: './paths/meta-entity.meta.id.yaml'
+
+  # alerts
+  /api/v2/alert-webhooks:
+    $ref: './paths/alerts.alert-webhooks.yaml'
+  /api/v2/alert-webhooks/{alert_webhook_id}:
+    $ref: './paths/alerts.alert-webhooks.id.yaml'
+  /api/v2/alert-webhooks/{alert_webhook_id}/rotate-secret:
+    $ref: './paths/alerts.alert-webhooks.id.rotate-secret.yaml'
+  /api/v2/alert-webhooks/{alert_webhook_id}/test:
+    $ref: './paths/alerts.alert-webhooks.id.test.yaml'
+  /api/v2/alert-events:
+    $ref: './paths/alerts.alert-events.yaml'
+  /api/v2/alert-events/{alert_event_id}:
+    $ref: './paths/alerts.alert-events.id.yaml'
+  /api/v2/alert-event-types:
+    $ref: './paths/alerts.alert-event-types.yaml'
+  /api/v2/alerts:
+    $ref: './paths/alerts.alerts.yaml'
+  /api/v2/alerts/{alert_id}:
+    $ref: './paths/alerts.alerts.id.yaml'
+  /api/v2/alert-attempts:
+    $ref: './paths/alerts.alert-attempts.yaml'
+  /api/v2/alert-attempts/retry:
+    $ref: './paths/alerts.alert-attempts.retry.yaml'
+
+  # graph schema findings
+  #/api/v2/extensions-findings:
+  #  $ref: './paths/opengraph.extensions.findings.yaml'
 
 components:
   ##

@@ -1,0 +1,39 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { type OptionsObject } from 'notistack';
+import { useQuery } from 'react-query';
+import { useNotifications } from '../providers/NotificationProvider/hooks';
+import { apiClient } from '../utils/api';
+
+const ERROR = {
+    key: 'source-kinds',
+    message: 'An error occurred while loading source kinds. Try refreshing the page.',
+    options: {
+        persist: true,
+        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+    } as OptionsObject,
+};
+
+export const useSourceKindsQuery = () => {
+    const { addNotification } = useNotifications();
+
+    return useQuery({
+        queryKey: ['source-kinds'],
+        queryFn: ({ signal }) => apiClient.getSourceKinds({ signal }).then((res) => res.data.data.kinds),
+        onError: () => addNotification(ERROR.message, ERROR.key, ERROR.options),
+    });
+};

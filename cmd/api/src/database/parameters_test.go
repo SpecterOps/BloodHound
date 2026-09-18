@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package database_test
 
@@ -161,6 +160,26 @@ func TestParameters_GetEULACustomText(t *testing.T) {
 	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
 }
 
+func TestParameters_GetAGTParameter(t *testing.T) {
+	var (
+		db      = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"dawgs_worker_limit": 7, "selector_worker_limit": 7, "expansion_worker_limit": -1})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.AGTParameterKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, appcfg.AGTParameters{
+		DAWGsWorkerLimit:     6,
+		SelectorWorkerLimit:  7,
+		ExpansionWorkerLimit: 3,
+	}, appcfg.GetAGTParameters(testCtx, db))
+}
+
 func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 	var (
 		db                        = integration.SetupDB(t)
@@ -176,4 +195,90 @@ func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
 	}))
 
 	require.Equal(t, time.Hour*time.Duration(customAuthSessionTTLHours), appcfg.GetSessionTTLHours(testCtx, db))
+}
+
+func TestParameters_GetAPITokensParameter(t *testing.T) {
+	var (
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		enableApiKeys = true
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"enabled": enableApiKeys})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.APITokens,
+		Value: newVal,
+	}))
+
+	require.Equal(t, enableApiKeys, appcfg.GetAPITokensParameter(testCtx, db))
+}
+
+func TestParameters_GetAPITokenExpirationParameter(t *testing.T) {
+	var (
+		db               = integration.SetupDB(t)
+		testCtx          = context.Background()
+		apiKeyExpiration = true
+		expirationPeriod = 30
+	)
+
+	newVal, err := types.NewJSONBObject(map[string]any{"enabled": apiKeyExpiration, "expiration_period": expirationPeriod})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.APITokenExpiration,
+		Value: newVal,
+	}))
+
+	valObtained := appcfg.GetAPITokenExpirationParameter(testCtx, db)
+
+	require.Equal(t, apiKeyExpiration, valObtained.Enabled)
+	require.Equal(t, expirationPeriod, valObtained.ExpirationPeriod)
+}
+
+func TestParameters_GetGraphStorageOptimizationParameter(t *testing.T) {
+	var testCtx = context.Background()
+
+	type testData struct {
+		name     string
+		value    map[string]any
+		expected appcfg.GraphStorageOptimizationParameter
+	}
+
+	tt := []testData{
+		{
+			name:  "negative min interval seconds is rejected and defaults to 86400",
+			value: map[string]any{"after_boot": true, "after_analysis": true, "min_interval_seconds": -3600},
+			expected: appcfg.GraphStorageOptimizationParameter{
+				AfterBoot:          true,
+				AfterAnalysis:      true,
+				MinIntervalSeconds: 86400,
+			},
+		},
+		{
+			name:  "value that fails to map onto the struct falls back to the default for the unmapped field",
+			value: map[string]any{"after_boot": "not-a-bool", "after_analysis": true, "min_interval_seconds": 100},
+			expected: appcfg.GraphStorageOptimizationParameter{
+				AfterBoot:          false,
+				AfterAnalysis:      true,
+				MinIntervalSeconds: 100,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			db := integration.SetupDB(t)
+
+			newVal, err := types.NewJSONBObject(testCase.value)
+			require.Nil(t, err)
+
+			require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+				Key:   appcfg.GraphStorageOptimizationKey,
+				Value: newVal,
+			}))
+
+			require.Equal(t, testCase.expected, appcfg.GetGraphStorageOptimizationParameter(testCtx, db))
+		})
+	}
 }

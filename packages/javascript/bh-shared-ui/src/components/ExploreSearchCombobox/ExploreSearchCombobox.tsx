@@ -14,47 +14,66 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
+import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
-import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
+import { useMemo, useRef } from 'react';
+import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
+import { getDuplicateDisplayNames } from './utils';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
+    // Overrides the accessible name when several inputs share one visible label and assistive tech
+    // needs to tell them apart. Must contain labelText so the spoken name still matches what is on
+    // screen (WCAG 2.5.3 Label in Name). Defaults to labelText.
+    ariaLabel?: string;
+    // Attaches to the input's root element, which excludes the results dropdown rendered alongside
+    // it. Lets a caller reference the field box on its own — e.g. as an HTML5 drag image.
+    inputContainerRef?: React.Ref<HTMLDivElement>;
     inputValue: string;
+    autoFocus?: boolean;
     selectedItem: SearchValue | null;
     handleNodeEdited: (edit: string) => any;
     handleNodeSelected: (selection: SearchValue) => any;
     disabled?: boolean;
     variant?: TextFieldVariants;
+    errorMessage?: string;
 }> = ({
     labelText,
+    ariaLabel,
+    inputContainerRef,
     inputValue,
     selectedItem,
     handleNodeEdited,
     handleNodeSelected,
+    autoFocus,
     disabled = false,
     variant = 'outlined',
+    errorMessage,
 }) => {
     const theme = useTheme();
+    const searchNodesRef = useRef<HTMLInputElement>();
 
-    const { keyword, type } = getKeywordAndTypeValues(inputValue);
+    const { keyword, type } = useKeywordAndTypeValues(inputValue);
     const { data, error, isError, isLoading, isFetching } = useSearch(keyword, type);
 
-    const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps, openMenu } =
-        useCombobox({
-            items: data || [],
-            inputValue,
-            selectedItem,
-            onSelectedItemChange: ({ selectedItem }) => {
-                if (selectedItem) {
-                    handleNodeSelected(selectedItem);
-                }
-            },
-            itemToString: (item) => item?.name || item?.objectid || '',
-        });
+    const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, openMenu } = useCombobox({
+        items: data || [],
+        inputValue,
+        selectedItem,
+        onSelectedItemChange: ({ selectedItem }) => {
+            if (selectedItem) {
+                handleNodeSelected(selectedItem);
+            }
+        },
+        itemToString: (item) => item?.name || item?.objectid || '',
+    });
+
+    // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
+    const duplicateDisplayNames = useMemo(() => getDuplicateDisplayNames(data ?? []), [data]);
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -67,65 +86,94 @@ const ExploreSearchCombobox: React.FC<{
         data
     );
 
+    const downshiftInputProps = {
+        ...getInputProps({
+            onFocus: openMenu,
+            refKey: 'inputRef',
+            onChange: (e) => {
+                handleNodeEdited(e.currentTarget.value);
+            },
+        }),
+    };
+
     return (
-        <div {...getComboboxProps()} style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
             <TextField
+                ref={inputContainerRef}
                 placeholder={labelText}
                 variant={variant}
                 size='small'
                 fullWidth
                 disabled={disabled}
                 inputProps={{
-                    'aria-label': labelText,
+                    'aria-label': ariaLabel ?? labelText,
                 }}
                 InputProps={{
                     style: {
-                        backgroundColor: disabled ? theme.palette.action.disabled : 'inherit',
-                        fontSize: theme.typography.pxToRem(14),
+                        backgroundColor: disabled ? theme.neutral.tertiary : 'inherit',
+                        fontSize: '0.875rem',
                     },
+                    autoFocus,
                     startAdornment: selectedItem?.type && <NodeIcon nodeType={selectedItem?.type} />,
                 }}
-                {...getInputProps({
-                    onFocus: openMenu,
-                    refKey: 'inputRef',
-                    onChange: (e) => {
-                        handleNodeEdited(e.currentTarget.value);
-                    },
-                })}
+                {...downshiftInputProps}
+                inputRef={(node) => {
+                    downshiftInputProps.inputRef(node);
+                    searchNodesRef.current = node;
+                }}
                 data-testid='explore_search_input-search'
             />
+            {errorMessage && (
+                <Typography variant='caption' className='text-error'>
+                    {errorMessage}
+                </Typography>
+            )}
             <div
                 style={{
                     position: 'absolute',
                     marginTop: '1rem',
                     zIndex: 1300,
                 }}>
-                <Paper style={{ display: isOpen ? 'inherit' : 'none' }}>
+                <Paper style={{ display: isOpen ? 'inherit' : 'none' }} className='rounded-lg'>
                     <List
                         {...getMenuProps()}
                         dense
                         style={{
                             width: '100%',
                         }}
+                        role='listbox'
                         data-testid='explore_search_result-list'>
                         {disabledText ? (
-                            <ListItem disabled dense>
+                            <ListItem
+                                dense
+                                className='text-[#616161] dark:text-[#868686]' // To do: Tokenize when available
+                                {...getItemProps({
+                                    disabled: true,
+                                    'aria-disabled': true,
+                                    label: disabledText,
+                                    item: {
+                                        objectid: '',
+                                    },
+                                    style: { opacity: 0.6 },
+                                })}>
                                 <ListItemText primary={disabledText} />
                             </ListItem>
                         ) : (
-                            data!.map((item: SearchResult, index: any) => {
+                            data?.map((item: SearchResult, index: any) => {
                                 return (
                                     <SearchResultItem
                                         item={{
                                             label: item.name,
                                             objectId: item.objectid,
                                             kind: item.type,
+                                            distinguishedName: item.distinguishedname,
                                         }}
                                         index={index}
                                         key={index}
                                         highlightedIndex={highlightedIndex}
                                         keyword={keyword}
                                         getItemProps={getItemProps}
+                                        showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
                                     />
                                 );
                             })

@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, CircularProgress } from '@mui/material';
-import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient } from 'bh-shared-ui';
+import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from 'react-query';
 import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
@@ -32,12 +33,19 @@ const Login: React.FC = () => {
     const queryClient = useQueryClient();
 
     const authState = useAppSelector((state) => state.auth);
+    const appName = useAppName();
 
     const [useSSO, setUseSSO] = useState(false);
 
     const [lastUsername, setLastUsername] = useState('');
 
     const [lastPassword, setLastPassword] = useState('');
+
+    const title = (
+        <Helmet>
+            <title>Login | {appName}</title>
+        </Helmet>
+    );
 
     // clear the react-query query cache between authenticated sessions
     useEffect(() => {
@@ -78,6 +86,7 @@ const Login: React.FC = () => {
     if (listSSOProvidersQuery.isLoading) {
         return (
             <LoginPage>
+                {title}
                 <Box textAlign='center'>
                     <CircularProgress />
                 </Box>
@@ -94,6 +103,7 @@ const Login: React.FC = () => {
     if (oneTimePasscodeRequired) {
         return (
             <LoginPage>
+                {title}
                 <OneTimePasscodeForm
                     onSubmit={handleSubmitLoginWithOneTimePasscodeForm}
                     onCancel={resetForm}
@@ -106,6 +116,7 @@ const Login: React.FC = () => {
     if (listSSOProvidersQuery.isError || !listSSOProvidersQuery.data) {
         return (
             <LoginPage>
+                {title}
                 <LoginForm onSubmit={handleSubmitLoginForm} loading={authState.loginLoading} />
             </LoginPage>
         );
@@ -118,6 +129,7 @@ const Login: React.FC = () => {
         }
         return (
             <LoginPage>
+                {title}
                 <LoginViaSSOForm
                     providers={listSSOProvidersQuery.data}
                     onSubmit={handleSubmitLoginViaSSOForm}
@@ -129,6 +141,7 @@ const Login: React.FC = () => {
 
     return (
         <LoginPage>
+            {title}
             <LoginForm
                 onSubmit={handleSubmitLoginForm}
                 onLoginViaSSO={() => setUseSSO(true)}

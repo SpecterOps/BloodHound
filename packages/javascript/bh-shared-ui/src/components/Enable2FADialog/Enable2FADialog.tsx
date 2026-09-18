@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     Box,
     Dialog,
@@ -27,6 +26,7 @@ import {
     TextField,
 } from '@mui/material';
 import withStyles from '@mui/styles/withStyles';
+import { Button } from 'doodle-ui';
 import React, { useState } from 'react';
 import SetupKeyDialog from '../SetupKeyDialog';
 
@@ -213,7 +213,7 @@ const Enable2FADialog: React.FC<{
                             <>
                                 <Button
                                     type='button'
-                                    variant='tertiary'
+                                    variant='secondary'
                                     onClick={onCancel}
                                     data-testid='enable-2fa-dialog_button-close'>
                                     Cancel
@@ -226,7 +226,7 @@ const Enable2FADialog: React.FC<{
                             <>
                                 <Button
                                     type='button'
-                                    variant='tertiary'
+                                    variant='secondary'
                                     onClick={handleOnClose}
                                     data-testid='enable-2fa-dialog_button-close'>
                                     Close

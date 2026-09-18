@@ -56,15 +56,19 @@ type Azure struct {
 	ControlRelationshipKinds         []StringEnum
 	ExecutionPrivilegeKinds          []StringEnum
 	PathfindingRelationships         []StringEnum
+	PostProcessedRelationships       []StringEnum
 }
 
 type ActiveDirectory struct {
-	Properties                   []StringEnum
-	NodeKinds                    []StringEnum
-	RelationshipKinds            []StringEnum
-	ACLRelationships             []StringEnum
-	PathfindingRelationships     []StringEnum
-	InboundRelationshipKinds     []StringEnum
-	OutboundRelationshipKinds    []StringEnum
-	EdgeCompositionRelationships []StringEnum
+	Properties                            []StringEnum
+	NodeKinds                             []StringEnum
+	RelationshipKinds                     []StringEnum
+	ACLRelationships                      []StringEnum
+	IngestACLRelationships                []StringEnum
+	PathfindingRelationships              []StringEnum
+	PathfindingRelationshipsMatchFrontend []StringEnum
+	InboundRelationshipKinds              []StringEnum
+	OutboundRelationshipKinds             []StringEnum
+	EdgeCompositionRelationships          []StringEnum
+	PostProcessedRelationships            []StringEnum
 }
