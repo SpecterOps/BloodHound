@@ -474,6 +474,18 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
 
+// GraphExtensionUpsertResult contains the persisted extension and entity outcomes from an extension upsert.
+type GraphExtensionUpsertResult struct {
+	ExtensionExisted           bool                 // indicates whether the extension was created or updated, used when determining appropriate API response
+	Extension                  GraphSchemaExtension // Persisted graph schema extension record used for logging
+	NodeKindsResult            ReconcileResult[GraphSchemaNodeKind]
+	RelationshipKindsResult    ReconcileResult[GraphSchemaRelationshipKind]
+	KindInfosResult            ReconcileResult[GraphSchemaKindInfo]
+	EnvironmentsResult         ReconcileResult[SchemaEnvironment]
+	RelationshipFindingsResult ReconcileResult[SchemaFinding]
+	SavedQueriesResult         ReconcileResult[SavedQuery]
+}
+
 // Graph Extension Upsert Input
 
 type SavedQueriesInput []SavedQueryInput
