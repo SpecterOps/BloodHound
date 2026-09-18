@@ -15,9 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Button, IconButton } from './Button';
+import { Button } from './Button';
 
 describe('Button', () => {
     it('defaults to type button', () => {
@@ -31,39 +29,29 @@ describe('Button', () => {
 
         expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
     });
-});
 
-describe('IconButton', () => {
-    it('renders an AppIcon and defaults the tooltip to its accessible label', async () => {
-        const user = userEvent.setup();
-        const { container } = render(
-            <IconButton aria-label='More information'>
-                <AppIcon.Info />
-            </IconButton>
-        );
+    it('preserves the primary variant colors and active state', () => {
+        render(<Button>Primary</Button>);
 
-        const button = screen.getByRole('button', { name: 'More information' });
+        const button = screen.getByRole('button', { name: 'Primary' });
 
-        await user.hover(button);
-
-        expect((await screen.findByRole('tooltip')).textContent).toBe('More information');
-        expect(container.querySelector('svg')).not.toBeNull();
+        expect(button.classList.contains('text-common-white')).toBe(true);
+        expect(button.classList.contains('dark:text-common-dark')).toBe(true);
+        expect(button.classList.contains('active:bg-[#0D0A30]')).toBe(true);
+        expect(button.classList.contains('dark:active:bg-[#8D8BF8]')).toBe(true);
     });
 
-    it('displays its tooltip when hovered', async () => {
-        const user = userEvent.setup();
-        render(
-            <IconButton aria-label='More information' tooltip='Additional context'>
-                <AppIcon.Info />
-            </IconButton>
-        );
+    it('preserves the secondary variant colors and active state without default opacity', () => {
+        render(<Button variant='secondary'>Secondary</Button>);
 
-        const button = screen.getByRole('button', { name: 'More information' });
+        const button = screen.getByRole('button', { name: 'Secondary' });
 
-        await user.hover(button);
-
-        expect((await screen.findByRole('tooltip')).textContent).toBe('Additional context');
-        expect(button.classList.contains('inline-grid')).toBe(true);
-        expect(button.getAttribute('class')).not.toContain('(state) =>');
+        expect(button.classList.contains('text-common-dark')).toBe(true);
+        expect(button.classList.contains('dark:text-common-white')).toBe(true);
+        expect(button.classList.contains('active:bg-secondary-btn-active-fill')).toBe(true);
+        expect(button.classList.contains('active:text-common-dark')).toBe(true);
+        expect(button.classList.contains('dark:active:text-common-white')).toBe(true);
+        expect(button.classList.contains('disabled:opacity-50')).toBe(true);
+        expect(button.classList.contains('opacity-50')).toBe(false);
     });
 });

@@ -22,25 +22,25 @@ import { Icon } from './Icon';
 describe('Icon', () => {
     it('renders an AppIcon without button semantics', () => {
         const { container } = render(
-            <Icon>
+            <Icon aria-label='Information'>
                 <AppIcon.Info />
             </Icon>
         );
 
-        expect(container.querySelector('svg')).not.toBeNull();
+        expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe('Information');
         expect(screen.queryByRole('button')).toBeNull();
     });
 
-    it('optionally renders a tooltip', async () => {
+    it('uses its accessible label as its tooltip', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon tooltip='More information'>
+            <Icon aria-label='Filter options'>
                 <AppIcon.Info />
             </Icon>
         );
 
         await user.hover(container.querySelector('svg') as SVGSVGElement);
 
-        expect((await screen.findByRole('tooltip')).textContent).toBe('More information');
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Filter options');
     });
 });

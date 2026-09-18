@@ -15,20 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 import * as React from 'react';
 import { Tooltip } from '../Tooltip';
+import { cn } from '../utils';
 
 export interface IconProps {
+    'aria-label': string;
     children: React.ReactElement;
-    tooltip?: React.ReactNode;
+    className?: string;
 }
 
-export const Icon: React.FC<IconProps> = ({ children, tooltip }) => {
-    if (!tooltip) {
-        return children;
-    }
+export const Icon: React.FC<IconProps> = ({ 'aria-label': ariaLabel, children, className }) => {
+    const accessibleIcon = React.cloneElement(children, { 'aria-label': ariaLabel } as React.HTMLAttributes<HTMLElement>);
 
     return (
-        <Tooltip tooltip={tooltip} contentProps={{ side: 'bottom', align: 'start' }}>
-            <span className='inline-flex'>{children}</span>
+        <Tooltip tooltip={ariaLabel} contentProps={{ side: 'bottom', align: 'start' }}>
+            <span className={cn('inline-flex', className)}>{accessibleIcon}</span>
         </Tooltip>
     );
 };
