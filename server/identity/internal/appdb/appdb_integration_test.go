@@ -164,7 +164,6 @@ func TestStore_GetPermission_Integration(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			var (
 				ctx         = context.Background()
@@ -211,7 +210,6 @@ func TestStore_GetRole_Integration(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			var (
 				ctx         = context.Background()
@@ -332,7 +330,6 @@ func TestStore_ListRoles_Integration(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			var (
 				ctx         = context.Background()
@@ -453,7 +450,6 @@ func TestStore_ListPermissions_Integration(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			var (
 				ctx         = context.Background()
@@ -552,7 +548,6 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 
 			var (
 				ctx         = context.Background()
