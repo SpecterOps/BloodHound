@@ -1035,7 +1035,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`.",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
@@ -1066,9 +1066,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -8459,7 +8456,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are user_id, name, query, id, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are user_id, name, query, id, extension_id, category, created_at, updated_at, deleted_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -8481,6 +8478,20 @@
           },
           {
             "name": "user_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "extension_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "category",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -20259,6 +20270,11 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
+                              },
+                              "archived_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of when the finding was archived. Omitted when finding has not been archived."
                               }
                             }
                           }
@@ -20271,7 +20287,7 @@
                   "Mixed findings (relationship and list)": {
                     "summary": "Unified response with both finding types",
                     "value": {
-                      "count": 2,
+                      "count": 3,
                       "skip": 0,
                       "limit": 10,
                       "data": [
@@ -20318,6 +20334,29 @@
                           "id": 102,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
                           "last_seen": "2026-04-14T16:57:35.675609Z"
+                        },
+                        {
+                          "severity": "moderate",
+                          "finding": "T0WriteOwner",
+                          "title": "WriteOwner Privileges on Tier Zero Objects",
+                          "finding_type": "relationship",
+                          "is_cross_platform": false,
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "asset_group_tag_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "JSMITH@CORP1.LAB.HOME-LABS.LOL",
+                          "source_principal_kind": "User",
+                          "source_principal_name": "John Smith",
+                          "target_principal_id": "ADMIN@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Domain Admin",
+                          "status": "remediated",
+                          "id": 103,
+                          "first_seen": "2026-03-01T08:00:00.000000Z",
+                          "last_seen": "2026-04-20T12:00:00.000000Z",
+                          "archived_at": "2026-04-20T12:00:00.000000Z"
                         }
                       ]
                     }
@@ -26411,6 +26450,15 @@
               },
               "description": {
                 "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "category": {
+                "type": "string",
+                "readOnly": true
               }
             }
           }
