@@ -15819,6 +15819,10 @@
                     "items": {
                       "$ref": "#/components/schemas/model.client-schedule"
                     }
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -16074,6 +16078,10 @@
                   },
                   "domain_controller": {
                     "type": "string"
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -24115,6 +24123,14 @@
                     "$ref": "#/components/schemas/enum.client-type"
                   }
                 ]
+              },
+              "provided_identifier": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  }
+                ]
               }
             }
           }
@@ -27251,6 +27267,9 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
+              },
+              "provided_identifier": {
+                "$ref": "#/components/schemas/null.string"
               }
             }
           }
