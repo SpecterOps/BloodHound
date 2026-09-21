@@ -18,7 +18,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
-import GraphControls, { type GraphExportAction } from './GraphControls';
+import GraphControls, { type GraphExportAction, type GraphLayoutControlOptions } from './GraphControls';
 
 const exportToJsonSpy = vi.spyOn(exportUtils, 'exportToJson');
 
@@ -62,6 +62,9 @@ describe('GraphControls', () => {
     const onSearchedNodeClickFn = vi.fn();
     const onAdditionalExportActionOne = vi.fn();
     const onAdditionalExportActionTwo = vi.fn();
+    const onDirectionChange = vi.fn();
+    const onHorizontalSpacingChange = vi.fn();
+    const onVerticalSpacingChange = vi.fn();
     const additionalExportActions: readonly GraphExportAction[] = [
         { id: 'additional-one', label: 'Additional action one', onSelect: onAdditionalExportActionOne },
         { id: 'additional-two', label: 'Additional action two', onSelect: onAdditionalExportActionTwo },
@@ -75,6 +78,9 @@ describe('GraphControls', () => {
         onSearchedNodeClickFn.mockClear();
         onAdditionalExportActionOne.mockClear();
         onAdditionalExportActionTwo.mockClear();
+        onDirectionChange.mockClear();
+        onHorizontalSpacingChange.mockClear();
+        onVerticalSpacingChange.mockClear();
     });
 
     type SetupOptions = {
@@ -87,6 +93,7 @@ describe('GraphControls', () => {
         isExploreTableSelected?: boolean;
         additionalExportActions?: readonly GraphExportAction[];
         route?: string;
+        layoutControls?: GraphLayoutControlOptions;
     };
 
     const setup = ({
@@ -99,6 +106,7 @@ describe('GraphControls', () => {
         isExploreTableSelected,
         additionalExportActions,
         route = '/',
+        layoutControls,
     }: SetupOptions = {}) => {
         const options = layoutOptionsOverride ?? layoutOptions;
         render(
@@ -117,6 +125,7 @@ describe('GraphControls', () => {
                 isExploreTableSelected={isExploreTableSelected}
                 additionalExportActions={additionalExportActions}
                 currentNodes={currentNodes}
+                layoutControls={layoutControls}
             />,
             { route }
         );
@@ -174,6 +183,56 @@ describe('GraphControls', () => {
 
             expect(layout).toHaveAttribute('aria-expanded', 'false');
             expect(layout).toHaveFocus();
+        });
+    });
+
+    describe('Graph layout controls', () => {
+        const layoutControls: GraphLayoutControlOptions = {
+            direction: 'right',
+            horizontalSpacing: 5,
+            onDirectionChange,
+            onHorizontalSpacingChange,
+            onVerticalSpacingChange,
+            verticalSpacing: 5,
+        };
+
+        it('changes direction through the direction icon menu', async () => {
+            const { user } = setup({ layoutControls });
+
+            await user.click(screen.getByRole('button', { name: 'Graph direction: Right' }));
+            await user.click(screen.getByRole('menuitemradio', { name: 'Down' }));
+
+            expect(onDirectionChange).toHaveBeenCalledWith('down');
+        });
+
+        it.each([
+            ['Horizontal', onHorizontalSpacingChange],
+            ['Vertical', onVerticalSpacingChange],
+        ] as const)('changes %s spacing through its icon menu', async (axis, onChange) => {
+            const { user } = setup({ layoutControls });
+
+            await user.click(screen.getByRole('button', { name: `${axis} spacing: 5` }));
+
+            const slider = screen.getByRole('slider', { name: `${axis} spacing` });
+            slider.focus();
+            await user.keyboard('{ArrowRight}');
+
+            expect(onChange).toHaveBeenCalledWith(6);
+        });
+
+        it('hides the direction menu but keeps spacing controls when direction is not provided', () => {
+            const spacingOnlyControls: GraphLayoutControlOptions = {
+                horizontalSpacing: 5,
+                onHorizontalSpacingChange,
+                onVerticalSpacingChange,
+                verticalSpacing: 5,
+            };
+
+            setup({ layoutControls: spacingOnlyControls });
+
+            expect(screen.queryByRole('button', { name: /Graph direction/ })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Horizontal spacing: 5' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Vertical spacing: 5' })).toBeInTheDocument();
         });
     });
 

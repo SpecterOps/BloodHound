@@ -15,15 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    faArrowDown,
+    faArrowLeft,
+    faArrowRight,
+    faArrowUp,
     faCropAlt,
     faDiagramProject,
     faDownload,
     faEye,
     faEyeSlash,
+    faLeftRight,
     faMagnifyingGlass,
+    faUpDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, MenuItem, Tooltip } from 'doodle-ui';
+// import { Slider } from '@mui/material';
+import { IconButton, MenuItem, Slider, Tooltip } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useRef, useState } from 'react';
@@ -40,6 +47,30 @@ export interface GraphExportAction {
     disabled?: boolean;
 }
 
+export const graphDirections = ['down', 'left', 'right', 'up'] as const;
+export type GraphDirection = (typeof graphDirections)[number];
+
+export interface GraphLayoutControlOptions {
+    direction?: GraphDirection;
+    horizontalSpacing: number;
+    onDirectionChange?: (direction: GraphDirection) => void;
+    onHorizontalSpacingChange: (spacing: number) => void;
+    onVerticalSpacingChange: (spacing: number) => void;
+    verticalSpacing: number;
+}
+
+export const defaultGraphSpacing = 5;
+export const maximumGraphSpacing = 10;
+export const minimumGraphSpacing = 0;
+export const getGraphSpacingScale = (spacing: number) => 0.5 + spacing * 0.1;
+
+const directionIcons = {
+    down: faArrowDown,
+    left: faArrowLeft,
+    right: faArrowRight,
+    up: faArrowUp,
+};
+
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
     onLayoutChange: (layout: T[number]) => void;
@@ -55,7 +86,62 @@ interface GraphControlsProps<T extends readonly string[]> {
     jsonData: Record<string, any> | undefined;
     currentNodes: Record<string, any> | undefined;
     additionalExportActions?: readonly GraphExportAction[];
+    layoutControls?: GraphLayoutControlOptions;
 }
+
+interface SpacingControlProps {
+    axis: 'Horizontal' | 'Vertical';
+    icon: typeof faLeftRight;
+    onChange: (spacing: number) => void;
+    value: number;
+}
+
+// doodle-ui version of SpacingControl (now active; no marks to match the MUI look):
+const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) => (
+    <GraphMenu label={`${axis} spacing: ${value}`} icon={icon}>
+        <div className='box-border w-56 px-5 py-3' data-testid={`explore_graph-${axis.toLowerCase()}-spacing-slider`}>
+            <Slider
+                thumbAriaLabel={`${axis} spacing`}
+                max={maximumGraphSpacing}
+                min={minimumGraphSpacing}
+                onValueChange={(nextValue) => {
+                    if (typeof nextValue === 'number') onChange(nextValue);
+                }}
+                step={1}
+                value={value}
+            />
+            <div className='flex justify-between text-xs'>
+                <span>Compact</span>
+                <span>Spacious</span>
+            </div>
+        </div>
+    </GraphMenu>
+);
+
+// MUI version of SpacingControl (commented out; using doodle-ui version above):
+// const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) => (
+//     <GraphMenu label={`${axis} spacing: ${value}`} icon={icon}>
+//         <div
+//             className='box-border w-56 px-5 pb-3 pt-8'
+//             data-testid={`explore_graph-${axis.toLowerCase()}-spacing-slider`}>
+//             <Slider
+//                 aria-label={`${axis} spacing`}
+//                 max={maximumGraphSpacing}
+//                 min={minimumGraphSpacing}
+//                 onChange={(_event, nextValue) => {
+//                     if (typeof nextValue === 'number') onChange(nextValue);
+//                 }}
+//                 step={1}
+//                 value={value}
+//                 valueLabelDisplay='auto'
+//             />
+//             <div className='flex justify-between text-xs'>
+//                 <span>Compact</span>
+//                 <span>Spacious</span>
+//             </div>
+//         </div>
+//     </GraphMenu>
+// );
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
     const {
@@ -73,6 +159,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         jsonData,
         currentNodes = {},
         additionalExportActions = [],
+        layoutControls,
     } = props;
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
@@ -178,6 +265,44 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         JSON
                     </MenuItem>
                 </GraphMenu>
+
+                {layoutControls?.direction && layoutControls.onDirectionChange && (
+                    <GraphMenu
+                        label={`Graph direction: ${capitalize(layoutControls.direction)}`}
+                        icon={directionIcons[layoutControls.direction]}>
+                        {graphDirections.map((direction) => {
+                            const isSelected = direction === layoutControls.direction;
+
+                            return (
+                                <MenuItem
+                                    aria-checked={isSelected}
+                                    className={cn({ '!bg-primary !text-white dark:!text-neutral-1': isSelected })}
+                                    key={direction}
+                                    onSelect={() => layoutControls.onDirectionChange?.(direction)}
+                                    role='menuitemradio'>
+                                    {capitalize(direction)}
+                                </MenuItem>
+                            );
+                        })}
+                    </GraphMenu>
+                )}
+
+                {layoutControls && (
+                    <>
+                        <SpacingControl
+                            axis='Horizontal'
+                            icon={faLeftRight}
+                            onChange={layoutControls.onHorizontalSpacingChange}
+                            value={layoutControls.horizontalSpacing}
+                        />
+                        <SpacingControl
+                            axis='Vertical'
+                            icon={faUpDown}
+                            onChange={layoutControls.onVerticalSpacingChange}
+                            value={layoutControls.verticalSpacing}
+                        />
+                    </>
+                )}
 
                 <Tooltip
                     tooltip='Search'
