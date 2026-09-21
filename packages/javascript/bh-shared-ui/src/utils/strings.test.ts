@@ -74,7 +74,14 @@ describe('safeParseJson', () => {
     test.each([
         ['a nested object', '{"metadata":{"version":1}}'],
         ['a nested array', '{"tags":["active"]}'],
-    ])('returns a flat-object error for %s', (_description, input) => {
-        expect(safeParseJson(input)).toBe('Must be a flat JSON object.  Nested values are not supported.');
+    ])('returns a flat-object error for %s by default', (_description, input) => {
+        expect(safeParseJson(input)).toBe('Must be a flat JSON object. Nested values are not supported.');
+    });
+
+    test.each([
+        ['a nested object', '{"metadata":{"version":1}}', { metadata: { version: 1 } }],
+        ['a nested array', '{"tags":["active"]}', { tags: ['active'] }],
+    ])('parses %s when flat is false', (_description, input, expected) => {
+        expect(safeParseJson(input, false)).toEqual(expected);
     });
 });

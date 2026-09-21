@@ -82,7 +82,7 @@ export function parseKeywordAndTypeValue(
  * @returns The parsed object, a descriptive error message for invalid JSON, arrays, or nested properties, or
  * `undefined` for other unsupported JSON values.
  */
-export const safeParseJson = (text: string): Record<string, unknown> | string | undefined => {
+export const safeParseJson = (text: string, flat: boolean = true): Record<string, unknown> | string | undefined => {
     try {
         const params: unknown = JSON.parse(text);
         if (Array.isArray(params)) {
@@ -90,8 +90,10 @@ export const safeParseJson = (text: string): Record<string, unknown> | string | 
         }
 
         if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
-            if (Object.values(params).some((value) => typeof value === 'object' && value !== null)) {
-                return 'Must be a flat JSON object. Nested values are not supported.';
+            if (flat) {
+                if (Object.values(params).some((value) => typeof value === 'object' && value !== null)) {
+                    return 'Must be a flat JSON object. Nested values are not supported.';
+                }
             }
 
             return params as Record<string, unknown>;
