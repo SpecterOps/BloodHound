@@ -62,7 +62,12 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 		for _, publishedCertTemplate := range publishedCertTemplates {
 
 			if valid, err := isCertTemplateValidForESC16(publishedCertTemplate); err != nil {
-				slog.WarnContext(ctx, "Error validating cert template for ADCSESC16", slog.Uint64("cert_template_id", uint64(publishedCertTemplate.ID)), attr.Error(err))
+				slog.WarnContext(
+					ctx,
+					"Error validating cert template for ADCSESC16",
+					slog.Uint64("cert_template_id", uint64(publishedCertTemplate.ID)),
+					attr.Error(err),
+				)
 				continue
 			} else if !valid {
 				continue
@@ -70,7 +75,11 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 				enrollers := CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
 
 				if filteredEnrollers, err := filterUserDNSResults(tx, enrollers, publishedCertTemplate); err != nil {
-					slog.WarnContext(ctx, "Error filtering users in ADCSESC16", attr.Error(err))
+					slog.WarnContext(
+						ctx,
+						"Error filtering users for ADCSESC16",
+						attr.Error(err),
+					)
 					continue
 				} else {
 					filteredEnrollers.Each(func(value uint64) bool {
