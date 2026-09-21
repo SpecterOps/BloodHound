@@ -332,6 +332,73 @@ class BHEAPIClient {
     getAssetGroupTags = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
+    getPrivilegeZoneBoundaryConfiguration = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<types.PrivilegeZoneBoundaryConfiguration>>(
+            '/api/v2/privilege-zone-boundaries/configuration',
+            options
+        );
+
+    splitPrivilegeZonesByEnvironment = (
+        environments: types.PrivilegeZoneEnvironment[],
+        dryRun: boolean,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.post<BasicResponse<types.PrivilegeZoneSplitResponse>>(
+            '/api/v2/privilege-zone-boundaries/environment-split',
+            { environments, dry_run: dryRun },
+            options
+        );
+
+    upsertPrivilegeZoneControlPolicy = (policy: types.PrivilegeZoneControlPolicyInput, options?: RequestOptions) =>
+        this.baseClient.put<BasicResponse<types.PrivilegeZoneControlPolicy>>(
+            '/api/v2/privilege-zone-boundaries/control-policies',
+            policy,
+            options
+        );
+
+    deletePrivilegeZoneControlPolicy = (policyId: number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/privilege-zone-boundaries/control-policies/${policyId}`, options);
+
+    upsertPrivilegeZoneLandscape = (landscape: types.PrivilegeZoneLandscapeInput, options?: RequestOptions) =>
+        this.baseClient.put<BasicResponse<types.PrivilegeZoneLandscape>>(
+            '/api/v2/privilege-zone-boundaries/landscapes',
+            landscape,
+            options
+        );
+
+    deletePrivilegeZoneLandscape = (landscapeId: number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/privilege-zone-boundaries/landscapes/${landscapeId}`, options);
+
+    startPrivilegeZoneExposureJob = (
+        scopeKind: types.PrivilegeZoneExposureScopeKind,
+        scopeId: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.post<BasicResponse<types.PrivilegeZoneExposureJob>>(
+            '/api/v2/privilege-zone-boundaries/exposure-jobs',
+            { scope_kind: scopeKind, scope_id: scopeId },
+            options
+        );
+
+    getPrivilegeZoneExposureJob = (jobId: number, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<types.PrivilegeZoneExposureJob>>(
+            `/api/v2/privilege-zone-boundaries/exposure-jobs/${jobId}`,
+            options
+        );
+
+    getLatestPrivilegeZoneExposureJob = (
+        scopeKind: types.PrivilegeZoneExposureScopeKind,
+        scopeId: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<BasicResponse<types.PrivilegeZoneExposureJob>>(
+            '/api/v2/privilege-zone-boundaries/exposure-jobs/latest',
+            {
+                ...options,
+                params: { ...options?.params, scope_kind: scopeKind, scope_id: scopeId },
+            }
+        );
+
     searchAssetGroupTags = (body: { query: string; tag_type: number }, options?: RequestOptions) =>
         this.baseClient.post<AssetGroupTagSearchResponse>(`/api/v2/asset-group-tags/search`, body, options);
 

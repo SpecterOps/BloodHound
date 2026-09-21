@@ -698,6 +698,15 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 
 // selectAssetGroupNodes - concurrently selects all nodes for all tags
 func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
+	tags, err := db.GetAssetGroupTagForSelection(ctx)
+	if err != nil {
+		return []error{err}
+	}
+
+	return selectAssetGroupNodesForTags(ctx, db, graphDb, tags)
+}
+
+func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, graphDb graph.Database, tags model.AssetGroupTags) []error {
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -710,9 +719,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 	// Due to concurrency, to keep track of errors, mutex is required
 	errs := newErrorsWithLock()
 
-	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
-		errs.Append(err)
-	} else if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
+	if primaryDisplayKinds, err := db.GetPrimaryDisplayKinds(ctx); err != nil {
 		errs.Append(err)
 	} else {
 		agtParameters := appcfg.GetAGTParameters(ctx, db)
@@ -790,6 +797,10 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
 func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]*graph.Node) error {
+	return tagAssetGroupNodesForTagWithFilter(ctx, db, graphDb, tag, exclusionSet, nodesToUpdate, nil)
+}
+
+func tagAssetGroupNodesForTagWithFilter(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, exclusionSet cardinality.Duplex[uint64], nodesToUpdate map[uint64]*graph.Node, includeNode func(model.AssetGroupTag, model.AssetGroupSelectorNode) bool) error {
 	if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
 		return err
 	} else {
@@ -822,6 +833,9 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 				// 3. Diff the sets filling the respective sets for later db updates
 				for _, nodeDb := range selectedNodes {
+					if includeNode != nil && !includeNode(tag, nodeDb) {
+						continue
+					}
 					if !exclusionSet.Contains(nodeDb.NodeId.Uint64()) {
 						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
 						if tag.RequireCertify.Bool && nodeDb.Certified <= model.AssetGroupCertificationRevoked {
@@ -905,6 +919,15 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 // tagAssetGroupNodes - tags all nodes for all tags
 func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) []error {
+	tags, err := db.GetAssetGroupTagForSelection(ctx)
+	if err != nil {
+		return []error{err}
+	}
+
+	return tagAssetGroupNodesForTags(ctx, db, graphDb, tags, nil)
+}
+
+func tagAssetGroupNodesForTags(ctx context.Context, db database.Database, graphDb graph.Database, tags model.AssetGroupTags, includeNode func(model.AssetGroupTag, model.AssetGroupSelectorNode) bool) []error {
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -916,9 +939,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 	errs := newErrorsWithLock()
 
-	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
-		errs.Append(err)
-	} else {
+	{
 		// Tiers are hierarchical and must be handled synchronously while labels can be tagged in parallel
 		var (
 			labelsOrOwned []model.AssetGroupTag
@@ -945,7 +966,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Fire off the label tagging
 		for _, tag := range labelsOrOwned {
-			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), nodesToUpdate); err != nil {
+			if err := tagAssetGroupNodesForTagWithFilter(ctx, db, graphDb, tag, cardinality.NewBitmap64(), nodesToUpdate, includeNode); err != nil {
 				errs.Append(err)
 			}
 		}
@@ -953,7 +974,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		// Process the tier tagging
 		for _, tier := range tiersOrdered {
 			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
-			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, nodesToUpdate); err != nil {
+			if err := tagAssetGroupNodesForTagWithFilter(ctx, db, graphDb, tier, nodesSeen, nodesToUpdate, includeNode); err != nil {
 				errs.Append(err)
 			}
 		}
@@ -1120,7 +1141,22 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 }
 
 // TODO Cleanup tieringEnabled after Tiering GA
+type AssetGroupTaggingOptions struct {
+	Tags        model.AssetGroupTags
+	IncludeNode func(tag model.AssetGroupTag, node model.AssetGroupSelectorNode) bool
+}
+
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database) []error {
+	return tagAssetGroupsAndTierZero(ctx, db, graphDb, nil)
+}
+
+// TagAssetGroupsAndTierZeroWithOptions provides a product-agnostic extension
+// point for callers that own an alternate tag set or node eligibility policy.
+func TagAssetGroupsAndTierZeroWithOptions(ctx context.Context, db database.Database, graphDb graph.Database, options AssetGroupTaggingOptions) []error {
+	return tagAssetGroupsAndTierZero(ctx, db, graphDb, &options)
+}
+
+func tagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, options *AssetGroupTaggingOptions) []error {
 	defer measure.ContextLogAndMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -1152,11 +1188,23 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			errs = append(errs, err)
 		}
 
-		if selectErrs := selectAssetGroupNodes(ctx, db, graphDb); len(selectErrs) > 0 {
+		var selectErrs []error
+		if options == nil {
+			selectErrs = selectAssetGroupNodes(ctx, db, graphDb)
+		} else {
+			selectErrs = selectAssetGroupNodesForTags(ctx, db, graphDb, options.Tags)
+		}
+		if len(selectErrs) > 0 {
 			errs = append(errs, selectErrs...)
 		}
 
-		if tagErrs := tagAssetGroupNodes(ctx, db, graphDb); len(tagErrs) > 0 {
+		var tagErrs []error
+		if options == nil {
+			tagErrs = tagAssetGroupNodes(ctx, db, graphDb)
+		} else {
+			tagErrs = tagAssetGroupNodesForTags(ctx, db, graphDb, options.Tags, options.IncludeNode)
+		}
+		if len(tagErrs) > 0 {
 			errs = append(errs, tagErrs...)
 		}
 	} else {

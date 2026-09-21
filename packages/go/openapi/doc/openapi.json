@@ -21055,6 +21055,537 @@
         }
       }
     },
+    "/api/v2/privilege-zone-boundaries/configuration": {
+      "get": {
+        "operationId": "GetPrivilegeZoneBoundaryConfiguration",
+        "summary": "Get environment-scoped privilege-zone configuration",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "zones",
+                        "permissions",
+                        "policies",
+                        "landscapes",
+                        "environments"
+                      ],
+                      "properties": {
+                        "zones": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone"
+                          }
+                        },
+                        "permissions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "source_zone_id",
+                              "target_zone_id",
+                              "allowed"
+                            ],
+                            "properties": {
+                              "source_zone_id": {
+                                "type": "integer"
+                              },
+                              "target_zone_id": {
+                                "type": "integer"
+                              },
+                              "allowed": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        },
+                        "policies": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-control-policy"
+                          }
+                        },
+                        "landscapes": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-landscape"
+                          }
+                        },
+                        "environments": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-environment"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/environment-split": {
+      "post": {
+        "operationId": "SplitPrivilegeZonesByEnvironment",
+        "summary": "Preview or create environment-scoped privilege zones",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "environments",
+                  "dry_run"
+                ],
+                "properties": {
+                  "environments": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/components/schemas/model.privilege-zone-environment"
+                    }
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dry-run plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Zones created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/control-policies": {
+      "put": {
+        "operationId": "UpsertPrivilegeZoneControlPolicy",
+        "summary": "Create or update a selector-based directional control policy",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.privilege-zone-control-policy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Policy created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/control-policies/{policy_id}": {
+      "delete": {
+        "operationId": "DeletePrivilegeZoneControlPolicy",
+        "summary": "Delete a selector-based directional control policy",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Policy deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/landscapes": {
+      "put": {
+        "operationId": "UpsertPrivilegeZoneLandscape",
+        "summary": "Create or update a privilege-zone landscape",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.privilege-zone-landscape"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Landscape updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Landscape created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/landscapes/{landscape_id}": {
+      "delete": {
+        "operationId": "DeletePrivilegeZoneLandscape",
+        "summary": "Delete a privilege-zone landscape",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "landscape_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Landscape deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/exposure-jobs": {
+      "post": {
+        "operationId": "StartPrivilegeZoneExposureJob",
+        "summary": "Start an on-demand privilege-zone exposure calculation",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "scope_kind",
+                  "scope_id"
+                ],
+                "properties": {
+                  "scope_kind": {
+                    "type": "string",
+                    "enum": [
+                      "landscape",
+                      "target_zone"
+                    ]
+                  },
+                  "scope_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Exposure job accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/exposure-jobs/latest": {
+      "get": {
+        "operationId": "GetLatestPrivilegeZoneExposureJob",
+        "summary": "Get the latest exposure calculation for a scope",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "scope_kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "landscape",
+                "target_zone"
+              ]
+            }
+          },
+          {
+            "name": "scope_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/exposure-jobs/{job_id}": {
+      "get": {
+        "operationId": "GetPrivilegeZoneExposureJob",
+        "summary": "Get a privilege-zone exposure job",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/posture-stats": {
       "parameters": [
         {
@@ -27940,6 +28471,329 @@
           }
         }
       },
+      "model.privilege-zone": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tag"
+          },
+          {
+            "type": "object",
+            "required": [
+              "environment_id",
+              "zone_tier",
+              "source_asset_group_tag_id"
+            ],
+            "properties": {
+              "environment_id": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "zone_tier": {
+                "type": "string",
+                "enum": [
+                  "tier_zero",
+                  "tier_one"
+                ]
+              },
+              "source_asset_group_tag_id": {
+                "$ref": "#/components/schemas/null.int32"
+              }
+            }
+          }
+        ]
+      },
+      "model.privilege-zone-control-policy-selector": {
+        "type": "object",
+        "properties": {
+          "zone_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "environment_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "landscape_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tier_zero",
+                "tier_one"
+              ]
+            }
+          }
+        }
+      },
+      "model.privilege-zone-pair-match": {
+        "type": "string",
+        "enum": [
+          "any",
+          "same",
+          "different"
+        ]
+      },
+      "model.privilege-zone-control-policy": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "enabled",
+          "source_selector",
+          "target_selector",
+          "constraints",
+          "effective_pair_count",
+          "excluded_pair_count"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "source_selector": {
+            "$ref": "#/components/schemas/model.privilege-zone-control-policy-selector"
+          },
+          "target_selector": {
+            "$ref": "#/components/schemas/model.privilege-zone-control-policy-selector"
+          },
+          "constraints": {
+            "type": "object",
+            "required": [
+              "environment",
+              "platform",
+              "landscape"
+            ],
+            "properties": {
+              "environment": {
+                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
+              },
+              "platform": {
+                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
+              },
+              "landscape": {
+                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
+              }
+            }
+          },
+          "effective_pair_count": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "excluded_pair_count": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "created_by": {
+            "type": "string",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_by": {
+            "type": "string",
+            "readOnly": true
+          }
+        }
+      },
+      "model.privilege-zone-environment": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "platform"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        }
+      },
+      "model.privilege-zone-landscape": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "environments"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "environments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.privilege-zone-environment"
+            }
+          }
+        }
+      },
+      "model.privilege-zone-exposure-job": {
+        "type": "object",
+        "required": [
+          "id",
+          "scope_kind",
+          "scope_id",
+          "status",
+          "input_fingerprint",
+          "created_at",
+          "created_by"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "scope_kind": {
+            "type": "string",
+            "enum": [
+              "landscape",
+              "target_zone"
+            ]
+          },
+          "scope_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "complete",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "input_fingerprint": {
+            "type": "string"
+          },
+          "error_message": {
+            "$ref": "#/components/schemas/null.string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "job_id",
+                "source_zone_id",
+                "target_zone_id",
+                "source_identity_total",
+                "direct_exposed_count",
+                "derived_exposed_count",
+                "direct_exposed_percentage",
+                "derived_exposed_percentage"
+              ],
+              "properties": {
+                "job_id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "source_zone_id": {
+                  "type": "integer"
+                },
+                "target_zone_id": {
+                  "type": "integer"
+                },
+                "source_identity_total": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "direct_exposed_count": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "derived_exposed_count": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "direct_exposed_percentage": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "derived_exposed_percentage": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          }
+        }
+      },
       "model.risk-posture-stat": {
         "allOf": [
           {
@@ -28620,6 +29474,7 @@
         "Attack Paths",
         "Risk Posture",
         "Asset Scores",
+        "Privilege Zone Boundaries",
         "Meta Entities",
         "Alerts"
       ]

@@ -20,11 +20,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"gorm.io/gorm"
 )
 
 const CustomNodeIconType = "font-awesome"
@@ -74,6 +77,14 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		return schemaExists, fmt.Errorf("failed to fetch existing findings: %w", err)
 	} else if _, err := reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
 		return schemaExists, fmt.Errorf("failed to reconcile findings: %w", err)
+	} else if tierTemplates, err := bloodhoundDBTransaction.GetOrderedAssetGroupTagTiers(ctx); err != nil {
+		return schemaExists, fmt.Errorf("failed to fetch privilege zone templates: %w", err)
+	} else if len(tierTemplates) == 0 {
+		return schemaExists, fmt.Errorf("failed to reconcile privilege zone rules: Tier Zero template not found")
+	} else if existingPZRules, err := bloodhoundDBTransaction.GetAssetGroupTagSelectorsByExtensionId(ctx, extension.ID); err != nil {
+		return schemaExists, fmt.Errorf("failed to fetch existing privilege zone rules: %w", err)
+	} else if _, err := reconcile(ctx, graphExtensionInput.PZRulesInput, existingPZRules, bloodhoundDBTransaction.pzRuleReconcileConfig(extension.ID, tierTemplates[0].ID)); err != nil {
+		return schemaExists, fmt.Errorf("failed to reconcile privilege zone rules: %w", err)
 	} else if existingSavedQueries, err := bloodhoundDBTransaction.GetSavedQueriesByExtensionID(ctx, extension.ID); err != nil {
 		return schemaExists, fmt.Errorf("failed to fetch existing saved queries: %w", err)
 	} else if _, err := reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
@@ -82,6 +93,87 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		return schemaExists, err
 	} else {
 		return schemaExists, nil
+	}
+}
+
+func (s *BloodhoundDB) pzRuleReconcileConfig(extensionID int32, tierZeroTagID int) reconcileConfig[model.PZRuleInput, model.AssetGroupTagSelector, string] {
+	toSelector := func(input model.PZRuleInput) model.AssetGroupTagSelector {
+		seeds := make([]model.SelectorSeed, 0, len(input.Seeds))
+		for _, seed := range input.Seeds {
+			seeds = append(seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
+		}
+
+		return model.AssetGroupTagSelector{
+			AssetGroupTagId: tierZeroTagID,
+			Name:            input.Name,
+			Description:     input.Description,
+			AutoCertify:     input.AutoCertify,
+			IsDefault:       true,
+			AllowDisable:    false,
+			RuleKey:         null.StringFrom(strings.TrimSpace(input.Name)),
+			ExtensionId:     null.Int32From(extensionID),
+			Seeds:           seeds,
+		}
+	}
+
+	return reconcileConfig[model.PZRuleInput, model.AssetGroupTagSelector, string]{
+		getInputKey: func(input model.PZRuleInput) string {
+			return strings.TrimSpace(input.Name)
+		},
+		getExistingKey: func(existing model.AssetGroupTagSelector) string {
+			return existing.RuleKey.ValueOrZero()
+		},
+		create: func(ctx context.Context, input model.PZRuleInput) (model.AssetGroupTagSelector, error) {
+			selector := toSelector(input)
+			selector.CreatedBy = model.AssetGroupActorOpenGraphExtensionManagement
+			selector.UpdatedBy = model.AssetGroupActorOpenGraphExtensionManagement
+			seeds := selector.Seeds
+			result := s.db.WithContext(ctx).Omit("Seeds").Create(&selector)
+			if result.Error != nil {
+				return model.AssetGroupTagSelector{}, CheckError(result)
+			}
+			insertedSeeds, err := insertSelectorSeeds(s.db.WithContext(ctx), selector.ID, seeds)
+			if err != nil {
+				return model.AssetGroupTagSelector{}, err
+			}
+			selector.Seeds = insertedSeeds
+			return selector, nil
+		},
+		update: func(ctx context.Context, existing model.AssetGroupTagSelector, input model.PZRuleInput) (model.AssetGroupTagSelector, error) {
+			selector := toSelector(input)
+			selector.ID = existing.ID
+			selector.CreatedAt = existing.CreatedAt
+			selector.CreatedBy = existing.CreatedBy
+			selector.UpdatedBy = model.AssetGroupActorOpenGraphExtensionManagement
+
+			result := s.db.WithContext(ctx).Model(&model.AssetGroupTagSelector{}).Where("id = ? AND extension_id = ?", existing.ID, extensionID).Updates(map[string]any{
+				"name":          selector.Name,
+				"description":   selector.Description,
+				"auto_certify":  selector.AutoCertify,
+				"is_default":    selector.IsDefault,
+				"allow_disable": selector.AllowDisable,
+				"updated_by":    selector.UpdatedBy,
+				"updated_at":    gorm.Expr("NOW()"),
+			})
+			if result.Error != nil {
+				return model.AssetGroupTagSelector{}, CheckError(result)
+			} else if result.RowsAffected == 0 {
+				return model.AssetGroupTagSelector{}, ErrNotFound
+			}
+			if result := s.db.WithContext(ctx).Where("selector_id = ?", selector.ID).Delete(&model.SelectorSeed{}); result.Error != nil {
+				return model.AssetGroupTagSelector{}, CheckError(result)
+			}
+			insertedSeeds, err := insertSelectorSeeds(s.db.WithContext(ctx), selector.ID, selector.Seeds)
+			if err != nil {
+				return model.AssetGroupTagSelector{}, err
+			}
+			selector.Seeds = insertedSeeds
+			return selector, nil
+		},
+		delete: func(ctx context.Context, existing model.AssetGroupTagSelector) error {
+			result := s.db.WithContext(ctx).Where("id = ? AND extension_id = ?", existing.ID, extensionID).Delete(&model.AssetGroupTagSelector{})
+			return CheckError(result)
+		},
 	}
 }
 

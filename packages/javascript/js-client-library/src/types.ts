@@ -166,6 +166,116 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     counts?: AssetGroupTagCounts;
 }
 
+export type PrivilegeZoneTier = 'tier_zero' | 'tier_one';
+
+export interface PrivilegeZone extends AssetGroupTag {
+    environment_id: string | null;
+    zone_tier: PrivilegeZoneTier;
+    source_asset_group_tag_id: number | null;
+}
+
+export interface PrivilegeZoneEnvironment {
+    id: string;
+    name: string;
+    platform: string;
+}
+
+export interface PrivilegeZoneControlPermission {
+    source_zone_id: number;
+    target_zone_id: number;
+    allowed: boolean;
+}
+
+export type PrivilegeZonePairMatch = 'any' | 'same' | 'different';
+
+export interface PrivilegeZoneControlPolicySelector {
+    zone_ids?: number[];
+    environment_ids?: string[];
+    landscape_ids?: number[];
+    platforms?: string[];
+    tiers?: PrivilegeZoneTier[];
+}
+
+export interface PrivilegeZoneControlPolicyConstraints {
+    environment: PrivilegeZonePairMatch;
+    platform: PrivilegeZonePairMatch;
+    landscape: PrivilegeZonePairMatch;
+}
+
+export interface PrivilegeZoneControlPolicy extends Created, Updated {
+    id: number;
+    name: string;
+    description: string;
+    enabled: boolean;
+    source_selector: PrivilegeZoneControlPolicySelector;
+    target_selector: PrivilegeZoneControlPolicySelector;
+    constraints: PrivilegeZoneControlPolicyConstraints;
+    effective_pair_count: number;
+    excluded_pair_count: number;
+}
+
+export type PrivilegeZoneControlPolicyInput = Pick<
+    PrivilegeZoneControlPolicy,
+    'id' | 'name' | 'description' | 'enabled' | 'source_selector' | 'target_selector' | 'constraints'
+>;
+
+export interface PrivilegeZoneLandscape extends Created, Updated {
+    id: number;
+    name: string;
+    description: string;
+    environments: PrivilegeZoneEnvironment[];
+}
+
+export type PrivilegeZoneLandscapeInput = Pick<PrivilegeZoneLandscape, 'id' | 'name' | 'description' | 'environments'>;
+
+export interface PrivilegeZoneBoundaryConfiguration {
+    zones: PrivilegeZone[];
+    permissions: PrivilegeZoneControlPermission[];
+    policies: PrivilegeZoneControlPolicy[];
+    landscapes: PrivilegeZoneLandscape[];
+    environments: PrivilegeZoneEnvironment[];
+}
+
+export interface PrivilegeZoneSplitPlanItem {
+    environment: PrivilegeZoneEnvironment;
+    template_id: number;
+    template: string;
+    name: string;
+    zone_tier: PrivilegeZoneTier;
+    exists: boolean;
+}
+
+export interface PrivilegeZoneSplitResponse {
+    plan: PrivilegeZoneSplitPlanItem[];
+    zones?: PrivilegeZone[];
+}
+
+export type PrivilegeZoneExposureScopeKind = 'landscape' | 'target_zone';
+export type PrivilegeZoneExposureJobStatus = 'pending' | 'running' | 'complete' | 'failed' | 'cancelled';
+
+export interface PrivilegeZoneExposure {
+    job_id: number;
+    source_zone_id: number;
+    target_zone_id: number;
+    source_identity_total: number;
+    direct_exposed_count: number;
+    derived_exposed_count: number;
+    direct_exposed_percentage: number;
+    derived_exposed_percentage: number;
+}
+
+export interface PrivilegeZoneExposureJob extends Created {
+    id: number;
+    scope_kind: PrivilegeZoneExposureScopeKind;
+    scope_id: string;
+    status: PrivilegeZoneExposureJobStatus;
+    input_fingerprint: string;
+    error_message: string | null;
+    started_at: string | null;
+    completed_at: string | null;
+    results?: PrivilegeZoneExposure[];
+}
+
 export const SeedTypeObjectId = 1 as const;
 export const SeedTypeCypher = 2 as const;
 

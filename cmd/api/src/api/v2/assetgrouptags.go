@@ -82,6 +82,10 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
+type assetGroupTagVisibilityFilter interface {
+	FilterVisibleAssetGroupTags(ctx context.Context, tags model.AssetGroupTags) (model.AssetGroupTags, error)
+}
+
 type assetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
 	AutoCertify *model.SelectorAutoCertifyMethod `json:"auto_certify"`
@@ -123,17 +127,25 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
+			visibleTags := tags
+			if visibilityFilter, ok := s.DB.(assetGroupTagVisibilityFilter); ok {
+				if visibleTags, err = visibilityFilter.FilterVisibleAssetGroupTags(rCtx, tags); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+
 			var (
 				resp = GetAssetGroupTagsResponse{
-					Tags: make([]AssetGroupTagView, 0, len(tags)),
+					Tags: make([]AssetGroupTagView, 0, len(visibleTags)),
 				}
-				assetGroupTagCountsMap = make(model.AssetGroupTagCountsMap, len(tags))
+				assetGroupTagCountsMap = make(model.AssetGroupTagCountsMap, len(visibleTags))
 			)
 
 			if paramIncludeCounts {
-				ids := make([]int, 0, len(tags))
-				for i := range tags {
-					ids = append(ids, tags[i].ID)
+				ids := make([]int, 0, len(visibleTags))
+				for i := range visibleTags {
+					ids = append(ids, visibleTags[i].ID)
 				}
 				if assetGroupTagCountsMap, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
@@ -141,7 +153,7 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 				}
 			}
 
-			for _, tag := range tags {
+			for _, tag := range visibleTags {
 				tview := AssetGroupTagView{AssetGroupTag: tag}
 				if paramIncludeCounts {
 					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {

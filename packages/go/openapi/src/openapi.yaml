@@ -198,6 +198,7 @@ x-tagGroups:
       - Attack Paths
       - Risk Posture
       - Asset Scores
+      - Privilege Zone Boundaries
       - Meta Entities
       - Alerts
 paths:
@@ -848,6 +849,26 @@ paths:
     $ref: './paths/attack-paths.domains.id.sparkline.yaml'
   /api/v2/attack-paths/{attack_path_id}/acceptance:
     $ref: './paths/attack-paths.attack-paths.id.acceptance.yaml'
+
+  # privilege-zone boundaries (feature gated)
+  /api/v2/privilege-zone-boundaries/configuration:
+    $ref: './paths/privilege-zone-boundaries.configuration.yaml'
+  /api/v2/privilege-zone-boundaries/environment-split:
+    $ref: './paths/privilege-zone-boundaries.environment-split.yaml'
+  /api/v2/privilege-zone-boundaries/control-policies:
+    $ref: './paths/privilege-zone-boundaries.control-policies.yaml'
+  /api/v2/privilege-zone-boundaries/control-policies/{policy_id}:
+    $ref: './paths/privilege-zone-boundaries.control-policies.id.yaml'
+  /api/v2/privilege-zone-boundaries/landscapes:
+    $ref: './paths/privilege-zone-boundaries.landscapes.yaml'
+  /api/v2/privilege-zone-boundaries/landscapes/{landscape_id}:
+    $ref: './paths/privilege-zone-boundaries.landscapes.id.yaml'
+  /api/v2/privilege-zone-boundaries/exposure-jobs:
+    $ref: './paths/privilege-zone-boundaries.exposure-jobs.yaml'
+  /api/v2/privilege-zone-boundaries/exposure-jobs/latest:
+    $ref: './paths/privilege-zone-boundaries.exposure-jobs.latest.yaml'
+  /api/v2/privilege-zone-boundaries/exposure-jobs/{job_id}:
+    $ref: './paths/privilege-zone-boundaries.exposure-jobs.id.yaml'
 
   # risk posture
   /api/v2/posture-stats:
