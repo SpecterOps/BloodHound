@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: string
-format: date-time
+pattern: '^((eq|neq|gt|gte|lt|lte):)?[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?([Zz]|-[0-9]{2}:[0-9]{2})$'
 description: |
   Filter results by column timestamp value formatted as an RFC-3339 string.
   Valid filter predicates are `eq`, `neq`, `gt`, `gte`, `lt`, `lte`.

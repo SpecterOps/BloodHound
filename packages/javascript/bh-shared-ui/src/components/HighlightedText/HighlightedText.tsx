@@ -14,12 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import React from 'react';
 
 const escapeSpecialCharacters = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 
-const HighlightedText: React.FC<{ text: string; search: string }> = ({ text, search }) => {
+const HighlightedText: React.FC<{ text: string; search: string | undefined }> = ({ text, search }) => {
+    if (!search) return <>{text}</>;
     const escapedSearch = escapeSpecialCharacters(search);
     const regex = new RegExp(`(.*?)(${escapedSearch})(.*)`, 'mi');
     const groups = text.match(regex);

@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -32,8 +31,6 @@ import (
 const (
 	CustomNodeKindParameter = "kind_name"
 )
-
-var validColorString = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
@@ -60,22 +57,16 @@ type CreateCustomNodeRequest struct {
 }
 
 func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeRequest) error {
+	if len(customNodeKindRequest.CustomTypes) == 0 {
+		return fmt.Errorf("custom_types must contain at least 1 entry")
+	}
+
 	for key, config := range customNodeKindRequest.CustomTypes {
 		if key == "" {
 			return fmt.Errorf("custom_types contains an entry with an empty string as a key. please remove or replace the empty key")
-		} else if err := validateConfig(config); err != nil {
+		} else if err := config.Validate(); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func validateConfig(config model.CustomNodeKindConfig) error {
-	if config.Icon.Type != "font-awesome" {
-		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
-	} else if !validColorString.MatchString(config.Icon.Color) && config.Icon.Color != "" {
-		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
 	}
 
 	return nil
@@ -93,6 +84,8 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); errors.Is(err, database.ErrDuplicateCustomNodeKindName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
 	} else if err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := s.Graph.RefreshKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusCreated, response)
@@ -132,8 +125,12 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if err := validateConfig(customNodeKindRequest.Config); err != nil {
+	} else if err := customNodeKindRequest.Config.Validate(); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
+	} else if existing, err := s.DB.GetCustomNodeKind(request.Context(), paramId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if existing.SchemaNodeKindId != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: kind name is owned by a schema extension", api.ErrorResponseConflict), request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: assignColorDefault(customNodeKindRequest.Config)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -142,13 +139,9 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 }
 
 func (s *Resources) DeleteCustomNodeKind(response http.ResponseWriter, request *http.Request) {
-	var (
-		paramId = mux.Vars(request)[CustomNodeKindParameter]
+	api.WriteErrorResponse(
+		request.Context(),
+		api.BuildErrorResponse(http.StatusGone, "This endpoint has been deprecated and is no longer available", request),
+		response,
 	)
-
-	if err := s.DB.DeleteCustomNodeKind(request.Context(), paramId); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusOK)
-	}
 }

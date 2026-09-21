@@ -43,20 +43,25 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
 	authz "github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/test/must"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -69,15 +74,15 @@ const (
 
 func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 	var (
-		currentPassword   = "currentPassword"
-		goodUser          = model.User{AuthSecret: defaultDigestAuthSecret(t, currentPassword), Unique: model.Unique{ID: must.NewUUIDv4()}}
-		otherUser         = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
-		badUser           = model.User{SSOProviderID: null.Int32From(1), Unique: model.Unique{ID: must.NewUUIDv4()}}
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		currentPassword      = "currentPassword"
+		goodUser             = model.User{AuthSecret: defaultDigestAuthSecret(t, currentPassword), Unique: model.Unique{ID: must.NewUUIDv4()}}
+		otherUser            = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
+		badUser              = model.User{SSOProviderID: null.Int32From(1), Unique: model.Unique{ID: must.NewUUIDv4()}}
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 	defer mockCtrl.Finish()
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = goodUser
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
@@ -170,8 +175,8 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 
 func TestManagementResource_EnableUserSAML(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 
 		adminUser  = model.User{Unique: model.Unique{ID: must.NewUUIDv4()}}
 		goodRoles  = []int32{0}
@@ -193,7 +198,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 		}
 	)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
@@ -298,8 +303,8 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 			},
 		}
 
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
 	defer mockCtrl.Finish()
@@ -335,640 +340,6 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 	})
 }
 
-func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "invalidColumn")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsNotSortable)
-	}
-}
-
-func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "invalidPredicate:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
-	}
-}
-
-func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
-	}
-}
-
-func TestManagementResource_ListPermissions_DBError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'foo'"}).Return(model.Permissions{}, fmt.Errorf("foo"))
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-authority")
-		q.Add("sort_by", "name")
-		q.Add("name", "eq:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	}
-}
-
-func TestManagementResource_ListPermissions(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-
-	perm1 := model.Permission{
-		Authority: "a",
-		Name:      "a",
-		Serial: model.Serial{
-			Basic: model.Basic{
-				CreatedAt: time.Time{},
-			},
-		},
-	}
-
-	perm2 := model.Permission{
-		Authority: "b",
-		Name:      "b",
-		Serial: model.Serial{
-			Basic: model.Basic{
-				CreatedAt: time.Time{},
-			},
-		},
-	}
-
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Permissions{perm1, perm2}, nil)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-authority")
-		q.Add("sort_by", "name")
-		q.Add("name", "eq:a")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-
-		require.Equal(t, perm1.Authority, respPermissions["data"].(map[string]any)["permissions"].([]any)[0].(map[string]any)["authority"])
-		require.Equal(t, perm2.Authority, respPermissions["data"].(map[string]any)["permissions"].([]any)[1].(map[string]any)["authority"])
-	}
-}
-func TestManagementResource_GetPermission(t *testing.T) {
-	t.Parallel()
-
-	type mock struct {
-		mockDatabase *mocks.MockDatabase
-	}
-	type expected struct {
-		responseBody   string
-		responseCode   int
-		responseHeader http.Header
-	}
-	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
-	}
-
-	tt := []testData{
-		{
-			name: "Error: Invalid permission ID format - Bad Request",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/permissions/invalid",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
-			},
-		},
-		{
-			name: "Error: Database Error GetPermission - Internal Server Error",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/permissions/123",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetPermission(gomock.Any(), 123).Return(model.Permission{}, errors.New("error"))
-			},
-			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			},
-		},
-		{
-			name: "Success: Permission found - OK",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/permissions/123",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				expectedPermission := model.Permission{
-					Authority: "read:users",
-					Name:      "Read Users",
-					Serial: model.Serial{
-						ID: 123,
-					},
-				}
-				mock.mockDatabase.EXPECT().GetPermission(gomock.Any(), 123).Return(expectedPermission, nil)
-			},
-			expected: expected{
-				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"authority":"read:users", "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "id":123, "name":"Read Users", "updated_at":"0001-01-01T00:00:00Z"}}`,
-			},
-		},
-	}
-
-	for _, testCase := range tt {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-
-			mocks := &mock{
-				mockDatabase: mocks.NewMockDatabase(ctrl),
-			}
-
-			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks)
-
-			response := httptest.NewRecorder()
-
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
-
-			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), resources.GetPermission).Methods(request.Method)
-			router.ServeHTTP(response, request)
-
-			status, header, body := test.ProcessResponse(t, response)
-
-			assert.Equal(t, testCase.expected.responseCode, status)
-			assert.Equal(t, testCase.expected.responseHeader, header)
-			assert.JSONEq(t, testCase.expected.responseBody, body)
-		})
-	}
-}
-
-func TestManagementResource_ListRoles_SortingError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "invalidColumn")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsNotSortable)
-	}
-}
-
-func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("foo", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), "column cannot be filtered")
-	}
-}
-
-func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "invalidPredicate:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
-	}
-}
-
-func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
-	}
-}
-
-func TestManagementResource_ListRoles_DBError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{}, fmt.Errorf("foo"))
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-description")
-		q.Add("sort_by", "name")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	}
-}
-
-func TestManagementResource_ListRoles(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-
-	role1 := model.Role{
-		Name:        "a",
-		Description: "a",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	role2 := model.Role{
-		Name:        "b",
-		Description: "b",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "description desc, name", model.SQLFilter{}).Return(model.Roles{role1, role2}, nil)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-description")
-		q.Add("sort_by", "name")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-
-		require.Equal(t, role1.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[0].(map[string]any)["name"])
-		require.Equal(t, role2.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[1].(map[string]any)["name"])
-	}
-}
-
-func TestManagementResource_ListRoles_Filtered(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/auth/roles"
-
-	role1 := model.Role{
-		Name:        "a",
-		Description: "a",
-		Permissions: nil,
-		Serial:      model.Serial{},
-	}
-
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllRoles(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Roles{role1}, nil)
-
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "eq:a")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListRoles).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-		require.Equal(t, role1.Name, respPermissions["data"].(map[string]any)["roles"].([]any)[0].(map[string]any)["name"])
-	}
-}
-
-func TestManagementResource_GetRole(t *testing.T) {
-	t.Parallel()
-
-	type mock struct {
-		mockDatabase *mocks.MockDatabase
-	}
-	type expected struct {
-		responseBody   string
-		responseCode   int
-		responseHeader http.Header
-	}
-	type testData struct {
-		name         string
-		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock)
-		expected     expected
-	}
-
-	tt := []testData{
-		{
-			name: "Error: Invalid role ID format - Bad Request",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/roles/invalid",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
-			},
-		},
-		{
-			name: "Error: Database Error GetRole - Internal Server Error",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/roles/123",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(123)).Return(model.Role{}, errors.New("error"))
-			},
-			expected: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			},
-		},
-		{
-			name: "Success: Role found - OK",
-			buildRequest: func() *http.Request {
-				return &http.Request{
-					URL: &url.URL{
-						Path: "/api/v2/roles/123",
-					},
-					Method: http.MethodGet,
-				}
-			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				permissionRead := model.Permission{
-					Authority: "read:users",
-					Name:      "Read Users",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}
-				permissionWrite := model.Permission{
-					Authority: "write:users",
-					Name:      "Write Users",
-					Serial: model.Serial{
-						ID: 2,
-					},
-				}
-
-				expectedRole := model.Role{
-					Name:        "Administrator",
-					Description: "System administrator role",
-					Permissions: model.Permissions{permissionRead, permissionWrite},
-					Serial: model.Serial{
-						ID: 123,
-					},
-				}
-				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(123)).Return(expectedRole, nil)
-			},
-			expected: expected{
-				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"System administrator role","id":123,"name":"Administrator","permissions":[{"authority":"read:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":1,"name":"Read Users","updated_at":"0001-01-01T00:00:00Z"},{"authority":"write:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":2,"name":"Write Users","updated_at":"0001-01-01T00:00:00Z"}],"updated_at":"0001-01-01T00:00:00Z"}}`,
-			},
-		},
-	}
-
-	for _, testCase := range tt {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-			ctrl := gomock.NewController(t)
-
-			mocks := &mock{
-				mockDatabase: mocks.NewMockDatabase(ctrl),
-			}
-
-			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks)
-
-			response := httptest.NewRecorder()
-
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
-
-			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), resources.GetRole).Methods(request.Method)
-			router.ServeHTTP(response, request)
-
-			status, header, body := test.ProcessResponse(t, response)
-
-			assert.Equal(t, testCase.expected.responseCode, status)
-			assert.Equal(t, testCase.expected.responseHeader, header)
-			assert.JSONEq(t, testCase.expected.responseBody, body)
-		})
-	}
-}
-
 func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -976,7 +347,7 @@ func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	endpoint := "/api/v2/auth/users/%s/secret"
 
 	badUserId := uuid.NullUUID{}
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(gomock.Any(), badUserId.UUID).Return(model.User{}, fmt.Errorf("db failure"))
 
@@ -1005,7 +376,7 @@ func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, tc.Input.UserId), nil); err != nil {
 			t.Fatal(err)
 		} else {
@@ -1042,12 +413,12 @@ func TestExpireUserAuthSecret_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(gomock.Any(), userId).Return(model.User{AuthSecret: &model.AuthSecret{}}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId), nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1065,9 +436,9 @@ func TestManagementResource_ListUsers_SortingError(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/users"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1092,9 +463,9 @@ func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/users"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1119,9 +490,9 @@ func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/users"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1146,9 +517,9 @@ func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) 
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/users"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1173,10 +544,10 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/users"
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{}).Return(model.Users{}, fmt.Errorf("foo"))
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1216,10 +587,10 @@ func TestManagementResource_ListUsers(t *testing.T) {
 		PrincipalName: "Jane",
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{}).Return(model.Users{user1, user2}, nil)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "first_name desc, last_name", model.SQLFilter{SQLString: "support_account = false"}).Return(model.Users{user1, user2}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1261,10 +632,19 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", model.SQLFilter{SQLString: "first_name = 'a'"}).Return(model.Users{user1}, nil)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetAllUsers(gomock.Any(), "", gomock.Cond(func(sqlFilter model.SQLFilter) bool {
+		if !assert.Contains(t, sqlFilter.SQLString, "first_name = E'a'") {
+			return false
+		}
+		if !assert.Contains(t, sqlFilter.SQLString, "support_account = false") {
+			return false
+		}
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		return true
+	})).Return(model.Users{user1}, nil)
+
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -1296,15 +676,16 @@ func TestCreateUser_Failure(t *testing.T) {
 	badRole := []int32{3}
 
 	badUser := model.User{
-		Roles:         model.Roles{},
-		PrincipalName: "Bad User",
-		FirstName:     null.StringFrom("bad"),
-		LastName:      null.StringFrom("bad"),
-		EmailAddress:  null.StringFrom("bad"),
-		EULAAccepted:  true,
+		Roles:           model.Roles{},
+		PrincipalName:   "Bad User",
+		FirstName:       null.StringFrom("bad"),
+		LastName:        null.StringFrom("bad"),
+		EmailAddress:    null.StringFrom("bad"),
+		EULAAccepted:    true,
+		AllEnvironments: true,
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1379,7 +760,7 @@ func TestCreateUser_Failure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload)); err != nil {
@@ -1419,7 +800,7 @@ func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
 
 	endpoint := "/api/v2/auth/users"
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
@@ -1429,7 +810,7 @@ func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
 	}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(model.User{}, database.ErrDuplicateEmail)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1464,7 +845,7 @@ func TestCreateUser_Success(t *testing.T) {
 	endpoint := "/api/v2/auth/users"
 	goodUser := model.User{PrincipalName: "good user"}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1474,7 +855,7 @@ func TestCreateUser_Success(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1502,6 +883,270 @@ func TestCreateUser_Success(t *testing.T) {
 	}
 }
 
+func TestCreateUser_ETAC(t *testing.T) {
+	endpoint := "/api/v2/auth/users"
+
+	tests := []struct {
+		name           string
+		goodUser       model.User
+		createReq      v2.CreateUserRequest
+		expectMocks    func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph)
+		expectedStatus int
+		returnedRoles  model.Roles
+		assertBody     func(t *testing.T, body string)
+	}{
+		{
+			name: "Success setting all_environments on user",
+			goodUser: model.User{
+				PrincipalName:   "good user",
+				AllEnvironments: true,
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal:                        "good user",
+					AllEnvironments:                  null.BoolFrom(true),
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, `"all_environments":true`)
+				assert.Contains(t, body, `"environment_targeted_access_control":null`)
+			},
+		},
+		{
+			name: "Success creating an etac list on new user",
+			goodUser: model.User{
+				PrincipalName: "good user",
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
+				},
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
+					},
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "54321"})},
+				}, nil)
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, `"environment_id":"12345"`)
+				assert.Contains(t, body, `"environment_id":"54321"`)
+				assert.Contains(t, body, `"all_environments":false`)
+			},
+		},
+		{
+			name: "Success when ETAC enabled and list omitted defaults to all environments",
+			goodUser: model.User{
+				PrincipalName:   "good user",
+				AllEnvironments: true,
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			},
+			expectedStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, `"all_environments":true`)
+			},
+		},
+		{
+			name: "Error setting etac for ineligible role",
+			goodUser: model.User{
+				PrincipalName: "good user",
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
+					},
+					Roles: []int32{1},
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			returnedRoles: []model.Role{
+				{
+					Name: authz.RoleAdministrator,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
+			},
+		},
+		{
+			name: "Error setting both environment list and all environments to true",
+			goodUser: model.User{
+				PrincipalName: "good user",
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
+				},
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
+					},
+					AllEnvironments: null.BoolFrom(true),
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACBadRequest)
+			},
+		},
+		{
+			name: "Error setting etac list on user when environment does not exist",
+			goodUser: model.User{
+				PrincipalName: "good user",
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+					{EnvironmentID: "12345"},
+					{EnvironmentID: "54321"},
+				},
+			},
+			createReq: v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{
+					Principal: "good user",
+					EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+						Environments: []v2.UpdateEnvironmentRequest{
+							{
+								EnvironmentID: "12345",
+							},
+							{
+								EnvironmentID: "54321",
+							},
+						},
+					},
+				},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
+				}, nil)
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, "environment not found: 54321")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			resources, mockDB, mockGraphDB := apitest.NewAuthManagementResource(mockCtrl)
+
+			// common mocks
+			mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+				Key: appcfg.PasswordExpirationWindow,
+				Value: must.NewJSONBObject(appcfg.PasswordExpiration{
+					Duration: appcfg.DefaultPasswordExpirationWindow,
+				}),
+			}, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(tc.returnedRoles, nil)
+
+			// case-specific mocks
+			tc.expectMocks(mockDB, tc.goodUser, mockGraphDB)
+
+			resources.DogTags = dogtags.NewTestService(dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			})
+
+			// request/response
+			ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+			payload, err := json.Marshal(tc.createReq)
+			require.NoError(t, err)
+
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+			require.NoError(t, err)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.CreateUser).Methods(http.MethodPost)
+
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+
+			require.Equal(t, tc.expectedStatus, rr.Code)
+			tc.assertBody(t, rr.Body.String())
+		})
+	}
+}
+
 func TestCreateUser_ResetPassword(t *testing.T) {
 	goodUser := model.User{
 		PrincipalName: "good user",
@@ -1517,7 +1162,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1551,7 +1196,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 
 	bhlog.ConfigureDefaultText(os.Stdout)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	payload, err := json.Marshal(input.Body)
 	require.Nil(t, err)
 
@@ -1590,7 +1235,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1600,7 +1245,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1653,7 +1298,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1664,7 +1309,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 	mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1717,7 +1362,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1729,7 +1374,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1773,12 +1418,12 @@ func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
 	goodUserID, err := uuid.NewV4()
 	require.Nil(t, err)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{EmailAddress: null.StringFrom("")}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(database.ErrDuplicateEmail)
 
-	reqCtx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	reqCtx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	payload, err := json.Marshal(v2.UpdateUserRequest{EmailAddress: "different"})
 	require.Nil(t, err)
@@ -1804,9 +1449,9 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		endpoint = "/api/v2/auth/users"
 		// logged in user has ID 00000000-0000-0000-0000-000000000000
 		// leaving ID blank here will make goodUser have the same ID, so this should fail
-		goodUser          = model.User{PrincipalName: "good user"}
-		isDisabled        = true
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		goodUser             = model.User{PrincipalName: "good user"}
+		isDisabled           = true
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
@@ -1829,7 +1474,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 		Serial: model.Serial{},
 	}}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -1886,13 +1531,13 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 				ID: 2,
 			},
 		}
-		badRoles          = []int32{2}
-		adminUser         = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		badRoles             = []int32{2}
+		adminUser            = model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	defer mockCtrl.Finish()
@@ -1950,7 +1595,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 
 	isDisabled := true
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -1972,7 +1617,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 	}}, nil)
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2031,7 +1676,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -2053,7 +1698,7 @@ func TestManagementResource_UpdateUser_DBError(t *testing.T) {
 	}}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2130,7 +1775,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`,
 			},
 		},
 		{
@@ -2187,7 +1832,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000001", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -2206,7 +1851,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), resources.GetUser).Methods(request.Method)
@@ -2261,8 +1906,8 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					},
 				}
 
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
+				userContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+				bhCtx := bhctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = user
 
 				return request.WithContext(userContext)
@@ -2270,7 +1915,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":"john.doe@example.com", "environment_targeted_access_control":null, "eula_accepted":false, "first_name":"John", "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":"Doe", "principal_name":"john.doe", "roles":[{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "description":"The big boy.", "id":0, "name":"Big Boy", "permissions":[], "updated_at":"0001-01-01T00:00:00Z"}], "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 		{
@@ -2283,8 +1928,8 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
+				userContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+				bhCtx := bhctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = model.User{}
 
 				return request.WithContext(userContext)
@@ -2292,7 +1937,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseBody:   `{"data":{"AuthSecret":null, "all_environments":false, "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "email_address":null, "environment_targeted_access_control":null, "eula_accepted":false, "first_name":null, "id":"00000000-0000-0000-0000-000000000000", "is_disabled":false, "last_login":"0001-01-01T00:00:00Z", "last_name":null, "principal_name":"", "roles":null, "sso_provider_id":null, "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -2303,7 +1948,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, &database.BloodhoundDB{}, authz.NewAuthorizer(&database.BloodhoundDB{}), api.NewAuthenticator(config.Configuration{}, &database.BloodhoundDB{}, nil))
+			resources := auth.NewManagementResource(config.Configuration{}, &database.BloodhoundDB{}, authz.NewAuthorizer(&database.BloodhoundDB{}), api.NewAuthenticator(config.Configuration{}, &database.BloodhoundDB{}, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(request.URL.Path, resources.GetSelf).Methods(request.Method)
@@ -2325,9 +1970,9 @@ func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
 	endpoint := "/api/v2/bloodhound-users"
 	userID := "badUserID"
 
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2351,10 +1996,10 @@ func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{}, database.ErrNotFound)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2379,14 +2024,14 @@ func TestManagementResource_DeleteUser_UserBhCtxNotFound(t *testing.T) {
 	userID, err := uuid.NewV4()
 	require.NoError(t, err)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{
 		Unique: model.Unique{
 			ID: userID,
 		},
 	}, nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
@@ -2420,14 +2065,14 @@ func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
 
 	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: userID}, Roles: model.Roles{adminRole}}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{
 		Unique: model.Unique{
 			ID: userID,
 		},
 	}, nil)
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
@@ -2453,10 +2098,10 @@ func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
 	userID, err := uuid.NewV4()
 	require.Nil(t, err)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(model.User{}, fmt.Errorf("foo"))
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
 	require.Nil(t, err)
 
@@ -2495,11 +2140,11 @@ func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
 
 	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(user, nil)
 	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(fmt.Errorf("foo"))
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
 	require.NoError(t, err)
@@ -2536,13 +2181,13 @@ func TestManagementResource_DeleteUser_Success(t *testing.T) {
 		},
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), userID).Return(user, nil)
 	mockDB.EXPECT().DeleteUser(gomock.Any(), user).Return(nil)
 
 	adminUser := model.User{AuthSecret: defaultDigestAuthSecret(t, "currentPassword"), Unique: model.Unique{ID: must.NewUUIDv4()}, Roles: model.Roles{adminRole}}
 
-	bhCtx := ctx.Get(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{}))
+	bhCtx := bhctx.Get(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{}))
 	bhCtx.AuthCtx.Owner = adminUser
 	req, err := http.NewRequestWithContext(bhCtx.ConstructGoContext(), "DELETE", endpoint, nil)
 	require.NoError(t, err)
@@ -2575,7 +2220,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 
 	isDisabled := true
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
 		Key: appcfg.PasswordExpirationWindow,
 		Value: must.NewJSONBObject(appcfg.PasswordExpiration{
@@ -2598,7 +2243,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, nil)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	input := v2.CreateUserRequest{
 		UpdateUserRequest: v2.UpdateUserRequest{
 			Principal: "good user",
@@ -2643,6 +2288,235 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 	handler := http.HandlerFunc(resources.UpdateUser)
 	handler.ServeHTTP(response, req)
 	require.Equal(t, http.StatusOK, response.Code)
+}
+
+func TestManagementResource_UpdateUser_ETAC(t *testing.T) {
+	endpoint := "/api/v2/auth/users"
+
+	type testCase struct {
+		name           string
+		setupUser      func(uuid.UUID) model.User
+		updateRequest  v2.UpdateUserRequest
+		expectedStatus int
+		returnedRoles  model.Roles
+		assertBody     func(t *testing.T, body string)
+		expectMocks    func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph)
+	}
+
+	isDisabled := true
+
+	tests := []testCase{
+		{
+			name: "Success updating a user to all environments",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:                       &isDisabled,
+				AllEnvironments:                  null.BoolFrom(true),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{},
+			},
+			expectedStatus: http.StatusOK,
+			assertBody:     func(t *testing.T, _ string) {},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "Success updating a user to specific environments",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(false),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+					},
+				},
+			},
+			expectedStatus: http.StatusOK,
+			assertBody:     func(t *testing.T, _ string) {},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
+				}, nil)
+				mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name: "Error when current role is Administrator and roles omitted",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+					Roles:         model.Roles{{Name: authz.RoleAdministrator}},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled: &isDisabled,
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+					},
+				},
+			},
+			returnedRoles:  nil,
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACInvalidRoles)
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {},
+		},
+		{
+			name: "Error attempting to set both all_environments true and set access to specific environments",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName:   "good user",
+					Unique:          model.Unique{ID: id},
+					AllEnvironments: true,
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(true),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+						{
+							EnvironmentID: "54321",
+						},
+					},
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, api.ErrorResponseETACBadRequest)
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				// no DeleteEnvironmentTargetedAccessControlForUser or UpdateUser expected here
+			},
+		},
+		{
+			name: "Error setting etac list on user when environment does not exist ",
+			setupUser: func(id uuid.UUID) model.User {
+				return model.User{
+					PrincipalName: "good user",
+					Unique:        model.Unique{ID: id},
+				}
+			},
+			updateRequest: v2.UpdateUserRequest{
+				IsDisabled:      &isDisabled,
+				AllEnvironments: null.BoolFrom(false),
+				EnvironmentTargetedAccessControl: &v2.UpdateUserETACRequest{
+					Environments: []v2.UpdateEnvironmentRequest{
+						{
+							EnvironmentID: "12345",
+						},
+						{
+							EnvironmentID: "54321",
+						},
+					},
+				},
+			},
+			expectedStatus: http.StatusBadRequest,
+			assertBody: func(t *testing.T, body string) {
+				assert.Contains(t, body, "environment not found: 54321")
+			},
+			expectMocks: func(mockDB *mocks.MockDatabase, goodUser model.User, mockGraphDB *mocks_graph.MockGraph) {
+				mockGraphDB.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{
+					{Properties: graph.AsProperties(map[string]any{common.ObjectID.String(): "12345"})},
+				}, nil)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			goodUserID, err := uuid.NewV4()
+			require.Nil(t, err)
+
+			goodUser := tc.setupUser(goodUserID)
+
+			resources, mockDB, mockGraphDB := apitest.NewAuthManagementResource(mockCtrl)
+
+			// common mocks
+			mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.PasswordExpirationWindow).Return(appcfg.Parameter{
+				Key: appcfg.PasswordExpirationWindow,
+				Value: must.NewJSONBObject(appcfg.PasswordExpiration{
+					Duration: appcfg.DefaultPasswordExpirationWindow,
+				}),
+			}, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(model.Roles{}, nil)
+			mockDB.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(goodUser, nil).AnyTimes()
+			mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(goodUser, nil)
+			mockDB.EXPECT().GetRoles(gomock.Any(), gomock.Any()).Return(tc.returnedRoles, nil)
+			mockDB.EXPECT().LookupActiveSessionsByUser(gomock.Any(), gomock.Any()).Return([]model.UserSession{}, nil)
+
+			// case-specific expectations
+			tc.expectMocks(mockDB, goodUser, mockGraphDB)
+
+			ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+
+			resources.DogTags = dogtags.NewTestService(dogtags.TestOverrides{
+				Bools: map[dogtags.BoolDogTag]bool{
+					dogtags.ETAC_ENABLED: true,
+				},
+			})
+
+			// create user first
+			createInput := v2.CreateUserRequest{
+				UpdateUserRequest: v2.UpdateUserRequest{Principal: "good user"},
+				SetUserSecretRequest: v2.SetUserSecretRequest{
+					Secret:             "abcDEF123456$$",
+					NeedsPasswordReset: true,
+				},
+			}
+			payload, err := json.Marshal(createInput)
+			require.Nil(t, err)
+			req, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(payload))
+			require.Nil(t, err)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.CreateUser).Methods("POST")
+			rr := httptest.NewRecorder()
+			router.ServeHTTP(rr, req)
+			require.Equal(t, rr.Code, http.StatusOK)
+
+			// update user
+			updatePayload, err := json.Marshal(tc.updateRequest)
+			require.Nil(t, err)
+			updateEndpoint := fmt.Sprintf("/api/v2/bloodhound-users/%v", goodUserID)
+			req, err = http.NewRequestWithContext(ctx, http.MethodPatch, updateEndpoint, bytes.NewReader(updatePayload))
+			require.Nil(t, err)
+			req = mux.SetURLVars(req, map[string]string{api.URIPathVariableUserID: goodUserID.String()})
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+			response := httptest.NewRecorder()
+			http.HandlerFunc(resources.UpdateUser).ServeHTTP(response, req)
+
+			require.Equal(t, tc.expectedStatus, response.Code)
+			tc.assertBody(t, response.Body.String())
+		})
+	}
 }
 
 func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
@@ -2695,13 +2569,13 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{authToken1, authToken2}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
 
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2728,9 +2602,9 @@ func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/tokens"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -2755,9 +2629,9 @@ func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) 
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/tokens"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -2782,9 +2656,9 @@ func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testin
 	defer mockCtrl.Finish()
 
 	endpoint := "/api/v2/auth/tokens"
-	resources, _ := apitest.NewAuthManagementResource(mockCtrl)
+	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
 		t.Fatal(err)
 	} else {
@@ -2818,14 +2692,14 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2928,8 +2802,8 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 	otherUser.AuthTokens = model.AuthTokens{otherUserToken}
 	allAuthTokens := model.AuthTokens{authToken1, authToken2, otherUserToken}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -2940,7 +2814,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{}).Return(allAuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
@@ -3055,14 +2929,14 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	user.AuthTokens = model.AuthTokens{authToken1, authToken2}
 	otherUser.AuthTokens = model.AuthTokens{otherUserToken}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3129,17 +3003,17 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 
 	user.AuthTokens = model.AuthTokens{authToken1}
 
-	c := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(c)
+	c := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(c)
 	bhCtx.AuthCtx.Owner = user
 	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
 	require.True(t, isUser)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	// The filters are stored in a map before parsing, which means we don't know what order the resulted SQLFilter will be in.
 	// Mock out both possibilities to catch both cases.
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a' and user_id = '" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "' and name = 'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = E'a' and user_id = E'" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "' and name = E'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3166,6 +3040,150 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
 		require.Nil(t, err)
 		require.Equal(t, authToken1.Name.String, respPermissions["data"].(map[string]any)["tokens"].([]any)[0].(map[string]any)["name"])
+	}
+}
+
+func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
+	var (
+		nonAdminUser = model.User{
+			PrincipalName: "User1",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		otherUser = model.User{
+			PrincipalName: "User2",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		adminUser = model.User{
+			PrincipalName: "User3",
+			Unique:        model.Unique{ID: must.NewUUIDv4()},
+		}
+		endpoint = "/api/v2/auth/tokens"
+	)
+
+	testCases := []struct {
+		name           string
+		userIDParam    string
+		isUserAdmin    bool
+		mockSetup      func(t *testing.T, mockDB *mocks.MockDatabase)
+		expectedStatus int
+	}{
+		{
+			name:           "Failure: non-admin eq filtering by foreign user_id returns 403",
+			userIDParam:    "eq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by foreign user_id returns 403",
+			userIDParam:    "neq:" + otherUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "Failure: non-admin neq filtering by own user_id returns 403",
+			userIDParam:    "neq:" + nonAdminUser.ID.String(),
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:        "Success: non-admin eq filtering by own user_id is normalized to derive user_id from context",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Failure: non-admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    false,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "Success: non-admin filtering by uppercase UUID is normalized",
+			userIDParam: "eq:" + strings.ToUpper(nonAdminUser.ID.String()),
+			isUserAdmin: false,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Failure: admin filtering by invalid UUID returns 400",
+			userIDParam:    "eq:bad-uuid",
+			isUserAdmin:    true,
+			mockSetup:      func(t *testing.T, mockDatabase *mocks.MockDatabase) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "Success: admin eq filtering by foreign user_id succeeds",
+			userIDParam: "eq:" + nonAdminUser.ID.String(),
+			isUserAdmin: true,
+			mockSetup: func(t *testing.T, mockDatabase *mocks.MockDatabase) {
+				mockDatabase.EXPECT().GetAllAuthTokens(
+					gomock.Any(),
+					"",
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
+				).Return(model.AuthTokens{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockCtrl             = gomock.NewController(t)
+				resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+			)
+			defer mockCtrl.Finish()
+
+			tt.mockSetup(t, mockDB)
+
+			requestContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+			bhCtx := bhctx.Get(requestContext)
+			bhCtx.AuthCtx.Owner = nonAdminUser
+			if tt.isUserAdmin {
+				bhCtx.AuthCtx.Owner = adminUser
+				bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+					Enabled: true,
+					Permissions: model.Permissions{
+						authz.Permissions().AuthManageUsers,
+					},
+				}
+			}
+			_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+			require.True(t, isUser)
+
+			req, err := http.NewRequestWithContext(requestContext, http.MethodGet, endpoint, nil)
+			require.NoError(t, err)
+
+			queryParams := url.Values{}
+			queryParams.Add("user_id", tt.userIDParam)
+			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+			req.URL.RawQuery = queryParams.Encode()
+
+			router := mux.NewRouter()
+			router.HandleFunc(endpoint, resources.ListAuthTokens).Methods(http.MethodGet)
+
+			responseRecorder := httptest.NewRecorder()
+			router.ServeHTTP(responseRecorder, req)
+
+			require.Equal(t, tt.expectedStatus, responseRecorder.Code)
+		})
 	}
 }
 
@@ -3216,6 +3234,27 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 	}
 	tt := []testData{
 		{
+			name: "Error: API Keys are disabled - Forbidden Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/tokens",
+					},
+					Method: http.MethodPost,
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: appcfg.APITokensParameter{Enabled: false},
+				}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"API key creation is disabled"}]}`,
+			},
+		},
+		{
 			name: "Error: GetUserFromAuthCtx unable to get user from ctx - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -3225,7 +3264,11 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3245,13 +3288,17 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
 				}))
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3271,13 +3318,17 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
 				}))
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -3298,7 +3349,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -3306,6 +3357,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3327,7 +3381,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"1"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 					},
@@ -3335,6 +3389,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusForbidden,
@@ -3356,7 +3413,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -3370,6 +3427,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3391,7 +3451,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Roles: model.Roles{
@@ -3412,6 +3472,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
 				mock.mockDatabase.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3433,7 +3496,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Roles: model.Roles{
@@ -3460,6 +3523,8 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 					Key:        "key",
 					HmacMethod: "hmac-sha2-256",
 					LastAccess: time.Time{},
+					ExpiresAt:  sql.NullTime{},
+					CreatedBy:  uuid.NullUUID{},
 					Unique: model.Unique{
 						ID: uuid.FromStringOrNil("id"),
 						Basic: model.Basic{
@@ -3469,11 +3534,81 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 						},
 					},
 				}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null}}`,
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","created_by":null,"deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
+			},
+		},
+		{
+			name: "Success: created_by is set correctly in the response - OK",
+			buildRequest: func() *http.Request {
+				var (
+					header  = http.Header{}
+					request = &http.Request{
+						URL: &url.URL{
+							Path: "/api/v2/tokens",
+						},
+						Method: http.MethodPost,
+						Header: header,
+						Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+					}
+				)
+
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+								},
+							},
+						},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth", "ManageUsers"),
+							},
+						},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				createdByID := uuid.FromStringOrNil("00000000-0000-0000-0000-000000000001")
+
+				mock.mockDatabase.EXPECT().GetUser(gomock.Any(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{
+					UserID:     uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					ClientID:   uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					Name:       null.StringFrom("name"),
+					Key:        "key",
+					HmacMethod: "hmac-sha2-256",
+					LastAccess: time.Time{},
+					ExpiresAt:  sql.NullTime{},
+					CreatedBy:  uuid.NullUUID{UUID: createdByID, Valid: true},
+					Unique: model.Unique{
+						ID: uuid.FromStringOrNil("id"),
+						Basic: model.Basic{
+							CreatedAt: time.Time{},
+							UpdatedAt: time.Time{},
+							DeletedAt: sql.NullTime{},
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.APITokens).Return(appcfg.Parameter{Key: appcfg.APITokens, Value: types.JSONBObject{
+					Object: &appcfg.APITokensParameter{Enabled: true},
+				}}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","created_by":"00000000-0000-0000-0000-000000000001","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null,"expires_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`,
 			},
 		},
 	}
@@ -3492,7 +3627,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc("/api/v2/tokens", resources.CreateAuthToken).Methods(request.Method)
@@ -3533,7 +3668,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Method: http.MethodPost,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3555,7 +3690,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3563,7 +3698,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`,
 			},
 		},
 		{
@@ -3580,7 +3715,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3605,7 +3740,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3631,7 +3766,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3658,7 +3793,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3693,7 +3828,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3731,7 +3866,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3773,7 +3908,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					Body:   io.NopCloser(bytes.NewReader(mfaBytes)),
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3817,7 +3952,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3863,7 +3998,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					PostForm: url.Values{},
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					Host: request.URL,
 				}))
 			},
@@ -3908,7 +4043,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 				Crypto: config.CryptoConfiguration{
 					Argon2: config.Argon2Configuration{},
 				},
-			}, mocks.mockDatabase, nil))
+			}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa", api.URIPathVariableUserID), resources.EnrollMFA).Methods(request.Method)
@@ -3982,7 +4117,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 	missingUserId := test.NewUUIDv4(t)
 	userId := test.NewUUIDv4(t)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), missingUserId).Return(model.User{}, database.ErrNotFound)
 
 	type Input struct {
@@ -4017,7 +4152,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -4033,7 +4168,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	endpoint := "/api/v2/auth/users/%s/mfa"
 	userId := test.NewUUIDv4(t)
@@ -4043,7 +4178,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 
 	input := auth.MFAEnrollmentRequest{"password"}
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	if payload, err := json.Marshal(input); err != nil {
 		t.Fatal(err)
 	} else if req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf(endpoint, userId.String()), bytes.NewReader(payload)); err != nil {
@@ -4073,7 +4208,7 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
 	}
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	endpoint := "/api/v2/auth/users/%s/mfa"
 	nonAdminId := test.NewUUIDv4(t)
@@ -4081,8 +4216,8 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(adminContext)
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
 	bhCtx.AuthCtx.Owner = admin
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -4111,11 +4246,67 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 	}
 }
 
+func TestDisenrollMFA_Admin_SuccessNoPasswordSSO(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
+
+	endpoint := "/api/v2/auth/users/%s/mfa"
+
+	admin := model.User{
+		FirstName:     null.String{NullString: sql.NullString{String: "Admin", Valid: true}},
+		LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+		EmailAddress:  null.String{NullString: sql.NullString{String: "admin@gmail.com", Valid: true}},
+		PrincipalName: "AdminUser",
+		SSOProviderID: null.Int32{
+			NullInt32: sql.NullInt32{
+				Int32: 9,
+				Valid: true,
+			},
+		},
+	}
+
+	nonAdminId := test.NewUUIDv4(t)
+
+	mockDB.EXPECT().GetUser(gomock.Any(), nonAdminId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password"), Unique: model.Unique{ID: nonAdminId}}, nil).AnyTimes()
+	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
+
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
+	bhCtx.AuthCtx.Owner = admin
+	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
+		Enabled: true,
+		Permissions: model.Permissions{
+			authz.Permissions().AuthManageUsers,
+		},
+	}
+	_, isUser := authz.GetUserFromAuthCtx(bhCtx.AuthCtx)
+	require.True(t, isUser)
+
+	input := auth.MFAEnrollmentRequest{}
+	if payload, err := json.Marshal(input); err != nil {
+		t.Fatal(err)
+	} else if req, err := http.NewRequestWithContext(adminContext, "DELETE", fmt.Sprintf(endpoint, nonAdminId.String()), bytes.NewReader(payload)); err != nil {
+		t.Fatal(err)
+	} else {
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		router := mux.NewRouter()
+		router.HandleFunc(fmt.Sprintf(endpoint, "{user_id}"), resources.DisenrollMFA).Methods("DELETE")
+
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+
+		require.Equal(t, http.StatusOK, rr.Code)
+		require.Contains(t, rr.Body.String(), auth.MFADeactivated)
+	}
+}
+
 func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	endpoint := "/api/v2/auth/users/%s/mfa"
 	nonAdminId := test.NewUUIDv4(t)
@@ -4130,8 +4321,8 @@ func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 		AuthSecret:    defaultDigestAuthSecret(t, "adminpassword"),
 	}
 
-	adminContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-	bhCtx := ctx.Get(adminContext)
+	adminContext := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
+	bhCtx := bhctx.Get(adminContext)
 	bhCtx.AuthCtx.Owner = admin
 	bhCtx.AuthCtx.PermissionOverrides = authz.PermissionOverrides{
 		Enabled: true,
@@ -4171,7 +4362,7 @@ func TestGetMFAActivationStatus_Failure(t *testing.T) {
 
 	missingId := test.NewUUIDv4(t)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	mockDB.EXPECT().GetUser(gomock.Any(), missingId).Return(model.User{}, database.ErrNotFound)
 
 	type Input struct {
@@ -4199,7 +4390,7 @@ func TestGetMFAActivationStatus_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -4221,7 +4412,7 @@ func TestGetMFAActivationStatus_Success(t *testing.T) {
 	pendingId := test.NewUUIDv4(t)
 	deactivatedId := test.NewUUIDv4(t)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(gomock.Any(), activatedId).Return(model.User{AuthSecret: &model.AuthSecret{TOTPActivated: true, TOTPSecret: "imasharedsecret"}}, nil)
 	mockDB.EXPECT().GetUser(gomock.Any(), pendingId).Return(model.User{AuthSecret: &model.AuthSecret{TOTPActivated: false, TOTPSecret: "imasharedsecret"}}, nil)
@@ -4260,7 +4451,7 @@ func TestGetMFAActivationStatus_Success(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -4286,7 +4477,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 	missingUserId := test.NewUUIDv4(t)
 	unenrolledId := test.NewUUIDv4(t)
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 
 	mockDB.EXPECT().GetUser(gomock.Any(), missingUserId).Return(model.User{}, database.ErrNotFound)
 	mockDB.EXPECT().GetUser(gomock.Any(), unenrolledId).Return(model.User{AuthSecret: defaultDigestAuthSecret(t, "password")}, nil)
@@ -4330,7 +4521,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 		if payload, err := json.Marshal(tc.Input.Body); err != nil {
 			t.Fatal(err)
 		} else if req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf(endpoint, tc.Input.UserId), bytes.NewReader(payload)); err != nil {
@@ -4347,7 +4538,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	totpSecret, err := authz.GenerateTOTPSecret("https://example.com", "foo@bar.baz")
 	if err != nil {
 		t.Fatal(err)
@@ -4362,7 +4553,7 @@ func TestActivateMFA_Success(t *testing.T) {
 	mockDB.EXPECT().GetUser(gomock.Any(), userId).Return(model.User{AuthSecret: defaultDigestAuthSecretWithTOTP(t, "password", totpSecret.Secret())}, nil)
 	mockDB.EXPECT().UpdateAuthSecret(gomock.Any(), gomock.Any()).Return(nil)
 
-	ctx := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
 	inputBody := auth.MFAActivationRequest{passcode}
 	if payload, err := json.Marshal(inputBody); err != nil {
 		t.Fatal(err)
@@ -4427,7 +4618,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -4444,7 +4635,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed"}]}`,
 			},
 		},
 		{
@@ -4457,7 +4648,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -4489,7 +4680,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{},
 						PermissionOverrides: authz.PermissionOverrides{
@@ -4522,7 +4713,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{
@@ -4564,7 +4755,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{
@@ -4613,7 +4804,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					Method: http.MethodDelete,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{
 					AuthCtx: authz.Context{
 						Owner: model.User{
 							Unique: model.Unique{
@@ -4667,7 +4858,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 
 			router := mux.NewRouter()
 			router.HandleFunc(fmt.Sprintf("/api/v2/tokens/{%s}", api.URIPathVariableTokenID), resources.DeleteAuthToken).Methods(request.Method)

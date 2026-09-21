@@ -19,24 +19,24 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 Certified Pre-Owned
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href=' https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7'>
                 Certipy 4.0
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
                 Domain Escalation Edit Attributes
             </Link>

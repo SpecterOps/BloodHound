@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DeepPartial, apiClient, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { DeepPartial, apiClient } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import App, { Inner } from 'src/App';
@@ -47,9 +47,12 @@ const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: createAuthStateWithPermissions(Object.values(Permissions)).user,
+                data: [],
             })
         );
+    }),
+    rest.get('/api/v2/file-upload/accepted-types', async (_, res, ctx) => {
+        return res(ctx.status(200));
     })
 );
 

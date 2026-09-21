@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Grid, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { FC } from 'react';
 import NodeIcon from '../NodeIcon';
 import { AssetGroupChangelogEntry } from './types';
@@ -44,7 +44,7 @@ const AssetGroupChangelogTable: FC<{
             <Box mt={1}>
                 <Grid container direction='row' justifyContent='flex-end' spacing={1}>
                     <Grid item>
-                        <Button variant='tertiary' size='small' onClick={onCancel}>
+                        <Button variant='secondary' size='small' onClick={onCancel}>
                             Cancel
                         </Button>
                     </Grid>

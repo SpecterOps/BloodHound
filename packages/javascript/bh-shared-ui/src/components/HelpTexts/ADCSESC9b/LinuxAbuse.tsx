@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
-import { useHelpTextStyles } from '../utils';
+import { hasChildCodeElementsClasses } from '../utils';
 
 const LinuxAbuse: FC = () => {
-    const classes = useHelpTextStyles();
     const step1 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 1: </b>Remove SPNs including <code>dNSHostName</code> on victim.
                 <br />
                 <br />
@@ -40,7 +40,7 @@ const LinuxAbuse: FC = () => {
 
     const step2 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 2: </b>Set <code>dNSHostName</code> of victim computer to targeted computer's{' '}
                 <code>dNSHostName</code>.
                 <br />
@@ -57,7 +57,7 @@ const LinuxAbuse: FC = () => {
 
     const step3 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 3: </b>Check if <code>mail</code> attribute of victim must be set and set it if required.
                 <br />
                 <br />
@@ -99,7 +99,10 @@ const LinuxAbuse: FC = () => {
             <br />
             There are several options for this step. You can obtain a session as SYSTEM on the host, which allows you to
             interact with AD as the computer account, by abusing control over the computer AD object (see{' '}
-            <Link target='blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/generic-all'>
+            <Link
+                target='blank'
+                rel='noopener noreferrer'
+                href='https://bloodhound.specterops.io/resources/edges/generic-all'>
                 GenericAll edge documentation
             </Link>
             )
@@ -126,7 +129,7 @@ const LinuxAbuse: FC = () => {
 
     const step6 = (
         <>
-            <Typography variant='body2' className={classes.containsCodeEl}>
+            <Typography variant='body2' className={hasChildCodeElementsClasses}>
                 <b>Step 6 (Optional): </b>Set <code>dNSHostName</code> and SPN of victim to the previous values.
                 <br />
                 <br />

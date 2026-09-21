@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/drivers/neo4j"
 )
 
@@ -42,12 +43,23 @@ const (
 	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
 	PruneTTL                 ParameterKey = "prune.ttl"
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
+	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
+	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
-	// The below keys are not intended to be user updateable, so should not be added to IsValidKey
-	ScheduledAnalysis          ParameterKey = "analysis.scheduled"
-	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
-	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
-	TierManagementParameterKey ParameterKey = "analysis.tiering"
+	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
+	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
+	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
+	TierManagementParameterKey          ParameterKey = "analysis.tiering"
+	AGTParameterKey                     ParameterKey = "analysis.tagging"
+	StaleClientUpdatedLogicKey          ParameterKey = "pipeline.updated_stale_client"
+	RetainIngestedFilesKey              ParameterKey = "analysis.retain_ingest_files"
+	APITokens                           ParameterKey = "auth.api_tokens"
+	TimeoutLimit                        ParameterKey = "api.timeout_limit"
+	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
+	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
+	GraphStorageOptimizationKey         ParameterKey = "analysis.graph_storage_optimization"
+	CustomSubClaimKey                   ParameterKey = "auth.custom_sub_claim_key"
 )
 
 const (
@@ -58,8 +70,10 @@ const (
 	DefaultPruneBaseTTL           = time.Hour * 24 * 7
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
 
-	DefaultTierLimit  = 1
-	DefaultLabelLimit = 0
+	MaxDawgsWorkerLimit         = 6 // This is the maximum analysis parallel workers during tagging
+	DefaultDawgsWorkerLimit     = 2 // This is the parallel workers during tagging
+	DefaultExpansionWorkerLimit = 3 // This is the size of the expansion worker pool during tagging
+	DefaultSelectorWorkerLimit  = 7 // This is the size of the selector worker pool during tagging
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -80,9 +94,11 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
 		return true
 	default:
 		return false
@@ -90,9 +106,11 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 }
 
 // IsProtectedKey These keys should not be updatable by users
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey, CustomSubClaimKey:
 		return true
 	default:
 		return false
@@ -133,6 +151,26 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &FedEULACustomTextParameter{}
 	case SessionTTLHours:
 		v = &SessionTTLHoursParameter{}
+	case StaleClientUpdatedLogicKey:
+		v = &StaleClientUpdatedLogic{}
+	case AGTParameterKey:
+		v = &AGTParameters{}
+	case APITokens:
+		v = &APITokensParameter{}
+	case TimeoutLimit:
+		v = &TimeoutLimitParameter{}
+	case EnvironmentTargetedAccessControlKey:
+		v = &EnvironmentTargetedAccessControlParameters{}
+	case SupportAccountProvisioningKey:
+		v = &SupportAccountProvisioningParameters{}
+	case ClientMetricsKey:
+		v = &ClientMetricsParameter{}
+	case APITokenExpiration:
+		v = &APITokenExpirationParameter{}
+	case GraphStorageOptimizationKey:
+		v = &GraphStorageOptimizationParameter{}
+	case CustomSubClaimKey:
+		v = &CustomSubClaimKeyParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -211,17 +249,18 @@ func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
 
 		return nil
 	}
-
 }
 
 func GetPasswordExpiration(ctx context.Context, service ParameterService) time.Duration {
 	var expiration PasswordExpiration
 
 	if cfg, err := service.GetConfigurationParameter(ctx, PasswordExpirationWindow); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch password expiratio configuration; returning default values")
+		slog.WarnContext(ctx, "Failed to fetch password expiration configuration; returning default values")
 		return DefaultPasswordExpirationWindow
 	} else if err := cfg.Map(&expiration); err != nil {
-		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid password expiration configuration supplied; returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(PasswordExpirationWindow)))
 		return DefaultPasswordExpirationWindow
 	}
 
@@ -236,7 +275,7 @@ type Neo4jParameters struct {
 }
 
 func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
-	var result = Neo4jParameters{
+	result := Neo4jParameters{
 		WriteFlushSize: neo4j.DefaultWriteFlushSize,
 		BatchWriteSize: neo4j.DefaultBatchWriteSize,
 	}
@@ -244,7 +283,9 @@ func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jPara
 	if neo4jParametersCfg, err := service.GetConfigurationParameter(ctx, Neo4jConfigs); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch neo4j configuration; returning default values")
 	} else if err = neo4jParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid neo4j configuration supplied; returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(Neo4jConfigs)))
 	}
 
 	return result
@@ -262,7 +303,9 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 	if cfg, err := service.GetConfigurationParameter(ctx, CitrixRDPSupportKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
+		slog.WarnContext(ctx, "Invalid CitrixRDPSupport configuration supplied, returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(CitrixRDPSupportKey)))
 	}
 
 	return result.Enabled
@@ -293,7 +336,6 @@ func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
 		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
 			return errors.New("missing or invalid has_session_edge_ttl")
 		} else {
-
 			s.HasSessionEdgeTTL = duration.ToDuration()
 		}
 
@@ -310,7 +352,9 @@ func GetPruneTTLParameters(ctx context.Context, service ParameterService) PruneT
 	if pruneTTLParametersCfg, err := service.GetConfigurationParameter(ctx, PruneTTL); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch prune TTL configuration; returning default values")
 	} else if err = pruneTTLParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid prune TTL configuration supplied; returning default values %+v", err))
+		slog.WarnContext(ctx, "Invalid prune TTL configuration supplied; returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(PruneTTL)))
 	}
 
 	return result
@@ -328,7 +372,9 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 	if cfg, err := service.GetConfigurationParameter(ctx, ReconciliationKey); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch reconciliation configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid reconciliation configuration supplied, %v. returning default values.", err))
+		slog.WarnContext(ctx, "Invalid reconciliation configuration supplied, returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(ReconciliationKey)))
 	}
 
 	return result.Enabled
@@ -356,14 +402,16 @@ type TrustedProxiesParameters struct {
 }
 
 func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) int {
-	var result = TrustedProxiesParameters{
+	result := TrustedProxiesParameters{
 		TrustedProxies: 0,
 	}
 
 	if trustedProxiesParametersCfg, err := service.GetConfigurationParameter(ctx, TrustedProxiesConfig); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch trusted proxies configuration; returning default values")
 	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values")
+		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(TrustedProxiesConfig)))
 	}
 
 	return result.TrustedProxies
@@ -375,17 +423,40 @@ type TieringParameters struct {
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
 }
 
-func GetTieringParameters(ctx context.Context, service ParameterService) TieringParameters {
-	result := TieringParameters{
-		TierLimit:                DefaultTierLimit,
-		LabelLimit:               DefaultLabelLimit,
-		MultiTierAnalysisEnabled: false,
+type AGTParameters struct {
+	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
+	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
+	SelectorWorkerLimit  int `json:"selector_worker_limit,omitempty"`
+}
+
+func GetAGTParameters(ctx context.Context, service ParameterService) AGTParameters {
+	result := AGTParameters{
+		DAWGsWorkerLimit:     DefaultDawgsWorkerLimit,
+		ExpansionWorkerLimit: DefaultExpansionWorkerLimit,
+		SelectorWorkerLimit:  DefaultSelectorWorkerLimit,
 	}
 
-	if tieringParametersCfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
-		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
-	} else if err = tieringParametersCfg.Map(&result); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Invalid tiering configuration supplied; returning default values %+v", err))
+	if agtParametersCfg, err := service.GetConfigurationParameter(ctx, AGTParameterKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch agt configuration; returning default values")
+	} else if err = agtParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid agt configuration supplied; returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(AGTParameterKey)))
+	}
+
+	if result.DAWGsWorkerLimit <= 0 || result.DAWGsWorkerLimit > MaxDawgsWorkerLimit {
+		slog.WarnContext(ctx, "Invalid agt configuration supplied for dawgs_worker_limit; setting to max value.", slog.Int("max_dawgs_worker_limit", MaxDawgsWorkerLimit))
+		result.DAWGsWorkerLimit = MaxDawgsWorkerLimit
+	}
+
+	if result.SelectorWorkerLimit <= 0 {
+		slog.WarnContext(ctx, "Invalid agt configuration supplied for selector_worker_limit; setting to default value.", slog.Int("default_selector_worker_limit", DefaultSelectorWorkerLimit))
+		result.SelectorWorkerLimit = DefaultSelectorWorkerLimit
+	}
+
+	if result.ExpansionWorkerLimit <= 0 {
+		slog.WarnContext(ctx, "Invalid agt configuration supplied for expansion_worker_limit; setting to default value.", slog.Int("default_expansion_worker_limit", DefaultExpansionWorkerLimit))
+		result.ExpansionWorkerLimit = DefaultExpansionWorkerLimit
 	}
 
 	return result
@@ -413,7 +484,7 @@ type SessionTTLHoursParameter struct {
 }
 
 func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
-	var result = SessionTTLHoursParameter{
+	result := SessionTTLHoursParameter{
 		Hours: DefaultSessionTTLHours, // Default to a logged in auth session time to live of 8 hours
 	}
 
@@ -422,9 +493,243 @@ func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Dura
 	} else if err = sessionTTLHours.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
 	} else if result.Hours <= 0 {
-		slog.WarnContext(ctx, "auth session ttl hours ≤ 0; returning default values")
+		slog.WarnContext(ctx, "Auth session ttl hours ≤ 0; returning default values")
 		result.Hours = DefaultSessionTTLHours
 	}
 
 	return time.Hour * time.Duration(result.Hours)
+}
+
+// StaleClientUpdatedLogic
+
+type StaleClientUpdatedLogic struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetStaleClientUpdatedLogic(ctx context.Context, service ParameterService) bool {
+	var result StaleClientUpdatedLogic
+
+	if cfg, err := service.GetConfigurationParameter(ctx, StaleClientUpdatedLogicKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch StaleClientLogic configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid StaleClientLogic configuration supplied. returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(StaleClientUpdatedLogicKey)))
+	}
+
+	return result.Enabled
+}
+
+// RetainIngestedFiles
+type RetainIngestedFilesParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func ShouldRetainIngestedFiles(ctx context.Context, service ParameterService) bool {
+	result := RetainIngestedFilesParameter{
+		// Retention should always default to false in the case where the parameter may not be set
+		Enabled: false,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, RetainIngestedFilesKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch ShouldRetainIngestedFiles configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid ShouldRetainIngestedFiles configuration supplied, returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(RetainIngestedFilesKey)))
+	}
+
+	return result.Enabled
+}
+
+type TimeoutLimitParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetTimeoutLimitParameter(ctx context.Context, service ParameterService) bool {
+	result := TimeoutLimitParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, TimeoutLimit); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch timeout limit configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid timeout limit configuration supplied, returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(TimeoutLimit)))
+	}
+
+	return result.Enabled
+}
+
+type APITokensParameter struct {
+	Enabled bool `json:"enabled"`
+}
+
+func GetAPITokensParameter(ctx context.Context, service ParameterService) bool {
+	result := APITokensParameter{Enabled: true}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokens); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid API tokens configuration supplied, returning default values.",
+			attr.Error(err),
+			slog.String("parameter_key", string(APITokens)))
+	}
+
+	return result.Enabled
+}
+
+type EnvironmentTargetedAccessControlParameters struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetEnvironmentTargetedAccessControlParameters(ctx context.Context, service ParameterService) EnvironmentTargetedAccessControlParameters {
+	result := EnvironmentTargetedAccessControlParameters{
+		Enabled: false,
+	}
+
+	if etacParametersCfg, err := service.GetConfigurationParameter(ctx, EnvironmentTargetedAccessControlKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch environment targeted access control configuration; returning default values")
+	} else if err = etacParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid environment targeted access control configuration supplied; returning default values",
+			slog.String("parameter_key", string(EnvironmentTargetedAccessControlKey)),
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type SupportAccountProvisioningParameters struct {
+	// Setting disabled as false means that you are explicitly opting into the feature
+	Enabled    bool          `json:"enabled,omitempty"`
+	SessionTTL time.Duration `json:"session_ttl,omitempty"`
+}
+
+func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error {
+	pDb := struct {
+		SessionTTL string `json:"session_ttl,omitempty"`
+		Enabled    bool   `json:"enabled,omitempty"`
+	}{}
+
+	if err := json.Unmarshal(data, &pDb); err != nil {
+		return fmt.Errorf("error unmarshaling data for SupportAccountProvisioningParameters: %w", err)
+	} else {
+		if duration, err := iso8601.FromString(pDb.SessionTTL); err != nil {
+			return err
+		} else {
+			s.SessionTTL = duration.ToDuration()
+			s.Enabled = pDb.Enabled
+		}
+
+		return nil
+	}
+}
+
+func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
+	result := SupportAccountProvisioningParameters{
+		Enabled:    true,
+		SessionTTL: time.Hour * 2,
+	}
+
+	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch support account provisioning configuration; returning default values")
+	} else if err = jitParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid support account provisioning configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type ClientMetricsParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetClientMetricsParameter(ctx context.Context, service ParameterService) ClientMetricsParameter {
+	result := ClientMetricsParameter{
+		Enabled: false,
+	}
+
+	if clientMetricsCfg, err := service.GetConfigurationParameter(ctx, ClientMetricsKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch client metrics configuration; returning default values")
+	} else if err = clientMetricsCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid client metrics configuration supplied; returning default values",
+			attr.Error(err))
+	}
+
+	return result
+}
+
+type APITokenExpirationParameter struct {
+	Enabled          bool `json:"enabled"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"integer,min=1,max=365"`
+}
+
+func GetAPITokenExpirationParameter(ctx context.Context, service ParameterService) APITokenExpirationParameter {
+	result := APITokenExpirationParameter{Enabled: false, ExpirationPeriod: 90}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, APITokenExpiration); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch API tokens expiration configuration; returning default values.")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid API tokens expiration configuration supplied, returning default values.",
+			attr.Error(err))
+	} else if result.ExpirationPeriod <= 0 || result.ExpirationPeriod > 365 {
+		slog.WarnContext(ctx, "Invalid API token expiration period supplied, returning default values.",
+			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
+			slog.String("parameter_key", string(APITokenExpiration)))
+		result.ExpirationPeriod = 90
+	}
+
+	return result
+}
+
+// GraphStorageOptimization
+type GraphStorageOptimizationParameter struct {
+	AfterBoot          bool `json:"after_boot"`
+	AfterAnalysis      bool `json:"after_analysis"`
+	MinIntervalSeconds int  `json:"min_interval_seconds"`
+}
+
+func GetGraphStorageOptimizationParameter(ctx context.Context, service ParameterService) GraphStorageOptimizationParameter {
+	result := GraphStorageOptimizationParameter{
+		AfterBoot:          false,
+		AfterAnalysis:      false,
+		MinIntervalSeconds: 86400,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, GraphStorageOptimizationKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch graph storage optimization configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid graph storage optimization configuration supplied; returning default values",
+			attr.Error(err),
+			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+	} else if result.MinIntervalSeconds < 0 {
+		slog.WarnContext(ctx, "Invalid negative min interval seconds supplied, returning default value.",
+			slog.Int("invalid_min_interval_seconds", result.MinIntervalSeconds),
+			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+		result.MinIntervalSeconds = 86400
+	}
+
+	return result
+}
+
+type CustomSubClaimKeyParameter struct {
+	ClaimKey string `json:"claim_key"`
+}
+
+func GetCustomSubClaimParameter(ctx context.Context, service ParameterService) CustomSubClaimKeyParameter {
+	result := CustomSubClaimKeyParameter{
+		ClaimKey: "",
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, CustomSubClaimKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch Custom sub Claim Key configuration; returning default value")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(
+			ctx, "Invalid Custom sub Claim Key configuration supplied; returning default values",
+			attr.Error(err),
+			slog.String("parameter_key", string(CustomSubClaimKey)),
+		)
+	}
+
+	return result
 }

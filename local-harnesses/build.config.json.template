@@ -6,7 +6,6 @@
     "work_dir": "/bhapi/work",
     "collectors_base_path": "/bhapi/collectors",
     "log_level": "INFO",
-    "log_path": "bhapi.log",
     "enable_startup_wait_period": false,
     "datapipe_interval": 1,
     "database": {
@@ -17,8 +16,9 @@
     },
     "graph_driver": "neo4j",
     "default_admin": {
+        "enabled": true,
         "principal_name": "admin",
-        "email_address": "spam@example.com",
+        "email_address": "admin@example.com",
         "password": "SFdzJoW2GT7Fn68aEieKn7S1S2DLdXnw",
         "first_name": "BloodHound",
         "last_name": "Dev",

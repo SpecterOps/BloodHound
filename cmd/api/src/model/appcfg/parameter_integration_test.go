@@ -15,19 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build integration
-// +build integration
 
 package appcfg_test
 
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/specterops/dawgs/drivers/neo4j"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/specterops/dawgs/drivers/neo4j"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParameters_IsValidKey(t *testing.T) {
@@ -38,6 +39,10 @@ func TestParameters_IsValidKey(t *testing.T) {
 
 	t.Run("should return true on valid keys", func(t *testing.T) {
 		require.True(t, parameter.IsValidKey(appcfg.PruneTTL))
+	})
+
+	t.Run("should return true for scheduled analysis key", func(t *testing.T) {
+		require.True(t, parameter.IsValidKey(appcfg.ScheduledAnalysis))
 	})
 }
 
@@ -101,6 +106,40 @@ func TestParameters_Validate(t *testing.T) {
 		errs := parameter.Validate()
 		require.Len(t, errs, 0)
 	})
+
+	t.Run("should validate scheduled analysis with valid rrule", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"enabled": true, "rrule": "DTSTART:20240101T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1"})
+		require.Nil(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.ScheduledAnalysis}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+	})
+
+	t.Run("should error on scheduled analysis with invalid rrule", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"enabled": true, "rrule": "invalid"})
+		require.Nil(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.ScheduledAnalysis}
+		errs := parameter.Validate()
+		require.Len(t, errs, 1)
+		require.Contains(t, errs[0].Error(), "invalid rrule")
+	})
+
+	t.Run("should error on scheduled analysis missing dtstart", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"enabled": true, "rrule": "RRULE:FREQ=DAILY;INTERVAL=1"})
+		require.Nil(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.ScheduledAnalysis}
+		errs := parameter.Validate()
+		require.Len(t, errs, 1)
+		require.Contains(t, errs[0].Error(), "dtstart is required")
+	})
+
+	t.Run("should validate scheduled analysis when disabled with empty rrule", func(t *testing.T) {
+		val, err := types.NewJSONBObject(map[string]any{"enabled": false, "rrule": ""})
+		require.Nil(t, err)
+		parameter := appcfg.Parameter{Value: val, Key: appcfg.ScheduledAnalysis}
+		errs := parameter.Validate()
+		require.Len(t, errs, 0)
+	})
 }
 
 func TestParameters_GetPasswordExpiration(t *testing.T) {
@@ -116,7 +155,7 @@ func TestParameters_GetNeo4jParameters(t *testing.T) {
 }
 
 func TestParameters_GetCitrixRDPSupport(t *testing.T) {
-	require.False(t, appcfg.GetCitrixRDPSupport(context.Background(), integration.SetupDB(t)))
+	require.True(t, appcfg.GetCitrixRDPSupport(context.Background(), integration.SetupDB(t)))
 }
 
 func TestParameters_GetPruneTTLParameters(t *testing.T) {
@@ -131,11 +170,90 @@ func TestParameters_GetReconciliationParameter(t *testing.T) {
 	require.True(t, appcfg.GetReconciliationParameter(context.Background(), integration.SetupDB(t)))
 }
 
-func TestParameters_GetTieringParameters(t *testing.T) {
-	result := appcfg.TieringParameters{
-		TierLimit:                appcfg.DefaultTierLimit,
-		LabelLimit:               appcfg.DefaultLabelLimit,
-		MultiTierAnalysisEnabled: false,
+func TestParameters_GetTimeoutLimitParameter(t *testing.T) {
+	require.True(t, appcfg.GetTimeoutLimitParameter(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_GetAPITokensParameter(t *testing.T) {
+	require.True(t, appcfg.GetAPITokensParameter(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_GetEnvironmentTargetedAccessControlParameters(t *testing.T) {
+	result := appcfg.EnvironmentTargetedAccessControlParameters{
+		Enabled: false,
 	}
-	require.Equal(t, result, appcfg.GetTieringParameters(context.Background(), integration.SetupDB(t)))
+	require.Equal(t, result, appcfg.GetEnvironmentTargetedAccessControlParameters(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_SupportAccountProvisioningParameters(t *testing.T) {
+	result := appcfg.SupportAccountProvisioningParameters{
+		Enabled:    true,
+		SessionTTL: time.Hour * 2,
+	}
+	require.Equal(t, result, appcfg.GetSupportAccountProvisioningParameters(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_GetScheduledAnalysisParameter(t *testing.T) {
+	t.Run("should return default values when parameter not found", func(t *testing.T) {
+		result, err := appcfg.GetScheduledAnalysisParameter(context.Background(), integration.SetupDB(t))
+		require.NoError(t, err)
+		require.False(t, result.Enabled)
+		require.Equal(t, "", result.RRule)
+	})
+
+	t.Run("should return configured values when parameter exists", func(t *testing.T) {
+		var (
+			db  = integration.SetupDB(t)
+			ctx = context.Background()
+		)
+
+		// Set a scheduled analysis configuration
+		val, err := types.NewJSONBObject(map[string]any{
+			"enabled": true,
+			"rrule":   "DTSTART:20240101T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1",
+		})
+		require.NoError(t, err)
+
+		parameter := appcfg.Parameter{
+			Key:   appcfg.ScheduledAnalysis,
+			Value: val,
+		}
+
+		err = db.SetConfigurationParameter(ctx, parameter)
+		require.NoError(t, err)
+
+		// Retrieve and verify
+		result, err := appcfg.GetScheduledAnalysisParameter(ctx, db)
+		require.NoError(t, err)
+		require.True(t, result.Enabled)
+		require.Equal(t, "DTSTART:20240101T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1", result.RRule)
+	})
+
+	t.Run("should return disabled state when configured as disabled", func(t *testing.T) {
+		var (
+			db  = integration.SetupDB(t)
+			ctx = context.Background()
+		)
+
+		// Set a disabled scheduled analysis configuration
+		val, err := types.NewJSONBObject(map[string]any{
+			"enabled": false,
+			"rrule":   "",
+		})
+		require.NoError(t, err)
+
+		parameter := appcfg.Parameter{
+			Key:   appcfg.ScheduledAnalysis,
+			Value: val,
+		}
+
+		err = db.SetConfigurationParameter(ctx, parameter)
+		require.NoError(t, err)
+
+		// Retrieve and verify
+		result, err := appcfg.GetScheduledAnalysisParameter(ctx, db)
+		require.NoError(t, err)
+		require.False(t, result.Enabled)
+		require.Equal(t, "", result.RRule)
+	})
 }

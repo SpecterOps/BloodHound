@@ -20,7 +20,9 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
-import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { encodeCypherQuery } from 'bh-shared-ui';
+import { createGraphKinds, cypherTestResponse, mockCodemirrorLayoutMethods } from 'bh-shared-ui/testing';
+import { ConfigurationKey, GraphData } from 'js-client-library';
 
 const comboboxLookaheadOptions = {
     data: [
@@ -37,6 +39,14 @@ const comboboxLookaheadOptions = {
     ],
 };
 
+const setInitialServerState = (savedConfigurationValue?: boolean) => {
+    return {
+        isTimeoutLimitEnabled: savedConfigurationValue || false,
+    };
+};
+
+let serverState = setInitialServerState();
+
 const server = setupServer(
     rest.get('/api/v2/search', (req, res, ctx) => {
         return res(ctx.json(comboboxLookaheadOptions));
@@ -51,7 +61,7 @@ const server = setupServer(
     rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
         return res(
             ctx.json({
-                data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+                data: createGraphKinds(['Tier Zero', 'Tier One', 'Tier Two'], []),
             })
         );
     }),
@@ -61,11 +71,59 @@ const server = setupServer(
                 data: [],
             })
         );
+    }),
+    rest.get(`/api/v2/self`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    id: '4e09c965-65bd-4f15-ae71-5075a6fed14b',
+                    roles: [{ name: 'Administrator', permissions: [] }],
+                },
+            })
+        );
+    }),
+    rest.get(`/api/v2/saved-queries/:id/permissions`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    rest.get(`/api/v2/saved-queries`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    rest.get(`/api/v2/config`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        key: ConfigurationKey.TimeoutLimit,
+                        value: {
+                            enabled: serverState.isTimeoutLimitEnabled,
+                        },
+                    },
+                ],
+            })
+        );
     })
 );
 
-beforeAll(() => server.listen());
-beforeEach(() => mockCodemirrorLayoutMethods());
+beforeAll(() => {
+    server.listen();
+    const style = document.createElement('style');
+    style.innerHTML = '.hidden { display: none; }';
+    document.head.appendChild(style);
+});
+
+beforeEach(() => {
+    mockCodemirrorLayoutMethods();
+
+    serverState = setInitialServerState();
+});
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
@@ -84,6 +142,12 @@ const setup = async (exploreSearchTab?: string) => {
 // Example
 
 describe('ExploreSearch rendering per tab', async () => {
+    it('renders hidden h2 with current tab name for screen readers', async () => {
+        await setup();
+        const hiddenHeading = screen.getByRole('heading', { level: 2, name: /search/i });
+        expect(hiddenHeading).toBeInTheDocument();
+        expect(hiddenHeading).toHaveClass('sr-only');
+    });
     it('should render', async () => {
         await setup();
         expect(screen.getByLabelText('Search Nodes')).toBeInTheDocument();
@@ -92,24 +156,23 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('tab', { name: /pathfinding/i })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /cypher/i })).toBeInTheDocument();
     });
-
     it('should render the pathfinding search controls when searchType is pathfinding', async () => {
         await setup('pathfinding');
 
-        expect(screen.getByLabelText(/start node/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/destination node/i)).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: /start node/i })).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: /destination node 1/i })).toBeInTheDocument();
 
-        expect(screen.getByRole('button', { name: /right-left/i })).toBeDisabled();
-        expect(screen.getByRole('button', { name: /filter/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Swap start and destination/i })).toBeDisabled();
+        expect(screen.getByRole('button', { name: /Show pathfinding filter options/i })).toBeInTheDocument();
     });
 
     it('should render the cypher search controls when user clicks on cypher tab ', async () => {
         await setup('cypher');
 
-        expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
+        expect(screen.getByTestId('cypher-search-section')).toBeInTheDocument();
 
-        expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Learn more about cypher/i })).toBeInTheDocument();
+        expect(screen.getByLabelText('Run cypher query')).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
@@ -205,5 +268,87 @@ describe('ExploreSearch interaction', () => {
 
         const searchInput = screen.getByPlaceholderText('Search Nodes');
         expect(searchInput).toHaveValue('admin');
+    });
+
+    it('displays a “Disable query timeout” checkbox when timeout limit param config is enabled false', async () => {
+        await setup('cypher');
+        expect(await screen.findByRole('checkbox', { name: /Disable query timeout/i })).toBeInTheDocument();
+    });
+
+    it('does not display a “Disable query timeout” checkbox when timeout limit param config is enabled true', async () => {
+        serverState = setInitialServerState(true);
+        await setup('cypher');
+        expect(screen.queryByRole('checkbox', { name: /Disable query timeout/i })).not.toBeInTheDocument();
+    });
+});
+
+describe('ExploreSearch handling of cypher query responses', () => {
+    const CYPHER_QUERY = 'match (n) return n limit 10';
+
+    const multiNodeGraphResponse = {
+        data: {
+            nodes: {
+                '108': cypherTestResponse.data.nodes['108'],
+                '489': cypherTestResponse.data.nodes['489'],
+            },
+            edges: [],
+        },
+    };
+
+    const singleNodeGraphResponse = {
+        data: {
+            nodes: { '108': cypherTestResponse.data.nodes['108'] },
+            edges: [],
+        },
+    };
+
+    const zeroNodeGraphResponse = {
+        data: {
+            nodes: {},
+            edges: [
+                { id: 1, source: '1', target: '2', label: 'HasSession', kind: 'HasSession', lastSeen: '2023-01-01' },
+            ],
+        },
+    };
+
+    const mockCypherEndpoint = (response: { data: GraphData }) => {
+        server.use(rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => res(ctx.json(response))));
+    };
+
+    // Renders ExploreSearch with the cypher tab active and a query already present in the URL, which
+    // causes the query to run automatically on mount.
+    const setupCypherSearch = async (extraParams = '') => {
+        const route = `/?exploreSearchTab=cypher&searchType=cypher&cypherSearch=${encodeCypherQuery(
+            CYPHER_QUERY
+        )}${extraParams}`;
+
+        const screen = await act(async () => render(<ExploreSearch />, { route }));
+
+        return { screen };
+    };
+
+    it('keeps the search widget open and does not set a selected item when the query returns zero nodes', async () => {
+        mockCypherEndpoint(zeroNodeGraphResponse);
+        const { screen } = await setupCypherSearch();
+
+        expect(await screen.findByRole('button', { name: /run cypher query/i })).not.toBeDisabled();
+
+        expect(await screen.findByTestId('cypher-search-section')).toBeVisible();
+        expect(window.location.search).not.toContain('selectedItem=');
+    });
+
+    it('selects the single returned node and closes the search widget when the query returns exactly one node', async () => {
+        mockCypherEndpoint(singleNodeGraphResponse);
+        const { screen } = await setupCypherSearch();
+
+        expect(await screen.findByTestId('cypher-search-section')).not.toBeVisible();
+    });
+
+    it('clears the selected item and closes the search widget when the query returns multiple nodes', async () => {
+        mockCypherEndpoint(multiNodeGraphResponse);
+        const { screen } = await setupCypherSearch('&selectedItem=999');
+
+        expect(window.location.search).not.toContain('selectedItem=');
+        expect(await screen.findByTestId('cypher-search-section')).not.toBeVisible();
     });
 });

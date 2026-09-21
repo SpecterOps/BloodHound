@@ -14,17 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faArrowDown, faInbox } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faInbox, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, useTheme } from '@mui/material';
 import { DragEvent, useRef, useState } from 'react';
+import { cn } from '../../utils';
 
 const FileDrop: React.FC<{
     onDrop: (files: any) => void;
     disabled: boolean;
     accept?: string[];
-}> = ({ onDrop, disabled, accept }) => {
-    const theme = useTheme();
+    multiple?: boolean;
+    icon?: IconDefinition;
+    className?: string;
+}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
     const [isHoverActive, setHoverActive] = useState(false);
@@ -57,53 +59,49 @@ const FileDrop: React.FC<{
     const handleMouseLeave = () => setHoverActive(false);
 
     const formatAcceptList = () => (accept && accept.length ? accept.join(',') : undefined);
+    const uploadLabel = multiple
+        ? 'Choose JSON or zip/compressed JSON files to upload'
+        : 'Choose a JSON file to upload';
 
     return (
-        <Box
-            sx={{
-                cursor: 'pointer',
-                height: 300,
-                borderRadius: 1,
-                border: 2,
-                px: 20,
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor:
-                    isHoverActive || isDragActive ? theme.palette.neutral.tertiary : theme.palette.neutral.secondary,
-                color: theme.palette.color.primary,
-                borderColor: theme.palette.color.primary,
-                fontWeight: 'bold',
-                textAlign: 'center',
-            }}>
+        <>
             <input
                 data-testid='ingest-file-upload'
                 disabled={disabled}
                 ref={inputRef}
                 type='file'
-                multiple={true}
+                multiple={multiple}
                 onChange={handleChange}
                 hidden
                 accept={formatAcceptList()}
             />
-            <FontAwesomeIcon icon={isDragActive ? faArrowDown : faInbox} size='3x' />
-            <p>Click here or drag and drop to upload files</p>
-
-            <Box
-                position='absolute'
-                width='100%'
-                height='100%'
+            <button
+                type='button'
+                aria-label={uploadLabel}
+                disabled={disabled}
+                className={cn(
+                    'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 py-4 flex flex-col items-center justify-center bg-neutral-2 focus-visible:focus-ring',
+                    {
+                        'cursor-default opacity-50': disabled,
+                        'bg-neutral-3': isHoverActive || isDragActive || disabled,
+                    },
+                    className
+                )}
                 onClick={handleClick}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                onDrop={handleDrop}
-            />
-        </Box>
+                onDrop={handleDrop}>
+                <FontAwesomeIcon className='pointer-events-none' icon={isDragActive ? faArrowDown : icon} size='3x' />
+                <span className='pt-2 pointer-events-none'>
+                    {multiple
+                        ? 'Click here or drag and drop to upload JSON or zip/compressed JSON files'
+                        : 'Click here or drag and drop to upload a JSON file'}
+                </span>
+            </button>
+        </>
     );
 };
 

@@ -29,6 +29,10 @@ describe('testPassword', () => {
         expect(testPassword('TEST123$!@#%')).toBe(false);
     });
 
+    it('fails for password with control characters', () => {
+        expect(testPassword('testTEST123$!@#%\t')).toBe(false);
+    });
+
     it('fails for password without uppercase letters', () => {
         expect(testPassword('test123$!@#%')).toBe(false);
     });

@@ -17,7 +17,9 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand/v2"
 	"net/http"
 	"strings"
@@ -25,12 +27,13 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
@@ -67,24 +70,28 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 			} else {
 				switch authScheme {
 				case api.AuthorizationSchemeBearer:
-					if userAuth, err := authenticator.ValidateSession(request.Context(), schemeParameter); err != nil {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
+					if authContext, err := authenticator.ValidateBearerToken(request.Context(), schemeParameter); err != nil {
+						slog.ErrorContext(request.Context(), "Error while authenticating bearer token in AuthMiddleware", attr.Error(err))
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "Token Authorization failed.", request), response)
 						return
 					} else {
-						bhCtx := ctx.Get(request.Context())
-						bhCtx.AuthCtx = userAuth
+						bhCtx := bhctx.Get(request.Context())
+						bhCtx.AuthCtx = authContext
 					}
 
 				case api.AuthorizationSchemeBHESignature:
 					if tokenID, err := uuid.FromString(schemeParameter); err != nil {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Token ID is malformed.", request), response)
 						return
-					} else if userAuth, responseCode, err := authenticator.ValidateRequestSignature(tokenID, request, time.Now()); err != nil {
+					} else if userAuth, responseCode, err := authenticator.ValidateRequestSignature(tokenID, request, time.Now()); errors.Is(err, api.ErrApiKeysDisabled) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, err.Error(), request), response)
+						return
+					} else if err != nil {
 						msg := fmt.Errorf("unable to validate request signature for client: %w", err).Error()
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(responseCode, msg, request), response)
 						return
 					} else {
-						bhCtx := ctx.Get(request.Context())
+						bhCtx := bhctx.Get(request.Context())
 						bhCtx.AuthCtx = userAuth
 					}
 
@@ -104,7 +111,7 @@ func AuthMiddleware(authenticator api.Authenticator) mux.MiddlewareFunc {
 func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAllPermissions(bhCtx.AuthCtx, permissions) {
 				authorizer.AuditLogUnauthorizedAccess(request)
@@ -121,7 +128,7 @@ func PermissionsCheckAll(authorizer auth.Authorizer, permissions ...model.Permis
 func PermissionsCheckAtLeastOne(authorizer auth.Authorizer, permissions ...model.Permission) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if bhCtx := ctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
+			if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
 			} else if !authorizer.AllowsAtLeastOnePermission(bhCtx.AuthCtx, permissions) {
 				authorizer.AuditLogUnauthorizedAccess(request)
@@ -165,7 +172,7 @@ func RequireUserId() mux.MiddlewareFunc {
 func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer auth.Authorizer) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			bhCtx := ctx.FromRequest(request)
+			bhCtx := bhctx.FromRequest(request)
 
 			if !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authorized", request), response)
@@ -200,8 +207,10 @@ func AuthorizeAuthManagementAccess(permissions auth.PermissionSet, authorizer au
 	}
 }
 
-const loginMinimum = time.Second + 500*time.Millisecond
-const loginVariation = 500 * time.Millisecond
+const (
+	loginMinimum   = time.Second + 500*time.Millisecond
+	loginVariation = 500 * time.Millisecond
+)
 
 // LoginTimer is a middleware to protect against time-based user enumeration on the Login route. It does this by
 // starting a timer before the actual login procedure to normalize the duration of this procedure to be within 1.5s and

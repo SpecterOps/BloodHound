@@ -23,17 +23,15 @@ describe('GenericErrorBoundaryFallback', () => {
     });
 
     it('should display', () => {
-        const elem = screen.getByRole('alert');
+        const element = screen.getByRole('alert');
 
-        expect(elem).toBeInTheDocument();
-        expect(elem).toHaveTextContent('An unexpected error has occurred.');
+        expect(element).toBeInTheDocument();
+        expect(element).toHaveTextContent('An unexpected error has occurred.');
         expect(screen.getByTestId('ErrorOutlineIcon')).toBeInTheDocument();
     });
 
     it('should be aligned to right of screen', () => {
-        const elem = screen.getByTestId('error-boundary');
-        const styles = getComputedStyle(elem);
-        expect(styles.display).toEqual('flex');
-        expect(styles.justifyContent).toEqual('flex-end');
+        const element = screen.getByTestId('error-boundary');
+        expect(element).toHaveClass('flex justify-end');
     });
 });

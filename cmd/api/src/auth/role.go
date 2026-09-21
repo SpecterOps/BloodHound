@@ -23,6 +23,7 @@ import (
 const (
 	RoleUploadOnly    = "Upload-Only"
 	RoleReadOnly      = "Read-Only"
+	RoleAuditor       = "Auditor"
 	RoleUser          = "User"
 	RolePowerUser     = "Power User"
 	RoleAdministrator = "Administrator"
@@ -47,8 +48,10 @@ func Roles() map[string]RoleTemplate {
 				permissions.APsGenerateReport,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleUploadOnly: {
@@ -56,8 +59,13 @@ func Roles() map[string]RoleTemplate {
 			Description: "Used for data collection clients, can post data but cannot read data",
 			Permissions: model.Permissions{
 				permissions.ClientsTasking,
-				permissions.GraphDBIngest,
+				permissions.GraphDBIngestManage,
 			},
+		},
+		RoleAuditor: {
+			Name:        RoleAuditor,
+			Description: "Can read data and audit logs",
+			Permissions: append(permissions.ReadAll(), permissions.AuthCreateToken, permissions.AuthManageSelf),
 		},
 		RoleUser: {
 			Name:        RoleUser,
@@ -67,30 +75,35 @@ func Roles() map[string]RoleTemplate {
 				permissions.APsGenerateReport,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.ClientsRead,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
+				permissions.OpenGraphRead,
 			},
 		},
 		RolePowerUser: {
 			Name:        RolePowerUser,
 			Description: "Can upload data, manage clients, and perform any action a User can",
 			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
 				permissions.APsGenerateReport,
 				permissions.APsManageAPs,
 				permissions.AuthCreateToken,
 				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
 				permissions.ClientsManage,
 				permissions.ClientsRead,
 				permissions.ClientsTasking,
 				permissions.CollectionManageJobs,
-				permissions.GraphDBIngest,
+				permissions.GraphDBIngestManage,
 				permissions.GraphDBWrite,
 				permissions.GraphDBRead,
 				permissions.SavedQueriesRead,
 				permissions.SavedQueriesWrite,
 				permissions.GraphDBMutate,
+				permissions.OpenGraphRead,
 			},
 		},
 		RoleAdministrator: {

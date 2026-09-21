@@ -19,6 +19,8 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import ExploreSearchCombobox from '.';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { mockKindsHandler } from '../../mocks';
+import { mockGetConfigurationHandler } from '../../mocks/handlers';
 import { act, render, screen, within } from '../../test-utils';
 
 const testSearchResults = {
@@ -51,7 +53,9 @@ const server = setupServer(
                 data: [],
             })
         );
-    })
+    }),
+    mockKindsHandler(),
+    mockGetConfigurationHandler()
 );
 
 beforeAll(() => server.listen());
@@ -162,6 +166,63 @@ describe('icon rendering', () => {
 
         const input = screen.getByLabelText(labelText);
         expect(input).not.toHaveClass('MuiInputBase-inputAdornedStart');
+    });
+});
+
+describe('ExploreSearchCombobox with duplicate display names', () => {
+    const duplicateNameResults = {
+        data: [
+            {
+                name: 'ADMIN@TESTLAB.LOCAL',
+                objectid: '1',
+                type: 'User',
+                distinguishedname: 'CN=Admin,OU=Users,DC=testlab,DC=local',
+            },
+            {
+                name: 'ADMIN@TESTLAB.LOCAL',
+                objectid: '2',
+                type: 'Group',
+                distinguishedname: 'CN=Admin,OU=Groups,DC=testlab,DC=local',
+            },
+            {
+                name: 'UNIQUE@TESTLAB.LOCAL',
+                objectid: '3',
+                type: 'Computer',
+                distinguishedname: 'CN=Unique,OU=Computers,DC=testlab,DC=local',
+            },
+        ],
+    };
+
+    beforeEach(() => {
+        server.use(
+            rest.get(`/api/v2/search`, (req, res, ctx) => {
+                return res(ctx.json(duplicateNameResults));
+            })
+        );
+    });
+
+    it('shows the distinguished name only for results with duplicate display names', async () => {
+        const user = userEvent.setup();
+        const labelText: string = 'test label';
+
+        await act(async () => {
+            render(
+                <ExploreSearchCombobox
+                    labelText={labelText}
+                    inputValue='admin'
+                    handleNodeEdited={vi.fn()}
+                    handleNodeSelected={vi.fn()}
+                    selectedItem={null}
+                />
+            );
+        });
+
+        await user.click(screen.getByLabelText(labelText));
+        await screen.findAllByRole('option');
+
+        expect(screen.getByText('CN=Admin,OU=Users,DC=testlab,DC=local')).toBeInTheDocument();
+        expect(screen.getByText('CN=Admin,OU=Groups,DC=testlab,DC=local')).toBeInTheDocument();
+        expect(screen.queryByText('CN=Unique,OU=Computers,DC=testlab,DC=local')).not.toBeInTheDocument();
     });
 });
 

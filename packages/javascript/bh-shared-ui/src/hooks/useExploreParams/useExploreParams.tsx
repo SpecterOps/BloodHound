@@ -15,18 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { NavigateOptions, useSearchParams } from 'react-router-dom';
-import { EdgeCheckboxType } from '../../edgeTypes';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
+import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
-type SearchType = ExploreSearchTab | 'relationship' | 'composition';
+type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';
 
 export type ExploreQueryParams = {
     exploreSearchTab: ExploreSearchTab | null;
     primarySearch: string | null;
     secondarySearch: string | null;
+    tertiarySearch: string | null;
+    quaternarySearch: string | null;
     cypherSearch: string | null;
     searchType: SearchType | null;
     expandedPanelSections: string[] | null;
@@ -53,6 +55,7 @@ export const acceptedSearchTypes = {
     ...acceptedExploreSearchTabs,
     relationship: 'relationship',
     composition: 'composition',
+    aclinheritance: 'aclinheritance',
 } satisfies MappedStringLiteral<SearchType, SearchType>;
 
 export const parseSearchType = (paramValue: string | null): SearchType | null => {
@@ -80,6 +83,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         exploreSearchTab: parseSearchTab(searchParams.get('exploreSearchTab')),
         primarySearch: searchParams.get('primarySearch'),
         secondarySearch: searchParams.get('secondarySearch'),
+        tertiarySearch: searchParams.get('tertiarySearch'),
+        quaternarySearch: searchParams.get('quaternarySearch'),
         cypherSearch: searchParams.get('cypherSearch'),
         searchType: parseSearchType(searchParams.get('searchType')),
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
@@ -95,6 +100,8 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                         'exploreSearchTab',
                         'primarySearch',
                         'secondarySearch',
+                        'tertiarySearch',
+                        'quaternarySearch',
                         'cypherSearch',
                         'searchType',
                         'expandedPanelSections',

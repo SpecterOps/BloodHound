@@ -29,8 +29,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	oidcmock "github.com/specterops/bloodhound/cmd/api/src/services/oidc/mocks"
 	"github.com/stretchr/testify/assert"
@@ -45,8 +45,8 @@ import (
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
 	)
 	defer mockCtrl.Finish()
 
@@ -166,9 +166,9 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 	var (
-		mockCtrl          = gomock.NewController(t)
-		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
-		baseProvider      = model.SSOProvider{
+		mockCtrl             = gomock.NewController(t)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		baseProvider         = model.SSOProvider{
 			Type: model.SessionAuthProviderOIDC,
 			Name: "Gotham Net",
 			OIDCProvider: &model.OIDCProvider{
@@ -324,11 +324,11 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -362,11 +362,11 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -404,11 +404,11 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -452,7 +452,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
@@ -508,11 +508,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -547,11 +547,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 					Method: http.MethodGet,
 				}
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -592,11 +592,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				request.Form.Add("code", "test")
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -638,11 +638,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 				request.Form.Add("code", "test")
 				request.Form.Add("state", "test")
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -694,11 +694,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 				}
 				request.AddCookie(pkceCookie)
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -759,11 +759,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 				}
 				request.AddCookie(stateCookie)
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -824,11 +824,11 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 				}
 				request.AddCookie(stateCookie)
 
-				bhContext := &ctx.Context{
+				bhContext := &bhctx.Context{
 					Host: request.URL,
 				}
 
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
@@ -872,7 +872,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 			resource.OIDC = mocks.mockOIDC
 			response := httptest.NewRecorder()
 

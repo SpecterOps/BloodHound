@@ -19,26 +19,29 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1'>
                 https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://www.youtube.com/watch?v=z8thoG7gPd0'>
                 https://www.youtube.com/watch?v=z8thoG7gPd0
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4728'>
                 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4728
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://www.thehacker.recipes/ad/movement/dacl/addmember'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.thehacker.recipes/ad/movement/dacl/addmember'>
                 https://www.thehacker.recipes/ad/movement/dacl/addmember
             </Link>
         </Box>

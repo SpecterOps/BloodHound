@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Deprecated: The code in this file supports legacy v8 stepwise migrations for existing customers
+// who may be upgrading from older versions. Once v11 is released and all customers have
+// migrated through v9 (which transitions to goose), this code can be removed.
+// The goose migration system in goose.go will handle all migrations going forward.
 package migration
 
 import (
@@ -49,7 +53,7 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 		}
 
 		// execute the migration(s) for this version in a transaction
-		slog.Info(fmt.Sprintf("Executing SQL migrations for %s", versionString))
+		slog.Info("Executing SQL migrations", slog.String("version", versionString))
 		if err := s.DB.Transaction(func(tx *gorm.DB) error {
 
 			for _, migration := range manifest.Migrations[versionString] {
@@ -80,15 +84,6 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 	}
 
 	return nil
-}
-
-// HasMigrationTable is a utility for checking if migration schema is initialized. We assume that
-// if the `migrations` table exists, the schema must be initialized, and vice versa.
-func (s *Migrator) HasMigrationTable() (bool, error) {
-	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'migrations');`
-
-	var hasTable bool
-	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
 }
 
 // CreateMigrationSchema creates all the necessary SQL schema for tracking migration status.

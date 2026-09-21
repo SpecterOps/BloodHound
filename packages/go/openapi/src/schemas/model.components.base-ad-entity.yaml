@@ -20,5 +20,7 @@ properties:
     type: string
   name:
     type: string
+    nullable: true
   exists:
     type: boolean
+    nullable: true

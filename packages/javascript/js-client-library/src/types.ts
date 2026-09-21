@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { EnvironmentRequest } from './requests';
+import type { SupportBundleSummaryStatus } from './responses';
 
 export interface Serial {
     id: number;
@@ -29,18 +32,29 @@ export interface AssetGroupMemberParams {
     limit?: number;
 }
 
-type System = 'SYSTEM';
+export const BloodHoundString = 'BloodHound' as const;
+
+type BloodHound = typeof BloodHoundString;
 
 type ISO_DATE_STRING = string;
 
+export type TimestampFields = {
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
 interface Created {
     created_at: ISO_DATE_STRING;
-    created_by: string | System;
+    created_by: string | BloodHound;
 }
 
 interface Updated {
     updated_at: ISO_DATE_STRING;
-    updated_by: string | System;
+    updated_by: string | BloodHound;
 }
 
 interface Deleted {
@@ -53,46 +67,138 @@ interface Disabled {
     disabled_by: string | null;
 }
 
-export const AssetGroupTagTypeTier = 1 as const;
+export interface AssetGroupTagHistoryRecord {
+    id: number;
+    created_at: string;
+    actor: string;
+    email: string | null;
+    action: string;
+    target: string;
+    asset_group_tag_id: number;
+    environment_id: string | null;
+    note: string | null;
+}
+
+export interface AssetGroupTagCertificationRecord {
+    id: number;
+    object_id: string;
+    environment_id: string;
+    primary_kind: string;
+    name: string;
+    created_at: string;
+    asset_group_tag_id: number;
+    certified_by: string;
+    certified: CertificationType;
+}
+
+export const CertificationPending = 0 as const;
+export const CertificationRevoked = 1 as const;
+export const CertificationManual = 2 as const;
+export const CertificationAuto = 3 as const;
+export const AllStatuses = 4 as const;
+
+export type CertificationType =
+    | typeof CertificationPending
+    | typeof CertificationRevoked
+    | typeof CertificationManual
+    | typeof CertificationAuto
+    | typeof AllStatuses;
+
+export const CertificationTypeMap: Record<CertificationType, string> = {
+    [CertificationPending]: 'Pending',
+    [CertificationRevoked]: 'Rejected',
+    [CertificationManual]: 'User Certified',
+    [CertificationAuto]: 'Automatic',
+    [AllStatuses]: 'All Statuses',
+};
+
+export type AssetGroupTagCertificationParams = {
+    certified?: CertificationType;
+    certified_by?: string;
+    primary_kind?: string;
+    created_at?: string;
+};
+
+export const HighestPrivilegePosition = 1 as const;
+
+export const AssetGroupTagTypeZone = 1 as const;
 export const AssetGroupTagTypeLabel = 2 as const;
 export const AssetGroupTagTypeOwned = 3 as const;
 
-export type AssetGroupTagTypes =
-    | typeof AssetGroupTagTypeTier
+export type AssetGroupTagType =
+    | typeof AssetGroupTagTypeZone
     | typeof AssetGroupTagTypeLabel
     | typeof AssetGroupTagTypeOwned;
 
-export const AssetGroupTagTypesMap = {
-    1: 'tier',
-    2: 'label',
-    3: 'owned',
+export const AssetGroupTagTypeMap = {
+    [AssetGroupTagTypeZone]: 'zone',
+    [AssetGroupTagTypeLabel]: 'label',
+    [AssetGroupTagTypeOwned]: 'owned',
 } as const;
 
+export const RuleKey = 'selector' as const;
+export const RulesKey = 'selectors' as const;
+export const CustomRulesKey = 'custom_selectors' as const;
+export const DefaultRulesKey = 'default_selectors' as const;
+export const DisabledRulesKey = 'disabled_selectors' as const;
+
+export const ObjectKey = 'member' as const;
+export const ObjectsKey = 'members' as const;
+
 export interface AssetGroupTagCounts {
-    selectors: number;
-    members: number;
+    [RulesKey]: number;
+    [CustomRulesKey]: number;
+    [DefaultRulesKey]: number;
+    [DisabledRulesKey]: number;
+    [ObjectsKey]: number;
 }
 
 export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypes;
+    type: AssetGroupTagType;
     position: number | null;
-    requireCertify: boolean | null;
+    require_certify: boolean | null;
     description: string;
-    counts?: AssetGroupTagCounts;
     analysis_enabled: boolean | null;
+    glyph: string | null;
+    counts?: AssetGroupTagCounts;
 }
 
 export const SeedTypeObjectId = 1 as const;
 export const SeedTypeCypher = 2 as const;
+
+export const SeedExpansionMethodNone = 0 as const;
+export const SeedExpansionMethodAll = 1 as const;
+export const SeedExpansionMethodChild = 2 as const;
+export const SeedExpansionMethodParent = 3 as const;
+export type SeedExpansionMethod =
+    | typeof SeedExpansionMethodNone
+    | typeof SeedExpansionMethodAll
+    | typeof SeedExpansionMethodChild
+    | typeof SeedExpansionMethodParent;
 
 export type SeedTypes = typeof SeedTypeObjectId | typeof SeedTypeCypher;
 
 export const SeedTypesMap = {
     [SeedTypeObjectId]: 'Object ID',
     [SeedTypeCypher]: 'Cypher',
+} as const;
+
+export const AssetGroupTagSelectorAutoCertifyDisabled = 0 as const;
+export const AssetGroupTagSelectorAutoCertifySeedsOnly = 2 as const;
+export const AssetGroupTagSelectorAutoCertifyAllMembers = 1 as const;
+
+export type AssetGroupTagSelectorAutoCertifyType =
+    | typeof AssetGroupTagSelectorAutoCertifyDisabled
+    | typeof AssetGroupTagSelectorAutoCertifySeedsOnly
+    | typeof AssetGroupTagSelectorAutoCertifyAllMembers;
+
+export const AssetGroupTagSelectorAutoCertifyMap = {
+    [AssetGroupTagSelectorAutoCertifyDisabled]: 'Off',
+    [AssetGroupTagSelectorAutoCertifySeedsOnly]: 'Direct Objects',
+    [AssetGroupTagSelectorAutoCertifyAllMembers]: 'All Objects',
 } as const;
 
 export interface AssetGroupTagSelectorCounts {
@@ -105,7 +211,7 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     description: string;
     is_default: boolean;
     allow_disable: boolean;
-    auto_certify: boolean;
+    auto_certify: AssetGroupTagSelectorAutoCertifyType;
     seeds: AssetGroupTagSelectorSeed[];
     counts?: AssetGroupTagSelectorCounts;
 }
@@ -130,11 +236,13 @@ export const NodeSourceChild = 2 as const;
 export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
-export interface AssetGroupTagNode {
+export interface AssetGroupTagMember {
+    asset_group_tag_id: number;
     id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;
     name: string;
+    source: number;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
@@ -185,7 +293,6 @@ export interface SSOProvider extends Serial, SSOProviderConfiguration {
 export interface ListSSOProvidersResponse {
     data: SSOProvider[];
 }
-
 export interface User {
     id: string;
     sso_provider_id: number | null;
@@ -200,6 +307,15 @@ export interface User {
     updated_at: string;
     is_disabled: boolean;
     eula_accepted: boolean;
+    all_environments?: boolean;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+}
+
+export interface UserMinimal {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
 }
 
 interface Permission {
@@ -227,6 +343,12 @@ export interface ListUsersResponse {
     };
 }
 
+export interface ListUsersMinimalResponse {
+    data: {
+        users: UserMinimal[];
+    };
+}
+
 export interface LoginResponse {
     data: {
         user_id: string;
@@ -238,7 +360,7 @@ export interface LoginResponse {
 }
 
 export type CommunityCollectorType = 'sharphound' | 'azurehound';
-export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise' | 'openhound';
 export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
 
 export interface CollectorManifest {
@@ -276,6 +398,7 @@ export interface GraphNodeProperties {
 export type GraphNode = {
     label: string;
     kind: string;
+    kinds: string[];
     objectId: string;
     lastSeen: string;
     isTierZero: boolean;
@@ -283,11 +406,12 @@ export type GraphNode = {
     properties?: GraphNodeProperties;
 };
 
-export type GraphNodeSpreadWithProperties = Omit<GraphNode, 'properties'> & GraphNodeProperties;
+export type GraphNodeSpreadWithProperties = Partial<Omit<GraphNode, 'properties'> & GraphNodeProperties>;
 
 export type GraphNodes = Record<string, GraphNode>;
 
 export type GraphEdge = {
+    id: number;
     source: string;
     target: string;
     label: string;
@@ -295,6 +419,7 @@ export type GraphEdge = {
     lastSeen: string;
     impactPercent?: number;
     exploreGraphId?: string;
+    properties?: Record<string, any>;
     data?: Record<string, any>;
 };
 
@@ -321,6 +446,7 @@ export type StyledGraphNode = {
 };
 
 export type StyledGraphEdge = {
+    id: number;
     color: string;
     data: Record<string, any>;
     end1?: {
@@ -349,3 +475,651 @@ export type CustomNodeKindType = {
         };
     };
 };
+
+export type OuDetails = {
+    objectid: string;
+    name?: string;
+    exists?: boolean;
+    distinguishedname?: string;
+    type?: string;
+};
+
+export type DomainDetails = {
+    objectid: string;
+    name: string;
+    exists: boolean;
+    type: string;
+};
+
+export type DomainResult = {
+    job_id: number;
+    domain_name: string;
+    success: boolean;
+    message: string;
+    user_count: number;
+    group_count: number;
+    computer_count: number;
+    gpo_count: number;
+    ou_count: number;
+    container_count: number;
+    aiaca_count: number;
+    rootca_count: number;
+    enterpriseca_count: number;
+    ntauthstore_count: number;
+    certtemplate_count: number;
+    deleted_count: number;
+    id: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: {
+        Time: string;
+        Valid: boolean;
+    };
+};
+
+export type ScheduledJobDisplay = {
+    id: number;
+    client_id: string;
+    client_name: string;
+    event_id: number;
+    execution_time: string;
+    start_time: string;
+    end_time: string;
+    status: number;
+    status_message: string;
+    session_collection: boolean;
+    local_group_collection: boolean;
+    ad_structure_collection: boolean;
+    cert_services_collection: boolean;
+    ca_registry_collection: boolean;
+    dc_registry_collection: boolean;
+    all_trusted_domains: boolean;
+    domain_controller: string;
+    ous: OuDetails[];
+    domains: DomainDetails[];
+    domain_results: DomainResult[];
+};
+
+export type Client = {
+    configured_user: string;
+    events: {
+        id: number;
+        client_id: string;
+        session_collection: boolean;
+        local_group_collection: boolean;
+        ad_structure_collection: boolean;
+        cert_services_collection: boolean;
+        ca_registry_collection: boolean;
+        dc_registry_collection: boolean;
+        all_trusted_domains: boolean;
+        ous: OuDetails[];
+        domains: DomainDetails[];
+        rrule: string;
+    }[];
+    hostname: string;
+    id: string;
+    ip_address: string;
+    last_checkin: string;
+    name: string;
+    token: unknown;
+    current_job_id: number | null;
+    current_task_id: number | null;
+    current_job: ScheduledJobDisplay;
+    current_task: ScheduledJobDisplay;
+    completed_job_count: number;
+    completed_task_count: number;
+    domain_controller: unknown;
+    version: string;
+    user_sid: string;
+    type: string;
+    issuer_address: string;
+    issuer_address_override: string;
+    support_bundle_summary: SupportBundleSummaryStatus;
+};
+
+export type FileIngestJob = TimestampFields & {
+    end_time: string;
+    failed_files: number;
+    id: number;
+    last_ingest: string;
+    start_time: string;
+    status_message: string;
+    status: number;
+    total_files: number;
+    user_email_address: string;
+    user_id: string;
+};
+
+export type FileIngestCompletedTask = TimestampFields & {
+    errors: string[];
+    warnings: string[];
+    file_name: string;
+    id: number;
+    parent_file_name: string;
+};
+
+export const WindowsAuth = 'windows' as const;
+export const BloodHoundAuth = 'bloodhound' as const;
+
+export type AuthenticationMethod = typeof BloodHoundAuth | typeof WindowsAuth;
+
+export type FindingAssetsResponse = {
+    long_description: string;
+    long_remediation: string;
+    references: string;
+    short_description: string;
+    short_remediation: string;
+    title: string;
+    type: string;
+};
+
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+//  Alerts - Webhooks
+// ---------------------------------------------------------------------------
+export type WebhookType = 'generic' | 'slack' | 'ms-teams';
+
+export type Webhook = {
+    id: string;
+    type: WebhookType;
+    name: string;
+    description: string;
+    url: string;
+    health: number;
+    attempts: number;
+    failures: number;
+    last_error: string | null;
+    last_errored_at: ISO_DATE_STRING | null;
+    last_succeeded_at: ISO_DATE_STRING | null;
+    created_at: ISO_DATE_STRING;
+    created_by: string;
+    updated_at: ISO_DATE_STRING;
+    updated_by: string;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
+};
+
+export type WebhookSortBy =
+    | 'name'
+    | 'created_at'
+    | 'updated_at'
+    | 'health'
+    | 'type'
+    | 'url'
+    | 'last_triggered_at'
+    | 'last_error'
+    | 'attempts'
+    | '-name'
+    | '-created_at'
+    | '-updated_at'
+    | '-health'
+    | '-type'
+    | '-url'
+    | '-last_triggered_at'
+    | '-last_error'
+    | '-attempts';
+
+export interface GetWebhooksParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: WebhookSortBy;
+    name?: string;
+}
+
+export type AlertsSortBy = 'name' | 'created_at' | 'updated_at' | '-name' | '-created_at' | '-updated_at';
+
+export interface WebhookParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: string;
+    type?: WebhookType;
+    name?: string;
+    url?: string;
+    disabled?: string;
+    health?: string;
+    attempts?: string;
+    failures?: string;
+    created_at?: string;
+    updated_at?: string;
+    last_errored_at?: string;
+    last_succeeded_at?: string;
+}
+
+export interface WebhookSecret {
+    id: string;
+    hmac_secret: string;
+    created_at: ISO_DATE_STRING;
+}
+
+export interface WebhookTest {
+    event_type: string;
+    version: string;
+}
+
+export type SourceKind = {
+    id: number;
+    name: string;
+};
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+
+export interface AlertParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: AlertsSortBy;
+    type?: WebhookType;
+    created_at?: string;
+    delivered?: string | boolean;
+}
+
+export interface AlertEvent {
+    id: string;
+    type: string;
+    message: string;
+    data: object;
+    created_at: ISO_DATE_STRING;
+    attempts_queued_at: ISO_DATE_STRING;
+}
+
+export interface AlertEventTypeVersion {
+    created_at?: ISO_DATE_STRING;
+    dataExample: object;
+    data_version: number;
+    deprecated_at?: ISO_DATE_STRING;
+}
+
+export interface AlertEventType {
+    category: string;
+    description: string;
+    name: string;
+    namespace: string;
+    severity: string;
+    type: string;
+    versions: AlertEventTypeVersion[];
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts (Notifications)
+// ---------------------------------------------------------------------------
+
+export interface AlertsParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: 'name' | 'created_at' | 'updated_at';
+    type?: WebhookType;
+    created_at?: string;
+    delivered?: string | boolean;
+}
+
+export interface Subscription {
+    channel_id: string;
+    event_type: string;
+    version: number;
+    created_at: ISO_DATE_STRING | null;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string;
+}
+export interface Notification {
+    id: string;
+    name: string;
+    description: string;
+    created_at: ISO_DATE_STRING;
+    created_by: string;
+    updated_at: ISO_DATE_STRING;
+    updated_by: string;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
+    subscriptions: Subscription[];
+}
+
+export type AlertAttemptsSortableColumn = 'created_at' | 'succeeded_at' | 'next_attempt_at' | 'attempts';
+export type AlertAttemptsSortBy = AlertAttemptsSortableColumn | `-${AlertAttemptsSortableColumn}`;
+export interface AlertAttemptsParams {
+    skip?: number;
+    limit?: number;
+    sort_by?: AlertAttemptsSortBy;
+    alert_id?: string;
+    channel_id?: string;
+    event_id?: string;
+    succeeded?: boolean;
+    created_at?: ISO_DATE_STRING;
+}
+
+export interface AlertAttempt {
+    alert_id: string;
+    channel_id: string;
+    event_id: string;
+    created_at: ISO_DATE_STRING;
+    succeeded_at: ISO_DATE_STRING;
+    last_status_code: number;
+    last_error: string;
+    attempts: number;
+    next_attempt_at: ISO_DATE_STRING;
+}
+
+// ---------------------------------------------------------------------------
+// Base schemas
+// ---------------------------------------------------------------------------
+
+export interface ExtensionBase {
+    name: string;
+    display_name?: string;
+    namespace: string;
+    version: string;
+}
+
+export interface NodeKindBase {
+    name: string;
+    display_name?: string;
+    description?: string;
+    is_display_kind?: boolean;
+    icon?: string;
+    color?: string;
+}
+
+export interface RelationshipKindBase {
+    name: string;
+    description?: string;
+    is_traversable: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Info content primitives
+// ---------------------------------------------------------------------------
+
+export interface InfoMarkdownContent {
+    markdown: {
+        position?: number;
+        content: string;
+    };
+}
+
+export interface InfoQueryContent {
+    query: {
+        position?: number;
+        content: string;
+    };
+}
+
+export interface InfoPropsContent {
+    props: {
+        position?: number;
+        content: string[];
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Info section scenarios (mutually exclusive via never)
+// ---------------------------------------------------------------------------
+
+export type InfoMarkdown = InfoMarkdownContent & { query?: never; props?: never };
+export type InfoQuery = InfoQueryContent & { markdown?: never; props?: never };
+export type InfoProps = InfoPropsContent & { markdown?: never; query?: never };
+export type InfoMarkdownQuery = InfoMarkdownContent & InfoQueryContent & { props?: never };
+export type InfoMarkdownProps = InfoMarkdownContent & InfoPropsContent & { query?: never };
+
+// export type KindInfoContent = InfoMarkdown | InfoQuery | InfoProps | InfoMarkdownQuery | InfoMarkdownProps;
+export type KindInfoContent = InfoMarkdown;
+
+// ---------------------------------------------------------------------------
+// Kind info structures
+// ---------------------------------------------------------------------------
+export interface KindInfoBase {
+    title: string;
+    position: number;
+}
+
+type KindInfoKey = { name: string };
+
+export type KindInfoItem = KindInfoBase & KindInfoContent & KindInfoKey;
+
+export type NodeKindInfoItem = KindInfoItem & { node_kind_id: number };
+/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
+export type NodeKindInfo = NodeKindInfoItem[];
+
+export type RelationshipKindInfoItem = KindInfoItem & { relationship_kind_id: number };
+/** Keys: lowercase alphanumeric, hyphens, underscores, 1–128 chars */
+export type RelationshipKindInfo = RelationshipKindInfoItem[];
+
+// ---------------------------------------------------------------------------
+// Definition schemas
+// ---------------------------------------------------------------------------
+
+export interface RemediationDefinition {
+    short_description: string;
+    long_description: string;
+    short_remediation: string;
+    long_remediation: string;
+}
+
+export interface RelationshipFindingDefinition {
+    /** readOnly */
+    relationship_finding_id?: number;
+    name: string;
+    display_name: string;
+    relationship_kind: string;
+    environment_kind: string;
+    remediation: RemediationDefinition;
+}
+
+export interface EnvironmentDefinition {
+    environment_kind: string;
+    source_kind: string;
+    principal_kinds: string[];
+}
+
+export type NodeKindDefinition = NodeKindBase & { info?: NodeKindInfo };
+
+export type RelationshipKindDefinition = RelationshipKindBase & { info?: RelationshipKindInfo };
+
+export interface ExtensionDefinition {
+    schema: ExtensionBase;
+    node_kinds: NodeKindDefinition[];
+    relationship_kinds: RelationshipKindDefinition[];
+    environments?: EnvironmentDefinition[];
+    relationship_findings?: RelationshipFindingDefinition[];
+}
+
+// ---------------------------------------------------------------------------
+// Response body schemas
+// ---------------------------------------------------------------------------
+
+export interface ExtensionDetails {
+    /** readOnly */
+    extension_id?: number;
+    name: string;
+    display_name?: string;
+    namespace: string;
+    is_builtin?: boolean;
+    version: string;
+}
+
+export type NodeKindResponse = NodeKindBase & {
+    /** readOnly */
+    node_kind_id?: number;
+    extension?: ExtensionDetails;
+    info?: NodeKindInfo;
+};
+
+export type RelationshipKindResponse = RelationshipKindBase & {
+    /** readOnly */
+    relationship_kind_id?: number;
+    extension?: ExtensionDetails;
+    info?: RelationshipKindInfo;
+};
+
+export interface NodeKindRef {
+    node_kind_id: number | null;
+    name: string;
+}
+
+export interface NodeProperties {
+    objectid?: string;
+    name?: string;
+    displayname?: string;
+    /** date-time */
+    lastseen?: string;
+    [key: string]: unknown;
+}
+
+export interface NodeDetails {
+    /** readOnly */
+    node_id: number;
+    kinds: NodeKindRef[];
+    properties: NodeProperties;
+}
+
+export type NodeDetailsWithInfo = NodeDetails & {
+    info?: NodeKindInfo;
+};
+
+export interface RelationshipKindRef {
+    relationship_kind_id: number | null;
+    name: string;
+}
+
+export interface RelationshipProperties {
+    is_traversable?: boolean;
+    /** date-time */
+    lastSeen: string;
+    [key: string]: unknown;
+}
+
+export interface RelationshipDetails {
+    /** readOnly */
+    relationship_id: number;
+    kind: RelationshipKindRef;
+    /** readOnly */
+    source_node_id?: number;
+    /** readOnly */
+    target_node_id?: number;
+    properties: RelationshipProperties;
+}
+
+export type RelationshipDetailsWithInfo = RelationshipDetails & {
+    info?: RelationshipKindInfo;
+};
+
+// While this only has one currently, there will be more in the future, so we're doing this now to make that easier.
+export enum CollectorJobSecretType {
+    AuthKey = 'auth_key',
+}
+
+export interface CollectorJobSecret {
+    id: string;
+    type: CollectorJobSecretType;
+    key_id: string;
+    display_key_id: string;
+    created_at: string;
+}
+
+export interface CollectorJobType {
+    id: number;
+    key: string;
+    display_name: string;
+    params_version: string;
+    params_schema: Record<string, unknown>;
+    backoff_strategy: 'exponential' | 'fixed';
+    backoff_base: string;
+    backoff_cap: string;
+    max_attempts: number;
+    unclaimed_ttl: string | null;
+    claim_ttl: string;
+    is_builtin: boolean;
+    schema_extension_id: number | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    deleted_by: string | null;
+}
+
+export interface CollectorJobProfileMinimal {
+    id: number;
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_id: string | null;
+}
+
+export interface CollectorJobScheduleMinimal {
+    id: number;
+    name: string;
+    rrule: string;
+    next_run_at: string;
+    priority: number;
+}
+
+export interface CollectorJobProfile extends CollectorJobProfileMinimal {
+    schedules: CollectorJobScheduleMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CollectorJobSchedule extends CollectorJobScheduleMinimal {
+    disabled_at: string | null;
+    disabled_by: string | null;
+    profiles: CollectorJobProfileMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobStatus {
+    Ready = 'ready',
+    Claimed = 'claimed',
+    Running = 'running',
+}
+
+export interface CollectorJob {
+    id: string;
+    job_schedule_id: number | null;
+    job_profile_id: number | null;
+    job_type_id: number;
+    job_key: string;
+    params_version: string;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_key_id: string | null;
+    priority: number;
+    status: CollectorJobStatus;
+    run_at: string;
+    unclaimed_deadline_at: string;
+    attempts: number;
+    max_attempts: number;
+    last_failure: string | null;
+    claimed_by: string | null;
+    claimed_at: string | null;
+    claim_expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobOutcome {
+    Succeeded = 'succeeded',
+    Failed = 'failed',
+    Cancelled = 'cancelled',
+}
+
+export interface CollectorJobHistory {
+    id: string;
+    recorded_at: string;
+    job_created_at: string;
+    last_claimed_at: string | null;
+    last_claimed_by: string | null;
+    job_schedule_id: number | null;
+    job_profile_id: number | null;
+    job_type_id: number;
+    job_key: string;
+    params_version: string;
+    priority: number;
+    params: Record<string, unknown>;
+    attempts: number;
+    outcome: CollectorJobOutcome;
+    outcome_metadata: Record<string, unknown> | null;
+    failure_reason: string | null;
+}

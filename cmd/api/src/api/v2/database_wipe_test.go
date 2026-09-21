@@ -17,29 +17,35 @@
 package v2_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/gofrs/uuid"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
+	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
 
 func TestDatabaseWipe(t *testing.T) {
 	var (
-		mockCtrl  = gomock.NewController(t)
-		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-		mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{DB: mockDB, Graph: mockGraph}
-		user      = setupUser()
-		userCtx   = setupUserCtx(user)
+		mockCtrl              = gomock.NewController(t)
+		mockDB                = dbMocks.NewMockDatabase(mockCtrl)
+		mockGraph             = graph_mocks.NewMockDatabase(mockCtrl)
+		resources             = v2.Resources{DB: mockDB, Graph: mockGraph}
+		user                  = setupUser()
+		userCtx               = setupUserCtx(user)
+		capturedDeleteRequest model.AnalysisRequest
 	)
 	defer mockCtrl.Finish()
 
@@ -117,6 +123,91 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 			{
+				Name: "successful source kind deletion request",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteSourceKinds: []int{0, 42}})
+				},
+				Setup: func() {
+					capturedDeleteRequest = model.AnalysisRequest{}
+
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
+					mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(graph.Kinds{graph.StringKind("Base"), graph.StringKind("User")}, nil)
+					mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, request model.AnalysisRequest) error {
+						capturedDeleteRequest = request
+						return nil
+					}).Times(1)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
+					if capturedDeleteRequest.RequestedBy != user.ID.String() {
+						t.Fatalf("expected requested by %q, got %q", user.ID.String(), capturedDeleteRequest.RequestedBy)
+					}
+					if capturedDeleteRequest.RequestType != model.AnalysisRequestDeletion {
+						t.Fatalf("expected request type %q, got %q", model.AnalysisRequestDeletion, capturedDeleteRequest.RequestType)
+					}
+					if !capturedDeleteRequest.DeleteSourcelessGraph {
+						t.Fatal("expected delete sourceless graph to be true")
+					}
+					if !slices.Equal(capturedDeleteRequest.DeleteSourceKinds, []string{"Base"}) {
+						t.Fatalf("expected delete source kinds [Base], got %v", capturedDeleteRequest.DeleteSourceKinds)
+					}
+				},
+			},
+			{
+				Name: "successful relationship deletion request",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteRelationships: []string{"HasSession"}})
+				},
+				Setup: func() {
+					capturedDeleteRequest = model.AnalysisRequest{}
+
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, request model.AnalysisRequest) error {
+						capturedDeleteRequest = request
+						return nil
+					}).Times(1)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
+					if capturedDeleteRequest.RequestedBy != user.ID.String() {
+						t.Fatalf("expected requested by %q, got %q", user.ID.String(), capturedDeleteRequest.RequestedBy)
+					}
+					if capturedDeleteRequest.RequestType != model.AnalysisRequestDeletion {
+						t.Fatalf("expected request type %q, got %q", model.AnalysisRequestDeletion, capturedDeleteRequest.RequestType)
+					}
+					if !slices.Equal(capturedDeleteRequest.DeleteRelationships, []string{"HasSession"}) {
+						t.Fatalf("expected delete relationships [HasSession], got %v", capturedDeleteRequest.DeleteRelationships)
+					}
+					if capturedDeleteRequest.DeleteAllGraph {
+						t.Fatal("expected delete all graph to be false")
+					}
+				},
+			},
+			{
+				Name: "source kind deletion request returns 400 for unknown source kind id",
+				Input: func(input *apitest.Input) {
+					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
+					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteSourceKinds: []int{99}})
+				},
+				Setup: func() {
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
+					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "failure building delete request: requested source kind id 99 not found")
+				},
+			},
+			{
 				Name: "failed deletion of high value selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetHeader(input, headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -145,7 +236,7 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAssetGroupSelectorsDelete := mockDB.EXPECT().DeleteAssetGroupSelectorsForAssetGroups(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					successfulAuditLogSuccess := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					successfulAnalysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					successfulAnalysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeFull).Times(1)
 
 					gomock.InOrder(successfulAuditLogIntent, successfulAssetGroupSelectorsDelete, successfulAuditLogSuccess, successfulAnalysisKickoff)
 
@@ -278,7 +369,7 @@ func TestDatabaseWipe(t *testing.T) {
 					assetGroupSelectorsAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// analysis kickoff
-					analysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String()).Times(1)
+					analysisKickoff := mockDB.EXPECT().RequestAnalysis(gomock.Any(), uuid.UUID{}.String(), model.AnalysisModeFull).Times(1)
 
 					gomock.InOrder(assetGroupSelectorsDelete, assetGroupSelectorsAuditLog, analysisKickoff)
 
@@ -297,4 +388,135 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestResources_BuildDeleteRequest(t *testing.T) {
+	t.Run("maps relationship delete request", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		deleteRequest, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteRelationships: []string{"HasSession"},
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if deleteRequest.RequestedBy != "test-user" {
+			t.Fatalf("expected requested by to be test-user, got %q", deleteRequest.RequestedBy)
+		}
+
+		if deleteRequest.RequestType != model.AnalysisRequestDeletion {
+			t.Fatalf("expected request type %q, got %q", model.AnalysisRequestDeletion, deleteRequest.RequestType)
+		}
+
+		if !slices.Equal(deleteRequest.DeleteRelationships, []string{"HasSession"}) {
+			t.Fatalf("expected delete relationships to contain HasSession, got %v", deleteRequest.DeleteRelationships)
+		}
+	})
+
+	t.Run("maps source kinds and sourceless flag", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		mockDB.EXPECT().GetSourceKinds(testCtx).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
+		mockGraph.EXPECT().FetchKinds(testCtx).Return(graph.Kinds{graph.StringKind("Base"), graph.StringKind("User")}, nil)
+
+		deleteRequest, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteSourceKinds: []int{0, 42},
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if !deleteRequest.DeleteSourcelessGraph {
+			t.Fatal("expected delete sourceless graph to be true")
+		}
+
+		if !slices.Equal(deleteRequest.DeleteSourceKinds, []string{"Base"}) {
+			t.Fatalf("expected delete source kinds to contain Base, got %v", deleteRequest.DeleteSourceKinds)
+		}
+	})
+
+	t.Run("rejects unknown source kind id", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		mockDB.EXPECT().GetSourceKinds(testCtx).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
+
+		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteSourceKinds: []int{99},
+		})
+		if err == nil {
+			t.Fatal("expected an error for an unknown source kind id")
+		}
+
+		if !strings.Contains(err.Error(), "requested source kind id 99 not found") {
+			t.Fatalf("expected unknown source kind error, got %v", err)
+		}
+	})
+
+	t.Run("rejects deleteCollectedGraphData combined with source kinds", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteCollectedGraphData: true,
+			DeleteSourceKinds:        []int{42},
+		})
+		if err == nil {
+			t.Fatal("expected an error when deleteCollectedGraphData is combined with source kinds")
+		}
+
+		if !strings.Contains(err.Error(), "deleteCollectedGraphData may not be combined with deleteSourceKinds or deleteRelationships") {
+			t.Fatalf("expected mutual exclusion error, got %v", err)
+		}
+	})
+
+	t.Run("rejects deleteCollectedGraphData combined with relationships", func(t *testing.T) {
+		var (
+			testCtx   = context.Background()
+			mockCtrl  = gomock.NewController(t)
+			mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+			mockGraph = graph_mocks.NewMockDatabase(mockCtrl)
+			resources = v2.Resources{DB: mockDB, Graph: mockGraph}
+		)
+		defer mockCtrl.Finish()
+
+		_, err := resources.BuildDeleteRequest(testCtx, "test-user", v2.DatabaseWipe{
+			DeleteCollectedGraphData: true,
+			DeleteRelationships:      []string{"HasSession"},
+		})
+		if err == nil {
+			t.Fatal("expected an error when deleteCollectedGraphData is combined with relationships")
+		}
+
+		if !strings.Contains(err.Error(), "deleteCollectedGraphData may not be combined with deleteSourceKinds or deleteRelationships") {
+			t.Fatalf("expected mutual exclusion error, got %v", err)
+		}
+	})
 }

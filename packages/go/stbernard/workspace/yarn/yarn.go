@@ -17,6 +17,7 @@
 package yarn
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -58,12 +59,18 @@ type Workspace struct {
 // InstallWorkspaceDeps runs yarn install for a given list of jsPaths
 func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"install"}
 	)
 
 	for _, path := range jsPaths {
-		if _, err := cmdrunner.Run(command, args, path, env); err != nil {
+		executionPlan := cmdrunner.ExecutionPlan{
+			Command: command,
+			Args:    args,
+			Path:    path,
+			Env:     env.Slice(),
+		}
+		if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 			return fmt.Errorf("yarn install at %v: %w", path, err)
 		}
 	}
@@ -74,11 +81,17 @@ func InstallWorkspaceDeps(cwd string, jsPaths []string, env environment.Environm
 // Format runs yarn format on current workspace
 func Format(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"format"}
 	)
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("running yarn format: %w", err)
 	} else {
 		return nil
@@ -88,11 +101,17 @@ func Format(cwd string, env environment.Environment) error {
 // BuildWorkspace runs yarn build for the current working directory
 func BuildWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"build"}
 	)
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("yarn build at %v: %w", cwd, err)
 	} else {
 		return nil
@@ -102,11 +121,17 @@ func BuildWorkspace(cwd string, env environment.Environment) error {
 // TestWorkspace runs yarn tests for all yarn workspaces
 func TestWorkspace(cwd string, env environment.Environment) error {
 	var (
-		command = "yarn"
+		command = env[environment.YarnCmdVarName]
 		args    = []string{"test", "--coverage", "--run"}
 	)
 
-	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: command,
+		Args:    args,
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
 		return fmt.Errorf("yarn test at %v: %w", cwd, err)
 	} else {
 		return nil
@@ -164,7 +189,7 @@ func relWorkspaceToAbsWorkspace(cwd string, relWorkspace Workspace) Workspace {
 func getCoverage(coverFile string) (coverage, error) {
 	var cov coverage
 	if b, err := os.ReadFile(coverFile); err != nil {
-		slog.Warn(fmt.Sprintf("Could not find coverage for %s, skipping", coverFile))
+		slog.Warn("Could not find coverage, skipping", slog.String("cover_file", coverFile))
 		return cov, nil
 	} else if err := json.Unmarshal(b, &cov); err != nil {
 		return cov, fmt.Errorf("unmarshal coverage file %s: %w", coverFile, err)

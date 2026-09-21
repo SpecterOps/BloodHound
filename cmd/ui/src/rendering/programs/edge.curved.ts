@@ -35,6 +35,7 @@ import { bezier } from 'src/rendering/utils/bezier';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
+    SEGMENTS_PER_EDGE = POINTS / 2 - 1,
     ATTRIBUTES = 6,
     STRIDE = POINTS * ATTRIBUTES;
 
@@ -51,6 +52,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
     canUse32BitsIndices: boolean;
+    correctionRatio: number = 1;
 
     constructor(gl: WebGLRenderingContext) {
         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -152,23 +154,57 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         // 1. Calculate a control point for this edge
 
         let { control } = data;
+        const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
 
         if (!control) {
-            const height = bezier.calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
             control = bezier.getControlAtMidpoint(height, start, end);
         }
 
-        // 2. Get collection of points at some constant resolution distributed on quadratic curve based on
-        // starting point, ending point, previously calculated control point
+        // 2. Estimate a clamp t-value for the edge. This should cut off at the last step of RESOLUTION before the edge
+        // arrowhead's base -- we'll add a final point at the exact clamp position to close the gap
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+
+        // The magic numbers are hardcoded constants from the existing GLSL shaders for the arrowhead, they are needed here
+        // to calculate the correct arrowhead length.
+        const sqrtZoomRatio = 1 / inverseSqrtZoomRatio;
+        const graphSpaceRadius = targetData.size * 2.0 * this.correctionRatio;
+        const pixelsThickness = Math.max(thickness, 1.7 * sqrtZoomRatio);
+        const graphSpaceArrowLength = pixelsThickness * 3.0 * this.correctionRatio;
+
+        let clamp: number;
+        if (height !== 0) {
+            // This matches the binary search approach in the edge.curvedArrowHead program to find the approximate t at the arrow's base
+            const evalCurve = (t: number) =>
+                bezier.getCoordinatesAlongQuadraticBezier(sourceData, targetData, control, t);
+
+            const tipT = bezier.getTAtDistance(evalCurve, targetData, graphSpaceRadius, 0.5, 1);
+            const tip = evalCurve(tipT);
+
+            clamp = bezier.getTAtDistance(evalCurve, tip, graphSpaceArrowLength, 0.5, tipT);
+        } else {
+            // Like in the arrowhead program, this calculation is much simpler when the edge is a straight line.
+            const lineLength = bezier.getLineLength(sourceData, targetData);
+            clamp = (lineLength - graphSpaceRadius - graphSpaceArrowLength) / lineLength;
+        }
+
+        // 3. Get collection of points at some constant resolution distributed on quadratic curve based on
+        // starting point, ending point, previously calculated control point. Only fill our buffers up to the
+        // previously calculated clamp value.
 
         const points = [];
 
-        for (let t = 0; t <= 1; t += RESOLUTION) {
+        for (let t = 0; t <= clamp; t += RESOLUTION) {
             const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
             points.push(pointOnCurve);
         }
 
-        // 3. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
+        // Prevent rendering this edge if it is short enough that there is only one point before our clamp value
+        if (points.length < 2) {
+            for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
+            return;
+        }
+
+        // 4. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
         // add data to this.array
 
         let i = POINTS * ATTRIBUTES * offset;
@@ -214,6 +250,42 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = color;
             array[i++] = 0;
         }
+
+        // Add one final point at the exact clamp position if we have the space. makes up any gap between the edge's
+        // last full segment and the arrowhead.
+        const bufferEnd = STRIDE * (offset + 1);
+        if (i + 12 <= bufferEnd) {
+            const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
+            const previousPoint = points[points.length - 1];
+
+            if (finalPoint.x !== previousPoint.x || finalPoint.y !== previousPoint.y) {
+                const finalNormal = bezier.getNormals(previousPoint, finalPoint);
+                const vOffset = {
+                    x: finalNormal.x * thickness,
+                    y: -finalNormal.y * thickness,
+                };
+                // First point
+                array[i++] = finalPoint.x;
+                array[i++] = finalPoint.y;
+                array[i++] = vOffset.y;
+                array[i++] = vOffset.x;
+                array[i++] = color;
+                array[i++] = 0;
+
+                // First point flipped
+                array[i++] = finalPoint.x;
+                array[i++] = finalPoint.y;
+                array[i++] = -vOffset.y;
+                array[i++] = -vOffset.x;
+                array[i++] = color;
+                array[i++] = 0;
+            }
+        }
+
+        // zero out any remaining buffer slots
+        while (i < bufferEnd) {
+            array[i++] = 0;
+        }
     }
 
     computeIndices(): void {
@@ -231,7 +303,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             indices[c++] = i + 3;
 
             // Disconnect if it is the last line segment in the curve
-            const isLastSegment = (c / 6) % (RESOLUTION - 1) === 0;
+            const isLastSegment = (c / 6) % SEGMENTS_PER_EDGE === 0;
             if (isLastSegment) i += 2;
         }
 
@@ -248,6 +320,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
     render(params: RenderParams): void {
         if (this.hasNothingToRender()) return;
+
+        this.correctionRatio = params.correctionRatio;
 
         const gl = this.gl;
 

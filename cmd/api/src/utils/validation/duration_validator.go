@@ -42,7 +42,7 @@ func NewDurationValidator(params map[string]string) Validator {
 	if minD, ok := params["min"]; ok {
 		validator.min = params["min"]
 		if duration, err := iso8601.FromString(minD); err != nil {
-			slog.Warn(fmt.Sprintf("NewDurationValidator invalid min limit provided %s", minD))
+			slog.Warn("NewDurationValidator invalid min limit provided", slog.String("duration", minD))
 		} else {
 			validator.minD = duration.ToDuration()
 		}
@@ -51,7 +51,7 @@ func NewDurationValidator(params map[string]string) Validator {
 	if maxD, ok := params["max"]; ok {
 		validator.max = params["max"]
 		if duration, err := iso8601.FromString(maxD); err != nil {
-			slog.Warn(fmt.Sprintf("NewDurationValidator invalid max limit provided %s", maxD))
+			slog.Warn("NewDurationValidator invalid max limit provided", slog.String("duration", maxD))
 		} else {
 			validator.maxD = duration.ToDuration()
 		}

@@ -16,22 +16,30 @@
 
 import { Box } from '@mui/material';
 import NodeIcon from '../../components/NodeIcon';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { EntityKinds } from '../../utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind, CommonKindProperties } from '../../graphSchema';
+import { EntityKinds, KnownNodeProperties, formatPotentiallyUnknownLabel } from '../../utils';
 import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
-    displayname?: string;
-    grouplinkid?: string;
+    properties: Record<string, any> & {
+        displayname?: string;
+        grouplinkid?: string;
+        isOwnedObject?: boolean;
+        isTierZero?: boolean;
+        name?: string;
+        noderesourcegroupid?: string;
+        objectid?: string;
+        serverreferencecomputer?: string;
+        serverreferencecomputername?: string;
+        service_principal_id?: string;
+        siteservernode?: string;
+        siteservernodename?: string;
+        federatedidentitycredentialappid?: string;
+    };
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
-    isOwned?: boolean;
-    isTierZero?: boolean;
-    name?: string;
-    noderesourcegroupid?: string;
     nodeType?: string;
-    objectid: string;
-    service_principal_id?: string;
+    zone?: string;
 }
 
 const RelatedKindField = (
@@ -39,8 +47,11 @@ const RelatedKindField = (
     fieldLabel: string,
     relatedKind: EntityKinds,
     id: string,
-    name?: string
+    name?: string,
+    displayValue?: string
 ) => {
+    const value = displayValue || id;
+
     return (
         <Box padding={1}>
             <Box fontWeight='bold' mr={1}>
@@ -50,39 +61,83 @@ const RelatedKindField = (
             <Box display='flex' flexDirection='row' flexWrap='wrap' justifyContent='flex-start'>
                 <NodeIcon nodeType={relatedKind} />
                 <Box
-                    onClick={() => onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || '' })}
+                    onClick={() =>
+                        onSourceNodeSelected({ objectid: id, type: relatedKind, name: name || displayValue || '' })
+                    }
                     style={{ cursor: 'pointer' }}
                     overflow='hidden'
                     textOverflow='ellipsis'
-                    title={id}>
-                    {id}
+                    title={value}>
+                    {value}
                 </Box>
             </Box>
         </Box>
     );
 };
 
-export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
+const basicObjectFields = [
+    'zone',
+    'nodeType',
+    'isTierZero',
+    'isOwnedObject',
+    CommonKindProperties.DisplayName,
+    CommonKindProperties.ObjectID,
+] satisfies (KnownNodeProperties | CommonKindProperties | 'zone')[];
+
+export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
+    properties: props,
+    handleSourceNodeSelected,
+    nodeType,
+    zone,
+}): JSX.Element => {
+    const fieldValues = { ...props, nodeType, zone };
     return (
         <>
-            {props.nodeType && <Field label='Node Type' value={props.nodeType} />}
-            {props.isTierZero && <Field label='Tier Zero:' value={true} />}
-            {props.isOwned && <Field label='Owned Object:' value={true} />}
-            {props.displayname && <Field label='Display Name:' value={props.displayname} />}
-            <Field label='Object ID:' value={props.objectid} />
-            {props.handleSourceNodeSelected && (
+            {basicObjectFields.map((field) => {
+                const value = fieldValues[field];
+                if (value === undefined) return null; // <Field /> doesn't support undefined values
+
+                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
+            })}
+            {handleSourceNodeSelected && (
                 <>
                     {props.service_principal_id &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Service Principal ID:',
                             AzureNodeKind.ServicePrincipal,
                             props.service_principal_id,
                             props.name
                         )}
+                    {props.serverreferencecomputer &&
+                        RelatedKindField(
+                            handleSourceNodeSelected,
+                            'Referenced Computer:',
+                            ActiveDirectoryNodeKind.Computer,
+                            props.serverreferencecomputer,
+                            props.serverreferencecomputername,
+                            props.serverreferencecomputername
+                        )}
+                    {props.siteservernode &&
+                        RelatedKindField(
+                            handleSourceNodeSelected,
+                            'Site Server:',
+                            ActiveDirectoryNodeKind.SiteServer,
+                            props.siteservernode,
+                            props.siteservernodename,
+                            props.siteservernodename
+                        )}
+                    {props.federatedidentitycredentialappid &&
+                        RelatedKindField(
+                            handleSourceNodeSelected,
+                            'Federated Identity Credential Application ID:',
+                            AzureNodeKind.App,
+                            props.federatedidentitycredentialappid,
+                            props.name
+                        )}
                     {props.noderesourcegroupid &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Node Resource Group ID:',
                             AzureNodeKind.ResourceGroup,
                             props.noderesourcegroupid,
@@ -90,7 +145,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
                         )}
                     {props.grouplinkid &&
                         RelatedKindField(
-                            props.handleSourceNodeSelected,
+                            handleSourceNodeSelected,
                             'Linked Group ID:',
                             ActiveDirectoryNodeKind.Group,
                             props.grouplinkid,

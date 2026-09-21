@@ -14,43 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faCode, faDirections, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { Tab, Tabs } from '@mui/material';
 import {
     CypherSearch,
     ExploreQueryParams,
     ExploreSearchTab,
-    Icon,
     MappedStringLiteral,
     NodeSearch,
     PathfindingSearch,
     cn,
     encodeCypherQuery,
+    isGraphResponse,
     useCypherSearch,
     useExploreParams,
+    useExploreSelectedItem,
     useNodeSearch,
     usePathfindingFilters,
     usePathfindingSearch,
 } from 'bh-shared-ui';
+import { IconButton } from 'doodle-ui';
+import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import React, { useState } from 'react';
-
-const useStyles = makeStyles((theme) => ({
-    menuButton: {
-        borderRadius: theme.shape.borderRadius,
-        borderColor: 'rgba(0,0,0,0.23)',
-        color: 'black',
-        height: '35px',
-    },
-    icon: {
-        height: '40px',
-        boxSizing: 'border-box',
-        padding: theme.spacing(2),
-        fontSize: theme.typography.fontSize,
-        color: theme.palette.color.primary,
-    },
-}));
+import { setAutoRunQueries, setTimeoutSetting } from 'src/ducks/global/actions';
+import { useAppDispatch, useAppSelector } from 'src/store';
 
 const tabMap = {
     node: 0,
@@ -58,28 +46,41 @@ const tabMap = {
     cypher: 2,
 } satisfies MappedStringLiteral<ExploreSearchTab, number>;
 
+const tabs = [
+    {
+        label: 'Search',
+        icon: faSearch,
+    },
+    {
+        label: 'Pathfinding',
+        icon: faDirections,
+    },
+    {
+        label: 'Cypher',
+        icon: faCode,
+    },
+];
+
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
-    if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
+    if (exploreSearchTab && Object.hasOwn(tabMap, exploreSearchTab)) return exploreSearchTab as keyof typeof tabMap;
     return 'node';
 };
 
 const ExploreSearch: React.FC = () => {
     /* Hooks */
-    const classes = useStyles();
-
-    const theme = useTheme();
-
-    const matches = useMediaQuery(theme.breakpoints.down('md'));
-
-    const { exploreSearchTab, setExploreParams } = useExploreParams();
+    const { cypherSearch, exploreSearchTab, setExploreParams } = useExploreParams();
+    const { clearSelectedItem, setSelectedItem } = useExploreSelectedItem();
 
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
+
     // We can move this back down into the filter modal once we remove the redux implementation
     const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
+    const activeTabValue = tabMap[activeTab];
+    const activeTabLabel = tabs[activeTabValue].label;
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
@@ -112,6 +113,12 @@ const ExploreSearch: React.FC = () => {
             if (!pathfindingSearchState.destinationSelectedItem) {
                 params.secondarySearch = null;
             }
+            if (!pathfindingSearchState.nodes[2]?.selectedItem) {
+                params.tertiarySearch = null;
+            }
+            if (!pathfindingSearchState.nodes[3]?.selectedItem) {
+                params.quaternarySearch = null;
+            }
         }
         if (tab === 'cypher') {
             if (!cypherSearchState.cypherQuery) {
@@ -140,46 +147,90 @@ const ExploreSearch: React.FC = () => {
             params.exploreSearchTab = 'pathfinding';
         }
         if (tab === 'cypher') {
-            params.searchType = 'cypher';
+            if (cypherSearchState.cypherQuery) {
+                params.searchType = 'cypher';
+            }
             params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
             params.exploreSearchTab = 'cypher';
         }
         return params;
     };
 
+    //auto run queries
+    const autoRun = useAppSelector((state) => state.global.view.autoRunQueries);
+    const dispatch = useAppDispatch();
+    const handleAutoRunChange = (autoRun: boolean) => {
+        dispatch(setAutoRunQueries(autoRun));
+    };
+
+    // disable query timeout
+    const disableTimeout = useAppSelector((state) => state.global.view.timeoutSetting);
+    const handleDisableTimeoutChange = (disableTimeout: boolean) => {
+        dispatch(setTimeoutSetting(disableTimeout));
+    };
+
+    const handleQuerySuccess: (data: GraphResponse | FlatGraphResponse) => void = (data) => {
+        if (isGraphResponse(data)) {
+            const returnedNodes = Object.keys(data.data.nodes || {});
+
+            const keepSearchMenuOpenBecauseNoCypherQuery = !cypherSearch && exploreSearchTab === 'cypher';
+            const shouldCloseMenu = !keepSearchMenuOpenBecauseNoCypherQuery && returnedNodes.length >= 1;
+
+            if (returnedNodes.length > 1) {
+                clearSelectedItem();
+            } else if (returnedNodes.length === 1) {
+                setSelectedItem(returnedNodes[0]);
+            }
+
+            if (shouldCloseMenu) {
+                setShowSearchWidget(false);
+            }
+        }
+    };
+
     return (
-        <div
-            data-testid='explore_search-container'
-            className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
-                'w-[600px]': activeTab === 'cypher' && showSearchWidget,
-            })}>
+        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
+            {/* Added for Screen Reader */}
+            <h2 className='sr-only'>{`${activeTabLabel} tab`}</h2>
             <div
-                className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
+                className='h-10 pl-1 w-full flex gap-1 items-center rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
-                <Icon
+                <IconButton
+                    aria-label='Toggle search widget'
                     data-testid='explore_search-container_header_expand-collapse-button'
-                    className={classes.icon}
-                    click={() => {
+                    className='rounded-sm'
+                    onClick={() => {
                         setShowSearchWidget((v) => !v);
                     }}>
-                    <FontAwesomeIcon icon={showSearchWidget ? faMinus : faPlus} />
-                </Icon>
+                    <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} />
+                </IconButton>
                 <Tabs
                     variant='fullWidth'
-                    value={tabMap[activeTab]}
+                    value={activeTabValue}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     className='h-10 min-h-10 w-full'
                     TabIndicatorProps={{
                         className: 'h-[3px]',
                     }}>
-                    {getTabsContent(matches)}
+                    {tabs.map(({ label, icon }) => (
+                        <Tab
+                            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
+                            label={label}
+                            key={label}
+                            icon={<FontAwesomeIcon icon={icon} />}
+                            iconPosition='start'
+                            title={label}
+                            className='h-10 min-h-10'
+                        />
+                    ))}
                 </Tabs>
             </div>
 
             <div
-                className={cn('hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]', {
+                className={cn('hidden min-h-0 rounded pointer-events-auto', {
                     block: showSearchWidget,
+                    'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
                 })}>
                 <TabPanels
                     tabs={[
@@ -190,7 +241,14 @@ const ExploreSearch: React.FC = () => {
                             pathfindingSearchState={pathfindingSearchState}
                             pathfindingFilterState={pathfindingFilterState}
                         />,
-                        <CypherSearch cypherSearchState={cypherSearchState} />,
+                        <CypherSearch
+                            cypherSearchState={cypherSearchState}
+                            autoRun={autoRun}
+                            setAutoRun={handleAutoRunChange}
+                            disableQueryLimit={disableTimeout}
+                            setDisableQueryLimit={handleDisableTimeoutChange}
+                            onQuerySuccess={handleQuerySuccess}
+                        />,
                         /* eslint-enable react/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
@@ -198,35 +256,6 @@ const ExploreSearch: React.FC = () => {
             </div>
         </div>
     );
-};
-
-const getTabsContent = (matches: boolean) => {
-    const tabs = [
-        {
-            label: 'Search',
-            icon: faSearch,
-        },
-        {
-            label: 'Pathfinding',
-            icon: faDirections,
-        },
-        {
-            label: 'Cypher',
-            icon: faCode,
-        },
-    ];
-
-    return tabs.map(({ label, icon }) => (
-        <Tab
-            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
-            label={matches ? '' : label}
-            key={label}
-            icon={<FontAwesomeIcon icon={icon} />}
-            iconPosition='start'
-            title={label}
-            className='h-10 min-h-10'
-        />
-    ));
 };
 
 interface TabPanelsProps {

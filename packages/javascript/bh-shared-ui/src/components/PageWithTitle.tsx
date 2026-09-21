@@ -14,23 +14,48 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Container, ContainerProps, Typography } from '@mui/material';
+import { Box, Container, ContainerProps } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useAppName } from '../providers/AppNameProvider';
+import { cn } from '../utils';
 
 type PageWithTitleProps = ContainerProps<
     'div',
     {
         title?: string;
+        actions?: React.ReactNode;
         pageDescription?: JSX.Element;
         children?: React.ReactNode;
+        fullWidth?: boolean;
     }
 >;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({
+    title,
+    actions,
+    pageDescription,
+    children,
+    fullWidth,
+    className,
+    ...rest
+}) => {
+    const appName = useAppName();
     return (
-        <Container maxWidth='xl' {...rest}>
-            <Box component={'header'}>
-                {title && <Typography variant='h1'>{title}</Typography>}
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={cn('pt-4', className)}>
+            {title && (
+                <Helmet>
+                    <title>
+                        {title} | {appName}
+                    </title>
+                </Helmet>
+            )}
+            <Box component={'header'} className='pb-4'>
+                <div className='mb-4 flex justify-between gap-2'>
+                    {title && <Typography variant='h1'>{title}</Typography>}
+                    {actions && actions}
+                </div>
                 {pageDescription}
             </Box>
             {children}

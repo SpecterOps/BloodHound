@@ -23,10 +23,11 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/tools"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/packages/go/bhlog"
-	"github.com/specterops/bloodhound/packages/go/bhlog/level"
+	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -34,13 +35,21 @@ import (
 	"github.com/specterops/dawgs/util/size"
 )
 
+// RuntimeDependencies holds values that must be created before the entrypoint starts. For instance
+// IngestControl is reliant on the FileService. In order for the pre-migration toolapi to have
+// access to the FileServiceRetained, the FileServiceResolver is created prior to the
+// PreMigrationDaemons and the Entrypoint. This could then be passed in.
+type RuntimeDependencies struct {
+	FileServiceResolver storageService.FileServiceResolver
+}
+
 func ensureDirectory(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 
-		if err := os.MkdirAll(path, 0755); err != nil {
+		if err := os.MkdirAll(path, 0o755); err != nil {
 			return fmt.Errorf("unable to create directory %s: %w", path, err)
 		}
 	}
@@ -59,12 +68,40 @@ func EnsureServerDirectories(cfg config.Configuration) error {
 		return err
 	}
 
+	if err := ensureDirectory(cfg.ScratchDirectory()); err != nil {
+		return err
+	}
+
+	if err := ensureDirectory(cfg.RetainedFilesDirectory()); err != nil {
+		return err
+	}
+
 	if err := ensureDirectory(cfg.ClientLogDirectory()); err != nil {
 		return err
 	}
 
 	if err := ensureDirectory(cfg.CollectorsDirectory()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+var requiredFileServices = []storage.FileServiceName{
+	storage.FileServiceIngest,
+	storage.FileServiceRetained,
+	storage.FileServiceCollectors,
+	storage.FileServiceWork,
+}
+
+// EnsureFileServices confirms that the required file services are created in the supplied fileServiceResolver.
+func EnsureFileServices(
+	fileServiceResolver storageService.FileServiceResolver,
+) error {
+	for _, serviceName := range requiredFileServices {
+		if _, err := fileServiceResolver.Resolve(serviceName); err != nil {
+			return fmt.Errorf("failed to resolve %s file service: %w", serviceName, err)
+		}
 	}
 
 	return nil
@@ -82,7 +119,7 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 		err              error
 	)
 
-	driverName, err := tools.LookupGraphDriver(ctx, cfg)
+	driverName, err := tools.ResolveGraphDriver(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +127,13 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	switch driverName {
 	case neo4j.DriverName:
 		slog.InfoContext(ctx, "Connecting to graph using Neo4j")
-		connectionString = cfg.Neo4J.Neo4jConnectionString()
+		connectionString = cfg.Neo4J.Neo4JConnectionString()
 
 	case pg.DriverName:
 		slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
 		connectionString = cfg.Database.PostgreSQLConnectionString()
 
-		pool, err = pg.NewPool(connectionString)
+		pool, err = dbpool.NewDawgsPool(cfg.Database)
 		if err != nil {
 			return nil, err
 		}
@@ -116,27 +153,4 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 	} else {
 		return graph.NewDatabaseSwitch(ctx, graphDatabase), nil
 	}
-}
-
-// InitializeLogging sets up output file logging, and returns errors if any
-func InitializeLogging(cfg config.Configuration) error {
-	var logLevel = slog.LevelInfo
-
-	if cfg.LogLevel != "" {
-		if parsedLevel, err := bhlog.ParseLevel(cfg.LogLevel); err != nil {
-			return err
-		} else {
-			logLevel = parsedLevel
-		}
-	}
-
-	if cfg.EnableTextLogger {
-		bhlog.ConfigureDefaultText(os.Stdout)
-	} else {
-		bhlog.ConfigureDefaultJSON(os.Stdout)
-	}
-	level.SetGlobalLevel(logLevel)
-
-	slog.Info("Logging configured")
-	return nil
 }

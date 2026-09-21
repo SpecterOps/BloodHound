@@ -14,6 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Deprecated: The code in this file supports legacy v8 stepwise migrations for existing customers
+// who may be upgrading from older versions. Once v11 is released and all customers have
+// migrated through v9 (which transitions to goose), this code can be removed.
+// The goose migration system in goose.go will handle all migrations going forward.
 package migration
 
 import (

@@ -25,8 +25,12 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
+	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
@@ -40,18 +44,36 @@ func TestDeleteAllData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
+
+	// Capture the MigrationData version before the wipe. On the Postgres backend the full wipe takes the fast
+	// TRUNCATE path, which must recreate the MigrationData node so the migration system does not re-initialize the
+	// database on next startup.
+	preDeleteVersion, err := migrations.GetMigrationData(ctx, testSuite.GraphDB)
+	require.NoError(t, err)
 
 	// DELETE ALL
 	var (
@@ -59,12 +81,18 @@ func TestDeleteAllData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteAllExpected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+
+	// The MigrationData node must survive the wipe with its version intact. A non-nil error here means the node was
+	// not recreated (GetMigrationData returns ErrNoMigrationData when no readable node exists).
+	postDeleteVersion, err := migrations.GetMigrationData(ctx, testSuite.GraphDB)
+	require.NoError(t, err)
+	require.Equal(t, preDeleteVersion, postDeleteVersion)
 }
 
 // TestDeleteAllData_Alternative covers the case where a client intends to delete all data,
@@ -79,17 +107,29 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	// DELETE ALL
@@ -98,7 +138,7 @@ func TestDeleteAllData_Alternative(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "TestDeleteAllData")), "deleteAllExpected.json")
@@ -115,17 +155,29 @@ func TestDeleteSourcelessData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	var (
@@ -133,7 +185,7 @@ func TestDeleteSourcelessData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteSourcelessExpected.json")
@@ -150,17 +202,29 @@ func TestDeleteSourceKindsData(t *testing.T) {
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
-			path.Join(testSuite.WorkDir, "base.json"),
+			"base.json",
 		}
 	)
+	ingestLocalStore, err := storage.NewLocalStore(testSuite.WorkDir)
+	require.NoError(t, err, "error creating ingest local store")
+	ingestFileService := storage.NewFileService(ingestLocalStore)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	for _, file := range files {
-		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
+		ingestContext := graphify.NewIngestContext(ctx, graphify.WithIngestTime(time.Now()), graphify.WithEndpointResolver(endpoint.NewResolver(testSuite.GraphDB)))
+		fileData, err := testSuite.GraphifyService.ProcessIngestFile(ingestContext, ingestFileService, model.IngestTask{StoredFileName: file, FileType: model.FileTypeJson})
 		require.NoError(t, err)
+
+		failed := 0
+		for _, data := range fileData {
+			if len(data.Errors) > 0 {
+				failed++
+			}
+		}
+
 		require.Zero(t, failed)
-		require.Equal(t, 1, total)
+		require.Equal(t, 1, len(fileData))
 	}
 
 	var (
@@ -168,10 +232,36 @@ func TestDeleteSourceKindsData(t *testing.T) {
 		sourceKinds   = []graph.Kind{graph.StringKind("Base"), graph.StringKind("AZBase"), graph.StringKind("GithubBase")}
 	)
 
-	err := datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
 	require.Nil(t, err)
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "deleteSourceKindsExpected.json")
+	require.NoError(t, err)
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
+func TestDeleteRelationshipsData(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		fixturesPath = path.Join("fixtures", t.Name())
+		testSuite    = setupIntegrationTestSuite(t, fixturesPath)
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	baseGraph, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "opengraph/base.json")
+	require.NoError(t, err)
+
+	err = generic.WriteGraphToDatabase(testSuite.GraphDB, &baseGraph)
+	require.NoError(t, err)
+
+	deleteRequest := model.AnalysisRequest{DeleteRelationships: []string{"MemberOf"}}
+	sourceKinds := []graph.Kind{}
+
+	err = datapipe.DeleteCollectedGraphData(ctx, testSuite.GraphDB, deleteRequest, sourceKinds)
+	require.NoError(t, err)
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(testSuite.WorkDir), "deleteRelationshipsExpected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }

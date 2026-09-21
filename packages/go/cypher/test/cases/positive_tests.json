@@ -1,0 +1,901 @@
+{
+  "test_cases": [
+    {
+      "name": "Match all nodes in the graph",
+      "type": "string_match",
+      "details": {
+        "query": "match (a) return a limit 5",
+        "fitness": 1
+      }
+    },
+    {
+      "name": "Match nodes with the label :Person",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Filter nodes by single label and single property",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person {name: 'Tom Hanks'}) return p",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "Filter nodes by multi label and single property",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person:Male {name: 'Tom Hanks'}) return p",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Support filter and quantifier expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (g:GPO) optional match (g)-[r1:GPLink {enforced: false}]-\u003e(container1) with g, container1 optional match (g)-[r2:GPLink {enforced: true}]-\u003e(container2) with g, container1, container2 optional match p1 = (g)-[r1:GPLink]-\u003e(container1)-[r2:Contains*1..]-\u003e(n1:Computer) where none(x in nodes(p1) where x.blocksinheritance = true and labels(x) = 'OU') with g, p1, container2, n1 optional match p2 = (g)-[r1:GPLink]-\u003e(container2)-[r2:Contains*1..]-\u003e(n2:Computer) return p1, p2",
+        "fitness": -6
+      }
+    },
+    {
+      "name": "Match nodes by multi label and multi property",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person:Male {fname: 'Tom', lname: 'Hank'}) return p",
+        "matcher": "match \\(p:Person:Male \\{(fname|lname): '(Tom|Hank)', (fname|lname): '(Tom|Hank)'}\\) return p",
+        "fitness": 7
+      }
+    },
+    {
+      "name": "Retrieve single node property",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p.name",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Run query with parameters",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name = $name return p.born",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Run query with complex parameters",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person {value: $test}) where p.name = $1 and p.other in $array return p.name, p.born",
+        "fitness": 14
+      }
+    },
+    {
+      "name": "Retrieve multiple node properties",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p.fname, p.lname",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with equality",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name = 'Tom Hanks' return p",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with \u003c operator",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.age \u003c 50 return p",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with \u003e operator",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.age \u003e 50 return p",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with \u003c= operator",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.age \u003c= 50 return p",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with \u003e= operator",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.age \u003e= 50 return p",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with not equal to",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name \u003c\u003e 'Tom Hanks' return p",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with disjunction",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where (p.fname = 'Tom' or p.fname = 'Brad') return p",
+        "fitness": 7
+      }
+    },
+    {
+      "name": "Filter nodes using WHERE clause with conjuction",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.fname = 'Tom' and p.lname = 'Hanks' return p",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Traverse relationship by specifying edge type, filter query using where clause",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN]-\u003e(m:Movie) where p.name = 'Tom Hanks' return m",
+        "fitness": 12
+      }
+    },
+    {
+      "name": "Traverse relationship by specifying edge type, filter query using property matcher",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person {name: 'Tom Hanks'})-[:ACTED_IN]-\u003e(m:Movie) return m",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Traverse relationship by specifying multiple edge types",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN|DIRECTED]-\u003e(m:Movie) return m",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "Specify left to right relationship",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[]-\u003e(m:Movie) return m",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Specify right to left relationship",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)\u003c-[]-(m:Movie) return m",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Specify bi-directional relationship",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)\u003c-[]-\u003e(m:Movie) return m",
+        "fitness": 0
+      }
+    },
+    {
+      "name": "Filter query by specifying node labels in the where clause",
+      "type": "string_match",
+      "details": {
+        "query": "match (p)-[:ACTED_IN]-\u003e(m) where p:Person and m:Movie and m.title = 'The Matrix' return p.name",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Filter using ranges in where clause",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN]-\u003e(m:Movie) where 2000 \u003c m.released \u003c 2003 and 100 \u003e m.last \u003c 200 return p.name",
+        "fitness": 10
+      }
+    },
+    {
+      "name": "Nested property references",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p.born",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Filtering by existence of a property",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.doesThisPropertyExist is not null return n",
+        "fitness": -1
+      }
+    },
+    {
+      "name": "Filter by string matching: prefix string search",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name starts with 'tom' return p",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Filter by string matching: suffix string search",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name ends with 'hanks' return p",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Filter by string matching: substring search",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name contains 'tom h' return p",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Filter by string matching: toLower()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where toLower(p.name) starts with 'tom' return p",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "Filter by string matching: toUpper()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where toUpper(p.name) starts with 'tom' return p",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "Filter by list inclusion: list literal of numeric values",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.born in [1965, 1970, 1975] return p.name, p.born",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Filter by list inclusion: list literal of string values",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) where p.name in [\"tom\", \"tommy\", \"thomas\"] return p.name, p.born",
+        "fitness": 7
+      }
+    },
+    {
+      "name": "Filter by list inclusion: list comes from the edge property named `r.roles`",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[r:ACTED_IN]-\u003e(m:Movie) where 'Neo' in r.roles return p.name",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "Query for the properties of a node using keys()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p.name, keys(p)",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Query for the properties of an edge using keys()",
+      "type": "string_match",
+      "details": {
+        "query": "match ()-[e:EDGE_OF_INTEREST]-\u003e() return keys(e)",
+        "fitness": 1
+      }
+    },
+    {
+      "name": "Specify alias in return clause with `AS`",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Person) return n.property as renamedProperty",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Retrieve labels for a node using labels()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return labels(p)",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Ordering query results",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p order by p.born asc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Ordering query results descending",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p order by p.born desc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Provide multiple sort expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p order by p.year asc, p.name desc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Limit results",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p limit 100",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Skip results",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p skip 100",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Order, limit, and skip results",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p order by p.name asc skip 10 limit 10",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Eliminate duplicate rows returned",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[]-\u003e(m:Movie) return distinct p.name, m.title",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "Eliminate duplicate property values",
+      "type": "string_match",
+      "details": {
+        "query": "match (m:Movie) return distinct m.title",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Aggregation using count()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return count(*)",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Order results by count()",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return count(*) as total order by total desc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Return a list",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person) return p.name, [p.born, p.died]",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Aggregation using collect() to return a list",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN]-\u003e(m:Movie) return p.name, collect(m.title)",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Eliminate duplication in lists",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN]-\u003e(m:Movie) where m.year = 1920 return collect(distinct (m.title))",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Collecting nodes",
+      "type": "string_match",
+      "details": {
+        "query": "match (p:Person)-[:ACTED_IN]-\u003e(m:Movie) where p.name = 'tom cruise' return collect(m) as tomCruiseMovies",
+        "fitness": 12
+      }
+    },
+    {
+      "name": "built-in shortestPaths()",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((p1:Person)\u003c-[*]-\u003e(p2:Person)) where p1.name = 'tom' and p2.name = 'jerry' return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Find nodes with property",
+      "type": "string_match",
+      "details": {
+        "query": "match (b) where b.name is not null return b",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Find nodes with relationships",
+      "type": "string_match",
+      "details": {
+        "query": "match (b) where (b)\u003c-[]-\u003e() return b",
+        "fitness": -4
+      }
+    },
+    {
+      "name": "Find nodes with no relationships",
+      "type": "string_match",
+      "details": {
+        "query": "match (b) where not ((b)\u003c-[]-\u003e()) return b",
+        "fitness": -5
+      }
+    },
+    {
+      "name": "Single node pattern",
+      "type": "string_match",
+      "details": {
+        "query": "match (b) return b",
+        "fitness": 0
+      }
+    },
+    {
+      "name": "Multiple node patterns",
+      "type": "string_match",
+      "details": {
+        "query": "match (a), (b {prop: a.name}) return a, b",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Conjunction",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.indexed \u003e= 1 and n.other_1 = 2 return n",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Multiple conjunctions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.indexed \u003e= 1 and n.other_1 = 2 and n.other_2 = 3 return n",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Conjunction with disjunction",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.indexed \u003e= 1 and (n.other_1 = 2 or n.other_2 = 3) return n",
+        "fitness": 7
+      }
+    },
+    {
+      "name": "Disjunction",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where (n.indexed \u003e= 1 or n.other_1 = 2) return n",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Multiple disjunctions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where (n.indexed \u003e= 1 or n.other_1 = 2 or n.other_2 = 3) return n",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "String predicate starts with",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.name starts with '123' return n",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "String predicate contains",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.name contains '123' return n",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "String predicate ends with",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where n.name ends with '123' return n",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "Match node by ID",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) where id(n) = 1 return n",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Match patterns with range literal",
+      "type": "string_match",
+      "details": {
+        "query": "match (n)-[:NestedEdge*]-\u003e() where id(n) = 1 return n",
+        "fitness": 1
+      }
+    },
+    {
+      "name": "Match patterns with range literal with at least one edge",
+      "type": "string_match",
+      "details": {
+        "query": "match (n)-[:NestedEdge*1..]-\u003e() where id(n) = 1 return n",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Match patterns with range literal with 1 to 2 edges",
+      "type": "string_match",
+      "details": {
+        "query": "match (n)-[:NestedEdge*1..2]-\u003e() where id(n) = 1 return n",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Match patterns with where and return clauses",
+      "type": "string_match",
+      "details": {
+        "query": "match (n {property: true})\u003c-[r {property: n.name}]-(s)-[v]-\u003e() where n.indexed = false return n, r.other",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Match distinct",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Person) return distinct n",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Match skip and limit",
+      "type": "string_match",
+      "details": {
+        "query": "match (n) return n skip 1 limit 1",
+        "fitness": 1
+      }
+    },
+    {
+      "name": "Match order by",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Person) return n order by n.name asc, n.other desc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Find All Domain Admins",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (n:Group)\u003c-[:MemberOf*1..]-(m) where n.objectid =~ '(?i)S-1-5-.*-512' return p",
+        "fitness": 10
+      }
+    },
+    {
+      "name": "Map Domain Trusts",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (n:Domain)-[]-\u003e(m:Domain) return p",
+        "fitness": 3
+      }
+    },
+    {
+      "name": "Find principals with DCSync rights",
+      "type": "string_match",
+      "details": {
+        "query": "match p = ()-[:DCSync|AllExtendedRights|GenericAll]-\u003e(:Domain {name: 'DOMAIN.PAIN'}) return p",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "Principals with Foreign Domain Group Membership",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (n:Base)-[:MemberOf]-\u003e(m:Group) where n.domain = 'DOMAIN.PAIN' and m.domain \u003c\u003e n.domain return p",
+        "fitness": 8
+      }
+    },
+    {
+      "name": "Find Computers where Domain Users are Local Admin",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (m:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:AdminTo]-\u003e(n:Computer) return p",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Find Computers where Domain Users can read LAPS passwords",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:MemberOf*0..]-\u003e(g:Group)-[:AllExtendedRights|ReadLAPSPassword]-\u003e(n:Computer) return p",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "Find All Paths from Domain Users to High Value Targets",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[*1..]-\u003e(n {highvalue: true})) where g \u003c\u003e n return p",
+        "fitness": 13
+      }
+    },
+    {
+      "name": "Find all shortest paths to workstations where Domain Users can RDP",
+      "type": "string_match",
+      "details": {
+        "query": "match p = allShortestPaths((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]-\u003e(c:Computer)) where not (c.operatingsystem contains 'Server') return p",
+        "fitness": 14
+      }
+    },
+    {
+      "name": "Find Workstations where Domain Users can RDP",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]-\u003e(c:Computer) where not (c.operatingsystem contains 'Server') return p",
+        "fitness": 10
+      }
+    },
+    {
+      "name": "Find Servers where Domain Users can RDP",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[:CanRDP]-\u003e(c:Computer) where c.operatingsystem contains 'Server' return p",
+        "fitness": 11
+      }
+    },
+    {
+      "name": "Find Dangerous Privileges for Domain Users Groups",
+      "type": "string_match",
+      "details": {
+        "query": "match p = (m:Group)-[:Owns|GenericAll|GenericWrite|WriteOwner|WriteDacl|MemberOf|ForceChangePassword|AllExtendedRights|AddMember|HasSession|Contains|GPLink|AllowedToDelegate|CoerceToTGT|SameForestTrust|AllowedToAct|AdminTo|CanPSRemote|CanRDP|ExecuteDCOM|HasSIDHistory|AddSelf|DCSync|ReadLAPSPassword|ReadGMSAPassword|DumpSMSAPassword|SQLAdmin|AddAllowedToAct|WriteSPN|AddKeyCredentialLink|SyncLAPSPassword|WriteAccountRestrictions|GoldenCert|ADCSESC1|ADCSESC3|ADCSESC4|ADCSESC5|ADCSESC6a|ADCSESC6b|ADCSESC7|ADCSESC9a|ADCSESC9b|ADCSESC10a|ADCSESC10b|ADCSESC13|DCFor|SyncedToEntraUser]-\u003e(n:Base) where m.objectid ends with '-513' return p",
+        "fitness": 9
+      }
+    },
+    {
+      "name": "Find Domain Admins Logons to non-Domain Controllers",
+      "type": "string_match",
+      "details": {
+        "query": "match (dc)-[r:MemberOf*0..]-\u003e(g:Group) where g.objectid ends with '-516' with collect(dc) as exclude match p = (c:Computer)-[n:HasSession]-\u003e(u:User)-[r2:MemberOf*1..]-\u003e(g:Group) where g.objectid ends with '-512' and not (c in exclude) return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Support add expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value + n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support subtract expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value - n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support multiply expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value * n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support divide expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value / n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support modulo expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value % n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support power of expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return n.value ^ n.other_value as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support complex unary expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return 1 - 2 / 2 * 100 as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support complex arithmetic expressions",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) return 1 + 2 % 3 + n.prop_1 ^ n.prop_2 - 300.124 / 2 * 100 as combined",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Support unary operators in property match",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) where n.prop_1 = -1 return n",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Support complex arithmetic expressions with unary operators in property match",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Product) where n.prop_1 = -(1 + 2) * -3 return n",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Find Kerberoastable Users with most privileges",
+      "type": "string_match",
+      "details": {
+        "query": "match (u:User {hasspn: true}) optional match (u)-[:AdminTo]-\u003e(c1:Computer) optional match (u)-[:MemberOf*1..]-\u003e(:Group)-[:AdminTo]-\u003e(c2:Computer) with u, collect(c1) + collect(c2) as tempVar unwind tempVar as comps return u.name, count(distinct (comps)) order by count(distinct (comps)) desc",
+        "fitness": 2
+      }
+    },
+    {
+      "name": "Find Kerberoastable Members of High Value Groups",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n:User)-[:MemberOf]-\u003e(g:Group)) where g.highvalue = true and n.hasspn = true return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Shortest Paths to Unconstrained Delegation Systems",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]-\u003e(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
+        "fitness": 13
+      }
+    },
+    {
+      "name": "Shortest Paths from Kerberoastable Users",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]-\u003e(m:Computer {unconstraineddelegation: true})) where not (n = m) return p",
+        "fitness": 13
+      }
+    },
+    {
+      "name": "Shortest Paths to Domain Admins from Kerberoastable Users",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n:User {hasspn: true})-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]-\u003e(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Shortest Paths from Owned Principals",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n:User {hasspn: true})-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]-\u003e(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Shortest Paths to High Value Targets",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n)-[*1..]-\u003e(m {highvalue: true})) where m.domain = 'DOMAIN.PAIN' and m \u003c\u003e n return p",
+        "fitness": 11
+      }
+    },
+    {
+      "name": "Return All Matches",
+      "type": "string_match",
+      "details": {
+        "query": "match (a:Person), (b:Company), (c:LegalFirm) return *",
+        "fitness": 6
+      }
+    },
+    {
+      "name": "Shortest Paths from Domain Users to High Value Targets",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((g:Group {name: 'DOMAIN USERS@DOMAIN.PAIN'})-[*1..]-\u003e(n {highvalue: true})) where g.objectid ends with '-513' and g \u003c\u003e n return p",
+        "fitness": 20
+      }
+    },
+    {
+      "name": "Find Shortest Paths to Domain Admins",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*1..]-\u003e(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
+        "fitness": 14
+      }
+    },
+    {
+      "name": "Find Shortest Paths to Domain Admins with Traversal Limit",
+      "type": "string_match",
+      "details": {
+        "query": "match p = shortestPath((n)-[:HasSession|AdminTo|Contains|AZLogicAppContributor*5..1]-\u003e(m:Group {name: 'DOMAIN ADMINS@DOMAIN.PAIN'})) where not (n = m) return p",
+        "fitness": 17
+      }
+    },
+    {
+      "name": "Find Computers with Unsupported Operating Systems",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:Computer) where n.operatingsystem =~ '(?i).*(2000|2003|2008|xp|vista|7|me).*' return n",
+        "fitness": 4
+      }
+    },
+    {
+      "name": "List All Kerberoastable Accounts",
+      "type": "string_match",
+      "details": {
+        "query": "match (n:User) where n.hasspn = true return n",
+        "fitness": 5
+      }
+    },
+    {
+      "name": "Find AS-REP Roastable Users (DontReqPreAuth)",
+      "type": "string_match",
+      "details": {
+        "query": "match (u:User {dontreqpreauth: true}) return u",
+        "fitness": 5
+      }
+    }
+  ]
+}

@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -30,21 +29,25 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp/totp"
-
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
+	"github.com/specterops/bloodhound/server/alerts"
 )
 
 const (
@@ -63,9 +66,12 @@ type ManagementResource struct {
 	authenticator              api.Authenticator // Used for secrets
 	OIDC                       oidc.Service
 	SAML                       saml.Service
+	GraphQuery                 queries.Graph
+	DogTags                    dogtags.Service
+	AlertPublisher             alerts.Publisher
 }
 
-func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
+func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator, graphQuery queries.Graph, dogTagsService dogtags.Service, alertPublisher alerts.Publisher) ManagementResource {
 	return ManagementResource{
 		config:                     authConfig,
 		secretDigester:             authConfig.Crypto.Argon2.NewDigester(),
@@ -75,163 +81,9 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		authenticator:              authenticator,
 		OIDC:                       &oidc.Client{},
 		SAML:                       &saml.Client{},
-	}
-}
-
-func (s ManagementResource) ListPermissions(response http.ResponseWriter, request *http.Request) {
-	var (
-		order         []string
-		permissions   model.Permissions
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
-	)
-
-	for _, column := range sortByColumns {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !permissions.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, column), request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
-	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(permissions.GetFilterableColumns(), name); !valid {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			}
-
-			if validPredicates, err := permissions.GetValidFilterPredicatesAsStrings(name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					}
-
-					queryFilters[name][i].IsStringData = permissions.IsString(filter.Name)
-				}
-			}
-		}
-
-		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
-		} else if permissions, err = s.db.GetAllPermissions(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else {
-			api.WriteBasicResponse(request.Context(), v2.ListPermissionsResponse{Permissions: permissions}, http.StatusOK, response)
-		}
-	}
-}
-
-func (s ManagementResource) GetPermission(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars        = mux.Vars(request)
-		rawPermissionID = pathVars[api.URIPathVariablePermissionID]
-	)
-
-	if permissionID, err := strconv.Atoi(rawPermissionID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if permission, err := s.db.GetPermission(request.Context(), permissionID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), permission, http.StatusOK, response)
-	}
-}
-
-func (s ManagementResource) ListRoles(response http.ResponseWriter, request *http.Request) {
-	var (
-		order         []string
-		roles         model.Roles
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
-	)
-
-	for _, column := range sortByColumns {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !roles.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, column), request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
-	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(roles.GetFilterableColumns(), name); !valid {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			}
-
-			if validPredicates, err := roles.GetValidFilterPredicatesAsStrings(name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					}
-
-					queryFilters[name][i].IsStringData = roles.IsString(filter.Name)
-				}
-			}
-		}
-
-		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
-		} else if roles, err = s.db.GetAllRoles(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), v2.ListRolesResponse{Roles: roles}, http.StatusOK, response)
-		}
-	}
-}
-
-func (s ManagementResource) GetRole(response http.ResponseWriter, request *http.Request) {
-	var (
-		pathVars  = mux.Vars(request)
-		rawRoleID = pathVars[api.URIPathVariableRoleID]
-	)
-
-	if roleID, err := strconv.ParseInt(rawRoleID, 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if role, err := s.db.GetRole(request.Context(), int32(roleID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), role, http.StatusOK, response)
+		GraphQuery:                 graphQuery,
+		DogTags:                    dogTagsService,
+		AlertPublisher:             alertPublisher,
 	}
 }
 
@@ -286,6 +138,9 @@ func (s ManagementResource) ListUsers(response http.ResponseWriter, request *htt
 			}
 		}
 
+		// Additional filtering to exclude support accounts
+		queryFilters.AddFilter(model.QueryParameterFilter{Name: "support_account", Operator: model.Equals, Value: "false"})
+
 		// ignoring the error here as this would've failed at ParseQueryParameterFilters before getting here
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
@@ -324,7 +179,11 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 				return
 			} else if secretDigest, err := s.secretDigester.Digest(createUserRequest.Secret); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to digest secret for user",
+					attr.Error(err),
+				)
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 				return
 			} else {
@@ -347,7 +206,12 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("SAML Provider ID must be a number: %v", err.Error()), request), response)
 				return
 			} else if samlProvider, err := s.db.GetSAMLProvider(request.Context(), samlProviderID); err != nil {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to fetch SAML provider %s: %v", createUserRequest.SAMLProviderID, err))
+				slog.ErrorContext(
+					request.Context(),
+					"Error while attempting to fetch SAML provider",
+					slog.String("saml_provider_id", createUserRequest.SAMLProviderID),
+					attr.Error(err),
+				)
 				api.HandleDatabaseError(request, response, err)
 				return
 			} else {
@@ -359,6 +223,21 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 				return
 			} else {
 				userTemplate.SSOProviderID = createUserRequest.SSOProviderID
+			}
+		}
+
+		// ETAC DogTags
+		// This is to handle an edge case where GORM defaults this value to false on user creation
+		// Once ETAC is available to GA, this can be removed
+		userTemplate.AllEnvironments = true
+		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+			// Access to all environments will be denied by default
+			// The migration sets the default for all_environments to true, which will enable all users to have access to all environments until ETAC is explicitly enabled
+			userTemplate.AllEnvironments = false
+
+			if err := handleETACRequest(createUserRequest.UpdateUserRequest, roles, &userTemplate, s.GraphQuery); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
 			}
 		}
 
@@ -382,7 +261,7 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 		updateUserRequest v2.UpdateUserRequest
 		pathVars          = mux.Vars(request)
 		rawUserID         = pathVars[api.URIPathVariableUserID]
-		authCtx           = *ctx.FromRequest(request)
+		authCtx           = *bhctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -484,6 +363,20 @@ func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *ht
 			user.Roles = roles
 		}
 
+		// ETAC DogTags
+		if etacEnabled := s.DogTags.GetFlagAsBool(dogtags.ETAC_ENABLED); etacEnabled {
+			// Use the request's roles if it is being sent, otherwise use the user's current role to determine if an ETAC list may be applied
+			effectiveRoles := user.Roles
+			if updateUserRequest.Roles != nil {
+				effectiveRoles = roles
+			}
+
+			if err := handleETACRequest(updateUserRequest, effectiveRoles, &user, s.GraphQuery); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+		}
+
 		if err := s.db.UpdateUser(request.Context(), user); err != nil {
 			if errors.Is(err, database.ErrDuplicateUserPrincipal) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseUserDuplicatePrincipal, request), response)
@@ -514,7 +407,7 @@ func (s ManagementResource) GetUser(response http.ResponseWriter, request *http.
 }
 
 func (s ManagementResource) GetSelf(response http.ResponseWriter, request *http.Request) {
-	bhCtx := ctx.FromRequest(request)
+	bhCtx := bhctx.FromRequest(request)
 	api.WriteBasicResponse(request.Context(), bhCtx.AuthCtx.Owner, http.StatusOK, response)
 }
 
@@ -523,7 +416,7 @@ func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *ht
 		user      model.User
 		pathVars  = mux.Vars(request)
 		rawUserID = pathVars[api.URIPathVariableUserID]
-		bhCtx     = ctx.FromRequest(request)
+		bhCtx     = bhctx.FromRequest(request)
 	)
 
 	if userID, err := uuid.FromString(rawUserID); err != nil {
@@ -567,7 +460,7 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 		setUserSecretRequest v2.SetUserSecretRequest
 		pathVars             = mux.Vars(request)
 		rawUserID            = pathVars[api.URIPathVariableUserID]
-		bhCtx                = ctx.FromRequest(request)
+		bhCtx                = bhctx.FromRequest(request)
 	)
 
 	if loggedInUser, found := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !found {
@@ -594,7 +487,11 @@ func (s ManagementResource) PutUserAuthSecret(response http.ResponseWriter, requ
 
 		passwordExpiration := appcfg.GetPasswordExpiration(request.Context(), s.db)
 		if secretDigest, err := s.secretDigester.Digest(setUserSecretRequest.Secret); err != nil {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Error while attempting to digest secret for user: %v", err))
+			slog.ErrorContext(
+				request.Context(),
+				"Error while attempting to digest secret for user",
+				attr.Error(err),
+			)
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			authSecret.UserID = targetUser.ID
@@ -642,9 +539,10 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 
 func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request *http.Request) {
 	var (
-		order         []string
-		authTokens    = model.AuthTokens{}
-		sortByColumns = request.URL.Query()[api.QueryParameterSortBy]
+		order           []string
+		authTokens      = model.AuthTokens{}
+		validatedUserID uuid.UUID
+		sortByColumns   = request.URL.Query()[api.QueryParameterSortBy]
 	)
 
 	for _, column := range sortByColumns {
@@ -691,18 +589,34 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 			}
 		}
 
-		// Only show the user their tokens unless they have permission to manage other users
-		bhCtx := ctx.FromRequest(request)
+		if queryFilters.IsFiltered("user_id") {
+			parsedUUID, err := utils.ParseUUID(queryFilters["user_id"][0].Value)
+			if err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			validatedUserID = parsedUUID
+		}
+
+		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
+		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
+		bhCtx := bhctx.FromRequest(request)
 		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
 			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-				if queryFilters.IsFiltered("user_id") {
-					if len(queryFilters["user_id"]) > 0 && queryFilters["user_id"][0].Value != user.ID.String() {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "only admins are able to filter tokens by user_id", request), response)
+				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
+					if validatedUserID != user.ID {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "filtering tokens by another user's user_id requires admin privileges", request), response)
 						return
 					}
-				} else {
-					queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
+					// non-admin users may only use the eq operator when filtering by their own user_id
+					if queryFilters["user_id"][0].Operator != model.Equals {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "non-admin users may only apply the eq operator when filtering by user_id", request), response)
+						return
+					}
+					delete(queryFilters, "user_id")
 				}
+				// in all other cases, add a filter with user_id derived from the context
+				queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
 			}
 		}
 
@@ -720,10 +634,13 @@ func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request
 func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
 		createUserTokenRequest = v2.CreateUserToken{}
-		bhCtx                  = ctx.FromRequest(request)
+		bhCtx                  = bhctx.FromRequest(request)
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
+	if !appcfg.GetAPITokensParameter(request.Context(), s.db) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "API key creation is disabled", request), response)
+		return
+	} else if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&createUserTokenRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
@@ -731,7 +648,7 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 		api.HandleDatabaseError(request, response, err)
 	} else if err := verifyUserID(&createUserTokenRequest, user, bhCtx, s.authorizer); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
-	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256); err != nil {
+	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256, user.ID); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if newAuthToken, err := s.db.CreateAuthToken(request.Context(), authToken); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -743,7 +660,7 @@ func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, reques
 // This is a helper function that selects the correct user_id to use for the token being created.
 // If no user_id is passed in the request, use the authed user's ID and proceed.
 // If the request contains a user_id other than their own, check to make sure they have permissions to create tokens for other users and reject.
-func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, bhCtx *ctx.Context, authorizer auth.Authorizer) error {
+func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, bhCtx *bhctx.Context, authorizer auth.Authorizer) error {
 	if createUserTokenRequest.UserID == "" {
 		createUserTokenRequest.UserID = user.ID.String()
 		return nil
@@ -759,7 +676,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 	var (
 		pathVars      = mux.Vars(request)
 		rawTokenID    = pathVars[api.URIPathVariableTokenID]
-		bhCtx         = ctx.FromRequest(request)
+		bhCtx         = bhctx.FromRequest(request)
 		auditLogEntry model.AuditEntry
 	)
 
@@ -792,11 +709,23 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		if err := s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			// We want to keep err scoped because response trumps this error
 			if errors.Is(err, database.ErrNotFound) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Resource not found",
+					attr.Error(err),
+				)
 			} else if errors.Is(err, context.DeadlineExceeded) {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Context deadline exceeded",
+					attr.Error(err),
+				)
 			} else {
-				slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				slog.ErrorContext(
+					request.Context(),
+					"Unexpected database error",
+					attr.Error(err),
+				)
 			}
 		}
 	}
@@ -829,7 +758,7 @@ type MFAStatusResponse struct {
 
 func (s ManagementResource) EnrollMFA(response http.ResponseWriter, request *http.Request) {
 	rawUserId := mux.Vars(request)[api.URIPathVariableUserID]
-	host := *ctx.Get(request.Context()).Host
+	host := *bhctx.Get(request.Context()).Host
 
 	payload := MFAEnrollmentRequest{}
 
@@ -882,32 +811,39 @@ func (s ManagementResource) DisenrollMFA(response http.ResponseWriter, request *
 	} else if user, err := s.db.GetUser(request.Context(), userId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		// Default the password to check against to the user from the path param
-		secretToValidate := *user.AuthSecret
-		bhCtx := ctx.FromRequest(request)
+		bhCtx := bhctx.FromRequest(request)
 		if authedUser, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
+			// Default the password to check against to the user from the path param
+			secretToValidate := *user.AuthSecret
+
 			if authedUser.ID != userId {
 				// If the operation is being performed on a different user than who is logged in then we need to ensure they have proper permission
 				if s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 					// Compare passed password against the logged in user's password instead
-					secretToValidate = *authedUser.AuthSecret
+					if authedUser.AuthSecret != nil {
+						secretToValidate = *authedUser.AuthSecret
+					}
 				} else {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "must be an admin to disable MFA for another user", request), response)
 					return
 				}
 			}
+
+			// Check the password only if the current authed user is not using SSO
+			if !authedUser.SSOProviderID.Valid {
+				if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
+					// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
+					// b/c the bearer token is valid despite the secret in the request payload being invalid
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
+					return
+				}
+			}
 		}
 
-		// Check the password
-		if err := api.ValidateSecret(s.secretDigester, payload.Secret, secretToValidate); err != nil {
-			// In this context an authenticated user revalidating their password for mfa enrollment should get a 400 bad request
-			// b/c the bearer token is valid despite the secret in the request payload being invalid
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrResponseDetailsInvalidCurrentPassword, request), response)
-			return
+		if user.AuthSecret != nil {
+			user.AuthSecret.TOTPSecret = ""
+			user.AuthSecret.TOTPActivated = false
 		}
-
-		user.AuthSecret.TOTPSecret = ""
-		user.AuthSecret.TOTPActivated = false
 
 		if err := s.db.UpdateAuthSecret(request.Context(), *user.AuthSecret); err != nil {
 			api.HandleDatabaseError(request, response, err)

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Skeleton, Typography, useTheme } from '@mui/material';
+import { Skeleton, Typography } from 'doodle-ui';
 import { PageWithTitle } from '../../../components';
 import DocumentationLinks from '../../../components/DocumentationLinks';
 
@@ -33,7 +33,6 @@ type Props = {
 };
 
 function CustomLayout(props: Props) {
-    const theme = useTheme();
     const { getComponent, specSelectors } = props;
     const VersionPragmaFilter = getComponent('VersionPragmaFilter', true);
     const FilterContainer = getComponent('FilterContainer', true);
@@ -52,40 +51,30 @@ function CustomLayout(props: Props) {
             data-testid='api-explorer'
             className='api-explorer'
             pageDescription={
-                <Typography variant='body2' paragraph>
+                <Typography variant='body2'>
                     Review and understand the API endpoints available that power BloodHound. To learn how to use the
-                    API, see {DocumentationLinks.apiUsageLink}.
+                    API, see {DocumentationLinks.apiUsageLink}. <br /> <br /> <b>*[EXPERIMENTAL]</b> – Endpoints labeled
+                    as "Experimental" are under active development, such as for Early Access functionality. Breaking
+                    changes may occur until the experimental flag is removed.
                 </Typography>
             }>
             {!isReady() ? (
-                <Box display='grid' gap={theme.spacing(4)}>
-                    <Box>
-                        <Typography variant='h1'>
-                            <Skeleton />
-                        </Typography>
-                    </Box>
-                    <Box>
-                        <Skeleton variant='rectangular' height={160} />
-                    </Box>
-                    <Box>
-                        <Skeleton variant='rectangular' height={80} />
-                    </Box>
-                </Box>
+                <div className='grid gap-8'>
+                    <Typography variant='h1'>
+                        <Skeleton className='h-10' />
+                    </Typography>
+                    <Skeleton className='h-40' />
+                    <Skeleton className='h-20' />
+                </div>
             ) : (
-                <Box className='swagger-ui' display='grid' gap={theme.spacing(4)}>
+                <div className='swagger-ui'>
                     <SvgAssets />
                     <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors />}>
-                        <Box>
-                            <FilterContainer />
-                        </Box>
-                        <Box>
-                            <Operations />
-                        </Box>
-                        <Box>
-                            <Models />
-                        </Box>
+                        <FilterContainer />
+                        <Operations />
+                        <Models />
                     </VersionPragmaFilter>
-                </Box>
+                </div>
             )}
         </PageWithTitle>
     );

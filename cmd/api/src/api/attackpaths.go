@@ -25,20 +25,33 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// ParseAssetGroupTagIdParams converts raw query parameter strings to integers.
+func ParseAssetGroupTagIdParams(params []string) ([]int, error) {
+	tagIds := make([]int, 0, len(params))
+	for _, param := range params {
+		tagId, err := strconv.Atoi(param)
+		if err != nil {
+			return nil, err
+		}
+		tagIds = append(tagIds, tagId)
+	}
+	return tagIds, nil
+}
+
 func ParseAssetGroupTagIdWithFallback(ctx context.Context, db database.Database, maybeAssetGroupTagId string) ([]int, error) {
 	var tagIds []int
 
 	if maybeAssetGroupTagId != "" {
-		if tierIdParam, err := strconv.Atoi(maybeAssetGroupTagId); err != nil {
+		if tagId, err := strconv.Atoi(maybeAssetGroupTagId); err != nil {
 			return tagIds, err
-		} else if tierIdParam == 0 {
+		} else if tagId == 0 {
 			// This is a workaround to supply tiering agnostic findings
 			tagIds = append(tagIds, model.AssetGroupTierHygienePlaceholderId)
 			return tagIds, nil
-		} else if _, err = db.GetAssetGroupTag(ctx, tierIdParam); err != nil {
+		} else if _, err = db.GetAssetGroupTag(ctx, tagId); err != nil {
 			return tagIds, err
 		} else {
-			tagIds = append(tagIds, tierIdParam)
+			tagIds = append(tagIds, tagId)
 			return tagIds, nil
 		}
 	}

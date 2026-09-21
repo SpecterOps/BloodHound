@@ -22,11 +22,14 @@ import (
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
-	dsig "github.com/russellhaering/goxmldsig"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/crypto"
+)
+
+const (
+	RSASHA256SignatureMethod = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
 )
 
 func getIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {
@@ -83,7 +86,7 @@ func NewServiceProvider(hostUrl url.URL, cfg config.Configuration, samlProvider 
 			AcsURL:            samlProvider.ServiceProviderACSURI.URL,
 			IDPMetadata:       idpMetadata,
 			AuthnNameIDFormat: saml.EmailAddressNameIDFormat,
-			SignatureMethod:   dsig.RSASHA256SignatureMethod,
+			SignatureMethod:   RSASHA256SignatureMethod,
 			AllowIDPInitiated: true,
 		}, nil
 	}

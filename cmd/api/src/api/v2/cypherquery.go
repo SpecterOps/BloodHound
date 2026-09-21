@@ -17,24 +17,28 @@
 package v2
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/util"
 )
 
-var (
-	errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
-)
+const auditLogOutcomeTimeout = time.Second * 30
+
+var errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 
 type CypherQueryPayload struct {
 	Query             string `json:"query"`
@@ -43,13 +47,30 @@ type CypherQueryPayload struct {
 
 // Helper function to handle error conditions in CypherQuery.
 func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, err error) {
+	var (
+		errorResp          *api.ErrorWrapper
+		errorCategoryLabel string
+	)
+
 	if errors.Is(err, errUnauthorizedGraphMutation) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
-	} else if util.IsNeoTimeoutError(err) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
+		return
+	} else if util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+		errorCategoryLabel = cypherQueryErrorTypeTimeout
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request)
+	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
+		errorCategoryLabel = cypherQueryErrorTypeMemory
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
+	} else if errors.Is(err, ops.ErrGraphQueryExecutionFailed) {
+		errorCategoryLabel = cypherQueryErrorTypeExecute
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		errorCategoryLabel = cypherQueryErrorTypeUnknown
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	}
+
+	cypherQueryErrors.WithLabelValues(errorCategoryLabel).Inc()
+	api.WriteErrorResponse(request.Context(), errorResp, response)
 }
 
 // Helper function to handle processing of property keys.
@@ -68,7 +89,13 @@ func processCypherProperties(graphResponse model.UnifiedGraph) model.UnifiedGrap
 	}
 	eSlice := slices.Sorted(maps.Keys(eKeys))
 	nSlice := slices.Sorted(maps.Keys(nKeys))
-	return model.UnifiedGraphWPropertyKeys{NodeKeys: nSlice, EdgeKeys: eSlice, Edges: graphResponse.Edges, Nodes: graphResponse.Nodes}
+	return model.UnifiedGraphWPropertyKeys{
+		NodeKeys: nSlice,
+		EdgeKeys: eSlice,
+		Edges:    graphResponse.Edges,
+		Nodes:    graphResponse.Nodes,
+		Literals: graphResponse.Literals,
+	}
 }
 
 func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Request) {
@@ -79,20 +106,72 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		err           error
 	)
 
+	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
+	if !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+		return
+	}
+
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
+		cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeDecode).Inc()
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
 	}
 
 	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query, queries.DefaultQueryFitnessLowerBoundExplore); err != nil {
+		if errors.Is(err, queries.ErrCypherQueryTooComplex) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeFitness).Inc()
+		} else if errors.Is(err, queries.ErrCypherQueryUnparseable) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeParse).Inc()
+		} else {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeUnknown).Inc()
+		}
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
 
+	auditLogEntry, err := model.NewAuditEntry(
+		model.AuditLogActionRunCypherQuery,
+		model.AuditLogStatusIntent,
+		model.AuditData{
+			"query":              preparedQuery.StrippedQuery,
+			"include_properties": payload.IncludeProperties,
+		},
+	)
+	if err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+		return
+	}
+
+	if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	}
+
+	auditLogEntry.Status = model.AuditLogStatusFailure
+
+	defer func() {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
+
+		if err = s.DB.AppendAuditLog(auditContext, auditLogEntry); err != nil {
+			slog.ErrorContext(request.Context(), "Failure to create run cypher query audit log", attr.Error(err))
+		}
+	}()
+
+	primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context())
+	if err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
 	if preparedQuery.HasMutation {
-		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.cypherMutation(request, primaryDisplayKinds, preparedQuery, true)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		// defaulting include properties to true so ETAC filtering logic has access to node properties
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, true)
 	}
 
 	if err != nil {
@@ -100,27 +179,50 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+	// Etac DogTags
+	if ShouldFilterForETAC(s.DogTags, user) {
+		filteredResponse, err := filterETACGraph(graphResponse, user)
+		if err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+			return
+		}
+		graphResponse = filteredResponse
+	}
+
+	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges)+len(graphResponse.Literals) == 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
 		return
 	}
+
+	auditLogEntry.Status = model.AuditLogStatusSuccess
+
 	if !payload.IncludeProperties {
+		// removing node properties from the response
+		for id, node := range graphResponse.Nodes {
+			node.Properties = nil
+			graphResponse.Nodes[id] = node
+		}
+		// removing edge properties from the response
+		for i, edge := range graphResponse.Edges {
+			edge.Properties = nil
+			graphResponse.Edges[i] = edge
+		}
+
 		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
 		return
+	} else {
+		api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
 	}
-
-	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
-
 }
 
-func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds graphschema.PrimaryDisplayKinds, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		auditLogEntry model.AuditEntry
 		graphResponse model.UnifiedGraph
 		err           error
 	)
 
-	if !s.Authorizer.AllowsPermission(ctx.FromRequest(request).AuthCtx, auth.Permissions().GraphDBMutate) {
+	if !s.Authorizer.AllowsPermission(bhctx.FromRequest(request).AuthCtx, auth.Permissions().GraphDBMutate) {
 		s.Authorizer.AuditLogUnauthorizedAccess(request)
 		return model.UnifiedGraph{}, errUnauthorizedGraphMutation
 	}
@@ -135,17 +237,20 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, includeProperties); err != nil {
-		auditLogEntry.Status = model.AuditLogStatusFailure
-	} else {
+	auditLogEntry.Status = model.AuditLogStatusFailure
+	defer func() {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
+
+		if auditErr := s.DB.AppendAuditLog(auditContext, auditLogEntry); auditErr != nil {
+			// We want to keep the graph response error because it is more useful to the caller than an audit log error.
+			slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(auditErr))
+		}
+	}()
+
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err == nil {
 		auditLogEntry.Status = model.AuditLogStatusSuccess
 	}
 
-	if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
-		// We want to keep err scoped because having info on the mutation graph response trumps this error
-		slog.ErrorContext(request.Context(), fmt.Sprintf("failure to create mutation audit log %s", err.Error()))
-	}
-
 	return graphResponse, err
-
 }

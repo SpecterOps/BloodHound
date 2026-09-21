@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, DialogActions, DialogContent, Grid, TextField } from '@mui/material';
+import { Button } from 'doodle-ui';
 import { OIDCProviderInfo, Role, SSOProvider, UpsertOIDCProviderRequest } from 'js-client-library';
 import { FC, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { Roles, getRoleId } from '../../utils/roles';
 import SSOProviderConfigForm, { maybeBackfillSSOProviderConfig } from './SSOProviderConfigForm';
 
 const UpsertOIDCProviderForm: FC<{
@@ -28,7 +29,7 @@ const UpsertOIDCProviderForm: FC<{
     onClose: () => void;
     onSubmit: (data: UpsertOIDCProviderRequest) => void;
 }> = ({ error, oldSSOProvider, roles, onClose, onSubmit }) => {
-    const readOnlyRoleId = roles?.find((role) => role.name === 'Read-Only')?.id;
+    const readOnlyRoleId = getRoleId(Roles.READ_ONLY, roles);
 
     const defaultValues = {
         name: oldSSOProvider?.name ?? '',
@@ -73,7 +74,7 @@ const UpsertOIDCProviderForm: FC<{
     };
 
     return (
-        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' noValidate onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -87,11 +88,13 @@ const UpsertOIDCProviderForm: FC<{
                                     message: 'OIDC Provider Name must be alphanumeric.',
                                 },
                             }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'name'}
+                                    inputRef={ref}
+                                    id='name'
                                     variant='standard'
+                                    required
                                     fullWidth
                                     name='name'
                                     label='OIDC Provider Name'
@@ -108,12 +111,14 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='client_id'
                             rules={{ required: 'Client ID is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'clientId'}
+                                    inputRef={ref}
+                                    id='clientId'
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='clientId'
                                     label='Client ID'
                                     error={!!errors.client_id}
@@ -127,13 +132,15 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='issuer'
                             rules={{ required: 'Issuer is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'issuer'}
+                                    inputRef={ref}
+                                    id='issuer'
                                     variant='standard'
                                     fullWidth
                                     name='issuer'
+                                    required
                                     label='Issuer'
                                     error={!!errors.issuer}
                                     helperText={errors.issuer?.message || 'OIDC Issuer'}
@@ -159,7 +166,7 @@ const UpsertOIDCProviderForm: FC<{
             <DialogActions>
                 <Button
                     type='button'
-                    variant='tertiary'
+                    variant='secondary'
                     onClick={handleClose}
                     data-testid='create-oidc-provider-dialog_button-close'>
                     Cancel

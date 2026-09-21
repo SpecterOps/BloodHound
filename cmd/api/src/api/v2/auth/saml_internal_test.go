@@ -18,7 +18,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -27,9 +26,10 @@ import (
 
 	"github.com/crewjam/saml"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -53,7 +53,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 
 		mockCtrl          = gomock.NewController(t)
 		mockDB            = dbmocks.NewMockDatabase(mockCtrl)
-		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, dbmocks.NewMockAuthContextInitializer(mockCtrl))
+		testAuthenticator = api.NewAuthenticator(config.Configuration{}, mockDB, apimocks.NewMockAuthExtensions(mockCtrl))
 
 		hostUrl = serde.MustParseURL("https://example.com")
 
@@ -74,7 +74,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	httpRequest, _ := http.NewRequestWithContext(
-		context.WithValue(context.TODO(), ctx.ValueKey, &ctx.Context{Host: &hostUrl.URL}),
+		context.WithValue(context.TODO(), bhctx.ValueKey, &bhctx.Context{Host: &hostUrl.URL}),
 		http.MethodPost,
 		"http://localhost",
 		nil,
@@ -83,8 +83,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("successfully create sso session", func(t *testing.T) {
 		var (
 			response              = httptest.NewRecorder()
-			expires               = time.Now().UTC().Add(appcfg.DefaultSessionTTLHours * time.Hour)
-			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
+			expectedCookiePattern = `token=.*; Path=/; Expires=.*; Secure; SameSite=Strict`
 		)
 
 		mockDB.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2).Do(func(_ context.Context, log model.AuditLog) {
@@ -99,9 +98,17 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)
 
+		before := time.Now().UTC()
 		testAuthenticator.CreateSSOSession(httpRequest, response, principalName, gothamSSO)
+		after := time.Now().UTC()
 
-		require.Regexp(t, expectedCookieContent, response.Header().Get(headers.SetCookie.String()))
+		cookieHeader := response.Header().Get(headers.SetCookie.String())
+		cookies := (&http.Response{Header: http.Header{"Set-Cookie": {cookieHeader}}}).Cookies()
+		expectedExpiry := before.Add(appcfg.DefaultSessionTTLHours * time.Hour)
+		tolerance := after.Sub(before) + time.Second
+
+		require.Regexp(t, expectedCookiePattern, cookieHeader)
+		require.WithinDuration(t, expectedExpiry, cookies[0].Expires, tolerance)
 		require.Equal(t, "https://example.com/ui", response.Header().Get(headers.Location.String()))
 		require.Equal(t, http.StatusFound, response.Code)
 	})

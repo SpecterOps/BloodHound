@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build disabled
-// +build disabled
 
 package tools_test
 
@@ -53,8 +52,8 @@ func TestSwitchPostgreSQL(t *testing.T) {
 		migrator = setupTestMigrator(t, ctx, graphDB)
 	)
 
-	// lookup creates the database_switch table if needed
-	driver, err := tools.LookupGraphDriver(migrator.ServerCtx, migrator.Cfg)
+	// resolve creates the database_switch table if needed
+	driver, err := tools.ResolveGraphDriver(migrator.ServerCtx, migrator.Cfg)
 	require.Nil(t, err)
 
 	if driver != neo4j.DriverName {
@@ -69,7 +68,7 @@ func TestSwitchPostgreSQL(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, response.StatusCode)
 
-	driver, err = tools.LookupGraphDriver(migrator.ServerCtx, migrator.Cfg)
+	driver, err = tools.ResolveGraphDriver(migrator.ServerCtx, migrator.Cfg)
 	require.Nil(t, err)
 	require.Equal(t, pg.DriverName, driver)
 }
@@ -84,7 +83,7 @@ func TestSwitchNeo4j(t *testing.T) {
 		migrator = setupTestMigrator(t, ctx, graphDB)
 	)
 
-	driver, err := tools.LookupGraphDriver(migrator.ServerCtx, migrator.Cfg)
+	driver, err := tools.ResolveGraphDriver(migrator.ServerCtx, migrator.Cfg)
 	require.Nil(t, err)
 
 	if driver != pg.DriverName {
@@ -99,7 +98,7 @@ func TestSwitchNeo4j(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, response.StatusCode)
 
-	driver, err = tools.LookupGraphDriver(migrator.ServerCtx, migrator.Cfg)
+	driver, err = tools.ResolveGraphDriver(migrator.ServerCtx, migrator.Cfg)
 	require.Nil(t, err)
 	require.Equal(t, neo4j.DriverName, driver)
 }

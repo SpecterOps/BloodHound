@@ -34,7 +34,8 @@ const (
 )
 
 type command struct {
-	env environment.Environment
+	env       environment.Environment
+	noVersion bool
 }
 
 type repository struct {
@@ -65,6 +66,8 @@ func (s *command) Name() string {
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
 
+	cmd.BoolVar(&s.noVersion, "no-version", false, "Disable version tag checking (for environments without git tags)")
+
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
@@ -93,7 +96,11 @@ func (s *command) Run() error {
 		for _, repo := range repos {
 			fmt.Printf("Repository Report For %s\n", repo.path)
 			fmt.Printf("Current HEAD: %s\n", repo.sha)
-			fmt.Printf("Detected version: %s\n", repo.version)
+			if s.noVersion {
+				fmt.Println("Detected version: (skipped)")
+			} else {
+				fmt.Printf("Detected version: %s\n", repo.version)
+			}
 			if !repo.clean {
 				fmt.Println("CHANGES DETECTED - please commit outstanding changes and run the command again")
 				return fmt.Errorf("changes detected in git repository - please commit outstanding changes and run the command again")
@@ -123,18 +130,27 @@ func (s *command) submodulesCheck(paths []string) ([]repository, error) {
 func (s *command) repositoryCheck(cwd string) (repository, error) {
 	var repo repository
 
-	if sha, err := git.FetchCurrentCommitSHA(cwd, s.env); err != nil {
+	sha, err := git.FetchCurrentCommitSHA(cwd, s.env)
+	if err != nil {
 		return repo, fmt.Errorf("fetching current commit sha: %w", err)
-	} else if version, err := git.ParseLatestVersionFromTags(cwd, s.env); err != nil {
-		return repo, fmt.Errorf("parsing version: %w", err)
-	} else if clean, err := git.CheckClean(cwd, s.env); err != nil {
-		return repo, fmt.Errorf("checking repository clean: %w", err)
-	} else {
-		repo.path = cwd
-		repo.sha = sha
-		repo.version = version
-		repo.clean = clean
-
-		return repo, nil
 	}
+
+	repo.path = cwd
+	repo.sha = sha
+
+	if !s.noVersion {
+		version, err := git.ParseLatestVersionFromTags(cwd, s.env)
+		if err != nil {
+			return repo, fmt.Errorf("parsing version: %w", err)
+		}
+		repo.version = version
+	}
+
+	clean, err := git.CheckClean(cwd, s.env)
+	if err != nil {
+		return repo, fmt.Errorf("checking repository clean: %w", err)
+	}
+	repo.clean = clean
+
+	return repo, nil
 }

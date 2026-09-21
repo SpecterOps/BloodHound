@@ -36,15 +36,13 @@ A conventional commit will have the following shape:
 Simple example:
 
 ```
-feat: Adds table view to Explore page
-
-Closes BED-5555
+feat: Adds table view to Explore page BED-5555
 ```
 
 Detailed example:
 
 ```
-docs(bh-rfc-2): Address PR feedback
+docs(bh-rfc-2): Address PR feedback BED-5475
 
 - fixes 'Adherance' typo
 - removes superfluous types
@@ -89,9 +87,10 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 ### 3.3 Description
 
 - The description part of a conventional commit message MUST be included.
+- The description of a conventional commit message MUST follow directly after the colon and a space of the type/scope prefix
+- The description of a conventional commit message MUST end with a reference to a ticket or issue number that is space delimited
 - The description of a conventional commit message SHOULD give a brief overview of the work committed.
 - The description of a conventional commit message SHOULD be no longer than 72 characters. This character limit is aimed at improving readability in areas where commit messages are regularly viewed.
-- The description of a conventional commit message MUST follow directly after the colon and a space of the type/scope prefix
 
 ### 3.4 Body
 
@@ -102,8 +101,8 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 
 ### 3.5 Footer
 
-- A footer MUST be included as part of a conventional commit message
-- An item to relate a ticket or issue number MUST be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+- A footer MAY be included as part of a conventional commit message
+- An item to relate a ticket or issue number MAY be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
 Examples:
 
@@ -117,7 +116,7 @@ resolves: #777
 CLOSES: #1, resolves #2, Fix: BED-4444
 ```
 
-- A footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
+- A footer SHOULD be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword SHOULD be used.
 - A breaking change MAY also be denoted after the type/scope with an exclamation point, e.g., `fix!: Updates v1 endpoint to remove bug`
 - A footer SHOULD be separated from the body (or the type and description if no body is included) with an empty line.
 - Multiple footers MAY be included in the commit.
@@ -126,10 +125,9 @@ CLOSES: #1, resolves #2, Fix: BED-4444
 Example:
 
 ```
-feat(auth): Introduces required facial recognition sign in
+feat(explore): Adds a node legend to the explore graph BED-5555
 
 BREAKING CHANGE: The API endpoints for login and registration have changed.
-Closes BED-5555
 ```
 
 ## 4. Best Practices

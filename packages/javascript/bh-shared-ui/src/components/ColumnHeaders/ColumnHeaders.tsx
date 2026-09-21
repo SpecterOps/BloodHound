@@ -14,18 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    TooltipContent,
-    TooltipPortal,
-    TooltipProvider,
-    TooltipRoot,
-    TooltipTrigger,
-} from '@bloodhoundenterprise/doodleui';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { TextButton, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from 'doodle-ui';
+import { useId } from 'react';
 import { SortOrder } from '../../types';
-import { cn } from '../../utils';
+import { adaptClickHandlerToKeyDown, cn } from '../../utils';
 import { AppIcon } from '../AppIcon';
 
 interface BaseColumnHeader extends React.HTMLAttributes<HTMLDivElement> {
@@ -42,7 +36,7 @@ export const BaseColumnHeader: React.FC<BaseColumnHeader> = (props) => {
         'text-right': textAlign === 'right',
     };
 
-    return <div className={cn('font-semibold text-base -mb-1', textAlignment, className)}>{title}</div>;
+    return <div className={cn('font-semibold text-base text-text-main -mb-1', textAlignment, className)}>{title}</div>;
 };
 
 interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -59,6 +53,7 @@ interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     const { title, tooltipText, sortOrder, disable, classes, onSort, ...rest } = props;
+    const tooltipDescriptionId = useId();
 
     const containerClass = classes && classes.container ? classes.container : '';
     const buttonClass = classes && classes.button ? classes.button : '';
@@ -68,33 +63,53 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     if (sortOrder === 'desc') IconComponent = AppIcon.SortDesc;
 
     return (
-        <div
-            {...rest}
-            role='button'
-            onClick={onSort}
-            className={cn({ 'pointer-events-none cursor-default': disable }, containerClass)}>
-            <Button
-                className={cn('p-0 font-semibold text-base hover:no-underline relative', buttonClass)}
-                variant={'text'}>
-                {title}
-                {tooltipText && (
-                    <TooltipProvider>
-                        <TooltipRoot>
-                            <TooltipTrigger>
-                                <div>
-                                    <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipPortal>
-                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                                    {tooltipText}
-                                </TooltipContent>
-                            </TooltipPortal>
-                        </TooltipRoot>
-                    </TooltipProvider>
-                )}
-                <IconComponent size={12} className={cn('absolute -right-5 m-1')} />
-            </Button>
-        </div>
+        <TooltipProvider>
+            <TooltipRoot>
+                <TooltipTrigger asChild>
+                    <div {...rest} data-testid='column-header_sort-button' className={containerClass}>
+                        <TextButton
+                            disabled={disable}
+                            aria-label={`Sort by ${title}`}
+                            aria-describedby={tooltipText ? tooltipDescriptionId : undefined}
+                            className={cn(
+                                'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
+                                buttonClass
+                            )}
+                            onClick={onSort}
+                            onKeyDown={adaptClickHandlerToKeyDown(onSort)}
+                            tabIndex={0}>
+                            {title}
+                            {/* SortIcon stays inside the button when no tooltip to avoid affecting other header style layouts - example on the ObjectsAccordion used on Attack Paths and PZ Zone builder pages */}
+                            {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
+                            {tooltipText && (
+                                <>
+                                    <span
+                                        className='flex items-center'
+                                        aria-hidden='true'
+                                        data-testid='column-header_tooltip-trigger-icon'>
+                                        <FontAwesomeIcon size='sm' icon={faInfoCircle} />
+                                    </span>
+                                    <span className='flex items-center'>
+                                        <IconComponent size={12} />
+                                    </span>
+                                    <TooltipPortal>
+                                        <TooltipContent
+                                            className='max-w-80 dark:bg-neutral-dark-5 border-0'
+                                            data-testid='column-header_tooltip-content-text'>
+                                            {tooltipText}
+                                        </TooltipContent>
+                                    </TooltipPortal>
+                                </>
+                            )}
+                        </TextButton>
+                        {tooltipText && (
+                            <span id={tooltipDescriptionId} className='sr-only'>
+                                {tooltipText}
+                            </span>
+                        )}
+                    </div>
+                </TooltipTrigger>
+            </TooltipRoot>
+        </TooltipProvider>
     );
 };

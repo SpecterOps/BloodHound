@@ -18,10 +18,12 @@ package daemons
 
 import (
 	"context"
-	"fmt"
+
 	"log/slog"
 	"sync"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 type Daemon interface {
@@ -48,7 +50,11 @@ func (s *Manager) Start(ctx context.Context, daemons ...Daemon) {
 	defer s.daemonsLock.Unlock()
 
 	for _, daemon := range daemons {
-		slog.InfoContext(ctx, fmt.Sprintf("Starting daemon %s", daemon.Name()))
+		slog.InfoContext(
+			ctx,
+			"Starting daemon",
+			slog.String("name", daemon.Name()),
+		)
 		go daemon.Start(ctx)
 
 		s.daemons = append(s.daemons, daemon)
@@ -63,10 +69,17 @@ func (s *Manager) Stop() {
 	defer cancel()
 
 	for _, daemon := range s.daemons {
-		slog.Info(fmt.Sprintf("Shutting down daemon %s", daemon.Name()))
+		slog.Info(
+			"Shutting down daemon",
+			slog.String("name", daemon.Name()),
+		)
 
 		if err := daemon.Stop(shutdownCtx); err != nil {
-			slog.Error(fmt.Sprintf("Failure caught while shutting down daemon %s: %v", daemon.Name(), err))
+			slog.Error(
+				"Failure caught while shutting down daemon",
+				slog.String("name", daemon.Name()),
+				attr.Error(err),
+			)
 		}
 	}
 }

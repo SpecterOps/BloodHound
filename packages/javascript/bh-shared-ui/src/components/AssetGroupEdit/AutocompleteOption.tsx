@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Fade, ListItem, Tooltip, Typography } from '@mui/material';
+import { Box, Fade, ListItem, Tooltip } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC, HTMLAttributes } from 'react';
 import NodeIcon from '../NodeIcon';
 

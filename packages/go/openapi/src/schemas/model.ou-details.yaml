@@ -20,5 +20,7 @@ allOf:
     properties:
       distinguishedname:
         type: string
+        nullable: true
       type:
         type: string
+        nullable: true

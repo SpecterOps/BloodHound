@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './BasicObjectInfoFields';
-export * from './EdgeInfo';
+export * from './ContextMenu/AssetGroupMenuItemPrivilegeZonesEnabled';
+export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
+export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';
 export * from './ExploreSearch';
-export * from './InfoStyles';
 export * from './fragments';
+export { default as GraphItemInformationPanel } from './GraphItemInformationPanel';
+export * from './InfoStyles';
 export * from './providers';

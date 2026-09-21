@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { groupSpecialFormat } from '../utils';
@@ -23,15 +23,28 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
     return (
         <>
             <Typography variant='body2'>
-                {groupSpecialFormat(sourceType, sourceName)} has the permissions to modify the gPLink attribute of{' '}
+                {groupSpecialFormat(sourceType, sourceName)} has permission to modify the gPLink attribute of{' '}
                 {targetType} {targetName}.
             </Typography>
 
             <Typography variant='body2'>
-                The ability to alter the gPLink attribute may allow an attacker to apply a malicious Group Policy Object
-                (GPO) to all child user and computer objects (including the ones located in nested OUs). This can be
-                exploited to make said child objects execute arbitrary commands through an immediate scheduled task,
-                thus compromising them.
+                Modifying an object's gPLink attribute can allow an attacker to link a malicious Group Policy Object
+                (GPO) so it applies to affected users and computers. That GPO can force those objects to execute
+                arbitrary commands, for example through an immediate scheduled task.
+            </Typography>
+            <Typography variant='body2'>
+                For domain and OU objects, affected child users and computers include those contained directly within
+                the domain or OU, as well as those in nested OUs.
+            </Typography>
+            <Typography variant='body2'>
+                For site objects, affected computers include the site's domain controllers, and also computers whose IP
+                addresses fall within one of the site's subnets. If the site is the default site, affected computers
+                also include computers that do not map to any other site. Affected users are those who sign in to the
+                affected computers.
+            </Typography>
+            <Typography variant='body2'>
+                Unless the GPO link is enforced, users and computers in a domain or OU that blocks GPO inheritance are
+                not affected by inherited GPOs, including GPOs linked to an AD site.
             </Typography>
         </>
     );

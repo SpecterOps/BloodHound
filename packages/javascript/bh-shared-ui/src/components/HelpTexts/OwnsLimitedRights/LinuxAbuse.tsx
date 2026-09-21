@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const LinuxAbuse: FC = () => {
@@ -26,8 +26,13 @@ const LinuxAbuse: FC = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Please refer to the abuse info for the specific granted permissions at
-                https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                Please refer to the abuse info for the specific granted permissions at{' '}
+                <a
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges'>
+                    https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
+                </a>
             </Typography>
         </>
     );

@@ -21,34 +21,45 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
+	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/dawgs/graph"
 )
 
 // The GraphifyData interface is designed to manage the lifecycle of ingestion tasks
 type GraphifyData interface {
+	appcfg.ParameterService
+
 	// Task handlers
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
 
 	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
+	EnsureStubbedCustomNodeKindForIngest(context.Context, string) error
 }
 
 type GraphifyService struct {
-	ctx     context.Context
-	db      GraphifyData
-	graphdb graph.Database
-	cfg     config.Configuration
-	schema  upload.IngestSchema
+	ctx                 context.Context
+	db                  GraphifyData
+	graphdb             graph.Database
+	endpointResolver    *endpoint.Resolver
+	cfg                 config.Configuration
+	schema              upload.IngestSchema
+	fileServiceResolver storage.FileServiceResolver
+	changeManager       ChangeManager
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema, fileServiceResolver storage.FileServiceResolver, changeManager ChangeManager) GraphifyService {
 	return GraphifyService{
-		ctx:     ctx,
-		db:      db,
-		graphdb: graphDb,
-		cfg:     cfg,
-		schema:  schema,
+		ctx:                 ctx,
+		db:                  db,
+		graphdb:             graphDb,
+		endpointResolver:    endpoint.NewResolver(graphDb),
+		cfg:                 cfg,
+		schema:              schema,
+		fileServiceResolver: fileServiceResolver,
+		changeManager:       changeManager,
 	}
 }

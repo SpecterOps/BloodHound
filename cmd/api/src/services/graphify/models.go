@@ -59,13 +59,11 @@ type AzureBase struct {
 }
 
 type ConvertedAzureData struct {
-	NodeProps   []ein.IngestibleNode
-	RelProps    []ein.IngestibleRelationship
-	OnPremNodes []ein.IngestibleNode
+	NodeProps []ein.IngestibleNode
+	RelProps  []ein.IngestibleRelationship
 }
 
 func (s *ConvertedAzureData) Clear() {
 	s.NodeProps = s.NodeProps[:0]
 	s.RelProps = s.RelProps[:0]
-	s.OnPremNodes = s.OnPremNodes[:0]
 }

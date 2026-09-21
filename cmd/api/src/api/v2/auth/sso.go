@@ -29,7 +29,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
@@ -146,7 +146,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 				}
 
 				// Format callback url from host
-				provider.FormatProviderURLs(*ctx.Get(requestCtx).Host)
+				provider.FormatProviderURLs(*bhctx.Get(requestCtx).Host)
 
 				switch ssoProvider.Type {
 				case model.SessionAuthProviderOIDC:
@@ -155,7 +155,7 @@ func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, requ
 					}
 				case model.SessionAuthProviderSAML:
 					if ssoProvider.SAMLProvider != nil {
-						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*ctx.Get(requestCtx).Host)
+						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*bhctx.Get(requestCtx).Host)
 						provider.Details = ssoProvider.SAMLProvider
 					}
 				}
@@ -177,7 +177,7 @@ type DeleteSSOProviderResponse struct {
 func (s ManagementResource) DeleteSSOProvider(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSSOProviderID = mux.Vars(request)[api.URIPathVariableSSOProviderID]
-		requestContext   = ctx.FromRequest(request)
+		requestContext   = bhctx.FromRequest(request)
 	)
 
 	// Convert the incoming string url param to an int
@@ -279,9 +279,19 @@ func SanitizeAndGetRoles(ctx context.Context, autoProvisionConfig model.SSOProvi
 			case len(validRoles) == 1:
 				return validRoles, nil
 			case len(validRoles) > 1:
-				slog.WarnContext(ctx, fmt.Sprintf("[SSO] JIT Role Provision detected multiple valid roles - %s , falling back to default role %s", validRoles.Names(), defaultRole.Name))
+				slog.WarnContext(
+					ctx,
+					"[SSO] JIT Role Provision detected multiple valid roles, falling back to default role",
+					slog.String("valid_roles", strings.Join(validRoles.Names(), ",")),
+					slog.String("default_role", defaultRole.Name),
+				)
 			default:
-				slog.WarnContext(ctx, fmt.Sprintf("[SSO] JIT Role Provision detected no valid roles from %s , falling back to default role %s", maybeBHRoles, defaultRole.Name))
+				slog.WarnContext(
+					ctx,
+					"[SSO] JIT Role Provision detected no valid roles, falling back to default role",
+					slog.String("roles", strings.Join(maybeBHRoles, ",")),
+					slog.String("default_role", defaultRole.Name),
+				)
 			}
 		}
 

@@ -19,8 +19,7 @@ import toString from 'lodash/toString';
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 import ImPropTypes from 'react-immutable-proptypes';
-import CommunityIcon from '../../../components/CommunityIcon';
-import EnterpriseIcon from '../../../components/EnterpriseIcon';
+import { AppIcon } from '../../../components/AppIcon';
 
 export const OperationsEditionPlugin = function () {
     return {
@@ -30,9 +29,9 @@ export const OperationsEditionPlugin = function () {
                     // The component only has access to the tag that is currently being rendered and not the entire array.
                     // This looks up the array by the top-level system attribute so it can be passed into the component at render time.
                     const [, path, action] = props.specPath.toJS();
-                    const tags = system.spec().toJS().json.paths[path][action].tags;
-                    const isCommunity = tags.includes('Community');
-                    const isEnterprise = tags.includes('Enterprise');
+                    const tagsList = system.spec().getIn(['json', 'paths', path, action, 'tags']); // Immutable.List<string> | undefined
+                    const isCommunity = tagsList?.includes('Community') ?? false;
+                    const isEnterprise = tagsList?.includes('Enterprise') ?? false;
 
                     return (
                         <div>
@@ -118,10 +117,28 @@ export class OperationSummaryWithEdition extends PureComponent<{
         const hasSecurity = security && !!security.count();
         const securityIsOptional = hasSecurity && security.size === 1 && security.first().isEmpty();
         const allowAnonymous = !hasSecurity || securityIsOptional;
+        const editionAvailability = [
+            {
+                color: 'var(--bhce-main)',
+                isAvailable: isCommunity,
+                marginRight: '10px',
+                name: 'BloodHound Community Edition',
+            },
+            {
+                color: 'var(--bhe-main)',
+                isAvailable: isEnterprise,
+                marginRight: '15px',
+                name: 'BloodHound Enterprise',
+            },
+        ];
         return (
             <div className={`opblock-summary opblock-summary-${method}`}>
                 <button
-                    aria-label={`${method} ${path.replace(/\//g, '\u200b/')}`}
+                    aria-label={`${method} ${path}. ${
+                        isCommunity ? 'Available' : 'Not available'
+                    } in BloodHound Community Edition. ${
+                        isEnterprise ? 'Available' : 'Not available'
+                    } in BloodHound Enterprise`}
                     aria-expanded={isShown}
                     className='opblock-summary-control'
                     onClick={toggleShown}>
@@ -131,47 +148,39 @@ export class OperationSummaryWithEdition extends PureComponent<{
                         operationProps={operationProps}
                         specPath={specPath}
                     />
-
                     {!showSummary ? null : (
                         <div className='opblock-summary-description'>{toString(resolvedSummary || summary)}</div>
                     )}
 
-                    <CommunityIcon
-                        style={{ marginRight: '10px' }}
-                        fill={isCommunity ? '#EE290D' : 'grey'}
-                        title={
-                            isCommunity
-                                ? 'Available in BloodHound Community Edition'
-                                : 'Not available in BloodHound Community Edition'
-                        }
-                        width='50px'
-                        height='33px'
-                    />
-                    <EnterpriseIcon
-                        style={{ marginRight: '15px' }}
-                        fill={isEnterprise ? '#34318F' : 'grey'}
-                        title={
-                            isEnterprise
-                                ? 'Available in BloodHound Enterprise'
-                                : 'Not available in BloodHound Enterprise'
-                        }
-                        width='47px'
-                        height='30px'
-                    />
+                    <span className='flex justify-end items-center'>
+                        {editionAvailability.map(({ name, isAvailable, color, marginRight }) => (
+                            <AppIcon.BHLogo
+                                aria-hidden='true'
+                                focusable='false'
+                                height='33px'
+                                key={name}
+                                style={{ marginRight, color: isAvailable ? color : 'grey' }}
+                                viewBox='0 2.75 24 18.5'
+                                width='50px'
+                            />
+                        ))}
 
-                    {displayOperationId && (originalOperationId || operationId) ? (
-                        <span className='opblock-summary-operation-id'>{originalOperationId || operationId}</span>
-                    ) : null}
+                        {displayOperationId && (originalOperationId || operationId) ? (
+                            <span className='opblock-summary-operation-id'>{originalOperationId || operationId}</span>
+                        ) : null}
 
-                    <svg className='arrow' width='20' height='20' aria-hidden='true' focusable='false'>
-                        <use
-                            href={isShown ? '#large-arrow-up' : '#large-arrow-down'}
-                            xlinkHref={isShown ? '#large-arrow-up' : '#large-arrow-down'}
-                        />
-                    </svg>
+                        <svg className='arrow' width='20' height='20' aria-hidden='true' focusable='false'>
+                            <use
+                                href={isShown ? '#large-arrow-up' : '#large-arrow-down'}
+                                xlinkHref={isShown ? '#large-arrow-up' : '#large-arrow-down'}
+                            />
+                        </svg>
+                    </span>
                 </button>
 
-                {allowAnonymous ? null : (
+                {allowAnonymous ? (
+                    <span className='w-5 ml-2.5'></span>
+                ) : (
                     <AuthorizeOperationBtn
                         isAuthorized={isAuthorized}
                         onClick={() => {

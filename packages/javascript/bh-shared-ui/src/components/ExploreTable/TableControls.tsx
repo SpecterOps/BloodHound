@@ -14,15 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
+import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
-
-const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
+import { ExportColumns } from './explore-table-utils';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
@@ -32,10 +31,12 @@ type TableControlsProps<TData, TValue> = {
     resultsCount?: number;
     tableName?: string;
     className?: string;
-    onDownloadClick?: () => void;
+    onDownloadClick?: (columns: ExportColumns) => void;
     onExpandClick?: () => void;
     onCloseClick?: () => void;
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+    onChangePinnedColumns?: (columns: string[]) => void;
+    onResetColumnSize?: () => void;
 };
 
 const TableControls = <TData, TValue>({
@@ -50,16 +51,25 @@ const TableControls = <TData, TValue>({
     onCloseClick,
     onExpandClick,
     onManageColumnsChange,
+    onChangePinnedColumns,
+    onResetColumnSize,
 }: TableControlsProps<TData, TValue>) => {
     const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
-            columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
+            columns?.map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
                 value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
             })),
         [columns, pinnedColumns]
     );
+
+    const DISABLED_CLASSNAME = 'pointer-events-none *:dark:text-neutral-500 *:text-neutral-400';
+    const noResults = !resultsCount;
+
+    const handleConfirmExport = (columns: ExportColumns) => {
+        onDownloadClick?.(columns);
+    };
 
     return (
         <div className={cn('flex p-3 justify-between relative', className)}>
@@ -69,35 +79,68 @@ const TableControls = <TData, TValue>({
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
-                    <div className='flex justify-center items-center relative'>
+                    <div className='flex justify-center items-center relative w-full'>
+                        <Label htmlFor='explore-table-search' className='sr-only'>
+                            Explore Table Search
+                        </Label>
                         <Input
-                            className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
+                            id='explore-table-search'
+                            variant='outlined'
+                            data-testid='explore-table-search'
+                            disabled={noResults}
                             {...SearchInputProps}
                         />
-                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
+                        <FontAwesomeIcon
+                            className={cn('absolute right-2 pointer-events-none', { [DISABLED_CLASSNAME]: noResults })}
+                            icon={faSearch}
+                        />
                     </div>
                 )}
                 {onDownloadClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onDownloadClick} className={ICON_CLASSES} icon={faDownload} />
-                    </div>
+                    <Menu>
+                        <MenuTrigger asChild>
+                            <IconButton
+                                variant='secondary'
+                                aria-disabled={noResults}
+                                data-testid='download-button'
+                                aria-label='Download CSV'
+                                disabled={noResults}>
+                                <FontAwesomeIcon icon={faDownload} />
+                            </IconButton>
+                        </MenuTrigger>
+                        <MenuContent align='start'>
+                            <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
+                            <MenuItem onSelect={() => handleConfirmExport('selected')}>Selected Columns</MenuItem>
+                        </MenuContent>
+                    </Menu>
                 )}
                 {onExpandClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onExpandClick} className={ICON_CLASSES} icon={faExpand} />
-                    </div>
+                    <IconButton
+                        variant='secondary'
+                        onClick={onExpandClick}
+                        data-testid='expand-button'
+                        aria-label='Expand table view'>
+                        <FontAwesomeIcon icon={faExpand} />
+                    </IconButton>
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
+                        disabled={noResults}
                         allColumns={parsedColumns}
                         selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
+                        onChangePinnedColumns={onChangePinnedColumns}
+                        onResetColumnSize={onResetColumnSize}
                     />
                 )}
                 {onCloseClick && (
-                    <div>
-                        <FontAwesomeIcon onClick={onCloseClick} className={ICON_CLASSES} icon={faClose} />
-                    </div>
+                    <IconButton
+                        variant='secondary'
+                        onClick={onCloseClick}
+                        data-testid='close-button'
+                        aria-label='Close table view'>
+                        <FontAwesomeIcon icon={faClose} />
+                    </IconButton>
                 )}
             </div>
         </div>

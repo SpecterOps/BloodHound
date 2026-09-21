@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
 import { typeFormat } from '../utils';
@@ -26,11 +26,21 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName, targetType }) => {
                 The GPO {sourceName} is linked to the {typeFormat(targetType)} {targetName}.
             </Typography>
             <Typography variant='body2'>
-                The GPO's settings apply to AD accounts (users and computers) within {targetName}.
+                A linked GPO applies its settings to objects in the linked container.
             </Typography>
             <Typography variant='body2'>
-                The Enforced property on the edge indicates whether the GPO link is enforced, meaning it still applies
-                if an OU has blocked GPO inheritance.
+                For domain and OU objects, affected child users and computers include those contained directly within
+                the domain or OU, as well as those in nested OUs.
+            </Typography>
+            <Typography variant='body2'>
+                For site objects, affected computers include the site's domain controllers, and also computers whose IP
+                addresses fall within one of the site's subnets. If the site is the default site, affected computers
+                also include computers that do not map to any other site. Affected users are those who sign in to the
+                affected computers.
+            </Typography>
+            <Typography variant='body2'>
+                Unless the GPO link is enforced, users and computers in a domain or OU that blocks GPO inheritance are
+                not affected by inherited GPOs, including GPOs linked to an AD site.
             </Typography>
         </>
     );

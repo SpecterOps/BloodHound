@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { RequestOptions } from 'js-client-library';
+import { NodeDetailsWithInfo, RequestOptions } from 'js-client-library';
+import { EntityTables } from '../components';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
 
@@ -36,15 +37,12 @@ export interface EntityInfoDataTableProps {
     parentLabels?: string[];
     queryType?: EntityRelationshipQueryTypes;
 }
+
 export interface EntityInfoContentProps {
     DataTable: React.FC<EntityInfoDataTableProps>;
-    id: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+    priorityTables?: EntityTables;
+    additionalTables?: EntityTables;
+    selectedNode: NodeDetailsWithInfo;
 }
 
 let controller = new AbortController();
@@ -53,8 +51,10 @@ export const abortEntitySectionRequest = () => {
     controller.abort();
     controller = new AbortController();
 };
+
 export const MetaNodeKind = 'Meta' as const;
-export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind | typeof MetaNodeKind;
+export const MetaDetailNodeKind = 'MetaDetail' as const;
+export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind;
 
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {
     [AzureNodeKind.Entity]: (id: string, options?: RequestOptions) =>
@@ -133,13 +133,23 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
             undefined,
             options
         ),
+    [AzureNodeKind.FederatedIdentityCredential]: (id: string, options?: RequestOptions) =>
+        apiClient.getAZEntityInfoV2(
+            'federated-identity-credentials',
+            id,
+            undefined,
+            false,
+            undefined,
+            undefined,
+            undefined,
+            options
+        ),
     [ActiveDirectoryNodeKind.Entity]: (id: string, options?: RequestOptions) => apiClient.getBaseV2(id, false, options),
     // LocalGroups and LocalUsers are entities that we handle directly and add the `Base` kind to so using getBaseV2 is an assumption but should work
     [ActiveDirectoryNodeKind.LocalGroup]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
     [ActiveDirectoryNodeKind.LocalUser]: (id: string, options?: RequestOptions) =>
         apiClient.getBaseV2(id, false, options),
-
     [ActiveDirectoryNodeKind.AIACA]: (id: string, options?: RequestOptions) => apiClient.getAIACAV2(id, false, options),
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string, options?: RequestOptions) =>
         apiClient.getCertTemplateV2(id, false, options),
@@ -161,7 +171,11 @@ export const entityInformationEndpoints: Record<EntityKinds, (id: string, option
     [ActiveDirectoryNodeKind.User]: (id: string, options?: RequestOptions) => apiClient.getUserV2(id, false, options),
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string, options?: RequestOptions) =>
         apiClient.getIssuancePolicyV2(id, false, options),
-    Meta: apiClient.getMetaV2,
+    [ActiveDirectoryNodeKind.Site]: (id: string, options?: RequestOptions) => apiClient.getSiteV2(id, false, options),
+    [ActiveDirectoryNodeKind.SiteServer]: (id: string, options?: RequestOptions) =>
+        apiClient.getSiteServerV2(id, false, options),
+    [ActiveDirectoryNodeKind.SiteSubnet]: (id: string, options?: RequestOptions) =>
+        apiClient.getSiteSubnetV2(id, false, options),
 };
 
 export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfoDataTableProps[]>> = {
@@ -182,6 +196,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Inbound Object Control',
             queryType: 'azapp-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Federated Identity Credentials',
+            queryType: 'azapp-federated_identity_credentials',
         },
     ],
     [AzureNodeKind.VMScaleSet]: (id: string) => [
@@ -225,6 +244,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Roles',
             queryType: 'azgroup-roles',
+        },
+        {
+            id,
+            label: 'Eligible Roles',
+            queryType: 'azgroup-eligible-approver-roles',
         },
         {
             id,
@@ -623,6 +647,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
         },
         {
             id,
+            label: 'Eligible Roles',
+            queryType: 'azuser-eligible-approver-roles',
+        },
+        {
+            id,
             label: 'Execution Privileges',
             queryType: 'azuser-execution_privileges',
         },
@@ -709,12 +738,22 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'aiaca-inbound_object_control',
         },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'aiaca-pki_hierarchy',
+        },
     ],
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
             queryType: 'certtemplate-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Published To CAs',
+            queryType: 'certtemplate-published_to_cas',
         },
     ],
     [ActiveDirectoryNodeKind.Computer]: (id: string) => [
@@ -843,12 +882,27 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Controllers',
             queryType: 'domain-controllers',
         },
+        {
+            id,
+            label: 'ADCS Escalations',
+            queryType: 'domain-adcs_escalations',
+        },
     ],
     [ActiveDirectoryNodeKind.EnterpriseCA]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
             queryType: 'enterpriseca-inbound_object_control',
+        },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'enterpriseca-pki_hierarchy',
+        },
+        {
+            id,
+            label: 'Published Templates',
+            queryType: 'enterpriseca-published_templates',
         },
     ],
     [ActiveDirectoryNodeKind.GPO]: (id: string) => [
@@ -870,6 +924,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     id,
                     label: 'Users',
                     queryType: 'gpo-users',
+                },
+                {
+                    id,
+                    label: 'Sites',
+                    queryType: 'gpo-sites',
                 },
                 {
                     id,
@@ -943,6 +1002,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'ntauthstore-inbound_object_control',
         },
+        {
+            id,
+            label: 'Trusted CAs',
+            queryType: 'ntauthstore-trusted_cas',
+        },
     ],
     [ActiveDirectoryNodeKind.OU]: (id: string) => [
         {
@@ -972,6 +1036,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'rootca-inbound_object_control',
         },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'rootca-pki_hierarchy',
+        },
     ],
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string) => [
         {
@@ -983,6 +1052,28 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Linked Certificate Templates',
             queryType: 'issuancepolicy-linked_certificate_templates',
+        },
+    ],
+    [ActiveDirectoryNodeKind.Site]: (id: string) => [
+        {
+            id,
+            label: 'Inbound Object Control',
+            queryType: 'site-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Linked GPOs',
+            queryType: 'site-linked_gpos',
+        },
+        {
+            id,
+            label: 'Linked Site Servers',
+            queryType: 'site-linked_siteservers',
+        },
+        {
+            id,
+            label: 'Linked Site Subnets',
+            queryType: 'site-linked_sitesubnets',
         },
     ],
     [ActiveDirectoryNodeKind.User]: (id: string) => [
@@ -1043,7 +1134,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             queryType: 'user-inbound_object_control',
         },
     ],
-    Meta: () => [],
 };
 
 export type EntityRelationshipEndpoint = Record<string, (params: EntitySectionEndpointParams) => Promise<any>>;
@@ -1064,6 +1154,12 @@ export const entityRelationshipEndpoints = {
     'azapp-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('applications', id, 'inbound-control', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
+    'azapp-federated_identity_credentials': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('applications', id, 'federated-identity-credentials', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),
@@ -1104,6 +1200,12 @@ export const entityRelationshipEndpoints = {
     'azgroup-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azgroup-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('groups', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
             .then((res) => res.data),
     'azgroup-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
@@ -1541,6 +1643,12 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getAZEntityInfoV2('users', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'azuser-eligible-approver-roles': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'eligible-approver-roles', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
     'azuser-execution_privileges': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'outbound-execution-privileges', counts, skip, limit, type, {
@@ -1607,9 +1715,15 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'aiaca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getAIACAControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'aiaca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient.getAIACAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'certtemplate-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getCertTemplateControllersV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'certtemplate-published_to_cas': ({ id, skip, limit, type }) =>
+        apiClient
+            .getCertTemplatePublishedToCAsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'computer-sessions': ({ id, skip, limit, type }) =>
         apiClient.getComputerSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1677,9 +1791,21 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'domain-controllers': ({ id, skip, limit, type }) =>
         apiClient.getDomainControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'domain-adcs_escalations': ({ id, skip, limit, type }) =>
+        apiClient
+            .getDomainADCSEscalationsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'enterpriseca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getEnterpriseCAControllersV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'enterpriseca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient
+            .getEnterpriseCAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'enterpriseca-published_templates': ({ id, skip, limit, type }) =>
+        apiClient
+            .getEnterpriseCAPublishedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'gpo-ous': ({ id, skip, limit, type }) =>
         apiClient.getGPOOUsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1687,6 +1813,8 @@ export const entityRelationshipEndpoints = {
         apiClient.getGPOComputersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-users': ({ id, skip, limit, type }) =>
         apiClient.getGPOUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'gpo-sites': ({ id, skip, limit, type }) =>
+        apiClient.getGPOSitesV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-tier_zero_objects': ({ id, skip, limit, type }) =>
         apiClient.getGPOTierZeroV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'gpo-inbound_object_control': ({ id, skip, limit, type }) =>
@@ -1715,6 +1843,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getNTAuthStoreControllersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'ntauthstore-trusted_cas': ({ id, skip, limit, type }) =>
+        apiClient
+            .getNTAuthStoreTrustedCAsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'ou-affecting_gpos': ({ id, skip, limit, type }) =>
         apiClient.getOUGPOsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'ou-groups': ({ id, skip, limit, type }) =>
@@ -1725,6 +1857,8 @@ export const entityRelationshipEndpoints = {
         apiClient.getOUUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'rootca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getRootCAControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'rootca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient.getRootCAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'issuancepolicy-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getIssuancePolicyControllersV2(id, skip, limit, type, { signal: controller.signal })
@@ -1733,6 +1867,14 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getIssuancePolicyLinkedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'site-inbound_object_control': ({ id, skip, limit, type }) =>
+        apiClient.getSiteControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_gpos': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedGPOsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_siteservers': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedServersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'site-linked_sitesubnets': ({ id, skip, limit, type }) =>
+        apiClient.getSiteLinkedSubnetsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-sessions': ({ id, skip, limit, type }) =>
         apiClient.getUserSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-member_of': ({ id, skip, limit, type }) =>

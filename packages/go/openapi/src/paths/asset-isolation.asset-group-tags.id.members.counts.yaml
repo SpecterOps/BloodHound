@@ -32,6 +32,10 @@ get:
     - Asset Isolation
     - Community
     - Enterprise
+
+  parameters:
+    - $ref: './../parameters/query.environments.yaml'
+
   responses:
     200:
       description: OK

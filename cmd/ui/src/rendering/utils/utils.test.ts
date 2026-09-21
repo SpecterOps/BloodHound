@@ -14,14 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SigmaNodeEventPayload } from 'sigma/sigma';
-import { MouseCoords } from 'sigma/types';
-import {
-    getLabelBoundsFromContext,
-    getNodeRadius,
-    LabelBoundsParams,
-    preventAllDefaults,
-} from 'src/rendering/utils/utils';
+import { getLabelBoundsFromContext, getNodeRadius, LabelBoundsParams } from 'src/rendering/utils/utils';
 
 describe('getLabelBoundsFromContext', () => {
     it('returns bounds for text rendered to canvas', () => {
@@ -66,36 +59,5 @@ describe('getNodeRadius', () => {
 
         expect(getNodeRadius(true, 1, nodeSize)).not.toEqual(getNodeRadius(true, 0.5, nodeSize));
         expect(getNodeRadius(false, 1, nodeSize)).not.toEqual(getNodeRadius(false, 0.5, nodeSize));
-    });
-});
-
-describe('preventAllDefaults', () => {
-    it('prevents Sigma defaults events', () => {
-        const mockEvent: SigmaNodeEventPayload = {
-            event: { x: 10, y: 20 } as MouseCoords,
-            preventSigmaDefault: vi.fn(),
-            node: 'node-id',
-        };
-
-        preventAllDefaults(mockEvent);
-        expect(mockEvent.preventSigmaDefault).toHaveBeenCalled();
-    });
-
-    it('prevents MouseCoords events', () => {
-        const mockEvent = new MouseEvent('click');
-        mockEvent.preventDefault = vi.fn();
-        mockEvent.stopPropagation = vi.fn();
-        const mockMouseCoords: MouseCoords = {
-            sigmaDefaultPrevented: false,
-            preventSigmaDefault: vi.fn(),
-            original: mockEvent,
-            x: 10,
-            y: 20,
-        };
-
-        preventAllDefaults(mockMouseCoords);
-        expect(mockMouseCoords.preventSigmaDefault).toHaveBeenCalled();
-        expect(mockMouseCoords.original.preventDefault).toHaveBeenCalled();
-        expect(mockMouseCoords.original.stopPropagation).toHaveBeenCalled();
     });
 });

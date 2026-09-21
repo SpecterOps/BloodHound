@@ -14,18 +14,25 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { MouseCoords, NodeDisplayData, PartialButFor } from 'sigma/types';
+import { NodeDisplayData, PartialButFor } from 'sigma/types';
 
 /** Threshold of graph zoom before labels fade out */
-export const STARTING_ZOOM_FADE_RATIO = 0.65;
-export const ENDING_ZOOM_FADE_RATIO = 0.5;
+export const STARTING_ZOOM_FADE_RATIO = 0.4;
+export const ENDING_ZOOM_FADE_RATIO = 0.3;
 
 /** Padding displayed around label for node or edge */
 export const LABEL_PADDING = 3;
 
 /** Padding displayed around a node */
 export const NODE_PADDING = 2;
+
+/** Gap between the bottom of a node and the top of its label */
+export const LABEL_NODE_MARGIN = 4;
+
+/** Dimming values for fading the non highlighted nodes */
+export const DIM_FACTOR = 0.1;
+export const NO_DIM_FACTOR = 1.0;
+export const DEFAULT_BG_COLOR = '#ffffff';
 
 /**
  * While edge labels are drawn with a custom renderer, the mouse target for capturing clicks is
@@ -39,9 +46,38 @@ export const EDGE_TYPES = ['curved', 'arrow'];
 
 /** Type for node data passed to custom render programs */
 export type GraphItemData = PartialButFor<
-    NodeDisplayData & { inverseSqrtZoomRatio: number },
+    NodeDisplayData & { inverseSqrtZoomRatio: number; sublabel?: string; isDimmed?: boolean },
     'x' | 'y' | 'size' | 'label' | 'color'
 >;
+
+/**
+ * Blend two 6-digit hex colors together by a given ratio.
+ *
+ * @param hex - The starting color in 6-digit hex format (e.g. `#4e9a4e`)
+ * @param targetHex - The color to blend toward in 6-digit hex format (e.g. `#1a1a2e`)
+ * @param amount - How far to blend toward `targetHex` (0 = original, 1 = full target)
+ * @returns A 6-digit hex string of the blended color
+ */
+export const blendHexColors = (hex: string, targetHex: string, amount: number): string => {
+    const parse = (h: string): [number, number, number] => {
+        // trim() handles the leading space that getComputedStyle returns for CSS custom property values
+        const cleaned = h.trim().replace('#', '');
+        return [
+            parseInt(cleaned.slice(0, 2), 16),
+            parseInt(cleaned.slice(2, 4), 16),
+            parseInt(cleaned.slice(4, 6), 16),
+        ];
+    };
+
+    const [r1, g1, b1] = parse(hex);
+    const [r2, g2, b2] = parse(targetHex);
+
+    const r = Math.round(r1 + (r2 - r1) * amount);
+    const g = Math.round(g1 + (g2 - g1) * amount);
+    const b = Math.round(b1 + (b2 - b1) * amount);
+
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+};
 
 /**
  * Calculate a labels opacity relative to the current graph's zoom (to mimick ReGraph)
@@ -113,6 +149,35 @@ export const getLabelBoundsFromContext = (
 };
 
 /**
+ * Use a context to calculate the bounds for text drawn below and centered on a node.
+ * Unlike getLabelBoundsFromContext (which places the label to the right), this positions
+ * the label horizontally centered on the node's x coordinate and vertically below its bottom edge.
+ *
+ * @param context the canvas's drawing context, used to measure text width
+ * @param params settings which influence label's bounds
+ * @param offsetY additional vertical offset from the top of the label area, used to stack a sublabel below the primary label
+ * @returns tuple containing label bounds as [x, y, width, height]
+ */
+export const getNodeLabelBoundsBelowFromContext = (
+    context: CanvasRenderingContext2D,
+    params: LabelBoundsParams = DEFAULT_PARAMS,
+    offsetY: number = 0
+): [x: number, y: number, width: number, height: number] => {
+    const labelBounds = context.measureText(params.label);
+    const labelWidth = labelBounds.width;
+    // Add the space above the text baseline plus the space below it
+    const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
+    const nodeRadius = params.size * params.inverseSqrtZoomRatio;
+
+    return [
+        params.position.x - labelWidth / 2 - LABEL_PADDING,
+        params.position.y + nodeRadius + LABEL_NODE_MARGIN + offsetY,
+        labelWidth + 2 * LABEL_PADDING,
+        labelHeight + 2 * LABEL_PADDING,
+    ];
+};
+
+/**
  * Calculate the radius of a node by the given size
  *
  * @param highlighted whether node is highlighted or not (highlights add to radius)
@@ -129,21 +194,4 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
     else radius = size * inverseSqrtZoomRatio;
 
     return radius;
-};
-
-/**
- * Reusable method to prevent defaults for mouse move, right click, and double click
- *
- * @param event Sigma or mouse event object used to cancel defaults
- */
-export const preventAllDefaults = (event: SigmaNodeEventPayload | MouseCoords) => {
-    if ('preventSigmaDefault' in event && typeof event.preventSigmaDefault === 'function') {
-        event.preventSigmaDefault();
-    }
-
-    // Prevent events for MouseCoords type
-    if ('original' in event && event.original instanceof MouseEvent) {
-        event.original.preventDefault();
-        event.original.stopPropagation();
-    }
 };

@@ -21,29 +21,41 @@ import (
 )
 
 type PermissionSet struct {
+	AlertsRead   model.Permission
+	AlertsManage model.Permission
+
 	AppReadApplicationConfiguration  model.Permission
 	AppWriteApplicationConfiguration model.Permission
 
 	APsGenerateReport model.Permission
 	APsManageAPs      model.Permission
 
-	AuthAcceptEULA                      model.Permission
-	AuthCreateToken                     model.Permission
-	AuthManageApplicationConfigurations model.Permission
-	AuthManageProviders                 model.Permission
-	AuthManageSelf                      model.Permission
-	AuthManageUsers                     model.Permission
+	AuditLogRead model.Permission
+
+	AuthAcceptEULA       model.Permission
+	AuthCreateToken      model.Permission
+	AuthReadProviders    model.Permission
+	AuthManageProviders  model.Permission
+	AuthManageSelf       model.Permission
+	AuthManageUsers      model.Permission
+	AuthReadUsers        model.Permission
+	AuthReadUsersMinimal model.Permission
 
 	ClientsManage  model.Permission
 	ClientsRead    model.Permission
 	ClientsTasking model.Permission
 
+	CollectionReadJobs   model.Permission
 	CollectionManageJobs model.Permission
 
-	GraphDBIngest model.Permission
-	GraphDBMutate model.Permission
-	GraphDBRead   model.Permission
-	GraphDBWrite  model.Permission
+	GraphDBIngestManage model.Permission
+	GraphDBIngestRead   model.Permission
+	GraphDBMutate       model.Permission
+	GraphDBRead         model.Permission
+	GraphDBWrite        model.Permission
+
+	OpenGraphRead  model.Permission
+	OpenGraphWrite model.Permission
 
 	SavedQueriesRead  model.Permission
 	SavedQueriesWrite model.Permission
@@ -53,55 +65,94 @@ type PermissionSet struct {
 
 func (s PermissionSet) All() model.Permissions {
 	return model.Permissions{
+		s.AlertsRead,
+		s.AlertsManage,
 		s.AppReadApplicationConfiguration,
 		s.AppWriteApplicationConfiguration,
 		s.APsGenerateReport,
 		s.APsManageAPs,
+		s.AuditLogRead,
 		s.AuthCreateToken,
-		s.AuthManageApplicationConfigurations,
+		s.AuthReadProviders,
 		s.AuthManageProviders,
 		s.AuthManageSelf,
 		s.AuthManageUsers,
+		s.AuthReadUsers,
+		s.AuthReadUsersMinimal,
 		s.ClientsManage,
 		s.ClientsRead,
 		s.ClientsTasking,
+		s.CollectionReadJobs,
 		s.CollectionManageJobs,
-		s.GraphDBIngest,
+		s.GraphDBIngestManage,
+		s.GraphDBIngestRead,
 		s.GraphDBMutate,
 		s.GraphDBRead,
 		s.GraphDBWrite,
+		s.OpenGraphRead,
+		s.OpenGraphWrite,
 		s.SavedQueriesRead,
 		s.SavedQueriesWrite,
 		s.WipeDB,
 	}
 }
 
+func (s PermissionSet) ReadAll() model.Permissions {
+	return model.Permissions{
+		s.AlertsRead,
+		s.AppReadApplicationConfiguration,
+		s.APsGenerateReport,
+		s.AuditLogRead,
+		s.AuthReadProviders,
+		s.AuthReadUsers,
+		s.AuthReadUsersMinimal,
+		s.ClientsRead,
+		s.CollectionReadJobs,
+		s.GraphDBIngestRead,
+		s.GraphDBRead,
+		s.OpenGraphRead,
+		s.SavedQueriesRead,
+	}
+}
+
 // Permissions Note: Not the only source of truth, changes here must be added to a migration *.sql file to update the permissions table
 func Permissions() PermissionSet {
 	return PermissionSet{
+		AlertsRead:   model.NewPermission("alerts", "Read"),
+		AlertsManage: model.NewPermission("alerts", "Manage"),
+
 		AppReadApplicationConfiguration:  model.NewPermission("app", "ReadAppConfig"),
 		AppWriteApplicationConfiguration: model.NewPermission("app", "WriteAppConfig"),
 
 		APsGenerateReport: model.NewPermission("risks", "GenerateReport"),
 		APsManageAPs:      model.NewPermission("risks", "ManageRisks"),
 
-		AuthAcceptEULA:                      model.NewPermission("auth", "AcceptEULA"),
-		AuthCreateToken:                     model.NewPermission("auth", "CreateToken"),
-		AuthManageApplicationConfigurations: model.NewPermission("auth", "ManageAppConfig"),
-		AuthManageProviders:                 model.NewPermission("auth", "ManageProviders"),
-		AuthManageSelf:                      model.NewPermission("auth", "ManageSelf"),
-		AuthManageUsers:                     model.NewPermission("auth", "ManageUsers"),
+		AuditLogRead: model.NewPermission("audit_log", "Read"),
+
+		AuthAcceptEULA:       model.NewPermission("auth", "AcceptEULA"),
+		AuthCreateToken:      model.NewPermission("auth", "CreateToken"),
+		AuthReadProviders:    model.NewPermission("auth", "ReadProviders"),
+		AuthManageProviders:  model.NewPermission("auth", "ManageProviders"),
+		AuthManageSelf:       model.NewPermission("auth", "ManageSelf"),
+		AuthManageUsers:      model.NewPermission("auth", "ManageUsers"),
+		AuthReadUsers:        model.NewPermission("auth", "ReadUsers"),
+		AuthReadUsersMinimal: model.NewPermission("auth", "ReadUsersMinimal"),
 
 		ClientsManage:  model.NewPermission("clients", "Manage"),
 		ClientsRead:    model.NewPermission("clients", "Read"),
 		ClientsTasking: model.NewPermission("clients", "Tasking"),
 
+		CollectionReadJobs:   model.NewPermission("collection", "ReadJobs"),
 		CollectionManageJobs: model.NewPermission("collection", "ManageJobs"),
 
-		GraphDBIngest: model.NewPermission("graphdb", "Ingest"),
-		GraphDBMutate: model.NewPermission("graphdb", "Mutate"),
-		GraphDBRead:   model.NewPermission("graphdb", "Read"),
-		GraphDBWrite:  model.NewPermission("graphdb", "Write"),
+		GraphDBIngestManage: model.NewPermission("graphdb", "IngestManage"),
+		GraphDBIngestRead:   model.NewPermission("graphdb", "IngestRead"),
+		GraphDBMutate:       model.NewPermission("graphdb", "Mutate"),
+		GraphDBRead:         model.NewPermission("graphdb", "Read"),
+		GraphDBWrite:        model.NewPermission("graphdb", "Write"),
+
+		OpenGraphRead:  model.NewPermission("opengraph", "Read"),
+		OpenGraphWrite: model.NewPermission("opengraph", "Write"),
 
 		SavedQueriesRead:  model.NewPermission("saved_queries", "Read"),
 		SavedQueriesWrite: model.NewPermission("saved_queries", "Write"),

@@ -1,0 +1,91 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: relationship_kind_id
+    description: Relationship Kind ID
+    in: path
+    required: true
+    schema:
+      type: integer
+      format: int32
+
+get:
+  operationId: GetRelationshipKind
+  summary: Get Relationship Kind
+  description: >
+    **Experimental** - Retrieves the details of a single OpenGraph relationship kind by its
+    id, including its extension metadata and entity-panel info map keyed by info key.
+  tags:
+    - OpenGraph (Experimental)
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.relationship-kind-response.yaml'
+          examples:
+            With info:
+              summary: Relationship kind with entity-panel info
+              value:
+                data:
+                  relationship_kind_id: 42
+                  name: "MemberOf"
+                  description: "a membership relationship"
+                  is_traversable: true
+                  extension:
+                    extension_id: 7
+                    name: "Active Directory"
+                    display_name: "Active Directory"
+                    namespace: "AD"
+                    version: "v0.0.1"
+                  info:
+                    overview:
+                      title: "Overview"
+                      position: 0
+                      markdown:
+                        content: "This relationship represents group membership."
+            Without info:
+              summary: Relationship kind without entity-panel info
+              value:
+                data:
+                  relationship_kind_id: 43
+                  name: "HasSession"
+                  description: "a session relationship"
+                  is_traversable: true
+                  extension:
+                    extension_id: 7
+                    name: "Active Directory"
+                    display_name: "Active Directory"
+                    namespace: "AD"
+                    version: "v0.0.1"
+                  info: {}
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

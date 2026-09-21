@@ -36,12 +36,14 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
@@ -52,7 +54,7 @@ func (s Resources) GetSavedQuery(response http.ResponseWriter, request *http.Req
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -77,9 +79,12 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		queryParams   = request.URL.Query()
 		sortByColumns = queryParams[api.QueryParameterSortBy]
 		savedQueries  model.SavedQueries
-		scopes        = queryParams[api.QueryParameterScope]
+		scope         = queryParams.Get(api.QueryParameterScope)
 	)
 
+	if scope == "" {
+		scope = string(model.SavedQueryScopeOwned)
+	}
 	for _, column := range sortByColumns {
 		var descending bool
 		if string(column[0]) == "-" {
@@ -97,13 +102,14 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 		} else {
 			order = append(order, column)
 		}
-
 	}
-
+	// ensure deterministic ordering if not provided
+	if len(order) == 0 {
+		order = append(order, "id")
+	}
 	queryParameterFilterParser := model.NewQueryParameterFilterParser()
 	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := savedQueries.GetValidFilterPredicatesAsStrings(name); err != nil {
@@ -119,8 +125,7 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 				}
 			}
 		}
-
-		if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		} else if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
@@ -128,51 +133,16 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 10000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if len(scopes) == 0 {
-			if queries, count, err := s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		} else if scopedQueries, scopedCount, err := s.DB.ListSavedQueries(request.Context(), scope, user.ID, strings.Join(order, ", "), sqlFilter, skip, limit); err != nil {
+			if strings.Contains(err.Error(), "invalid scope parameter") {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			} else {
-				api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
-			var queries []model.SavedQueryResponse
-			var count int
-			for _, scope := range strings.Split(scopes[0], ",") {
-				var scopedQueries model.SavedQueries
-				var scopedCount int
-
-				switch strings.ToLower(scope) {
-				case string(model.SavedQueryScopePublic):
-					scopedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
-					scopedCount = len(scopedQueries)
-				case string(model.SavedQueryScopeShared):
-					scopedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
-					scopedCount = len(scopedQueries)
-				case string(model.SavedQueryScopeOwned):
-					scopedQueries, scopedCount, err = s.DB.ListSavedQueries(request.Context(), user.ID, strings.Join(order, ", "), sqlFilter, skip, limit)
-				default:
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
-					return
-				}
-
-				if err != nil {
-					api.HandleDatabaseError(request, response, err)
-					return
-				}
-
-				for _, query := range scopedQueries {
-					queries = append(queries, model.SavedQueryResponse{
-						SavedQuery: query,
-						Scope:      scope,
-					})
-				}
-				count += scopedCount
-
-			}
-			api.WriteResponseWrapperWithPagination(request.Context(), queries, limit, skip, count, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(request.Context(), scopedQueries, limit, skip, scopedCount, http.StatusOK, response)
 		}
 	}
-
 }
 
 // TransferableSavedQuery - Used for importing/exporting saved queries
@@ -203,18 +173,18 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}
 		// did not make it far enough in the api request for an audit log event
 	}()
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err = strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -268,18 +238,18 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}
 		// did not make it far enough in the api request for an audit log event
 	}()
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQueries, model.AuditLogStatusIntent, model.AuditData{"export_saved_queries_scope": scope, "user_id": user.ID.String()}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -319,7 +289,7 @@ func (s Resources) getSavedQueriesByUserAndScope(ctx context.Context, userId uui
 	case string(model.SavedQueryScopeShared):
 		savedQueries, err = s.DB.GetSharedSavedQueries(ctx, userId)
 	case string(model.SavedQueryScopeOwned):
-		savedQueries, _, err = s.DB.ListSavedQueries(ctx, userId, "id", model.SQLFilter{}, 0, 0)
+		savedQueries, err = s.DB.GetSavedQueriesOwnedBy(ctx, userId)
 	default:
 		return nil, fmt.Errorf("invalid scope param: %s", scope)
 	}
@@ -374,18 +344,18 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 			}
 			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+					slog.ErrorContext(request.Context(), "Resource not found", attr.Error(err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+					slog.ErrorContext(request.Context(), "Context deadline exceeded", attr.Error(err))
 				} else {
-					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+					slog.ErrorContext(request.Context(), "Unexpected database error", attr.Error(err))
 				}
 			}
 		}
 		// did not make it far enough in the api request for an audit log event
 	}()
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionImportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"user_id": user.ID}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -412,6 +382,8 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		if savedQueries, err = extractQueriesFromFileFunc(user.ID, request.Body); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			switch {
+			case strings.Contains(err.Error(), "failed to normalize json file"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "failed to unmarshal json file"):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			case strings.Contains(err.Error(), "error during zip validation") || strings.Contains(err.Error(), "not a valid zip file"):
@@ -439,7 +411,10 @@ func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.Reader) (model.S
 		savedQueries = make(model.SavedQueries, 0)
 		query        TransferableSavedQuery
 	)
-	if jsonQueryFile, err := io.ReadAll(file); err != nil {
+
+	if normFile, err := bomenc.NormalizeToUTF8(file); err != nil {
+		return model.SavedQueries{}, fmt.Errorf("failed to normalize json file: %w", err)
+	} else if jsonQueryFile, err := io.ReadAll(normFile); err != nil {
 		return savedQueries, err
 	} else if err = json.Unmarshal(jsonQueryFile, &query); err != nil {
 		return savedQueries, fmt.Errorf("failed to unmarshal json file: %w", err)
@@ -496,13 +471,13 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 		createRequest CreateSavedQueryRequest
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if err := api.ReadJSONRequestPayloadLimited(&createRequest, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Name == "" || createRequest.Query == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "the name and/or query field is empty", request), response)
-	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query, createRequest.Description); err != nil {
+	} else if savedQuery, err := s.DB.CreateSavedQuery(request.Context(), user.ID, createRequest.Name, createRequest.Query, createRequest.Description, nil, nil, ""); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 		} else {
@@ -521,7 +496,7 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 		err             error
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 		return
 	} else if err := api.ReadJSONRequestPayloadLimited(&updateRequest, request); err != nil {
@@ -570,7 +545,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
 	)
 
-	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)

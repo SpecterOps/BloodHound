@@ -26,15 +26,18 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/audit"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/deps"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/dora"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/goimports"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/license"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/tag"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
@@ -95,6 +98,9 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			cover.Create(env),
 			goimports.Create(env),
 			license.Create(env),
+			tag.Create(env),
+			audit.Create(env),
+			dora.Create(env),
 		}
 	)
 

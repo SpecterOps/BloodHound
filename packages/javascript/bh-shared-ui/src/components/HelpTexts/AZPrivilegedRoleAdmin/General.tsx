@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const General: FC = () => {
     return (
         <Typography variant='body2'>
-            The Privileged Role Admin role can grant any other admin role to another principal at the tenant level.
+            The principal has the Privileged Role Administrator Entra ID role active against the target tenant.
         </Typography>
     );
 };

@@ -18,18 +18,21 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.object-id.yaml'
 get:
-  operationId: GetEnterpriseCaEntity
-  summary: Get Enterprise CA entity info
-  description: Get info and counts for this Enterprise CA node.
+  operationId: GetEnterpriseCaEntityControllers
+  summary: Get Enterprise CA entity controllers
+  description: Get a list, graph, or count of the principals that can control this Enterprise CA.
   tags:
     - Enterprise CAs
     - Community
     - Enterprise
   parameters:
-    - $ref: './../parameters/query.hydrate-counts.yaml'
+    - $ref: './../parameters/query.entity.skip.yaml'
+    - $ref: './../parameters/query.entity.limit.yaml'
+    - $ref: './../parameters/query.entity.type.yaml'
+    - $ref: './../parameters/query.entity.sort-by.yaml'
   responses:
     200:
-      $ref: './../responses/entity-info-query-results.yaml'
+      $ref: './../responses/related-entity-query-results.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/dawgs/graph"
+
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/stretchr/testify/assert"
@@ -125,6 +127,36 @@ func TestConvertContainerToNode_InheritanceHashes(t *testing.T) {
 
 	result := ein.ConvertContainerToNode(containerObject, time.Now().UTC())
 	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestConvertSiteToNode_InheritanceHashes(t *testing.T) {
+	testHash := "abc123"
+	siteObject := ein.Site{
+		IngestBase:        ein.IngestBase{},
+		InheritanceHashes: []string{testHash},
+	}
+
+	result := ein.ConvertSiteToNode(siteObject, time.Now().UTC())
+	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
+}
+
+func TestParseSiteServerData_ServerIs(t *testing.T) {
+	siteServer := ein.SiteServer{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "S-1-5-21-123-456-789-1001",
+		},
+		ServerIs: ein.TypedPrincipal{
+			ObjectIdentifier: "S-1-5-21-123-456-789-1002",
+			ObjectType:       "Computer",
+		},
+	}
+
+	result := ein.ParseSiteServerData(siteServer)
+	require.Len(t, result, 1)
+	assert.Equal(t, ad.ServerIs, result[0].RelType)
+	assert.Equal(t, siteServer.ObjectIdentifier, result[0].Source.Value)
+	assert.Equal(t, siteServer.ServerIs.ObjectIdentifier, result[0].Target.Value)
+	assert.Equal(t, ad.Computer, result[0].Target.Kind)
 }
 
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
@@ -247,6 +279,8 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 }
 
 func TestConvertComputerToNode(t *testing.T) {
+	var restrictSendingNtlmTraffic uint = 2
+
 	computer := ein.Computer{
 		IngestBase: ein.IngestBase{
 			Properties: map[string]any{
@@ -258,7 +292,7 @@ func TestConvertComputerToNode(t *testing.T) {
 				Collected: true,
 			},
 			Result: ein.NTLMRegistryInfo{
-				RestrictSendingNtlmTraffic: 2,
+				RestrictSendingNtlmTraffic: &restrictSendingNtlmTraffic,
 			},
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
@@ -282,4 +316,220 @@ func TestConvertComputerToNode(t *testing.T) {
 	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
+}
+
+func TestParseGroupMiscData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		group ein.Group
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected []ein.IngestibleRelationship
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGroupMiscData without SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: make([]ein.TypedPrincipal, 0),
+				},
+			},
+			expected: make([]ein.IngestibleRelationship, 0),
+		},
+		{
+			name: "ParseGroupMiscData with SIDHistory",
+			args: args{
+				group: ein.Group{
+					IngestBase: ein.IngestBase{
+						ObjectIdentifier: "groupBase",
+					},
+					HasSIDHistory: []ein.TypedPrincipal{
+						{
+							ObjectIdentifier: "historySID",
+							ObjectType:       ad.User.String(),
+						},
+					},
+				},
+			},
+			expected: []ein.IngestibleRelationship{
+				{
+					Source: ein.IngestibleEndpoint{
+						Value:   "groupBase",
+						MatchBy: "",
+						Kind:    graph.StringKind(ad.Group.String()),
+					},
+					Target: ein.IngestibleEndpoint{
+						Value: "historySID",
+						Kind:  graph.StringKind(ad.User.String()),
+					},
+					RelType:  ad.HasSIDHistory,
+					RelProps: map[string]any{"isacl": false},
+				},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGroupMiscData(testCase.args.group)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
+}
+
+func TestParseGPOData(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		gpo ein.GPO
+	}
+	type testData struct {
+		name     string
+		args     args
+		expected ein.IngestibleNode
+	}
+
+	tt := []testData{
+		{
+			name: "ParseGPOData without Properties",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Enabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "0"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "0", ad.GPOStatus.String(): ein.PrettyGPOStatusEnabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO UserConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "1"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO ComputerConfigurationDisabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "2"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with GPO Disabled",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "3"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with Invalid GPO Status",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): "4"},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "4", ad.GPOStatus.String(): ein.PrettyGPOStatusNotExisting},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (int)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): 2},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "2", ad.GPOStatus.String(): ein.PrettyGPOStatusComputerConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with numeric status (float64)",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): float64(3)},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "3", ad.GPOStatus.String(): ein.PrettyGPOStatusDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+		{
+			name: "ParseGPOData with whitespace-padded string",
+			args: args{
+				gpo: ein.GPO{
+					ObjectIdentifier: "gpoBase",
+					Properties:       map[string]any{ad.GPOStatus.String(): " 1 "},
+				},
+			},
+			expected: ein.IngestibleNode{
+				ObjectID:    "gpoBase",
+				PropertyMap: map[string]any{ad.GPOStatusRaw.String(): "1", ad.GPOStatus.String(): ein.PrettyGPOStatusUserConfigurationDisabled},
+				Labels:      []graph.Kind{ad.GPO},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := ein.ParseGPOData(testCase.args.gpo)
+			assert.Equal(t, testCase.expected, result)
+		})
+	}
 }

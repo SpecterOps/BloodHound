@@ -13,28 +13,26 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Typography } from '@mui/material';
+import { Tooltip } from 'doodle-ui';
 import React from 'react';
 import Icon from '../../components/Icon';
 import NodeIcon from '../../components/NodeIcon/NodeIcon';
-import { useExploreParams } from '../../hooks';
+import { useExploreParams, useExploreSelectedItem } from '../../hooks';
 import { EntityKinds } from '../../utils/content';
-import { useHeaderStyles } from '../../views/Explore/InfoStyles';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers';
+import HiddenEntityIcon from '../HiddenEntityIcon';
 
 export interface HeaderProps {
-    expanded: boolean;
     name: string;
-    onToggleExpanded: (expanded: boolean) => void;
-    nodeType?: EntityKinds;
+    nodeType?: EntityKinds | string;
 }
-
-const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
-    const styles = useHeaderStyles();
+// TODO - refactor in BED-6062
+const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { clearSelectedItem, selectedItem, isHidden } = useExploreSelectedItem();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
@@ -47,33 +45,28 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
     };
 
     return (
-        <Box className={styles.header}>
-            <Icon
-                className={styles.icon}
-                click={() => {
-                    onToggleExpanded(!expanded);
-                }}>
-                <FontAwesomeIcon icon={expanded ? faMinus : faPlus} />
-            </Icon>
-
-            {nodeType && <NodeIcon nodeType={nodeType} />}
-
-            <Typography
-                data-testid='explore_entity-information-panel_header-text'
-                variant='h6'
-                noWrap
-                className={styles.headerText}>
-                {name}
-            </Typography>
-
+        <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
             <Icon
                 tip='Collapse All'
-                click={handleCollapseAll}
-                className={styles.icon}
+                onClick={handleCollapseAll}
+                className='box-border text-contrast'
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
-        </Box>
+            {isHidden ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
+            <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
+                <h6
+                    data-testid='explore_entity-information-panel_header-text'
+                    className='truncate pl-2 pr-4 leading-10 grow'>
+                    {name}
+                </h6>
+            </Tooltip>
+            {selectedItem && (
+                <Icon className='box-border text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+                    <FontAwesomeIcon icon={faRemove} />
+                </Icon>
+            )}
+        </div>
     );
 };
 

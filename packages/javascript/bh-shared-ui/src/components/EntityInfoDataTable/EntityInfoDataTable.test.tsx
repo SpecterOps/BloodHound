@@ -36,7 +36,14 @@ const queryCount = {
         count: 8,
         limit: 128,
         skip: 0,
-        data: [],
+        data: [
+            {
+                kinds: ['Base', 'OU', 'Tag_Tier_Zero'],
+                label: 'OU',
+                name: 'DOMAIN CONTROLLERS@PHANTOM.CORP',
+                objectID: 'E4E6B0BB-0403-4F6A-9CC1-12138BB62220',
+            },
+        ],
     },
     computers: {
         count: 3003,
@@ -91,6 +98,10 @@ const handlers: Array<RequestHandler> = [
         return res(ctx.json(queryCount[asset]));
     }),
 
+    rest.get(`api/v2/custom-nodes`, (req, res, ctx) => {
+        return res(ctx.json({ data: null }));
+    }),
+
     rest.get(`api/v2/azure/key-vaults*`, (req, res, ctx) => {
         if (req.url.searchParams.get('related_entity_type') === 'all-readers') {
             return res(ctx.json(keyVaultTest.AllReaders));
@@ -131,7 +142,30 @@ describe('EntityInfoDataTable', () => {
             expect(sum).not.toBeNull();
         });
 
-        it('displays ! icon when one of the Affected Object calls fail', async () => {
+        it('opens nested sections and updates URL params correctly', async () => {
+            const user = userEvent.setup();
+            render(<EntityInfoDataTable {...adGpoSections[0]} />);
+
+            // Expand the parent section
+            const parentButton = await screen.findByText(adGpoSections[0].label);
+            await user.click(parentButton);
+
+            // Verify all nested sections are visible.
+            // I dont like the non-null assertion but if that data shape does change then this test should fail and use a different section type
+            const expectedSections = adGpoSections[0].sections!.map((section) => section.label);
+            const sectionHeaders = await Promise.all(expectedSections.map((label) => screen.findByText(label)));
+
+            // Click to expand a nested section and expect URL to be updated with both accordion labels
+            await user.click(sectionHeaders[0]);
+            expect(window.location.search).toContain('OUs');
+            expect(window.location.search).toContain('Affected+Objects');
+
+            // Verify nested section content is visible
+            const nestedContent = await screen.findByText('DOMAIN CONTROLLERS@PHANTOM.CORP');
+            expect(nestedContent).toBeInTheDocument();
+        });
+
+        it('displays an error alert when one of the Affected Object calls fail', async () => {
             console.error = vi.fn();
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
@@ -141,9 +175,9 @@ describe('EntityInfoDataTable', () => {
 
             render(<EntityInfoDataTable {...adGpoSections[0]} />);
 
-            const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
+            const errorAlert = await screen.findByRole('alert');
 
-            expect(errorIcon).not.toBeNull();
+            expect(errorAlert).toHaveTextContent('Error loading Affected Objects');
         });
 
         it('displays 0 when a given sections returns empty, and sums the rest of the sections correctly', async () => {

@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -38,33 +39,50 @@ func (s *GormLogAdapter) LogMode(level logger.LogLevel) logger.Interface {
 }
 
 func (s *GormLogAdapter) Info(ctx context.Context, msg string, data ...any) {
-	slog.InfoContext(ctx, fmt.Sprintf(msg, data...))
+	slog.InfoContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Warn(ctx context.Context, msg string, data ...any) {
-	slog.WarnContext(ctx, fmt.Sprintf(msg, data...))
+	slog.WarnContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Error(ctx context.Context, msg string, data ...any) {
-	slog.ErrorContext(ctx, fmt.Sprintf(msg, data...))
+	slog.ErrorContext(ctx, fmt.Sprintf(msg, data...)) //nolint:sloglint // Gorm logger interface requires format string
 }
 
 func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		sql, _ := fc()
 
-		slog.ErrorContext(ctx, "Database error", "query", sql, "err", err)
+		slog.ErrorContext(
+			ctx,
+			"Database error",
+			slog.String("query", sql),
+			attr.Error(err),
+		)
 	} else {
 		elapsed := time.Since(begin)
 
 		if elapsed >= s.SlowQueryErrorThreshold {
 			sql, rows := fc()
 
-			slog.ErrorContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows, "sql", sql)
+			slog.ErrorContext(
+				ctx,
+				"Slow database query",
+				slog.Int64("duration_ms", elapsed.Milliseconds()),
+				slog.Int64("num_rows", rows),
+				slog.String("query", sql),
+			)
 		} else if elapsed >= s.SlowQueryWarnThreshold {
 			sql, rows := fc()
 
-			slog.WarnContext(ctx, "Slow database query", "duration_ms", elapsed.Milliseconds(), "num_rows", rows, "sql", sql)
+			slog.WarnContext(
+				ctx,
+				"Slow database query",
+				slog.Int64("duration_ms", elapsed.Milliseconds()),
+				slog.Int64("num_rows", rows),
+				slog.String("query", sql),
+			)
 		}
 	}
 }

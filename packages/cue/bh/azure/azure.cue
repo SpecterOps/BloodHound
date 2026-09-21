@@ -31,6 +31,7 @@ ControlRelationshipKinds: [...types.#Kind]
 ExecutionPrivilegeKinds: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
 InboundOutboundRelationshipKinds: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 AppOwnerOrganizationID: types.#StringEnum & {
@@ -240,13 +241,6 @@ ServicePrincipalID: types.#StringEnum & {
 	representation: "service_principal_id"
 }
 
-ServicePrincipalNames: types.#StringEnum & {
-	symbol:         "ServicePrincipalNames"
-	schema:         "azure"
-	name:           "Service Principal Names"
-	representation: "service_principal_names"
-}
-
 TenantID: types.#StringEnum & {
 	symbol:         "TenantID"
 	schema:         "azure"
@@ -310,6 +304,40 @@ EndUserAssignmentRequiresTicketInformation: types.#StringEnum & {
 	representation: "enduserassignmentrequiresticketinformation"
 }
 
+LastSuccessfulSignInDateTime: types.#StringEnum & {
+	symbol:         "LastSuccessfulSignInDateTime"
+	schema:         "azure"
+	name:           "Last Successful Sign In Date Time"
+	representation: "lastsuccessfulsignindatetime"
+}
+
+Issuer: types.#StringEnum & {
+	symbol:         "Issuer"
+	schema:         "azure"
+	name:           "Issuer"
+	representation: "issuer"
+}
+
+Subject: types.#StringEnum & {
+	symbol:         "Subject"
+	schema:         "azure"
+	name:           "Subject"
+	representation: "subject"
+}
+
+Audiences: types.#StringEnum & {
+	symbol:         "Audiences"
+	schema:         "azure"
+	name:           "Audiences"
+	representation: "audiences"
+}
+
+FederatedIdentityCredentialAppID: types.#StringEnum & {
+	symbol:         "FederatedIdentityCredentialAppID"
+	schema:         "azure"
+	name:           "Federated Identity Credential Application ID"
+	representation: "federatedidentitycredentialappid"
+}
 
 Properties: [
 	AppOwnerOrganizationID,
@@ -319,7 +347,6 @@ Properties: [
 	UserType,
 	TenantID,
 	ServicePrincipalID,
-	ServicePrincipalNames,
 	OperatingSystemVersion,
 	TrustType,
 	IsBuiltIn,
@@ -351,7 +378,12 @@ Properties: [
 	EndUserAssignmentGroupApprovers,
 	EndUserAssignmentRequiresMFA,
 	EndUserAssignmentRequiresJustification,
-	EndUserAssignmentRequiresTicketInformation
+	EndUserAssignmentRequiresTicketInformation,
+	LastSuccessfulSignInDateTime,
+	Issuer,
+	Subject,
+	Audiences,
+	FederatedIdentityCredentialAppID
 ]
 
 // Kinds
@@ -475,6 +507,12 @@ AutomationAccount: types.#Kind & {
 	representation: "AZAutomationAccount"
 }
 
+FederatedIdentityCredential: types.#Kind & {
+	symbol:         "FederatedIdentityCredential"
+	schema:         "azure"
+	representation: "AZFederatedIdentityCredential"
+}
+
 NodeKinds: [
 	Entity,
 	VMScaleSet,
@@ -496,6 +534,7 @@ NodeKinds: [
 	WebApp,
 	LogicApp,
 	AutomationAccount,
+	FederatedIdentityCredential
 ]
 
 AvereContributor: types.#Kind & {
@@ -702,12 +741,6 @@ KeyVaultContributor: types.#Kind & {
 	representation: "AZKeyVaultContributor"
 }
 
-VMAdminLogin: types.#Kind & {
-	symbol:         "VMAdminLogin"
-	schema:         "azure"
-	representation: "AZVMAdminLogin"
-}
-
 AddMembers: types.#Kind & {
 	symbol:         "AddMembers"
 	schema:         "azure"
@@ -718,12 +751,6 @@ AddSecret: types.#Kind & {
 	symbol:         "AddSecret"
 	schema:         "azure"
 	representation: "AZAddSecret"
-}
-
-ExecuteCommand: types.#Kind & {
-	symbol:         "ExecuteCommand"
-	schema:         "azure"
-	representation: "AZExecuteCommand"
 }
 
 GlobalAdmin: types.#Kind & {
@@ -786,10 +813,9 @@ LogicAppContributor: types.#Kind & {
 	representation:	"AZLogicAppContributor"
 }
 
-SyncedToADUser: types.#Kind & {
-	symbol:			"SyncedToADUser"
-	schema:			"azure"
-	representation:	"SyncedToADUser"
+SyncedToEntraUser: types.#Kind & {
+	symbol: "SyncedToEntraUser"
+	schema: "azure"
 }
 
 AZRoleEligible: types.#Kind & {
@@ -802,6 +828,12 @@ AZRoleApprover: types.#Kind & {
 	symbol:			"AZRoleApprover"
 	schema:			"azure"
 	representation:	"AZRoleApprover"
+}
+
+AZAuthenticatesTo: types.#Kind & {
+	symbol:			"AZAuthenticatesTo"
+	schema:			"azure"
+	representation:	"AZAuthenticatesTo"
 }
 
 RelationshipKinds: [
@@ -851,9 +883,10 @@ RelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToEntraUser,
 	AZRoleEligible,
 	AZRoleApprover,
+	AZAuthenticatesTo
 ]
 
 AppRoleTransitRelationshipKinds: [
@@ -903,6 +936,7 @@ ControlRelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
+	AZAuthenticatesTo
 ]
 
 ExecutionPrivilegeKinds: [
@@ -953,9 +987,17 @@ InboundOutboundRelationshipKinds: [
 	AZMGAddSecret,
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
-	SyncedToADUser,
+	SyncedToEntraUser,
 	AZRoleEligible,
-	AZRoleApprover
+	AZRoleApprover,
+	Contains,
+	AZAuthenticatesTo
 ]
 
-PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])
+PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
+
+PostProcessedRelationships: [
+	ExecuteCommand,
+	SyncedToEntraUser,
+	AZRoleApprover,
+]

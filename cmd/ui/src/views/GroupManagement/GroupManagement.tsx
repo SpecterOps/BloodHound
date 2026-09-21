@@ -36,7 +36,7 @@ import {
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { dataCollectionMessage } from '../QA/utils';
+import { dataCollectionMessage } from '../DataQuality/utils';
 
 const GroupManagement = () => {
     const navigate = useAppNavigate();
@@ -45,7 +45,7 @@ const GroupManagement = () => {
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
-    const getGraphNodeByObjectId = useNodeByObjectId(openNode?.id);
+    const { data: node } = useNodeByObjectId(openNode?.id);
     const { setExploreParams } = useExploreParams();
 
     const { checkPermission } = usePermissions();
@@ -65,8 +65,9 @@ const GroupManagement = () => {
             navigate({
                 pathname: ROUTE_EXPLORE,
                 search: createTypedSearchParams<ExploreQueryParams>({
-                    selectedItem: getGraphNodeByObjectId.data?.id,
-                    primarySearch: openNode?.id,
+                    selectedItem: node?.node_id.toString() ?? openNode.id,
+                    primarySearch:
+                        node?.properties.name || node?.properties.objectid || openNode.name || openNode.id || '',
                     searchType: 'node',
                     exploreSearchTab: 'node',
                 }),
@@ -93,7 +94,7 @@ const GroupManagement = () => {
             tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
-            entityPanelComponent={<EntityInfoPanel selectedNode={openNode} DataTable={EntityInfoDataTable} />}
+            entityPanelComponent={<EntityInfoPanel selectedNode={node} DataTable={EntityInfoDataTable} />}
             domainSelectorErrorMessage={<>Domains unavailable. {dataCollectionMessage}</>}
             onShowNodeInExplore={handleShowNodeInExplore}
             onClickMember={handleClickMember}

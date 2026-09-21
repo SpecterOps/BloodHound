@@ -26,10 +26,14 @@ Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
+IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
+PathfindingRelationshipsMatchFrontend: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
+PostProcessedRelationships: [...types.#Kind]
+DCAPostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -292,6 +296,13 @@ AdminCount: types.#StringEnum & {
 	representation: "admincount"
 }
 
+AdminSDHolderProtected: types.#StringEnum & {
+	symbol:         "AdminSDHolderProtected"
+	schema:         "ad"
+	name:           "AdminSDHolder Protected"
+	representation: "adminsdholderprotected"
+}
+
 DontRequirePreAuth: types.#StringEnum & {
 	symbol:         "DontRequirePreAuth"
 	schema:         "ad"
@@ -388,6 +399,20 @@ StrongCertificateBindingEnforcement: types.#StringEnum & {
 	schema:         "ad"
 	name:           "Strong Certificate Binding Enforcement"
 	representation: "strongcertificatebindingenforcement"
+}
+
+VulnerableNetlogonSecurityDescriptor: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptor"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor"
+	representation: "vulnerablenetlogonsecuritydescriptor"
+}
+
+VulnerableNetlogonSecurityDescriptorCollected: types.#StringEnum & {
+	symbol:         "VulnerableNetlogonSecurityDescriptorCollected"
+	schema:         "ad"
+	name:           "Vulnerable Netlogon Security Descriptor Collected"
+	representation: "vulnerablenetlogonsecuritydescriptorcollected"
 }
 
 CrossCertificatePair: types.#StringEnum & {
@@ -824,6 +849,20 @@ DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
  	representation: "doesanyinheritedacegrantownerrights"
 }
 
+CustomExplicitDenyAcesCount: types.#StringEnum & {
+	symbol: "CustomExplicitDenyAcesCount"
+	schema: "ad"
+	name: "Custom Explicit Deny ACEs Count"
+	representation: "customexplicitdenyacescount"
+}
+
+CustomInheritedDenyAcesCount: types.#StringEnum & {
+	symbol: "CustomInheritedDenyAcesCount"
+	schema: "ad"
+	name: "Custom Inherited Deny ACEs Count"
+	representation: "custominheriteddenyacescount"
+}
+
 OwnerSid: types.#StringEnum & {
 	symbol: "OwnerSid"
  	schema: "ad"
@@ -885,6 +924,13 @@ IsDC: types.#StringEnum & {
 	schema: "ad"
 	name: "Is Domain Controller"
 	representation: "isdc"
+}
+
+IsReadOnlyDC: types.#StringEnum & {
+	symbol: "IsReadOnlyDC"
+	schema: "ad"
+	name: "Read-Only DC"
+	representation: "isreadonlydc"
 }
 
 HTTPEnrollmentEndpoints: types.#StringEnum & {
@@ -985,17 +1031,59 @@ NetBIOS: types.#StringEnum & {
 }
 
 RPCEncryptionEnforced: types.#StringEnum & {
-	symbol: 		"RPCEncryptionEnforced"
-	schema: 		"ad"
+	symbol:         "RPCEncryptionEnforced"
+	schema:         "ad"
 	name:           "RPC Encryption Enforced"
 	representation: "rpcencryptionenforced"
 }
 
 RPCEncryptionCollected: types.#StringEnum & {
-	symbol: 		"RPCEncryptionCollected"
-	schema: 		"ad"
+	symbol:         "RPCEncryptionCollected"
+	schema:         "ad"
 	name:           "RPC Encryption Collected"
 	representation: "rpcencryptioncollected"
+}
+
+ServicePrincipalNames: types.#StringEnum & {
+	symbol:         "ServicePrincipalNames"
+	schema:         "ad"
+	name:           "Service Principal Names"
+	representation: "serviceprincipalnames"
+}
+
+ServerReference: types.#StringEnum & {
+	symbol:         "ServerReference"
+	schema:         "ad"
+	name:           "Server Reference"
+	representation: "serverreference"
+}
+
+SiteObject: types.#StringEnum & {
+	symbol:         "SiteObject"
+	schema:         "ad"
+	name:           "Site Object"
+	representation: "siteobject"
+}
+
+ObjectClass: types.#StringEnum & {
+	symbol:         "ObjectClass"
+	schema:         "ad"
+	name:           "Object Class"
+	representation: "objectclass"
+}
+
+GPOStatusRaw: types.#StringEnum & {
+	symbol:         "GPOStatusRaw"
+	schema:         "ad"
+	name:           "GPO Status (Raw)"
+	representation: "gpostatusraw"
+}
+
+GPOStatus: types.#StringEnum & {
+	symbol:         "GPOStatus"
+	schema:         "ad"
+	name:           "GPO Status"
+	representation: "gpostatus"
 }
 
 Properties: [
@@ -1050,6 +1138,8 @@ Properties: [
 	CertificateMappingMethods,
 	StrongCertificateBindingEnforcementRaw,
 	StrongCertificateBindingEnforcement,
+	VulnerableNetlogonSecurityDescriptor,
+	VulnerableNetlogonSecurityDescriptorCollected,
 	EKUs,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,
@@ -1110,6 +1200,8 @@ Properties: [
 	MSA,
 	DoesAnyAceGrantOwnerRights,
 	DoesAnyInheritedAceGrantOwnerRights,
+	CustomExplicitDenyAcesCount,
+	CustomInheritedDenyAcesCount,
 	ADCSWebEnrollmentHTTP,
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
@@ -1118,6 +1210,7 @@ Properties: [
 	LDAPSAvailable,
 	LDAPSEPA,
 	IsDC,
+	IsReadOnlyDC,
 	HTTPEnrollmentEndpoints,
 	HTTPSEnrollmentEndpoints,
 	HasVulnerableEndpoint,
@@ -1134,6 +1227,13 @@ Properties: [
 	NetBIOS,
 	RPCEncryptionEnforced,
 	RPCEncryptionCollected,
+	AdminSDHolderProtected,
+	ServicePrincipalNames,
+	ServerReference,
+	SiteObject,
+	ObjectClass,
+	GPOStatusRaw,
+	GPOStatus,
 ]
 
 // Kinds
@@ -1220,6 +1320,21 @@ IssuancePolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
+Site: types.#Kind & {
+	symbol: "Site"
+	schema: "active_directory"
+}
+
+SiteServer: types.#Kind & {
+	symbol: "SiteServer"
+	schema: "active_directory"
+}
+
+SiteSubnet: types.#Kind & {
+	symbol: "SiteSubnet"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -1237,6 +1352,9 @@ NodeKinds: [
 	NTAuthStore,
 	CertTemplate,
 	IssuancePolicy,
+	Site,
+	SiteServer,
+	SiteSubnet
 ]
 
 Owns: types.#Kind & {
@@ -1302,6 +1420,11 @@ HasSession: types.#Kind & {
 
 Contains: types.#Kind & {
 	symbol: "Contains"
+	schema: "active_directory"
+}
+
+ServerIs: types.#Kind & {
+	symbol: "ServerIs"
 	schema: "active_directory"
 }
 
@@ -1595,9 +1718,10 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
-SyncedToEntraUser: types.#Kind & {
-	symbol: "SyncedToEntraUser"
-	schema: "active_directory"
+SyncedToADUser: types.#Kind & {
+	symbol:			"SyncedToADUser"
+	schema:			"active_directory"
+	representation:	"SyncedToADUser"
 }
 
 CoerceAndRelayNTLMToSMB: types.#Kind & {
@@ -1645,6 +1769,10 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+ProtectAdminGroups: types.#Kind & {
+	symbol:         "ProtectAdminGroups"
+	schema:         "active_directory"
+}
 
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
@@ -1676,6 +1804,16 @@ CanApplyGPO: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteAltSecurityIdentities: types.#Kind & {
+	symbol: "WriteAltSecurityIdentities"
+	schema: "active_directory"
+}
+
+WritePublicInformation: types.#Kind & {
+	symbol: "WritePublicInformation"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1689,6 +1827,7 @@ RelationshipKinds: [
 	AddMember,
 	HasSession,
 	Contains,
+	ServerIs,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
@@ -1748,7 +1887,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	SyncedToEntraUser,
+	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToADCSRPC,
@@ -1764,6 +1903,9 @@ RelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
+	ProtectAdminGroups,
 ]
 
 // ACL Relationships
@@ -1796,7 +1938,11 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
+
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
@@ -1810,6 +1956,7 @@ SharedRelationshipKinds: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
+	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
 	AllowedToAct,
@@ -1841,7 +1988,7 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
-	SyncedToEntraUser,
+	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToADCSRPC,
@@ -1855,16 +2002,25 @@ SharedRelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
+	ManageCA,
+	ManageCertificates,
+	ServerIs,
 ]
 
 // Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds])
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
 
 // Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+
+// Edges that are used in Shortest Path and match the frontend's list of traversable edges
+PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]]),
+
 
 EdgeCompositionRelationships: [
 	GoldenCert,
@@ -1886,3 +2042,46 @@ EdgeCompositionRelationships: [
 	GPOAppliesTo,
 	CanApplyGPO,
 ]
+
+PostProcessedRelationships: [
+	DCSync,
+	ProtectAdminGroups,
+	SyncLAPSPassword,
+	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
+	TrustedForNTAuth,
+	IssuedSignedBy,
+	EnterpriseCAFor,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC13,
+	EnrollOnBehalfOf,
+	SyncedToADUser,
+	ExtendedByPolicy,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
+	HasTrustKeys,
+]
+
+DCAPostProcessedRelationships: [
+	Owns,
+	WriteOwner
+]
+
+// All post-processed edges
+AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])

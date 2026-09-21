@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 describe('redux store', () => {
     beforeEach(() => {
         vi.resetModules();
@@ -59,15 +58,13 @@ describe('redux store', () => {
     });
 
     test('app does not crash if "token" cookie exists and "persistedState" localstorage key does not exist', async () => {
-        // See https://specterops.atlassian.net/browse/BED-2224 for details
-        vi.mock('js-cookie', () => ({
-            default: {
-                get: () => 'valid_session_token',
-                remove: vi.fn(),
-            },
-        }));
-        Storage.prototype.getItem = vi.fn().mockImplementationOnce(() => null);
-        await import('src/store');
+        localStorage.removeItem('persistedState');
+        document.cookie = 'token=valid_session_token';
+
+        const { store } = await import('src/store');
+
+        expect(store.getState().auth.sessionToken).toBe('valid_session_token');
+        expect(document.cookie).not.toContain('token=');
     });
 });
 

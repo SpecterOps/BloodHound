@@ -1,12 +1,14 @@
 ################
 # Project Level Git Ignore
 ################################
+# Codex
+.codex
+
+# Augment
+.augment
 
 # Temporary backup files
 *.bak
-
-# beagle state
-.beagle
 
 # pprof results
 *.pprof
@@ -35,6 +37,9 @@ integration-config-local.json
 # coverage files
 coverage/
 coverage.*
+
+# DORA metrics generated files
+.dora/trends/
 
 # Log files
 logs
@@ -459,3 +464,20 @@ local-harnesses/*
 go.work*
 
 !go.work.template
+
+# integration tests allure results
+allure-results
+allure-report
+go-test-results.json
+
+# Playwright generated
+cmd/ui/playwright
+
+#########
+# DORA Metrics
+#################
+# Local configuration overrides (may contain sensitive data)
+.dora.local.yaml
+# DORA data directory (contains SQLite DB and authentication tokens)
+.dora/
+.claude/

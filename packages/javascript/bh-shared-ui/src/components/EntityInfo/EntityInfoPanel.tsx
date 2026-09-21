@@ -13,59 +13,68 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Paper, SxProps, Typography } from '@mui/material';
-import React, { useState } from 'react';
-import { SelectedNode } from '../../types';
-import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views/Explore';
+import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
+import React, { HTMLProps } from 'react';
+import { usePrimaryKind } from '../../hooks';
+import { EntityInfoDataTableProps, NoEntitySelectedMessage, cn, getEntityName } from '../../utils';
+import { ObjectInfoPanelContextProvider } from '../../views/Explore/providers/ObjectInfoPanelProvider';
+import { RoleBasedFilterBadge } from '../RoleBasedFilterBadge';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
-interface EntityInfoPanelProps {
-    DataTable: React.FC<EntityInfoDataTableProps>;
-    selectedNode?: SelectedNode | null;
-    sx?: SxProps;
-    additionalTables?: {
-        sectionProps: EntityInfoDataTableProps;
-        TableComponent: React.FC<EntityInfoDataTableProps>;
-    }[];
+type EntityTable = React.FC<EntityInfoDataTableProps>;
+
+export type EntityTables = {
+    sectionProps: EntityInfoDataTableProps;
+    TableComponent: EntityTable;
+}[];
+
+export interface EntityInfoPanelProps {
+    DataTable: EntityTable;
+    selectedNode?: NodeDetails | NodeDetailsWithInfo;
+    className?: HTMLProps<HTMLDivElement>['className'];
+    additionalTables?: EntityTables;
+    priorityTables?: EntityTables;
+    showPlaceholderMessage?: boolean;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
-    const styles = usePaneStyles();
-    const [expanded, setExpanded] = useState(true);
-
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
+    selectedNode,
+    className,
+    additionalTables,
+    priorityTables,
+    DataTable,
+    showPlaceholderMessage = false,
+}) => {
+    const primaryKind = usePrimaryKind(selectedNode?.kinds ?? []);
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                <Header
-                    name={selectedNode?.name || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.type}
-                    expanded={expanded}
-                    onToggleExpanded={(expanded) => {
-                        setExpanded(expanded);
-                    }}
-                />
-            </Paper>
-            <Paper
-                elevation={0}
-                classes={{ root: styles.contentPaperRoot }}
-                style={{
-                    display: expanded ? 'initial' : 'none',
-                }}>
+        <div
+            className={cn(
+                'flex flex-col rounded-lg pointer-events-none overflow-y-hidden h-full min-w-[400px] w-[400px] max-w-[400px] gap-2',
+                className
+            )}
+            data-testid='explore_entity-information-panel'>
+            <RoleBasedFilterBadge />
+            <div className='bg-neutral-2 pointer-events-auto rounded-lg shadow-outer-1'>
+                <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
+            </div>
+            <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg shadow-outer-1'>
                 {selectedNode ? (
                     <EntityInfoContent
                         DataTable={DataTable}
-                        id={selectedNode.id}
-                        nodeType={selectedNode.type}
-                        databaseId={selectedNode.graphId}
+                        priorityTables={priorityTables}
                         additionalTables={additionalTables}
+                        selectedNode={selectedNode}
                     />
                 ) : (
-                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
+                    <p className='text-sm'>
+                        {showPlaceholderMessage
+                            ? 'Select an object to view the associated information'
+                            : NoEntitySelectedMessage}
+                    </p>
                 )}
-            </Paper>
-        </Box>
+            </div>
+        </div>
     );
 };
 

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,27 +14,56 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AxiosResponse } from 'axios';
+import { EnvironmentRequest } from './requests';
 import {
+    AlertAttempt,
+    AlertEvent,
+    AlertEventType,
     AssetGroupTag,
-    AssetGroupTagNode,
+    AssetGroupTagCertificationRecord,
+    AssetGroupTagHistoryRecord,
+    AssetGroupTagMember,
     AssetGroupTagSelector,
+    Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
+    CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
     EnterpriseCollectorType,
+    FileIngestCompletedTask,
+    FileIngestJob,
     GraphData,
+    NodeDetails,
+    NodeDetailsWithInfo,
+    NodeKindResponse,
     NodeSourceTypes,
+    Notification,
+    RelationshipDetails,
+    RelationshipDetailsWithInfo,
+    RelationshipKindResponse,
+    Role,
+    ScheduledJobDisplay,
+    SourceKind,
+    TimestampFields,
+    Webhook,
+    WebhookSecret,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
-export type BasicResponse<T> = {
+export interface BasicResponse<T> {
     data: T;
-};
+}
 
-export type TimeWindowedResponse<T> = BasicResponse<T> & {
+export interface TimeWindowedResponse<T> extends BasicResponse<T> {
     start: string;
     end: string;
-};
+}
 
 export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
     Required<BasicResponse<T>> & {
@@ -43,21 +72,28 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
-type TimestampFields = {
-    created_at: string;
-    updated_at: string;
-    deleted_at: {
-        Time: string;
-        Valid: boolean;
-    };
+export type EnvironmentExposure = {
+    exposure_percent: number;
+    asset_group_tag: AssetGroupTag;
 };
 
+export const knownEnvironmentTypes = ['active-directory', 'azure'] as const;
+
+export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
+
 export type Environment = {
-    type: 'active-directory' | 'azure';
+    // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
+    // Needed because environment types can be provided by the user
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
     id: string;
     collected: boolean;
+    hygiene_attack_paths: number; // While improbable this number could possibly be higher than the JavaScript max safe integer in the response
+    exposures: EnvironmentExposure[];
+    environment_kind_display_name?: string; // OG Environments
+    environment_kind_id?: number; // OG Environments
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
@@ -111,6 +147,20 @@ export type AzureDataQualityStat = TimestampFields & {
 
 export type AzureDataQualityResponse = PaginatedResponse<AzureDataQualityStat[]>;
 
+export type OpenGraphDataQualityStat = TimestampFields & {
+    run_id: string;
+    environment_kind_id: number;
+    environment_id: string;
+    extension_id: number;
+    id: number;
+    kind_id: number;
+    metric_name: string;
+    metric_type: string;
+    metric_value: number;
+};
+
+export type OpenGraphDataQualityResponse = PaginatedResponse<OpenGraphDataQualityStat[]>;
+
 type PostureStat = TimestampFields & {
     domain_sid: string;
     exposure_index: number;
@@ -148,6 +198,25 @@ export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> 
     data_type: string;
 };
 
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
+    environments: string[];
+    asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
+};
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
+
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
     last_complete_analysis_at: string;
@@ -156,12 +225,18 @@ type DatapipeStatus = {
 
 export type DatapipeStatusResponse = BasicResponse<DatapipeStatus>;
 
+export type NullTime = {
+    Time: string;
+    Valid: boolean;
+};
+
 export type AuthToken = TimestampFields & {
     hmac_method: string;
     id: string;
     last_access: string;
     name: string;
     user_id: string;
+    expires_at: NullTime | null;
 };
 
 export type ListAuthTokensResponse = BasicResponse<{ tokens: AuthToken[] }>;
@@ -172,21 +247,30 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
-export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
+export type AssetGroupTagsHistory = PaginatedResponse<{ records: AssetGroupTagHistoryRecord[] }>;
 
-export interface AssetGroupTagMemberListItem extends AssetGroupTagNode {
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagMember[] }>;
+export type AssetGroupTagsCertification = PaginatedResponse<{ members: AssetGroupTagCertificationRecord[] }>;
+
+export interface AssetGroupTagMemberListItem extends AssetGroupTagMember {
     source: NodeSourceTypes;
 }
 
-export interface AssetGroupTagMemberInfo extends AssetGroupTagNode {
+export interface AssetGroupTagMemberInfo extends AssetGroupTagMember {
     properties: Record<string, any>;
     selectors: AssetGroupTagSelector[];
 }
 
+export type AssetGroupTagSearchResponse = BasicResponse<{
+    tags: AssetGroupTag[];
+    selectors: AssetGroupTagSelector[];
+    members: AssetGroupTagMember[];
+}>;
+
 export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
 export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;
 export type AssetGroupTagSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
-export type AssetGroupTagSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
+export type AssetGroupTagSelectorsResponse = PaginatedResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupTagMembersResponse = PaginatedResponse<{ members: AssetGroupTagMemberListItem[] }>;
 export type AssetGroupTagMemberInfoResponse = BasicResponse<{
     member: AssetGroupTagMemberInfo;
@@ -234,19 +318,15 @@ export type AssetGroupMemberCountsResponse = BasicResponse<AssetGroupMemberCount
 export type SavedQuery = {
     id: number;
     name: string;
+    description: string;
     query: string;
     user_id: string;
 };
 
-export type FileIngestJob = TimestampFields & {
-    user_id: string;
-    user_email_address: string;
-    status: number;
-    status_message: string;
-    start_time: string;
-    end_time: string;
-    last_ingest: string;
-    id: number;
+export type SavedQueryPermissionsResponse = {
+    shared_to_user_ids: string[];
+    query_id: number | undefined;
+    public: boolean;
 };
 
 export type ListFileIngestJobsResponse = PaginatedResponse<FileIngestJob[]>;
@@ -256,6 +336,8 @@ export type ListFileTypesForIngestResponse = BasicResponse<string[]>;
 export type StartFileIngestResponse = BasicResponse<FileIngestJob>;
 
 export type UploadFileToIngestResponse = null;
+
+export type FileIngestCompletedTasksResponse = BasicResponse<FileIngestCompletedTask[] | null>;
 
 export type EndFileIngestResponse = null;
 
@@ -284,3 +366,221 @@ export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityColle
 export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
 
 export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;
+
+export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDisplay[]>;
+
+export type GetExportQueryResponse = AxiosResponse<Blob>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Clients
+// ---------------------------------------------------------------------------
+export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Support Bundles (Management Operations)
+// ---------------------------------------------------------------------------
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export enum ArtifactStatus {
+    PENDING = 'pending',
+    UPLOADING = 'uploading',
+    COMPLETE = 'complete',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    // total byte size of the artifact to download
+    artifact_size: number | null;
+    artifact_status: ArtifactStatus | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    started_at: string | null;
+    completed_at: string | null;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+// ---------------------------------------------------------------------------
+
+export type EdgeType = {
+    id: number;
+    name: string;
+    description: string;
+    is_traversable: boolean;
+    schema_name: string;
+    is_builtin: boolean;
+};
+
+export type GetEdgeTypesResponse = BasicResponse<EdgeType[]>;
+export type GetSelfResponse = BasicResponse<Self>;
+
+export type Self = {
+    AuthSecret: {
+        id: number;
+        digest_method: string;
+        expires_at: string;
+        totp_activated: boolean;
+    };
+    email_address: string;
+    eula_accepted: boolean;
+    first_name: string;
+    id: string;
+    last_login: string;
+    last_name: string;
+    principal_name: string;
+    saml_provider_id: number | null;
+    roles: Role[];
+    all_environments?: boolean;
+    created_at: string;
+    environment_targeted_access_control?: EnvironmentRequest[] | null;
+    is_disabled: boolean;
+    sso_provider_id: number | null;
+    updated_at: string;
+};
+
+export type Extension = {
+    id: string;
+    is_builtin: boolean;
+    name: string;
+    namespace: string;
+    version: string;
+};
+
+export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
+
+export type FindingTypeResponse = BasicResponse<{ finding: string; title: string }[]>;
+
+export type FindingSchema = {
+    id: number;
+    name: string;
+    display_name: string;
+    type: string;
+    environment_id: number;
+    extension_id: number;
+    kind: string;
+    subtypes: string[];
+    is_builtin: boolean;
+    created_at: string;
+};
+
+export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[] }>;
+
+export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
+
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+
+export type UnifiedFinding = {
+    id: number;
+    severity: string;
+    finding: string;
+    title: string;
+    finding_type: string;
+    platform: string;
+    environment_id: string;
+    environment_name: string;
+    asset_group_tag_id: number;
+    zone_name: string;
+    source_principal_id: string;
+    source_principal_name: string;
+    source_principal_kind: string;
+    target_principal_id: string;
+    target_principal_name: string;
+    target_principal_kind: string;
+    status: FindingStatus;
+    first_seen: string;
+    last_seen: string;
+    prioritization_rank?: number | null;
+    is_cross_platform?: boolean;
+};
+
+export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
+
+export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
+export type CreateWebhookResponse = {
+    webhook: Webhook;
+    hmac_secret: string;
+};
+export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
+export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
+export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export type GetAlertEventsResponse = PaginatedResponse<{ events: AlertEvent[] }>;
+export type GetAlertEventResponse = BasicResponse<{ event: AlertEvent }>;
+export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEventType[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+type AlertPayload = { alert: Notification };
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
+export type GetAlertResponse = BasicResponse<AlertPayload>;
+export type CreateAlertResponse = BasicResponse<AlertPayload>;
+export type UpdateAlertResponse = BasicResponse<AlertPayload>;
+export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
+export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+
+export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
+
+export type GetRelationshipResponse = BasicResponse<RelationshipDetails | RelationshipDetailsWithInfo>;
+
+export type ListNodeKindsResponse = BasicResponse<NodeKindResponse[]>;
+
+export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
+
+export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
+
+export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;

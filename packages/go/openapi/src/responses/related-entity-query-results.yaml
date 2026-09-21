@@ -43,3 +43,7 @@ content:
                     type: string
                   label:
                     type: string
+                  kinds:
+                    type: array
+                    items:
+                      type: string

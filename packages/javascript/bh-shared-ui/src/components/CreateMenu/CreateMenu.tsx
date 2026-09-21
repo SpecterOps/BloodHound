@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Menu, MenuItem, Typography } from '@mui/material';
+import { Menu, MenuItem } from '@mui/material';
+import { Button, Typography } from 'doodle-ui';
 import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
@@ -47,10 +47,8 @@ const MenuWithDropdown: React.FC<{
                 ref={buttonRef}
                 onClick={openMenu}
                 disabled={disabled}>
-                <Box display='flex' alignItems={'center'}>
-                    <Typography mr='8px'>{menuTitle}</Typography>
-                    <FontAwesomeIcon icon={faCaretDown} />
-                </Box>
+                <Typography>{menuTitle}</Typography>
+                <FontAwesomeIcon icon={faCaretDown} />
             </Button>
             <Menu id='create-menu' anchorEl={buttonRef.current} keepMounted open={isOpen} onClose={closeMenu}>
                 {menuItems.map((menuItem) => (

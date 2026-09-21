@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
+import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
 import { EdgeInfoProps } from '../index';
 
 const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
@@ -40,7 +42,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         It can also be done with pass-the-hash using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/byt3bl33d3r/pth-toolkit'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/byt3bl33d3r/pth-toolkit'>
                             pth-toolkit's net tool
                         </Link>
                         . If the LM hash is not known, use 'ffffffffffffffffffffffffffffffff'.
@@ -70,7 +75,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         A targeted kerberoast attack can be performed using{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/targetedKerberoast'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/targetedKerberoast'>
                             targetedKerberoast.py
                         </Link>
                         .
@@ -94,7 +102,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
 
                     <Typography variant='body2'>
                         To abuse this permission, use{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
                         .
@@ -109,6 +120,7 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     <Typography variant='body2'>
                         For other optional parameters, view the pyWhisker documentation.
                     </Typography>
+                    <AdcsEsc14ScenarioALinux />
                 </>
             );
         case 'Computer':
@@ -149,7 +161,10 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     <Typography variant='body1'> Shadow Credentials attack </Typography>
                     <Typography variant='body2'>
                         To abuse this permission, use{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/ShutdownRepo/pywhisker'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/ShutdownRepo/pywhisker'>
                             pyWhisker
                         </Link>
                         .
@@ -162,25 +177,65 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                     <Typography variant='body2'>
                         For other optional parameters, view the pyWhisker documentation.
                     </Typography>
+                    <AdcsEsc14ScenarioALinux />
                 </>
             );
         case 'GPO':
             return (
                 <>
                     <Typography variant='body2'>
-                        With GenericWrite over a GPO, you may make modifications to that GPO which will then apply to
-                        the users and computers affected by the GPO. Select the target object you wish to push an evil
-                        policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows
-                        item-level targeting, such as a new immediate scheduled task. Then wait at least 2 hours for the
-                        group policy client to pick up and execute the new evil policy. See the references tab for a
-                        more detailed write up on this abuse.
+                        GenericWrite on a GPO allows you to modify that GPO and inject malicious configuration. For
+                        example, you can add an immediate scheduled task that runs on the computers or users that
+                        process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                        item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes
+                        for standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain
+                        controllers. See the References tab for more detail.
                     </Typography>
 
                     <Typography variant='body2'>
-                        <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
+                        The{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/synacktiv/GroupPolicyBackdoor'>
+                            GroupPolicyBackdoor.py
+                        </Link>{' '}
+                        tool can perform the attack from Linux. First, define a module file that describes the
+                        configuration to inject. The example below defines a computer configuration with an immediate
+                        scheduled task that adds a domain user as a local administrator. The filter limits the
+                        configuration to a specific target.
+                    </Typography>
+
+                    <Typography component={'pre'}>
+                        {'[MODULECONFIG]\n' +
+                            'name = Scheduled Tasks\n' +
+                            'type = computer\n' +
+                            '\n' +
+                            '[MODULEOPTIONS]\n' +
+                            'task_type = immediate\n' +
+                            'program = cmd.exe\n' +
+                            'arguments = /c "net localgroup Administrators corp.com\\john /add"\n' +
+                            '\n' +
+                            '[MODULEFILTERS]\n' +
+                            'filters = [{ "operator": "AND", "type": "Computer Name", "value": "srv1.corp.com"}]'}
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Save this configuration as Scheduled_task_add.ini, then inject it into the target GPO with the
+                        'inject' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py gpo inject -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -m Scheduled_task_add.ini -n "TARGETGPO"'
+                        }
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Alternatively,{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Hackndo/pyGPOAbuse'>
                             pyGPOAbuse.py
                         </Link>{' '}
-                        can be used for that purpose.
+                        can also be used for this purpose.
                     </Typography>
                     <Typography variant='body2'>
                         This edge can be a false positive in rare scenarios. If you have GenericWrite on the GPO with
@@ -193,52 +248,128 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                 </>
             );
         case 'OU':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        GenericWrite permissions on an OU allow you to modify its gPLink attribute. This can be abused
+                        to link a malicious Group Policy Object (GPO) to the OU, applying it to the OU's users and
+                        computers, including those in nested OUs. The linked GPO can force those child objects to
+                        execute arbitrary commands, for example through an immediate scheduled task.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From Linux, you can use the{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
+                            OUned.py
+                        </Link>{' '}
+                        tool to exploit this gPLink manipulation path. For requirements and implementation details, see{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
+                            the accompanying OUned.py article
+                        </Link>
+                        .
+                    </Typography>
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target OU through its gPLink attribute. You can use{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/synacktiv/GroupPolicyBackdoor'>
+                            GroupPolicyBackdoor.py
+                        </Link>{' '}
+                        for this. For example, first inject the malicious configuration with the 'inject' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py gpo inject -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -m Scheduled_task_add.ini -n "TARGETGPO"'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then link the modified GPO to the OU with the 'link' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py links link -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -o "OU=SERVERS,DC=corp,DC=com" -n "TARGETGPO"'
+                        }
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many users and computers the target OU contains; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
+                    </Typography>
+                </>
+            );
         case 'Domain':
             return (
                 <>
                     <Typography variant='body2'>
-                        An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
-                        configuration, such as a scheduled task executing a malicious script.
+                        GenericWrite on a domain object allows you to modify its gPLink attribute. This can be abused to
+                        link a malicious Group Policy Object (GPO) to the domain, applying it to the domain's users and
+                        computers, including those in nested OUs. The linked GPO can force those child objects to
+                        execute arbitrary commands, for example through an immediate scheduled task.
                     </Typography>
+
                     <Typography variant='body2'>
-                        The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering
-                        can be used to limit the impact to specific accounts, which is important in environments with
-                        many users or computers under the affected scope.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
+
                     <Typography variant='body2'>
-                        Refer to{' '}
-                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                            A Red Teamer's Guide to GPOs and OUs
-                        </Link>
-                        for details about the abuse technique, and check out{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
-                            pyGPOAbuse.py
-                        </Link>{' '}
-                        for practical exploitation.
-                    </Typography>
-                    <Typography variant='body2'>
-                        <b>Without control over a GPO</b>
-                        <br />
-                        An attacker can still execute the attack without control over a GPO by setting up a fake LDAP
-                        server to host a GPO. This approach requires the ability to add non-existent DNS records and
-                        create machine accounts, or access to a compromised domain-joined machine. However, this method
-                        is complex and requires significant setup.
-                        <br />
-                        <br />
-                        From a Linux machine, the write access to the gPLink attribute may be abused using the{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/synacktiv/OUned'>
+                        From Linux, you can use the{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/synacktiv/OUned'>
                             OUned.py
                         </Link>{' '}
-                        exploitation tool. For a detailed outline of exploit requirements and implementation, you can
-                        refer to{' '}
+                        tool to exploit this gPLink manipulation path. For requirements and implementation details, see{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
-                            the article associated to the OUned.py tool
+                            the accompanying OUned.py article
                         </Link>
                         .
+                    </Typography>
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target domain object through its gPLink attribute. You can use{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/synacktiv/GroupPolicyBackdoor'>
+                            GroupPolicyBackdoor.py
+                        </Link>{' '}
+                        for this. For example, first inject the malicious configuration with the 'inject' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py gpo inject -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -m Scheduled_task_add.ini -n "TARGETGPO"'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then link the modified GPO to the domain with the 'link' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py links link -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -o "DC=corp,DC=com" -n "TARGETGPO"'
+                        }
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many users and computers the target domain contains; each affected object will
+                        attempt to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
@@ -291,6 +422,71 @@ const LinuxAbuse: FC<EdgeInfoProps> = ({ targetType }) => {
                         targeted group by adding the group's distinguishedName in the msDS-OIDToGroupLink attribute of
                         the issuance policy object. This action may enable you to gain membership of the group through
                         an ADCS ESC13 attack.
+                    </Typography>
+                </>
+            );
+        case 'Site':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        GenericWrite permissions on a site object allow you to modify its gPLink attribute. A malicious
+                        Group Policy Object (GPO) linked to the site can force affected computers and users to execute
+                        arbitrary commands, for example through an immediate scheduled task.{' '}
+                    </Typography>
+                    <Typography variant='body2'>
+                        For site objects, affected computers include the site's domain controllers, and also computers
+                        whose IP addresses fall within one of the site's subnets. If the site is the default site,
+                        affected computers also include computers that do not map to any other site. Affected users are
+                        those who sign in to the affected computers.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From Linux, see{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                            the Site Unseen article
+                        </Link>{' '}
+                        for site-specific gPLink attack requirements and implementation details.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target site object through its gPLink attribute. You can use{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/synacktiv/GroupPolicyBackdoor'>
+                            GroupPolicyBackdoor.py
+                        </Link>{' '}
+                        for this. For example, first inject the malicious configuration with the 'inject' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py gpo inject -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -m Scheduled_task_add.ini -n "TARGETGPO"'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        Then link the modified GPO to the site object with the 'link' command.
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'python3 gpb.py links link -d "corp.com" --dc "dc.corp.com" -u "user" -p "password" -o "CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=corp,DC=com" -n "TARGETGPO"'
+                        }
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many computers and users the target site affects; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );

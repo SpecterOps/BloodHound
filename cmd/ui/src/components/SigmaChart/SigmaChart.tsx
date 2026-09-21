@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
+import { useTheme } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { forwardRef } from 'react';
+import { forwardRef, RefAttributes } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
@@ -44,7 +44,7 @@ interface SigmaChartProps {
     showEdgeLabels?: boolean;
 }
 
-const SigmaChart = forwardRef(function SigmaChart(
+const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(function SigmaChart(
     {
         graph,
         highlightedItem,
@@ -61,6 +61,7 @@ const SigmaChart = forwardRef(function SigmaChart(
 
     return (
         <div
+            data-testid='sigma-container-wrapper'
             // prevent browser's default right-click behavior
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaContainer
@@ -71,7 +72,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                     left: 0,
                     height: '100%',
                     width: '100%',
-                    background: theme.palette.neutral.primary,
+                    background: theme.neutral.primary,
                 }}
                 graph={graph}
                 settings={{
@@ -91,7 +92,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                     edgeLabelSize: 12,
                     labelSize: 12,
                     labelFont: 'Roboto',
-                    labelColor: { color: theme.palette.color.primary },
+                    labelColor: { color: theme.contrast },
                     labelRenderer: drawLabel,
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,

@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
+import { AdcsEsc14ScenarioAWindows, AltSecIdentitiesBlurb } from '../AdcsEsc14ScenarioA';
 import CodeController from '../CodeController/CodeController';
 import { EdgeInfoProps } from '../index';
 
@@ -94,6 +96,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         equivalent to the "AddKeyCredentialLink" edge.
                     </Typography>
 
+                    <AltSecIdentitiesBlurb />
+
                     <Typography variant='body2'>
                         Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
                         targeted user, which may be abused in a Targeted Kerberoast attack.
@@ -169,6 +173,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         For other optional parameters, view the Whisker documentation.
                     </Typography>
 
+                    <AdcsEsc14ScenarioAWindows />
+
                     <Typography variant='body1'> Targeted Kerberoast attack </Typography>
 
                     <Typography variant='body2'>
@@ -230,6 +236,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Constrained Delegation attack.
                         </Typography>
 
+                        <AltSecIdentitiesBlurb />
+
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
                         <Typography variant='body2'>
                             For systems using legacy LAPS, the following AD computer object properties are relevant:
@@ -273,7 +281,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             The encrypted attributes can also be retrieved and decrypted using{' '}
                             <Link
                                 target='_blank'
-                                rel='noopener'
+                                rel='noopener noreferrer'
                                 href='https://github.com/xpn/RandomTSScripts/tree/master/lapsv2decrypt'>
                                 lapsv2decrypt
                             </Link>{' '}
@@ -364,6 +372,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
                         </Typography>
+
+                        <AdcsEsc14ScenarioAWindows />
                     </>
                 );
             } else {
@@ -380,6 +390,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
                         </Typography>
+
+                        <AltSecIdentitiesBlurb />
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
 
@@ -465,6 +477,8 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
                         </Typography>
+
+                        <AdcsEsc14ScenarioAWindows />
                     </>
                 );
             }
@@ -480,7 +494,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                     <Typography component={'pre'}>{'lsadump::dcsync /domain:testlab.local /user:harmj0y'}</Typography>
 
-                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to obtain control of the objects of the domain is to
                         apply a GenericAll ACE on the domain that will inherit down to all object types. This can be
@@ -520,14 +534,14 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendant Object Takeover</Typography>
+                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendant objects. You could, for example,
+                        right you want to apply to precisely which kinds of descendent objects. You could, for example,
                         grant a user "ForceChangePassword" permission against all user objects, or grant a security
                         group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
@@ -546,54 +560,52 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             '$dsEntry.PsBase.CommitChanges()'}
                     </Typography>
 
-                    <Typography variant='body1'>
-                        Target User or Computer Protected by Disabled ACL Inheritance
-                    </Typography>
+                    <Typography variant='body1'>Objects for which ACL inheritance is disabled</Typography>
+
                     <Typography variant='body2'>
-                        Users and computers with ACL inheritance disabled (directly or through a parent OU) are not
-                        vulnerable to the previously described ACL-based attacks. However, they can still be compromised
-                        through a GPO-based attack.
+                        The compromise vector described above relies on ACL inheritance and will not work for objects
+                        with ACL inheritance disabled, such as objects protected by AdminSDHolder (attribute
+                        adminCount=1). This observation applies to any user or computer with inheritance disabled,
+                        including objects located in nested OUs.
                     </Typography>
 
                     <Typography variant='body2'>
-                        An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
-                        configuration, such as a scheduled task executing a malicious script.
+                        In this situation, GenericAll on the domain object may still be exploitable through gPLink.
+                        GenericAll allows you to modify the domain's gPLink attribute, which can be abused to link a
+                        malicious Group Policy Object (GPO) to the domain. The linked GPO applies to the domain's users
+                        and computers, including those in nested OUs, and can force those child objects to execute
+                        arbitrary commands, for example through an immediate scheduled task.
                     </Typography>
+
                     <Typography variant='body2'>
-                        The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering
-                        can be used to limit the impact to specific accounts, which is important in environments with
-                        many users or computers under the affected scope.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
+
                     <Typography variant='body2'>
-                        Refer to{' '}
-                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                            A Red Teamer's Guide to GPOs and OUs
-                        </Link>
-                        for details about the abuse technique, and check out{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
-                            SharpGPOAbuse
-                        </Link>{' '}
-                        for practical exploitation.
-                    </Typography>
-                    <Typography variant='body2'>
-                        <b>Without control over a GPO</b>
-                        <br />
-                        An attacker can still execute the attack without control over a GPO by setting up a fake LDAP
-                        server to host a GPO. This approach requires the ability to add non-existent DNS records and
-                        create machine accounts, or access to a compromised domain-joined machine. However, this method
-                        is complex and requires significant setup.
-                        <br />
-                        <br />
-                        From a domain-joined compromised Windows machine, the write access to the gPLink attribute may
-                        be abused through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to this article:{' '}
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For requirements and implementation
+                        details, see{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                            OU having a laugh?
+                            this article
                         </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target domain object through its gPLink attribute.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many users and computers the target domain contains; each affected object will
+                        attempt to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
@@ -601,24 +613,21 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
             return (
                 <>
                     <Typography variant='body2'>
-                        With full control of a GPO, you may make modifications to that GPO which will then apply to the
-                        users and computers affected by the GPO. Select the target object you wish to push an evil
-                        policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows
-                        item-level targeting, such as a new immediate scheduled task. Then wait for the group policy
-                        client to pick up and execute the new evil policy. See the references tab for a more detailed
-                        write up on this abuse.
+                        GenericAll on a GPO allows you to modify that GPO and inject malicious configuration. For
+                        example, you can add an immediate scheduled task that runs on the computers or users that
+                        process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                        item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes
+                        for standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain
+                        controllers. See the References tab for more detail.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Refer to{' '}
-                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                            A Red Teamer's Guide to GPOs and OUs
-                        </Link>
-                        for details about the abuse technique, and check out{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
-                            SharpGPOAbuse
+                        On a domain-joined Windows machine, you can edit GPOs with the native Group Policy Management
+                        Console (GPMC). On a non-domain-joined Windows machine, use the{' '}
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CCob/DRSAT'>
+                            DRSAT (Disconnected RSAT)
                         </Link>{' '}
-                        for practical exploitation.
+                        tool.
                     </Typography>
                 </>
             );
@@ -633,7 +642,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         step:
                     </Typography>
 
-                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to abuse control of the OU is to apply a GenericAll
                         ACE on the OU that will inherit down to all object types. Again, this can be done using
@@ -678,14 +687,14 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendant Object Takeover</Typography>
+                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendant objects. You could, for example,
+                        right you want to apply to precisely which kinds of descendent objects. You could, for example,
                         grant a user "ForceChangePassword" permission against all user objects, or grant a security
                         group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
@@ -704,55 +713,52 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             '$dsEntry.PsBase.CommitChanges()'}
                     </Typography>
 
-                    <Typography variant='body1'>
-                        Target User or Computer Protected by Disabled ACL Inheritance
+                    <Typography variant='body1'>Objects for which ACL inheritance is disabled</Typography>
+
+                    <Typography variant='body2'>
+                        The compromise vector described above relies on ACL inheritance and will not work for objects
+                        with ACL inheritance disabled, such as objects protected by AdminSDHolder (attribute
+                        adminCount=1). This observation applies to any user or computer with inheritance disabled,
+                        including objects located in nested OUs.
                     </Typography>
 
                     <Typography variant='body2'>
-                        Users and computers with ACL inheritance disabled (directly or through a parent OU) are not
-                        vulnerable to the previously described ACL-based attacks. However, they can still be compromised
-                        through a GPO-based attack.
+                        In this situation, GenericAll on the OU may still be exploitable through gPLink. GenericAll
+                        allows you to modify the OU's gPLink attribute, which can be abused to link a malicious Group
+                        Policy Object (GPO) to the OU. The linked GPO applies to the OU's users and computers, including
+                        those in nested OUs, and can force those child objects to execute arbitrary commands, for
+                        example through an immediate scheduled task.
                     </Typography>
 
                     <Typography variant='body2'>
-                        An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
-                        configuration, such as a scheduled task executing a malicious script.
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
                     </Typography>
+
                     <Typography variant='body2'>
-                        The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering
-                        can be used to limit the impact to specific accounts, which is important in environments with
-                        many users or computers under the affected scope.
-                    </Typography>
-                    <Typography variant='body2'>
-                        Refer to{' '}
-                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
-                            A Red Teamer's Guide to GPOs and OUs
-                        </Link>
-                        for details about the abuse technique, and check out{' '}
-                        <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
-                            SharpGPOAbuse
-                        </Link>{' '}
-                        for practical exploitation.
-                    </Typography>
-                    <Typography variant='body2'>
-                        <b>Without control over a GPO</b>
-                        <br />
-                        An attacker can still execute the attack without control over a GPO by setting up a fake LDAP
-                        server to host a GPO. This approach requires the ability to add non-existent DNS records and
-                        create machine accounts, or access to a compromised domain-joined machine. However, this method
-                        is complex and requires significant setup.
-                        <br />
-                        <br />
-                        From a domain-joined compromised Windows machine, the write access to the gPLink attribute may
-                        be abused through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to this article:{' '}
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For requirements and implementation
+                        details, see{' '}
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                            OU having a laugh?
+                            this article
                         </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target OU through its gPLink attribute.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many users and computers the target OU contains; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );
@@ -836,6 +842,53 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         targeted group by adding the group's distinguishedName in the msDS-OIDToGroupLink attribute of
                         the issuance policy object. This action may enable you to gain membership of the group through
                         an ADCS ESC13 attack.
+                    </Typography>
+                </>
+            );
+        case 'Site':
+            return (
+                <>
+                    <Typography variant='body2'>
+                        GenericAll permissions on a site object allow you to modify its gPLink attribute. A malicious
+                        Group Policy Object (GPO) linked to the site can force affected computers and users to execute
+                        arbitrary commands, for example through an immediate scheduled task.{' '}
+                    </Typography>
+                    <Typography variant='body2'>
+                        For site objects, affected computers include the site's domain controllers, and also computers
+                        whose IP addresses fall within one of the site's subnets. If the site is the default site,
+                        affected computers also include computers that do not map to any other site. Affected users are
+                        those who sign in to the affected computers.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you do not control an existing GPO and cannot create one, exploitation requires the ability
+                        to create machine accounts and add DNS records that do not already exist in the domain. An
+                        already compromised domain-joined machine can also be used. Executing this attack vector is not
+                        trivial and requires setup.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        From a compromised domain-joined Windows machine, you can exploit this gPLink manipulation path
+                        with Powermad, PowerView, and native Windows functionality. For site-specific requirements and
+                        implementation details, see{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                            the Site Unseen article
+                        </Link>
+                        .
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        If you control an existing GPO or can create one, the attack is simpler: inject a malicious
+                        configuration, such as an immediate scheduled task, into a controlled GPO, then link that GPO to
+                        the target site object through its gPLink attribute.
+                    </Typography>
+
+                    <Typography variant='body2'>
+                        Consider how many computers and users the target site affects; each affected object will attempt
+                        to retrieve and apply the malicious GPO.
                     </Typography>
                 </>
             );

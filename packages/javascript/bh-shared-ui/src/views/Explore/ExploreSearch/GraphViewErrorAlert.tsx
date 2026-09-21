@@ -14,12 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
+import { Alert, AlertTitle, Box } from '@mui/material';
 
 const GraphViewErrorAlert = () => {
-    const theme = useTheme();
     return (
-        <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
+        <Box className='flex justify-center mt-16 mx-8'>
             <Alert severity={'error'}>
                 <AlertTitle>Error</AlertTitle>
                 <p>An unexpected error has occurred. Please refresh the page and try again.</p>

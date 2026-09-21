@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+/* eslint-disable no-useless-assignment */
+/* stop strict complaints about `i` from eslint */
+
 import { Attributes } from 'graphology-types';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
@@ -23,6 +26,9 @@ import CurvedEdgeProgram from './edge.curved';
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
     ATTRIBUTES = 6,
+    // These self edges have essentially static dimensions so we can approximate the arrowhead
+    // clamp with a constant t value (instead of the approximation we use for curved edges)
+    CLAMP_APPROXIMATION_T = 0.91,
     STRIDE = POINTS * ATTRIBUTES;
 
 export const getControlPointsFromGroupSize = (
@@ -84,16 +90,17 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         const start = { x: sourceData.x, y: sourceData.y };
         const thickness = data.size || 1;
 
+        const { control2, control3 } = getControlPointsFromGroupSize(
+            data.groupPosition,
+            data.framedGraphNodeRadius * 3,
+            start,
+            true,
+            true
+        );
+
         const points = [];
 
-        for (let t = 0; t <= 1; t += RESOLUTION) {
-            const { control2, control3 } = getControlPointsFromGroupSize(
-                data.groupPosition,
-                data.framedGraphNodeRadius * 3,
-                start,
-                true,
-                true
-            );
+        for (let t = 0; t <= CLAMP_APPROXIMATION_T; t += RESOLUTION) {
             const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(start, control2, control3, start, t);
             points.push(pointOnCurve);
         }
@@ -139,6 +146,10 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = -vOffset.y;
             array[i++] = -vOffset.x;
             array[i++] = color;
+            array[i++] = 0;
+        }
+        // zero out any remaining buffer slots
+        while (i < STRIDE * (offset + 1)) {
             array[i++] = 0;
         }
     }

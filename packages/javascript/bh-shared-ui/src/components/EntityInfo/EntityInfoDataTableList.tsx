@@ -16,18 +16,25 @@
 import { Box, Divider } from '@mui/material';
 import React from 'react';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { usePrimaryKind } from '../../hooks';
 import { EntityInfoContentProps, EntityKinds, allSections } from '../../utils';
 
-const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, additionalTables, DataTable }) => {
-    let type = nodeType as EntityKinds;
-    if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
-        type = ActiveDirectoryNodeKind.Entity;
+const getEntityKindInfoSections = (id: string, kind: string) => {
+    if (kind === ActiveDirectoryNodeKind.LocalGroup || kind === ActiveDirectoryNodeKind.LocalUser)
+        return allSections[ActiveDirectoryNodeKind.Entity]!(id);
 
-    const tables = allSections[type]?.(id) || [];
+    if (allSections[kind as EntityKinds]) return allSections[kind as EntityKinds]!(id);
+
+    return [];
+};
+
+const EntityInfoList: React.FC<EntityInfoContentProps> = ({ selectedNode, additionalTables, DataTable }) => {
+    const primaryKind = usePrimaryKind(selectedNode.kinds);
+    const entityInfoKindSections = getEntityKindInfoSections(selectedNode.properties.objectid ?? '', primaryKind);
 
     return (
         <div data-testid='entity-info-data-table-list'>
-            {tables.map((table, index) => {
+            {entityInfoKindSections.map((table, index) => {
                 return (
                     <React.Fragment key={index}>
                         <Box padding={1}>
@@ -53,4 +60,4 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     );
 };
 
-export default EntityInfoDataTableList;
+export default EntityInfoList;

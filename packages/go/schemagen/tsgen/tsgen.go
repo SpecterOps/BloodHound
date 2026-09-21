@@ -68,7 +68,7 @@ type Cursor interface {
 	// Export creates an "export" keyword token.
 	Export() Cursor
 
-	// Export creates an "import" keyword token.
+	// Import creates an "import" keyword token.
 	Import() Cursor
 
 	// Export creates an "from" keyword token with an attached path literal to define where the preceding import

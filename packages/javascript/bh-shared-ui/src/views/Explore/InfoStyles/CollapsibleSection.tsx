@@ -40,32 +40,19 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     accordionDetails: {
         padding: theme.spacing(1, 0),
     },
-    accordionCount: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontWeight: 'bold',
-        fontSize: '0.9rem',
-        backgroundColor: theme.palette.neutral.quinary,
-        minWidth: '3rem',
-        height: '1.6rem',
-        lineHeight: '1.6em',
-        paddingX: '0.5rem',
-        borderRadius: theme.shape.borderRadius,
-        color: theme.palette.color.primary,
-    },
     edgeAccordionDetails: {
         padding: theme.spacing(0, 0, 0, 1),
-        '& p.MuiTypography-body1': {
+        '& p.typography-body1': {
             marginTop: '8px',
             fontSize: '0.875rem',
             textDecoration: 'underline',
             padding: theme.spacing(0.5, 0.5),
             borderRadius: theme.shape.borderRadius,
         },
-        '& p.MuiTypography-body2': {
+        '& p.typography-body2, & p.edge-accordion-body2': {
             marginTop: '8px',
             fontSize: '0.75rem',
+            lineHeight: '1.43',
             backgroundColor: theme.palette.neutral.tertiary,
             padding: theme.spacing(0.5, 1),
             borderRadius: theme.shape.borderRadius,
@@ -73,14 +60,19 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
         '& a': {
             fontSize: '0.75rem',
             marginTop: '4px',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
+            textDecoration: 'underline',
+            color: theme.palette.color.links,
+            cursor: 'pointer',
         },
         '& pre': {
             fontFamily: '"source-code-pro", "Menlo", "Monaco", "Consolas", "Courier New", "monospace"',
             whiteSpace: 'pre-line',
             fontSize: '0.75rem',
+            lineHeight: '1.5',
             wordBreak: 'break-all',
-
             margin: theme.spacing(1, 0),
             padding: theme.spacing(0.5, 1),
             backgroundColor: theme.palette.neutral.quinary,
@@ -100,32 +92,6 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
     },
     expandIcon: {
         color: theme.palette.color.primary,
-    },
-    title: {
-        marginLeft: theme.spacing(2),
-        lineHeight: '3em',
-        fontSize: theme.typography.fontSize,
-    },
-    fieldsContainer: {
-        fontSize: '0.75rem',
-        '& > :nth-child(odd)': {
-            backgroundColor: theme.palette.neutral.tertiary,
-        },
-        '& > :nth-child(even)': {
-            backgroundColor: theme.palette.neutral.secondary,
-        },
-        borderRadius: theme.shape.borderRadius,
-    },
-    alertRoot: {
-        display: 'flex',
-        justifyContent: 'center',
-        padding: 0,
-        minWidth: '3rem',
-        borderRadius: theme.shape.borderRadius,
-    },
-    alertIcon: {
-        padding: '4px',
-        margin: 0,
     },
 }));
 

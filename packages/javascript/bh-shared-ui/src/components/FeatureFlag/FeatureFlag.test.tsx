@@ -74,15 +74,15 @@ describe('FeatureFlag', () => {
     });
 
     it('renders nothing if flag is enabled and enabled prop is not provided', async () => {
-        render(<FeatureFlag flagKey='enabled-flag' />);
+        const { container } = render(<FeatureFlag flagKey='enabled-flag' />);
         await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-        expect(document.querySelector('div')?.innerHTML).toEqual('');
+        expect(container.textContent).toBe('');
     });
 
     it('renders nothing if flag is disabled and disabled prop is not provided', async () => {
-        render(<FeatureFlag flagKey='disabled-flag' />);
+        const { container } = render(<FeatureFlag flagKey='disabled-flag' />);
         await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
-        expect(document.querySelector('div')?.innerHTML).toEqual('');
+        expect(container.textContent).toBe('');
     });
 
     it('renders an error fallback when flag is not found', async () => {

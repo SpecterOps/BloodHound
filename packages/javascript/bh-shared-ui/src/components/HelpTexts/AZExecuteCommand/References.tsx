@@ -19,14 +19,14 @@ import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://attack.mitre.org/tactics/TA0002/'>
+        <Box className='overflow-x-auto'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://attack.mitre.org/tactics/TA0002/'>
                 MITRE: Execution
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.specterops.io/death-from-above-lateral-movement-from-azure-to-on-prem-ad-d18cb3959d4d'>
                 Death from Above: Lateral Movement from Azure to On-Prem AD
             </Link>
