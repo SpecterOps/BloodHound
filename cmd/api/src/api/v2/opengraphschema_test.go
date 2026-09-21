@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	databasemocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -171,7 +170,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 
 	type fields struct {
 		setupOpenGraphServiceMock func(t *testing.T, repository *schemamocks.MockOpenGraphSchemaService)
-		setupDatabaseMock         func(t *testing.T, database *databasemocks.MockDatabase)
 	}
 	type args struct {
 		buildRequest func() *http.Request
@@ -475,17 +473,12 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				response     = httptest.NewRecorder()
-				request      = tt.args.buildRequest()
-				mockDatabase = databasemocks.NewMockDatabase(mockCtrl)
+				response = httptest.NewRecorder()
+				request  = tt.args.buildRequest()
 			)
 			tt.fields.setupOpenGraphServiceMock(t, mockOpenGraphService)
-			if tt.fields.setupDatabaseMock != nil {
-				tt.fields.setupDatabaseMock(t, mockDatabase)
-			}
 
 			s := v2.Resources{
-				DB:                     mockDatabase,
 				OpenGraphSchemaService: mockOpenGraphService,
 			}
 
