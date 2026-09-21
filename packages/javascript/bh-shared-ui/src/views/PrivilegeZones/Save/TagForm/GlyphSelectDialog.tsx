@@ -36,14 +36,6 @@ import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { AppIcon } from '../../../../components';
 import { IconList, freeIconsList } from '../../../../utils';
 
-const clearSelectionButtonClasses = [
-    'bg-transparent text-inherit !shadow-none dark:text-inherit',
-    'hover:bg-transparent hover:text-primary dark:hover:text-primary',
-    'active:bg-transparent active:text-secondary dark:active:bg-transparent dark:active:text-secondary',
-    'focus-visible:rounded-sm focus-visible:bg-transparent focus-visible:text-primary dark:focus-visible:text-primary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent',
-].join(' ');
-
 const InnerElement = forwardRef<HTMLUListElement, any>(({ style, ...rest }, ref) => (
     <ul ref={ref} style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest} />
 ));
@@ -166,7 +158,7 @@ const GlyphSelectDialog: React.FC<{
                                     <IconButton
                                         aria-label='Clear Selection'
                                         onClick={handleClear}
-                                        className={clearSelectionButtonClasses}
+                                        className='bg-transparent text-inherit !shadow-none focus-visible:rounded-sm'
                                         size={64}>
                                         <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
                                             <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />

@@ -29,14 +29,14 @@ type TriggerProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigg
 
 const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Trigger>, TriggerProps>(
     (props, ref) => {
-        const { asChild = !!props.children, className, ...rest } = props;
+        const { children, asChild = !!children, className, ...rest } = props;
         return (
             <TooltipPrimitive.Trigger
                 ref={ref}
                 className={cn('focus:outline-none focus-visible:focus-ring', className)}
                 asChild={asChild}
                 {...rest}>
-                {props.children ?? <AppIcon.Info size={16} aria-hidden='true' />}
+                {children ?? <AppIcon.Info size={16} aria-hidden='true' />}
             </TooltipPrimitive.Trigger>
         );
     }
@@ -78,7 +78,7 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 interface TooltipProps extends React.PropsWithChildren {
-    tooltip: string | React.ReactNode;
+    tooltip: React.ReactNode;
     renderTrigger?: (trigger: React.ReactElement<TriggerProps>) => React.ReactElement;
     open?: RootProps['open'];
     defaultOpen?: RootProps['defaultOpen'];

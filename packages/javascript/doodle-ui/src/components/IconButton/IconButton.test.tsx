@@ -136,7 +136,7 @@ describe('IconButton', () => {
     it('uses className and the icon currentColor for color', () => {
         const { container } = render(
             <IconButton aria-label='Delete' className='text-status-error-main'>
-                <AppIcon.FileMagnifyingGlass />
+                <AppIcon.FilterOutline />
             </IconButton>
         );
 
