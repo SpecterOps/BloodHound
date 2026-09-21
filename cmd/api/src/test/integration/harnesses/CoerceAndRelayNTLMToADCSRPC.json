@@ -163,7 +163,7 @@
       "id": "n1",
       "fromId": "n0",
       "toId": "n2",
-      "type": "CoerceAndRelayNTLMToADCS",
+      "type": "CoerceAndRelayNTLMToADCSRPC",
       "properties": {},
       "style": {}
     },
@@ -218,8 +218,8 @@
     {
       "id": "n8",
       "fromId": "n7",
-      "toId": "n2",
-      "type": "HostsCAFor",
+      "toId": "n3",
+      "type": "HostsCAService",
       "properties": {},
       "style": {}
     }
