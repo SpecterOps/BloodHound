@@ -148,7 +148,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAllAssetGroups(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'ag1'"}).
+						GetAllAssetGroups(gomock.Any(), "", model.SQLFilter{SQLString: "name = E'ag1'"}).
 						Return(model.AssetGroups{ag1}, nil)
 				},
 				Test: func(output apitest.Output) {

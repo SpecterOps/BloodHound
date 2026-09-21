@@ -1018,6 +1018,26 @@ export interface CollectorJobSecret {
     created_at: string;
 }
 
+export interface CollectorJobType {
+    id: number;
+    key: string;
+    display_name: string;
+    params_version: string;
+    params_schema: Record<string, unknown>;
+    backoff_strategy: 'exponential' | 'fixed';
+    backoff_base: string;
+    backoff_cap: string;
+    max_attempts: number;
+    unclaimed_ttl: string | null;
+    claim_ttl: string;
+    is_builtin: boolean;
+    schema_extension_id: number | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    deleted_by: string | null;
+}
+
 export interface CollectorJobProfileMinimal {
     id: number;
     name: string;
