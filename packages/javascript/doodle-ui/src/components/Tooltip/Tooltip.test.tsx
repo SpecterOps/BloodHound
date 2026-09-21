@@ -22,7 +22,8 @@ describe('Tooltip', () => {
     it('uses AppIcon.Info as the default trigger', () => {
         const { container } = render(<Tooltip tooltip='Helpful context' />);
 
-        expect(screen.getByRole('button', { name: 'Helpful context' }).getAttribute('type')).toBe('button');
+        expect(screen.queryByRole('button')).toBeNull();
+        expect(screen.getByRole('img', { name: 'Helpful context' }).getAttribute('tabindex')).toBe('0');
         expect(container.querySelector('svg')).not.toBeNull();
         expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
         expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 24 24');
@@ -40,9 +41,19 @@ describe('Tooltip', () => {
             </form>
         );
 
-        await user.click(screen.getByRole('button', { name: 'Helpful context' }));
+        await user.click(screen.getByRole('img', { name: 'Helpful context' }));
 
         expect(handleSubmit).not.toHaveBeenCalled();
+    });
+
+    it('opens the default trigger tooltip on keyboard focus', async () => {
+        const user = userEvent.setup();
+        render(<Tooltip tooltip='Helpful context' />);
+
+        await user.tab();
+
+        expect(document.activeElement).toBe(screen.getByRole('img', { name: 'Helpful context' }));
+        expect(await screen.findByRole('tooltip', { name: 'Helpful context' })).not.toBeNull();
     });
 
     it('applies the default overlay z-index', async () => {

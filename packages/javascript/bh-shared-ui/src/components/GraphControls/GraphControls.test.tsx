@@ -472,8 +472,7 @@ describe('GraphControls', () => {
         it('disables the search button when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
-            await user.click(searchResultsMenu);
+            await user.click(screen.getByTestId('explore_graph-controls_search-current-results'));
 
             expect(screen.getByTestId('explore_graph-controls_search-current-results')).toBeDisabled();
         });

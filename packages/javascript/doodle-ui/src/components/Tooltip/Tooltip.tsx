@@ -29,7 +29,9 @@ type TriggerProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigg
 
 const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Trigger>, TriggerProps>(
     (props, ref) => {
-        const { children, asChild = !!children, className, type, ...rest } = props;
+        const { children, asChild = children == null || React.isValidElement(children), className, type, ...rest } =
+            props;
+
         return (
             <TooltipPrimitive.Trigger
                 ref={ref}
@@ -37,7 +39,12 @@ const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 asChild={asChild}
                 type={asChild ? type : (type ?? 'button')}
                 {...rest}>
-                {children ?? <AppIcon.Info size={16} aria-hidden='true' />}
+                {children ?? (
+                    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                    <span role='img' tabIndex={0} className='inline-flex items-center justify-center'>
+                        <AppIcon.Info size={16} aria-hidden='true' />
+                    </span>
+                )}
             </TooltipPrimitive.Trigger>
         );
     }
@@ -94,6 +101,7 @@ interface TooltipProps extends React.PropsWithChildren {
 const Tooltip: React.FC<TooltipProps> = (props) => {
     const {
         tooltip,
+        children,
         renderTrigger,
         open,
         defaultOpen,
@@ -104,7 +112,7 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         contentWidth,
         contentProps = {},
     } = props;
-    const defaultTriggerLabel = !props.children && !renderTrigger
+    const defaultTriggerLabel = !children && !renderTrigger
         ? typeof tooltip === 'string'
             ? tooltip
             : 'Show more information'
@@ -113,7 +121,7 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         <TooltipTrigger {...triggerProps} asChild={false} />
     ) : (
         <TooltipTrigger
-            children={props.children}
+            children={children}
             aria-label={triggerProps['aria-label'] ?? defaultTriggerLabel}
             {...triggerProps}
         />
