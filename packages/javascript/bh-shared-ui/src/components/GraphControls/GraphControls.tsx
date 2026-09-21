@@ -118,31 +118,6 @@ const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) =>
     </GraphMenu>
 );
 
-// MUI version of SpacingControl (commented out; using doodle-ui version above):
-// const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) => (
-//     <GraphMenu label={`${axis} spacing: ${value}`} icon={icon}>
-//         <div
-//             className='box-border w-56 px-5 pb-3 pt-8'
-//             data-testid={`explore_graph-${axis.toLowerCase()}-spacing-slider`}>
-//             <Slider
-//                 aria-label={`${axis} spacing`}
-//                 max={maximumGraphSpacing}
-//                 min={minimumGraphSpacing}
-//                 onChange={(_event, nextValue) => {
-//                     if (typeof nextValue === 'number') onChange(nextValue);
-//                 }}
-//                 step={1}
-//                 value={value}
-//                 valueLabelDisplay='auto'
-//             />
-//             <div className='flex justify-between text-xs'>
-//                 <span>Compact</span>
-//                 <span>Spacious</span>
-//             </div>
-//         </div>
-//     </GraphMenu>
-// );
-
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
     const {
         onReset,
