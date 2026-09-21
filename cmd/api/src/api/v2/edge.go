@@ -148,8 +148,6 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting ACL inheritance path for edge: %v", err), request), response)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "unknown user", request), response)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		unifiedGraph.AddPathSet(primaryDisplayKinds, pathSet, true)
