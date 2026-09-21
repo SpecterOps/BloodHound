@@ -31,7 +31,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 , targeting the HTTP(S) endpoint of the enterprise CA server.
             </Typography>
             <Typography variant='body1'>2. Coerce the Target Computer</Typography>
-            <Typography variant='body2' component='div'>
+            <Typography variant='body2'>
                 Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
