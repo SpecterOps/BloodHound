@@ -1,0 +1,49 @@
+---
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Pull Request Size
+
+on:
+  pull_request:
+    branches: [main, "stage/**"]
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  check-pull-request-size:
+    name: Check pull request size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report approved size exception
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
+        run: |
+          printf '%s\n\n%s\n' \
+            '## Pull request size' \
+            'The `pr-size-exception` label is present; the size check was skipped.' \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Checkout trusted base revision
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: Fetch pull request revision
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
+        run: git fetch --no-tags origin +refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pull-request-head
+      - name: Check changed lines
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
+        run: |
+          set -o pipefail
+          go tool stbernard pr-size \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head refs/remotes/origin/pull-request-head \
+            | tee -a "$GITHUB_STEP_SUMMARY"
