@@ -73,6 +73,9 @@ put:
               type: string
             domain_controller:
               type: string
+            provided_identifier:
+              type: string
+              description: Optional identifier used to associate an external identity-provider token with this client.
   responses:
     200:
       description: OK

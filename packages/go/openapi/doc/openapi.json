@@ -1035,7 +1035,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`.",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
@@ -1066,9 +1066,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -8462,7 +8459,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are user_id, name, query, id, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are user_id, name, query, id, extension_id, category, created_at, updated_at, deleted_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -8484,6 +8481,20 @@
           },
           {
             "name": "user_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "extension_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "category",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -11723,6 +11734,60 @@
         }
       }
     },
+    "/api/v2/gpos/{object_id}/sites": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetGpoEntitySites",
+        "summary": "Get GPO entity sites",
+        "description": "Get a list, graph, or count of the sites affected by this GPO.",
+        "tags": [
+          "GPOs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/gpos/{object_id}/tier-zero": {
       "parameters": [
         {
@@ -12658,6 +12723,366 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntity",
+        "summary": "Get Site entity info",
+        "description": "Get info and counts for this Site node.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityControllers",
+        "summary": "Get Site entity controllers",
+        "description": "Get a list, graph, or count of the principals that can control this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/linked-gpos": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityLinkedGpos",
+        "summary": "Get Site entity linked GPOs",
+        "description": "Get a list, graph, or count of the GPOs linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/siteservers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteServers",
+        "summary": "Get Site entity site servers",
+        "description": "Get a list, graph, or count of the site servers linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/sitesubnets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteSubnets",
+        "summary": "Get Site entity site subnets",
+        "description": "Get a list, graph, or count of the site subnets linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/siteservers/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteServerEntity",
+        "summary": "Get Site Server entity info",
+        "description": "Get info and counts for this Site Server node.",
+        "tags": [
+          "Site Servers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sitesubnets/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteSubnetEntity",
+        "summary": "Get Site Subnet entity info",
+        "description": "Get info and counts for this Site Subnet node.",
+        "tags": [
+          "Site Subnets",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -15397,6 +15822,10 @@
                     "items": {
                       "$ref": "#/components/schemas/model.client-schedule"
                     }
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -15652,6 +16081,10 @@
                   },
                   "domain_controller": {
                     "type": "string"
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -19848,6 +20281,11 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
+                              },
+                              "archived_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of when the finding was archived. Omitted when finding has not been archived."
                               }
                             }
                           }
@@ -19860,7 +20298,7 @@
                   "Mixed findings (relationship and list)": {
                     "summary": "Unified response with both finding types",
                     "value": {
-                      "count": 2,
+                      "count": 3,
                       "skip": 0,
                       "limit": 10,
                       "data": [
@@ -19907,6 +20345,29 @@
                           "id": 102,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
                           "last_seen": "2026-04-14T16:57:35.675609Z"
+                        },
+                        {
+                          "severity": "moderate",
+                          "finding": "T0WriteOwner",
+                          "title": "WriteOwner Privileges on Tier Zero Objects",
+                          "finding_type": "relationship",
+                          "is_cross_platform": false,
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "asset_group_tag_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "JSMITH@CORP1.LAB.HOME-LABS.LOL",
+                          "source_principal_kind": "User",
+                          "source_principal_name": "John Smith",
+                          "target_principal_id": "ADMIN@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Domain Admin",
+                          "status": "remediated",
+                          "id": 103,
+                          "first_seen": "2026-03-01T08:00:00.000000Z",
+                          "last_seen": "2026-04-20T12:00:00.000000Z",
+                          "archived_at": "2026-04-20T12:00:00.000000Z"
                         }
                       ]
                     }
@@ -23665,6 +24126,14 @@
                     "$ref": "#/components/schemas/enum.client-type"
                   }
                 ]
+              },
+              "provided_identifier": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
+                  }
+                ]
               }
             }
           }
@@ -26000,6 +26469,15 @@
               },
               "description": {
                 "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "category": {
+                "type": "string",
+                "readOnly": true
               }
             }
           }
@@ -26176,6 +26654,18 @@
               "certtemplates": {
                 "type": "integer"
               },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
+                "type": "integer"
+              },
               "acls": {
                 "type": "integer"
               },
@@ -26302,6 +26792,18 @@
                 "type": "integer"
               },
               "certtemplates": {
+                "type": "integer"
+              },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
                 "type": "integer"
               },
               "acls": {
@@ -26768,6 +27270,9 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
+              },
+              "provided_identifier": {
+                "$ref": "#/components/schemas/null.string"
               }
             }
           }
@@ -28158,6 +28663,9 @@
         "Enterprise CAs",
         "NT Auth Stores",
         "Cert Templates",
+        "Sites",
+        "Site Servers",
+        "Site Subnets",
         "OUs",
         "AD Users",
         "Groups",
