@@ -1,0 +1,104 @@
+<!--
+Copyright 2026 Specter Ops, Inc.
+
+Licensed under the Apache License, Version 2.0
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex" />
+        <title>BloodHound CE — Project Pages</title>
+        <style>
+            :root {
+                color-scheme: dark;
+            }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #0f1117;
+                color: #e6e8ee;
+                font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            }
+            main {
+                width: min(720px, 90vw);
+                text-align: center;
+            }
+            h1 {
+                margin: 0 0 0.25rem;
+                font-size: 1.75rem;
+            }
+            p.subtitle {
+                margin: 0 0 2rem;
+                color: #9aa1b1;
+            }
+            .cards {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+            a.card {
+                display: block;
+                padding: 1.5rem;
+                border: 1px solid #262a36;
+                border-radius: 12px;
+                background: #171a23;
+                color: inherit;
+                text-decoration: none;
+                transition:
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+            }
+            a.card:hover {
+                border-color: #4f8cff;
+                transform: translateY(-2px);
+            }
+            a.card h2 {
+                margin: 0 0 0.5rem;
+                font-size: 1.15rem;
+            }
+            a.card span {
+                color: #9aa1b1;
+                font-size: 0.9rem;
+            }
+            footer {
+                margin-top: 2.5rem;
+                color: #6b7280;
+                font-size: 0.8rem;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>BloodHound CE — Project Pages</h1>
+            <p class="subtitle">Published from the <code>gh-pages</code> branch</p>
+            <div class="cards">
+                <a class="card" href="./storybook/">
+                    <h2>DoodleUI Storybook</h2>
+                    <span>Component library documentation and interactive stories</span>
+                </a>
+                <a class="card" href="./allure/">
+                    <h2>Allure Test Report</h2>
+                    <span>Latest Go &amp; UI unit test results and history</span>
+                </a>
+            </div>
+            <footer>SpecterOps · BloodHound Community Edition</footer>
+        </main>
+    </body>
+</html>

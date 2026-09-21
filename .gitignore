@@ -25,6 +25,7 @@ cmd/api/src/cmd/bhapi/bhapi
 # ui builds
 **/build/*
 **/dist/*
+**/storybook-static/
 
 # tmp directories
 work
