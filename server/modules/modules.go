@@ -73,7 +73,7 @@ func Register(deps Deps) {
 
 	analysis.Register(deps.Router, deps.Pool)
 	appcfg.Register(deps.Router, deps.Pool)
-	identity.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool)
