@@ -391,6 +391,141 @@ func TestConvertComputerToNode_RestrictOutboundNTLM(t *testing.T) {
 	}
 }
 
+func TestConvertComputerToNode_NTLMRegistryDefaults(t *testing.T) {
+	var (
+		stableDefaultProperties = map[string]any{
+			ad.RestrictOutboundNTLM.String():         false,
+			ad.RestrictReceivingNTLMTraffic.String(): false,
+			ad.ClientAllowedNTLMServers.String():     []string{},
+		}
+		versionDependentProperties = []string{
+			ad.RequireSecuritySignature.String(),
+			ad.NTLMMinClientSec.String(),
+			ad.NTLMMinServerSec.String(),
+			ad.LMCompatibilityLevel.String(),
+			ad.UseMachineID.String(),
+		}
+		testCases = []struct {
+			name                            string
+			collected                       bool
+			isDomainController              any
+			expectedEnableSecuritySignature any
+		}{
+			{
+				name:                            "member computer",
+				collected:                       true,
+				isDomainController:              false,
+				expectedEnableSecuritySignature: false,
+			},
+			{
+				name:                            "domain controller",
+				collected:                       true,
+				isDomainController:              true,
+				expectedEnableSecuritySignature: true,
+			},
+			{
+				name:               "unknown computer role",
+				collected:          true,
+				isDomainController: nil,
+			},
+			{
+				name:               "registry data not collected",
+				isDomainController: false,
+			},
+		}
+	)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			properties := map[string]any{}
+			if testCase.isDomainController != nil {
+				properties[ad.IsDC.String()] = testCase.isDomainController
+			}
+
+			computer := ein.Computer{
+				IngestBase: ein.IngestBase{
+					Properties: properties,
+				},
+				NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
+					APIResult: ein.APIResult{
+						Collected: testCase.collected,
+					},
+				},
+			}
+
+			result := ein.ConvertComputerToNode(computer, time.Now())
+			if !testCase.collected {
+				for propertyName := range stableDefaultProperties {
+					assert.NotContains(t, result.PropertyMap, propertyName)
+				}
+				for _, propertyName := range versionDependentProperties {
+					assert.NotContains(t, result.PropertyMap, propertyName)
+				}
+				assert.NotContains(t, result.PropertyMap, ad.EnableSecuritySignature.String())
+				return
+			}
+
+			for propertyName, expectedValue := range stableDefaultProperties {
+				assert.Equal(t, expectedValue, result.PropertyMap[propertyName])
+			}
+			for _, propertyName := range versionDependentProperties {
+				assert.Contains(t, result.PropertyMap, propertyName)
+				assert.Nil(t, result.PropertyMap[propertyName])
+			}
+			assert.Equal(t, testCase.expectedEnableSecuritySignature, result.PropertyMap[ad.EnableSecuritySignature.String()])
+		})
+	}
+}
+
+func TestConvertComputerToNode_NTLMRegistryValuesOverrideDefaults(t *testing.T) {
+	var (
+		restrictSendingNtlmTraffic   uint = 2
+		restrictReceivingNtlmTraffic uint = 2
+		requireSecuritySignature     uint = 1
+		enableSecuritySignature      uint = 1
+		ntlmMinClientSec             uint = 16
+		ntlmMinServerSec             uint = 32
+		lmCompatibilityLevel         uint = 5
+		useMachineID                 uint = 1
+		clientAllowedNTLMServers          = []string{"server.example.com"}
+	)
+
+	computer := ein.Computer{
+		IngestBase: ein.IngestBase{
+			Properties: map[string]any{
+				ad.IsDC.String(): false,
+			},
+		},
+		NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
+			APIResult: ein.APIResult{
+				Collected: true,
+			},
+			Result: ein.NTLMRegistryInfo{
+				RestrictSendingNtlmTraffic:   &restrictSendingNtlmTraffic,
+				RestrictReceivingNTLMTraffic: &restrictReceivingNtlmTraffic,
+				RequireSecuritySignature:     &requireSecuritySignature,
+				EnableSecuritySignature:      &enableSecuritySignature,
+				NtlmMinClientSec:             &ntlmMinClientSec,
+				NtlmMinServerSec:             &ntlmMinServerSec,
+				LmCompatibilityLevel:         &lmCompatibilityLevel,
+				UseMachineId:                 &useMachineID,
+				ClientAllowedNTLMServers:     &clientAllowedNTLMServers,
+			},
+		},
+	}
+
+	result := ein.ConvertComputerToNode(computer, time.Now())
+	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.RestrictReceivingNTLMTraffic.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.RequireSecuritySignature.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.EnableSecuritySignature.String()])
+	assert.Equal(t, ntlmMinClientSec, result.PropertyMap[ad.NTLMMinClientSec.String()])
+	assert.Equal(t, ntlmMinServerSec, result.PropertyMap[ad.NTLMMinServerSec.String()])
+	assert.Equal(t, lmCompatibilityLevel, result.PropertyMap[ad.LMCompatibilityLevel.String()])
+	assert.Equal(t, true, result.PropertyMap[ad.UseMachineID.String()])
+	assert.Equal(t, clientAllowedNTLMServers, result.PropertyMap[ad.ClientAllowedNTLMServers.String()])
+}
+
 func TestParseGroupMiscData(t *testing.T) {
 	t.Parallel()
 	type args struct {

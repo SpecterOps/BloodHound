@@ -120,17 +120,21 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
-		// Clear missing registry values from the node. RestrictSendingNtlmTraffic is the exception because
-		// Windows treats an unconfigured policy as Allow All.
+		// Initialize stable Windows defaults and clear values whose effective defaults vary by OS version.
 		itemProps[ad.RestrictOutboundNTLM.String()] = false
-		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = false
 		itemProps[ad.RequireSecuritySignature.String()] = nil
 		itemProps[ad.EnableSecuritySignature.String()] = nil
 		itemProps[ad.NTLMMinClientSec.String()] = nil
 		itemProps[ad.NTLMMinServerSec.String()] = nil
 		itemProps[ad.LMCompatibilityLevel.String()] = nil
 		itemProps[ad.UseMachineID.String()] = nil
-		itemProps[ad.ClientAllowedNTLMServers.String()] = nil
+		itemProps[ad.ClientAllowedNTLMServers.String()] = []string{}
+
+		// The default server-side SMB signing negotiation setting depends on the computer's role, not its OS.
+		if isDomainController, hasDomainControllerProperty := itemProps[ad.IsDC.String()].(bool); hasDomainControllerProperty {
+			itemProps[ad.EnableSecuritySignature.String()] = isDomainController
+		}
 
 		/*
 			RestrictSendingNtlmTraffic is sent to us as an uint if sent at all
