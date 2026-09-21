@@ -70,4 +70,11 @@ describe('safeParseJson', () => {
     test('returns an object-required error for a JSON array', () => {
         expect(safeParseJson('[]')).toBe('Use a JSON object as the top-level value. Arrays are not allowed.');
     });
+
+    test.each([
+        ['a nested object', '{"metadata":{"version":1}}'],
+        ['a nested array', '{"tags":["active"]}'],
+    ])('returns a flat-object error for %s', (_description, input) => {
+        expect(safeParseJson(input)).toBe('Must be a flat JSON object.  Nested values are not supported.');
+    });
 });
