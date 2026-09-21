@@ -80,9 +80,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler)),
 		routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata),
 
-		// Permissions
-		routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf),
-
 		// User management for all BloodHound users
 		routerInst.GET("/api/v2/bloodhound-users", managementResource.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers),
 		routerInst.POST("/api/v2/bloodhound-users", managementResource.CreateUser).RequirePermissions(permissions.AuthManageUsers),
@@ -147,7 +144,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuditLogRead),
 
 		// App Config API
-		routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration),
 		routerInst.PUT("/api/v2/config", resources.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration),
 
 		routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB),
@@ -272,6 +268,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}", api.URIPathVariableObjectID), resources.GetGPOEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/computers", api.URIPathVariableObjectID), resources.ListADGPOAffectedComputers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/users", api.URIPathVariableObjectID), resources.ListADGPOAffectedUsers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/sites", api.URIPathVariableObjectID), resources.ListADGPOAffectedSites).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/tier-zero", api.URIPathVariableObjectID), resources.ListADGPOAffectedTierZero).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/ous", api.URIPathVariableObjectID), resources.ListADGPOAffectedContainers).RequirePermissions(permissions.GraphDBRead),
@@ -338,6 +335,19 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).RequirePermissions(permissions.GraphDBRead),
+
+		// Site Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}", api.URIPathVariableObjectID), resources.GetSiteEntityInfo).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/linked-gpos", api.URIPathVariableObjectID), resources.ListADSiteLinkedGPOs).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/siteservers", api.URIPathVariableObjectID), resources.ListADSiteLinkedServers).RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET(fmt.Sprintf("/api/v2/sites/{%s}/sitesubnets", api.URIPathVariableObjectID), resources.ListADSiteLinkedSubnets).RequirePermissions(permissions.GraphDBRead),
+
+		// SiteServer Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/siteservers/{%s}", api.URIPathVariableObjectID), resources.GetSiteServerEntityInfo).RequirePermissions(permissions.GraphDBRead),
+
+		// SiteSubnet Entity API
+		routerInst.GET(fmt.Sprintf("/api/v2/sitesubnets/{%s}", api.URIPathVariableObjectID), resources.GetSiteSubnetEntityInfo).RequirePermissions(permissions.GraphDBRead),
 
 		// Data Quality Stats API
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags),

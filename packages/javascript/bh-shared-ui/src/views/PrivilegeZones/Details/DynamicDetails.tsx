@@ -80,7 +80,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
         <div
             className='mb-8 flex max-h-full min-w-0 max-w-full flex-col gap-6'
             data-testid='privilege-zones_tag-details-card'>
-            <Card className='min-w-0 max-w-full overflow-hidden p-6'>
+            <Card className='min-w-0 max-w-full overflow-auto min-h-36 p-6'>
                 <div className='flex items-center min-w-0' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} wrapperClasses='shrink-0' />}
                     <span className='min-w-0 flex-1 truncate text-xl font-bold'>{name}</span>
