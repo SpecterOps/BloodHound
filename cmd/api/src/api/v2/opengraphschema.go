@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -92,18 +91,6 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	} else if graphExtensionInput, err = payload.ToGraphExtensionInput(); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	} else if payload.PZRules != nil {
-		if tierManagementEnabled, featureFlagErr := s.DB.IsEnabled(ctx, appcfg.FeatureTierManagement); featureFlagErr != nil {
-			slog.WarnContext(ctx, "Proceeding with extension privilege zone rules because tier management status could not be determined",
-				slog.String("extension_name", graphExtensionInput.ExtensionInput.Name),
-				attr.Error(featureFlagErr),
-			)
-		} else if !tierManagementEnabled {
-			slog.WarnContext(ctx, "Skipping extension privilege zone rules because tier management is disabled",
-				slog.String("extension_name", graphExtensionInput.ExtensionInput.Name),
-			)
-			graphExtensionInput.PZRulesInput = nil
-		}
 	}
 
 	if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {

@@ -37,7 +37,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	databasemocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 
@@ -390,9 +389,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 		{
 			name: "success - inserted new graph extension from zip bundle",
 			fields: fields{
-				setupDatabaseMock: func(t *testing.T, mock *databasemocks.MockDatabase) {
-					mock.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureTierManagement).Return(true, nil)
-				},
 				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					var expectedGraphExtension = serviceGraphExtension
 					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
@@ -468,47 +464,6 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						"/api/v2/extensions", bytes.NewReader(zipBuffer.Bytes()))
 					require.NoError(t, err)
 					request.Header.Set("content-type", mediatypes.ApplicationZip.String())
-					return request
-				},
-			},
-			want: want{
-				responseCode: http.StatusCreated,
-			},
-		},
-		{
-			name: "success - skips privilege zone rules when tier management is disabled",
-			fields: fields{
-				setupDatabaseMock: func(t *testing.T, mock *databasemocks.MockDatabase) {
-					mock.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureTierManagement).Return(false, nil)
-				},
-				// expect only serviceGraphExtension which does not include any PZ rules
-				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
-					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), serviceGraphExtension).Return(false, nil)
-				},
-			},
-			args: args{
-				func() *http.Request {
-					var (
-						extensionWithPZRules = graphExtension
-						jsonPayload          []byte
-						request              *http.Request
-						err                  error
-					)
-
-					extensionWithPZRules.PZRules = &model.PZRulesPayload{{
-						RuleKey: "tier_zero_admins",
-						Name:    "Tier Zero Admins",
-						Seeds: []model.SelectorSeedPayload{{
-							Type:  model.SelectorTypeCypher,
-							Value: "MATCH (n:TEST_Kind1) RETURN n",
-						}},
-					}}
-					jsonPayload, err = json.Marshal(extensionWithPZRules)
-					require.NoError(t, err)
-					request, err = http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut,
-						"/api/v2/extensions", bytes.NewReader(jsonPayload))
-					require.NoError(t, err)
-					request.Header.Set("content-type", mediatypes.ApplicationJson.String())
 					return request
 				},
 			},
