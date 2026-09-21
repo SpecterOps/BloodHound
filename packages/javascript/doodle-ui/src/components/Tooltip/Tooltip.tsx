@@ -29,12 +29,13 @@ type TriggerProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigg
 
 const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Trigger>, TriggerProps>(
     (props, ref) => {
-        const { children, asChild = !!children, className, ...rest } = props;
+        const { children, asChild = !!children, className, type, ...rest } = props;
         return (
             <TooltipPrimitive.Trigger
                 ref={ref}
                 className={cn('focus:outline-none focus-visible:focus-ring', className)}
                 asChild={asChild}
+                type={asChild ? type : (type ?? 'button')}
                 {...rest}>
                 {children ?? <AppIcon.Info size={16} aria-hidden='true' />}
             </TooltipPrimitive.Trigger>

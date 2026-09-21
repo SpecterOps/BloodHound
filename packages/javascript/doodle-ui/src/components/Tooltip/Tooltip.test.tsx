@@ -22,12 +22,27 @@ describe('Tooltip', () => {
     it('uses AppIcon.Info as the default trigger', () => {
         const { container } = render(<Tooltip tooltip='Helpful context' />);
 
-        expect(screen.getByRole('button', { name: 'Helpful context' })).not.toBeNull();
+        expect(screen.getByRole('button', { name: 'Helpful context' }).getAttribute('type')).toBe('button');
         expect(container.querySelector('svg')).not.toBeNull();
         expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
         expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 24 24');
         expect(container.querySelector('svg')?.getAttribute('width')).toBe('16');
         expect(container.querySelector('svg')?.getAttribute('height')).toBe('16');
+    });
+
+    it('does not submit a parent form when the default trigger is clicked', async () => {
+        const user = userEvent.setup();
+        const handleSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+
+        render(
+            <form onSubmit={handleSubmit}>
+                <Tooltip tooltip='Helpful context' />
+            </form>
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Helpful context' }));
+
+        expect(handleSubmit).not.toHaveBeenCalled();
     });
 
     it('applies the default overlay z-index', async () => {
