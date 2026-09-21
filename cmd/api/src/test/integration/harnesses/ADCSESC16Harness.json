@@ -11,7 +11,9 @@
         "Domain"
       ],
       "properties": {
-        "collected": "BOOL:True"
+        "collected": "BOOL:True",
+        "domainsid": "S-1-5-21-1000000000-1000000000-1000000000",
+        "objectid": "S-1-5-21-1000000000-1000000000-1000000000"
       },
       "style": {
         "node-color": "#68ccca"
@@ -63,7 +65,8 @@
         "isuserspecifiessanenabled": "BOOL:True",
         "isuserspecifiessanenabledcollected": "BOOL:True",
         "disabledextensionscollected": "BOOL:True",
-        "disabledextensions": "STRLIST:1.3.6.1.4.1.311.25.2"
+        "disabledextensions": "STRLIST:1.3.6.1.4.1.311.25.2",
+        "domainsid": "S-1-5-21-1000000000-1000000000-1000000000"
       },
       "style": {
         "node-color": "#194d33",
@@ -107,6 +110,17 @@
       "properties": {},
       "style": {
         "node-color": "#fcc400"
+      }
+    },
+    {
+      "id": "n7",
+      "caption": "EnterpriseCAHost1",
+      "labels": [
+        "Computer"
+      ],
+      "properties": {
+        "enabled": "BOOL:True",
+        "domainsid": "S-1-5-21-1000000000-1000000000-1000000000"
       }
     }
   ],
@@ -183,6 +197,14 @@
       "style": {},
       "properties": {},
       "fromId": "n6",
+      "toId": "n3"
+    },
+    {
+      "id": "n34",
+      "type": "HostsCAService",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
       "toId": "n3"
     }
   ],
