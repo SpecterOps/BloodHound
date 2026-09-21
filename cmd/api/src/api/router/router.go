@@ -41,6 +41,7 @@ func With(limiterFactory func() mux.MiddlewareFunc, routes ...*Route) {
 // Router is a wrapper for the mux.Router type. It adds service-specific functionality to HTTP handler routes created.
 type Router struct {
 	globalMiddleware []mux.MiddlewareFunc
+	routeMiddleware  []mux.MiddlewareFunc
 	mux              *mux.Router
 	authorizer       auth.Authorizer
 }
@@ -158,6 +159,19 @@ func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
 }
 
+// WithRouteMiddleware applies middleware only to routes registered by
+// register, allowing migrated slices to be wrapped without changing legacy
+// routes already attached to the mux.
+func (s *Router) WithRouteMiddleware(middleware mux.MiddlewareFunc, register func() error) error {
+	previousMiddleware := s.routeMiddleware
+	s.routeMiddleware = append(append([]mux.MiddlewareFunc{}, previousMiddleware...), middleware)
+	defer func() {
+		s.routeMiddleware = previousMiddleware
+	}()
+
+	return register()
+}
+
 // MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
 // matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
 func (s Router) MuxRouter() *mux.Router {
@@ -177,6 +191,7 @@ func (s Router) Handler() http.Handler {
 
 func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 	middlewareWrapper := middleware.NewWrapper(handler)
+	middlewareWrapper.UseBefore(s.routeMiddleware...)
 
 	return &Route{
 		handler: middlewareWrapper,
@@ -186,6 +201,7 @@ func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 
 func (s Router) HandleFunc(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	middlewareWrapper := middleware.NewWrapper(http.HandlerFunc(handlerFunc))
+	middlewareWrapper.UseBefore(s.routeMiddleware...)
 
 	return &Route{
 		handler:    middlewareWrapper,
