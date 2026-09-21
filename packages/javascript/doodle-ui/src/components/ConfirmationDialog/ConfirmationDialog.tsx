@@ -1,0 +1,118 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import * as React from 'react';
+import { ReactNode, useCallback, useState } from 'react';
+import { Button } from '../Button';
+import { Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '../Dialog';
+import { Input } from '../Input';
+
+const ConfirmationDialog: React.FC<{
+    open: boolean;
+    title: string;
+    text: string | JSX.Element;
+    onCancel: () => void;
+    onConfirm: () => void;
+    challengeTxt?: string;
+    isLoading?: boolean;
+    error?: string;
+    cancelIcon?: ReactNode;
+    confirmIcon?: ReactNode;
+    iconPosition?: 'left' | 'right';
+    cancelText?: string;
+    confirmText?: string;
+}> = ({
+    open,
+    title,
+    text,
+    onCancel,
+    isLoading,
+    error,
+    challengeTxt = '',
+    onConfirm,
+    cancelIcon,
+    confirmIcon,
+    iconPosition = 'left',
+    cancelText = 'Cancel',
+    confirmText = 'Confirm',
+}) => {
+    const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
+
+    const handleClose = useCallback(() => {
+        onCancel();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onCancel]);
+
+    const handleConfirm = useCallback(() => {
+        onConfirm();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onConfirm]);
+
+    const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
+        <>
+            {iconPosition === 'left' ? icon : null}
+            {buttonText}
+            {iconPosition === 'right' ? icon : null}
+        </>
+    );
+
+    return (
+        <Dialog open={open} data-testid='confirmation-dialog'>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle className='text-lg'>{title}</DialogTitle>
+                    <DialogDescription className='text-lg'>{text}</DialogDescription>
+                    {challengeTxt && (
+                        <DialogDescription asChild className='text-sm'>
+                            <div className='pb-1'>
+                                Please input "{challengeTxt}" prior to clicking confirm.
+                                <Input
+                                    placeholder={challengeTxt}
+                                    variant='outlined'
+                                    onChange={(e) => setChallengeTxtReply(e.target.value)}
+                                    value={challengeTxtReply}
+                                    data-testid='confirmation-dialog_challenge-text'
+                                />
+                            </div>
+                        </DialogDescription>
+                    )}
+                    <DialogActions>
+                        {error && <p className='content-center text-error text-xs mt-[3px]'>{error}</p>}
+                        <Button
+                            variant='secondary'
+                            onClick={handleClose}
+                            disabled={isLoading}
+                            data-testid='confirmation-dialog_button-no'>
+                            {renderButtonContent(cancelText, cancelIcon)}
+                        </Button>
+                        <Button
+                            onClick={handleConfirm}
+                            disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
+                            data-testid='confirmation-dialog_button-yes'>
+                            {renderButtonContent(confirmText, confirmIcon)}
+                        </Button>
+                    </DialogActions>
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
+    );
+};
+ConfirmationDialog.displayName = 'ConfirmationDialog';
+
+export { ConfirmationDialog };

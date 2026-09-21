@@ -24,6 +24,7 @@ export * from './Card';
 export * from './Carousel';
 export * from './Checkbox';
 export * from './ComboBadge';
+export * from './ConfirmationDialog';
 export * from './DataTable';
 export * from './DatePicker';
 export * from './Dialog';
