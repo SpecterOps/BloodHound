@@ -57,11 +57,17 @@ describe('safeParseJson', () => {
     });
 
     test.each([
-        ['invalid JSON', '{name: BloodHound}'],
-        ['a JSON array', '[]'],
         ['JSON null', 'null'],
         ['a JSON primitive', '"BloodHound"'],
     ])('returns undefined for %s', (_description, input) => {
         expect(safeParseJson(input)).toBeUndefined();
+    });
+
+    test('returns a syntax error for invalid JSON', () => {
+        expect(safeParseJson('{name: BloodHound}')).toBe('Syntax error: invalid JSON.');
+    });
+
+    test('returns an object-required error for a JSON array', () => {
+        expect(safeParseJson('[]')).toBe('Use a JSON object as the top-level value. Arrays are not allowed.');
     });
 });

@@ -79,16 +79,20 @@ export function parseKeywordAndTypeValue(
  * Useful for validating JSON strings
  *
  * @param text - The JSON text to parse.
- * @returns The parsed object, or `undefined` when the input is invalid, `null`, or a JSON array.
+ * @returns The parsed object, a descriptive error message for invalid JSON or arrays, or `undefined` for other
+ * unsupported JSON values.
  */
-export const safeParseJson = (text: string): Record<string, unknown> | undefined => {
+export const safeParseJson = (text: string): Record<string, unknown> | string | undefined => {
     try {
         const params: unknown = JSON.parse(text);
+        if (Array.isArray(params)) {
+            return 'Use a JSON object as the top-level value. Arrays are not allowed.';
+        }
         if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
             return params as Record<string, unknown>;
         }
     } catch {
-        return undefined;
+        return 'Syntax error: invalid JSON.';
     }
 
     return undefined;
