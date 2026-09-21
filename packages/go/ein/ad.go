@@ -120,8 +120,9 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
-		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
-		itemProps[ad.RestrictOutboundNTLM.String()] = nil
+		// Clear missing registry values from the node. RestrictSendingNtlmTraffic is the exception because
+		// Windows treats an unconfigured policy as Allow All.
+		itemProps[ad.RestrictOutboundNTLM.String()] = false
 		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
 		itemProps[ad.RequireSecuritySignature.String()] = nil
 		itemProps[ad.EnableSecuritySignature.String()] = nil

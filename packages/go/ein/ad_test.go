@@ -318,6 +318,79 @@ func TestConvertComputerToNode(t *testing.T) {
 	assert.Equal(t, true, result.PropertyMap[ad.SMBSigning.String()])
 }
 
+func TestConvertComputerToNode_RestrictOutboundNTLM(t *testing.T) {
+	var (
+		allowAll  uint = 0
+		auditAll  uint = 1
+		denyAll   uint = 2
+		testCases      = []struct {
+			name                         string
+			collected                    bool
+			restrictSendingNtlmTraffic   *uint
+			expectedRestrictOutboundNTLM bool
+			expectsProperty              bool
+		}{
+			{
+				name:                         "collected with policy not configured defaults to allow all",
+				collected:                    true,
+				expectedRestrictOutboundNTLM: false,
+				expectsProperty:              true,
+			},
+			{
+				name:                         "collected with allow all",
+				collected:                    true,
+				restrictSendingNtlmTraffic:   &allowAll,
+				expectedRestrictOutboundNTLM: false,
+				expectsProperty:              true,
+			},
+			{
+				name:                         "collected with audit all",
+				collected:                    true,
+				restrictSendingNtlmTraffic:   &auditAll,
+				expectedRestrictOutboundNTLM: false,
+				expectsProperty:              true,
+			},
+			{
+				name:                         "collected with deny all",
+				collected:                    true,
+				restrictSendingNtlmTraffic:   &denyAll,
+				expectedRestrictOutboundNTLM: true,
+				expectsProperty:              true,
+			},
+			{
+				name:            "not collected leaves policy unknown",
+				expectsProperty: false,
+			},
+		}
+	)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			computer := ein.Computer{
+				IngestBase: ein.IngestBase{
+					Properties: map[string]any{},
+				},
+				NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
+					APIResult: ein.APIResult{
+						Collected: testCase.collected,
+					},
+					Result: ein.NTLMRegistryInfo{
+						RestrictSendingNtlmTraffic: testCase.restrictSendingNtlmTraffic,
+					},
+				},
+			}
+
+			result := ein.ConvertComputerToNode(computer, time.Now())
+			restrictOutboundNTLM, hasProperty := result.PropertyMap[ad.RestrictOutboundNTLM.String()]
+
+			assert.Equal(t, testCase.expectsProperty, hasProperty)
+			if testCase.expectsProperty {
+				assert.Equal(t, testCase.expectedRestrictOutboundNTLM, restrictOutboundNTLM)
+			}
+		})
+	}
+}
+
 func TestParseGroupMiscData(t *testing.T) {
 	t.Parallel()
 	type args struct {
