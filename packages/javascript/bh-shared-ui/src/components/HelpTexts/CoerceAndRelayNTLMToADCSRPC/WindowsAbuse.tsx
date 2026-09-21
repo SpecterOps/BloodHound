@@ -22,13 +22,21 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body1'>1. Start the Relay Server on Linux</Typography>
             <Typography variant='body2'>
-                The NTLM relay can be executed with tools like{' '}
-                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Kevin-Robertson/Inveigh'>
-                    Inveigh
+                There is currently no publicly available Windows tool that supports relaying NTLM authentication to an
+                AD CS RPC enrollment endpoint. Start the relay server on a Linux host using{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
+                    ntlmrelayx.py
                 </Link>
-                , targeting the RPC endpoint of the enterprise CA server.
+                . To relay to the enterprise CA via RPC and enroll a certificate, specify the RPC endpoint as the target
+                and use the following arguments:
+            </Typography>
+            <Typography component={'pre'}>
+                {'-t rpc://<CA_IP> -rpc-mode ICPR -icpr-ca-name <CA_NAME> -smb2support'}
             </Typography>
             <Typography variant='body1'>2. Coerce the Target Computer</Typography>
             <Typography variant='body2' component='div'>

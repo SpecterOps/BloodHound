@@ -52,10 +52,6 @@ const References: FC = () => {
                 Relay Your Heart Away: An OPSEC-Conscious Approach to 445 Takeover
             </Link>
             <br />
-            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Kevin-Robertson/Inveigh'>
-                Inveigh
-            </Link>
-            <br />
             <Link
                 target='_blank'
                 rel='noopener noreferrer'
