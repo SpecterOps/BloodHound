@@ -75,10 +75,7 @@ describe('Glyph Select Dialog', () => {
         expect(clearSelectionButton).not.toHaveClass('bg-primary');
         expect(clearSelectionButton.style.getPropertyValue('--icon-button-icon-size')).toBe('64px');
 
-        const selectedIconCard = clearSelectionButton.querySelector('[aria-label="Clear Selection"]');
-
-        expect(selectedIconCard).not.toBeNull();
-        await user.hover(selectedIconCard!);
+        await user.hover(clearSelectionButton);
 
         const tooltip = await screen.findByRole('tooltip');
         expect(tooltip).toHaveTextContent('Clear Selection');

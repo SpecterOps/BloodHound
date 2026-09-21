@@ -32,7 +32,57 @@ describe('IconButton', () => {
         await user.hover(container.querySelector('svg') as SVGSVGElement);
 
         expect((await screen.findByRole('tooltip')).textContent).toBe('More information');
-        expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe('More information');
+        expect(container.querySelector('svg')?.getAttribute('aria-label')).toBeNull();
+        expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('supports tooltip text that differs from the accessible label', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='Delete extension' tooltip='Built-in extensions cannot be deleted'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'Delete extension' }));
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Built-in extensions cannot be deleted');
+    });
+
+    it('uses the enabled button as the tooltip trigger on keyboard focus', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='Keyboard information'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'Keyboard information' });
+
+        await user.tab();
+
+        expect(document.activeElement).toBe(button);
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Keyboard information');
+    });
+
+    it('uses a non-disabled wrapper as the tooltip trigger for disabled buttons', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='Unavailable action' disabled>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'Unavailable action' });
+        const tooltipTrigger = button.parentElement;
+
+        expect((button as HTMLButtonElement).disabled).toBe(true);
+        expect(tooltipTrigger?.tagName).toBe('SPAN');
+        expect(tooltipTrigger?.getAttribute('data-state')).toBe('closed');
+
+        await user.hover(tooltipTrigger!);
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Unavailable action');
     });
 
     it('applies its styles to the button', () => {
@@ -67,14 +117,20 @@ describe('IconButton', () => {
         expect(expectedClasses.every((className) => button.classList.contains(className))).toBe(true);
     });
 
-    it('defaults to the primary Button variant', () => {
+    it('defaults to the transparent default variant', () => {
         render(
-            <IconButton aria-label='Primary action'>
+            <IconButton aria-label='Default action'>
                 <AppIcon.Info />
             </IconButton>
         );
 
-        expect(screen.getByRole('button', { name: 'Primary action' }).classList.contains('bg-primary')).toBe(true);
+        const button = screen.getByRole('button', { name: 'Default action' });
+
+        expect(button.classList.contains('hover:text-primary')).toBe(true);
+        expect(button.classList.contains('active:bg-transparent')).toBe(true);
+        expect(button.classList.contains('bg-primary')).toBe(false);
+        expect(button.classList.contains('bg-secondary-btn-fill')).toBe(false);
+        expect(button.classList.contains('shadow-outer-1')).toBe(false);
     });
 
     it('uses className and the icon currentColor for color', () => {

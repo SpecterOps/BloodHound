@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
@@ -25,15 +25,15 @@ const meta = {
     component: IconButton,
     tags: ['autodocs'],
     args: {
-        variant: 'primary',
+        variant: 'default',
         disabled: false,
         size: 16,
-        'aria-label': 'Show information',
-        children: <AppIcon.Info />,
+        'aria-label': 'Open Menu',
+        children: <FontAwesomeIcon icon={faEllipsisVertical} />,
     },
     argTypes: {
         variant: {
-            options: ['primary', 'secondary'],
+            options: ['default', 'primary', 'secondary'],
             control: 'select',
         },
         children: {
@@ -50,6 +50,14 @@ const meta = {
                 type: {
                     summary: 'string',
                 },
+            },
+        },
+        tooltip: {
+            description:
+                'Optional visible tooltip content. Defaults to the aria-label; override it only when additional context is needed.',
+            control: 'text',
+            table: {
+                category: 'Accessibility',
             },
         },
         size: {
@@ -93,7 +101,7 @@ Use the \`size\` prop to resize the icon and button together. Use \`className\` 
 
 ### Variants
 
-The \`primary\` and \`secondary\` variants use the same visual styles as their Button counterparts while preserving IconButton's icon-only shape and sizing. IconButton defaults to \`primary\`, just like Button. Select the variant directly instead of adding \`ButtonVariants\` through \`className\`.
+The transparent \`default\` variant is intended for standalone icon controls. The \`primary\` and \`secondary\` variants use the same visual styles as their Button counterparts while preserving IconButton's icon-only shape and sizing. Select the variant directly instead of adding \`ButtonVariants\` through \`className\`.
 
 \`\`\`tsx
 <IconButton variant='primary' aria-label='Show filter options'>
@@ -106,19 +114,20 @@ The \`primary\` and \`secondary\` variants use the same visual styles as their B
 Icons inherit the button's computed text color through \`currentColor\`. Prefer a variant when the icon should follow a standard button color. Use \`className\` for a local color override.
 
 \`\`\`tsx
-<IconButton aria-label='Show information' className='text-primary'>
-    <AppIcon.Info />
+<IconButton aria-label='Open Menu' className='text-primary'>
+    <FontAwesomeIcon icon={faEllipsisVertical} />
 </IconButton>
 \`\`\`
 
 ### Accessible label
 
 - Every IconButton requires an \`aria-label\` describing the action performed by the button.
-- IconButton forwards that label to its internal \`Icon\`, so the rendered icon retains the same accessible label and always displays it in a tooltip.
+- The icon is decorative because the button already provides its accessible name.
+- IconButton displays the \`aria-label\` in a tooltip by default. Pass \`tooltip\` only when the visible tooltip needs additional context, such as why an action is disabled.
 
 Do not use the icon's name as the label when it does not describe the action. For example, prefer \`"Show filter options"\` over \`"Filter icon"\`.
 
-Consumers only need to provide the label on IconButton; IconButton supplies it to the internal Icon for its accessible name and tooltip.`,
+Consumers normally only need to provide the label on IconButton; IconButton uses it as both the button's accessible name and its tooltip.`,
             },
         },
     },
@@ -127,12 +136,18 @@ Consumers only need to provide the label on IconButton; IconButton supplies it t
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
                 <IconButton {...iconButtonProps}>
-                    <AppIcon.Info />
+                    <FontAwesomeIcon icon={faEllipsisVertical} />
                 </IconButton>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
+                <div className='flex flex-col items-center gap-4'>
+                    <IconButton aria-label='Open Menu' size={18}>
+                        <FontAwesomeIcon icon={faEllipsisVertical} />
+                    </IconButton>
+                    Default
+                </div>
                 <div className='flex flex-col items-center gap-4'>
                     <IconButton aria-label='Delete item' size={18} variant='primary'>
                         <FontAwesomeIcon icon={faTrash} />

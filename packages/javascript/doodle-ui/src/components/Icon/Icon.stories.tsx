@@ -49,7 +49,7 @@ Every Icon requires an \`aria-label\`. Icon applies the label to its child so th
 </Icon>
 \`\`\`
 
-Use Icon for visual or informational icons. For an icon that performs an action, render the \`AppIcon\` inside \`IconButton\` instead. \`IconButton\` forwards its required \`aria-label\` to the internal Icon, which uses it for the tooltip.`,
+Use Icon for visual or informational icons. For an icon that performs an action, render the \`AppIcon\` inside \`IconButton\` instead. \`IconButton\` applies its required \`aria-label\` to the button and uses it for the tooltip.`,
             },
         },
     },

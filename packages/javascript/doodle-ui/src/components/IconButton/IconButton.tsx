@@ -18,8 +18,14 @@ import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/Button.styles';
-import { Icon, type IconProps } from '../Icon';
+import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
+
+const defaultIconButtonClasses = [
+    'hover:text-primary dark:hover:text-primary',
+    'active:bg-transparent active:text-secondary dark:active:text-secondary',
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary',
+];
 
 export const IconButtonVariants = cva(
     [
@@ -30,22 +36,24 @@ export const IconButtonVariants = cva(
     {
         variants: {
             variant: {
+                default: defaultIconButtonClasses,
                 primary: primaryClasses,
                 secondary: secondaryClasses,
             },
         },
         defaultVariants: {
-            variant: 'primary',
+            variant: 'default',
         },
     }
 );
 
-export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className'> {
-    variant?: 'primary' | 'secondary';
+export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className' | 'render'> {
+    variant?: 'default' | 'primary' | 'secondary';
     className?: BaseUIButton.Props['className'];
     'aria-label': string;
-    children: IconProps['children'];
+    children: React.ReactElement;
     size?: number;
+    tooltip?: React.ReactNode;
 }
 
 type IconButtonStyle = React.CSSProperties & {
@@ -54,19 +62,24 @@ type IconButtonStyle = React.CSSProperties & {
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
     {
-        variant = 'primary',
+        variant = 'default',
         'aria-label': ariaLabel,
         children,
         className,
         disabled = false,
         size = 16,
+        tooltip = ariaLabel,
         ...props
     },
     ref
 ) {
-    return (
+    const decorativeIcon = React.cloneElement(children, {
+        'aria-hidden': true,
+    } as React.HTMLAttributes<HTMLElement>);
+    const renderButton = (render?: BaseUIButton.Props['render']) => (
         <BaseUIButton
             {...props}
+            render={render}
             ref={ref}
             aria-label={ariaLabel}
             disabled={disabled}
@@ -79,12 +92,19 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     '--icon-button-icon-size': `${size}px`,
                 }) as IconButtonStyle
             }>
-            <Icon
-                aria-label={ariaLabel}
-                className='size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>svg]:size-full'>
-                {children}
-            </Icon>
+            <span className='inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>svg]:size-full'>
+                {decorativeIcon}
+            </span>
         </BaseUIButton>
+    );
+
+    return (
+        <Tooltip
+            tooltip={tooltip}
+            contentProps={{ side: 'bottom', align: 'start' }}
+            renderTrigger={disabled ? undefined : renderButton}>
+            {disabled ? <span className='inline-flex'>{renderButton()}</span> : undefined}
+        </Tooltip>
     );
 });
 

@@ -62,6 +62,7 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 ref={ref}
                 sideOffset={sideOffset}
                 className={cn(
+                    'TooltipContent',
                     'text-main rounded-md border dark:border-0 bg-neutral-light-2 dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-md',
                     'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
                     'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
@@ -78,6 +79,7 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 interface TooltipProps extends React.PropsWithChildren {
     tooltip: string | React.ReactNode;
+    renderTrigger?: (trigger: React.ReactElement<TriggerProps>) => React.ReactElement;
     open?: RootProps['open'];
     defaultOpen?: RootProps['defaultOpen'];
     onOpenChange?: RootProps['onOpenChange'];
@@ -91,6 +93,7 @@ interface TooltipProps extends React.PropsWithChildren {
 const Tooltip: React.FC<TooltipProps> = (props) => {
     const {
         tooltip,
+        renderTrigger,
         open,
         defaultOpen,
         onOpenChange,
@@ -100,7 +103,20 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         contentWidth,
         contentProps = {},
     } = props;
-    const defaultTriggerLabel = !props.children && typeof tooltip === 'string' ? tooltip : undefined;
+    const defaultTriggerLabel = !props.children && !renderTrigger
+        ? typeof tooltip === 'string'
+            ? tooltip
+            : 'Show more information'
+        : undefined;
+    const trigger = renderTrigger ? (
+        <TooltipTrigger {...triggerProps} asChild={false} />
+    ) : (
+        <TooltipTrigger
+            children={props.children}
+            aria-label={triggerProps['aria-label'] ?? defaultTriggerLabel}
+            {...triggerProps}
+        />
+    );
 
     return (
         <TooltipProvider>
@@ -110,11 +126,7 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
                 onOpenChange={onOpenChange}
                 delayDuration={delayDuration}
                 {...rootProps}>
-                <TooltipTrigger
-                    children={props.children}
-                    aria-label={triggerProps['aria-label'] ?? defaultTriggerLabel}
-                    {...triggerProps}
-                />
+                {renderTrigger ? renderTrigger(trigger) : trigger}
                 <TooltipPortal>
                     <TooltipContent contentWidth={contentWidth} {...contentProps}>
                         {tooltip}
