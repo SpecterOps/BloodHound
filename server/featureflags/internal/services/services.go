@@ -36,13 +36,13 @@ const (
 	FeatureAlerts                     = "alerts"
 	FeatureFindingsPrioritizationV0   = appcfg.FeatureFindingsPrioritizationV0
 	FeatureArtifactExpirationCleanup  = "artifact_expiration_cleanup"
-	FeatureZoneNode                   = "zone_node"
+	FeatureZoneNode                   = appcfg.FeatureZoneNode
 )
 
 // Request source values used by the feature flags slice.
 const (
-	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
-	ZoneNodeFlagRequestSource       = "zone-node-feature-flag-toggle"
+	PrioritizationFlagRequestSource = appcfg.PrioritizationFlagRequestSource
+	ZoneNodeFlagRequestSource       = appcfg.ZoneNodeFlagRequestSource
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
