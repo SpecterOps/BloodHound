@@ -22,98 +22,101 @@ const References: FC = () => {
         <Box className='overflow-x-auto'>
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://blog.compass-security.com/2022/11/relaying-to-ad-certificate-services-over-rpc/'>
                 Relaying to AD Certificate Services over RPC
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://heartburn.dev/exploiting-active-directory-certificate-services-esc11-walkthrough/'>
                 Exploiting Active Directory Certificate Services - ESC11 Walkthrough
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://en.hackndo.com/ntlm-relay/'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://en.hackndo.com/ntlm-relay/'>
                 Hackndo: NTLM relay
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://learn.microsoft.com/en-us/windows-server/security/kerberos/ntlm-overview'>
                 Microsoft: NTLM Overview
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.specterops.io/relay-your-heart-away-an-opsec-conscious-approach-to-445-takeover-1c9b4666c8ac'>
                 Relay Your Heart Away: An OPSEC-Conscious Approach to 445 Takeover
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Inveigh'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Kevin-Robertson/Inveigh'>
                 Inveigh
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                 Windows Coerced Authentication Methods
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/topotam/PetitPotam'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
                 PetitPotam
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/leechristensen/SpoolSample'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/leechristensen/SpoolSample'>
                 SpoolSample
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
                 Rubeus
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/ly4k/Certipy'>
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/ly4k/Certipy'>
                 Certipy
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://www.guidepointsecurity.com/blog/beyond-the-basics-exploring-uncommon-ntlm-relay-attack-techniques/'>
                 Beyond the Basics: Exploring Uncommon NTLM Relay Attack Techniques
             </Link>
             <br />
-            <Link target='_blank' rel='noopener' href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
                 printerbug.py
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://trustedsec.com/blog/a-comprehensive-guide-on-relaying-anno-2022'>
                 I'm bringing relaying back: A comprehensive guide on relaying anno 2022
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
                 ntlmrelayx.py
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
                 Detecting NTLM Relay Attacks
             </Link>
             <br />
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 Certified Pre-Owned: Abusing Active Directory Certificate Services
             </Link>

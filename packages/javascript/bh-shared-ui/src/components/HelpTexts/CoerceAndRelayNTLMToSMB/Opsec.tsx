@@ -20,19 +20,17 @@ import { FC } from 'react';
 
 const Opsec: FC = () => {
     return (
-        <>
-            <Typography variant='body2'>
-                NTLM relayed authentications can be detected by login events where the IP address does not match the
-                computer’s actual IP address. This detection technique is described in the blog post:{' '}
-                <Link
-                    target='_blank'
-                    rel='noopener'
-                    href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
-                    Detecting NTLM Relay Attacks
-                </Link>
-                .
-            </Typography>
-        </>
+        <Typography variant='body2'>
+            NTLM relayed authentications can be detected by login events where the IP address does not match the
+            computer’s actual IP address. This detection technique is described in the blog post:{' '}
+            <Link
+                target='_blank'
+                rel='noopener noreferrer'
+                href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
+                Detecting NTLM Relay Attacks
+            </Link>
+            .
+        </Typography>
     );
 };
 

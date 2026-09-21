@@ -14,27 +14,50 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const LinuxAbuse: FC = () => {
     return (
         <>
-            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body2'>
                 The NTLM relay can be executed with{' '}
-                <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>.
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
+                    ntlmrelayx.py
+                </Link>
+                .
             </Typography>
 
-            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body1'>2. Coerce the Target Computer</Typography>
+            <Typography variant='body2' component='div'>
                 Several coercion methods are documented here:{' '}
-                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
-                </a>
+                </Link>
                 . Examples of tools include:
-                <a href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>printerbug.py</a>
-                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
+                <ul style={{ paddingLeft: '1.5em' }}>
+                    <li>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
+                            printerbug.py
+                        </Link>
+                    </li>
+                    <li>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
+                            PetitPotam
+                        </Link>
+                    </li>
+                </ul>
             </Typography>
         </>
     );

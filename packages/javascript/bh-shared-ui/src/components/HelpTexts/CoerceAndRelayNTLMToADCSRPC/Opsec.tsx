@@ -28,14 +28,14 @@ const Opsec: FC = () => {
                 computer's actual IP address. This detection technique is described in the blog post:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
                     Detecting NTLM Relay Attacks
                 </Link>
                 .
             </Typography>
 
-            <Typography variant={'body2'}>
+            <Typography variant='body2'>
                 <b>Detection of Certificate Usage</b>
                 <br />
                 Authentication using the obtained certificate is another detection opportunity. If Kerberos
@@ -46,7 +46,7 @@ const Opsec: FC = () => {
                 whitepaper:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                     Certified Pre-Owned
                 </Link>

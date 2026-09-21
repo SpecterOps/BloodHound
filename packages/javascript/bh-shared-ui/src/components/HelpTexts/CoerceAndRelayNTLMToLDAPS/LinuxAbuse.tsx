@@ -22,48 +22,53 @@ import CodeController from '../CodeController/CodeController';
 const LinuxAbuse: FC = () => {
     return (
         <>
-            <Typography variant={'body1'}>1. Start the Relay Server</Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body2'>
                 The NTLM relay can be executed with{' '}
-                <a href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>ntlmrelayx.py</a>. To
-                relay to LDAP and perform a Shadow Credentials attack against the target computer:
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
+                    ntlmrelayx.py
+                </Link>
+                . To relay to LDAP and perform a Shadow Credentials attack against the target computer:
                 <CodeController>
                     {'ntlmrelayx.py -t ldaps://<Domain Controller IP> --shadow-credentials'}
                 </CodeController>
             </Typography>
 
-            <Typography variant={'body1'}>2. Coerce the Target Computer</Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body1'>2. Coerce the Target Computer</Typography>
+            <Typography variant='body2' component='div'>
                 Several coercion methods are documented here:{' '}
                 <Link
                     target='_blank'
-                    rel='noopener'
+                    rel='noopener noreferrer'
                     href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
                 </Link>
                 . Examples of tools include:
-                <ul>
+                <ul style={{ paddingLeft: '1.5em' }}>
                     <li>
-                        <Link target='_blank' rel='noopener' href='https://github.com/p0dalirius/Coercer'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/p0dalirius/Coercer'>
                             Coercer.py
                         </Link>
                     </li>
                     <li>
                         <Link
                             target='_blank'
-                            rel='noopener'
+                            rel='noopener noreferrer'
                             href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
                             printerbug.py
                         </Link>
                     </li>
                     <li>
-                        <Link target='_blank' rel='noopener' href='https://github.com/topotam/PetitPotam'>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
                             PetitPotam
                         </Link>
                     </li>
                 </ul>
             </Typography>
-            <Typography variant={'body2'}>
+            <Typography variant='body2'>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
                 Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
             </Typography>

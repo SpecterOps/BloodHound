@@ -25,7 +25,7 @@ const Opsec: FC = () => {
             computer’s actual IP address. This detection technique is described in the blog post:{' '}
             <Link
                 target='_blank'
-                rel='noopener'
+                rel='noopener noreferrer'
                 href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
                 Detecting NTLM Relay Attacks
             </Link>
