@@ -79,7 +79,7 @@ func (s *FilterValidationError) Unwrap() error {
 // ParseFilterOperator validates a raw operator string and returns the corresponding FilterOperator.
 func ParseFilterOperator(raw string) (FilterOperator, error) {
 	switch operator := FilterOperator(raw); operator {
-	case GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, Equals, NotEquals, ApproximatelyEquals:
+	case GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, Equals, NotEquals, ApproximatelyEquals, IsNull, IsNotNull:
 		return operator, nil
 	default:
 		return "", fmt.Errorf("%w: unknown predicate %q", ErrMalformedFilter, raw)
