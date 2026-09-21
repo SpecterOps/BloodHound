@@ -40,6 +40,7 @@ const (
 	NotEquals           FilterOperator = "neq"
 	ApproximatelyEquals FilterOperator = "~eq"
 	IsNull              FilterOperator = "is_null"
+	IsNotNull           FilterOperator = "is_not_null"
 )
 
 // Validation sentinels classify why a set of query parameter filters failed validation. Callers should
