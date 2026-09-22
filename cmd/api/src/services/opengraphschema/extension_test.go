@@ -594,7 +594,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 								RemediationInput:     model.RemediationInput{},
 							},
 						},
-					}).Return(model.GraphExtensionUpsertResult{}, nil)
+					}).Return(model.GraphExtensionUpsertResult{ExtensionExisted: true}, nil)
 				},
 				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
@@ -54,6 +55,12 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 		}
 	}
 
+	slog.InfoContext(ctx,
+		"Validated OpenGraph extension",
+		slog.String("extension_name", openGraphExtension.ExtensionInput.Name),
+		slog.String("extension_version", openGraphExtension.ExtensionInput.Version),
+	)
+
 	if result, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
 		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
@@ -69,7 +76,58 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
 		return false, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
+
+	logExtensionUpsertCompletion(ctx, result)
 	return result.ExtensionExisted, nil
+}
+
+// logExtensionUpsertCompletion records the persisted reconciliation counts for a successful extension upsert.
+func logExtensionUpsertCompletion(ctx context.Context, result model.GraphExtensionUpsertResult) {
+	var extensionOperation string
+
+	if result.ExtensionExisted {
+		extensionOperation = "updated"
+	} else {
+		extensionOperation = "created"
+	}
+
+	slog.InfoContext(ctx,
+		"Completed OpenGraph extension upsert",
+		slog.Int64("extension_id", int64(result.Extension.ID)),
+		slog.String("extension_name", result.Extension.Name),
+		slog.String("extension_version", result.Extension.Version),
+		slog.String("extension_operation", extensionOperation),
+		slog.Group("node_kinds",
+			slog.Int("count_created", len(result.NodeKindsResult.Created)),
+			slog.Int("count_updated", len(result.NodeKindsResult.Updated)),
+			slog.Int("count_deleted", len(result.NodeKindsResult.Deleted)),
+		),
+		slog.Group("relationship_kinds",
+			slog.Int("count_created", len(result.RelationshipKindsResult.Created)),
+			slog.Int("count_updated", len(result.RelationshipKindsResult.Updated)),
+			slog.Int("count_deleted", len(result.RelationshipKindsResult.Deleted)),
+		),
+		slog.Group("kind_info",
+			slog.Int("count_created", len(result.KindInfosResult.Created)),
+			slog.Int("count_updated", len(result.KindInfosResult.Updated)),
+			slog.Int("count_deleted", len(result.KindInfosResult.Deleted)),
+		),
+		slog.Group("environments",
+			slog.Int("count_created", len(result.EnvironmentsResult.Created)),
+			slog.Int("count_updated", len(result.EnvironmentsResult.Updated)),
+			slog.Int("count_deleted", len(result.EnvironmentsResult.Deleted)),
+		),
+		slog.Group("relationship_findings",
+			slog.Int("count_created", len(result.RelationshipFindingsResult.Created)),
+			slog.Int("count_updated", len(result.RelationshipFindingsResult.Updated)),
+			slog.Int("count_deleted", len(result.RelationshipFindingsResult.Deleted)),
+		),
+		slog.Group("saved_queries",
+			slog.Int("count_created", len(result.SavedQueriesResult.Created)),
+			slog.Int("count_updated", len(result.SavedQueriesResult.Updated)),
+			slog.Int("count_deleted", len(result.SavedQueriesResult.Deleted)),
+		),
+	)
 }
 
 // validateKindInfoMarkdown runs markdown safety validation over each kind-info entry's content.
