@@ -659,8 +659,8 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	ruleIds := make(map[string]struct{}, len(s))
 
 	for _, rule := range s {
-		if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found || strings.TrimSpace(ruleKey) == "" {
-			return fmt.Errorf("privilege zone rule requires a 'key' value prepended with the extension's namespace")
+		if strings.TrimSpace(rule.ExtensionRuleId) == "" {
+			return fmt.Errorf("privilege zone rule requires a 'key' value")
 		} else if strings.TrimSpace(rule.Name) == "" {
 			return fmt.Errorf("privilege zone rule name is required")
 		} else if _, ok := ruleNames[rule.Name]; ok {
@@ -1038,7 +1038,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			}
 
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
-				ExtensionRuleId: fmt.Sprintf("%s_%s", s.GraphSchemaExtension.Namespace, rulePayload.RuleKey),
+				ExtensionRuleId: rulePayload.RuleKey,
 				Name:            rulePayload.Name,
 				Description:     rulePayload.Description,
 				Seeds:           selectorSeeds,
