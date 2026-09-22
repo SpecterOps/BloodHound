@@ -191,12 +191,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			return middleware.DefaultRateLimitMiddleware(connections.RDMS)
 		}, func() error {
 			modules.Register(modules.Deps{
-				Router: &routerInst,
-				Pool:   connections.RDMS.Pool(),
-				Graph:  connections.Graph,
-				RateLimitMiddleware: func() mux.MiddlewareFunc {
-					return middleware.DefaultRateLimitMiddleware(connections.RDMS)
-				},
+				Router:  &routerInst,
+				Pool:    connections.RDMS.Pool(),
+				Graph:   connections.Graph,
 				DogTags: dogtagsService,
 			})
 			return nil
