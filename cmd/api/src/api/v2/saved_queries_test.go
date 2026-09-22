@@ -709,6 +709,47 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	assert.JSONEq(t, `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`, responseBodyWithDefaultTimestamp)
 }
 
+func TestResources_UpdateSavedQuery_AdminCantModifyExtensionQuery(t *testing.T) {
+	// Setup
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.NewV4()
+	require.NoError(t, err)
+
+	extensionId := int32(5)
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: uuid2.Nil.String(), SchemaExtensionID: &extensionId}, nil)
+
+	var payload any
+
+	// context owner is an admin
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), must.MarshalJSONReader(payload))
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	// Act
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, req)
+
+	// Assert
+	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"extension query cannot be modified"}]}`, responseBodyWithDefaultTimestamp)
+
+}
+
 func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 	// Setup
 	var (
@@ -1316,6 +1357,43 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, response.Code)
 	assert.JSONEq(t, `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":""}`, responseBodyWithDefaultTimestamp)
+}
+
+func TestResources_DeleteSavedQuery_AdminCantModifyExtensionQuery(t *testing.T) {
+	// Setup
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.NoError(t, err)
+
+	endpoint := "/api/v2/saved-queries/%s"
+	savedQueryId := "1"
+
+	extensionId := int32(5)
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: uuid2.Nil.String(), SchemaExtensionID: &extensionId}, nil)
+
+	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	handler := http.HandlerFunc(resources.DeleteSavedQuery)
+
+	// Act
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, req)
+
+	// Assert
+	responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+	assert.JSONEq(t, `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"extension query cannot be deleted"}]}`, responseBodyWithDefaultTimestamp)
 }
 
 func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
