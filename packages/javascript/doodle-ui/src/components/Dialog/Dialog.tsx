@@ -16,6 +16,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { TypographyVariants } from '../Typography';
 import { cn } from '../utils';
 
 /**
@@ -187,7 +188,11 @@ const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-    <DialogPrimitive.Title ref={ref} className={cn('flex text-left font-bold', className)} {...props} />
+    <DialogPrimitive.Title
+        ref={ref}
+        className={cn('flex text-left', TypographyVariants({ variant: 'h3' }), className)}
+        {...props}
+    />
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
