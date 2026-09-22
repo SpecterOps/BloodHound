@@ -175,6 +175,52 @@ func TestService_Outcome(t *testing.T) {
 	}
 }
 
+// TestService_RecordRejected verifies a rejected request writes a single failure
+// row with a freshly generated commit id, and that insert errors are propagated
+// so the caller can log them best-effort.
+func TestService_RecordRejected(t *testing.T) {
+	var sentinel = errors.New("insert failed")
+
+	tests := []struct {
+		name    string
+		dbErr   error
+		wantErr error
+	}{
+		{
+			name: "writes a failure row with a generated commit id",
+		},
+		{
+			name:    "propagates insert errors",
+			dbErr:   sentinel,
+			wantErr: sentinel,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+				captured     services.AuditRecord
+				entry        = sampleEntry()
+			)
+			captureInsert(databaseMock, &captured, tt.dbErr)
+
+			err := svc.RecordRejected(context.Background(), entry)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, services.StatusFailure, captured.Status)
+			assert.NotEqual(t, uuid.UUID{}, captured.CommitID, "a commit id should always be generated")
+			assert.Equal(t, entry.Action, captured.Action)
+			assert.Equal(t, services.SourceMiddleware, captured.Source)
+		})
+	}
+}
+
 // TestService_DefaultsUnknownActor verifies the service supplies the unknown
 // actor name when an entry carries no actor identity, centralizing the
 // unauthenticated edge case so callers do not each have to handle it.

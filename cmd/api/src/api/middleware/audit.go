@@ -38,6 +38,30 @@ type AuditService interface {
 	Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
 	Success(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
 	Failure(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
+	RecordRejected(ctx context.Context, entry audit.Entry) error
+}
+
+// auditStateKey is the unexported context key under which the pre-auth outer
+// stage stores the shared auditState so the inner stage can flag that it took
+// ownership of auditing the request.
+type auditStateKey struct{}
+
+// auditState is shared between the pre-auth outer stage and the post-auth inner
+// stage. The inner stage sets written once it commits to auditing a request so
+// the outer stage does not also write a rejection row for the same request.
+type auditState struct {
+	written bool
+}
+
+// withAuditState returns a context carrying the supplied auditState.
+func withAuditState(ctx context.Context, state *auditState) context.Context {
+	return context.WithValue(ctx, auditStateKey{}, state)
+}
+
+// auditStateFrom returns the auditState carried by ctx, if any.
+func auditStateFrom(ctx context.Context) (*auditState, bool) {
+	state, ok := ctx.Value(auditStateKey{}).(*auditState)
+	return state, ok
 }
 
 // AuditMiddleware records the intent/success/failure lifecycle of every API
@@ -54,6 +78,71 @@ func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, isExclude
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 			auditHandler(auditService, muxRouter, isExcluded, next, response, request)
 		})
+	}
+}
+
+// PreAuthAuditMiddleware is the thin outer stage that records requests rejected
+// before the post-auth AuditMiddleware runs (most importantly failed
+// authentication). It injects a shared auditState, and after the chain returns
+// writes a single best-effort failure row only when the inner stage never took
+// ownership (state.written is false) and the response was a 401 or 400. It must
+// be registered so it nests outside AuthMiddleware. Route templates for which
+// isExcluded returns true are skipped; a nil isExcluded audits every matched
+// route.
+func PreAuthAuditMiddleware(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool) mux.MiddlewareFunc {
+	if isExcluded == nil {
+		isExcluded = func(string) bool { return false }
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			preAuthAuditHandler(auditService, muxRouter, isExcluded, next, response, request)
+		})
+	}
+}
+
+func preAuthAuditHandler(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx           = request.Context()
+		routeTemplate = routeTemplateFor(muxRouter, request)
+	)
+
+	// Skip routes we cannot name and routes opted out at registration (e.g. /health).
+	if routeTemplate == unmatchedRouteLabel || isExcluded(routeTemplate) {
+		next.ServeHTTP(response, request)
+		return
+	}
+
+	var (
+		state    = &auditState{}
+		recorder = &responseRecorder{delegate: response}
+	)
+	request = request.WithContext(withAuditState(ctx, state))
+
+	next.ServeHTTP(recorder, request)
+
+	// The inner stage audited this request; nothing more to do here.
+	if state.written {
+		return
+	}
+
+	// Only pre-auth rejections are recorded here: a 401 (failed authentication)
+	// or a 400 (a malformed request rejected before auth). Other statuses either
+	// belong to the inner stage (which already set state.written above) or are not
+	// the authentication-failure coverage this stage exists to provide.
+	if recorder.statusCode != http.StatusBadRequest && recorder.statusCode != http.StatusUnauthorized {
+		return
+	}
+
+	// Best-effort and detached from request cancellation so a client disconnect
+	// does not drop the rejection record. Failure to write is logged, never
+	// surfaced, so it cannot turn a rejection into a 500 or become a DoS lever.
+	outcomeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
+	defer cancel()
+
+	entry := buildAuditEntry(request, routeTemplate)
+	if err := auditService.RecordRejected(outcomeCtx, entry); err != nil {
+		slog.ErrorContext(outcomeCtx, "Failed to write audit rejection row", attr.Error(err))
 	}
 }
 
@@ -74,6 +163,13 @@ func auditHandler(auditService AuditService, muxRouter *mux.Router, isExcluded f
 	if routeTemplate == unmatchedRouteLabel || isExcluded(routeTemplate) {
 		next.ServeHTTP(response, request)
 		return
+	}
+
+	// Take ownership of auditing this request so the pre-auth outer stage does not
+	// also write a rejection row. Set before the intent write so even a failed
+	// intent (500) suppresses a duplicate outer write.
+	if state, ok := auditStateFrom(ctx); ok {
+		state.written = true
 	}
 
 	// Derived from the request context so a client disconnect cancels the write,

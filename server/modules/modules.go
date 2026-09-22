@@ -88,14 +88,21 @@ func Register(deps Deps) Services {
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
 
-	// Audit middleware records the intent/success/failure lifecycle of every
-	// request. It is attached post-routing so the authenticated actor set by the
-	// auth middleware is available on the request context. Routes opt out of
-	// auditing at their own registration site via Route.ExcludeFromAudit (e.g. the
-	// health check), which the middleware consults through IsAuditExcluded so no
-	// route strings are hardcoded here. The Maintainer is returned so the
-	// entrypoint can hand it to the GC daemon to manage the audit_logs partitions.
+	// Audit middleware runs in two stages. The post-routing inner stage records
+	// the intent/success/failure lifecycle of every request that passes
+	// authentication; it is attached post-routing so the authenticated actor set
+	// by the auth middleware is available on the request context. The pre-routing
+	// outer stage nests outside the auth middleware and records a single
+	// best-effort failure row for requests rejected before the inner stage runs
+	// (most importantly failed authentication), which the inner stage would
+	// otherwise never see. A shared context flag prevents the two stages from
+	// double-writing. Routes opt out of auditing at their own registration site via
+	// Route.ExcludeFromAudit (e.g. the health check), which both stages consult
+	// through IsAuditExcluded so no route strings are hardcoded here. The
+	// Maintainer is returned so the entrypoint can hand it to the GC daemon to
+	// manage the audit_logs partitions.
 	auditService, auditMaintainer := audit.Register(deps.Pool)
+	deps.Router.UsePrerouting(middleware.PreAuthAuditMiddleware(auditService, deps.Router.MuxRouter(), deps.Router.IsAuditExcluded))
 	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditService, deps.Router.MuxRouter(), deps.Router.IsAuditExcluded))
 
 	return Services{AuditMaintainer: auditMaintainer}

@@ -160,6 +160,23 @@ func (s *Service) Failure(ctx context.Context, commitID uuid.UUID, entry Entry) 
 	return s.db.InsertAuditLog(ctx, s.toRecord(entry, commitID, StatusFailure))
 }
 
+// RecordRejected writes a single failure row for a request rejected before it
+// ever executed (e.g. failed authentication). Unlike the intent/outcome pair,
+// there is no prior intent row to link to, so a fresh commit id is generated
+// here. Callers use this best-effort so a write failure never masks the original
+// rejection.
+func (s *Service) RecordRejected(ctx context.Context, entry Entry) error {
+	var (
+		commitID uuid.UUID
+		err      error
+	)
+	commitID, err = uuid.NewV4()
+	if err != nil {
+		return fmt.Errorf("generating commit id: %w", err)
+	}
+	return s.db.InsertAuditLog(ctx, s.toRecord(entry, commitID, StatusFailure))
+}
+
 func (s *Service) toRecord(entry Entry, commitID uuid.UUID, status Status) AuditRecord {
 	var actorName = entry.ActorName
 

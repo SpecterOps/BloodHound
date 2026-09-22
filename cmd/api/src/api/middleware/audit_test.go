@@ -41,13 +41,20 @@ import (
 type mockAuditService struct {
 	commitID uuid.UUID
 
-	intentErr  error
-	successErr error
-	failureErr error
+	intentErr   error
+	successErr  error
+	failureErr  error
+	rejectedErr error
 
-	intentEntries  []audit.Entry
-	successCommits []uuid.UUID
-	failureCommits []uuid.UUID
+	intentEntries   []audit.Entry
+	successCommits  []uuid.UUID
+	failureCommits  []uuid.UUID
+	rejectedEntries []audit.Entry
+
+	// rejectedCtxErr captures ctx.Err() at the time the rejection write was
+	// invoked so tests can assert the write is not tied to the request's
+	// cancellation.
+	rejectedCtxErr error
 
 	// successCtxErr/failureCtxErr capture ctx.Err() at the time the outcome write
 	// was invoked so tests can assert the write is not tied to the request's
@@ -80,6 +87,12 @@ func (s *mockAuditService) Failure(ctx context.Context, commitID uuid.UUID, _ au
 	s.failureCommits = append(s.failureCommits, commitID)
 	s.failureCtxErr = ctx.Err()
 	return s.failureErr
+}
+
+func (s *mockAuditService) RecordRejected(ctx context.Context, entry audit.Entry) error {
+	s.rejectedEntries = append(s.rejectedEntries, entry)
+	s.rejectedCtxErr = ctx.Err()
+	return s.rejectedErr
 }
 
 const (
@@ -373,4 +386,181 @@ func TestAuditMiddleware_UnauthenticatedActorEmpty(t *testing.T) {
 	require.Empty(t, entry.ActorName, "middleware leaves the actor empty; the service applies the unknown default")
 	require.Empty(t, entry.ActorEmail)
 	require.Equal(t, testRequestID, entry.RequestID)
+}
+
+// authRejectMiddleware stands in for AuthMiddleware rejecting a request before it
+// reaches the inner AuditMiddleware: it writes the supplied status and does not
+// call next, so the inner stage never runs.
+func authRejectMiddleware(status int) mux.MiddlewareFunc {
+	return func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+			response.WriteHeader(status)
+		})
+	}
+}
+
+// newPreAuthChain builds the two-stage chain as wired in production: the pre-auth
+// outer stage wraps the mux, and the inner AuditMiddleware is attached inside the
+// mux (post-routing). When authRejectStatus is non-zero an auth stub rejects the
+// request before the inner stage runs; otherwise the registered handler runs and
+// returns handlerStatus.
+func newPreAuthChain(auditService middleware.AuditService, isExcluded func(routeTemplate string) bool, authRejectStatus, handlerStatus int) http.Handler {
+	router := mux.NewRouter()
+	if authRejectStatus != 0 {
+		router.Use(authRejectMiddleware(authRejectStatus))
+	}
+	router.Use(middleware.AuditMiddleware(auditService, router, isExcluded))
+	router.HandleFunc(testRoute, func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(handlerStatus)
+	})
+	return middleware.PreAuthAuditMiddleware(auditService, router, isExcluded)(router)
+}
+
+// newUnauthedRequest builds a request targeting path with only a request id in
+// the BloodHound context (no authenticated actor), mirroring a request that fails
+// authentication.
+func newUnauthedRequest(method, path string) *http.Request {
+	request := httptest.NewRequest(method, path, nil)
+	return request.WithContext(bhctx.Set(request.Context(), &bhctx.Context{RequestID: testRequestID}))
+}
+
+// TestPreAuthAuditMiddleware_AuthFailureRecordsRejection covers the core reason
+// the outer stage exists: a request rejected by auth before the inner stage runs
+// produces exactly one best-effort rejection row attributed by request id and
+// source IP, with the actor left empty.
+func TestPreAuthAuditMiddleware_AuthFailureRecordsRejection(t *testing.T) {
+	var (
+		mock     = &mockAuditService{}
+		chain    = newPreAuthChain(mock, nil, http.StatusUnauthorized, http.StatusOK)
+		recorder = httptest.NewRecorder()
+	)
+
+	chain.ServeHTTP(recorder, newUnauthedRequest(http.MethodPost, "/api/v2/things/abc"))
+
+	require.Equal(t, http.StatusUnauthorized, recorder.Code)
+
+	// The inner stage never ran, so only the outer rejection row is written.
+	require.Empty(t, mock.intentEntries)
+	require.Empty(t, mock.successCommits)
+	require.Empty(t, mock.failureCommits)
+	require.Len(t, mock.rejectedEntries, 1)
+
+	entry := mock.rejectedEntries[0]
+	require.Equal(t, http.MethodPost+testRoute, entry.Action)
+	require.Equal(t, testRequestID, entry.RequestID)
+	require.Empty(t, entry.ActorID)
+	require.Empty(t, entry.ActorName, "middleware leaves the actor empty; the service applies the unknown default")
+	require.Empty(t, entry.ActorEmail)
+
+	// The rejection write is detached from request cancellation.
+	require.NoError(t, mock.rejectedCtxErr)
+}
+
+// TestPreAuthAuditMiddleware_HappyPathNoDoubleWrite verifies that when the inner
+// stage audits a request the outer stage does not also write a rejection row.
+func TestPreAuthAuditMiddleware_HappyPathNoDoubleWrite(t *testing.T) {
+	var (
+		mock     = &mockAuditService{commitID: uuid.FromStringOrNil(testCommitID)}
+		chain    = newPreAuthChain(mock, nil, 0, http.StatusOK)
+		recorder = httptest.NewRecorder()
+	)
+
+	chain.ServeHTTP(recorder, newAuditRequest(http.MethodPost))
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	// The inner stage took ownership: one intent + one success, no rejection row.
+	require.Len(t, mock.intentEntries, 1)
+	require.Len(t, mock.successCommits, 1)
+	require.Empty(t, mock.rejectedEntries, "the outer stage must not double-write when the inner stage audited the request")
+}
+
+// TestPreAuthAuditMiddleware_SkippedRoutes verifies the outer stage does not write
+// a rejection row for excluded or unmatched routes, even when the response is a
+// rejection.
+func TestPreAuthAuditMiddleware_SkippedRoutes(t *testing.T) {
+	tests := []struct {
+		name       string
+		isExcluded func(routeTemplate string) bool
+		path       string
+		wantStatus int
+	}{
+		{
+			name:       "excluded route is not audited",
+			isExcluded: func(routeTemplate string) bool { return routeTemplate == testRoute },
+			path:       "/api/v2/things/abc",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			// An unmatched route never reaches the auth stub (mux runs Use
+			// middleware only for matched routes), so mux returns its 404.
+			name:       "unmatched route is not audited",
+			isExcluded: nil,
+			path:       "/api/v2/does-not-match",
+			wantStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mock     = &mockAuditService{}
+				chain    = newPreAuthChain(mock, tt.isExcluded, http.StatusUnauthorized, http.StatusOK)
+				recorder = httptest.NewRecorder()
+			)
+
+			chain.ServeHTTP(recorder, newUnauthedRequest(http.MethodGet, tt.path))
+
+			require.Equal(t, tt.wantStatus, recorder.Code)
+			require.Empty(t, mock.rejectedEntries)
+			require.Empty(t, mock.intentEntries)
+		})
+	}
+}
+
+// TestPreAuthAuditMiddleware_OnlyRecordsAuthStatuses verifies the outer stage
+// records a rejection only for the pre-auth statuses it is scoped to (401 failed
+// authentication, 400 malformed request) and ignores other pre-inner rejections.
+func TestPreAuthAuditMiddleware_OnlyRecordsAuthStatuses(t *testing.T) {
+	tests := []struct {
+		name         string
+		rejectStatus int
+		wantRejected int
+	}{
+		{name: "401 unauthorized is recorded", rejectStatus: http.StatusUnauthorized, wantRejected: 1},
+		{name: "400 bad request is recorded", rejectStatus: http.StatusBadRequest, wantRejected: 1},
+		{name: "403 forbidden is not recorded", rejectStatus: http.StatusForbidden, wantRejected: 0},
+		{name: "500 internal error is not recorded", rejectStatus: http.StatusInternalServerError, wantRejected: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mock     = &mockAuditService{}
+				chain    = newPreAuthChain(mock, nil, tt.rejectStatus, http.StatusOK)
+				recorder = httptest.NewRecorder()
+			)
+
+			chain.ServeHTTP(recorder, newUnauthedRequest(http.MethodPost, "/api/v2/things/abc"))
+
+			require.Equal(t, tt.rejectStatus, recorder.Code)
+			require.Len(t, mock.rejectedEntries, tt.wantRejected)
+		})
+	}
+}
+
+// TestPreAuthAuditMiddleware_RejectionWriteErrorSwallowed verifies that a failing
+// rejection write is logged and swallowed, never altering the response the client
+// already received.
+func TestPreAuthAuditMiddleware_RejectionWriteErrorSwallowed(t *testing.T) {
+	var (
+		mock     = &mockAuditService{rejectedErr: errAudit}
+		chain    = newPreAuthChain(mock, nil, http.StatusUnauthorized, http.StatusOK)
+		recorder = httptest.NewRecorder()
+	)
+
+	chain.ServeHTTP(recorder, newUnauthedRequest(http.MethodPost, "/api/v2/things/abc"))
+
+	require.Equal(t, http.StatusUnauthorized, recorder.Code)
+	require.Len(t, mock.rejectedEntries, 1)
 }
