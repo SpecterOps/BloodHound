@@ -100,12 +100,12 @@ func (s *BloodhoundDB) pzRuleReconcileConfig(extensionID int32, tierZeroTagID in
 	toSelector := func(input model.PZRuleInput) model.AssetGroupTagSelector {
 		seeds := make([]model.SelectorSeed, 0, len(input.Seeds))
 		for _, seed := range input.Seeds {
-			seeds = append(seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
+			seeds = append(seeds, model.SelectorSeed{Type: seed.Type, Value: strings.TrimSpace(seed.Value)})
 		}
 
 		return model.AssetGroupTagSelector{
 			AssetGroupTagId: tierZeroTagID,
-			Name:            input.Name,
+			Name:            strings.TrimSpace(input.Name),
 			Description:     input.Description,
 			AutoCertify:     input.AutoCertify,
 			IsDefault:       true,

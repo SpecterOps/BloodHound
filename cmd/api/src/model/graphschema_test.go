@@ -36,6 +36,86 @@ func baseExtensionInput() ExtensionInput {
 	}
 }
 
+func TestPZRulesInputValidate(t *testing.T) {
+	validRule := PZRuleInput{
+		Name:        "Tier Zero Admins",
+		AutoCertify: SelectorAutoCertifyMethodAllMembers,
+		Seeds: []SelectorSeedInput{{
+			Type:  SelectorTypeCypher,
+			Value: "MATCH (n:User) RETURN n",
+		}},
+	}
+
+	testCases := []struct {
+		name          string
+		rules         PZRulesInput
+		errorContains string
+	}{
+		{
+			name:  "accepts a valid rule",
+			rules: PZRulesInput{validRule},
+		},
+		{
+			name: "rejects duplicate normalized names",
+			rules: PZRulesInput{
+				validRule,
+				{
+					Name:  " Tier Zero Admins ",
+					Seeds: []SelectorSeedInput{{Type: SelectorTypeObjectId, Value: "S-1-5-21"}},
+				},
+			},
+			errorContains: "duplicate privilege zone rule",
+		},
+		{
+			name: "rejects an invalid auto certification method",
+			rules: PZRulesInput{{
+				Name:        "Tier Zero Admins",
+				AutoCertify: SelectorAutoCertifyMethod(99),
+				Seeds:       []SelectorSeedInput{{Type: SelectorTypeObjectId, Value: "S-1-5-21"}},
+			}},
+			errorContains: "invalid auto certification method",
+		},
+		{
+			name: "rejects an invalid seed type",
+			rules: PZRulesInput{{
+				Name:  "Tier Zero Admins",
+				Seeds: []SelectorSeedInput{{Type: SelectorType(99), Value: "S-1-5-21"}},
+			}},
+			errorContains: "invalid seed type",
+		},
+		{
+			name: "rejects mixed seed types",
+			rules: PZRulesInput{{
+				Name: "Tier Zero Admins",
+				Seeds: []SelectorSeedInput{
+					{Type: SelectorTypeObjectId, Value: "S-1-5-21"},
+					{Type: SelectorTypeCypher, Value: "MATCH (n:User) RETURN n"},
+				},
+			}},
+			errorContains: "must use one seed type",
+		},
+		{
+			name: "rejects invalid Cypher",
+			rules: PZRulesInput{{
+				Name:  "Tier Zero Admins",
+				Seeds: []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "not valid Cypher"}},
+			}},
+			errorContains: "contains invalid Cypher",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := testCase.rules.Validate()
+			if testCase.errorContains == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, testCase.errorContains)
+			}
+		})
+	}
+}
+
 func Test_validateGraphExtension(t *testing.T) {
 	type args struct {
 		graphExtension GraphExtensionInput

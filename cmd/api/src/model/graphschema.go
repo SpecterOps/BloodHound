@@ -634,26 +634,44 @@ func (s GraphExtensionInput) Validate() error {
 	return nil
 }
 
-// Placeholder, may be more to consider here
 func (s PZRulesInput) Validate() error {
 	var ruleNames = make(map[string]any, len(s))
 
 	for _, rule := range s {
-		if strings.TrimSpace(rule.Name) == "" {
+		ruleName := strings.TrimSpace(rule.Name)
+		if ruleName == "" {
 			return errors.New("privilege zone rule name is required")
 		}
-		if _, ok := ruleNames[rule.Name]; ok {
-			return fmt.Errorf("duplicate privilege zone rule: %s", rule.Name)
+		if _, ok := ruleNames[ruleName]; ok {
+			return fmt.Errorf("duplicate privilege zone rule: %s", ruleName)
 		}
 		if len(rule.Seeds) == 0 {
-			return fmt.Errorf("privilege zone rule %s requires at least one seed", rule.Name)
+			return fmt.Errorf("privilege zone rule %s requires at least one seed", ruleName)
 		}
+		switch rule.AutoCertify {
+		case SelectorAutoCertifyMethodDisabled, SelectorAutoCertifyMethodAllMembers, SelectorAutoCertifyMethodSeedsOnly:
+		default:
+			return fmt.Errorf("privilege zone rule %s has invalid auto certification method %d", ruleName, rule.AutoCertify)
+		}
+
+		seedType := rule.Seeds[0].Type
+		if seedType != SelectorTypeObjectId && seedType != SelectorTypeCypher {
+			return fmt.Errorf("privilege zone rule %s has invalid seed type %d", ruleName, seedType)
+		}
+
 		for _, seed := range rule.Seeds {
-			if strings.TrimSpace(seed.Value) == "" {
-				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
+			seedValue := strings.TrimSpace(seed.Value)
+			if seed.Type != seedType {
+				return fmt.Errorf("privilege zone rule %s must use one seed type", ruleName)
+			} else if seedValue == "" {
+				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", ruleName)
+			} else if seed.Type == SelectorTypeCypher {
+				if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), seedValue); err != nil {
+					return fmt.Errorf("privilege zone rule %s contains invalid Cypher: %w", ruleName, err)
+				}
 			}
 		}
-		ruleNames[rule.Name] = struct{}{}
+		ruleNames[ruleName] = struct{}{}
 	}
 	return nil
 }
