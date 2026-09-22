@@ -624,12 +624,17 @@ func buildSelectorNode(primaryDisplayKinds graphschema.PrimaryDisplayKinds, node
 
 // SelectNodes - selects all nodes for a given selector and diffs previous db state for minimal db updates
 func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds graphschema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) []error {
+	return selectNodesWithFilter(ctx, db, graphDb, agtParameters, primaryDisplayKinds, selector, expansionMethod, nil)
+}
+
+func selectNodesWithFilter(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds graphschema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod, includeNode func(model.AssetGroupSelectorNode) bool) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
 		nodesToUpdate []model.AssetGroupSelectorNode
 		nodesToInsert []model.AssetGroupSelectorNode
 		errs          []error
+		selectedCount int
 	)
 
 	// 1. Grab the graph nodes
@@ -643,18 +648,22 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for id, node := range nodesWithSrcSet {
+			certified, certifiedBy := certificationForSelectedNode(selector, *node)
+			if oldNode, ok := oldSelectedNodesByNodeId[id]; ok {
+				certified, certifiedBy = certificationForSelectedNode(selector, *node, oldNode)
+			}
+
+			selectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
+			if includeNode != nil && !includeNode(selectorNode) {
+				continue
+			}
+			selectedCount++
 
 			// Missing, insert the record
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; !ok {
-				certified, certifiedBy := certificationForSelectedNode(selector, *node)
-				newSelectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
-
-				nodesToInsert = append(nodesToInsert, newSelectorNode)
+				nodesToInsert = append(nodesToInsert, selectorNode)
 			} else {
-				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties
-				certified, certifiedBy := certificationForSelectedNode(selector, *node, oldNode)
-				selectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
-
+				// Auto certify is enabled but this node hasn't been certified, certify it. Further - update any out of sync node properties.
 				if shouldUpdateSelectorNode(oldNode, selectorNode) {
 					nodesToUpdate = append(nodesToUpdate, selectorNode)
 				}
@@ -687,6 +696,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			"AGT: Completed selecting",
 			slog.String("selector", selector.Name),
 			slog.Int("count_total", len(nodesWithSrcSet)),
+			slog.Int("count_selected", selectedCount),
 			slog.Int("count_inserted", len(nodesToInsert)),
 			slog.Int("count_updated", len(nodesToUpdate)),
 			slog.Int("count_deleted", len(oldSelectedNodesByNodeId)),
@@ -703,10 +713,10 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 		return []error{err}
 	}
 
-	return selectAssetGroupNodesForTags(ctx, db, graphDb, tags)
+	return selectAssetGroupNodesForTags(ctx, db, graphDb, tags, nil)
 }
 
-func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, graphDb graph.Database, tags model.AssetGroupTags) []error {
+func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, graphDb graph.Database, tags model.AssetGroupTags, includeNode func(model.AssetGroupTag, model.AssetGroupSelectorNode) bool) []error {
 	defer measure.ContextMeasure(
 		ctx,
 		slog.LevelInfo,
@@ -737,11 +747,13 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 			sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
 			wg                  = sync.WaitGroup{}
 			expansionByTagId    = make(map[int]model.AssetGroupExpansionMethod)
+			tagByID             = make(map[int]model.AssetGroupTag)
 		)
 
 		// Build expansion map
 		for _, tag := range tags {
 			expansionByTagId[tag.ID] = tag.GetExpansionMethod()
+			tagByID[tag.ID] = tag
 		}
 
 		// Parallelize the selection of nodes
@@ -755,7 +767,15 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 					if selector, ok := channels.Receive(ctx, getCh); !ok {
 						return
 					} else {
-						if selectNodeErrors := SelectNodes(ctx, db, graphDb, agtParameters, primaryDisplayKinds, selector, expansionByTagId[selector.AssetGroupTagId]); len(selectNodeErrors) > 0 {
+						var selectorNodeFilter func(model.AssetGroupSelectorNode) bool
+						if includeNode != nil {
+							tag := tagByID[selector.AssetGroupTagId]
+							selectorNodeFilter = func(node model.AssetGroupSelectorNode) bool {
+								return includeNode(tag, node)
+							}
+						}
+
+						if selectNodeErrors := selectNodesWithFilter(ctx, db, graphDb, agtParameters, primaryDisplayKinds, selector, expansionByTagId[selector.AssetGroupTagId], selectorNodeFilter); len(selectNodeErrors) > 0 {
 							errs.Append(selectNodeErrors...)
 						}
 					}
@@ -1192,7 +1212,7 @@ func tagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 		if options == nil {
 			selectErrs = selectAssetGroupNodes(ctx, db, graphDb)
 		} else {
-			selectErrs = selectAssetGroupNodesForTags(ctx, db, graphDb, options.Tags)
+			selectErrs = selectAssetGroupNodesForTags(ctx, db, graphDb, options.Tags, options.IncludeNode)
 		}
 		if len(selectErrs) > 0 {
 			errs = append(errs, selectErrs...)

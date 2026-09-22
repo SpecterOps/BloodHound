@@ -768,6 +768,50 @@ func TestSelectNodes(t *testing.T) {
 		assert.NotContains(t, selectorNodes, unselectedNode.ID)
 	})
 
+	t.Run("filters selected nodes and deletes previously selected excluded nodes", func(t *testing.T) {
+		includedName := "select-nodes-filter-included"
+		excludedName := "select-nodes-filter-excluded"
+		includedNode := insertGraphNode(t, testCtx, graphDB, includedName, ad.User)
+		excludedNode := insertGraphNode(t, testCtx, graphDB, excludedName, ad.User)
+		selector := insertTagAndTagSelector(
+			t,
+			testCtx,
+			bhDB,
+			testActor,
+			"select nodes filter",
+			model.SelectorAutoCertifyMethodDisabled,
+			createSelectorSeed(t, includedNode),
+			createSelectorSeed(t, excludedNode),
+		)
+
+		insertSelectorNodes(t, testCtx, bhDB, buildSelectorNode(
+			primaryDisplayKinds,
+			nodeWithSource{Node: excludedNode, Source: model.AssetGroupSelectorNodeSourceSeed},
+			selector,
+			model.AssetGroupCertificationPending,
+			null.String{},
+		))
+
+		selectErrs := selectNodesWithFilter(
+			testCtx,
+			bhDB,
+			graphDB,
+			agtParameters,
+			primaryDisplayKinds,
+			selector,
+			model.AssetGroupExpansionMethodNone,
+			func(node model.AssetGroupSelectorNode) bool {
+				return node.NodeId == includedNode.ID
+			},
+		)
+		require.Empty(t, selectErrs)
+
+		selectorNodes := requireSelectorNodesById(t, testCtx, bhDB, selector.ID)
+		require.Len(t, selectorNodes, 1)
+		assert.Contains(t, selectorNodes, includedNode.ID)
+		assert.NotContains(t, selectorNodes, excludedNode.ID)
+	})
+
 	t.Run("deletes all old selected nodes when no seeds resolve", func(t *testing.T) {
 		name := "select-nodes-missing-seed-old"
 		oldNode := insertGraphNode(t, testCtx, graphDB, name, ad.User)
