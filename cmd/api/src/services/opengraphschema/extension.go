@@ -20,8 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -32,6 +35,20 @@ func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, o
 		err          error
 		schemaExists bool
 	)
+
+	if openGraphExtension.PZRulesInput != nil {
+		if tierManagementEnabled, featureFlagErr := s.featureFlag.IsEnabled(ctx, appcfg.FeatureTierManagement); featureFlagErr != nil {
+			slog.WarnContext(ctx, "Proceeding with extension privilege zone rules because tier management status could not be determined",
+				slog.String("extension_name", openGraphExtension.ExtensionInput.Name),
+				attr.Error(featureFlagErr),
+			)
+		} else if !tierManagementEnabled {
+			slog.WarnContext(ctx, "Skipping extension privilege zone rules because tier management is disabled",
+				slog.String("extension_name", openGraphExtension.ExtensionInput.Name),
+			)
+			openGraphExtension.PZRulesInput = nil
+		}
+	}
 
 	if err = openGraphExtension.Validate(); err != nil {
 		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
