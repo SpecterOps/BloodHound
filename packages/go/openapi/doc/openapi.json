@@ -7733,6 +7733,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
@@ -7827,7 +7830,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"pz_rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -26246,38 +26249,55 @@
             }
           },
           "pz_rules": {
-            "type": "object",
-            "description": "Optional privilege-zone rules component.",
-            "required": [
-              "rules"
-            ],
-            "properties": {
-              "rules": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "description": {
-                      "type": "string"
-                    },
-                    "auto_certify": {
-                      "type": "boolean"
-                    },
-                    "seeds": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "integer"
-                          },
-                          "value": {
-                            "type": "string"
-                          }
-                        }
+            "type": "array",
+            "description": "Declares the extension's desired privilege zones. Omitting this property or\nproviding an empty array removes existing privilege zones associated with the extension.\n",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "name",
+                "seeds"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "A stable identifier for reconciling rules between extension upserts."
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Whether the privilege zone rule is enabled. Defaults to true when omitted."
+                },
+                "allow_disable": {
+                  "type": "boolean",
+                  "description": "Whether users may disable the privilege zone rule. Defaults to true when omitted."
+                },
+                "seeds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "value"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "integer",
+                        "enum": [
+                          2
+                        ],
+                        "description": "The selector type. Privilege-zone rules only support Cypher (2)."
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "A valid Cypher query used to seed the privilege zone."
                       }
                     }
                   }
