@@ -22,19 +22,30 @@ put:
     content:
       application/json:
         schema:
-          $ref: './../schemas/model.privilege-zone-control-policy.yaml'
+          $ref: './../schemas/model.privilege-zone-control-policy-input.yaml'
   responses:
     200:
       description: Policy updated
       content:
         application/json:
-          schema: { type: object }
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: './../schemas/model.privilege-zone-control-policy.yaml'
     201:
       description: Policy created
       content:
         application/json:
-          schema: { type: object }
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: './../schemas/model.privilege-zone-control-policy.yaml'
     400: { $ref: './../responses/bad-request.yaml' }
     401: { $ref: './../responses/unauthorized.yaml' }
     403: { $ref: './../responses/forbidden.yaml' }
+    404: { $ref: './../responses/not-found.yaml' }
     500: { $ref: './../responses/internal-server-error.yaml' }

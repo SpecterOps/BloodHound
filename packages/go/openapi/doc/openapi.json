@@ -21070,6 +21070,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "type": "object",
@@ -21183,7 +21186,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-split-response"
+                    }
+                  }
                 }
               }
             }
@@ -21193,7 +21204,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-split-response"
+                    }
+                  }
                 }
               }
             }
@@ -21226,7 +21245,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/model.privilege-zone-control-policy"
+                "$ref": "#/components/schemas/model.privilege-zone-control-policy-input"
               }
             }
           }
@@ -21237,7 +21256,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-control-policy"
+                    }
+                  }
                 }
               }
             }
@@ -21247,7 +21274,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.privilege-zone-control-policy"
+                    }
+                  }
                 }
               }
             }
@@ -21260,6 +21295,9 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -21347,6 +21385,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
@@ -21407,6 +21448,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
@@ -21460,6 +21504,9 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [
+                    "data"
+                  ],
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/model.privilege-zone-exposure-job"
@@ -28534,6 +28581,106 @@
           },
           "platform": {
             "type": "string"
+          }
+        }
+      },
+      "model.privilege-zone-split-response": {
+        "type": "object",
+        "required": [
+          "plan"
+        ],
+        "properties": {
+          "plan": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "environment",
+                "template_id",
+                "template",
+                "name",
+                "zone_tier",
+                "exists"
+              ],
+              "properties": {
+                "environment": {
+                  "$ref": "#/components/schemas/model.privilege-zone-environment"
+                },
+                "template_id": {
+                  "type": "integer"
+                },
+                "template": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "zone_tier": {
+                  "type": "string",
+                  "enum": [
+                    "tier_zero",
+                    "tier_one"
+                  ]
+                },
+                "exists": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.privilege-zone"
+            }
+          }
+        }
+      },
+      "model.privilege-zone-control-policy-input": {
+        "type": "object",
+        "required": [
+          "name",
+          "enabled",
+          "source_selector",
+          "target_selector",
+          "constraints"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Omit or set to zero to create a policy; provide an existing ID to update it.",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "source_selector": {
+            "$ref": "#/components/schemas/model.privilege-zone-control-policy-selector"
+          },
+          "target_selector": {
+            "$ref": "#/components/schemas/model.privilege-zone-control-policy-selector"
+          },
+          "constraints": {
+            "type": "object",
+            "required": [
+              "environment",
+              "platform"
+            ],
+            "properties": {
+              "environment": {
+                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
+              },
+              "platform": {
+                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
+              }
+            }
           }
         }
       },

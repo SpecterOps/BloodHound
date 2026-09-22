@@ -31,6 +31,7 @@ get:
         application/json:
           schema:
             type: object
+            required: [data]
             properties:
               data:
                 $ref: './../schemas/model.privilege-zone-exposure-job.yaml'

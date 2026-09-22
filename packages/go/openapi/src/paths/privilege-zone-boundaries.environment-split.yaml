@@ -37,12 +37,22 @@ post:
       description: Dry-run plan
       content:
         application/json:
-          schema: { type: object }
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: './../schemas/model.privilege-zone-split-response.yaml'
     201:
       description: Zones created
       content:
         application/json:
-          schema: { type: object }
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: './../schemas/model.privilege-zone-split-response.yaml'
     400: { $ref: './../responses/bad-request.yaml' }
     401: { $ref: './../responses/unauthorized.yaml' }
     403: { $ref: './../responses/forbidden.yaml' }
