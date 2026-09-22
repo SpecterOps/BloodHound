@@ -276,7 +276,7 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 			})
 
 			updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.graphExtensionInput)
-			testCase.assert(t, testSuite, &setupData, updated, err)
+			testCase.assert(t, testSuite, &setupData, updated.ExtensionExisted, err)
 		})
 	}
 }
