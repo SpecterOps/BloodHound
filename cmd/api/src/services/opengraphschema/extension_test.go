@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	schemamocks "github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema/mocks"
 	"github.com/specterops/dawgs/graph"
@@ -46,21 +47,11 @@ func baseSimpleGraphExtensionInput() model.GraphExtensionInput {
 	}
 }
 
-type staticFeatureFlagReader struct {
-	enabled bool
-	err     error
-}
-
-func (s staticFeatureFlagReader) IsEnabled(_ context.Context, _ string) (bool, error) {
-	return s.enabled, s.err
-}
-
 func TestOpenGraphSchemaService_GetGraphSchemaExtensions(t *testing.T) {
 	t.Parallel()
 
 	type mocks struct {
-		mockRepository     *schemamocks.MockOpenGraphSchemaRepository
-		mockGraphDBKindRep *schemamocks.MockGraphDBKindRepository
+		mockRepository *schemamocks.MockOpenGraphSchemaRepository
 	}
 	type args struct {
 		ctx     context.Context
@@ -194,13 +185,12 @@ func TestOpenGraphSchemaService_GetGraphSchemaExtensions(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mocks{
-				mockRepository:     schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
-				mockGraphDBKindRep: schemamocks.NewMockGraphDBKindRepository(ctrl),
+				mockRepository: schemamocks.NewMockOpenGraphSchemaRepository(ctrl),
 			}
 
 			testCase.setupMocks(t, mocks)
 
-			service := opengraphschema.NewOpenGraphSchemaService(mocks.mockRepository, mocks.mockGraphDBKindRep, staticFeatureFlagReader{enabled: true})
+			service := opengraphschema.NewOpenGraphSchemaService(mocks.mockRepository, nil, nil)
 
 			extensions, count, err := service.GetGraphSchemaExtensions(
 				testCase.args.ctx,
@@ -230,11 +220,25 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 	type fields struct {
 		setupOpenGraphSchemaRepositoryMock func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository)
 		setupGraphDBKindsRepositoryMock    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository)
+		setupFeatureFlagReaderMock         func(t *testing.T, mock *schemamocks.MockfeatureFlagReader)
 	}
 	type args struct {
 		ctx            context.Context
 		graphExtension model.GraphExtensionInput
 	}
+	var (
+		featureFlagError          = errors.New("feature flag error")
+		graphExtensionWithPZRules = baseSimpleGraphExtensionInput()
+	)
+
+	graphExtensionWithPZRules.PZRulesInput = model.PZRulesInput{{
+		ExtensionRuleId: "DEFAULT_rule",
+		Name:            "Default Rule",
+		Seeds: []model.SelectorSeedInput{{
+			Type:  model.SelectorTypeCypher,
+			Value: "MATCH (n) RETURN n",
+		}},
+	}}
 
 	tests := []struct {
 		name        string
@@ -257,12 +261,47 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 			wantUpdated: false,
 		},
 		{
+			name: "fail - tier management feature flag error",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {},
+				setupGraphDBKindsRepositoryMock:    func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+				setupFeatureFlagReaderMock: func(t *testing.T, mock *schemamocks.MockfeatureFlagReader) {
+					mock.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureTierManagement).Return(false, featureFlagError)
+				},
+			},
+			args: args{
+				ctx:            context.Background(),
+				graphExtension: graphExtensionWithPZRules,
+			},
+			wantErr:     model.ErrFeatureFlag,
+			wantUpdated: false,
+		},
+		{
+			name: "success - skips PZ rules when tier management disabled",
+			fields: fields{
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, nil)
+				},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
+				},
+				setupFeatureFlagReaderMock: func(t *testing.T, mock *schemamocks.MockfeatureFlagReader) {
+					mock.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureTierManagement).Return(false, nil)
+				},
+			},
+			args: args{
+				ctx:            context.Background(),
+				graphExtension: graphExtensionWithPZRules,
+			},
+			wantUpdated: false,
+		},
+		{
 			name: "fail - UpsertOpenGraphExtension error",
 			fields: fields{
-				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{ExtensionExisted: false}, fmt.Errorf("test error"))
 				},
-				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
 				ctx:            context.Background(),
@@ -274,10 +313,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "fail - duplicate namespace", // duplicate namespaces are not caught during validation and will be returned as an error from UpsertOpenGraphExtension
 			fields: fields{
-				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, fmt.Errorf("%w: DEFAULT", model.ErrDuplicateGraphSchemaExtensionNamespace))
 				},
-				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {},
 			},
 			args: args{
 				ctx:            context.Background(),
@@ -289,10 +328,10 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "fail - graph kinds refresh error",
 			fields: fields{
-				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
-				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(fmt.Errorf("test error"))
 				},
 			},
@@ -306,7 +345,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "success - inserted",
 			fields: fields{
-				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
 							Name:        "Test extension",
@@ -357,7 +396,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						},
 					}).Return(model.GraphExtensionUpsertResult{}, nil)
 				},
-				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
 				},
 			},
@@ -554,7 +593,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 		{
 			name: "success - updated",
 			fields: fields{
-				func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
+				setupOpenGraphSchemaRepositoryMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaRepository) {
 					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), model.GraphExtensionInput{
 						ExtensionInput: model.ExtensionInput{
 							Name:        "Test extension",
@@ -605,7 +644,7 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 						},
 					}).Return(model.GraphExtensionUpsertResult{ExtensionExisted: true}, nil)
 				},
-				func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
+				setupGraphDBKindsRepositoryMock: func(t *testing.T, mock *schemamocks.MockGraphDBKindRepository) {
 					mock.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
 				},
 			},
@@ -674,45 +713,27 @@ func TestOpenGraphSchemaService_UpsertGraphSchemaExtension(t *testing.T) {
 
 				mockOpenGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(mockCtrl)
 				mockGraphDBKindsRepository    = schemamocks.NewMockGraphDBKindRepository(mockCtrl)
+				mockFeatureFlagReader         = schemamocks.NewMockfeatureFlagReader(mockCtrl)
 			)
 
 			defer mockCtrl.Finish()
 
 			tt.fields.setupOpenGraphSchemaRepositoryMock(t, mockOpenGraphSchemaRepository)
 			tt.fields.setupGraphDBKindsRepositoryMock(t, mockGraphDBKindsRepository)
+			if tt.fields.setupFeatureFlagReaderMock != nil {
+				tt.fields.setupFeatureFlagReaderMock(t, mockFeatureFlagReader)
+			}
 
-			o := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository, mockGraphDBKindsRepository, staticFeatureFlagReader{enabled: true})
+			o := opengraphschema.NewOpenGraphSchemaService(mockOpenGraphSchemaRepository, mockGraphDBKindsRepository, mockFeatureFlagReader)
 			updated, err := o.UpsertOpenGraphExtension(tt.args.ctx, tt.args.graphExtension)
+			assert.Equal(t, tt.wantUpdated, updated)
 			if tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error(), "UpsertOpenGraphExtension() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
-			if tt.wantUpdated != updated {
-				require.Fail(t, "expected graph schema to be updated")
-			}
 		})
 	}
-}
-
-func TestOpenGraphSchemaService_UpsertGraphSchemaExtension_SkipsPZRulesWhenTierManagementDisabled(t *testing.T) {
-	var (
-		ctrl                      = gomock.NewController(t)
-		openGraphSchemaRepository = schemamocks.NewMockOpenGraphSchemaRepository(ctrl)
-		graphDBKindRepository     = schemamocks.NewMockGraphDBKindRepository(ctrl)
-		graphExtension            = baseSimpleGraphExtensionInput()
-	)
-
-	graphExtension.PZRulesInput = model.PZRulesInput{{ExtensionRuleId: "DEFAULT_rule", Name: "Default Rule"}}
-	// PZRulesInput should be stripped in the DB call
-	openGraphSchemaRepository.EXPECT().UpsertOpenGraphExtension(gomock.Any(), baseSimpleGraphExtensionInput()).Return(model.GraphExtensionUpsertResult{}, nil)
-	graphDBKindRepository.EXPECT().RefreshKinds(gomock.Any()).Return(nil)
-
-	service := opengraphschema.NewOpenGraphSchemaService(openGraphSchemaRepository, graphDBKindRepository, staticFeatureFlagReader{enabled: false})
-	updated, err := service.UpsertOpenGraphExtension(context.Background(), graphExtension)
-
-	require.NoError(t, err)
-	assert.False(t, updated)
 }
 
 func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
@@ -847,7 +868,7 @@ func TestOpenGraphSchemaService_ListExtensions(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil, staticFeatureFlagReader{enabled: true})
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil, nil)
 
 			res, err := service.ListExtensions(context.Background())
 
@@ -938,7 +959,7 @@ func TestOpenGraphSchemaService_DeleteExtension(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB, staticFeatureFlagReader{enabled: true})
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB, nil)
 
 			err := service.DeleteExtension(context.Background(), tt.args.extensionID)
 			if tt.expected.err != nil {
@@ -1074,7 +1095,7 @@ func TestOpenGraphSchemaService_GetEnvironmentKindsAndSchemaEnvironmentData(t *t
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, m.mockGraphDB, staticFeatureFlagReader{enabled: true})
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil, nil)
 
 			if envKinds, envKindToSchemaEnvironmentData, err := service.GetEnvironmentKindsAndSchemaEnvironmentData(tt.args.ctx, tt.args.onlyBuiltin); tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())
@@ -1197,7 +1218,7 @@ func TestOpenGraphSchemaService_GetSchemaFindings(t *testing.T) {
 
 			tt.setupMocks(t, m)
 
-			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil, staticFeatureFlagReader{enabled: true})
+			service := opengraphschema.NewOpenGraphSchemaService(m.mockOpenGraphSchema, nil, nil)
 
 			if findings, count, err := service.GetSchemaFindings(tt.args.ctx, tt.args.filters, tt.args.sort, tt.args.skip, tt.args.limit); tt.expected.err != nil {
 				assert.EqualError(t, err, tt.expected.err.Error())

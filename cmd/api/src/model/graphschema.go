@@ -39,6 +39,7 @@ var (
 	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
 	ErrGraphExtensionValidation = errors.New("graph schema validation error")
 	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+	ErrFeatureFlag              = errors.New("error checking if feature flag is enabled")
 
 	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
 	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
