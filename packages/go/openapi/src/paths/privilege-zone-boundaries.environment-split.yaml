@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 post:
   operationId: SplitPrivilegeZonesByEnvironment
-  summary: Preview or create environment-scoped privilege zones
+  summary: Preview or create environment-scoped Tier Zero zones
   tags: [Privilege Zone Boundaries, Enterprise]
   requestBody:
     required: true
@@ -34,7 +34,7 @@ post:
               type: boolean
   responses:
     200:
-      description: Dry-run plan
+      description: Tier Zero split dry-run plan
       content:
         application/json:
           schema:
@@ -44,7 +44,7 @@ post:
               data:
                 $ref: './../schemas/model.privilege-zone-split-response.yaml'
     201:
-      description: Zones created
+      description: Tier Zero zones created
       content:
         application/json:
           schema:

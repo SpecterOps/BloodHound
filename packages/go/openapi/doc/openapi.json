@@ -21149,7 +21149,7 @@
     "/api/v2/privilege-zone-boundaries/environment-split": {
       "post": {
         "operationId": "SplitPrivilegeZonesByEnvironment",
-        "summary": "Preview or create environment-scoped privilege zones",
+        "summary": "Preview or create environment-scoped Tier Zero zones",
         "tags": [
           "Privilege Zone Boundaries",
           "Enterprise"
@@ -21182,7 +21182,7 @@
         },
         "responses": {
           "200": {
-            "description": "Dry-run plan",
+            "description": "Tier Zero split dry-run plan",
             "content": {
               "application/json": {
                 "schema": {
@@ -21200,7 +21200,7 @@
             }
           },
           "201": {
-            "description": "Zones created",
+            "description": "Tier Zero zones created",
             "content": {
               "application/json": {
                 "schema": {
