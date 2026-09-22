@@ -41,7 +41,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 	type testData struct {
 		name           string
 		path           string
-		registerRoutes func(*router.Router, mux.MiddlewareFunc) error
+		registerRoutes func(*router.Router, func() mux.MiddlewareFunc) error
 		expected       expected
 	}
 
@@ -49,7 +49,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 		{
 			name: "Success: migrated route receives one scoped middleware - 200",
 			path: "/api/v2/migrated",
-			registerRoutes: func(routerInst *router.Router, scopedMiddleware mux.MiddlewareFunc) error {
+			registerRoutes: func(routerInst *router.Router, scopedMiddleware func() mux.MiddlewareFunc) error {
 				return routerInst.WithRouteMiddleware(scopedMiddleware, func() error {
 					routerInst.GET("/api/v2/migrated", func(response http.ResponseWriter, _ *http.Request) {
 						_, _ = response.Write([]byte("migrated"))
@@ -66,7 +66,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 		{
 			name: "Success: legacy route receives no scoped middleware - 200",
 			path: "/api/v2/legacy",
-			registerRoutes: func(routerInst *router.Router, _ mux.MiddlewareFunc) error {
+			registerRoutes: func(routerInst *router.Router, _ func() mux.MiddlewareFunc) error {
 				routerInst.GET("/api/v2/legacy", func(response http.ResponseWriter, _ *http.Request) {
 					_, _ = response.Write([]byte("legacy"))
 				})
@@ -87,11 +87,13 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 
 			var middlewareCalls int
 			routerInst := router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
-			scopedMiddleware := func(next http.Handler) http.Handler {
-				return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-					middlewareCalls++
-					next.ServeHTTP(response, request)
-				})
+			scopedMiddleware := func() mux.MiddlewareFunc {
+				return func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+						middlewareCalls++
+						next.ServeHTTP(response, request)
+					})
+				}
 			}
 			require.NoError(t, testCase.registerRoutes(&routerInst, scopedMiddleware))
 

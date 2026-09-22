@@ -187,7 +187,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
-		if err := routerInst.WithRouteMiddleware(middleware.DefaultRateLimitMiddleware(connections.RDMS), func() error {
+		if err := routerInst.WithRouteMiddleware(func() mux.MiddlewareFunc {
+			return middleware.DefaultRateLimitMiddleware(connections.RDMS)
+		}, func() error {
 			modules.Register(modules.Deps{
 				Router: &routerInst,
 				Pool:   connections.RDMS.Pool(),

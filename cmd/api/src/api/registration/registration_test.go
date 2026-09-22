@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -32,7 +33,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.T) {
+func TestRegistration_WithRouteMiddlewareUsesIndependentRateLimitsAcrossRoutes(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -51,7 +52,7 @@ func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.
 
 	tt := []testData{
 		{
-			name:       "Success: second migrated route shares the first route limit - 429",
+			name:       "Success: second migrated route has an independent rate limit - 204",
 			warmupPath: "/api/v2/first",
 			buildRequest: func() *http.Request {
 				request := httptest.NewRequest(http.MethodGet, "/api/v2/second", nil)
@@ -63,10 +64,10 @@ func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.
 					Return(appcfg.Parameter{}, nil).
 					Times(56)
 			},
-			expected: expected{responseCode: http.StatusTooManyRequests},
+			expected: expected{responseCode: http.StatusNoContent},
 		},
 		{
-			name:       "Success: first migrated route shares the second route limit - 429",
+			name:       "Success: first migrated route has an independent rate limit - 204",
 			warmupPath: "/api/v2/second",
 			buildRequest: func() *http.Request {
 				request := httptest.NewRequest(http.MethodGet, "/api/v2/first", nil)
@@ -78,7 +79,7 @@ func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.
 					Return(appcfg.Parameter{}, nil).
 					Times(56)
 			},
-			expected: expected{responseCode: http.StatusTooManyRequests},
+			expected: expected{responseCode: http.StatusNoContent},
 		},
 	}
 
@@ -95,7 +96,9 @@ func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.
 
 			m := &mock{database: mockDatabase}
 			testCase.setupMocks(m)
-			require.NoError(t, routerInst.WithRouteMiddleware(middleware.RateLimitMiddleware(mockDatabase, 55), func() error {
+			require.NoError(t, routerInst.WithRouteMiddleware(func() mux.MiddlewareFunc {
+				return middleware.RateLimitMiddleware(mockDatabase, 55)
+			}, func() error {
 				routerInst.GET("/api/v2/first", func(response http.ResponseWriter, _ *http.Request) {
 					response.WriteHeader(http.StatusNoContent)
 				})
@@ -112,7 +115,7 @@ func TestRegistration_WithRouteMiddlewareSharesRateLimitAcrossRoutes(t *testing.
 
 				routerInst.Handler().ServeHTTP(response, request)
 
-				require.Equal(t, http.StatusNoContent, response.Code, "request %d should pass the shared rate limit", requestNumber+1)
+				require.Equal(t, http.StatusNoContent, response.Code, "request %d should pass the first route's rate limit", requestNumber+1)
 			}
 
 			request := testCase.buildRequest()
