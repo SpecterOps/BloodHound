@@ -27,9 +27,9 @@ import {
     DialogDescription,
     DialogPortal,
     DialogTitle,
-    IconButton,
     Input,
     TextButton,
+    Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
@@ -155,18 +155,19 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    <IconButton
-                                        aria-label='Clear Selection'
-                                        onClick={handleClear}
-                                        className='bg-transparent text-inherit !shadow-none focus-visible:rounded-sm'
-                                        size={64}>
-                                        <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
-                                            <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
-                                            <CardContent className='first:pt-0 p-0'>
-                                                <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                            </CardContent>
-                                        </Card>
-                                    </IconButton>
+                                    <Tooltip tooltip='Clear Selection'>
+                                        <TextButton
+                                            aria-label='Clear Selection'
+                                            onClick={handleClear}
+                                            className='size-16 shrink-0 !p-0 focus-visible:rounded-sm'>
+                                            <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
+                                                <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
+                                                <CardContent className='first:pt-0 p-0'>
+                                                    <FontAwesomeIcon icon={selectedIcon} size='2xl' />
+                                                </CardContent>
+                                            </Card>
+                                        </TextButton>
+                                    </Tooltip>
                                 )}
                             </div>
 

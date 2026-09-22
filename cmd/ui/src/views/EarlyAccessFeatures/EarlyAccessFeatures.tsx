@@ -67,7 +67,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
                             {flag.enabled ? (
                                 <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
                             ) : null}
-                            <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
+                            <span>{flag.enabled ? 'Enabled' : 'Disabled'}</span>
                         </div>
                     </Button>
                 </div>

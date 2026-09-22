@@ -46,6 +46,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
         <div className='flex justify-between items-center text-sm font-bold'>
             <IconButton
                 aria-label='Collapse All'
+                className='px-4'
                 onClick={handleCollapseAll}
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />

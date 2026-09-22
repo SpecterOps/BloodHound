@@ -44,8 +44,8 @@ export const Icon: React.FC<IconProps> = ({
     hideTooltip = false,
     label,
 }) => {
-    const accessibleLabel = ariaLabel ?? label;
-    const tooltipLabel = label ?? accessibleLabel;
+    const accessibleLabel = ariaLabel || label;
+    const tooltipLabel = label || accessibleLabel;
     const iconElement = React.cloneElement(
         children,
         ariaHidden ? { 'aria-hidden': true } : { 'aria-label': accessibleLabel }

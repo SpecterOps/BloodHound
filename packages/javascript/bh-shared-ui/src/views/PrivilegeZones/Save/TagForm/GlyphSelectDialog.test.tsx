@@ -71,9 +71,9 @@ describe('Glyph Select Dialog', () => {
 
         const clearSelectionButton = screen.getByRole('button', { name: 'Clear Selection' });
 
-        expect(clearSelectionButton).toHaveClass('bg-transparent', 'text-inherit', '!shadow-none');
+        expect(clearSelectionButton).toHaveClass('size-16', 'shrink-0', '!p-0');
         expect(clearSelectionButton).not.toHaveClass('bg-primary');
-        expect(clearSelectionButton.style.getPropertyValue('--icon-button-icon-size')).toBe('64px');
+        expect(clearSelectionButton.style.getPropertyValue('--icon-button-icon-size')).toBe('');
 
         await user.hover(clearSelectionButton);
 

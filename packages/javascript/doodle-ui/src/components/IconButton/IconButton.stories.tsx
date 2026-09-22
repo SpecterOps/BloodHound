@@ -30,7 +30,7 @@ const meta = {
         disabled: false,
         hideTooltip: false,
         size: 16,
-        'aria-label': 'Open Menu',
+        'aria-label': 'More options',
         children: <FontAwesomeIcon icon={faEllipsisVertical} />,
     },
     argTypes: {
@@ -127,19 +127,19 @@ const meta = {
 Provide one icon child and an \`aria-label\` that describes the action. The button uses the label as its accessible name and default tooltip. Describe what happens when the button is activated—not the icon's appearance.
 
 \`\`\`tsx
-<IconButton aria-label='Open filters'>
+<IconButton aria-label='Show filter options'>
     <AppIcon.FilterOutline />
 </IconButton>
 \`\`\`
 
-Prefer \`"Open filters"\` over \`"Filter icon"\`. IconButton marks its child as decorative because the button itself owns the accessible name.
+Prefer \`"Show filter options"\` over \`"Filter icon"\`. IconButton marks its child as decorative because the button itself owns the accessible name.
 
 ### Supported icons
 
 IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`Icon\` element. Passing an icon directly is the simplest option. If an \`Icon\` is nested, IconButton suppresses its label and tooltip to prevent duplicate announcements and tooltips.
 
 \`\`\`tsx
-<IconButton aria-label='Open menu'>
+<IconButton aria-label='More options'>
     <FontAwesomeIcon icon={faEllipsisVertical} />
 </IconButton>
 
@@ -156,7 +156,7 @@ The tooltip defaults to \`aria-label\`. Use \`tooltip\` when the visible message
 
 \`\`\`tsx
 <IconButton
-    aria-label='Open filters'
+    aria-label='Show filter options'
     tooltip='Filters are unavailable while data loads'
     disabled
 >
@@ -181,7 +181,7 @@ The \`size\` prop controls the icon's width and height in pixels. It defaults to
 Icons inherit the button's text color through \`currentColor\`. Prefer a variant for standard colors and use \`className\` only for a deliberate local override.
 
 \`\`\`tsx
-<IconButton aria-label='Open menu' size={20} className='text-primary'>
+<IconButton aria-label='More options' size={20} className='text-primary'>
     <FontAwesomeIcon icon={faEllipsisVertical} />
 </IconButton>
 \`\`\``,
@@ -205,15 +205,15 @@ const renderVariantStory =
             {/* These buttons remain static */}
             <div className='flex items-center justify-center gap-8'>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Open Menu' size={18} variant={variant}>
-                        <Icon label='Open Menu'>
+                    <IconButton aria-label='More options' size={18} variant={variant}>
+                        <Icon label='More options'>
                             <FontAwesomeIcon icon={faEllipsisVertical} />
                         </Icon>
                     </IconButton>
                     Enabled
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Delete item' disabled size={18} variant={variant}>
+                    <IconButton aria-label='Show filter options' disabled size={18} variant={variant}>
                         <AppIcon.FilterOutline />
                     </IconButton>
                     Disabled
