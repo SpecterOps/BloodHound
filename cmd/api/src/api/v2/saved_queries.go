@@ -489,6 +489,7 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 }
 
 var (
+	errNotModifiable    = errors.New("query is not modifiable")
 	errUserHasNotAccess = errors.New("user does not have access")
 )
 
@@ -496,7 +497,10 @@ var (
 // user permissions, and extension usage.
 // Returns an error or nil if allowed.
 func (s Resources) checkModifyPermissions(ctx context.Context, savedQuery model.SavedQuery, user model.User) error {
-	if savedQuery.UserID != user.ID.String() {
+	if savedQuery.SchemaExtensionID != nil {
+		// queries associated with extensions cannot be modified
+		return errNotModifiable
+	} else if savedQuery.UserID != user.ID.String() {
 		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 			return errUserHasNotAccess
 		} else {
@@ -531,7 +535,9 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 		api.HandleDatabaseError(request, response, err)
 		return
 	} else if err = s.checkModifyPermissions(request.Context(), savedQuery, user); err != nil {
-		if errors.Is(err, errUserHasNotAccess) {
+		if errors.Is(err, errNotModifiable) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be modified", request), response)
+		} else if errors.Is(err, errUserHasNotAccess) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 		} else {
 			api.HandleDatabaseError(request, response, err)
@@ -571,7 +577,9 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if err = s.checkModifyPermissions(request.Context(), savedQuery, user); err != nil {
-		if errors.Is(err, errUserHasNotAccess) {
+		if errors.Is(err, errNotModifiable) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be deleted", request), response)
+		} else if errors.Is(err, errUserHasNotAccess) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
 		} else {
 			api.HandleDatabaseError(request, response, err)
