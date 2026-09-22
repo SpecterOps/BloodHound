@@ -23,9 +23,9 @@ const meta = {
     component: Icon,
     tags: ['autodocs'],
     args: {
-        'aria-label': 'Information',
         children: <AppIcon.Info size={24} />,
         hideTooltip: false,
+        label: 'Information',
     },
     argTypes: {
         children: {
@@ -37,9 +37,16 @@ const meta = {
         },
         'aria-label': {
             control: 'text',
-            description: 'Required accessible label describing the icon.',
+            description: 'Optional accessible-label override. Defaults to label when label is provided.',
             table: {
                 category: 'Accessibility',
+            },
+        },
+        label: {
+            control: 'text',
+            description: 'Tooltip text and the default accessible label for the icon.',
+            table: {
+                category: 'Content',
             },
         },
         'aria-hidden': {
@@ -74,14 +81,22 @@ const meta = {
     parameters: {
         docs: {
             description: {
-                component: `Use Icon for a non-interactive icon that communicates information. Icon adds accessibility and tooltip behavior to a single SVG child without adding button semantics. BloodHound consumers should normally supply an \`AppIcon\` from \`bh-shared-ui\`.
+                component: `Use Icon for a non-interactive icon that communicates information. Icon adds accessibility and tooltip behavior to a single SVG child without adding button semantics.
 
-### Accessible label
+### Label and accessible name
 
-Every Icon requires an \`aria-label\`. Icon forwards that label to its SVG child and uses it as the default tooltip. Describe the information conveyed by the icon, not its visual appearance. For example, prefer \`"Query saved"\` over \`"Checkmark icon"\`.
+Provide either \`label\` or \`aria-label\`. In most cases, use \`label\`: Icon displays it in the tooltip and applies it to the SVG as its accessible name. Describe the information conveyed by the icon, not its visual appearance. For example, prefer \`"Query saved"\` over \`"Checkmark icon"\`.
 
 \`\`\`tsx
-<Icon aria-label='Information about saved queries'>
+<Icon label='Information about saved queries'>
+    <AppIcon.Info />
+</Icon>
+\`\`\`
+
+Use \`aria-label\` as an override when the accessible name should be more descriptive than the visible tooltip. If only \`aria-label\` is provided, Icon also uses it as the tooltip for backwards compatibility.
+
+\`\`\`tsx
+<Icon label='Learn more' aria-label='Learn more about saved queries'>
     <AppIcon.Info />
 </Icon>
 \`\`\`
@@ -91,7 +106,7 @@ Every Icon requires an \`aria-label\`. Icon forwards that label to its SVG child
 The tooltip is displayed by default. Use \`hideTooltip\` only when equivalent text is already visible nearby. Hiding the tooltip does not remove the icon's accessible label.
 
 \`\`\`tsx
-<Icon aria-label='Information already shown in nearby text' hideTooltip>
+<Icon label='Information already shown in nearby text' hideTooltip>
     <AppIcon.Info />
 </Icon>
 \`\`\`
@@ -113,7 +128,7 @@ export const Default: Story = {
     parameters: {
         docs: {
             description: {
-                story: 'The accessible label is applied to the SVG and displayed in a tooltip.',
+                story: 'The label is displayed in a tooltip and used as the SVG accessible name.',
             },
         },
     },

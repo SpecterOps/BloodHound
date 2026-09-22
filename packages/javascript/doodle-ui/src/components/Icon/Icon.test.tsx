@@ -22,7 +22,7 @@ import { Icon } from './Icon';
 describe('Icon', () => {
     it('renders an AppIcon without button semantics', () => {
         const { container } = render(
-            <Icon aria-label='Information'>
+            <Icon label='Information'>
                 <AppIcon.Info />
             </Icon>
         );
@@ -31,10 +31,10 @@ describe('Icon', () => {
         expect(screen.queryByRole('button')).toBeNull();
     });
 
-    it('uses its accessible label as its tooltip', async () => {
+    it('uses its label as its accessible label and tooltip', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon aria-label='Filter options'>
+            <Icon label='Filter options'>
                 <AppIcon.Info />
             </Icon>
         );
@@ -44,10 +44,37 @@ describe('Icon', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Filter options');
     });
 
+    it('supports an accessible label that differs from its tooltip label', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <Icon aria-label='Saved query information' label='Learn more'>
+                <AppIcon.Info />
+            </Icon>
+        );
+
+        await user.hover(container.querySelector('svg') as SVGSVGElement);
+
+        expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe('Saved query information');
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Learn more');
+    });
+
+    it('uses aria-label as the tooltip when no label is provided', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <Icon aria-label='Information'>
+                <AppIcon.Info />
+            </Icon>
+        );
+
+        await user.hover(container.querySelector('svg') as SVGSVGElement);
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Information');
+    });
+
     it('does not render a tooltip when it is disabled', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon aria-label='Information' hideTooltip>
+            <Icon hideTooltip label='Information'>
                 <AppIcon.Info />
             </Icon>
         );

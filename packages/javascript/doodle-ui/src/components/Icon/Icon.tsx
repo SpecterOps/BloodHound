@@ -17,13 +17,24 @@ import * as React from 'react';
 import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
-export interface IconProps {
+interface IconBaseProps {
     'aria-hidden'?: boolean;
-    'aria-label': string;
     children: React.ReactElement;
     className?: string;
     hideTooltip?: boolean;
 }
+
+type IconLabelProps =
+    | {
+          'aria-label'?: string;
+          label: string;
+      }
+    | {
+          'aria-label': string;
+          label?: never;
+      };
+
+export type IconProps = IconBaseProps & IconLabelProps;
 
 export const Icon: React.FC<IconProps> = ({
     'aria-hidden': ariaHidden = false,
@@ -31,16 +42,19 @@ export const Icon: React.FC<IconProps> = ({
     children,
     className,
     hideTooltip = false,
+    label,
 }) => {
+    const accessibleLabel = ariaLabel ?? label;
+    const tooltipLabel = label ?? accessibleLabel;
     const iconElement = React.cloneElement(
         children,
-        ariaHidden ? { 'aria-hidden': true } : { 'aria-label': ariaLabel }
+        ariaHidden ? { 'aria-hidden': true } : { 'aria-label': accessibleLabel }
     );
 
     if (ariaHidden || hideTooltip) return <span className={cn('inline-flex', className)}>{iconElement}</span>;
 
     return (
-        <Tooltip tooltip={ariaLabel} contentProps={{ side: 'bottom', align: 'start' }}>
+        <Tooltip tooltip={tooltipLabel} contentProps={{ side: 'bottom', align: 'start' }}>
             <span className={cn('inline-flex', className)}>{iconElement}</span>
         </Tooltip>
     );

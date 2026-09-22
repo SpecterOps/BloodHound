@@ -144,7 +144,7 @@ IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`Icon\` element. Pass
 </IconButton>
 
 <IconButton aria-label='Show information'>
-    <Icon aria-label='Information'>
+    <Icon label='Information'>
         <AppIcon.Info />
     </Icon>
 </IconButton>
@@ -206,7 +206,7 @@ const renderVariantStory =
             <div className='flex items-center justify-center gap-8'>
                 <div className='flex flex-col items-center gap-4'>
                     <IconButton aria-label='Open Menu' size={18} variant={variant}>
-                        <Icon aria-label='Open Menu'>
+                        <Icon label='Open Menu'>
                             <FontAwesomeIcon icon={faEllipsisVertical} />
                         </Icon>
                     </IconButton>
