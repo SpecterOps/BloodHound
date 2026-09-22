@@ -859,10 +859,6 @@ paths:
     $ref: './paths/privilege-zone-boundaries.control-policies.yaml'
   /api/v2/privilege-zone-boundaries/control-policies/{policy_id}:
     $ref: './paths/privilege-zone-boundaries.control-policies.id.yaml'
-  /api/v2/privilege-zone-boundaries/landscapes:
-    $ref: './paths/privilege-zone-boundaries.landscapes.yaml'
-  /api/v2/privilege-zone-boundaries/landscapes/{landscape_id}:
-    $ref: './paths/privilege-zone-boundaries.landscapes.id.yaml'
   /api/v2/privilege-zone-boundaries/exposure-jobs:
     $ref: './paths/privilege-zone-boundaries.exposure-jobs.yaml'
   /api/v2/privilege-zone-boundaries/exposure-jobs/latest:

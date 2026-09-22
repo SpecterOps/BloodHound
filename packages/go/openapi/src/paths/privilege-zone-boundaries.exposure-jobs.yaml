@@ -27,7 +27,7 @@ post:
           properties:
             scope_kind:
               type: string
-              enum: [landscape, target_zone]
+              enum: [target_zone]
             scope_id:
               type: string
   responses:

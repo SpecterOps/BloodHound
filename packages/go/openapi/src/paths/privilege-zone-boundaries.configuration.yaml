@@ -28,7 +28,7 @@ get:
               data:
                 type: object
                 required:
-                  [zones, permissions, policies, landscapes, environments]
+                  [zones, permissions, policies, environments]
                 properties:
                   zones:
                     type: array
@@ -38,19 +38,16 @@ get:
                     type: array
                     items:
                       type: object
-                      required: [source_zone_id, target_zone_id, allowed]
+                      required: [source_zone_id, target_zone_id, allowed, required]
                       properties:
                         source_zone_id: { type: integer }
                         target_zone_id: { type: integer }
                         allowed: { type: boolean }
+                        required: { type: boolean }
                   policies:
                     type: array
                     items:
                       $ref: './../schemas/model.privilege-zone-control-policy.yaml'
-                  landscapes:
-                    type: array
-                    items:
-                      $ref: './../schemas/model.privilege-zone-landscape.yaml'
                   environments:
                     type: array
                     items:

@@ -184,6 +184,7 @@ export interface PrivilegeZoneControlPermission {
     source_zone_id: number;
     target_zone_id: number;
     allowed: boolean;
+    required: boolean;
 }
 
 export type PrivilegeZonePairMatch = 'any' | 'same' | 'different';
@@ -191,7 +192,6 @@ export type PrivilegeZonePairMatch = 'any' | 'same' | 'different';
 export interface PrivilegeZoneControlPolicySelector {
     zone_ids?: number[];
     environment_ids?: string[];
-    landscape_ids?: number[];
     platforms?: string[];
     tiers?: PrivilegeZoneTier[];
 }
@@ -199,7 +199,6 @@ export interface PrivilegeZoneControlPolicySelector {
 export interface PrivilegeZoneControlPolicyConstraints {
     environment: PrivilegeZonePairMatch;
     platform: PrivilegeZonePairMatch;
-    landscape: PrivilegeZonePairMatch;
 }
 
 export interface PrivilegeZoneControlPolicy extends Created, Updated {
@@ -219,20 +218,10 @@ export type PrivilegeZoneControlPolicyInput = Pick<
     'id' | 'name' | 'description' | 'enabled' | 'source_selector' | 'target_selector' | 'constraints'
 >;
 
-export interface PrivilegeZoneLandscape extends Created, Updated {
-    id: number;
-    name: string;
-    description: string;
-    environments: PrivilegeZoneEnvironment[];
-}
-
-export type PrivilegeZoneLandscapeInput = Pick<PrivilegeZoneLandscape, 'id' | 'name' | 'description' | 'environments'>;
-
 export interface PrivilegeZoneBoundaryConfiguration {
     zones: PrivilegeZone[];
     permissions: PrivilegeZoneControlPermission[];
     policies: PrivilegeZoneControlPolicy[];
-    landscapes: PrivilegeZoneLandscape[];
     environments: PrivilegeZoneEnvironment[];
 }
 
@@ -250,7 +239,7 @@ export interface PrivilegeZoneSplitResponse {
     zones?: PrivilegeZone[];
 }
 
-export type PrivilegeZoneExposureScopeKind = 'landscape' | 'target_zone';
+export type PrivilegeZoneExposureScopeKind = 'target_zone';
 export type PrivilegeZoneExposureJobStatus = 'pending' | 'running' | 'complete' | 'failed' | 'cancelled';
 
 export interface PrivilegeZoneExposure {

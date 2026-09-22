@@ -21077,7 +21077,6 @@
                         "zones",
                         "permissions",
                         "policies",
-                        "landscapes",
                         "environments"
                       ],
                       "properties": {
@@ -21094,7 +21093,8 @@
                             "required": [
                               "source_zone_id",
                               "target_zone_id",
-                              "allowed"
+                              "allowed",
+                              "required"
                             ],
                             "properties": {
                               "source_zone_id": {
@@ -21105,6 +21105,9 @@
                               },
                               "allowed": {
                                 "type": "boolean"
+                              },
+                              "required": {
+                                "type": "boolean"
                               }
                             }
                           }
@@ -21113,12 +21116,6 @@
                           "type": "array",
                           "items": {
                             "$ref": "#/components/schemas/model.privilege-zone-control-policy"
-                          }
-                        },
-                        "landscapes": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.privilege-zone-landscape"
                           }
                         },
                         "environments": {
@@ -21310,100 +21307,6 @@
         }
       }
     },
-    "/api/v2/privilege-zone-boundaries/landscapes": {
-      "put": {
-        "operationId": "UpsertPrivilegeZoneLandscape",
-        "summary": "Create or update a privilege-zone landscape",
-        "tags": [
-          "Privilege Zone Boundaries",
-          "Enterprise"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/model.privilege-zone-landscape"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Landscape updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Landscape created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
-    "/api/v2/privilege-zone-boundaries/landscapes/{landscape_id}": {
-      "delete": {
-        "operationId": "DeletePrivilegeZoneLandscape",
-        "summary": "Delete a privilege-zone landscape",
-        "tags": [
-          "Privilege Zone Boundaries",
-          "Enterprise"
-        ],
-        "parameters": [
-          {
-            "name": "landscape_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Landscape deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
     "/api/v2/privilege-zone-boundaries/exposure-jobs": {
       "post": {
         "operationId": "StartPrivilegeZoneExposureJob",
@@ -21426,7 +21329,6 @@
                   "scope_kind": {
                     "type": "string",
                     "enum": [
-                      "landscape",
                       "target_zone"
                     ]
                   },
@@ -21485,7 +21387,6 @@
             "schema": {
               "type": "string",
               "enum": [
-                "landscape",
                 "target_zone"
               ]
             }
@@ -28516,12 +28417,6 @@
               "type": "string"
             }
           },
-          "landscape_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
           "platforms": {
             "type": "array",
             "items": {
@@ -28584,17 +28479,13 @@
             "type": "object",
             "required": [
               "environment",
-              "platform",
-              "landscape"
+              "platform"
             ],
             "properties": {
               "environment": {
                 "$ref": "#/components/schemas/model.privilege-zone-pair-match"
               },
               "platform": {
-                "$ref": "#/components/schemas/model.privilege-zone-pair-match"
-              },
-              "landscape": {
                 "$ref": "#/components/schemas/model.privilege-zone-pair-match"
               }
             }
@@ -28646,45 +28537,6 @@
           }
         }
       },
-      "model.privilege-zone-landscape": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "environments"
-        ],
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_by": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_by": {
-            "type": "string"
-          },
-          "environments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.privilege-zone-environment"
-            }
-          }
-        }
-      },
       "model.privilege-zone-exposure-job": {
         "type": "object",
         "required": [
@@ -28704,7 +28556,6 @@
           "scope_kind": {
             "type": "string",
             "enum": [
-              "landscape",
               "target_zone"
             ]
           },

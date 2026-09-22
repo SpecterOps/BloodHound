@@ -359,16 +359,6 @@ class BHEAPIClient {
     deletePrivilegeZoneControlPolicy = (policyId: number, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/privilege-zone-boundaries/control-policies/${policyId}`, options);
 
-    upsertPrivilegeZoneLandscape = (landscape: types.PrivilegeZoneLandscapeInput, options?: RequestOptions) =>
-        this.baseClient.put<BasicResponse<types.PrivilegeZoneLandscape>>(
-            '/api/v2/privilege-zone-boundaries/landscapes',
-            landscape,
-            options
-        );
-
-    deletePrivilegeZoneLandscape = (landscapeId: number, options?: RequestOptions) =>
-        this.baseClient.delete(`/api/v2/privilege-zone-boundaries/landscapes/${landscapeId}`, options);
-
     startPrivilegeZoneExposureJob = (
         scopeKind: types.PrivilegeZoneExposureScopeKind,
         scopeId: string,

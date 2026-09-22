@@ -23,7 +23,7 @@ get:
       required: true
       schema:
         type: string
-        enum: [landscape, target_zone]
+        enum: [target_zone]
     - name: scope_id
       in: query
       required: true

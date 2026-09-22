@@ -39,13 +39,11 @@ properties:
     $ref: './model.privilege-zone-control-policy-selector.yaml'
   constraints:
     type: object
-    required: [environment, platform, landscape]
+    required: [environment, platform]
     properties:
       environment:
         $ref: './model.privilege-zone-pair-match.yaml'
       platform:
-        $ref: './model.privilege-zone-pair-match.yaml'
-      landscape:
         $ref: './model.privilege-zone-pair-match.yaml'
   effective_pair_count:
     type: integer

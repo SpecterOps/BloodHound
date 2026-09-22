@@ -21,9 +21,6 @@ properties:
   environment_ids:
     type: array
     items: { type: string }
-  landscape_ids:
-    type: array
-    items: { type: integer }
   platforms:
     type: array
     items: { type: string }
