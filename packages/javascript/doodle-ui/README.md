@@ -73,13 +73,13 @@ following the existing self-hosted Fontsource approach.
 
 Via Fontsource:
 
-```
+```sh
 yarn add @fontsource/figtree @fontsource/nunito-sans
 ```
 
 Then import the required weights in your entrypoint:
 
-```
+```tsx
 import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
 import '@fontsource/nunito-sans/600.css';
