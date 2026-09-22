@@ -99,6 +99,7 @@ import {
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
     GetCollectorJobSecretResponse,
+    GetCollectorJobTypesResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -822,6 +823,12 @@ class BHEAPIClient {
                 skip: 0,
                 limit: 1,
             },
+        });
+
+    getCollectorJobTypes = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobTypesResponse>('/api/v2/collector-job-types', {
+            ...options,
+            params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>

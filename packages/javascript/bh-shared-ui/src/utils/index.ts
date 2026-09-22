@@ -26,6 +26,7 @@ export * from './datetime';
 export * from './entityInfoDisplay';
 export * from './environments';
 export * from './exportGraphData';
+export * from './formValidationRules';
 export * from './freeIconsList';
 export * from './icons';
 export * from './jobs';
