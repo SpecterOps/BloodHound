@@ -16,34 +16,59 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 permissions:
-  contents: read
+  pull-requests: read
 
 jobs:
   check-pull-request-size:
     name: Check pull request size
     runs-on: ubuntu-latest
     steps:
-      - name: Report approved size exception
-        if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
-        run: |
-          printf '%s\n\n%s\n' \
-            '## Pull request size' \
-            'The `pr-size-exception` label is present; the size check was skipped.' \
-            >> "$GITHUB_STEP_SUMMARY"
-      - name: Checkout trusted base revision
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
+      - uses: SpecterOps/pr-size-check@47a422c9146fb4e4c9d90c08e11c1a5aee74ec46 # ratchet:SpecterOps/pr-size-check@v0.1.0
         with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.base.sha }}
-      - name: Fetch pull request revision
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
-        run: git fetch --no-tags origin +refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pull-request-head
-      - name: Check changed lines
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-size-exception') }}
-        run: |
-          set -o pipefail
-          go tool stbernard pr-size \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head refs/remotes/origin/pull-request-head \
-            | tee -a "$GITHUB_STEP_SUMMARY"
+          github-token: ${{ github.token }}
+          max-lines: 1000
+          bypass-label: pr-size-exception
+          count: additions-and-deletions
+          ignored-paths: |
+            **/doc/**
+            **/docs/**
+            **/architecture/**
+            **/rfc/**
+            **/test/**
+            **/tests/**
+            **/testdata/**
+            **/fixtures/**
+            **/__tests__/**
+            **/__mocks__/**
+            **/mocks/**
+            **/.yarn/cache/**
+            **/.yarn/unplugged/**
+            **/.yarn/releases/**
+            **/.npm/**
+            **/.pnpm-store/**
+            **/vendor/**
+            **/go.sum
+            **/yarn.lock
+            **/package-lock.json
+            **/npm-shrinkwrap.json
+            **/pnpm-lock.yaml
+            **/openapi/doc/openapi.json
+            **/*_generated.*
+            **/*.generated.*
+            **/*.gen.*
+            **/*.pb.go
+            **/wire_gen.go
+            **/*.md
+            **/*.mdx
+            **/*.rst
+            **/*.adoc
+            **/*.puml
+            **/*.plantuml
+            **/*.c4
+            **/*_test.*
+            **/*.spec.*
+            **/*.test.*
+            **/*.e2e.*
+            **/*.integration.*
+            .yarn/build-state.yml
+            .yarn/install-state.gz
