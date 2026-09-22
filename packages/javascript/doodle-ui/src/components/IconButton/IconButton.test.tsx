@@ -18,6 +18,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { primaryClasses, secondaryClasses } from '../Button/Button.styles';
+import { Icon } from '../Icon';
 import { IconButton } from './IconButton';
 
 describe('IconButton', () => {
@@ -47,6 +48,37 @@ describe('IconButton', () => {
         await user.hover(screen.getByRole('button', { name: 'Delete extension' }));
 
         expect((await screen.findByRole('tooltip')).textContent).toBe('Built-in extensions cannot be deleted');
+    });
+
+    it('hides both the button and child Icon tooltips when requested', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' hideTooltip>
+                <Icon aria-label='More information'>
+                    <AppIcon.Info />
+                </Icon>
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'More information' }));
+
+        expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
+    it('suppresses the child Icon tooltip in favor of the button tooltip', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='Button information'>
+                <Icon aria-label='Icon information'>
+                    <AppIcon.Info />
+                </Icon>
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'Button information' }));
+
+        expect((await screen.findByRole('tooltip')).textContent).toBe('Button information');
+        expect(screen.queryByText('Icon information')).toBeNull();
     });
 
     it('uses the enabled button as the tooltip trigger on keyboard focus', async () => {
@@ -99,6 +131,7 @@ describe('IconButton', () => {
         expect(button.getAttribute('class')).not.toContain('(state) =>');
         expect(iconWrapper?.classList.contains('size-[var(--icon-button-icon-size)]')).toBe(true);
         expect(iconWrapper?.classList.contains('items-center')).toBe(true);
+        expect(iconWrapper?.classList.contains('[&>*]:size-full')).toBe(true);
     });
 
     it.each([

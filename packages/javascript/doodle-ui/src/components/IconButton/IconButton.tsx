@@ -18,6 +18,7 @@ import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/Button.styles';
+import { Icon } from '../Icon';
 import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
@@ -52,6 +53,7 @@ export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | '
     className?: BaseUIButton.Props['className'];
     'aria-label': string;
     children: React.ReactElement;
+    hideTooltip?: boolean;
     size?: number;
     tooltip?: React.ReactNode;
 }
@@ -66,6 +68,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         'aria-label': ariaLabel,
         children,
         className,
+        hideTooltip = false,
         disabled = false,
         size = 16,
         tooltip = ariaLabel,
@@ -73,9 +76,10 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
     },
     ref
 ) {
-    const decorativeIcon = React.cloneElement(children, {
+    const buttonIcon = React.cloneElement(children, {
         'aria-hidden': true,
-    } as React.HTMLAttributes<HTMLElement>);
+        ...(children.type === Icon ? { hideTooltip: true } : {}),
+    } as React.HTMLAttributes<HTMLElement> & { hideTooltip?: boolean });
     const renderButton = (render?: BaseUIButton.Props['render']) => (
         <BaseUIButton
             {...props}
@@ -92,11 +96,13 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     '--icon-button-icon-size': `${size}px`,
                 }) as IconButtonStyle
             }>
-            <span className='inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>svg]:size-full'>
-                {decorativeIcon}
+            <span className='inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full'>
+                {buttonIcon}
             </span>
         </BaseUIButton>
     );
+
+    if (hideTooltip) return renderButton();
 
     return (
         <Tooltip

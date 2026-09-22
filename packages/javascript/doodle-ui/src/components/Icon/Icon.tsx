@@ -18,17 +18,30 @@ import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
 export interface IconProps {
+    'aria-hidden'?: boolean;
     'aria-label': string;
     children: React.ReactElement;
     className?: string;
+    hideTooltip?: boolean;
 }
 
-export const Icon: React.FC<IconProps> = ({ 'aria-label': ariaLabel, children, className }) => {
-    const accessibleIcon = React.cloneElement(children, { 'aria-label': ariaLabel } as React.HTMLAttributes<HTMLElement>);
+export const Icon: React.FC<IconProps> = ({
+    'aria-hidden': ariaHidden = false,
+    'aria-label': ariaLabel,
+    children,
+    className,
+    hideTooltip = false,
+}) => {
+    const iconElement = React.cloneElement(
+        children,
+        ariaHidden ? { 'aria-hidden': true } : { 'aria-label': ariaLabel }
+    );
+
+    if (ariaHidden || hideTooltip) return <span className={cn('inline-flex', className)}>{iconElement}</span>;
 
     return (
         <Tooltip tooltip={ariaLabel} contentProps={{ side: 'bottom', align: 'start' }}>
-            <span className={cn('inline-flex', className)}>{accessibleIcon}</span>
+            <span className={cn('inline-flex', className)}>{iconElement}</span>
         </Tooltip>
     );
 };

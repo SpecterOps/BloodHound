@@ -43,4 +43,17 @@ describe('Icon', () => {
 
         expect((await screen.findByRole('tooltip')).textContent).toBe('Filter options');
     });
+
+    it('does not render a tooltip when it is disabled', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <Icon aria-label='Information' hideTooltip>
+                <AppIcon.Info />
+            </Icon>
+        );
+
+        await user.hover(container.querySelector('svg') as SVGSVGElement);
+
+        expect(screen.queryByRole('tooltip')).toBeNull();
+    });
 });

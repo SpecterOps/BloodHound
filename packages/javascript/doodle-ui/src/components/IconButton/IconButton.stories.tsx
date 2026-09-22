@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
+import { Icon } from '../Icon';
 import { IconButton } from './IconButton';
 
 const meta = {
@@ -27,6 +28,7 @@ const meta = {
     args: {
         variant: 'default',
         disabled: false,
+        hideTooltip: false,
         size: 16,
         'aria-label': 'Open Menu',
         children: <FontAwesomeIcon icon={faEllipsisVertical} />,
@@ -35,11 +37,19 @@ const meta = {
         variant: {
             options: ['default', 'primary', 'secondary'],
             control: 'select',
+            description: 'Sets the visual emphasis of the button.',
+            table: {
+                category: 'Appearance',
+                defaultValue: {
+                    summary: 'default',
+                },
+            },
         },
         children: {
             control: false,
+            description: 'A single AppIcon, Font Awesome icon, or Icon element.',
             table: {
-                disable: true,
+                category: 'Content',
             },
         },
         'aria-label': {
@@ -54,10 +64,20 @@ const meta = {
         },
         tooltip: {
             description:
-                'Optional visible tooltip content. Defaults to the aria-label; override it only when additional context is needed.',
+                'Visible tooltip content. Defaults to aria-label; override it when the tooltip needs additional context.',
             control: 'text',
             table: {
                 category: 'Accessibility',
+            },
+        },
+        hideTooltip: {
+            description: 'Suppresses the tooltip without removing the button accessible label.',
+            control: 'boolean',
+            table: {
+                category: 'Accessibility',
+                defaultValue: {
+                    summary: 'false',
+                },
             },
         },
         size: {
@@ -78,100 +98,178 @@ const meta = {
                 },
             },
         },
+        disabled: {
+            control: 'boolean',
+            description: 'Disables button interaction. The tooltip remains available unless hideTooltip is true.',
+            table: {
+                category: 'State',
+                defaultValue: {
+                    summary: 'false',
+                },
+            },
+        },
+        className: {
+            control: 'text',
+            description: 'Classes applied to the button element.',
+            table: {
+                category: 'Appearance',
+            },
+        },
     },
     parameters: {
         layout: 'centered',
         docs: {
             description: {
-                component: `Use IconButton for an action represented by an icon without a visible text label.
+                component: `Use IconButton for an action represented only by an icon. If the action also has visible text, use Button or TextButton instead.
 
-### Sizing
+### Basic usage
 
-The \`size\` prop sets the icon's width and height in pixels. The button automatically resizes around the icon while preserving its square shape and consistent padding.
+Provide one icon child and an \`aria-label\` that describes the action. The button uses the label as its accessible name and default tooltip. Describe what happens when the button is activated—not the icon's appearance.
 
 \`\`\`tsx
-<IconButton aria-label='Open filters' size={16}>
+<IconButton aria-label='Open filters'>
     <AppIcon.FilterOutline />
 </IconButton>
 \`\`\`
 
-The default icon size is \`16px\`. By default, the button adds \`8px\` of padding on every side, so its total width and height are the icon size plus \`16px\`. For example, \`size={16}\` produces a \`32px × 32px\` button.
+Prefer \`"Open filters"\` over \`"Filter icon"\`. IconButton marks its child as decorative because the button itself owns the accessible name.
 
-Use the \`size\` prop to resize the icon and button together. Use \`className\` only when you need to override spacing or other presentation.
+### Supported icons
+
+IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`Icon\` element. Passing an icon directly is the simplest option. If an \`Icon\` is nested, IconButton suppresses its label and tooltip to prevent duplicate announcements and tooltips.
+
+\`\`\`tsx
+<IconButton aria-label='Open menu'>
+    <FontAwesomeIcon icon={faEllipsisVertical} />
+</IconButton>
+
+<IconButton aria-label='Show information'>
+    <Icon aria-label='Information'>
+        <AppIcon.Info />
+    </Icon>
+</IconButton>
+\`\`\`
+
+### Tooltip behavior
+
+The tooltip defaults to \`aria-label\`. Use \`tooltip\` when the visible message needs extra context while the concise accessible name should remain unchanged. Use \`hideTooltip\` only when the action is already identified by nearby visible text.
+
+\`\`\`tsx
+<IconButton
+    aria-label='Open filters'
+    tooltip='Filters are unavailable while data loads'
+    disabled
+>
+    <AppIcon.FilterOutline />
+</IconButton>
+\`\`\`
+
+Disabled buttons retain their tooltip so users can still learn what the action does or why it is unavailable. Set \`hideTooltip\` to suppress it explicitly.
 
 ### Variants
 
-The transparent \`default\` variant is intended for standalone icon controls. The \`primary\` and \`secondary\` variants use the same visual styles as their Button counterparts while preserving IconButton's icon-only shape and sizing. Select the variant directly instead of adding \`ButtonVariants\` through \`className\`.
+- \`default\` is transparent and works well for standalone controls and toolbars.
+- \`primary\` gives the action the strongest emphasis.
+- \`secondary\` provides emphasis without competing with a primary action.
+
+Use the \`variant\` prop rather than applying Button variant classes through \`className\`.
+
+### Sizing and color
+
+The \`size\` prop controls the icon's width and height in pixels. It defaults to \`16\`. IconButton adds \`8px\` of padding on each side, so \`size={16}\` produces a \`32px × 32px\` button.
+
+Icons inherit the button's text color through \`currentColor\`. Prefer a variant for standard colors and use \`className\` only for a deliberate local override.
 
 \`\`\`tsx
-<IconButton variant='primary' aria-label='Show filter options'>
-    <AppIcon.FilterOutline />
-</IconButton>
-\`\`\`
-
-### Color
-
-Icons inherit the button's computed text color through \`currentColor\`. Prefer a variant when the icon should follow a standard button color. Use \`className\` for a local color override.
-
-\`\`\`tsx
-<IconButton aria-label='Open Menu' className='text-primary'>
+<IconButton aria-label='Open menu' size={20} className='text-primary'>
     <FontAwesomeIcon icon={faEllipsisVertical} />
 </IconButton>
-\`\`\`
-
-### Accessible label
-
-- Every IconButton requires an \`aria-label\` describing the action performed by the button.
-- The icon is decorative because the button already provides its accessible name.
-- IconButton displays the \`aria-label\` in a tooltip by default. Pass \`tooltip\` only when the visible tooltip needs additional context, such as why an action is disabled.
-
-Do not use the icon's name as the label when it does not describe the action. For example, prefer \`"Show filter options"\` over \`"Filter icon"\`.
-
-Consumers normally only need to provide the label on IconButton; IconButton uses it as both the button's accessible name and its tooltip.`,
+\`\`\``,
             },
         },
     },
-    render: ({ ...iconButtonProps }) => (
+} satisfies Meta<typeof IconButton>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const renderVariantStory =
+    (variant: 'default' | 'primary' | 'secondary'): Story['render'] =>
+    ({ children, ...iconButtonProps }) => (
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <IconButton {...iconButtonProps}>
-                    <FontAwesomeIcon icon={faEllipsisVertical} />
-                </IconButton>
+                <IconButton {...iconButtonProps}>{children}</IconButton>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
-            <div className='flex items-center gap-4'>
+            <div className='flex items-center justify-center gap-8'>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Open Menu' size={18}>
-                        <FontAwesomeIcon icon={faEllipsisVertical} />
+                    <IconButton aria-label='Open Menu' size={18} variant={variant}>
+                        <Icon aria-label='Open Menu'>
+                            <FontAwesomeIcon icon={faEllipsisVertical} />
+                        </Icon>
                     </IconButton>
-                    Default
+                    Enabled
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Delete item' size={18} variant='primary'>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </IconButton>
-                    Primary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Show filter options' size={24} variant='secondary'>
-                        <AppIcon.FilterOutline />
-                    </IconButton>
-                    Secondary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButton aria-label='Show filter options' disabled size={24} variant='primary'>
+                    <IconButton aria-label='Delete item' disabled size={18} variant={variant}>
                         <AppIcon.FilterOutline />
                     </IconButton>
                     Disabled
                 </div>
             </div>
         </>
-    ),
-} satisfies Meta<typeof IconButton>;
+    );
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export const Default: Story = {
+    parameters: {
+        docs: {
+            description: {
+                story: 'Use the transparent default variant for icon actions in toolbars or other compact control groups.',
+            },
+        },
+    },
+    render: renderVariantStory('default'),
+};
 
-export const Default: Story = {};
+export const Primary: Story = {
+    args: {
+        variant: 'primary',
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Use the primary variant when the icon action is the main action in its immediate context.',
+            },
+        },
+    },
+    render: renderVariantStory('primary'),
+};
+
+export const Secondary: Story = {
+    args: {
+        variant: 'secondary',
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Use the secondary variant for a supporting icon action alongside a primary action.',
+            },
+        },
+    },
+    render: renderVariantStory('secondary'),
+};
+
+export const TooltipHidden: Story = {
+    args: {
+        hideTooltip: true,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Hide the tooltip only when nearby visible content already identifies the action. The button keeps its accessible name.',
+            },
+        },
+    },
+};
