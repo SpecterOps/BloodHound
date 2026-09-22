@@ -484,6 +484,7 @@ type GraphExtensionUpsertResult struct {
 	EnvironmentsResult         ReconcileResult[SchemaEnvironment]
 	RelationshipFindingsResult ReconcileResult[SchemaFinding]
 	SavedQueriesResult         ReconcileResult[SavedQuery]
+	PZRulesResult              ReconcileResult[AssetGroupTagSelector]
 }
 
 // Graph Extension Upsert Input
@@ -508,13 +509,17 @@ type GraphExtensionInput struct {
 	SavedQueriesInput         SavedQueriesInput
 }
 
-type PZRulesInput []PZRuleInput
-type PZRuleInput struct {
-	Name        string
-	Description string
-	AutoCertify SelectorAutoCertifyMethod
-	Seeds       []SelectorSeedInput
-}
+type (
+	PZRulesInput []PZRuleInput
+	PZRuleInput  struct {
+		ExtensionRuleId string
+		Name            string
+		Description     string
+		Seeds           []SelectorSeedInput
+		Enabled         bool
+		AllowDisable    bool
+	}
+)
 
 type SelectorSeedInput struct {
 	Type  SelectorType
@@ -637,7 +642,8 @@ func (s GraphExtensionInput) Validate() error {
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
 
-	if err := s.PZRulesInput.Validate(); err != nil {
+	// PZ Rules and Saved Query Validation
+	if err := s.PZRulesInput.Validate(s.ExtensionInput.Namespace); err != nil {
 		return err
 	} else if err := s.SavedQueriesInput.Validate(); err != nil {
 		return err
@@ -646,26 +652,34 @@ func (s GraphExtensionInput) Validate() error {
 	return nil
 }
 
-// Placeholder, may be more to consider here
-func (s PZRulesInput) Validate() error {
-	var ruleNames = make(map[string]any, len(s))
+// Validate performs comprehensive validation on a PZRulesInput payload
+func (s PZRulesInput) Validate(extensionNamespace string) error {
+	ruleNames := make(map[string]struct{}, len(s))
+	ruleIds := make(map[string]struct{}, len(s))
 
 	for _, rule := range s {
-		if strings.TrimSpace(rule.Name) == "" {
-			return errors.New("privilege zone rule name is required")
+		if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found || strings.TrimSpace(ruleKey) == "" {
+			return fmt.Errorf("privilege zone rule requires a 'key' value prepended with the extension's namespace")
+		} else if strings.TrimSpace(rule.Name) == "" {
+			return fmt.Errorf("privilege zone rule name is required")
+		} else if _, ok := ruleNames[rule.Name]; ok {
+			return fmt.Errorf("duplicate privilege zone rule name: %s", rule.Name)
+		} else if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
+			return fmt.Errorf("duplicate privilege zone rule key: %s", rule.ExtensionRuleId)
+		} else if len(rule.Seeds) != 1 {
+			return fmt.Errorf("privilege zone rule %s requires exactly one seed", rule.Name)
 		}
-		if _, ok := ruleNames[rule.Name]; ok {
-			return fmt.Errorf("duplicate privilege zone rule: %s", rule.Name)
-		}
-		if len(rule.Seeds) == 0 {
-			return fmt.Errorf("privilege zone rule %s requires at least one seed", rule.Name)
-		}
-		for _, seed := range rule.Seeds {
-			if strings.TrimSpace(seed.Value) == "" {
-				return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
-			}
+
+		seed := rule.Seeds[0]
+		if strings.TrimSpace(seed.Value) == "" {
+			return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
+		} else if seed.Type != SelectorTypeCypher {
+			return fmt.Errorf("privilege zone rule %s must be of cypher type", rule.Name)
+		} else if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), seed.Value); err != nil {
+			return fmt.Errorf("privilege zone rule %s contains invalid Cypher seed: %w", rule.Name, err)
 		}
 		ruleNames[rule.Name] = struct{}{}
+		ruleIds[rule.ExtensionRuleId] = struct{}{}
 	}
 	return nil
 }
@@ -699,22 +713,26 @@ func (s SavedQueriesInput) Validate() error {
 	return nil
 }
 
-type RelationshipFindingsInput []RelationshipFindingInput
-type RelationshipFindingInput struct {
-	Name                 string
-	DisplayName          string
-	PZDisplayName        string
-	RelationshipKindName string // edge kind
-	EnvironmentKindName  string
-	RemediationInput     RemediationInput
-}
+type (
+	RelationshipFindingsInput []RelationshipFindingInput
+	RelationshipFindingInput  struct {
+		Name                 string
+		DisplayName          string
+		PZDisplayName        string
+		RelationshipKindName string // edge kind
+		EnvironmentKindName  string
+		RemediationInput     RemediationInput
+	}
+)
 
-type EnvironmentsInput []EnvironmentInput
-type EnvironmentInput struct {
-	EnvironmentKindName string
-	SourceKindName      string
-	PrincipalKinds      []string
-}
+type (
+	EnvironmentsInput []EnvironmentInput
+	EnvironmentInput  struct {
+		EnvironmentKindName string
+		SourceKindName      string
+		PrincipalKinds      []string
+	}
+)
 
 type ExtensionInput struct {
 	Name        string
@@ -730,24 +748,29 @@ func (s ExtensionInput) GetDisplayName() string {
 	return s.Name
 }
 
-type NodesInput []NodeInput
-type NodeInput struct {
-	Name          string
-	DisplayName   string         // human-readable name
-	Description   string         // human-readable description of the node kind
-	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
-	Icon          string         // font-awesome icon for the registered node kind
-	IconColor     string         // icon hex color
-	Info          KindInfoInputs // entity panel definitions for this node kind
-}
+type (
+	NodesInput []NodeInput
+	NodeInput  struct {
+		Name          string
+		DisplayName   string         // human-readable name
+		Description   string         // human-readable description of the node kind
+		IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+		Icon          string         // font-awesome icon for the registered node kind
+		IconColor     string         // icon hex color
+		Info          KindInfoInputs // entity panel definitions for this node kind
+	}
+)
 
-type RelationshipsInput []RelationshipInput
-type RelationshipInput struct {
-	Name          string
-	Description   string
-	IsTraversable bool           // indicates whether the edge-kind is a traversable path
-	Info          KindInfoInputs // entity panel definitions for this relationship kind
-}
+type (
+	RelationshipsInput []RelationshipInput
+	RelationshipInput  struct {
+		Name          string
+		Description   string
+		IsTraversable bool           // indicates whether the edge-kind is a traversable path
+		Info          KindInfoInputs // entity panel definitions for this relationship kind
+	}
+)
+
 type RemediationInput struct {
 	ShortDescription string
 	LongDescription  string
@@ -802,16 +825,16 @@ type SelectorSeedPayload struct {
 
 // PZRulePayload is the JSON shape of a single privilege-zone rule (asset group tag selector) within pz_rules.
 type PZRulePayload struct {
-	Name        string                `json:"name"`
-	Description string                `json:"description,omitempty"`
-	AutoCertify *bool                 `json:"auto_certify,omitempty"`
-	Seeds       []SelectorSeedPayload `json:"seeds"`
+	Name         string                `json:"name"`
+	Description  string                `json:"description,omitempty"`
+	Seeds        []SelectorSeedPayload `json:"seeds"`
+	RuleKey      string                `json:"key"`
+	Enabled      *bool                 `json:"enabled,omitempty"`
+	AllowDisable *bool                 `json:"allow_disable,omitempty"`
 }
 
-// PZRulesPayload is the "rules" envelope for the pz_rules.json component.
-type PZRulesPayload struct {
-	Rules []PZRulePayload `json:"rules"`
-}
+// PZRulesPayload is the list of privilege-zone rules in the pz_rules component.
+type PZRulesPayload []PZRulePayload
 
 type GraphSchemaExtensionPayload struct {
 	Name        string `json:"name"`
@@ -938,7 +961,6 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			SavedQueriesInput:      make(SavedQueriesInput, 0),
 		}
 		infoInputs    KindInfoInputs
-		autoCertify   SelectorAutoCertifyMethod
 		selectorSeeds []SelectorSeedInput
 		err           error
 	)
@@ -997,23 +1019,30 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 
 	// Optional components are only mapped when present
 	if s.PZRules != nil {
-		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(s.PZRules.Rules))
-		for _, rulePayload := range s.PZRules.Rules {
-			autoCertify = SelectorAutoCertifyMethodDisabled
-			if rulePayload.AutoCertify != nil && *rulePayload.AutoCertify {
-				autoCertify = SelectorAutoCertifyMethodAllMembers
-			}
-
+		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(*s.PZRules))
+		for _, rulePayload := range *s.PZRules {
 			selectorSeeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
 			for _, seedPayload := range rulePayload.Seeds {
 				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))
 			}
 
+			ruleEnabled := true
+			if rulePayload.Enabled != nil {
+				ruleEnabled = *rulePayload.Enabled
+			}
+
+			ruleAllowDisable := true
+			if rulePayload.AllowDisable != nil {
+				ruleAllowDisable = *rulePayload.AllowDisable
+			}
+
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
-				Name:        rulePayload.Name,
-				Description: rulePayload.Description,
-				AutoCertify: autoCertify,
-				Seeds:       selectorSeeds,
+				ExtensionRuleId: fmt.Sprintf("%s_%s", s.GraphSchemaExtension.Namespace, rulePayload.RuleKey),
+				Name:            rulePayload.Name,
+				Description:     rulePayload.Description,
+				Seeds:           selectorSeeds,
+				Enabled:         ruleEnabled,
+				AllowDisable:    ruleAllowDisable,
 			})
 		}
 	}

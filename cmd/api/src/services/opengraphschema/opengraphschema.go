@@ -41,16 +41,23 @@ type GraphDBKindRepository interface {
 	RefreshKinds(ctx context.Context) error
 }
 
+// featureFlagReader defines a narrow interface meant to be satisfied by the regular BloodhoundDB for checking feature flag status.
+type featureFlagReader interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
 type OpenGraphSchemaService struct {
 	openGraphSchemaRepository OpenGraphSchemaRepository
 	graphDBKindRepository     GraphDBKindRepository
+	featureFlag               featureFlagReader
 	markdownValidator         *markdownValidator
 }
 
-func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository) *OpenGraphSchemaService {
+func NewOpenGraphSchemaService(openGraphSchemaExtensionRepository OpenGraphSchemaRepository, graphDBKindRepository GraphDBKindRepository, featureFlag featureFlagReader) *OpenGraphSchemaService {
 	return &OpenGraphSchemaService{
 		openGraphSchemaRepository: openGraphSchemaExtensionRepository,
 		graphDBKindRepository:     graphDBKindRepository,
+		featureFlag:               featureFlag,
 		markdownValidator:         newMarkdownValidator(),
 	}
 }
