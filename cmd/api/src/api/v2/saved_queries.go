@@ -528,13 +528,13 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 		return
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		api.HandleDatabaseError(request, response, err)
 		return
 	} else if err = s.checkModifyPermissions(request.Context(), savedQuery, user); err != nil {
 		if errors.Is(err, errUserHasNotAccess) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 		} else {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			api.HandleDatabaseError(request, response, err)
 		}
 		return
 	}
