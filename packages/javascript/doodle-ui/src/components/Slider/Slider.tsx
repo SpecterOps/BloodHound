@@ -76,7 +76,7 @@ const sliderThumbDotStyles = cva(
 type SliderRootProps = Omit<React.ComponentProps<typeof SliderPrimitive.Root>, 'children'>;
 type SliderChangeEventDetails = Parameters<NonNullable<SliderRootProps['onValueChange']>>[1];
 
-type SliderProps = Omit<SliderRootProps, 'value' | 'defaultValue' | 'onValueChange'> & {
+type SliderProps = Omit<SliderRootProps, 'value' | 'defaultValue' | 'onValueChange' | 'orientation'> & {
     /** The controlled value of the slider. */
     value?: number;
     /** The uncontrolled value of the slider when it is initially rendered. */
@@ -85,41 +85,24 @@ type SliderProps = Omit<SliderRootProps, 'value' | 'defaultValue' | 'onValueChan
     onValueChange?: (value: number, eventDetails: SliderChangeEventDetails) => void;
     /** Accessible label applied to the slider thumb. */
     thumbAriaLabel?: string;
-    trackClassName?: string;
-    indicatorClassName?: string;
-    thumbClassName?: string;
-    thumbDotClassName?: string;
 };
 
 /**
  * A slider for selecting a value, built on Base UI.
  */
 const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
-    (
-        {
-            className,
-            thumbAriaLabel,
-            trackClassName,
-            indicatorClassName,
-            thumbClassName,
-            thumbDotClassName,
-            value,
-            defaultValue,
-            onValueChange,
-            ...props
-        },
-        ref
-    ) => {
+    ({ className, thumbAriaLabel, value, defaultValue, onValueChange, ...props }, ref) => {
         const { min = 0 } = props;
 
-        const [displayValue, setDisplayValue] = React.useState(value ?? defaultValue);
+        const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
 
-        React.useEffect(() => {
-            if (value !== undefined) setDisplayValue(value);
-        }, [value]);
+        const displayValue = value ?? uncontrolledValue;
 
         const handleValueChange = (nextValue: number, eventDetails: SliderChangeEventDetails) => {
-            setDisplayValue(nextValue);
+            if (value === undefined) {
+                setUncontrolledValue(nextValue);
+            }
+
             onValueChange?.(nextValue, eventDetails);
         };
 
@@ -128,24 +111,21 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         return (
             <SliderPrimitive.Root
                 ref={ref}
-                className={cn(sliderRootStyles(), className)}
+                className={(state) =>
+                    cn(sliderRootStyles(), typeof className === 'function' ? className(state) : className)
+                }
                 value={value}
                 defaultValue={defaultValue}
                 onValueChange={handleValueChange}
                 {...props}>
                 <SliderPrimitive.Control className={sliderControlStyles()}>
-                    <SliderPrimitive.Track className={cn(sliderTrackStyles(), trackClassName)}>
-                        <SliderPrimitive.Indicator
-                            className={cn(sliderIndicatorStyles({ active: isActive }), indicatorClassName)}
-                        />
+                    <SliderPrimitive.Track className={sliderTrackStyles()}>
+                        <SliderPrimitive.Indicator className={sliderIndicatorStyles({ active: isActive })} />
                     </SliderPrimitive.Track>
                     <SliderPrimitive.Thumb
                         aria-label={thumbAriaLabel}
-                        className={cn(sliderThumbStyles({ active: isActive }), thumbClassName)}>
-                        <span
-                            aria-hidden
-                            className={cn(sliderThumbDotStyles({ active: isActive }), thumbDotClassName)}
-                        />
+                        className={sliderThumbStyles({ active: isActive })}>
+                        <span aria-hidden className={sliderThumbDotStyles({ active: isActive })} />
                     </SliderPrimitive.Thumb>
                 </SliderPrimitive.Control>
             </SliderPrimitive.Root>
@@ -155,4 +135,4 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
 Slider.displayName = 'Slider';
 
-export { Slider, sliderRootStyles as SliderVariants, type SliderProps };
+export { Slider, type SliderProps };

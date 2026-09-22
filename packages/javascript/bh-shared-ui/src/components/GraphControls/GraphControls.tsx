@@ -29,8 +29,7 @@ import {
     faUpDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { Slider } from '@mui/material';
-import { IconButton, MenuItem, Slider, Tooltip } from 'doodle-ui';
+import { IconButton, MenuItem, Popover, PopoverContent, PopoverTrigger, Slider, Tooltip } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useRef, useState } from 'react';
@@ -96,27 +95,44 @@ interface SpacingControlProps {
     value: number;
 }
 
-// doodle-ui version of SpacingControl (now active; no marks to match the MUI look):
-const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) => (
-    <GraphMenu label={`${axis} spacing: ${value}`} icon={icon}>
-        <div className='box-border w-56 px-5 py-3' data-testid={`explore_graph-${axis.toLowerCase()}-spacing-slider`}>
-            <Slider
-                thumbAriaLabel={`${axis} spacing`}
-                max={maximumGraphSpacing}
-                min={minimumGraphSpacing}
-                onValueChange={(nextValue) => {
-                    if (typeof nextValue === 'number') onChange(nextValue);
-                }}
-                step={1}
-                value={value}
-            />
-            <div className='flex justify-between text-xs'>
-                <span>Compact</span>
-                <span>Spacious</span>
-            </div>
-        </div>
-    </GraphMenu>
-);
+const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) => {
+    const label = `${axis} spacing: ${value}`;
+
+    return (
+        <Popover>
+            <Tooltip
+                tooltip={<span>{label}</span>}
+                triggerProps={{ asChild: true, className: 'pointer-events-auto' }}
+                contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
+                <PopoverTrigger asChild>
+                    <IconButton
+                        aria-label={label}
+                        data-testid={`explore_graph-controls_${axis.toLowerCase()}-spacing-menu`}>
+                        <FontAwesomeIcon aria-hidden='true' icon={icon} />
+                    </IconButton>
+                </PopoverTrigger>
+            </Tooltip>
+            <PopoverContent side='top' align='start' aria-label={`${axis} spacing`} className='w-auto p-1'>
+                <div
+                    className='box-border w-56 px-5 py-3'
+                    data-testid={`explore_graph-${axis.toLowerCase()}-spacing-slider`}>
+                    <Slider
+                        thumbAriaLabel={`${axis} spacing`}
+                        max={maximumGraphSpacing}
+                        min={minimumGraphSpacing}
+                        onValueChange={(nextValue) => onChange(nextValue)}
+                        step={1}
+                        value={value}
+                    />
+                    <div className='flex justify-between text-xs'>
+                        <span>Compact</span>
+                        <span>Spacious</span>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
 
 function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
     const {

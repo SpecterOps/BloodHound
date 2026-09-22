@@ -35,14 +35,7 @@ describe('Slider Tests', () => {
         const onValueChange = vi.fn();
 
         render(
-            <Slider
-                defaultValue={50}
-                min={0}
-                max={100}
-                step={1}
-                thumbAriaLabel='Value'
-                onValueChange={onValueChange}
-            />
+            <Slider defaultValue={50} min={0} max={100} step={1} thumbAriaLabel='Value' onValueChange={onValueChange} />
         );
 
         const thumb = screen.getByRole('slider', { name: 'Value' });
@@ -56,14 +49,44 @@ describe('Slider Tests', () => {
         const user = userEvent.setup();
         const onValueChange = vi.fn();
 
-        render(
-            <Slider defaultValue={50} disabled thumbAriaLabel='Value' onValueChange={onValueChange} />
-        );
+        render(<Slider defaultValue={50} disabled thumbAriaLabel='Value' onValueChange={onValueChange} />);
 
         const thumb = screen.getByRole('slider', { name: 'Value' });
         thumb.focus();
         await user.keyboard('{ArrowRight}');
 
         expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('keeps controlled styling aligned when the parent does not accept a value change', async () => {
+        const user = userEvent.setup();
+
+        render(<Slider value={0} min={0} max={100} thumbAriaLabel='Value' onValueChange={vi.fn()} />);
+
+        const thumbInput = screen.getByRole('slider', { name: 'Value' });
+        const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
+
+        thumbInput.focus();
+        await user.keyboard('{ArrowRight}');
+
+        expect(thumbInput).toHaveValue('0');
+        expect(thumbDot).toHaveClass('hidden');
+        expect(thumbDot).not.toHaveClass('block');
+    });
+
+    it('applies a state-driven className callback to the root when disabled', () => {
+        const { container } = render(
+            <Slider defaultValue={50} disabled className={(state) => (state.disabled ? 'my-disabled-slider' : '')} />
+        );
+
+        expect(container.firstChild).toHaveClass('my-disabled-slider');
+    });
+
+    it('does not apply the disabled className from the callback when enabled', () => {
+        const { container } = render(
+            <Slider defaultValue={50} className={(state) => (state.disabled ? 'my-disabled-slider' : '')} />
+        );
+
+        expect(container.firstChild).not.toHaveClass('my-disabled-slider');
     });
 });

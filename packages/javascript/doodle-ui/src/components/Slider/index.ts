@@ -13,4 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export { Slider, SliderVariants, type SliderProps } from './Slider';
+export { Slider, type SliderProps } from './Slider';

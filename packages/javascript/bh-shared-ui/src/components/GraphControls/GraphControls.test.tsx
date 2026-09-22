@@ -208,7 +208,7 @@ describe('GraphControls', () => {
         it.each([
             ['Horizontal', onHorizontalSpacingChange],
             ['Vertical', onVerticalSpacingChange],
-        ] as const)('changes %s spacing through its icon menu', async (axis, onChange) => {
+        ] as const)('changes %s spacing through its icon popover', async (axis, onChange) => {
             const { user } = setup({ layoutControls });
 
             await user.click(screen.getByRole('button', { name: `${axis} spacing: 5` }));

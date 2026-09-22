@@ -13,25 +13,43 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Controls, Description, Primary, Stories, Subtitle, Title } from '@storybook/blocks';
 import { useArgs } from '@storybook/preview-api';
 import type { Meta, StoryObj } from '@storybook/react';
 import { useRef, useState } from 'react';
 import { Slider } from './Slider';
 
+// Custom autodocs page: identical to Storybook's default, except the Stories list excludes the
+// primary story so the interactive Playground is not repeated below its top preview.
+const DocsPage = () => (
+    <>
+        <Title />
+        <Subtitle />
+        <Description />
+        <Primary />
+        <Controls />
+        <Stories includePrimary={false} />
+    </>
+);
+
 /**
  * An input where the user selects a value from within a given range.
  */
-const meta = {
+const meta: Meta<typeof Slider> = {
     title: 'Components/Slider',
     component: Slider,
     tags: ['autodocs'],
     argTypes: {
         value: {
             control: 'number',
-            description: 'The current value of the slider (position of the thumb).',
+            description: 'The controlled value of the slider.',
             table: { type: { summary: 'number' } },
         },
-        defaultValue: { table: { disable: true } },
+        defaultValue: {
+            control: 'number',
+            description: 'The initial value of an uncontrolled slider.',
+            table: { type: { summary: 'number' } },
+        },
         onValueChange: {
             action: 'value changed',
             description: 'Called when the slider value changes.',
@@ -53,36 +71,40 @@ const meta = {
             table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
         },
         step: { table: { disable: true } },
-        orientation: { table: { disable: true } },
         thumbAriaLabel: { table: { disable: true } },
-        trackClassName: { table: { disable: true } },
-        indicatorClassName: { table: { disable: true } },
-        thumbClassName: { table: { disable: true } },
-        thumbDotClassName: { table: { disable: true } },
     },
     args: {
-        value: 50,
         min: 0,
         max: 100,
+        thumbAriaLabel: 'Value',
     },
     parameters: {
         layout: 'centered',
+        docs: {
+            page: DocsPage,
+        },
     },
 } satisfies Meta<typeof Slider>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-    args: {},
+/**
+ * The interactive example. Dragging the thumb updates the `value` prop shown in the Controls
+ * panel, and editing that control moves the thumb. This is the Primary story at the top of the
+ * Docs page and the only story bound to the `value` prop.
+ */
+export const Playground: Story = {
+    args: {
+        value: 50,
+    },
     render: (args) => {
         const [, updateArgs] = useArgs();
-        // Local state is the source of truth so dragging stays responsive; the value is
-        // mirrored back to the `value` arg so it shows in the Controls panel.
+        // Local state keeps dragging responsive; we mirror it back to the `value` arg so the
+        // Controls panel reflects the current value.
         const [value, setValue] = useState(args.value ?? 50);
 
-        // Sync the thumb when the `value` control is edited from the Controls panel
-        // (adjust state during render so drags don't wait on the async arg round-trip).
+        // Move the thumb when the `value` control is edited from the Controls panel.
         const previousArgValue = useRef(args.value);
         if (args.value !== previousArgValue.current) {
             previousArgValue.current = args.value;
@@ -103,6 +125,21 @@ export const Default: Story = {
             </div>
         );
     },
+};
+
+/**
+ * A plain, uncontrolled example. It starts at 50 and can be dragged, but it is not bound to the
+ * `value` prop, so interacting with it never changes the Controls panel value.
+ */
+export const Default: Story = {
+    args: {
+        defaultValue: 50,
+    },
+    render: (args) => (
+        <div className='w-64'>
+            <Slider {...args} value={undefined} />
+        </div>
+    ),
 };
 
 export const Disabled: Story = {
