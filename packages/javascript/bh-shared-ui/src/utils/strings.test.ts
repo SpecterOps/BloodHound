@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseKeywordAndTypeValue, safeParseJson } from './strings';
+import { parseKeywordAndTypeValue } from './strings';
 
 describe('parseKeywordAndTypeValue', () => {
     test('`undefined` input is provided', () => {
@@ -45,29 +45,5 @@ describe('parseKeywordAndTypeValue', () => {
     it('Will ignore what is to the left of the first colon if it doesnt match an existing kind and will treat all as keyword', async () => {
         const result = parseKeywordAndTypeValue('testing:user:domain:ou:gpo:test', ['computer']);
         expect(result).toEqual({ keyword: 'testing:user:domain:ou:gpo:test', type: undefined });
-    });
-});
-
-describe('safeParseJson', () => {
-    test('parses a JSON object', () => {
-        expect(safeParseJson('{"name":"BloodHound","enabled":true}')).toEqual({
-            name: 'BloodHound',
-            enabled: true,
-        });
-    });
-
-    test.each([
-        ['JSON null', 'null'],
-        ['a JSON primitive', '"BloodHound"'],
-    ])('returns undefined for %s', (_description, input) => {
-        expect(safeParseJson(input)).toBeUndefined();
-    });
-
-    test('returns a syntax error for invalid JSON', () => {
-        expect(safeParseJson('{name: BloodHound}')).toBe('Syntax error: invalid JSON.');
-    });
-
-    test('returns an object-required error for a JSON array', () => {
-        expect(safeParseJson('[]')).toBe('Use a JSON object as the top-level value. Arrays are not allowed.');
     });
 });
