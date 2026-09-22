@@ -20,9 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 )
@@ -78,6 +80,10 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		return schemaExists, fmt.Errorf("failed to fetch existing saved queries: %w", err)
 	} else if _, err := reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
 		return schemaExists, fmt.Errorf("failed to reconcile saved queries: %w", err)
+	} else if existingSelectors, err := bloodhoundDBTransaction.GetAssetGroupTagSelectorsByExtensionId(ctx, extension.ID); err != nil {
+		return schemaExists, fmt.Errorf("failed to fetch existing asset group tag selectors: %w", err)
+	} else if _, err := reconcile(ctx, graphExtensionInput.PZRulesInput, existingSelectors, bloodhoundDBTransaction.pzRulesReconcileConfig(extension.ID)); err != nil {
+		return schemaExists, fmt.Errorf("failed to reconcile PZ rules: %w", err)
 	} else if err = tx.Commit().Error; err != nil {
 		return schemaExists, err
 	} else {
@@ -128,6 +134,83 @@ func (s *BloodhoundDB) createNewExtension(ctx context.Context, extensionInput mo
 	} else {
 		return created, false, nil
 	}
+}
+
+func (s *BloodhoundDB) pzRulesReconcileConfig(extensionID int32) reconcileConfig[model.PZRuleInput, model.AssetGroupTagSelector, string] {
+	return reconcileConfig[model.PZRuleInput, model.AssetGroupTagSelector, string]{
+		getInputKey: func(input model.PZRuleInput) string { return input.ExtensionRuleId },
+		getExistingKey: func(existing model.AssetGroupTagSelector) string {
+			if existing.RuleKey.Valid {
+				return existing.RuleKey.String
+			} else {
+				return ""
+			}
+		},
+		create: func(ctx context.Context, input model.PZRuleInput) (model.AssetGroupTagSelector, error) {
+			if selector, err := s.agtSelectorFromPzRule(ctx, extensionID, input); err != nil {
+				return model.AssetGroupTagSelector{}, err
+			} else if created, err := s.CreateAssetGroupTagSelector(ctx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, selector); err != nil {
+				return model.AssetGroupTagSelector{}, fmt.Errorf("failed to create extension privilege zone rule %q: %w", input.ExtensionRuleId, err)
+			} else {
+				return created, nil
+			}
+		},
+		update: func(ctx context.Context, existing model.AssetGroupTagSelector, input model.PZRuleInput) (model.AssetGroupTagSelector, error) {
+			if selector, err := s.agtSelectorFromPzRule(ctx, extensionID, input); err != nil {
+				return model.AssetGroupTagSelector{}, err
+			} else {
+				if !input.Enabled && existing.DisabledAt.Valid {
+					selector.DisabledAt = existing.DisabledAt
+					selector.DisabledBy = existing.DisabledBy
+				}
+				return s.UpdateOpenGraphAssetGroupTagSelector(ctx, extensionID, selector)
+			}
+		},
+		delete: func(ctx context.Context, existing model.AssetGroupTagSelector) error {
+			return s.DeleteAssetGroupTagSelector(ctx, model.User{PrincipalName: model.AssetGroupActorOpenGraphExtensionManagement}, existing)
+		},
+	}
+}
+
+func (s *BloodhoundDB) agtSelectorFromPzRule(ctx context.Context, extensionID int32, input model.PZRuleInput) (model.AssetGroupTagSelector, error) {
+	var (
+		assetGroupTags model.AssetGroupTags
+		selectorSeeds  = make([]model.SelectorSeed, 0, len(input.Seeds))
+		selector       model.AssetGroupTagSelector
+		err            error
+	)
+
+	if assetGroupTags, err = s.GetAssetGroupTags(ctx, model.SQLFilter{
+		SQLString: "type = ? AND position = ?",
+		Params:    []any{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition},
+	}); err != nil {
+		return model.AssetGroupTagSelector{}, fmt.Errorf("failed to fetch tier zero asset group tag: %w", err)
+	} else if len(assetGroupTags) == 0 {
+		return model.AssetGroupTagSelector{}, errors.New("tier zero asset group tag not found")
+	}
+
+	selector = model.AssetGroupTagSelector{
+		AssetGroupTagId: assetGroupTags[0].ID,
+		IsDefault:       true,
+		Name:            input.Name,
+		Description:     input.Description,
+		AutoCertify:     model.SelectorAutoCertifyMethodDisabled,
+		AllowDisable:    input.AllowDisable,
+		RuleKey:         null.StringFrom(input.ExtensionRuleId),
+		ExtensionId:     null.Int32From(extensionID),
+	}
+
+	for _, seed := range input.Seeds {
+		selectorSeeds = append(selectorSeeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
+	}
+	selector.Seeds = selectorSeeds
+
+	if !input.Enabled {
+		selector.DisabledAt = null.TimeFrom(time.Now())
+		selector.DisabledBy = null.StringFrom(model.AssetGroupActorOpenGraphExtensionManagement)
+	}
+
+	return selector, nil
 }
 
 func (s *BloodhoundDB) createExtensionSavedQuery(ctx context.Context, extensionID int32, input model.SavedQueryInput) (model.SavedQuery, error) {
