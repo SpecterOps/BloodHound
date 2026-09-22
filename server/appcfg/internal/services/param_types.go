@@ -157,7 +157,7 @@ var (
 		APITokenExpiration:                  {AllowAPIAccess: true},
 		TrustedProxiesConfig:                {},
 		FedEULACustomTextKey:                {},
-		TierManagementParameterKey:          {},
+		TierManagementParameterKey:          {AllowAPIAccess: true},
 		SessionTTLHours:                     {},
 		StaleClientUpdatedLogicKey:          {},
 		RetainIngestedFilesKey:              {},

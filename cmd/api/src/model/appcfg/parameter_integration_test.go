@@ -44,6 +44,10 @@ func TestParameters_IsValidKey(t *testing.T) {
 	t.Run("should return true for scheduled analysis key", func(t *testing.T) {
 		require.True(t, parameter.IsValidKey(appcfg.ScheduledAnalysis))
 	})
+
+	t.Run("should return true for tier management key", func(t *testing.T) {
+		require.True(t, parameter.IsValidKey(appcfg.TierManagementParameterKey))
+	})
 }
 
 func TestParameters_Validate(t *testing.T) {

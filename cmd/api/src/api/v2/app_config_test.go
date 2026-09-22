@@ -131,6 +131,64 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 		}
 	})
 
+	t.Run("Tier management configuration is user updatable", func(t *testing.T) {
+		var (
+			tieringRequest = appcfg.AppConfigUpdateRequest{
+				Key: string(appcfg.TierManagementParameterKey),
+				Value: map[string]any{
+					"tier_limit":                  20,
+					"label_limit":                 10,
+					"multi_tier_analysis_enabled": true,
+				},
+			}
+			expectedParameter = appcfg.Parameter{
+				Key: appcfg.TierManagementParameterKey,
+				Value: must.NewJSONBObject(map[string]any{
+					"tier_limit":                  float64(20),
+					"label_limit":                 float64(10),
+					"multi_tier_analysis_enabled": true,
+				}),
+			}
+		)
+
+		mockDB.EXPECT().
+			SetConfigurationParameter(gomock.Any(), expectedParameter).
+			Return(nil)
+
+		reqBody, _ := json.Marshal(tieringRequest)
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+		}
+	})
+
+	t.Run("Tier management configuration rejects invalid limits", func(t *testing.T) {
+		tieringRequest := appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.TierManagementParameterKey),
+			Value: map[string]any{
+				"tier_limit":                  -1,
+				"label_limit":                 10,
+				"multi_tier_analysis_enabled": true,
+			},
+		}
+
+		reqBody, _ := json.Marshal(tieringRequest)
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		resources.SetApplicationConfiguration(rec, req)
+
+		if status := rec.Code; status != http.StatusBadRequest {
+			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
+		}
+	})
+
 	t.Run("Scheduled Analysis updates next scheduled analysis start time", func(t *testing.T) {
 		var (
 			futureTime = time.Now().Add(48 * time.Hour).Format("20060102T150405Z")

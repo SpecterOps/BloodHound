@@ -284,6 +284,10 @@ func TestService_IsAPIAllowedKey(t *testing.T) {
 		assert.True(t, service.IsAPIAllowedKey(services.PasswordExpirationWindow))
 	})
 
+	t.Run("tier management is user updatable", func(t *testing.T) {
+		assert.True(t, service.IsAPIAllowedKey(services.TierManagementParameterKey))
+	})
+
 	t.Run("false case", func(t *testing.T) {
 		assert.False(t, service.IsAPIAllowedKey(services.TrustedProxiesConfig))
 	})

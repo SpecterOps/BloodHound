@@ -37,20 +37,20 @@ import (
 type ParameterKey string
 
 const (
-	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
-	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
-	Neo4jConfigs             ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
-	PruneTTL                 ParameterKey = "prune.ttl"
-	ReconciliationKey        ParameterKey = "analysis.reconciliation"
-	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
-	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
-	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
+	PasswordExpirationWindow   ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours            ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs               ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey        ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                   ParameterKey = "prune.ttl"
+	ReconciliationKey          ParameterKey = "analysis.reconciliation"
+	ScheduledAnalysis          ParameterKey = "analysis.scheduled"
+	ClientMetricsKey           ParameterKey = "pipeline.client_metrics"
+	APITokenExpiration         ParameterKey = "auth.api_token_expiration"
+	TierManagementParameterKey ParameterKey = "analysis.tiering"
 
 	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
-	TierManagementParameterKey          ParameterKey = "analysis.tiering"
 	AGTParameterKey                     ParameterKey = "analysis.tagging"
 	StaleClientUpdatedLogicKey          ParameterKey = "pipeline.updated_stale_client"
 	RetainIngestedFilesKey              ParameterKey = "analysis.retain_ingest_files"
@@ -97,7 +97,7 @@ func (s *Parameter) Map(value any) error {
 // paramDefinitions which is used by GET /config
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration, TierManagementParameterKey:
 		return true
 	default:
 		return false
@@ -109,7 +109,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // paramDefinitions which is used by GET /config
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey:
+	case TrustedProxiesConfig, FedEULACustomTextKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey:
 		return true
 	default:
 		return false
@@ -417,8 +417,8 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 }
 
 type TieringParameters struct {
-	TierLimit                int  `json:"tier_limit,omitempty"`
-	LabelLimit               int  `json:"label_limit,omitempty"`
+	TierLimit                int  `json:"tier_limit,omitempty" validate:"integer,min=1"`
+	LabelLimit               int  `json:"label_limit,omitempty" validate:"integer,min=0"`
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
 }
 
