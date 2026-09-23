@@ -102,21 +102,22 @@ type AssetGroupTagCounts struct {
 type AssetGroupTagCountsMap map[int]AssetGroupTagCounts
 
 type AssetGroupTag struct {
-	ID              int               `json:"id"`
-	Type            AssetGroupTagType `json:"type" validate:"required"`
-	KindId          int               `json:"kind_id"`
-	Name            string            `json:"name" validate:"required"`
-	Description     string            `json:"description"`
-	CreatedAt       time.Time         `json:"created_at"`
-	CreatedBy       string            `json:"created_by"`
-	UpdatedAt       time.Time         `json:"updated_at"`
-	UpdatedBy       string            `json:"updated_by"`
-	DeletedAt       null.Time         `json:"deleted_at"`
-	DeletedBy       null.String       `json:"deleted_by"`
-	Position        null.Int32        `json:"position"`
-	RequireCertify  null.Bool         `json:"require_certify"`
-	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
-	Glyph           null.String       `json:"glyph"`
+	ID               int               `json:"id"`
+	Type             AssetGroupTagType `json:"type" validate:"required"`
+	KindId           int               `json:"kind_id"`
+	KindNameOverride string            `json:"-" gorm:"->;-:migration;column:kind_name_override"`
+	Name             string            `json:"name" validate:"required"`
+	Description      string            `json:"description"`
+	CreatedAt        time.Time         `json:"created_at"`
+	CreatedBy        string            `json:"created_by"`
+	UpdatedAt        time.Time         `json:"updated_at"`
+	UpdatedBy        string            `json:"updated_by"`
+	DeletedAt        null.Time         `json:"deleted_at"`
+	DeletedBy        null.String       `json:"deleted_by"`
+	Position         null.Int32        `json:"position"`
+	RequireCertify   null.Bool         `json:"require_certify"`
+	AnalysisEnabled  null.Bool         `json:"analysis_enabled"`
+	Glyph            null.String       `json:"glyph"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -144,6 +145,9 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 func (s AssetGroupTag) KindName() string {
+	if s.KindNameOverride != "" {
+		return s.KindNameOverride
+	}
 	return fmt.Sprintf("%s%s", AssetGroupTagKindPrefix, strings.ReplaceAll(s.Name, " ", "_"))
 }
 
