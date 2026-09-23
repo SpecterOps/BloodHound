@@ -212,7 +212,7 @@ get:
                         status:
                           type: string
                           description: Finding status.
-                          enum: [active, accepted, remediated, deprecated, orphaned]
+                          enum: [active, in_progress, accepted, remediated, deprecated, orphaned]
                         id:
                           type: integer
                           description: Unique identifier of the finding.
