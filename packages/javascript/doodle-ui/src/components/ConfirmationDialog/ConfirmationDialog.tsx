@@ -66,9 +66,9 @@ const ConfirmationDialog: React.FC<{
 
     const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
         <>
-            {iconPosition === 'left' ? icon : null}
+            {iconPosition === 'left' && icon}
             {buttonText}
-            {iconPosition === 'right' ? icon : null}
+            {iconPosition === 'right' && icon}
         </>
     );
 
