@@ -496,19 +496,19 @@ var (
 // Checks if the update or delete operation is allowed based on query scope,
 // user permissions, and extension usage.
 // Returns an error or nil if allowed.
-func (s Resources) checkModifyPermissions(ctx context.Context, savedQuery model.SavedQuery, user model.User) error {
-	if savedQuery.SchemaExtensionID != nil {
-		// queries associated with extensions cannot be modified
+func (s Resources) checkModifyPermissions(ctx context.Context, savedQueryID int64, user model.User) error {
+	scopes, err := s.DB.GetScopeForSavedQuery(ctx, savedQueryID, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if scopes[model.SavedQueryScopeReadonly] {
 		return errNotModifiable
-	} else if savedQuery.UserID != user.ID.String() {
+	} else if !scopes[model.SavedQueryScopeOwned] {
 		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 			return errUserHasNotAccess
-		} else {
-			if isPublic, err := s.DB.IsSavedQueryPublic(ctx, savedQuery.ID); err != nil {
-				return err
-			} else if !isPublic {
-				return errUserHasNotAccess
-			}
+		} else if !scopes[model.SavedQueryScopePublic] {
+			return errUserHasNotAccess
 		}
 	}
 	return nil
@@ -534,7 +534,7 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 		return
-	} else if err = s.checkModifyPermissions(request.Context(), savedQuery, user); err != nil {
+	} else if err = s.checkModifyPermissions(request.Context(), savedQuery.ID, user); err != nil {
 		if errors.Is(err, errNotModifiable) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be modified", request), response)
 		} else if errors.Is(err, errUserHasNotAccess) {
@@ -576,7 +576,7 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if err = s.checkModifyPermissions(request.Context(), savedQuery, user); err != nil {
+	} else if err = s.checkModifyPermissions(request.Context(), savedQuery.ID, user); err != nil {
 		if errors.Is(err, errNotModifiable) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be deleted", request), response)
 		} else if errors.Is(err, errUserHasNotAccess) {

@@ -505,7 +505,14 @@ func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
 	require.NoError(t, err)
 
 	// query belongs to another user
-	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		database.SavedQueryScopeMap{
+			model.SavedQueryScopeReadonly: false,
+			model.SavedQueryScopeOwned:    false,
+			model.SavedQueryScopePublic:   false,
+		}, nil,
+	)
 
 	var payload any
 
@@ -546,9 +553,10 @@ func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
 
 	// query belongs to another user
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
-
-	// query is not public
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned:  false,
+		model.SavedQueryScopePublic: false,
+	}, nil)
 
 	var payload any
 
@@ -629,7 +637,7 @@ func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
 	// query is public
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("foo"))
 
 	var payload any
 
@@ -679,6 +687,9 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("random error"))
 
 	payload := map[string]any{
@@ -726,6 +737,9 @@ func TestResources_UpdateSavedQuery_AdminCantModifyExtensionQuery(t *testing.T) 
 
 	extensionId := int32(5)
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: uuid2.Nil.String(), SchemaExtensionID: &extensionId}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeReadonly: true,
+	}, nil)
 
 	var payload any
 
@@ -776,6 +790,9 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
 	payload := map[string]any{
@@ -830,6 +847,9 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_CannotUpdateExtraFields_Succ
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
 	payload := map[string]any{
@@ -886,6 +906,9 @@ func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
 	payload := map[string]any{
@@ -941,6 +964,10 @@ func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
 	}
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned:  true,
+		model.SavedQueryScopePublic: true,
+	}, nil)
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
 	payload := map[string]any{
@@ -998,7 +1025,9 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
 	// query is public
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopePublic: true,
+	}, nil)
 
 	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
 
@@ -1153,6 +1182,10 @@ func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
 
 	// query belongs to another user
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned:  false,
+		model.SavedQueryScopePublic: false,
+	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.NoError(t, err)
@@ -1190,7 +1223,7 @@ func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, fmt.Errorf("error"))
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("error"))
 
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.NoError(t, err)
@@ -1228,7 +1261,10 @@ func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
 
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(false, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned:  false,
+		model.SavedQueryScopePublic: false,
+	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.NoError(t, err)
@@ -1301,6 +1337,9 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: userId.String()}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(database.ErrNotFound)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
@@ -1338,6 +1377,9 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: userId.String()}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(fmt.Errorf("foo"))
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
@@ -1376,6 +1418,9 @@ func TestResources_DeleteSavedQuery_AdminCantModifyExtensionQuery(t *testing.T) 
 
 	extensionId := int32(5)
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: uuid2.Nil.String(), SchemaExtensionID: &extensionId}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeReadonly: true,
+	}, nil)
 
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
 	require.NoError(t, err)
@@ -1412,7 +1457,9 @@ func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "notThisUser"}, nil)
-	mockDB.EXPECT().IsSavedQueryPublic(gomock.Any(), gomock.Any()).Return(true, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopePublic: true,
+	}, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(nil)
 
 	req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
@@ -1448,6 +1495,9 @@ func TestResources_DeleteSavedQuery(t *testing.T) {
 	savedQueryId := "1"
 
 	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: userId.String()}, nil)
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
+		model.SavedQueryScopeOwned: true,
+	}, nil)
 	mockDB.EXPECT().DeleteSavedQuery(gomock.Any(), gomock.Any()).Return(nil)
 
 	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "DELETE", fmt.Sprintf(endpoint, savedQueryId), nil)
