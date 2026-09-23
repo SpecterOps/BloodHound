@@ -211,13 +211,25 @@ describe('GraphControls', () => {
         ] as const)('changes %s spacing through its icon popover', async (axis, onChange) => {
             const { user } = setup({ layoutControls });
 
-            await user.click(screen.getByRole('button', { name: `${axis} spacing: 5` }));
+            const trigger = screen.getByRole('button', {
+                name: `${axis} spacing: 5`,
+            });
 
-            const slider = screen.getByRole('slider', { name: `${axis} spacing` });
-            slider.focus();
+            act(() => trigger.focus());
+            await user.keyboard('{Enter}');
+
+            const slider = screen.getByRole('slider', {
+                name: `${axis} spacing`,
+            });
+
+            expect(slider).toHaveFocus();
+
             await user.keyboard('{ArrowRight}');
 
             expect(onChange).toHaveBeenCalledWith(6);
+
+            await user.keyboard('{Escape}');
+            expect(trigger).toHaveFocus();
         });
 
         it('hides the direction menu but keeps spacing controls when direction is not provided', () => {

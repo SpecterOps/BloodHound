@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Slider as SliderPrimitive } from '@base-ui/react/slider';
+import { Slider as SliderPrimitive, type SliderRootProps as BaseSliderRootProps } from '@base-ui/react/slider';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
@@ -73,16 +73,10 @@ const sliderThumbDotStyles = cva(
     }
 );
 
-type SliderRootProps = Omit<React.ComponentProps<typeof SliderPrimitive.Root>, 'children'>;
+type SliderRootProps = Omit<BaseSliderRootProps<number>, 'children'>;
 type SliderChangeEventDetails = Parameters<NonNullable<SliderRootProps['onValueChange']>>[1];
 
-type SliderProps = Omit<SliderRootProps, 'value' | 'defaultValue' | 'onValueChange' | 'orientation'> & {
-    /** The controlled value of the slider. */
-    value?: number;
-    /** The uncontrolled value of the slider when it is initially rendered. */
-    defaultValue?: number;
-    /** Called when the slider value changes. */
-    onValueChange?: (value: number, eventDetails: SliderChangeEventDetails) => void;
+type SliderProps = Omit<SliderRootProps, 'orientation' | 'minStepsBetweenValues' | 'thumbCollisionBehavior'> & {
     /** Accessible label applied to the slider thumb. */
     thumbAriaLabel?: string;
 };
