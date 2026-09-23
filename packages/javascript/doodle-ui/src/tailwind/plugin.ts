@@ -116,6 +116,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // BRAND COLORS
             '--bhe-main': light.primary.main,
+            '--brand-orange': light['brand-orange'],
             // '--sp-main': light.primary.main,
             '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
@@ -252,6 +253,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--icon': common.dark,
             // '--icon-contrast': common.white,
             '--icon-disabled': palette.grey[700],
+            '--border': '#939597',
             // '--divider': palette.neutral.light[500],
 
             // Legacy below
@@ -362,6 +364,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // BRAND COLORS
             '--bhe-main': dark.primary.main,
+            '--brand-orange': dark['brand-orange'],
             // '--sp-main': dark.primary.main,
             '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
@@ -499,6 +502,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--icon': common.white,
             // '--icon-contrast': common.dark,
             '--icon-disabled': common.disabled,
+            '--border': '#7B7B7B',
             // '--divider': palette.neutral.dark[500],
 
             ///////////// Legacy below //////////

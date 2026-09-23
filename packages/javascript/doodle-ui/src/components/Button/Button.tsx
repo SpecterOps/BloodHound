@@ -19,13 +19,39 @@ import * as React from 'react';
 import { cn } from '../utils';
 
 const buttonBaseClasses = [
-    'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
+    'inline-flex items-center justify-center whitespace-nowrap transition-colors',
     'focus:outline-none focus-visible:focus-ring',
     'disabled:text-[#616161] dark:disabled:text-[#A6A6A6] disabled:pointer-events-none disabled:opacity-50',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-const primaryClasses = [
+const containedButtonGeometryClasses = 'rounded p-2 text-sm/5';
+
+const containedButtonStateClasses = [
+    'hover:bg-secondary hover:text-text-contrast',
+    'focus-visible:bg-secondary focus-visible:text-text-contrast',
+    'active:bg-primary-variant active:text-text-contrast',
+];
+
+const containedPrimaryClasses = [
+    'border border-transparent bg-primary text-text-contrast',
+    ...containedButtonStateClasses,
+    'disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
+];
+
+const containedSecondaryClasses = [
+    'border border-border bg-elevation-1 text-text-main',
+    ...containedButtonStateClasses,
+    'disabled:bg-btn-disabled-fill',
+];
+
+const containedTertiaryClasses = [
+    'border border-brand-orange bg-elevation-1 text-text-main',
+    ...containedButtonStateClasses,
+    'disabled:border-btn-disabled-fill disabled:bg-btn-disabled-fill',
+];
+
+const iconPrimaryClasses = [
     'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
@@ -35,7 +61,7 @@ const primaryClasses = [
     // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)
 ];
 
-const secondaryClasses = [
+const iconSecondaryClasses = [
     'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white',
     'hover:bg-secondary hover:text-common-white dark:hover:text-common-dark',
     'focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
@@ -46,15 +72,16 @@ const secondaryClasses = [
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
-            primary: primaryClasses,
-            secondary: secondaryClasses,
+            primary: containedPrimaryClasses,
+            secondary: containedSecondaryClasses,
+            tertiary: containedTertiaryClasses,
             // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             /**
              * @deprecated Use TextButton instead.
              */
             transparent: [
-                'border border-transparent-btn-border bg-transparent text-main',
+                'rounded-3xl border border-transparent-btn-border bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-common-white hover:no-underline dark:hover:text-common-dark',
                 'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
             ],
@@ -80,10 +107,10 @@ export const ButtonVariants = cva(buttonBaseClasses, {
          */
         size: {
             // TODO remove small variant in BED-7635
-            small: 'h-9 px-4 py-1 text-xs',
-            medium: 'h-10 px-6 py-2 text-sm/5',
+            small: '',
+            medium: '',
             // TODO remove large variant in BED-7635
-            large: 'h-11 px-8 py-3 text-base',
+            large: '',
         },
     },
 
@@ -91,6 +118,28 @@ export const ButtonVariants = cva(buttonBaseClasses, {
         variant: 'primary',
         size: 'medium',
     },
+    compoundVariants: [
+        {
+            variant: ['primary', 'secondary', 'tertiary'],
+            size: ['small', 'medium', 'large'],
+            className: containedButtonGeometryClasses,
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'small',
+            className: 'h-9 px-4 py-1 text-xs',
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'medium',
+            className: 'h-10 px-6 py-2 text-sm/5',
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'large',
+            className: 'h-11 px-8 py-3 text-base',
+        },
+    ],
 });
 
 export interface ButtonProps extends BaseUIButton.Props, VariantProps<typeof ButtonVariants> {}
@@ -119,7 +168,7 @@ Button.displayName = 'Button';
 
 export const TextButtonBaseClasses = cn(
     ...buttonBaseClasses,
-    'px-2 py-1 has-[svg]:px-1',
+    'rounded-3xl px-2 py-1 has-[svg]:px-1',
     'active:text-[#0D0A30] dark:active:text-primary',
     'hover:text-secondary',
     'focus-visible:ring-0 focus-visible:ring-transparent focus-visible:text-secondary'
@@ -194,8 +243,8 @@ export const IconButtonVariants = cva(
         variants: {
             variant: {
                 default: defaultIconButtonClasses,
-                primary: primaryClasses,
-                secondary: secondaryClasses,
+                primary: iconPrimaryClasses,
+                secondary: iconSecondaryClasses,
             },
         },
         defaultVariants: {

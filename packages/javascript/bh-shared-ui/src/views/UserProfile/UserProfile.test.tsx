@@ -160,6 +160,18 @@ describe('UserProfile', () => {
         expect(screen.getByRole('button', { name: 'Reset Password' })).toBeInTheDocument();
     });
 
+    it('allows profile action buttons to size to their content', () => {
+        const actionButtons = [
+            screen.getByRole('button', { name: 'API Key Management' }),
+            screen.getByRole('button', { name: 'Reset Password' }),
+        ];
+
+        for (const button of actionButtons) {
+            expect(button).not.toHaveStyle({ width: '100%' });
+            expect(button.parentElement).toHaveClass('MuiGrid-grid-xs-9');
+        }
+    });
+
     describe('"Reset Password" button is clicked', () => {
         const user = userEvent.setup();
         beforeEach(async () => {
