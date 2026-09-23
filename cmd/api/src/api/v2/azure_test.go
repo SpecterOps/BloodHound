@@ -33,10 +33,12 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/util/size"
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -1494,4 +1496,394 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
+}
+
+const (
+	etacAnchorObjectID  = "sp-tenant-a"
+	etacAllowedTenantID = "tenant-a-id"
+	etacAllowedObjectID = "user-tenant-a-allowed"
+	etacAllowedName     = "ALLOWED USER TENANT A"
+	etacForeignTenantID = "tenant-b-id"
+	etacForeignObjectID = "user-tenant-b"
+	etacForeignName     = "USER TENANT B"
+)
+
+// TestResources_GetAZEntity_ETACFiltersRelatedEntities verifies that GetAZEntity filters related entities from inaccessible tenants
+// even when the anchor node belongs to an allowed tenant.
+// This and the following ETAC test functions use related_entity_type=outbound-control to cover the ETAC logic shared by all related entity types.
+func TestResources_GetAZEntity_ETACFiltersRelatedEntities(t *testing.T) {
+	t.Parallel()
+
+	type testData struct {
+		name           string
+		rawQuery       string
+		isListResponse bool
+	}
+
+	tt := []testData{
+		{
+			name:           "type=graph must not expose foreign tenant nodes",
+			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=graph",
+			isListResponse: false,
+		},
+		{
+			name:           "type=list must not expose foreign tenant nodes",
+			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=list&skip=0&limit=100",
+			isListResponse: true,
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				ctrl           = gomock.NewController(t)
+				mockDatabase   = mocks_db.NewMockDatabase(ctrl)
+				mockGraphDB    = graphmocks.NewMockDatabase(ctrl)
+				mockGraphQuery = mocks_graph.NewMockGraph(ctrl)
+				requestWithCtx = etacRestrictedRequest(testCase.rawQuery)
+				response       = httptest.NewRecorder()
+				router         = mux.NewRouter()
+			)
+
+			mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+			mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), etacAnchorObjectID, azure_schema.ServicePrincipal).Return(graph.NewNode(graph.ID(1), graph.AsProperties(graph.PropertyMap{
+				azure_schema.TenantID: etacAllowedTenantID,
+			}), azure_schema.Entity, azure_schema.ServicePrincipal), nil)
+
+			setupAZMixedTenantOutboundControlTraversal(t, ctrl, mockGraphDB)
+
+			resources := v2.Resources{
+				Graph:      mockGraphDB,
+				GraphQuery: mockGraphQuery,
+				DB:         mockDatabase,
+				DogTags:    etacEnabledDogTags(),
+			}
+
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+			router.ServeHTTP(response, requestWithCtx)
+
+			status, _, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, http.StatusOK, status)
+			assertNoForeignTenantData(t, body)
+			assertAllowedTenantDataPresent(t, body)
+
+			if !testCase.isListResponse {
+				assert.Contains(t, body, "** Hidden Object **", "graph responses redact inaccessible nodes rather than dropping them")
+			} else {
+				assert.NotContains(t, body, "** Hidden Object **", "list responses drop inaccessible nodes rather than redacting them")
+				assert.Contains(t, body, `"count":1`, "count must reflect the filtered/allowed nodes, not the unfiltered traversal")
+
+			}
+		})
+	}
+}
+
+// TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants verifies that GetAZRelatedEntities filters related entities
+// from inaccessible tenants.
+func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) {
+	t.Parallel()
+
+	type testData struct {
+		name           string
+		rawQuery       string
+		isListResponse bool
+	}
+
+	tt := []testData{
+		{
+			name:           "type=graph must not expose foreign tenant nodes",
+			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=graph",
+			isListResponse: false,
+		},
+		{
+			name:           "type=list must not expose foreign tenant nodes",
+			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=list&skip=0&limit=100",
+			isListResponse: true,
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				ctrl           = gomock.NewController(t)
+				mockDatabase   = mocks_db.NewMockDatabase(ctrl)
+				mockGraphDB    = graphmocks.NewMockDatabase(ctrl)
+				requestWithCtx = etacRestrictedRequest(testCase.rawQuery)
+				response       = httptest.NewRecorder()
+			)
+
+			mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+
+			setupAZMixedTenantOutboundControlTraversal(t, ctrl, mockGraphDB)
+
+			resources := v2.Resources{
+				Graph:   mockGraphDB,
+				DB:      mockDatabase,
+				DogTags: etacEnabledDogTags(),
+			}
+
+			// we need to extract the user's allowlist
+			user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(requestWithCtx).AuthCtx)
+			require.True(t, isUser)
+			allowList := v2.ExtractEnvironmentIDsFromUser(&user)
+
+			resources.GetAZRelatedEntities(requestWithCtx.Context(), response, requestWithCtx, etacAnchorObjectID, azure_schema.ServicePrincipal, allowList)
+
+			status, _, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, http.StatusOK, status)
+			assertNoForeignTenantData(t, body)
+			assertAllowedTenantDataPresent(t, body)
+
+			if !testCase.isListResponse {
+				assert.Contains(t, body, "** Hidden Object **", "graph responses redact inaccessible nodes rather than dropping them")
+			} else {
+				assert.NotContains(t, body, "** Hidden Object **", "list responses drop inaccessible nodes rather than redacting them")
+				assert.Contains(t, body, `"count":1`, "count must reflect the filtered/allowed nodes, not the unfiltered traversal")
+
+			}
+		})
+	}
+}
+
+// TestResources_GetAZEntity_ETACPermissions verifies that users with a restricted environment allowlist are subject to filtering.
+// Responses are unfiltered when the feature flag is off or the user has AllEnvironments.
+func TestResources_GetAZEntity_ETACPermissions(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		name                string
+		user                model.User
+		etacEnabled         bool
+		expectForeignTenant bool
+	}{
+		{
+			name:        "ETAC enabled with restricted environments allowlist hides foreign-tenant nodes",
+			user:        etacRestrictedUser(),
+			etacEnabled: true,
+		},
+		{
+			name: "ETAC disabled with empty environment allowlist returns nodes from both tenants",
+			user: model.User{
+				AllEnvironments:                  false,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{},
+			},
+			etacEnabled:         false,
+			expectForeignTenant: true,
+		},
+		{
+			name: "ETAC enabled for AllEnvironments user with empty environment allowlist returns nodes from both tenants",
+			user: model.User{
+				AllEnvironments:                  true,
+				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{},
+			},
+			etacEnabled:         true,
+			expectForeignTenant: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		for _, responseType := range []string{"graph", "list"} {
+			t.Run(testCase.name+"/type="+responseType, func(t *testing.T) {
+				t.Parallel()
+
+				var (
+					ctrl           = gomock.NewController(t)
+					mockDatabase   = mocks_db.NewMockDatabase(ctrl)
+					mockGraphDB    = graphmocks.NewMockDatabase(ctrl)
+					mockGraphQuery = mocks_graph.NewMockGraph(ctrl)
+					request        = httptest.NewRequest(http.MethodGet, "/api/v2/azure/service-principals?object_id="+etacAnchorObjectID+"&related_entity_type=outbound-control&type="+responseType+"&skip=0&limit=100", nil)
+					bheCtx         = bhctx.Context{
+						AuthCtx: auth.Context{Owner: testCase.user},
+					}
+					requestWithCtx = request.WithContext(bheCtx.ConstructGoContext())
+					response       = httptest.NewRecorder()
+					router         = mux.NewRouter()
+					resources      = v2.Resources{
+						Graph:      mockGraphDB,
+						GraphQuery: mockGraphQuery,
+						DB:         mockDatabase,
+						DogTags: dogtags.NewTestService(dogtags.TestOverrides{
+							Bools: map[dogtags.BoolDogTag]bool{
+								dogtags.ETAC_ENABLED: testCase.etacEnabled,
+							},
+						}),
+					}
+				)
+
+				mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
+				if testCase.etacEnabled && !testCase.user.AllEnvironments {
+					mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), etacAnchorObjectID, azure_schema.ServicePrincipal).Return(graph.NewNode(graph.ID(1), graph.AsProperties(graph.PropertyMap{
+						azure_schema.TenantID: etacAllowedTenantID,
+					}), azure_schema.Entity, azure_schema.ServicePrincipal), nil)
+				}
+
+				setupAZMixedTenantOutboundControlTraversal(t, ctrl, mockGraphDB)
+
+				router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
+				router.ServeHTTP(response, requestWithCtx)
+
+				status, _, body := test.ProcessResponse(t, response)
+
+				require.Equal(t, http.StatusOK, status)
+				assertAllowedTenantDataPresent(t, body)
+				if testCase.expectForeignTenant {
+					assert.Contains(t, body, etacForeignObjectID, "object ID should remain visible -- ETAC filtering does not apply to this user")
+					assert.Contains(t, body, etacForeignName, "node name should remain visible -- ETAC filtering does not apply to this user")
+
+					if responseType == "graph" {
+						assert.NotContains(t, body, "** Hidden Object **", "no hidden placeholders -- ETAC filtering does not apply to this user")
+					}
+
+					if responseType == "list" {
+						assert.Contains(t, body, `"count":2`, "count must reflect the entire traversal -- ETAC filtering does not apply to this user")
+					}
+				} else {
+					assertNoForeignTenantData(t, body)
+
+					if responseType == "graph" {
+						assert.Contains(t, body, "** Hidden Object **", "graph responses redact inaccessible nodes rather than dropping them")
+					} else {
+						assert.NotContains(t, body, "** Hidden Object **", "list responses drop inaccessible nodes rather than redacting them")
+					}
+
+					if responseType == "list" {
+						assert.Contains(t, body, `"count":1`, "count must reflect the filtered/allowed nodes, not the unfiltered traversal")
+					}
+				}
+			})
+		}
+	}
+}
+
+// etacRestrictedUser is a user whose ETAC allowlist contains only the anchor node's tenant.
+func etacRestrictedUser() model.User {
+	return model.User{
+		AllEnvironments: false,
+		EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{
+			{EnvironmentID: etacAllowedTenantID},
+		},
+	}
+}
+
+// setupAZMixedTenantOutboundControlTraversal mocks an outbound-control traversal in which the anchor Service Principal
+// controls one node in the user's allowed tenant and one node in a foreign tenant.
+func setupAZMixedTenantOutboundControlTraversal(t *testing.T, ctrl *gomock.Controller, mockGraphDB *graphmocks.MockDatabase) {
+	t.Helper()
+
+	var (
+		mockTx        = graphmocks.NewMockTransaction(ctrl)
+		mockNodeQuery = graphmocks.NewMockNodeQuery(ctrl)
+		mockRelQuery  = graphmocks.NewMockRelationshipQuery(ctrl)
+
+		anchorNode = graph.NewNode(graph.ID(1), graph.AsProperties(graph.PropertyMap{
+			common.ObjectID:       etacAnchorObjectID,
+			common.Name:           "SP TENANT A",
+			azure_schema.TenantID: etacAllowedTenantID,
+		}), azure_schema.Entity, azure_schema.ServicePrincipal)
+
+		foreignNode = graph.NewNode(graph.ID(2), graph.AsProperties(graph.PropertyMap{
+			common.ObjectID:       etacForeignObjectID,
+			common.Name:           etacForeignName,
+			azure_schema.TenantID: etacForeignTenantID,
+		}), azure_schema.Entity, azure_schema.User)
+
+		allowedNode = graph.NewNode(graph.ID(3), graph.AsProperties(graph.PropertyMap{
+			common.ObjectID:       etacAllowedObjectID,
+			common.Name:           etacAllowedName,
+			azure_schema.TenantID: etacAllowedTenantID,
+		}), azure_schema.Entity, azure_schema.User)
+
+		foreignEdge = graph.NewRelationship(graph.ID(100), anchorNode.ID, foreignNode.ID, graph.NewProperties(), azure_schema.Owns)
+		allowedEdge = graph.NewRelationship(graph.ID(101), anchorNode.ID, allowedNode.ID, graph.NewProperties(), azure_schema.Owns)
+	)
+
+	// directionalCursor mocks a graph.Cursor that yields the given results and closes
+	directionalCursor := func(results ...graph.DirectionalResult) graph.Cursor[graph.DirectionalResult] {
+		cursor := graphmocks.NewMockCursor[graph.DirectionalResult](ctrl)
+		channel := make(chan graph.DirectionalResult, len(results))
+
+		for _, result := range results {
+			channel <- result
+		}
+		close(channel)
+
+		cursor.EXPECT().Chan().Return(channel).AnyTimes()
+		cursor.EXPECT().Error().Return(nil).AnyTimes()
+
+		return cursor
+	}
+
+	mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate func(tx graph.Transaction) error, _ ...graph.TransactionOption) error {
+		return delegate(mockTx)
+	})
+
+	mockTx.EXPECT().GraphQueryMemoryLimit().Return(size.Size(0)).AnyTimes()
+	mockTx.EXPECT().Nodes().Return(mockNodeQuery).AnyTimes()
+	mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockNodeQuery).AnyTimes()
+	mockNodeQuery.EXPECT().First().Return(anchorNode, nil)
+	mockTx.EXPECT().Relationships().Return(mockRelQuery).AnyTimes()
+	mockRelQuery.EXPECT().Filterf(gomock.Any()).Return(mockRelQuery).AnyTimes()
+
+	// the anchor node traverses to the allowed and foreign nodes, which then terminate their paths
+	mockRelQuery.EXPECT().FetchDirection(gomock.Any(), gomock.Any()).DoAndReturn(func(_ graph.Direction, delegate func(graph.Cursor[graph.DirectionalResult]) error) error {
+		return delegate(directionalCursor(
+			graph.NewDirectionalResult(graph.DirectionOutbound, allowedEdge, allowedNode),
+			graph.NewDirectionalResult(graph.DirectionOutbound, foreignEdge, foreignNode),
+		))
+	})
+	mockRelQuery.EXPECT().FetchDirection(gomock.Any(), gomock.Any()).DoAndReturn(func(_ graph.Direction, delegate func(graph.Cursor[graph.DirectionalResult]) error) error {
+		return delegate(directionalCursor())
+	}).AnyTimes()
+}
+
+// etacRestrictedRequest builds a request with the auth context of an ETAC-restricted user.
+func etacRestrictedRequest(rawQuery string) *http.Request {
+	request := &http.Request{
+		URL: &url.URL{
+			Path:     "/api/v2/azure/service-principals",
+			RawQuery: rawQuery,
+		},
+		Method: http.MethodGet,
+	}
+
+	bheCtx := bhctx.Context{
+		AuthCtx: auth.Context{
+			PermissionOverrides: auth.PermissionOverrides{},
+			Owner:               etacRestrictedUser(),
+			Session:             model.UserSession{},
+		},
+	}
+
+	return request.WithContext(bheCtx.ConstructGoContext())
+}
+
+func etacEnabledDogTags() dogtags.Service {
+	return dogtags.NewTestService(dogtags.TestOverrides{
+		Bools: map[dogtags.BoolDogTag]bool{
+			dogtags.ETAC_ENABLED: true,
+		},
+	})
+}
+
+// assertNoForeignTenantData checks that the response omits the foreign tenantid, objectid, and name
+func assertNoForeignTenantData(t *testing.T, body string) {
+	t.Helper()
+
+	assert.NotContains(t, body, etacForeignTenantID, "foreign tenantid must not be present in the response")
+	assert.NotContains(t, body, etacForeignObjectID, "foreign tenant objectid must not be present in the response")
+	assert.NotContains(t, body, etacForeignName, "foreign tenant node name must not be present in the response")
+}
+
+// assertAllowedTenantDataPresent checks that the response still includes the related node from the allowed tenant
+func assertAllowedTenantDataPresent(t *testing.T, body string) {
+	t.Helper()
+
+	assert.Contains(t, body, etacAllowedObjectID, "allowed tenant objectid must be present in the response")
+	assert.Contains(t, body, etacAllowedName, "allowed tenant node name must be present in the response")
 }
