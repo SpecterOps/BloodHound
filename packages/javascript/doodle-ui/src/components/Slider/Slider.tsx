@@ -44,7 +44,7 @@ const sliderIndicatorStyles = cva(
 );
 
 const sliderThumbStyles = cva(
-    'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1 dark:focus-visible:bg-neutral-400 data-[disabled]:bg-disabled',
+    'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1 dark:has-[:focus-visible]:bg-neutral-400 data-[disabled]:bg-disabled',
     {
         variants: {
             active: {
@@ -59,7 +59,7 @@ const sliderThumbStyles = cva(
 );
 
 const sliderThumbDotStyles = cva(
-    'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full group-focus-visible/thumb:block group-focus-visible/thumb:bg-secondary group-data-[disabled]/thumb:hidden',
+    'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full group-has-[:focus-visible]/thumb:block group-has-[:focus-visible]/thumb:bg-secondary group-data-[disabled]/thumb:hidden',
     {
         variants: {
             active: {
@@ -85,7 +85,18 @@ type SliderProps = Omit<SliderRootProps, 'orientation' | 'minStepsBetweenValues'
  * A slider for selecting a value, built on Base UI.
  */
 const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
-    ({ className, thumbAriaLabel, value, defaultValue, onValueChange, ...props }, ref) => {
+    (
+        {
+            className,
+            thumbAriaLabel,
+            value,
+            defaultValue,
+            onValueChange,
+            'aria-describedby': ariaDescribedBy,
+            ...props
+        },
+        ref
+    ) => {
         const { min = 0 } = props;
 
         const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
@@ -93,11 +104,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         const displayValue = value ?? uncontrolledValue;
 
         const handleValueChange = (nextValue: number, eventDetails: SliderChangeEventDetails) => {
-            if (value === undefined) {
+            onValueChange?.(nextValue, eventDetails);
+
+            if (value === undefined && !eventDetails.isCanceled) {
                 setUncontrolledValue(nextValue);
             }
-
-            onValueChange?.(nextValue, eventDetails);
         };
 
         const isActive = (displayValue ?? min) > min;
@@ -118,6 +129,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                     </SliderPrimitive.Track>
                     <SliderPrimitive.Thumb
                         aria-label={thumbAriaLabel}
+                        aria-describedby={ariaDescribedBy}
                         className={sliderThumbStyles({ active: isActive })}>
                         <span aria-hidden className={sliderThumbDotStyles({ active: isActive })} />
                     </SliderPrimitive.Thumb>

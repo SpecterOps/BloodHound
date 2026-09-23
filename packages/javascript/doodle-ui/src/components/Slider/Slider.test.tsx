@@ -30,6 +30,20 @@ describe('Slider Tests', () => {
         expect(screen.getByRole('slider', { name: 'Horizontal spacing' })).toBeInTheDocument();
     });
 
+    it('applies aria-describedby to the slider input', () => {
+        render(
+            <>
+                <p id='slider-description'>Choose a value</p>
+                <Slider defaultValue={50} thumbAriaLabel='Value' aria-describedby='slider-description' />
+            </>
+        );
+
+        expect(screen.getByRole('slider', { name: 'Value' })).toHaveAttribute(
+            'aria-describedby',
+            'slider-description'
+        );
+    });
+
     it('calls onValueChange when the value is changed via the keyboard', async () => {
         const user = userEvent.setup();
         const onValueChange = vi.fn();
@@ -62,6 +76,31 @@ describe('Slider Tests', () => {
         const user = userEvent.setup();
 
         render(<Slider value={0} min={0} max={100} thumbAriaLabel='Value' onValueChange={vi.fn()} />);
+
+        const thumbInput = screen.getByRole('slider', { name: 'Value' });
+        const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
+
+        thumbInput.focus();
+        await user.keyboard('{ArrowRight}');
+
+        expect(thumbInput).toHaveValue('0');
+        expect(thumbDot).toHaveClass('hidden');
+        expect(thumbDot).not.toHaveClass('block');
+    });
+
+    it('does not update uncontrolled styling when a value change is canceled', async () => {
+        const user = userEvent.setup();
+
+        render(
+            <Slider
+                defaultValue={0}
+                min={0}
+                max={100}
+                step={1}
+                thumbAriaLabel='Value'
+                onValueChange={(_nextValue, eventDetails) => eventDetails.cancel()}
+            />
+        );
 
         const thumbInput = screen.getByRole('slider', { name: 'Value' });
         const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
