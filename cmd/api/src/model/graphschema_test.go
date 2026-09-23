@@ -1458,7 +1458,7 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 				EnvironmentsInput:      make(EnvironmentsInput, 0),
 				SavedQueriesInput:      make(SavedQueriesInput, 0),
 				PZRulesInput: PZRulesInput{{
-					ExtensionRuleId: "TEST_rule_1",
+					ExtensionRuleId: "rule_1",
 					Name:            "Rule 1",
 					Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
 					Enabled:         true,
@@ -1519,7 +1519,7 @@ func TestPZRulesInputValidate(t *testing.T) {
 		{
 			name: "error_-_multiple_seeds",
 			rules: PZRulesInput{{
-				ExtensionRuleId: "TEST_rule",
+				ExtensionRuleId: "rule",
 				Name:            "Rule",
 				Seeds: []SelectorSeedInput{
 					{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"},
@@ -1531,7 +1531,7 @@ func TestPZRulesInputValidate(t *testing.T) {
 		{
 			name: "error_-_object_id_seed",
 			rules: PZRulesInput{{
-				ExtensionRuleId: "TEST_rule",
+				ExtensionRuleId: "rule",
 				Name:            "Rule",
 				Seeds:           []SelectorSeedInput{{Type: SelectorTypeObjectId, Value: "0123456"}},
 			}},
@@ -1540,7 +1540,7 @@ func TestPZRulesInputValidate(t *testing.T) {
 		{
 			name: "error_-_invalid_cypher_seed",
 			rules: PZRulesInput{{
-				ExtensionRuleId: "TEST_rule",
+				ExtensionRuleId: "rule",
 				Name:            "Rule",
 				Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n RETURN n"}},
 			}},

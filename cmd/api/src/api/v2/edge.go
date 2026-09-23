@@ -155,7 +155,9 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		params = request.URL.Query()
 	)
 
-	if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
+	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "unknown user", request), response)
+	} else if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterEdgeType), request), response)
 	} else if sourceNode, hasParameter := params[edgeParameterSourceNode]; !hasParameter {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterSourceNode), request), response)
@@ -173,6 +175,8 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
 	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
+	} else if apiError := validateNodeAccess(request, s.GraphQuery, s.DogTags, user, startID, endID); apiError != nil {
+		api.WriteErrorResponse(request.Context(), apiError, response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if pathSet, err := ad.FetchACLInheritancePath(request.Context(), s.Graph, edge); err != nil {
@@ -182,6 +186,16 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		unifiedGraph.AddPathSet(primaryDisplayKinds, pathSet, true)
+
+		if ShouldFilterForETAC(s.DogTags, user) {
+			if filteredGraph, err := filterETACGraph(unifiedGraph, user); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
+				return
+			} else {
+				unifiedGraph = filteredGraph
+			}
+		}
+
 		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
 }

@@ -39,6 +39,7 @@ var (
 	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
 	ErrGraphExtensionValidation = errors.New("graph schema validation error")
 	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+	ErrFeatureFlag              = errors.New("error checking if feature flag is enabled")
 
 	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
 	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
@@ -474,6 +475,19 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
 
+// GraphExtensionUpsertResult contains the persisted extension and entity outcomes from an extension upsert.
+type GraphExtensionUpsertResult struct {
+	ExtensionExisted           bool                 // indicates whether the extension was created or updated, used when determining appropriate API response
+	Extension                  GraphSchemaExtension // Persisted graph schema extension record used for logging
+	NodeKindsResult            ReconcileResult[GraphSchemaNodeKind]
+	RelationshipKindsResult    ReconcileResult[GraphSchemaRelationshipKind]
+	KindInfosResult            ReconcileResult[GraphSchemaKindInfo]
+	EnvironmentsResult         ReconcileResult[SchemaEnvironment]
+	RelationshipFindingsResult ReconcileResult[SchemaFinding]
+	SavedQueriesResult         ReconcileResult[SavedQuery]
+	PZRulesResult              ReconcileResult[AssetGroupTagSelector]
+}
+
 // Graph Extension Upsert Input
 
 type SavedQueriesInput []SavedQueryInput
@@ -645,7 +659,7 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	ruleIds := make(map[string]struct{}, len(s))
 
 	for _, rule := range s {
-		if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found || strings.TrimSpace(ruleKey) == "" {
+		if strings.TrimSpace(rule.ExtensionRuleId) == "" {
 			return fmt.Errorf("privilege zone rule requires a 'key' value")
 		} else if strings.TrimSpace(rule.Name) == "" {
 			return fmt.Errorf("privilege zone rule name is required")
@@ -1024,7 +1038,7 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			}
 
 			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
-				ExtensionRuleId: fmt.Sprintf("%s_%s", s.GraphSchemaExtension.Namespace, rulePayload.RuleKey),
+				ExtensionRuleId: rulePayload.RuleKey,
 				Name:            rulePayload.Name,
 				Description:     rulePayload.Description,
 				Seeds:           selectorSeeds,
