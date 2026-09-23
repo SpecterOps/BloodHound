@@ -56,6 +56,12 @@ const meta = {
             description:
                 'When populated with a value, adds another validation step where the user must enter the provided `challengeTxt` value in order to proceed.',
         },
+        isLoading: {
+            description: 'When `true`, action button are disabled.',
+        },
+        error: {
+            description: 'Displays supplied error message.',
+        },
     },
 } satisfies Meta<typeof ConfirmationDialog>;
 
@@ -88,6 +94,7 @@ export const FullExample: Story = {
                     confirmText={args.confirmText}
                     challengeTxt={args.challengeTxt}
                     error={args.error}
+                    isLoading={args.isLoading}
                 />
             </>
         );
