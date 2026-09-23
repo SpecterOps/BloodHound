@@ -341,13 +341,17 @@ class BHEAPIClient {
     splitPrivilegeZonesByEnvironment = (
         environments: types.PrivilegeZoneEnvironment[],
         dryRun: boolean,
+        zoneNames?: Record<string, string>,
         options?: RequestOptions
     ) =>
         this.baseClient.post<BasicResponse<types.PrivilegeZoneSplitResponse>>(
             '/api/v2/privilege-zone-boundaries/environment-split',
-            { environments, dry_run: dryRun },
+            { environments, dry_run: dryRun, zone_names: zoneNames },
             options
         );
+
+    combinePrivilegeZonesByEnvironment = (options?: RequestOptions) =>
+        this.baseClient.delete('/api/v2/privilege-zone-boundaries/environment-split', options);
 
     upsertPrivilegeZoneControlPolicy = (policy: types.PrivilegeZoneControlPolicyInput, options?: RequestOptions) =>
         this.baseClient.put<BasicResponse<types.PrivilegeZoneControlPolicy>>(

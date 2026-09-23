@@ -32,6 +32,13 @@ post:
                 $ref: './../schemas/model.privilege-zone-environment.yaml'
             dry_run:
               type: boolean
+            zone_names:
+              type: object
+              description: Optional names keyed by environment object ID. Existing zones cannot be renamed by splitting.
+              additionalProperties:
+                type: string
+                minLength: 1
+                maxLength: 255
   responses:
     200:
       description: Tier Zero split dry-run plan
@@ -54,6 +61,16 @@ post:
               data:
                 $ref: './../schemas/model.privilege-zone-split-response.yaml'
     400: { $ref: './../responses/bad-request.yaml' }
+    401: { $ref: './../responses/unauthorized.yaml' }
+    403: { $ref: './../responses/forbidden.yaml' }
+    500: { $ref: './../responses/internal-server-error.yaml' }
+delete:
+  operationId: CombinePrivilegeZonesByEnvironment
+  summary: Restore the shared Tier Zero zone and deactivate environment-scoped Tier Zero zones
+  tags: [Privilege Zone Boundaries, Enterprise]
+  responses:
+    204:
+      description: Tier Zero zones combined
     401: { $ref: './../responses/unauthorized.yaml' }
     403: { $ref: './../responses/forbidden.yaml' }
     500: { $ref: './../responses/internal-server-error.yaml' }

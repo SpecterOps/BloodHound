@@ -21174,6 +21174,15 @@
                   },
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "zone_names": {
+                    "type": "object",
+                    "description": "Optional names keyed by environment object ID. Existing zones cannot be renamed by splitting.",
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255
+                    }
                   }
                 }
               }
@@ -21219,6 +21228,28 @@
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "CombinePrivilegeZonesByEnvironment",
+        "summary": "Restore the shared Tier Zero zone and deactivate environment-scoped Tier Zero zones",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "description": "Tier Zero zones combined"
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"
