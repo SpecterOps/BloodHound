@@ -17,40 +17,51 @@ import { cva } from 'class-variance-authority';
 import { cn } from '../utils';
 
 export const buttonBaseClasses = [
-    'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
+    'inline-flex items-center justify-center whitespace-nowrap transition-colors',
     'focus:outline-none focus-visible:focus-ring',
     'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none disabled:opacity-50',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-export const primaryClasses = [
-    'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
-    'hover:bg-secondary',
-    'focus-visible:bg-secondary',
-    'active:bg-[color:var(--button-primary-active-fill)]',
-    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]',
+const containedButtonGeometryClasses = 'rounded p-2 text-sm/5';
+
+const containedButtonStateClasses = [
+    'hover:bg-secondary hover:text-text-contrast',
+    'focus-visible:bg-secondary focus-visible:text-text-contrast',
+    'active:bg-primary-variant active:text-text-contrast',
 ];
 
-export const secondaryClasses = [
-    'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
-    'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
-    'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
-    'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
-    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
+const containedPrimaryClasses = [
+    'border border-transparent bg-primary text-text-contrast',
+    ...containedButtonStateClasses,
+    'disabled:bg-[color:var(--button-disabled-fill)]',
+];
+
+const containedSecondaryClasses = [
+    'border border-[color:var(--button-secondary-border)] bg-elevation-1 text-text-main',
+    ...containedButtonStateClasses,
+    'disabled:bg-[color:var(--button-disabled-fill)]',
+];
+
+const containedTertiaryClasses = [
+    'border border-brand-orange bg-elevation-1 text-text-main',
+    ...containedButtonStateClasses,
+    'disabled:border-[color:var(--button-disabled-fill)] disabled:bg-[color:var(--button-disabled-fill)]',
 ];
 
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
-            primary: primaryClasses,
-            secondary: secondaryClasses,
+            primary: containedPrimaryClasses,
+            secondary: containedSecondaryClasses,
+            tertiary: containedTertiaryClasses,
             // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             /**
              * @deprecated Use TextButton instead.
              */
             transparent: [
-                'border border-[color:var(--button-transparent-border)] bg-transparent text-main',
+                'rounded-3xl border border-[color:var(--button-transparent-border)] bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-[color:var(--button-highlight-text)] hover:no-underline',
                 'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
             ],
@@ -76,10 +87,10 @@ export const ButtonVariants = cva(buttonBaseClasses, {
          */
         size: {
             // TODO remove small variant in BED-7635
-            small: 'h-9 px-4 py-1 text-xs',
-            medium: 'h-10 px-6 py-2 text-sm/5',
+            small: '',
+            medium: '',
             // TODO remove large variant in BED-7635
-            large: 'h-11 px-8 py-3 text-base',
+            large: '',
         },
     },
 
@@ -87,11 +98,33 @@ export const ButtonVariants = cva(buttonBaseClasses, {
         variant: 'primary',
         size: 'medium',
     },
+    compoundVariants: [
+        {
+            variant: ['primary', 'secondary', 'tertiary'],
+            size: ['small', 'medium', 'large'],
+            className: containedButtonGeometryClasses,
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'small',
+            className: 'h-9 px-4 py-1 text-xs',
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'medium',
+            className: 'h-10 px-6 py-2 text-sm/5',
+        },
+        {
+            variant: ['transparent', 'icon'],
+            size: 'large',
+            className: 'h-11 px-8 py-3 text-base',
+        },
+    ],
 });
 
 export const TextButtonBaseClasses = cn(
     ...buttonBaseClasses,
-    'px-2 py-1 has-[svg]:px-1',
+    'rounded-3xl px-2 py-1 has-[svg]:px-1',
     'active:text-[color:var(--button-text-active)]',
     'hover:text-secondary',
     'focus-visible:ring-0 focus-visible:ring-transparent focus-visible:text-secondary'

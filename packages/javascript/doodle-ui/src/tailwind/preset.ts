@@ -136,6 +136,7 @@ export default {
                 'status-indeterminate-fill': 'var(--status-indeterminate-fill)',
 
                 'bhe-main': 'var(--bhe-main)',
+                'brand-orange': 'var(--brand-orange)',
                 // 'sp-main': 'var(--sp-main)',
                 'bhce-main': 'var(--bhce-main)',
 
