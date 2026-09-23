@@ -39,17 +39,20 @@ const validSchemaBaseJSON = `{
 	"relationship_kinds": [],
 	"environments": []`
 
-// validPZRulesJSON is a minimal privilege zone rules component.
-const validPZRulesJSON = `{
-	"rules": [
-		{
-			"name": "Tier Zero Admins",
-			"description": "seeds for tier zero",
-			"seeds": [
-				{"type": 1, "value": "match (n:OG_Kind) return n"}
-			]
-		}
-	]
+// validPZRulesJSON is a minimal inline privilege zone rules payload.
+const validPZRulesJSON = `[
+	{
+		"name": "Tier Zero Admins",
+		"description": "seeds for tier zero",
+		"seeds": [
+			{"type": 1, "value": "match (n:OG_Kind) return n"}
+		]
+	}
+]`
+
+// validPZRulesComponentJSON is a minimal privilege zone rules component.
+const validPZRulesComponentJSON = `{
+	"pz_rules": ` + validPZRulesJSON + `
 }`
 
 // validSavedQueryJSON is a minimal saved query definition.
@@ -199,7 +202,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name: "zip schema with findings requires at least one pz rule",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":   validSchemaWithFindingsJSON,
-				"pz_rules.json": `{"rules": []}`,
+				"pz_rules.json": `{"pz_rules": []}`,
 			}),
 			expected: expectedResults{
 				errorText:  "\"pz_rules.json\" must contain at least one rule",
@@ -211,7 +214,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name: "zip schema with findings and pz_rules.json is valid",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":   validSchemaWithFindingsJSON,
-				"pz_rules.json": validPZRulesJSON,
+				"pz_rules.json": validPZRulesComponentJSON,
 			}),
 			expected: expectedResults{
 				schemaName: "TestExtension",
@@ -222,7 +225,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name: "valid zip with all three components populates the full bundle",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":        validSchemaJSON,
-				"pz_rules.json":      validPZRulesJSON,
+				"pz_rules.json":      validPZRulesComponentJSON,
 				"saved_queries.json": validSavedQueriesJSON,
 			}),
 			expected: expectedResults{
@@ -241,7 +244,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 		},
 		{
 			name:    "missing schema.json is an extractor error",
-			archive: newExtensionZip(t, map[string]string{"pz_rules.json": validPZRulesJSON}),
+			archive: newExtensionZip(t, map[string]string{"pz_rules.json": validPZRulesComponentJSON}),
 			expected: expectedResults{
 				errorText:  "required component \"schema.json\" not found in extension bundle",
 				hasPZRules: true,
@@ -406,7 +409,7 @@ func TestValidateZipBundle(t *testing.T) {
 				name: "enterprise extension (findings) with pz_rules is valid",
 				payload: func() model.GraphExtensionPayload {
 					var payload = schemaWithFindings
-					payload.PZRules = &model.PZRulesPayload{Rules: []model.PZRulePayload{{Name: "Test rule"}}}
+					payload.PZRules = &model.PZRulesPayload{{Name: "Test rule"}}
 					return payload
 				}(),
 			},
