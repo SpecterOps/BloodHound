@@ -16,6 +16,7 @@
 import userEvent from '@testing-library/user-event';
 import { CustomRulesKey, DefaultRulesKey, DisabledRulesKey, RulesKey } from 'js-client-library';
 import { setupServer } from 'msw/node';
+import { FixedSizeList } from 'react-window';
 import * as useAssetGroupTags from '../../../hooks/useAssetGroupTags';
 import { zoneHandlers } from '../../../mocks';
 import { render, screen, waitFor, within } from '../../../test-utils';
@@ -23,6 +24,7 @@ import { disabledStylesOverride } from './constants';
 import { RulesAccordion } from './RulesAccordion';
 
 const mockNavigate = vi.fn();
+let mockRuleId: string | undefined;
 
 vi.mock('../../../hooks/useSelectedTag', () => ({
     useSelectedTagPathParams: () => ({
@@ -56,7 +58,7 @@ vi.mock('../../../hooks/usePZParams/usePZQueryParams', () => ({
 vi.mock('../../../hooks/usePZParams/usePZPathParams', () => ({
     usePZPathParams: () => ({
         tagId: 1,
-        ruleId: undefined,
+        ruleId: mockRuleId,
         isZonePage: true,
         tagDetailsLink: (id: number) => `/tags/${id}`,
         ruleDetailsLink: (tagId: number, ruleId: number) => `/tags/${tagId}/rules/${ruleId}`,
@@ -155,5 +157,46 @@ describe('RulesAccordion', () => {
         await userEvent.click(screen.getByText('tag-0-rule-1'));
 
         expect(mockNavigate).toHaveBeenCalledWith('/tags/1/rules/1');
+    });
+
+    it('does not reposition a selected rule after a rules-query update', async () => {
+        mockRuleId = '1';
+        const scrollToItem = vi.spyOn(FixedSizeList.prototype, 'scrollToItem');
+        const queryResult = {
+            data: {
+                pages: [
+                    {
+                        items: [{ id: 1, name: 'tag-0-rule-1' }],
+                    },
+                ],
+            },
+            fetchNextPage: vi.fn(),
+            hasNextPage: true,
+            isFetchingNextPage: false,
+            isLoading: false,
+        } as any;
+
+        useRulesInfiniteQuerySpy.mockImplementation(() => queryResult);
+
+        const { rerender } = render(<RulesAccordion />);
+
+        await waitFor(() => expect(scrollToItem).toHaveBeenCalledTimes(1));
+
+        useRulesInfiniteQuerySpy.mockImplementation(() => ({
+            ...queryResult,
+            data: {
+                pages: [
+                    {
+                        items: [
+                            { id: 1, name: 'tag-0-rule-1' },
+                            { id: 2, name: 'tag-0-rule-2' },
+                        ],
+                    },
+                ],
+            },
+        }));
+        rerender(<RulesAccordion />);
+
+        await waitFor(() => expect(scrollToItem).toHaveBeenCalledTimes(1));
     });
 });

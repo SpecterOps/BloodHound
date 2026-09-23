@@ -152,6 +152,7 @@ const LoadingRow = (_: number, style: React.CSSProperties) => (
 
 const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKey, count, isOpen, onOpen }) => {
     const listRef = useRef<FixedSizeList<AssetGroupTagSelector[]>>(null);
+    const positionedRuleKey = useRef<string | null>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrderAscending);
 
     const navigate = useAppNavigate();
@@ -186,13 +187,20 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
         const selectedItemIndex = allItems?.findIndex((rule) => rule.id === ruleIdNumber);
 
         if (typeof selectedItemIndex === 'number' && selectedItemIndex > -1) {
-            listRef.current?.scrollToItem(selectedItemIndex, 'smart');
+            const selectedRuleKey = `${tagId}:${filterKey}:${sortOrder}:${environments.join(',')}:${ruleId}`;
+
+            if (positionedRuleKey.current !== selectedRuleKey) {
+                listRef.current?.scrollToItem(selectedItemIndex, 'smart');
+                positionedRuleKey.current = selectedRuleKey;
+            }
+
+            return;
         }
 
         if (selectedItemIndex === -1 && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
         }
-    }, [ruleId, isOpen, rulesQuery]);
+    }, [environments, filterKey, isOpen, ruleId, rulesQuery, sortOrder, tagId]);
 
     const Row: InfiniteQueryFixedListProps<AssetGroupTagSelector>['renderRow'] = (item, index, style) => {
         const isSelected = isRuleSelected(item.id.toString());
