@@ -115,15 +115,34 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 
 // Recognized component file names within an extension bundle.
 const (
-	bundleFileNameSchema       = "schema.json"
-	bundleFileNamePzRules      = "pz_rules.json"
-	bundleFileNameSavedQueries = "saved_queries.json"
+	bundleFileNameSchema                      = "schema.json"
+	bundleFileNamePzRules                     = "pz_rules.json"
+	bundleFileNameSavedQueries                = "saved_queries.json"
+	bundleComponentDecompressedReadLimitBytes = api.DefaultAPIPayloadReadLimitBytes
 )
+
+type bundleComponentReadCloser struct {
+	io.Reader
+	io.Closer
+}
+
+func openBundleComponent(file *zip.File) (io.ReadCloser, error) {
+	if file.UncompressedSize64 > uint64(bundleComponentDecompressedReadLimitBytes) {
+		return nil, fmt.Errorf("component %q exceeds decompressed size limit of %d bytes", file.Name, bundleComponentDecompressedReadLimitBytes)
+	} else if componentReader, err := file.Open(); err != nil {
+		return nil, err
+	} else {
+		return bundleComponentReadCloser{
+			Reader: io.LimitReader(componentReader, bundleComponentDecompressedReadLimitBytes),
+			Closer: componentReader,
+		}, nil
+	}
+}
 
 func validateZipBundle(payload model.GraphExtensionPayload) error {
 	if len(payload.GraphRelationshipFindings) > 0 && payload.PZRules == nil {
 		return fmt.Errorf("extension declares relationship findings and requires a %q component", bundleFileNamePzRules)
-	} else if len(payload.GraphRelationshipFindings) > 0 && len(payload.PZRules.Rules) == 0 {
+	} else if len(payload.GraphRelationshipFindings) > 0 && len(*payload.PZRules) == 0 {
 		return fmt.Errorf("extension declares relationship findings and %q must contain at least one rule", bundleFileNamePzRules)
 	}
 	return nil
@@ -143,32 +162,50 @@ func extractExtensionDataFromJSON(payload io.Reader) (model.GraphExtensionPayloa
 	return graphExtension, nil
 }
 
-// extractPZRulesFromJSON - extracts a model.PZRulesPayload from the incoming payload. Will return an error if the
-// decoder fails to decode the payload.
-func extractPZRulesFromJSON(payload io.Reader) (model.PZRulesPayload, error) {
-	var pzRules model.PZRulesPayload
+// extractPZRulesFromJSON extracts PZ rules from the incoming component payload. It returns an error if the decoder
+// fails to decode the payload.
+func extractPZRulesFromJSON(payload io.Reader) (*model.PZRulesPayload, error) {
+	var (
+		// Contains the json tag for unmarshalling.
+		graphExtension model.GraphExtensionPayload
+		// Saves a non-nil slice to the extension payload, which determines whether the file has been seen.
+		nilPZRules model.PZRulesPayload
+	)
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
-		return pzRules, fmt.Errorf("failed to normalize %s: %w", bundleFileNamePzRules, err)
-	} else if err = json.NewDecoder(normFile).Decode(&pzRules); err != nil {
-		return pzRules, fmt.Errorf("unable to decode %s: %w", bundleFileNamePzRules, err)
+		return nil, fmt.Errorf("failed to normalize %s: %w", bundleFileNamePzRules, err)
+	} else if err = json.NewDecoder(normFile).Decode(&graphExtension); err != nil {
+		return nil, fmt.Errorf("unable to decode %s: %w", bundleFileNamePzRules, err)
 	}
 
-	return pzRules, nil
+	if graphExtension.PZRules == nil {
+		graphExtension.PZRules = &nilPZRules
+	}
+
+	return graphExtension.PZRules, nil
 }
 
-// extractSavedQueriesFromJSON - extracts a model.SavedQueriesPayload from the incoming payload. Will return an error
-// if the decoder fails to decode the payload.
-func extractSavedQueriesFromJSON(payload io.Reader) (model.SavedQueriesPayload, error) {
-	var savedQueries model.SavedQueriesPayload
+// extractSavedQueriesFromJSON - extracts saved queries from the incoming payload. Will return an error if the decoder
+// fails to decode the payload.
+func extractSavedQueriesFromJSON(payload io.Reader) (*model.SavedQueriesPayload, error) {
+	var (
+		// contains the json tag for unmarshall
+		graphExtension model.GraphExtensionPayload
+		// saves a nil slice to the extension payload which determines if the file has been seen
+		nilSavedQueries model.SavedQueriesPayload
+	)
 
 	if normFile, err := bomenc.NormalizeToUTF8(payload); err != nil {
-		return savedQueries, fmt.Errorf("failed to normalize %s: %w", bundleFileNameSavedQueries, err)
-	} else if err = json.NewDecoder(normFile).Decode(&savedQueries); err != nil {
-		return savedQueries, fmt.Errorf("unable to decode %s: %w", bundleFileNameSavedQueries, err)
+		return nil, fmt.Errorf("failed to normalize %s: %w", bundleFileNameSavedQueries, err)
+	} else if err = json.NewDecoder(normFile).Decode(&graphExtension); err != nil {
+		return nil, fmt.Errorf("unable to decode %s: %w", bundleFileNameSavedQueries, err)
 	}
 
-	return savedQueries, nil
+	if graphExtension.SavedQueries == nil {
+		graphExtension.SavedQueries = &nilSavedQueries
+	}
+
+	return graphExtension.SavedQueries, nil
 }
 
 func validateSchemaComponent(payload model.GraphExtensionPayload) error {
@@ -231,7 +268,7 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 	case bundleFileNameSchema:
 		if *schemaFound {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSchema)
-		} else if reader, err := file.Open(); err != nil {
+		} else if reader, err := openBundleComponent(file); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNameSchema, err)
 		} else {
 			defer reader.Close()
@@ -250,27 +287,27 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 	case bundleFileNamePzRules:
 		if extension.PZRules != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNamePzRules)
-		} else if reader, err := file.Open(); err != nil {
+		} else if reader, err := openBundleComponent(file); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNamePzRules, err)
 		} else {
 			defer reader.Close()
 			if rules, err := extractPZRulesFromJSON(reader); err != nil {
 				return err
 			} else {
-				extension.PZRules = &rules
+				extension.PZRules = rules
 			}
 		}
 	case bundleFileNameSavedQueries:
 		if extension.SavedQueries != nil {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSavedQueries)
-		} else if reader, err := file.Open(); err != nil {
+		} else if reader, err := openBundleComponent(file); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNameSavedQueries, err)
 		} else {
 			defer reader.Close()
 			if queries, err := extractSavedQueriesFromJSON(reader); err != nil {
 				return err
 			} else {
-				extension.SavedQueries = &queries
+				extension.SavedQueries = queries
 			}
 		}
 	default:

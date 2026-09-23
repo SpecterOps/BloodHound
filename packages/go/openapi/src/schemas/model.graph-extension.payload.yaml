@@ -70,23 +70,6 @@ properties:
           type: boolean
         info:
           $ref: './model.graph-extension.kind-info-definition.yaml'
-  #properties:
-  #  type: array
-  #  items:
-  #    type: object
-  #    properties:
-  #      name:
-  #        type: string
-  #        example: UserPrincipalName
-  #      display_name:
-  #        type: string
-  #        example: User Principal Name
-  #      data_type:
-  #        type: string
-  #        example: string
-  #      description:
-  #        type: string
-  #        example: An Active Directory User Principal Name
   environments:
     type: array
     items:
@@ -134,47 +117,76 @@ properties:
             long_remediation:
               type: string
   pz_rules:
-    type: object
-    description: Optional privilege-zone rules component.
-    properties:
-      rules:
-        type: array
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-            description:
-              type: string
-            auto_certify:
-              type: boolean
-            seeds:
-              type: array
-              items:
-                type: object
-                properties:
-                  type:
-                    type: integer
-                  value:
-                    type: string
-  saved_queries:
-    type: object
-    description: Optional saved queries component.
-    properties:
-      queries:
-        type: array
-        items:
-          type: object
-          properties:
-            query_key:
-              type: string
-              example: all-domain-admins
-            name:
-              type: string
-              example: All Domain Admins
-            query:
-              type: string
-              example: MATCH (n) RETURN n LIMIT 1
-            description:
-              type: string
-              example: Returns all domain admin nodes.
+    type: array
+    description: |
+      Declares the extension's desired privilege zones. Omitting this property or
+      providing an empty array removes existing privilege zones associated with the extension.
+    items:
+      type: object
+      required:
+        - key
+        - name
+        - seeds
+      properties:
+        key:
+          type: string
+          description: A stable identifier for reconciling rules between extension upserts.
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+          description: Whether the privilege zone rule is enabled. Defaults to true when omitted.
+        allow_disable:
+          type: boolean
+          description: Whether users may disable the privilege zone rule. Defaults to true when omitted.
+        seeds:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required:
+              - type
+              - value
+            properties:
+              type:
+                type: integer
+                enum: [2]
+                description: The selector type. Privilege-zone rules only support Cypher (2).
+              value:
+                type: string
+                description: A valid Cypher query used to seed the privilege zone.
+  queries:
+    type: array
+    description: |
+      Declares the extension's desired saved queries. Omitting this property or
+      providing an empty array removes existing saved queries associated with the extension.
+    items:
+      type: object
+      required:
+        - query_key
+        - name
+        - query
+      properties:
+        query_key:
+          type: string
+          description: A stable identifier for reconciling the saved query.
+          example: critical-assets
+        name:
+          type: string
+          description: The saved query's display name.
+          example: Critical Assets
+        query:
+          type: string
+          description: Extension-provided saved queries must be read-only; updating clauses are not supported.
+          example: MATCH (n) RETURN n
+        description:
+          type: string
+          description: An optional description of the saved query.
+          example: Lists all critical assets.
+        category:
+          type: string
+          description: An optional category for grouping the saved query.
+          example: Asset Management

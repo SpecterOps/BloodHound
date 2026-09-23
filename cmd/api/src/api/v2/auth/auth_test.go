@@ -340,174 +340,6 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 	})
 }
 
-func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "invalidColumn")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsNotSortable)
-	}
-}
-
-func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "invalidPredicate:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsBadQueryParameterFilters)
-	}
-}
-
-func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, _, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("name", "gt:0")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusBadRequest, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsFilterPredicateNotSupported)
-	}
-}
-
-func TestManagementResource_ListPermissions_DBError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'foo'"}).Return(model.Permissions{}, fmt.Errorf("foo"))
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-authority")
-		q.Add("sort_by", "name")
-		q.Add("name", "eq:foo")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusInternalServerError, response.Code)
-		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
-	}
-}
-
-func TestManagementResource_ListPermissions(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	endpoint := "/api/v2/permissions"
-
-	perm1 := model.Permission{
-		Authority: "a",
-		Name:      "a",
-		Serial: model.Serial{
-			Basic: model.Basic{
-				CreatedAt: time.Time{},
-			},
-		},
-	}
-
-	perm2 := model.Permission{
-		Authority: "b",
-		Name:      "b",
-		Serial: model.Serial{
-			Basic: model.Basic{
-				CreatedAt: time.Time{},
-			},
-		},
-	}
-
-	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllPermissions(gomock.Any(), "authority desc, name", model.SQLFilter{SQLString: "name = 'a'"}).Return(model.Permissions{perm1, perm2}, nil)
-
-	ctx := context.WithValue(context.Background(), bhctx.ValueKey, &bhctx.Context{})
-	if req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil); err != nil {
-		t.Fatal(err)
-	} else {
-		q := url.Values{}
-		q.Add("sort_by", "-authority")
-		q.Add("sort_by", "name")
-		q.Add("name", "eq:a")
-
-		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-		req.URL.RawQuery = q.Encode()
-
-		router := mux.NewRouter()
-		router.HandleFunc(endpoint, resources.ListPermissions).Methods("GET")
-
-		response := httptest.NewRecorder()
-		router.ServeHTTP(response, req)
-		require.Equal(t, http.StatusOK, response.Code)
-
-		respPermissions := map[string]any{}
-		err := json.Unmarshal(response.Body.Bytes(), &respPermissions)
-		require.Nil(t, err)
-
-		require.Equal(t, perm1.Authority, respPermissions["data"].(map[string]any)["permissions"].([]any)[0].(map[string]any)["authority"])
-		require.Equal(t, perm2.Authority, respPermissions["data"].(map[string]any)["permissions"].([]any)[1].(map[string]any)["authority"])
-	}
-}
-
 func TestExpireUserAuthSecret_Failure(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -2630,7 +2462,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(model.AuthTokens{}, fmt.Errorf("foo"))
 
 	endpoint := "/api/v2/auth/tokens"
 	if req, err := http.NewRequestWithContext(c, "GET", endpoint, nil); err != nil {
@@ -2867,7 +2699,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 	require.True(t, isUser)
 
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "name, last_access desc", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "'"}).Return(user.AuthTokens, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -2943,8 +2775,8 @@ func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
 	resources, mockDB, _ := apitest.NewAuthManagementResource(mockCtrl)
 	// The filters are stored in a map before parsing, which means we don't know what order the resulted SQLFilter will be in.
 	// Mock out both possibilities to catch both cases.
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = 'a' and user_id = '" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
-	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = '" + user.ID.String() + "' and name = 'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "name = E'a' and user_id = E'" + user.ID.String() + "'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
+	mockDB.EXPECT().GetAllAuthTokens(gomock.Any(), "", model.SQLFilter{SQLString: "user_id = E'" + user.ID.String() + "' and name = E'a'"}).AnyTimes().Return(model.AuthTokens{authToken1}, nil)
 
 	config, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
@@ -3027,7 +2859,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -3047,7 +2879,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -3067,7 +2899,7 @@ func TestManagementResource_ListAuthTokens_UserIDFilter(t *testing.T) {
 				mockDatabase.EXPECT().GetAllAuthTokens(
 					gomock.Any(),
 					"",
-					model.SQLFilter{SQLString: "user_id = '" + nonAdminUser.ID.String() + "'"},
+					model.SQLFilter{SQLString: "user_id = E'" + nonAdminUser.ID.String() + "'"},
 				).Return(model.AuthTokens{}, nil)
 			},
 			expectedStatus: http.StatusOK,

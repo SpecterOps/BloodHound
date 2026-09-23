@@ -34,10 +34,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-type ListPermissionsResponse struct {
-	Permissions model.Permissions `json:"permissions"`
-}
-
 type ListTokensResponse struct {
 	Tokens model.AuthTokens `json:"tokens"`
 }

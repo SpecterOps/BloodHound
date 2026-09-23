@@ -141,7 +141,7 @@ func (s RoleListView) ValidFilters() map[string]params.FilterableField {
 }
 
 // IsSortable implements params.Sortable, reporting the role fields the sort
-// middleware may order on. It reproduces the legacy GET /api/v2/roles contract.
+// middleware may order on.
 func (s RoleListView) IsSortable(field string) bool {
 	switch field {
 	case "name", "description", "id", "created_at", "updated_at":
@@ -319,6 +319,56 @@ func (s UserListView) ValidFilters() map[string]params.FilterableField {
 func (s UserListView) IsSortable(field string) bool {
 	switch field {
 	case "first_name", "last_name", "email_address", "principal_name", "last_login", "created_at", "updated_at":
+		return true
+	default:
+		return false
+	}
+}
+
+// PermissionListView is the JSON shape returned for a permission collection.
+type PermissionListView struct {
+	Permissions []PermissionView `json:"permissions"`
+}
+
+// BuildPermissionListView projects domain permissions into the response view.
+func BuildPermissionListView(permissions []services.Permission) PermissionListView {
+	var views = make([]PermissionView, 0, len(permissions))
+	for _, permission := range permissions {
+		views = append(views, BuildPermissionView(permission))
+	}
+
+	return PermissionListView{Permissions: views}
+}
+
+// JSONView marshals the list view for responses.WriteBasic.
+func (s PermissionListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// ValidFilters describes the query filters supported.
+func (s PermissionListView) ValidFilters() map[string]params.FilterableField {
+	var numericOperators = []params.FilterOperator{
+		params.Equals,
+		params.NotEquals,
+		params.GreaterThan,
+		params.GreaterThanOrEquals,
+		params.LessThan,
+		params.LessThanOrEquals,
+	}
+
+	return map[string]params.FilterableField{
+		"authority":  {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"name":       {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"id":         {Operators: numericOperators},
+		"created_at": {Operators: numericOperators},
+		"updated_at": {Operators: numericOperators},
+	}
+}
+
+// IsSortable reports the permission fields accepted by sort_by.
+func (s PermissionListView) IsSortable(field string) bool {
+	switch field {
+	case "authority", "name", "id", "created_at", "updated_at":
 		return true
 	default:
 		return false

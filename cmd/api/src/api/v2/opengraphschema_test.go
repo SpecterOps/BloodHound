@@ -97,6 +97,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					},
 				},
 			},
+			SavedQueries: &model.SavedQueriesPayload{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
+				},
+			},
 		}
 		serviceGraphExtension = model.GraphExtensionInput{
 			ExtensionInput: model.ExtensionInput{
@@ -143,6 +152,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						ShortRemediation: "do x",
 						LongRemediation:  "do x but better",
 					},
+				},
+			},
+			SavedQueriesInput: model.SavedQueriesInput{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
 				},
 			},
 		}
@@ -367,14 +385,16 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 		},
 		{
-			name: "success - inserted new graph extension from zip bundle",
+			name: "success_-_inserted_new_graph_extension_from_zip_bundle",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					var expectedGraphExtension = serviceGraphExtension
 					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
-						Name:        "Tier Zero Admins",
-						Description: "Seeds for tier zero",
-						AutoCertify: model.SelectorAutoCertifyMethodAllMembers,
+						ExtensionRuleId: "tier_zero_admins",
+						Name:            "Tier Zero Admins",
+						Description:     "Seeds for tier zero",
+						Enabled:         true,
+						AllowDisable:    true,
 						Seeds: []model.SelectorSeedInput{{
 							Type:  model.SelectorTypeCypher,
 							Value: "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n",
@@ -387,16 +407,26 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			args: args{
 				func() *http.Request {
 					var (
-						zipBuffer     bytes.Buffer
-						jsonPayload   []byte
-						zipWriter     *zip.Writer
-						schemaWriter  io.Writer
-						pzRulesWriter io.Writer
-						request       *http.Request
-						err           error
+						schemaExtension       = graphExtension
+						savedQueriesComponent = struct {
+							SavedQueries *model.SavedQueriesPayload `json:"queries"`
+						}{SavedQueries: graphExtension.SavedQueries}
+						zipBuffer           bytes.Buffer
+						jsonPayload         []byte
+						savedQueriesPayload []byte
+						zipWriter           *zip.Writer
+						schemaWriter        io.Writer
+						pzRulesWriter       io.Writer
+						savedQueriesWriter  io.Writer
+						request             *http.Request
+						err                 error
 					)
 
-					jsonPayload, err = json.Marshal(graphExtension)
+					schemaExtension.SavedQueries = nil
+					schemaExtension.PZRules = nil
+					jsonPayload, err = json.Marshal(schemaExtension)
+					require.NoError(t, err)
+					savedQueriesPayload, err = json.Marshal(savedQueriesComponent)
 					require.NoError(t, err)
 
 					zipWriter = zip.NewWriter(&zipBuffer)
@@ -407,16 +437,24 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					pzRulesWriter, err = zipWriter.Create("pz_rules.json")
 					require.NoError(t, err)
 					_, err = pzRulesWriter.Write([]byte(`{
-						"rules": [{
+						"pz_rules": [
+							{
+							"key": "tier_zero_admins",
 							"name": "Tier Zero Admins",
 							"description": "Seeds for tier zero",
-							"auto_certify": true,
+							"enabled": true,
+							"allow_disable": true,
 							"seeds": [{
 								"type": 2,
 								"value": "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n"
 							}]
-						}]
+							}
+						]
 					}`))
+					require.NoError(t, err)
+					savedQueriesWriter, err = zipWriter.Create("saved_queries.json")
+					require.NoError(t, err)
+					_, err = savedQueriesWriter.Write(savedQueriesPayload)
 					require.NoError(t, err)
 					require.NoError(t, zipWriter.Close())
 

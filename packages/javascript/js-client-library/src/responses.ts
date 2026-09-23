@@ -31,6 +31,7 @@ import {
     CollectorJobProfile,
     CollectorJobSchedule,
     CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -375,10 +376,14 @@ export type GetExportQueryResponse = AxiosResponse<Blob>;
 // ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
 // ---------------------------------------------------------------------------
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
@@ -500,6 +505,8 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+
 export type UnifiedFinding = {
     id: number;
     severity: string;
@@ -517,10 +524,11 @@ export type UnifiedFinding = {
     target_principal_id: string;
     target_principal_name: string;
     target_principal_kind: string;
-    status: string;
+    status: FindingStatus;
     first_seen: string;
     last_seen: string;
     prioritization_rank?: number | null;
+    is_cross_platform?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
@@ -573,3 +581,6 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;
