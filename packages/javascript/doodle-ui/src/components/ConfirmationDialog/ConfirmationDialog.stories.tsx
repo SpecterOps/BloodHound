@@ -31,6 +31,9 @@ const meta = {
     argTypes: {
         open: {
             control: false,
+            table: {
+                defaultValue: { summary: 'false' },
+            },
         },
         text: {
             description: 'Accepts string or JSX element.  Wrap sting in quotes.',
@@ -38,10 +41,16 @@ const meta = {
         cancelIcon: {
             description: 'Ex: `<FontAwesomeIcon icon={faRefresh} />`',
             control: false,
+            table: {
+                defaultValue: { summary: 'undefined' },
+            },
         },
         confirmIcon: {
             description: 'Ex: `<FontAwesomeIcon icon={faTrash} />`',
             control: false,
+            table: {
+                defaultValue: { summary: 'undefined' },
+            },
         },
         iconPosition: {
             description: 'Icons can be positioned `left` or `right` within the button.',
@@ -58,10 +67,27 @@ const meta = {
         },
         isLoading: {
             description: 'When `true`, action button are disabled.',
+            table: {
+                defaultValue: { summary: 'false' },
+            },
         },
         error: {
             description: 'Displays supplied error message.',
+            table: {
+                defaultValue: { summary: `''` },
+            },
         },
+    },
+    args: {
+        open: false,
+        title: 'Title',
+        text: 'Prompt text goes here...',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelText: 'Cancel',
+        confirmText: 'Confirm',
+        isLoading: false,
+        error: '',
     },
 } satisfies Meta<typeof ConfirmationDialog>;
 
@@ -69,13 +95,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const FullExample: Story = {
-    args: {
-        open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
-        onCancel: fn(),
-        onConfirm: fn(),
-    },
     render: (args) => {
         const [showDialog, setShowDialog] = useState(args.open);
         return (
@@ -102,13 +121,6 @@ export const FullExample: Story = {
 };
 
 export const Basic: Story = {
-    args: {
-        open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
-        onCancel: fn(),
-        onConfirm: fn(),
-    },
     render: (args) => {
         const [showDialog, setShowDialog] = useState(args.open);
         return (
@@ -128,11 +140,8 @@ export const Basic: Story = {
 
 export const OptionalIcons: Story = {
     args: {
-        open: false,
         title: 'Optional Icons',
         text: 'Icons can be applied to each button',
-        onCancel: fn(),
-        onConfirm: fn(),
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
         confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
@@ -157,12 +166,8 @@ export const OptionalIcons: Story = {
 
 export const ConfirmIconOnly: Story = {
     args: {
-        open: false,
         title: 'Confirm Icon Only',
         text: 'Icons can be applied to either / or / both ',
-        onCancel: fn(),
-        onConfirm: fn(),
-        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
         confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
     render: (args) => {
@@ -185,11 +190,8 @@ export const ConfirmIconOnly: Story = {
 
 export const IconPosition: Story = {
     args: {
-        open: false,
         title: 'Icon Position',
         text: 'Icons can be positioned left or right within the button.  This setting applies to both buttons.',
-        onCancel: fn(),
-        onConfirm: fn(),
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
         confirmIcon: <FontAwesomeIcon icon={faTrash} />,
         iconPosition: 'right',
@@ -217,13 +219,8 @@ export const IconPosition: Story = {
 
 export const CustomButtonText: Story = {
     args: {
-        open: false,
         title: 'Custom Button Text',
         text: 'Button text can be customized.',
-        onCancel: fn(),
-        onConfirm: fn(),
-        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
-        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
     render: (args) => {
         const [showDialog, setShowDialog] = useState(args.open);
@@ -246,14 +243,9 @@ export const CustomButtonText: Story = {
 
 export const ChallengeText: Story = {
     args: {
-        open: false,
         title: 'Challenge Text',
         text: 'Are you really sure you want to do this?',
-        onCancel: fn(),
-        onConfirm: fn(),
         challengeTxt: 'confirm',
-        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
-        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
     render: (args) => {
         const [showDialog, setShowDialog] = useState(args.open);
