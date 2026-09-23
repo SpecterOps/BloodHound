@@ -13,24 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Controls, Description, Primary, Stories, Subtitle, Title } from '@storybook/blocks';
 import { useArgs } from '@storybook/preview-api';
 import type { Meta, StoryObj } from '@storybook/react';
 import { useRef, useState } from 'react';
 import { Slider } from './Slider';
-
-// Custom autodocs page: identical to Storybook's default, except the Stories list excludes the
-// primary story so the interactive Playground is not repeated below its top preview.
-const DocsPage = () => (
-    <>
-        <Title />
-        <Subtitle />
-        <Description />
-        <Primary />
-        <Controls />
-        <Stories includePrimary={false} />
-    </>
-);
 
 /**
  * An input where the user selects a value from within a given range.
@@ -84,9 +70,6 @@ const meta: Meta<typeof Slider> = {
     },
     parameters: {
         layout: 'centered',
-        docs: {
-            page: DocsPage,
-        },
     },
 } satisfies Meta<typeof Slider>;
 
@@ -129,7 +112,7 @@ const renderInteractive: Story['render'] = (args) => {
  * Docs page.
  */
 export const Playground: Story = {
-    tags: ['!dev'], // hidden from the sidebar nav; still rendered as the primary block on the docs page
+    tags: ['!dev', '!autodocs'], // hidden from the sidebar nav; still rendered as the primary block on the docs page
     args: {
         value: 50,
     },
