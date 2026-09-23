@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react';
 import { X } from 'lucide-react';
+import type { ComponentProps } from 'react';
 import { Button } from '../Button';
 import {
     Drawer,
@@ -28,6 +29,10 @@ import {
     DrawerTrigger,
 } from './Drawer';
 
+type DrawerStoryArgs = ComponentProps<typeof Drawer> & {
+    className?: ComponentProps<typeof DrawerContent>['className'];
+};
+
 const meta = {
     title: 'Components/Drawer',
     component: Drawer,
@@ -35,7 +40,7 @@ const meta = {
         docs: {
             description: {
                 component:
-                    'A drawer that opens from the right by default. Put long content in DrawerBody to keep the header and footer visible. Side drawers have a 24rem maximum width; add a class such as max-w-[860px] to DrawerContent to make one wider.',
+                    'A drawer that opens from the right by default. Put long content in DrawerBody to keep the header and footer visible. Side drawers are 75% wide on small screens and 24rem wide above the sm breakpoint; add a class such as w-[860px] to DrawerContent to change the width.',
             },
         },
     },
@@ -49,6 +54,26 @@ const meta = {
                 category: 'Drawer',
                 type: { summary: "'right' | 'left' | 'up' | 'down'" },
                 defaultValue: { summary: 'right' },
+            },
+        },
+        modal: {
+            control: 'select',
+            options: [true, false, 'trap-focus'],
+            description:
+                "Controls interaction outside the drawer. true traps focus, locks page scrolling, and disables outside pointer interaction; false allows interaction with the rest of the page; 'trap-focus' traps focus without locking scrolling or blocking outside pointer interaction.",
+            table: {
+                category: 'Drawer',
+                type: { summary: "boolean | 'trap-focus'" },
+                defaultValue: { summary: 'true' },
+            },
+        },
+        showSwipeHandle: {
+            control: 'boolean',
+            description: 'Whether to show a swipe handle inside DrawerContent.',
+            table: {
+                category: 'Drawer',
+                type: { summary: 'boolean' },
+                defaultValue: { summary: 'false' },
             },
         },
         defaultOpen: {
@@ -77,12 +102,22 @@ const meta = {
                 type: { summary: '(open: boolean, eventDetails) => void' },
             },
         },
+        className: {
+            control: 'text',
+            description:
+                'Classes applied to DrawerContent. Use a width class such as w-[860px] to override the default width of side drawers.',
+            table: {
+                category: 'DrawerContent',
+                type: { summary: 'string' },
+                defaultValue: { summary: '75% / 24rem at sm+' },
+            },
+        },
     },
-    args: { swipeDirection: 'right' },
-} satisfies Meta<typeof Drawer>;
+    args: { swipeDirection: 'right', modal: true, showSwipeHandle: false, className: '' },
+} satisfies Meta<DrawerStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<DrawerStoryArgs>;
 
 export const Default: Story = {
     parameters: {
@@ -92,16 +127,14 @@ export const Default: Story = {
             },
         },
     },
-    render: (args) => (
-        <Drawer {...args}>
-            <DrawerTrigger render={<Button variant='secondary' />}>Open default drawer</DrawerTrigger>
-            <DrawerContent>
+    render: ({ className, ...drawerProps }) => (
+        <Drawer {...drawerProps}>
+            <DrawerTrigger render={<Button variant='secondary' />}>Open drawer</DrawerTrigger>
+            <DrawerContent className={className}>
                 <DrawerHeader>
                     <div>
                         <DrawerTitle>Create Item</DrawerTitle>
-                        <DrawerDescription className='mt-3 text-muted'>
-                            Enter a name for the new item.
-                        </DrawerDescription>
+                        <DrawerDescription className='mt-3'>Enter a name for the new item.</DrawerDescription>
                     </div>
                     <DrawerClose
                         aria-label='Close drawer'
@@ -128,6 +161,18 @@ export const Default: Story = {
     ),
 };
 
+export const CustomWidth: Story = {
+    args: { className: 'w-[860px] max-w-[100vw]' },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Apply width classes to DrawerContent to make a side drawer wider. The max-width keeps this example within the viewport on smaller screens.',
+            },
+        },
+    },
+    render: Default.render,
+};
+
 export const ScrollingList: Story = {
     parameters: {
         docs: {
@@ -136,10 +181,10 @@ export const ScrollingList: Story = {
             },
         },
     },
-    render: (args) => (
-        <Drawer {...args}>
+    render: ({ className, ...drawerProps }) => (
+        <Drawer {...drawerProps}>
             <DrawerTrigger render={<Button variant='secondary' />}>Open scrolling drawer</DrawerTrigger>
-            <DrawerContent>
+            <DrawerContent className={className}>
                 <DrawerHeader>
                     <DrawerTitle>Scrollable Content</DrawerTitle>
                     <DrawerClose
@@ -149,7 +194,7 @@ export const ScrollingList: Story = {
                     </DrawerClose>
                 </DrawerHeader>
                 <DrawerBody>
-                    <DrawerDescription className='mb-6 text-muted'>
+                    <DrawerDescription className='mb-6'>
                         Scroll this list inside the narrow drawer. The header and footer stay in place.
                     </DrawerDescription>
                     <ul className='divide-y'>
@@ -171,12 +216,13 @@ export const ScrollingList: Story = {
 
 const DirectionalDrawer = ({
     swipeDirection,
-}: {
-    swipeDirection: NonNullable<React.ComponentProps<typeof Drawer>['swipeDirection']>;
-}) => (
-    <Drawer swipeDirection={swipeDirection}>
+    className,
+    modal,
+    showSwipeHandle,
+}: Pick<DrawerStoryArgs, 'swipeDirection' | 'className' | 'modal' | 'showSwipeHandle'>) => (
+    <Drawer swipeDirection={swipeDirection} modal={modal} showSwipeHandle={showSwipeHandle}>
         <DrawerTrigger render={<Button variant='secondary' />}>Open {swipeDirection} drawer</DrawerTrigger>
-        <DrawerContent>
+        <DrawerContent className={className}>
             <DrawerHeader>
                 <DrawerTitle>{swipeDirection} drawer</DrawerTitle>
                 <DrawerClose
@@ -197,7 +243,14 @@ export const Left: Story = {
     parameters: {
         docs: { description: { story: 'Set swipeDirection to left to open the drawer from the left edge.' } },
     },
-    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'left'} />,
+    render: (args) => (
+        <DirectionalDrawer
+            swipeDirection={args.swipeDirection ?? 'left'}
+            className={args.className}
+            modal={args.modal}
+            showSwipeHandle={args.showSwipeHandle}
+        />
+    ),
 };
 
 export const Top: Story = {
@@ -205,7 +258,14 @@ export const Top: Story = {
     parameters: {
         docs: { description: { story: 'Set swipeDirection to up to open a full-width drawer from the top edge.' } },
     },
-    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'up'} />,
+    render: (args) => (
+        <DirectionalDrawer
+            swipeDirection={args.swipeDirection ?? 'up'}
+            className={args.className}
+            modal={args.modal}
+            showSwipeHandle={args.showSwipeHandle}
+        />
+    ),
 };
 
 export const Bottom: Story = {
@@ -215,5 +275,12 @@ export const Bottom: Story = {
             description: { story: 'Set swipeDirection to down to open a full-width drawer from the bottom edge.' },
         },
     },
-    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'down'} />,
+    render: (args) => (
+        <DirectionalDrawer
+            swipeDirection={args.swipeDirection ?? 'down'}
+            className={args.className}
+            modal={args.modal}
+            showSwipeHandle={args.showSwipeHandle}
+        />
+    ),
 };

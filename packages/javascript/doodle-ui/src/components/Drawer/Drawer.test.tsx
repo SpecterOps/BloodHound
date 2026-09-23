@@ -23,14 +23,11 @@ import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerHeader, DrawerTit
 expect.extend(matchers);
 
 const renderDrawer = ({
-    swipeDirection,
     className,
-}: {
-    swipeDirection?: React.ComponentProps<typeof Drawer>['swipeDirection'];
-    className?: string;
-} = {}) =>
+    ...drawerProps
+}: React.ComponentProps<typeof Drawer> & { className?: string } = {}) =>
     render(
-        <Drawer swipeDirection={swipeDirection}>
+        <Drawer {...drawerProps}>
             <DrawerTrigger>Open drawer</DrawerTrigger>
             <DrawerContent className={className}>
                 <DrawerHeader>
@@ -50,24 +47,25 @@ describe('Drawer', () => {
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
         const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
         expect(dialog).toHaveAttribute('data-swipe-direction', 'right');
-        expect(dialog).toHaveClass('max-w-sm');
+        expect(dialog).toHaveClass('data-[swipe-axis=x]:sm:[--drawer-content-width:24rem]');
+        expect(dialog).toHaveClass('data-[swipe-axis=x]:[--drawer-content-width:75%]');
     });
 
     it('allows the side drawer width to be overridden', async () => {
         const user = userEvent.setup();
-        renderDrawer({ className: 'max-w-[860px]' });
+        renderDrawer({ className: 'w-[860px]' });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
         const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
         expect(dialog).toHaveAttribute('data-swipe-direction', 'right');
-        expect(dialog).toHaveClass('max-w-[860px]');
-        expect(dialog).not.toHaveClass('max-w-sm');
+        expect(dialog).toHaveClass('w-[860px]');
+        expect(dialog).not.toHaveClass('w-[var(--drawer-content-width,auto)]');
     });
 
     it.each([
-        ['left', 'mr-auto'],
-        ['up', 'self-start'],
-        ['down', 'self-end'],
+        ['left', 'data-[swipe-direction=left]:left-0'],
+        ['up', 'data-[swipe-direction=up]:top-0'],
+        ['down', 'data-[swipe-direction=down]:bottom-0'],
     ] as const)('opens from the %s', async (swipeDirection, positionClass) => {
         const user = userEvent.setup();
         renderDrawer({ swipeDirection });
@@ -87,11 +85,28 @@ describe('Drawer', () => {
         expect(dialog).toBeInTheDocument();
         expect(screen.getByText('Drawer content')).toBeInTheDocument();
 
-        const backdrop = dialog.parentElement?.previousElementSibling;
-        expect(backdrop).toBeInstanceOf(HTMLElement);
-        await user.click(backdrop as HTMLElement);
+        const overlay = document.querySelector('[data-slot="drawer-overlay"]');
+        expect(overlay).toBeInstanceOf(HTMLElement);
+        await user.click(overlay as HTMLElement);
 
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('renders a swipe handle when requested', async () => {
+        const user = userEvent.setup();
+        renderDrawer({ showSwipeHandle: true });
+
+        await user.click(screen.getByRole('button', { name: 'Open drawer' }));
+        expect(document.querySelector('[data-slot="drawer-swipe-handle"]')).toBeInTheDocument();
+    });
+
+    it('omits the overlay for a non-modal drawer', async () => {
+        const user = userEvent.setup();
+        renderDrawer({ modal: false });
+
+        await user.click(screen.getByRole('button', { name: 'Open drawer' }));
+        expect(screen.getByRole('dialog', { name: 'Collection plan' })).toBeInTheDocument();
+        expect(document.querySelector('[data-slot="drawer-overlay"]')).not.toBeInTheDocument();
     });
 
     it('closes with its close button and the Escape key', async () => {
