@@ -36,6 +36,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 	type expected struct {
 		responseCode    int
 		responseBody    string
+		factoryCalls    int
 		middlewareCalls int
 	}
 	type testData struct {
@@ -60,6 +61,25 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 			expected: expected{
 				responseCode:    http.StatusOK,
 				responseBody:    "migrated",
+				factoryCalls:    1,
+				middlewareCalls: 1,
+			},
+		},
+		{
+			name: "Success: migrated path prefix receives one scoped middleware - 200",
+			path: "/api/v2/migrated-prefix/resource",
+			registerRoutes: func(routerInst *router.Router, scopedMiddleware func() mux.MiddlewareFunc) error {
+				return routerInst.WithRouteMiddleware(scopedMiddleware, func() error {
+					routerInst.PathPrefix("/api/v2/migrated-prefix", http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+						_, _ = response.Write([]byte("migrated prefix"))
+					}))
+					return nil
+				})
+			},
+			expected: expected{
+				responseCode:    http.StatusOK,
+				responseBody:    "migrated prefix",
+				factoryCalls:    1,
 				middlewareCalls: 1,
 			},
 		},
@@ -75,6 +95,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 			expected: expected{
 				responseCode:    http.StatusOK,
 				responseBody:    "legacy",
+				factoryCalls:    0,
 				middlewareCalls: 0,
 			},
 		},
@@ -85,9 +106,14 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			var middlewareCalls int
+			var (
+				middlewareFactoryCalls int
+				middlewareCalls        int
+			)
 			routerInst := router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
 			scopedMiddleware := func() mux.MiddlewareFunc {
+				middlewareFactoryCalls++
+
 				return func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 						middlewareCalls++
@@ -96,6 +122,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 				}
 			}
 			require.NoError(t, testCase.registerRoutes(&routerInst, scopedMiddleware))
+			assert.Equal(t, testCase.expected.factoryCalls, middlewareFactoryCalls)
 
 			request := httptest.NewRequest(http.MethodGet, testCase.path, nil)
 			response := httptest.NewRecorder()
@@ -104,6 +131,7 @@ func TestRouter_WithRouteMiddleware(t *testing.T) {
 			status, _, body := testutil.ProcessResponse(t, response)
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseBody, body)
+			assert.Equal(t, testCase.expected.factoryCalls, middlewareFactoryCalls)
 			assert.Equal(t, testCase.expected.middlewareCalls, middlewareCalls)
 		})
 	}
