@@ -70,8 +70,12 @@ const meta: Meta<typeof Slider> = {
             description: 'Whether the slider should ignore user interaction.',
             table: { type: { summary: 'boolean' }, defaultValue: { summary: 'false' } },
         },
-        step: { table: { disable: true } },
-        thumbAriaLabel: { table: { disable: true } },
+        thumbAriaLabel: {
+            control: 'text',
+            description: 'Accessible label applied to the slider thumb.',
+            table: { type: { summary: 'string' } },
+        },
+        step: { table: { disable: true } }, // TODO: BED-9872
     },
     args: {
         min: 0,
@@ -90,69 +94,65 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The interactive example. Dragging the thumb updates the `value` prop shown in the Controls
- * panel, and editing that control moves the thumb. This is the Primary story at the top of the
- * Docs page and the only story bound to the `value` prop.
+ * Per-instance interactive render. Local `useState` keeps each slider independent, so multiple
+ * instances on the Docs page don't move together, while `updateArgs` reflects the live value into
+ * that story's own Controls panel.
  */
-export const Playground: Story = {
-    args: {
-        value: 50,
-    },
-    render: (args) => {
-        const [, updateArgs] = useArgs();
-        // Local state keeps dragging responsive; we mirror it back to the `value` arg so the
-        // Controls panel reflects the current value.
-        const [value, setValue] = useState(args.value ?? 50);
+const renderInteractive: Story['render'] = (args) => {
+    const [, updateArgs] = useArgs();
+    const [value, setValue] = useState(args.value ?? 50);
 
-        // Move the thumb when the `value` control is edited from the Controls panel.
-        const previousArgValue = useRef(args.value);
-        if (args.value !== previousArgValue.current) {
-            previousArgValue.current = args.value;
-            if (typeof args.value === 'number') setValue(args.value);
-        }
+    const previousArgValue = useRef(args.value);
+    if (args.value !== previousArgValue.current) {
+        previousArgValue.current = args.value;
+        if (typeof args.value === 'number') setValue(args.value);
+    }
 
-        return (
-            <div className='w-64'>
-                <Slider
-                    {...args}
-                    value={value}
-                    onValueChange={(nextValue, eventDetails) => {
-                        setValue(nextValue);
-                        updateArgs({ value: nextValue });
-                        args.onValueChange?.(nextValue, eventDetails);
-                    }}
-                />
-            </div>
-        );
-    },
+    return (
+        <div className='w-64'>
+            <Slider
+                {...args}
+                value={value}
+                onValueChange={(nextValue, eventDetails) => {
+                    setValue(nextValue);
+                    updateArgs({ value: nextValue });
+                    args.onValueChange?.(nextValue, eventDetails);
+                }}
+            />
+        </div>
+    );
 };
 
 /**
- * A plain, uncontrolled example. It starts at 50 and can be dragged, but it is not bound to the
- * `value` prop, so interacting with it never changes the Controls panel value.
+ * The interactive example. Dragging the thumb updates the `value` prop shown in the Controls
+ * panel, and editing that control moves the thumb. This is the Primary story at the top of the
+ * Docs page.
+ */
+export const Playground: Story = {
+    tags: ['!dev'], // hidden from the sidebar nav; still rendered as the primary block on the docs page
+    args: {
+        value: 50,
+    },
+    render: renderInteractive,
+};
+
+/**
+ * The default form of the slider.
  */
 export const Default: Story = {
     args: {
-        defaultValue: 50,
+        value: 50,
     },
-    render: (args) => (
-        <div className='w-64'>
-            <Slider {...args} value={undefined} />
-        </div>
-    ),
+    render: renderInteractive,
 };
 
+/**
+ * Use the `disabled` prop to disable the slider.
+ */
 export const Disabled: Story = {
     args: {
         disabled: true,
         defaultValue: 50,
-    },
-    parameters: {
-        docs: {
-            description: {
-                story: 'A non-interactive slider. The thumb cannot be moved and interaction styles are suppressed.',
-            },
-        },
     },
     render: (args) => (
         <div className='w-64'>
