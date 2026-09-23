@@ -112,7 +112,7 @@ const renderInteractive: Story['render'] = (args) => {
  * Docs page.
  */
 export const Playground: Story = {
-    tags: ['!dev', '!autodocs'], // hidden from the sidebar nav; still rendered as the primary block on the docs page
+    tags: ['!dev', '!autodocs'], // hidden from the sidebar nav and docs; still rendered as the primary block on the docs page
     args: {
         value: 50,
     },
