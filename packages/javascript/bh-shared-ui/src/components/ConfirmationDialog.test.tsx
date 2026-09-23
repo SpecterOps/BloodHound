@@ -80,8 +80,8 @@ describe('ConfirmationDialog', () => {
 
         expect(cancelButton).toHaveTextContent('Go back');
         expect(confirmButton).toHaveTextContent('Continue');
-        expect(cancelButton.firstElementChild).toHaveAttribute('data-testid', 'cancel-icon');
-        expect(confirmButton.firstElementChild).toHaveAttribute('data-testid', 'confirm-icon');
+        expect(cancelButton.firstChild).toHaveAttribute('data-testid', 'cancel-icon');
+        expect(confirmButton.firstChild).toHaveAttribute('data-testid', 'confirm-icon');
     });
 
     it('should render custom button icons on the right', async () => {
@@ -103,7 +103,7 @@ describe('ConfirmationDialog', () => {
         const cancelButton = screen.getByTestId('confirmation-dialog_button-no');
         const confirmButton = screen.getByTestId('confirmation-dialog_button-yes');
 
-        expect(cancelButton.lastElementChild).toHaveAttribute('data-testid', 'cancel-icon');
-        expect(confirmButton.lastElementChild).toHaveAttribute('data-testid', 'confirm-icon');
+        expect(cancelButton.lastChild).toHaveAttribute('data-testid', 'cancel-icon');
+        expect(confirmButton.lastChild).toHaveAttribute('data-testid', 'confirm-icon');
     });
 });
