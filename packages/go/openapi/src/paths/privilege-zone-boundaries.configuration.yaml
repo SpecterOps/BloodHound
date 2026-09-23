@@ -29,7 +29,7 @@ get:
               data:
                 type: object
                 required:
-                  [zones, permissions, policies, environments]
+                  [zones, permissions, policies, environments, split_mode_enabled]
                 properties:
                   zones:
                     type: array
@@ -53,6 +53,8 @@ get:
                     type: array
                     items:
                       $ref: './../schemas/model.privilege-zone-environment.yaml'
+                  split_mode_enabled:
+                    type: boolean
     401: { $ref: './../responses/unauthorized.yaml' }
     403: { $ref: './../responses/forbidden.yaml' }
     500: { $ref: './../responses/internal-server-error.yaml' }

@@ -21080,7 +21080,8 @@
                         "zones",
                         "permissions",
                         "policies",
-                        "environments"
+                        "environments",
+                        "split_mode_enabled"
                       ],
                       "properties": {
                         "zones": {
@@ -21126,6 +21127,9 @@
                           "items": {
                             "$ref": "#/components/schemas/model.privilege-zone-environment"
                           }
+                        },
+                        "split_mode_enabled": {
+                          "type": "boolean"
                         }
                       }
                     }
@@ -21149,7 +21153,7 @@
     "/api/v2/privilege-zone-boundaries/environment-split": {
       "post": {
         "operationId": "SplitPrivilegeZonesByEnvironment",
-        "summary": "Preview or create environment-scoped Tier Zero zones",
+        "summary": "Preview or enable persistent environment-scoped Tier Zero mode",
         "tags": [
           "Privilege Zone Boundaries",
           "Enterprise"
@@ -21167,7 +21171,6 @@
                 "properties": {
                   "environments": {
                     "type": "array",
-                    "minItems": 1,
                     "items": {
                       "$ref": "#/components/schemas/model.privilege-zone-environment"
                     }
@@ -21209,7 +21212,7 @@
             }
           },
           "201": {
-            "description": "Tier Zero zones created",
+            "description": "Split mode enabled and current Tier Zero zones created",
             "content": {
               "application/json": {
                 "schema": {
@@ -21242,7 +21245,7 @@
       },
       "delete": {
         "operationId": "CombinePrivilegeZonesByEnvironment",
-        "summary": "Restore the shared Tier Zero zone and deactivate environment-scoped Tier Zero zones",
+        "summary": "Disable split mode and restore the shared Tier Zero zone",
         "tags": [
           "Privilege Zone Boundaries",
           "Enterprise"
@@ -21376,6 +21379,106 @@
         }
       }
     },
+    "/api/v2/privilege-zone-boundaries/finding-exposure": {
+      "post": {
+        "operationId": "CalculatePrivilegeZoneFindingExposure",
+        "summary": "Calculate source-identity reachability to one finding on demand",
+        "description": "Counts unique principal nodes with a traversable path to the finding's source principal.\nThis is calculated on request and does not run during analysis. Zone and platform percentages\nuse the number of identities in the respective source zone or platform as their denominator.\n",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "source_principal_id"
+                ],
+                "properties": {
+                  "source_principal_id": {
+                    "type": "string",
+                    "maxLength": 1024
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Finding exposure by source zone and platform",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "source_principal_id",
+                        "identity_total",
+                        "exposed_count",
+                        "exposed_percent",
+                        "zones",
+                        "platforms"
+                      ],
+                      "properties": {
+                        "source_principal_id": {
+                          "type": "string"
+                        },
+                        "identity_total": {
+                          "type": "integer"
+                        },
+                        "exposed_count": {
+                          "type": "integer"
+                        },
+                        "exposed_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
+                        "zones": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-finding-exposure-group"
+                          }
+                        },
+                        "platforms": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-finding-exposure-group"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/privilege-zone-boundaries/exposure-jobs": {
       "post": {
         "operationId": "StartPrivilegeZoneExposureJob",
@@ -21436,6 +21539,106 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/privilege-zone-boundaries/target-exposure": {
+      "post": {
+        "operationId": "CalculatePrivilegeZoneTargetExposure",
+        "summary": "Calculate reachability into a privilege zone on demand",
+        "description": "Counts unique identities outside the target privilege zone with a traversable\npath to any node in that zone. This includes identities outside all privilege\nzones and paths through other zones. Each percentage uses identities in the\ncorresponding source zone or platform as its denominator. The calculation\nruns only on request, not during analysis.\n",
+        "tags": [
+          "Privilege Zone Boundaries",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "target_zone_id"
+                ],
+                "properties": {
+                  "target_zone_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Target privilege zone exposure by source zone and platform",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "target_zone_id",
+                        "identity_total",
+                        "exposed_count",
+                        "exposed_percent",
+                        "zones",
+                        "platforms"
+                      ],
+                      "properties": {
+                        "target_zone_id": {
+                          "type": "integer"
+                        },
+                        "identity_total": {
+                          "type": "integer"
+                        },
+                        "exposed_count": {
+                          "type": "integer"
+                        },
+                        "exposed_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
+                        "zones": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-finding-exposure-group"
+                          }
+                        },
+                        "platforms": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.privilege-zone-finding-exposure-group"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -28712,6 +28915,34 @@
                 "$ref": "#/components/schemas/model.privilege-zone-pair-match"
               }
             }
+          }
+        }
+      },
+      "model.privilege-zone-finding-exposure-group": {
+        "type": "object",
+        "required": [
+          "name",
+          "identity_total",
+          "exposed_count",
+          "exposed_percent"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "zone_id": {
+            "type": "integer",
+            "description": "Present for zone groups; zero denotes identities outside privilege zones."
+          },
+          "identity_total": {
+            "type": "integer"
+          },
+          "exposed_count": {
+            "type": "integer"
+          },
+          "exposed_percent": {
+            "type": "number",
+            "format": "double"
           }
         }
       },

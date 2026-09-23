@@ -223,6 +223,7 @@ export interface PrivilegeZoneBoundaryConfiguration {
     permissions: PrivilegeZoneControlPermission[];
     policies: PrivilegeZoneControlPolicy[];
     environments: PrivilegeZoneEnvironment[];
+    split_mode_enabled: boolean;
 }
 
 export interface PrivilegeZoneSplitPlanItem {
@@ -237,6 +238,27 @@ export interface PrivilegeZoneSplitPlanItem {
 export interface PrivilegeZoneSplitResponse {
     plan: PrivilegeZoneSplitPlanItem[];
     zones?: PrivilegeZone[];
+}
+
+export interface PrivilegeZoneFindingExposureGroup {
+    name: string;
+    zone_id?: number;
+    identity_total: number;
+    exposed_count: number;
+    exposed_percent: number;
+}
+
+export interface PrivilegeZoneFindingExposure {
+    source_principal_id: string;
+    identity_total: number;
+    exposed_count: number;
+    exposed_percent: number;
+    zones: PrivilegeZoneFindingExposureGroup[];
+    platforms: PrivilegeZoneFindingExposureGroup[];
+}
+
+export interface PrivilegeZoneTargetExposure extends Omit<PrivilegeZoneFindingExposure, 'source_principal_id'> {
+    target_zone_id: number;
 }
 
 export type PrivilegeZoneExposureScopeKind = 'target_zone';

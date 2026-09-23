@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 post:
   operationId: SplitPrivilegeZonesByEnvironment
-  summary: Preview or create environment-scoped Tier Zero zones
+  summary: Preview or enable persistent environment-scoped Tier Zero mode
   tags: [Privilege Zone Boundaries, Enterprise]
   requestBody:
     required: true
@@ -27,7 +27,6 @@ post:
           properties:
             environments:
               type: array
-              minItems: 1
               items:
                 $ref: './../schemas/model.privilege-zone-environment.yaml'
             dry_run:
@@ -51,7 +50,7 @@ post:
               data:
                 $ref: './../schemas/model.privilege-zone-split-response.yaml'
     201:
-      description: Tier Zero zones created
+      description: Split mode enabled and current Tier Zero zones created
       content:
         application/json:
           schema:
@@ -66,7 +65,7 @@ post:
     500: { $ref: './../responses/internal-server-error.yaml' }
 delete:
   operationId: CombinePrivilegeZonesByEnvironment
-  summary: Restore the shared Tier Zero zone and deactivate environment-scoped Tier Zero zones
+  summary: Disable split mode and restore the shared Tier Zero zone
   tags: [Privilege Zone Boundaries, Enterprise]
   responses:
     204:
