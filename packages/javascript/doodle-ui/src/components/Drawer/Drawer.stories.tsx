@@ -30,31 +30,77 @@ import {
 
 const meta = {
     title: 'Components/Drawer',
-    component: DrawerContent,
+    component: Drawer,
     parameters: {
         docs: {
             description: {
                 component:
-                    'A right-side drawer for longer tasks and contextual details. The backdrop, Escape key, and close button dismiss it. Put long content in DrawerBody to keep the header and footer visible.',
+                    'A drawer that opens from the right by default. Put long content in DrawerBody to keep the header and footer visible. Side drawers have a 24rem maximum width; add a class such as max-w-[860px] to DrawerContent to make one wider.',
             },
         },
     },
     tags: ['autodocs'],
-} satisfies Meta<typeof DrawerContent>;
+    argTypes: {
+        swipeDirection: {
+            control: 'select',
+            options: ['right', 'left', 'up', 'down'],
+            description: 'The edge from which the drawer opens.',
+            table: {
+                category: 'Drawer',
+                type: { summary: "'right' | 'left' | 'up' | 'down'" },
+                defaultValue: { summary: 'right' },
+            },
+        },
+        defaultOpen: {
+            control: false,
+            description: 'Whether the drawer starts open when using uncontrolled state.',
+            table: {
+                category: 'Drawer',
+                type: { summary: 'boolean' },
+                defaultValue: { summary: 'false' },
+            },
+        },
+        open: {
+            control: false,
+            description: 'Controls whether the drawer is open. Use with onOpenChange.',
+            table: {
+                category: 'Drawer',
+                type: { summary: 'boolean' },
+                defaultValue: { summary: 'uncontrolled' },
+            },
+        },
+        onOpenChange: {
+            control: false,
+            description: 'Called when the drawer opens or closes.',
+            table: {
+                category: 'Drawer',
+                type: { summary: '(open: boolean, eventDetails) => void' },
+            },
+        },
+    },
+    args: { swipeDirection: 'right' },
+} satisfies Meta<typeof Drawer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Form: Story = {
-    render: () => (
-        <Drawer>
-            <DrawerTrigger render={<Button variant='secondary' />}>Open Drawer</DrawerTrigger>
+export const Default: Story = {
+    parameters: {
+        docs: {
+            description: {
+                story: 'A right-side drawer with a simple form at the default compact width. The header and footer remain visible while the body scrolls if its content grows.',
+            },
+        },
+    },
+    render: (args) => (
+        <Drawer {...args}>
+            <DrawerTrigger render={<Button variant='secondary' />}>Open default drawer</DrawerTrigger>
             <DrawerContent>
                 <DrawerHeader>
                     <div>
-                        <DrawerTitle>Form Inside Drawer</DrawerTitle>
+                        <DrawerTitle>Create Item</DrawerTitle>
                         <DrawerDescription className='mt-3 text-muted'>
-                            This form contains a name, but does not actually save.
+                            Enter a name for the new item.
                         </DrawerDescription>
                     </div>
                     <DrawerClose
@@ -69,14 +115,13 @@ export const Form: Story = {
                         <input
                             aria-label='Name'
                             className='mt-2 block w-full rounded border p-2'
-                            placeholder='Enter collection name'
+                            placeholder='Enter item name'
                         />
                     </div>
-                    <p>Content can scroll in DrawerBody.</p>
                 </DrawerBody>
                 <DrawerFooter className='justify-end gap-2'>
                     <DrawerClose render={<Button variant='secondary' />}>Cancel</DrawerClose>
-                    <Button>Create Plan</Button>
+                    <Button>Create Item</Button>
                 </DrawerFooter>
             </DrawerContent>
         </Drawer>
@@ -84,12 +129,19 @@ export const Form: Story = {
 };
 
 export const ScrollingList: Story = {
-    render: () => (
-        <Drawer>
-            <DrawerTrigger render={<Button variant='secondary' />}>Open Drawer</DrawerTrigger>
+    parameters: {
+        docs: {
+            description: {
+                story: 'The default narrow side drawer with enough items to make DrawerBody scroll. The header and Close footer stay visible while the list moves between them.',
+            },
+        },
+    },
+    render: (args) => (
+        <Drawer {...args}>
+            <DrawerTrigger render={<Button variant='secondary' />}>Open scrolling drawer</DrawerTrigger>
             <DrawerContent>
                 <DrawerHeader>
-                    <DrawerTitle>Long List of Items</DrawerTitle>
+                    <DrawerTitle>Scrollable Content</DrawerTitle>
                     <DrawerClose
                         aria-label='Close drawer'
                         className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
@@ -98,7 +150,7 @@ export const ScrollingList: Story = {
                 </DrawerHeader>
                 <DrawerBody>
                     <DrawerDescription className='mb-6 text-muted'>
-                        See how a list scrolls between header and footer.
+                        Scroll this list inside the narrow drawer. The header and footer stay in place.
                     </DrawerDescription>
                     <ul className='divide-y'>
                         {Array.from({ length: 20 }, (_, index) => (
@@ -115,4 +167,53 @@ export const ScrollingList: Story = {
             </DrawerContent>
         </Drawer>
     ),
+};
+
+const DirectionalDrawer = ({
+    swipeDirection,
+}: {
+    swipeDirection: NonNullable<React.ComponentProps<typeof Drawer>['swipeDirection']>;
+}) => (
+    <Drawer swipeDirection={swipeDirection}>
+        <DrawerTrigger render={<Button variant='secondary' />}>Open {swipeDirection} drawer</DrawerTrigger>
+        <DrawerContent>
+            <DrawerHeader>
+                <DrawerTitle>{swipeDirection} drawer</DrawerTitle>
+                <DrawerClose
+                    aria-label='Close drawer'
+                    className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
+                    <X aria-hidden='true' size={20} />
+                </DrawerClose>
+            </DrawerHeader>
+            <DrawerBody>
+                <DrawerDescription>Content can come from any edge of the screen.</DrawerDescription>
+            </DrawerBody>
+        </DrawerContent>
+    </Drawer>
+);
+
+export const Left: Story = {
+    args: { swipeDirection: 'left' },
+    parameters: {
+        docs: { description: { story: 'Set swipeDirection to left to open the drawer from the left edge.' } },
+    },
+    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'left'} />,
+};
+
+export const Top: Story = {
+    args: { swipeDirection: 'up' },
+    parameters: {
+        docs: { description: { story: 'Set swipeDirection to up to open a full-width drawer from the top edge.' } },
+    },
+    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'up'} />,
+};
+
+export const Bottom: Story = {
+    args: { swipeDirection: 'down' },
+    parameters: {
+        docs: {
+            description: { story: 'Set swipeDirection to down to open a full-width drawer from the bottom edge.' },
+        },
+    },
+    render: (args) => <DirectionalDrawer swipeDirection={args.swipeDirection ?? 'down'} />,
 };

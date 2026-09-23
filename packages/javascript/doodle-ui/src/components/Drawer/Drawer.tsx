@@ -18,32 +18,49 @@ import * as React from 'react';
 import { TypographyVariants } from '../Typography';
 import { cn } from '../utils';
 
-type DrawerProps = Omit<DrawerPrimitive.Root.Props, 'swipeDirection'>;
+type DrawerDirection = NonNullable<DrawerPrimitive.Root.Props['swipeDirection']>;
+const DrawerDirectionContext = React.createContext<DrawerDirection>('right');
 
-const Drawer = (props: DrawerProps) => <DrawerPrimitive.Root swipeDirection='right' {...props} />;
+const Drawer = ({ swipeDirection = 'right', ...props }: DrawerPrimitive.Root.Props) => (
+    <DrawerDirectionContext.Provider value={swipeDirection}>
+        <DrawerPrimitive.Root swipeDirection={swipeDirection} {...props} />
+    </DrawerDirectionContext.Provider>
+);
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
 const DrawerClose = DrawerPrimitive.Close;
 
+const directionClasses: Record<DrawerDirection, string> = {
+    right: 'ml-auto h-dvh w-full max-w-sm [transform:translateX(var(--drawer-swipe-movement-x))] data-[starting-style]:[transform:translateX(100%)] data-[ending-style]:[transform:translateX(100%)]',
+    left: 'mr-auto h-dvh w-full max-w-sm [transform:translateX(var(--drawer-swipe-movement-x))] data-[starting-style]:[transform:translateX(-100%)] data-[ending-style]:[transform:translateX(-100%)]',
+    down: 'self-end w-full max-h-[calc(100dvh-6rem)] rounded-t-lg [transform:translateY(var(--drawer-swipe-movement-y))] data-[starting-style]:[transform:translateY(100%)] data-[ending-style]:[transform:translateY(100%)]',
+    up: 'self-start w-full max-h-[calc(100dvh-6rem)] rounded-b-lg [transform:translateY(var(--drawer-swipe-movement-y))] data-[starting-style]:[transform:translateY(-100%)] data-[ending-style]:[transform:translateY(-100%)]',
+};
+
 const DrawerContent = React.forwardRef<React.ComponentRef<typeof DrawerPrimitive.Popup>, DrawerPrimitive.Popup.Props>(
-    ({ children, className, ...props }, ref) => (
-        <DrawerPrimitive.Portal>
-            <DrawerPrimitive.Backdrop className='fixed inset-0 z-[1410] bg-black/40 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[swiping]:transition-none' />
-            <DrawerPrimitive.Viewport className='pointer-events-none fixed inset-0 z-[1500] flex justify-end'>
-                <DrawerPrimitive.Popup
-                    ref={ref}
-                    className={cn(
-                        'pointer-events-auto flex h-dvh w-full max-w-[860px] flex-col gap-4 overflow-hidden bg-neutral-light-1 pl-3 py-4 text-main shadow-xl dark:bg-neutral-dark-1',
-                        '[transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-300 ease-out data-[starting-style]:[transform:translateX(100%)] data-[ending-style]:[transform:translateX(100%)] data-[swiping]:transition-none',
-                        'focus:outline-none focus-visible:focus-ring',
-                        className
-                    )}
-                    {...props}>
-                    <DrawerPrimitive.Content className='contents'>{children}</DrawerPrimitive.Content>
-                </DrawerPrimitive.Popup>
-            </DrawerPrimitive.Viewport>
-        </DrawerPrimitive.Portal>
-    )
+    ({ children, className, ...props }, ref) => {
+        const swipeDirection = React.useContext(DrawerDirectionContext);
+
+        return (
+            <DrawerPrimitive.Portal>
+                <DrawerPrimitive.Backdrop className='fixed inset-0 z-[1410] bg-black/40 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[swiping]:transition-none' />
+                <DrawerPrimitive.Viewport className='pointer-events-none fixed inset-0 z-[1500] flex'>
+                    <DrawerPrimitive.Popup
+                        ref={ref}
+                        className={cn(
+                            'pointer-events-auto flex flex-col gap-4 overflow-hidden bg-neutral-light-1 pl-3 py-4 text-main shadow-xl dark:bg-neutral-dark-1',
+                            'transition-transform duration-300 ease-out data-[swiping]:transition-none',
+                            'focus:outline-none focus-visible:focus-ring',
+                            directionClasses[swipeDirection],
+                            className
+                        )}
+                        {...props}>
+                        <DrawerPrimitive.Content className='contents'>{children}</DrawerPrimitive.Content>
+                    </DrawerPrimitive.Popup>
+                </DrawerPrimitive.Viewport>
+            </DrawerPrimitive.Portal>
+        );
+    }
 );
 DrawerContent.displayName = 'DrawerContent';
 

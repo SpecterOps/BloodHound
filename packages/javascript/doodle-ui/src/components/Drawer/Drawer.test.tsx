@@ -22,11 +22,17 @@ import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerHeader, DrawerTit
 
 expect.extend(matchers);
 
-const renderDrawer = () =>
+const renderDrawer = ({
+    swipeDirection,
+    className,
+}: {
+    swipeDirection?: React.ComponentProps<typeof Drawer>['swipeDirection'];
+    className?: string;
+} = {}) =>
     render(
-        <Drawer>
+        <Drawer swipeDirection={swipeDirection}>
             <DrawerTrigger>Open drawer</DrawerTrigger>
-            <DrawerContent>
+            <DrawerContent className={className}>
                 <DrawerHeader>
                     <DrawerTitle>Collection plan</DrawerTitle>
                     <DrawerClose>Close drawer</DrawerClose>
@@ -37,6 +43,41 @@ const renderDrawer = () =>
     );
 
 describe('Drawer', () => {
+    it('defaults to a compact right-side drawer', async () => {
+        const user = userEvent.setup();
+        renderDrawer();
+
+        await user.click(screen.getByRole('button', { name: 'Open drawer' }));
+        const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
+        expect(dialog).toHaveAttribute('data-swipe-direction', 'right');
+        expect(dialog).toHaveClass('max-w-sm');
+    });
+
+    it('allows the side drawer width to be overridden', async () => {
+        const user = userEvent.setup();
+        renderDrawer({ className: 'max-w-[860px]' });
+
+        await user.click(screen.getByRole('button', { name: 'Open drawer' }));
+        const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
+        expect(dialog).toHaveAttribute('data-swipe-direction', 'right');
+        expect(dialog).toHaveClass('max-w-[860px]');
+        expect(dialog).not.toHaveClass('max-w-sm');
+    });
+
+    it.each([
+        ['left', 'mr-auto'],
+        ['up', 'self-start'],
+        ['down', 'self-end'],
+    ] as const)('opens from the %s', async (swipeDirection, positionClass) => {
+        const user = userEvent.setup();
+        renderDrawer({ swipeDirection });
+
+        await user.click(screen.getByRole('button', { name: 'Open drawer' }));
+        const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
+        expect(dialog).toHaveAttribute('data-swipe-direction', swipeDirection);
+        expect(dialog).toHaveClass(positionClass);
+    });
+
     it('opens from its trigger and closes when the backdrop is clicked', async () => {
         const user = userEvent.setup();
         renderDrawer();
