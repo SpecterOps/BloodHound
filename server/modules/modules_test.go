@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
