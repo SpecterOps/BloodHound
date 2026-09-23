@@ -581,6 +581,24 @@ func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalNa
 	return id
 }
 
+// seedUserWithNullLastLogin inserts a user row whose last_login is left NULL,
+// exercising the nullable-timestamp scan path in ListUsers, and returns its id.
+func seedUserWithNullLastLogin(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, NULL, false, true, false, false, now(), now())`,
+		id.String(), principalName, principalName+"-first", principalName+"-last", principalName+"@example.com",
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
 // seedUserRole associates a seeded user with an existing role via the join table.
 func seedUserRole(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, roleID int32) {
 	t.Helper()
@@ -672,6 +690,31 @@ func TestStore_ListUsers_Integration(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, users, 1)
 		assert.Equal(t, principal, users[0].PrincipalName)
+	})
+
+	t.Run("returns a user with a NULL last_login as a zero-value timestamp", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		userID := seedUserWithNullLastLogin(t, ctx, pool, "null-last-login-user")
+
+		// The eq:null filter selects exactly the NULL rows, exercising the strict
+		// pgx scan path that previously failed on a NULL last_login.
+		users, err := store.ListUsers(ctx, params.Filters{
+			"last_login": {{Field: "last_login", Operator: params.Equals, Value: "null", SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+
+		byID := make(map[uuid.UUID]services.User, len(users))
+		for _, user := range users {
+			byID[user.ID] = user
+		}
+
+		user, ok := byID[userID]
+		require.True(t, ok, "expected the user with a NULL last_login to be returned")
+		assert.True(t, user.LastLogin.IsZero(), "a NULL last_login should scan to the zero-value time, matching legacy gorm coercion")
 	})
 
 	t.Run("returns users sorted by principal_name ascending", func(t *testing.T) {

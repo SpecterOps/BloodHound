@@ -548,7 +548,7 @@ type userRow struct {
 	LastName        sql.NullString `db:"last_name"`
 	EmailAddress    sql.NullString `db:"email_address"`
 	PrincipalName   string         `db:"principal_name"`
-	LastLogin       time.Time      `db:"last_login"`
+	LastLogin       sql.NullTime   `db:"last_login"`
 	IsDisabled      bool           `db:"is_disabled"`
 	AllEnvironments bool           `db:"all_environments"`
 	EULAAccepted    bool           `db:"eula_accepted"`
@@ -614,7 +614,7 @@ func toUser(row userRow, roles []services.Role, environmentAccessControl []servi
 		LastName:                         row.LastName,
 		EmailAddress:                     row.EmailAddress,
 		PrincipalName:                    row.PrincipalName,
-		LastLogin:                        row.LastLogin,
+		LastLogin:                        row.LastLogin.Time,
 		IsDisabled:                       row.IsDisabled,
 		AllEnvironments:                  row.AllEnvironments,
 		EULAAccepted:                     row.EULAAccepted,
