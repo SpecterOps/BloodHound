@@ -228,6 +228,42 @@ var roleColumns = map[string]string{
 	"updated_at":  "updated_at",
 }
 
+// nullFilterValue is the sentinel filter value the API translates into a SQL
+// NULL comparison. It mirrors the legacy filter builder, which renders eq:null /
+// neq:null as IS NULL / IS NOT NULL rather than binding the literal string
+// "null" through =/<>.
+const nullFilterValue = "null"
+
+// buildFilterComparison translates a single validated filter into a SQL WHERE
+// expression on the supplied builder. Equality filters whose value is the null
+// sentinel become IS NULL / IS NOT NULL, matching the legacy contract; every
+// other operator binds the value as a parameter. The boolean is false when the
+// operator is unsupported, letting callers surface a field-specific error.
+func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter params.Filter) (string, bool) {
+	switch filter.Operator {
+	case params.Equals:
+		if filter.Value == nullFilterValue {
+			return sb.IsNull(column), true
+		}
+		return sb.Equal(column, filter.Value), true
+	case params.NotEquals:
+		if filter.Value == nullFilterValue {
+			return sb.IsNotNull(column), true
+		}
+		return sb.NotEqual(column, filter.Value), true
+	case params.GreaterThan:
+		return sb.GreaterThan(column, filter.Value), true
+	case params.GreaterThanOrEquals:
+		return sb.GreaterEqualThan(column, filter.Value), true
+	case params.LessThan:
+		return sb.LessThan(column, filter.Value), true
+	case params.LessThanOrEquals:
+		return sb.LessEqualThan(column, filter.Value), true
+	default:
+		return "", false
+	}
+}
+
 // applyRoleFilters translates the validated query filters into WHERE expressions
 // on the supplied builder. Filters targeting the same field are combined using
 // that field's SetOperator; distinct fields are combined with AND.
@@ -248,22 +284,11 @@ func applyRoleFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters)
 
 		expressions := make([]string, 0, len(fieldFilters))
 		for _, filter := range fieldFilters {
-			switch filter.Operator {
-			case params.Equals:
-				expressions = append(expressions, sb.Equal(column, filter.Value))
-			case params.NotEquals:
-				expressions = append(expressions, sb.NotEqual(column, filter.Value))
-			case params.GreaterThan:
-				expressions = append(expressions, sb.GreaterThan(column, filter.Value))
-			case params.GreaterThanOrEquals:
-				expressions = append(expressions, sb.GreaterEqualThan(column, filter.Value))
-			case params.LessThan:
-				expressions = append(expressions, sb.LessThan(column, filter.Value))
-			case params.LessThanOrEquals:
-				expressions = append(expressions, sb.LessEqualThan(column, filter.Value))
-			default:
+			expression, ok := buildFilterComparison(sb, column, filter)
+			if !ok {
 				return fmt.Errorf("role filter uses unsupported operator %q", filter.Operator)
 			}
+			expressions = append(expressions, expression)
 		}
 
 		if setOperator == params.FilterOr {
@@ -506,22 +531,11 @@ func applyUserFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters)
 
 		expressions := make([]string, 0, len(fieldFilters))
 		for _, filter := range fieldFilters {
-			switch filter.Operator {
-			case params.Equals:
-				expressions = append(expressions, sb.Equal(column, filter.Value))
-			case params.NotEquals:
-				expressions = append(expressions, sb.NotEqual(column, filter.Value))
-			case params.GreaterThan:
-				expressions = append(expressions, sb.GreaterThan(column, filter.Value))
-			case params.GreaterThanOrEquals:
-				expressions = append(expressions, sb.GreaterEqualThan(column, filter.Value))
-			case params.LessThan:
-				expressions = append(expressions, sb.LessThan(column, filter.Value))
-			case params.LessThanOrEquals:
-				expressions = append(expressions, sb.LessEqualThan(column, filter.Value))
-			default:
+			expression, ok := buildFilterComparison(sb, column, filter)
+			if !ok {
 				return fmt.Errorf("user filter uses unsupported operator %q", filter.Operator)
 			}
+			expressions = append(expressions, expression)
 		}
 
 		if setOperator == params.FilterOr {

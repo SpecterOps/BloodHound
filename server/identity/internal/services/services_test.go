@@ -52,17 +52,17 @@ func TestService_GetPermission(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "returns the permission on success",
+			name:       "success - returns the permission",
 			dbResult:   expected,
 			wantResult: expected,
 		},
 		{
-			name:    "propagates ErrNoPermissionFound",
+			name:    "error - propagates ErrNoPermissionFound",
 			dbErr:   services.ErrNoPermissionFound,
 			wantErr: services.ErrNoPermissionFound,
 		},
 		{
-			name:    "propagates unexpected database errors",
+			name:    "error - propagates unexpected database errors",
 			dbErr:   unexpectedErr,
 			wantErr: unexpectedErr,
 		},
@@ -113,17 +113,17 @@ func TestService_GetRole(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "returns the role on success",
+			name:       "success - returns the role",
 			dbResult:   expected,
 			wantResult: expected,
 		},
 		{
-			name:    "propagates ErrNoRoleFound",
+			name:    "error - propagates ErrNoRoleFound",
 			dbErr:   services.ErrNoRoleFound,
 			wantErr: services.ErrNoRoleFound,
 		},
 		{
-			name:    "propagates unexpected database errors",
+			name:    "error - propagates unexpected database errors",
 			dbErr:   unexpectedErr,
 			wantErr: unexpectedErr,
 		},
@@ -177,17 +177,17 @@ func TestService_ListRoles(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "returns the roles on success",
+			name:       "success - returns the roles",
 			dbResult:   expected,
 			wantResult: expected,
 		},
 		{
-			name:       "returns an empty slice when no roles match",
+			name:       "success - returns an empty slice when no roles match",
 			dbResult:   []services.Role{},
 			wantResult: []services.Role{},
 		},
 		{
-			name:    "propagates unexpected database errors",
+			name:    "error - propagates unexpected database errors",
 			dbErr:   unexpectedErr,
 			wantErr: unexpectedErr,
 		},
@@ -241,17 +241,17 @@ func TestService_ListUsers(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "returns the users on success",
+			name:       "success - returns the users",
 			dbResult:   expected,
 			wantResult: expected,
 		},
 		{
-			name:       "returns an empty slice when no users match",
+			name:       "success - returns an empty slice when no users match",
 			dbResult:   []services.User{},
 			wantResult: []services.User{},
 		},
 		{
-			name:    "propagates unexpected database errors",
+			name:    "error - propagates unexpected database errors",
 			dbErr:   unexpectedErr,
 			wantErr: unexpectedErr,
 		},

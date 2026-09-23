@@ -58,7 +58,7 @@ func TestHandlers_GetPermission(t *testing.T) {
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name:  "returns 200 with the permission view on success",
+			name:  "success - returns 200 with the permission view",
 			rawID: "7",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetPermission(ctx, 7).Return(expected, nil)
@@ -75,12 +75,12 @@ func TestHandlers_GetPermission(t *testing.T) {
 			},
 		},
 		{
-			name:       "returns 400 for a malformed permission ID",
+			name:       "error - returns 400 for a malformed permission ID",
 			rawID:      "not-an-int",
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:  "returns 404 when the permission does not exist",
+			name:  "error - returns 404 when the permission does not exist",
 			rawID: "7",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetPermission(ctx, 7).Return(services.Permission{}, services.ErrNoPermissionFound)
@@ -88,7 +88,7 @@ func TestHandlers_GetPermission(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 		{
-			name:  "returns 500 on unexpected service error",
+			name:  "error - returns 500 on unexpected service error",
 			rawID: "7",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetPermission(ctx, 7).Return(services.Permission{}, unexpectedErr)
@@ -139,7 +139,7 @@ func TestHandlers_GetRole(t *testing.T) {
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name:  "returns 200 with the role view on success",
+			name:  "success - returns 200 with the role view",
 			rawID: "3",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetRole(ctx, int32(3)).Return(expected, nil)
@@ -158,12 +158,12 @@ func TestHandlers_GetRole(t *testing.T) {
 			},
 		},
 		{
-			name:       "returns 400 for a malformed role ID",
+			name:       "error - returns 400 for a malformed role ID",
 			rawID:      "not-an-int",
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:  "returns 404 when the role does not exist",
+			name:  "error - returns 404 when the role does not exist",
 			rawID: "3",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetRole(ctx, int32(3)).Return(services.Role{}, services.ErrNoRoleFound)
@@ -171,7 +171,7 @@ func TestHandlers_GetRole(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 		{
-			name:  "returns 500 on unexpected service error",
+			name:  "error - returns 500 on unexpected service error",
 			rawID: "3",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().GetRole(ctx, int32(3)).Return(services.Role{}, unexpectedErr)
@@ -227,7 +227,7 @@ func TestHandlers_ListRoles(t *testing.T) {
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name: "returns 200 with the role list view on success",
+			name: "success - returns 200 with the role list view",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(expected, nil)
 			},
@@ -243,7 +243,7 @@ func TestHandlers_ListRoles(t *testing.T) {
 			},
 		},
 		{
-			name: "returns 200 with an empty roles array when no roles match",
+			name: "success - returns 200 with an empty roles array when no roles match",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListRoles(ctx, filters, sortItems).Return([]services.Role{}, nil)
 			},
@@ -257,7 +257,7 @@ func TestHandlers_ListRoles(t *testing.T) {
 			},
 		},
 		{
-			name: "returns 500 on unexpected service error",
+			name: "error - returns 500 on unexpected service error",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListRoles(ctx, filters, sortItems).Return(nil, unexpectedErr)
 			},
@@ -329,7 +329,7 @@ func TestHandlers_ListUsers(t *testing.T) {
 		assertBody func(t *testing.T, body []byte)
 	}{
 		{
-			name: "returns 200 reproducing the legacy user JSON contract",
+			name: "success - returns 200 reproducing the legacy user JSON contract",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListUsers(ctx, filters, sortItems).Return(populated, nil)
 			},
@@ -369,7 +369,7 @@ func TestHandlers_ListUsers(t *testing.T) {
 			},
 		},
 		{
-			name: "returns null nullable fields and AuthSecret when unset",
+			name: "success - returns null nullable fields and AuthSecret when unset",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListUsers(ctx, filters, sortItems).Return(bare, nil)
 			},
@@ -391,7 +391,7 @@ func TestHandlers_ListUsers(t *testing.T) {
 			},
 		},
 		{
-			name: "returns 200 with an empty users array when no users match",
+			name: "success - returns 200 with an empty users array when no users match",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListUsers(ctx, filters, sortItems).Return([]services.User{}, nil)
 			},
@@ -405,7 +405,7 @@ func TestHandlers_ListUsers(t *testing.T) {
 			},
 		},
 		{
-			name: "returns 500 on unexpected service error",
+			name: "error - returns 500 on unexpected service error",
 			expect: func(m *mocks.MockIdentity, ctx context.Context) {
 				m.EXPECT().ListUsers(ctx, filters, sortItems).Return(nil, unexpectedErr)
 			},

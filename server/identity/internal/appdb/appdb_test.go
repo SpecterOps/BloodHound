@@ -65,6 +65,10 @@ const expectedListRolesFilteredSQL = `SELECT id, name, description, created_at, 
 // single greater-than filter on the numeric id column is supplied.
 const expectedListRolesFilteredByIDSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE (id > $1)`
 
+// expectedListRolesFilteredNullSQL is the literal SQL the Store issues for an
+// eq:null filter, which must render IS NULL rather than binding "null".
+const expectedListRolesFilteredNullSQL = `SELECT id, name, description, created_at, updated_at FROM roles WHERE (description IS NULL)`
+
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 	t.Helper()
 	pool, err := pgxmock.NewPool(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
@@ -99,7 +103,7 @@ func TestStore_GetPermission(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name: "returns the permission on success",
+			name: "success - returns the permission",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetPermissionSQL).WithArgs(permissionID, 1).WillReturnRows(
 					pool.NewRows(permissionRowColumns()).AddRow(
@@ -114,7 +118,7 @@ func TestStore_GetPermission(t *testing.T) {
 			wantResult: expected,
 		},
 		{
-			name: "maps CollectOneRow pgx.ErrNoRows to services.ErrNoPermissionFound",
+			name: "error - maps CollectOneRow pgx.ErrNoRows to services.ErrNoPermissionFound",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				// Query succeeds but returns zero rows; CollectOneRow returns pgx.ErrNoRows
 				pool.ExpectQuery(expectedGetPermissionSQL).WithArgs(permissionID, 1).WillReturnRows(
@@ -124,7 +128,7 @@ func TestStore_GetPermission(t *testing.T) {
 			wantErr: services.ErrNoPermissionFound,
 		},
 		{
-			name: "wraps CollectOneRow iteration error",
+			name: "error - wraps CollectOneRow iteration error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				// The rows object carries a close error that pgx.CollectOneRow surfaces
 				// via rows.Err() when Next() returns false.
@@ -135,7 +139,7 @@ func TestStore_GetPermission(t *testing.T) {
 			wantErrContains: "finding permission:",
 		},
 		{
-			name: "propagates other database errors",
+			name: "error - propagates other database errors",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetPermissionSQL).WithArgs(permissionID, 1).WillReturnError(dbErr)
 			},
@@ -202,7 +206,7 @@ func TestStore_GetRole(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name: "returns the role with permissions on success",
+			name: "success - returns the role with permissions",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnRows(
 					pool.NewRows(roleRowColumns()).AddRow(
@@ -226,7 +230,7 @@ func TestStore_GetRole(t *testing.T) {
 			wantResult: expected,
 		},
 		{
-			name: "maps CollectOneRow pgx.ErrNoRows to services.ErrNoRoleFound",
+			name: "error - maps CollectOneRow pgx.ErrNoRows to services.ErrNoRoleFound",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnRows(
 					pool.NewRows(roleRowColumns()),
@@ -235,14 +239,14 @@ func TestStore_GetRole(t *testing.T) {
 			wantErr: services.ErrNoRoleFound,
 		},
 		{
-			name: "propagates role query database error",
+			name: "error - propagates role query database error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnError(dbErr)
 			},
 			wantErr: dbErr,
 		},
 		{
-			name: "wraps permissions query error",
+			name: "error - wraps permissions query error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnRows(
 					pool.NewRows(roleRowColumns()).AddRow(
@@ -331,7 +335,7 @@ func TestStore_ListRoles(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name: "returns every role with permissions on success",
+			name: "success - returns every role with permissions",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin, readOnly))
 				expectPermissionsFor(pool, expectedListRolePermissionsTwoSQL, admin, readOnly)
@@ -339,7 +343,7 @@ func TestStore_ListRoles(t *testing.T) {
 			wantResult: []services.Role{admin, readOnly},
 		},
 		{
-			name:      "issues an ORDER BY clause for a sorted request",
+			name:      "success - issues an ORDER BY clause for a sorted request",
 			sortItems: params.SortItems{{Field: "name", Direction: params.Ascending}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSortedSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin))
@@ -348,7 +352,7 @@ func TestStore_ListRoles(t *testing.T) {
 			wantResult: []services.Role{admin},
 		},
 		{
-			name:    "issues a WHERE clause for a filtered request",
+			name:    "success - issues a WHERE clause for a filtered request",
 			filters: params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "Administrator", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesFilteredSQL).WithArgs("Administrator").WillReturnRows(expectRoleRows(pool, admin))
@@ -357,7 +361,7 @@ func TestStore_ListRoles(t *testing.T) {
 			wantResult: []services.Role{admin},
 		},
 		{
-			name:    "issues a WHERE clause for a numeric filter on id",
+			name:    "success - issues a WHERE clause for a numeric filter on id",
 			filters: params.Filters{"id": {{Field: "id", Operator: params.GreaterThan, Value: "1", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesFilteredByIDSQL).WithArgs("1").WillReturnRows(expectRoleRows(pool, readOnly))
@@ -366,28 +370,37 @@ func TestStore_ListRoles(t *testing.T) {
 			wantResult: []services.Role{readOnly},
 		},
 		{
-			name:    "returns an error for an unknown filter field",
+			name:    "success - issues IS NULL for an eq:null filter",
+			filters: params.Filters{"description": {{Field: "description", Operator: params.Equals, Value: "null", SetOperator: params.FilterAnd}}},
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListRolesFilteredNullSQL).WithArgs().WillReturnRows(expectRoleRows(pool, readOnly))
+				expectPermissionsFor(pool, expectedListRolePermissionsSQL, readOnly)
+			},
+			wantResult: []services.Role{readOnly},
+		},
+		{
+			name:    "error - unknown filter field",
 			filters: params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 			},
 			wantErrContains: "unknown field",
 		},
 		{
-			name:      "returns an error for an unknown sort field",
+			name:      "error - unknown sort field",
 			sortItems: params.SortItems{{Field: "nope", Direction: params.Ascending}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 			},
 			wantErrContains: "unknown field",
 		},
 		{
-			name: "propagates the roles query database error",
+			name: "error - propagates the roles query database error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnError(dbErr)
 			},
 			wantErr: dbErr,
 		},
 		{
-			name: "wraps the permissions query error",
+			name: "error - wraps the permissions query error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(expectRoleRows(pool, admin))
 				pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(admin.ID).WillReturnError(dbErr)
@@ -431,6 +444,14 @@ const expectedListUsersSortedSQL = expectedListUsersSQL + ` ORDER BY principal_n
 // expectedListUsersFilteredSQL is the literal SQL issued when a single equality
 // filter on first_name is supplied alongside the support_account exclusion.
 const expectedListUsersFilteredSQL = `SELECT id, sso_provider_id, first_name, last_name, email_address, principal_name, last_login, is_disabled, all_environments, eula_accepted, created_at, updated_at FROM users WHERE support_account = $1 AND (first_name = $2)`
+
+// expectedListUsersFilteredNullSQL is the literal SQL issued for an eq:null
+// filter, which must render IS NULL rather than binding "null" as a parameter.
+const expectedListUsersFilteredNullSQL = `SELECT id, sso_provider_id, first_name, last_name, email_address, principal_name, last_login, is_disabled, all_environments, eula_accepted, created_at, updated_at FROM users WHERE support_account = $1 AND (last_login IS NULL)`
+
+// expectedListUsersFilteredNotNullSQL is the literal SQL issued for a neq:null
+// filter, which must render IS NOT NULL rather than binding "null".
+const expectedListUsersFilteredNotNullSQL = `SELECT id, sso_provider_id, first_name, last_name, email_address, principal_name, last_login, is_disabled, all_environments, eula_accepted, created_at, updated_at FROM users WHERE support_account = $1 AND (last_login IS NOT NULL)`
 
 // expectedRolesForUsersOneSQL / TwoSQL are the batched roles query for one and
 // two listed users respectively.
@@ -528,7 +549,7 @@ func TestStore_ListUsers(t *testing.T) {
 		wantErrContains string
 	}{
 		{
-			name: "returns every user with associations on success",
+			name: "success - returns every user with associations",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				userRows := pool.NewRows(userRowColumns())
 				addUserRow(userRows, user1)
@@ -556,7 +577,7 @@ func TestStore_ListUsers(t *testing.T) {
 			wantResult: []services.User{user1, user2},
 		},
 		{
-			name:      "issues an ORDER BY clause for a sorted request",
+			name:      "success - issues an ORDER BY clause for a sorted request",
 			sortItems: params.SortItems{{Field: "principal_name", Direction: params.Ascending}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				userRows := pool.NewRows(userRowColumns())
@@ -578,7 +599,7 @@ func TestStore_ListUsers(t *testing.T) {
 			}},
 		},
 		{
-			name:    "issues a WHERE clause for a filtered request",
+			name:    "success - issues a WHERE clause for a filtered request",
 			filters: params.Filters{"first_name": {{Field: "first_name", Operator: params.Equals, Value: "Ada", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				userRows := pool.NewRows(userRowColumns())
@@ -605,35 +626,51 @@ func TestStore_ListUsers(t *testing.T) {
 			wantResult: []services.User{user1},
 		},
 		{
-			name: "returns an empty slice when no users match",
+			name:    "success - issues IS NULL for an eq:null filter",
+			filters: params.Filters{"last_login": {{Field: "last_login", Operator: params.Equals, Value: "null", SetOperator: params.FilterAnd}}},
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListUsersFilteredNullSQL).WithArgs(false).WillReturnRows(pool.NewRows(userRowColumns()))
+			},
+			wantResult: []services.User{},
+		},
+		{
+			name:    "success - issues IS NOT NULL for a neq:null filter",
+			filters: params.Filters{"last_login": {{Field: "last_login", Operator: params.NotEquals, Value: "null", SetOperator: params.FilterAnd}}},
+			expectations: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListUsersFilteredNotNullSQL).WithArgs(false).WillReturnRows(pool.NewRows(userRowColumns()))
+			},
+			wantResult: []services.User{},
+		},
+		{
+			name: "success - returns an empty slice when no users match",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListUsersSQL).WithArgs(false).WillReturnRows(pool.NewRows(userRowColumns()))
 			},
 			wantResult: []services.User{},
 		},
 		{
-			name:    "returns an error for an unknown filter field",
+			name:    "error - unknown filter field",
 			filters: params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 			},
 			wantErrContains: "unknown field",
 		},
 		{
-			name:      "returns an error for an unknown sort field",
+			name:      "error - unknown sort field",
 			sortItems: params.SortItems{{Field: "nope", Direction: params.Ascending}},
 			expectations: func(pool pgxmock.PgxPoolIface) {
 			},
 			wantErrContains: "unknown field",
 		},
 		{
-			name: "propagates the users query database error",
+			name: "error - propagates the users query database error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedListUsersSQL).WithArgs(false).WillReturnError(dbErr)
 			},
 			wantErr: dbErr,
 		},
 		{
-			name: "wraps the roles query error",
+			name: "error - wraps the roles query error",
 			expectations: func(pool pgxmock.PgxPoolIface) {
 				userRows := pool.NewRows(userRowColumns())
 				addUserRow(userRows, user1)
