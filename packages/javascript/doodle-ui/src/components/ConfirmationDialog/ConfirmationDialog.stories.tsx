@@ -43,6 +43,19 @@ const meta = {
             description: 'Ex: `<FontAwesomeIcon icon={faTrash} />`',
             control: false,
         },
+        iconPosition: {
+            description: 'Icons can be positioned `left` or `right` within the button.',
+        },
+        cancelText: {
+            description: 'Custom text for the Cancel button.',
+        },
+        confirmText: {
+            description: 'Custom text for the Confirm button.',
+        },
+        challengeTxt: {
+            description:
+                'When populated with a value, adds another validation step where the user must enter the provided `challengeTxt` value in order to proceed.',
+        },
     },
 } satisfies Meta<typeof ConfirmationDialog>;
 
@@ -74,6 +87,7 @@ export const FullExample: Story = {
                     cancelText={args.cancelText}
                     confirmText={args.confirmText}
                     challengeTxt={args.challengeTxt}
+                    error={args.error}
                 />
             </>
         );
@@ -108,8 +122,8 @@ export const Basic: Story = {
 export const OptionalIcons: Story = {
     args: {
         open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
+        title: 'Optional Icons',
+        text: 'Icons can be applied to each button',
         onCancel: fn(),
         onConfirm: fn(),
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
@@ -122,11 +136,39 @@ export const OptionalIcons: Story = {
                 <Button onClick={() => setShowDialog(true)}>Optional Button Icons</Button>
                 <ConfirmationDialog
                     open={showDialog}
-                    title='Title'
-                    text='Are you sure you want to add Icons this component?'
+                    title={args.title}
+                    text={args.text}
                     onCancel={() => setShowDialog(false)}
                     onConfirm={() => setShowDialog(false)}
                     cancelIcon={args.cancelIcon}
+                    confirmIcon={args.confirmIcon}
+                />
+            </>
+        );
+    },
+};
+
+export const ConfirmIconOnly: Story = {
+    args: {
+        open: false,
+        title: 'Confirm Icon Only',
+        text: 'Icons can be applied to either / or / both ',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+    },
+    render: (args) => {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Confirm Icon Only</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
                     confirmIcon={args.confirmIcon}
                 />
             </>
@@ -137,27 +179,28 @@ export const OptionalIcons: Story = {
 export const IconPosition: Story = {
     args: {
         open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
+        title: 'Icon Position',
+        text: 'Icons can be positioned left or right within the button.  This setting applies to both buttons.',
         onCancel: fn(),
         onConfirm: fn(),
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
         confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+        iconPosition: 'right',
     },
     render: (args) => {
         const [showDialog, setShowDialog] = useState(args.open);
         return (
             <>
-                <Button onClick={() => setShowDialog(true)}>Optional Button Icons</Button>
+                <Button onClick={() => setShowDialog(true)}>Icon Position</Button>
                 <ConfirmationDialog
                     open={showDialog}
-                    title='Title'
-                    text='Icons can be positioned left or right.'
+                    title={args.title}
+                    text={args.text}
                     onCancel={() => setShowDialog(false)}
                     onConfirm={() => setShowDialog(false)}
                     cancelIcon={args.cancelIcon}
                     confirmIcon={args.confirmIcon}
-                    iconPosition='right'
+                    iconPosition={args.iconPosition}
                     confirmText='Delete'
                 />
             </>
@@ -168,8 +211,8 @@ export const IconPosition: Story = {
 export const CustomButtonText: Story = {
     args: {
         open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
+        title: 'Custom Button Text',
+        text: 'Button text can be customized.',
         onCancel: fn(),
         onConfirm: fn(),
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
@@ -182,8 +225,8 @@ export const CustomButtonText: Story = {
                 <Button onClick={() => setShowDialog(true)}>Custom Button Text</Button>
                 <ConfirmationDialog
                     open={showDialog}
-                    title='Title'
-                    text='Button text can be customized.  '
+                    title={args.title}
+                    text={args.text}
                     onCancel={() => setShowDialog(false)}
                     onConfirm={() => setShowDialog(false)}
                     cancelText='No'
@@ -197,10 +240,11 @@ export const CustomButtonText: Story = {
 export const ChallengeText: Story = {
     args: {
         open: false,
-        title: 'Title',
-        text: 'Prompt text goes here',
+        title: 'Challenge Text',
+        text: 'Are you really sure you want to do this?',
         onCancel: fn(),
         onConfirm: fn(),
+        challengeTxt: 'confirm',
         cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
         confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
@@ -211,9 +255,9 @@ export const ChallengeText: Story = {
                 <Button onClick={() => setShowDialog(true)}>Challenge Text</Button>
                 <ConfirmationDialog
                     open={showDialog}
-                    title='Title'
-                    text='Are you really sure you want to do this?'
-                    challengeTxt='confirm'
+                    title={args.title}
+                    text={args.text}
+                    challengeTxt={args.challengeTxt}
                     onCancel={() => setShowDialog(false)}
                     onConfirm={() => setShowDialog(false)}
                 />
