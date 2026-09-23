@@ -14,8 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import '@testing-library/jest-dom';
+import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
-import { Button, TextButton } from './Button';
+import { expect } from 'vitest';
+import { Button, ButtonVariants, TextButton } from './Button';
+
+expect.extend(matchers);
 
 describe('Button', () => {
     it('defaults to type button', () => {
@@ -53,6 +58,56 @@ describe('Button', () => {
         expect(button.classList.contains('dark:active:text-common-white')).toBe(true);
         expect(button.classList.contains('disabled:opacity-50')).toBe(true);
         expect(button.classList.contains('opacity-50')).toBe(false);
+    });
+
+    it.each([
+        ['primary', 'border border-transparent bg-primary text-text-contrast'],
+        ['secondary', 'border-border bg-elevation-1 text-text-main'],
+        ['tertiary', 'border-brand-orange bg-elevation-1 text-text-main'],
+    ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
+        render(<Button variant={variant}>{variant}</Button>);
+
+        expect(screen.getByRole('button', { name: variant })).toHaveClass(
+            'rounded',
+            'p-2',
+            'text-sm/5',
+            'hover:bg-secondary',
+            'hover:text-text-contrast',
+            'focus-visible:bg-secondary',
+            'focus-visible:text-text-contrast',
+            'active:bg-primary-variant',
+            'active:text-text-contrast',
+            ...expectedClasses.split(' ')
+        );
+        expect(screen.getByRole('button', { name: variant })).not.toHaveClass('shadow-outer-1');
+    });
+
+    it.each(['small', 'medium', 'large'] as const)('keeps uniform geometry for the deprecated %s size', (size) => {
+        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/5');
+    });
+
+    it('keeps deprecated variants free of contained-button geometry', () => {
+        expect(ButtonVariants({ variant: 'transparent' })).toContain('rounded-3xl');
+        expect(ButtonVariants({ variant: 'transparent' })).not.toContain('rounded p-2');
+        expect(ButtonVariants({ variant: 'icon' })).not.toContain('rounded p-2');
+    });
+
+    it('defaults to a non-submitting button', () => {
+        render(<Button>Save</Button>);
+
+        expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'button');
+    });
+
+    it('keeps TextButton and IconButton geometry independent', () => {
+        render(
+            <>
+                <TextButton>Help</TextButton>
+                <IconButton aria-label='Settings' />
+            </>
+        );
+
+        expect(screen.getByRole('button', { name: 'Help' })).toHaveClass('rounded-3xl');
+        expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('rounded-full');
     });
 });
 
