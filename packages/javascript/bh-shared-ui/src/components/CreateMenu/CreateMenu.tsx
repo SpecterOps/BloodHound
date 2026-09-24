@@ -29,7 +29,7 @@ const MenuWithDropdown: React.FC<{
     disabled: boolean;
 }> = ({ menuTitle, menuItems, disabled }) => {
     return (
-        <Menu>
+        <Menu modal={false}>
             <MenuTrigger asChild>
                 <Button disabled={disabled}>
                     <Typography>{menuTitle}</Typography>
