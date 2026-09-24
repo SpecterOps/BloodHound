@@ -14,15 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { apiClient, isNodeResponse, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
-import { Button } from 'doodle-ui';
+import { Button, MenuItem } from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
+const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string; onClose?: () => void }> = ({
+    assetGroupId,
+    assetGroupName,
+    onClose,
+}) => {
     const { addNotification } = useNotifications();
     const { refetch } = useExploreGraph();
 
@@ -80,13 +84,14 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         }
     };
 
-    const handleOpenConfirmation = (e: React.MouseEvent<HTMLLIElement>) => {
-        e.stopPropagation();
+    const handleOpenConfirmation = (e: Event) => {
+        e.preventDefault();
         setOpen(true);
     };
 
     const handleCloseConfirmation = () => {
         setOpen(false);
+        onClose?.();
     };
 
     // error state, data didn't load
@@ -98,13 +103,16 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     if (assetGroupMembers.length === 0) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
+                <MenuItem onSelect={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
                     Add to {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (
                     <ConfirmNodeChangesDialog
                         handleCancel={handleCloseConfirmation}
-                        handleApply={handleAddToAssetGroup}
+                        handleApply={() => {
+                            handleAddToAssetGroup();
+                            handleCloseConfirmation();
+                        }}
                         open={open}
                         dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update zone membership.`}
                     />
@@ -117,13 +125,16 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
+                <MenuItem onSelect={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
                     Remove from {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (
                     <ConfirmNodeChangesDialog
-                        handleCancel={() => setOpen(false)}
-                        handleApply={handleRemoveFromAssetGroup}
+                        handleCancel={handleCloseConfirmation}
+                        handleApply={() => {
+                            handleRemoveFromAssetGroup();
+                            handleCloseConfirmation();
+                        }}
                         open={open}
                         dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update zone membership.`}
                     />

@@ -23,3 +23,4 @@ export * from './fragments';
 export { default as GraphItemInformationPanel } from './GraphItemInformationPanel';
 export * from './InfoStyles';
 export * from './providers';
+export { default as GraphContextMenu } from './ContextMenu/GraphContextMenu';
