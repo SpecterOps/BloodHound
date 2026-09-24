@@ -95,19 +95,27 @@ func TestFirstOfMonth(t *testing.T) {
 
 func TestStore_PreCreateNextPartition(t *testing.T) {
 	tests := []struct {
-		name        string
-		asOf        time.Time
-		expectedSQL string
+		name string
+		asOf time.Time
+		// expectedSQL are the CREATE statements expected in order: the current
+		// month first (so live writes have a home) then the next month.
+		expectedSQL []string
 	}{
 		{
-			name:        "mid month creates next month partition",
-			asOf:        time.Date(2026, time.January, 15, 0, 0, 0, 0, time.UTC),
-			expectedSQL: `CREATE TABLE IF NOT EXISTS audit_logs_2026_02 PARTITION OF audit_logs FOR VALUES FROM ('2026-02-01') TO ('2026-03-01')`,
+			name: "mid month creates current and next month partitions",
+			asOf: time.Date(2026, time.January, 15, 0, 0, 0, 0, time.UTC),
+			expectedSQL: []string{
+				`CREATE TABLE IF NOT EXISTS audit_logs_2026_01 PARTITION OF audit_logs FOR VALUES FROM ('2026-01-01') TO ('2026-02-01')`,
+				`CREATE TABLE IF NOT EXISTS audit_logs_2026_02 PARTITION OF audit_logs FOR VALUES FROM ('2026-02-01') TO ('2026-03-01')`,
+			},
 		},
 		{
-			name:        "december rolls over into next year",
-			asOf:        time.Date(2026, time.December, 20, 0, 0, 0, 0, time.UTC),
-			expectedSQL: `CREATE TABLE IF NOT EXISTS audit_logs_2027_01 PARTITION OF audit_logs FOR VALUES FROM ('2027-01-01') TO ('2027-02-01')`,
+			name: "december rolls the next month over into next year",
+			asOf: time.Date(2026, time.December, 20, 0, 0, 0, 0, time.UTC),
+			expectedSQL: []string{
+				`CREATE TABLE IF NOT EXISTS audit_logs_2026_12 PARTITION OF audit_logs FOR VALUES FROM ('2026-12-01') TO ('2027-01-01')`,
+				`CREATE TABLE IF NOT EXISTS audit_logs_2027_01 PARTITION OF audit_logs FOR VALUES FROM ('2027-01-01') TO ('2027-02-01')`,
+			},
 		},
 	}
 
@@ -119,8 +127,7 @@ func TestStore_PreCreateNextPartition(t *testing.T) {
 			)
 
 			require.NoError(t, store.CreateNextPartition(context.Background(), tt.asOf))
-			require.Len(t, querier.execSQL, 1)
-			assert.Equal(t, tt.expectedSQL, querier.execSQL[0])
+			assert.Equal(t, tt.expectedSQL, querier.execSQL)
 		})
 	}
 }

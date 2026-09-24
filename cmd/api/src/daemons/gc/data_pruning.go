@@ -95,10 +95,10 @@ func (s *Daemon) runDataPruning(ctx context.Context) {
 	s.sweepAuditPartitions(ctx)
 }
 
-// sweepAuditPartitions pre-creates the upcoming audit_logs partition and drops
-// partitions older than the retention window. Failures are logged and do not
-// stop the daemon; the next tick retries. It is a no-op when no maintainer is
-// configured.
+// sweepAuditPartitions ensures the current and next audit_logs partitions exist
+// and drops partitions older than the retention window. Failures are logged and
+// do not stop the daemon; the next tick retries. It is a no-op when no maintainer
+// is configured.
 func (s *Daemon) sweepAuditPartitions(ctx context.Context) {
 	if s.auditMaintainer == nil {
 		return

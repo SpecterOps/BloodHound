@@ -261,6 +261,15 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
 -- audit_logs has been verified in production.
 
 -- +goose Down
+-- WARNING: this Down is a DESTRUCTIVE dev/test teardown, NOT a production
+-- rollback. It drops the partitioned audit_logs AND the audit_logs_old recovery
+-- copy that Up retains, then recreates an empty legacy table -- all audit data is
+-- lost. Production rollback during the soak is the manual rename-back of
+-- audit_logs_old (see BHADR-32), not this Down. Down must drop audit_logs_old so
+-- a subsequent Up can re-run (Up's Phase 4 RENAME ... TO audit_logs_old fails if
+-- it already exists); an automated Down cannot be both re-runnable and
+-- data-preserving.
+--
 -- The Up block re-attaches audit_logs_id_seq to the partitioned audit_logs.id,
 -- so dropping the table with CASCADE also drops the owned sequence. Also drop the
 -- staging and rename-aside tables in case Down runs against a half-completed Up

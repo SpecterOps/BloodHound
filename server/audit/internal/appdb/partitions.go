@@ -31,18 +31,44 @@ const (
 // bounds the drop scan so we never loop unbounded looking for old partitions.
 var earliestPartitionMonth = time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-// CreateNextPartition ensures the partition for the month AFTER asOf exists.
-// Names and bounds mirror the migration; the DDL is injection-safe because every
-// value derives from a time.Time.
+// CreateNextPartition ensures the monthly partitions covering asOf's month and
+// the month after it both exist. Creating the current month (not only the next)
+// keeps live writes out of audit_logs_default: live rows always carry created_at
+// = now(), so the only partition that can receive live writes is the current
+// month's. Pre-creating just the next month left the current month unpartitioned
+// whenever the daemon's first run landed in a month the migration had not
+// pre-created (e.g. a deployment later than the migration's pre-created range),
+// silently routing that month's data into the default partition, which retention
+// never drops. Both creations are idempotent (CREATE TABLE IF NOT EXISTS), so a
+// repeated sweep converges. Names and bounds mirror the migration; the DDL is
+// injection-safe because every value derives from a time.Time.
 func (s *Store) CreateNextPartition(ctx context.Context, asOf time.Time) error {
 	var (
-		next = firstOfMonth(asOf).AddDate(0, 1, 0)
-		name = partitionName(next)
+		current = firstOfMonth(asOf)
+		next    = current.AddDate(0, 1, 0)
+		month   time.Time
+		err     error
+	)
+	// Inclusive [current, next]: guarantee a home for the current month's live
+	// writes, then pre-create the next month ahead of the rollover.
+	for month = current; !month.After(next); month = month.AddDate(0, 1, 0) {
+		if err = s.createPartitionForMonth(ctx, month); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// createPartitionForMonth idempotently creates the monthly partition containing
+// month. It is the single-month building block CreateNextPartition loops over.
+func (s *Store) createPartitionForMonth(ctx context.Context, month time.Time) error {
+	var (
+		name = partitionName(month)
 		ddl  = fmt.Sprintf(
 			`CREATE TABLE IF NOT EXISTS %s PARTITION OF %s FOR VALUES FROM ('%s') TO ('%s')`,
 			name, tableAuditLogs,
-			next.Format(partitionDateFormat),
-			next.AddDate(0, 1, 0).Format(partitionDateFormat),
+			month.Format(partitionDateFormat),
+			month.AddDate(0, 1, 0).Format(partitionDateFormat),
 		)
 		err error
 	)
