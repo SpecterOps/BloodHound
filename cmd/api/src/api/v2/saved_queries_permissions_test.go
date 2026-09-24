@@ -1888,18 +1888,6 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 
 	// Setup
 	var (
-		testSavedQuery1 = model.SavedQuery{
-			UserID:      user1Id.String(),
-			Name:        "Test Query 1",
-			Query:       "Match (n:Base) return n",
-			Description: "test query",
-			BigSerial: model.BigSerial{
-				ID: 1,
-				Basic: model.Basic{
-					CreatedAt: time.Now(),
-				},
-			},
-		}
 		testSavedQuery1Permissions = model.SavedQueriesPermissions{
 			SharedToUserID: uuid.NullUUID{
 				UUID:  user2Id,
@@ -1991,7 +1979,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, fmt.Errorf("error returning saved query"))
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopes{}, fmt.Errorf("error returning saved query"))
 				},
 			},
 			args: args{
@@ -2012,58 +2000,16 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, nil)
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Shared: false,
+						}, nil)
 				},
 			},
 			args: args{
 				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					require.NoError(t, err)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
-					return req
-				},
-			},
-			expect: expected{
-				responseCode:   http.StatusNotFound,
-				responseBody:   `{"errors":[{"context":"","message":"no query permissions exist for saved query"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "fail - error asserting if user owns query",
-			fields: fields{
-				setupMocks: func(t *testing.T, mock *mock) {
-					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQuery{}, fmt.Errorf("error returning saved query"))
-				},
-			},
-			args: args{
-				buildRequest: func() *http.Request {
-					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					require.NoError(t, err)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
-					return req
-				},
-			},
-			expect: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "fail - user cannot access saved query permissions",
-			fields: fields{
-				setupMocks: func(t *testing.T, mock *mock) {
-					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
-				},
-			},
-			args: args{
-				buildRequest: func() *http.Request {
-					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
 					require.NoError(t, err)
 					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					return req
@@ -2080,8 +2026,12 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Owned:  true,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
 				},
 			},
 			args: args{
@@ -2095,7 +2045,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"],"readonly":false}}`, user2Id),
 			},
 		},
 		{
@@ -2103,6 +2053,11 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Owned:  false,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
 				},
 			},
@@ -2117,7 +2072,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"],"readonly":false}}`, user2Id),
 			},
 		},
 		{
@@ -2125,6 +2080,10 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: true,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
 				},
 			},
@@ -2139,7 +2098,34 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[]}}`,
+				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[],"readonly":false}}`,
+			},
+		},
+		{
+			name: "success - public readonly query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public:   true,
+							ReadOnly: true,
+						}, nil)
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() *http.Request {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user2Id), http.MethodGet, "/api/v2/saved-queries/2/permissions", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[],"readonly":true}}`,
 			},
 		},
 	}

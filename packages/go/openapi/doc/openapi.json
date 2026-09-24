@@ -26518,6 +26518,9 @@
           },
           "public": {
             "type": "boolean"
+          },
+          "readonly": {
+            "type": "boolean"
           }
         }
       },

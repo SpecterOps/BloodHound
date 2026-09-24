@@ -17,7 +17,6 @@
 package v2
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -94,6 +93,7 @@ type SavedQueryPermissionResponse struct {
 	QueryID         int64       `json:"query_id"`
 	Public          bool        `json:"public"`
 	SharedToUserIDs []uuid.UUID `json:"shared_to_user_ids"`
+	Readonly        bool        `json:"readonly"`
 }
 
 func (s *SavedQueryPermissionResponse) appendUserId(userId uuid.NullUUID) {
@@ -115,19 +115,20 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "no associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if dbSavedQueryScope, err := s.DB.GetScopeForSavedQuery(request.Context(), savedQueryID, user.ID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if isAccessibleToUser := s.canUserAccessSavedQueryPermissions(dbSavedQueryScope, user); !isAccessibleToUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "no query permissions exist for saved query", request), response)
 	} else if savedQueryPermissions, err := s.DB.GetSavedQueryPermissions(request.Context(), savedQueryID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if len(savedQueryPermissions) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "no query permissions exist for saved query", request), response)
-	} else if isAccessibleToUser, err := s.canUserAccessSavedQueryPermissions(request.Context(), savedQueryPermissions[0], user); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if !isAccessibleToUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "no query permissions exist for saved query", request), response)
 	} else {
 		var savedQueryPermissionResponse = SavedQueryPermissionResponse{
 			QueryID:         savedQueryID,
 			Public:          savedQueryPermissions[0].Public,
 			SharedToUserIDs: make([]uuid.UUID, 0),
+			Readonly:        dbSavedQueryScope.ReadOnly,
 		}
 		if !savedQueryPermissionResponse.Public {
 			for _, savedQueryPermission := range savedQueryPermissions {
@@ -139,15 +140,11 @@ func (s Resources) GetSavedQueryPermissions(response http.ResponseWriter, reques
 }
 
 // canUserAccessSavedQueryPermissions - users can access query permissions if its public, they own the query or are an admin.
-func (s Resources) canUserAccessSavedQueryPermissions(ctx context.Context, savedQueryPermissions model.SavedQueriesPermissions, user model.User) (bool, error) {
-	if savedQueryPermissions.Public || user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-		return true, nil
+func (s Resources) canUserAccessSavedQueryPermissions(savedQueryScope database.SavedQueryScopes, user model.User) bool {
+	if savedQueryScope.Public || user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+		return true
 	}
-	if savedQuery, err := s.DB.GetSavedQuery(ctx, savedQueryPermissions.QueryID); err != nil {
-		return false, err
-	} else {
-		return user.ID.String() == savedQuery.UserID, nil
-	}
+	return savedQueryScope.Owned
 }
 
 // ShareSavedQueries allows a user to share queries between users, as well as share them publicly
