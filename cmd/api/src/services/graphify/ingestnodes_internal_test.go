@@ -81,13 +81,14 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 	})
 }
 
-func TestMaybeSubmitNodeUpdate(t *testing.T) {
+func TestNodeIngesterMaybeSubmitNodeUpdate(t *testing.T) {
 	t.Run("there is no changelog, submit to batch and track stats", func(t *testing.T) {
 		var (
 			ctx              = context.Background()
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
 			ingestCtx        = NewIngestContext(ctx)
+			ingester         = nodeIngester{ingestContext: ingestCtx}
 
 			node       = graph.PrepareNode(graph.NewProperties().Set("hello", "world"), graph.StringKind("kindA"))
 			nodeUpdate = graph.NodeUpdate{Node: node}
@@ -104,7 +105,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 		// mock expects
 		mockBatchUpdater.EXPECT().UpdateNodeBy(nodeUpdate).Return(nil).Times(1)
 
-		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
+		err := ingester.maybeSubmitNodeUpdate(nodeUpdate)
 		require.NoError(t, err)
 
 		// Verify stats were incremented
@@ -120,6 +121,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
 			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
+			ingester          = nodeIngester{ingestContext: ingestCtx}
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))
@@ -139,7 +141,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 		mockChangeManager.EXPECT().ResolveChange(change).Return(true, nil).Times(1)
 		mockBatchUpdater.EXPECT().UpdateNodeBy(nodeUpdate).Return(nil).Times(1)
 
-		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
+		err := ingester.maybeSubmitNodeUpdate(nodeUpdate)
 		require.NoError(t, err)
 
 		// Verify stats were incremented
@@ -155,6 +157,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
 			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
+			ingester          = nodeIngester{ingestContext: ingestCtx}
 
 			objectID   = "1234"
 			node       = graph.PrepareNode(graph.NewProperties().Set("objectid", objectID), graph.StringKind("kindA"))
@@ -175,7 +178,7 @@ func TestMaybeSubmitNodeUpdate(t *testing.T) {
 		mockBatchUpdater.EXPECT().UpdateNodeBy(gomock.Any()).Times(0)
 		mockChangeManager.EXPECT().Submit(ctx, change).Times(1)
 
-		err := maybeSubmitNodeUpdate(ingestCtx, nodeUpdate)
+		err := ingester.maybeSubmitNodeUpdate(nodeUpdate)
 		require.NoError(t, err)
 
 		// Verify stats: processed incremented, written NOT incremented (deduplicated)

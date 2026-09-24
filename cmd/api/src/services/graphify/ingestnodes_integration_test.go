@@ -73,12 +73,13 @@ func ingestTestNode(t *testing.T, suite IntegrationTestSuite, nodeData testNodeD
 				graphify.WithEndpointResolver(endpoint.NewResolver(suite.GraphDB)))
 		}
 
-		return graphify.IngestNode(ingestCtx, nodeData.SourceKind,
+		return graphify.IngestNodes(ingestCtx, nodeData.SourceKind, []ein.IngestibleNode{
 			ein.IngestibleNode{
 				ObjectID:    nodeData.ObjectID,
 				Labels:      nodeData.Labels,
 				PropertyMap: propertyBag.Map,
-			})
+			},
+		})
 	})
 
 	require.NoError(t, err)
@@ -175,9 +176,9 @@ func TestIngestNode(t *testing.T) {
 			}
 
 			// Ingest same node twice - second should be deduplicated
-			err := graphify.IngestNode(ingestCtx, nodeData.SourceKind, node)
+			err := graphify.IngestNodes(ingestCtx, nodeData.SourceKind, []ein.IngestibleNode{node})
 			require.NoError(t, err)
-			err = graphify.IngestNode(ingestCtx, nodeData.SourceKind, node)
+			err = graphify.IngestNodes(ingestCtx, nodeData.SourceKind, []ein.IngestibleNode{node})
 			require.NoError(t, err)
 
 			return nil
