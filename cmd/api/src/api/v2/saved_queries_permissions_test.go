@@ -48,15 +48,6 @@ var (
 	ErrMockDatabaseError = errors.New("mockDatabaseError")
 )
 
-// helper to build scopes more succinctly
-func newSavedQueryScope(owned, public, shared bool) database.SavedQueryScopes {
-	return database.SavedQueryScopes{
-		Owned:  owned,
-		Public: public,
-		Shared: shared,
-	}
-}
-
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
 	adminUser := model.User{
 		Roles: model.Roles{
@@ -138,7 +129,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -149,7 +140,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
@@ -160,7 +151,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -171,7 +162,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -182,7 +173,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -193,7 +184,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -204,7 +195,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -215,7 +206,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -226,7 +217,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -237,7 +228,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -248,7 +239,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -259,7 +250,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, true, true),
+			scope:       database.SavedQueryScopes{Public: true, Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 
@@ -272,7 +263,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, true, false),
+			scope:       database.SavedQueryScopes{Public: true},
 			expectedErr: v2.ErrInvalidPublicShare,
 		},
 		{
@@ -283,7 +274,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -294,7 +285,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -305,7 +296,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -316,7 +307,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -327,7 +318,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -338,7 +329,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
@@ -349,7 +340,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, true, false),
+			scope:       database.SavedQueryScopes{Public: true},
 			expectedErr: nil,
 		},
 
@@ -362,7 +353,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{adminUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
@@ -373,7 +364,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -384,7 +375,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -395,7 +386,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -406,7 +397,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -417,7 +408,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -428,7 +419,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -439,7 +430,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
@@ -450,7 +441,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
@@ -461,7 +452,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrInvalidPublicShare,
 		},
 		{
@@ -472,7 +463,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 
@@ -485,7 +476,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{userRoleUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
@@ -496,7 +487,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
@@ -507,7 +498,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -518,7 +509,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -529,7 +520,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // upper-layer HTTP handler will reject this combination
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 
@@ -542,7 +533,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{powerUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
@@ -553,7 +544,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
@@ -564,7 +555,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
@@ -575,7 +566,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
@@ -586,7 +577,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // HTTP handler still blocks this, but CanUpdate returns nil
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 	}
