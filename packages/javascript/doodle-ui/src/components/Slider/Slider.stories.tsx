@@ -120,13 +120,17 @@ export const Playground: Story = {
 };
 
 /**
- * The default form of the slider.
+ * The default uncontrolled form of the slider.
  */
 export const Default: Story = {
     args: {
-        value: 50,
+        defaultValue: 50,
     },
-    render: renderInteractive,
+    render: (args) => (
+        <div className='w-64'>
+            <Slider {...args} />
+        </div>
+    ),
 };
 
 /**
