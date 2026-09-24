@@ -38,10 +38,7 @@ describe('Slider Tests', () => {
             </>
         );
 
-        expect(screen.getByRole('slider', { name: 'Value' })).toHaveAttribute(
-            'aria-describedby',
-            'slider-description'
-        );
+        expect(screen.getByRole('slider', { name: 'Value' })).toHaveAttribute('aria-describedby', 'slider-description');
     });
 
     it('calls onValueChange when the value is changed via the keyboard', async () => {
@@ -111,6 +108,16 @@ describe('Slider Tests', () => {
         expect(thumbInput).toHaveValue('0');
         expect(thumbDot).toHaveClass('hidden');
         expect(thumbDot).not.toHaveClass('block');
+    });
+
+    it('shows the thumb dot when the value is greater than the minimum', () => {
+        render(<Slider defaultValue={50} min={0} max={100} thumbAriaLabel='Value' />);
+
+        const thumbInput = screen.getByRole('slider', { name: 'Value' });
+        const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
+
+        expect(thumbDot).toHaveClass('block', 'bg-primary');
+        expect(thumbDot).not.toHaveClass('hidden');
     });
 
     it('applies a state-driven className callback to the root when disabled', () => {

@@ -18,15 +18,13 @@ import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-const sliderRootStyles = cva(
-    'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50'
-);
+const sliderRootStyles =
+    'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
-const sliderControlStyles = cva('group/slider relative flex w-full grow items-center py-3');
+const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
 
-const sliderTrackStyles = cva(
-    'relative h-1 w-full grow overflow-hidden rounded-full bg-neutral-200 data-[disabled]:bg-disabled'
-);
+const sliderTrackStyles =
+    'relative h-1 w-full grow overflow-hidden rounded-full bg-neutral-200 data-[disabled]:bg-disabled';
 
 const sliderIndicatorStyles = cva(
     'h-full rounded-full group-has-[:focus-visible]/slider:bg-secondary data-[disabled]:bg-disabled',
@@ -92,13 +90,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
             value,
             defaultValue,
             onValueChange,
+            min = 0,
             'aria-describedby': ariaDescribedBy,
             ...props
         },
         ref
     ) => {
-        const { min = 0 } = props;
-
         const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
 
         const displayValue = value ?? uncontrolledValue;
@@ -117,14 +114,15 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
             <SliderPrimitive.Root
                 ref={ref}
                 className={(state) =>
-                    cn(sliderRootStyles(), typeof className === 'function' ? className(state) : className)
+                    cn(sliderRootStyles, typeof className === 'function' ? className(state) : className)
                 }
+                min={min}
                 value={value}
                 defaultValue={defaultValue}
                 onValueChange={handleValueChange}
                 {...props}>
-                <SliderPrimitive.Control className={sliderControlStyles()}>
-                    <SliderPrimitive.Track className={sliderTrackStyles()}>
+                <SliderPrimitive.Control className={sliderControlStyles}>
+                    <SliderPrimitive.Track className={sliderTrackStyles}>
                         <SliderPrimitive.Indicator className={sliderIndicatorStyles({ active: isActive })} />
                     </SliderPrimitive.Track>
                     <SliderPrimitive.Thumb
