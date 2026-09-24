@@ -16,7 +16,11 @@
 
 package database
 
-import "context"
+import (
+	"context"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+)
 
 // reconcileConfig holds the callbacks needed to reconcile a collection of existing items against a desired input set.
 // TInput is the desired-state type, TExisting is the current-state type, and K is a comparable key used to
@@ -39,13 +43,17 @@ func reconcile[TInput any, TExisting any, K comparable](
 	inputs []TInput,
 	existingRows []TExisting,
 	config reconcileConfig[TInput, TExisting, K],
-) ([]TExisting, error) {
-	existingByKey := make(map[K]TExisting, len(existingRows))
+) (model.ReconcileResult[TExisting], error) {
+	var (
+		existingByKey = make(map[K]TExisting, len(existingRows))
+		inputKeys     = make(map[K]bool, len(inputs))
+		result        model.ReconcileResult[TExisting]
+	)
+
 	for _, existing := range existingRows {
 		existingByKey[config.getExistingKey(existing)] = existing
 	}
 
-	inputKeys := make(map[K]bool, len(inputs))
 	for _, input := range inputs {
 		inputKeys[config.getInputKey(input)] = true
 	}
@@ -56,25 +64,34 @@ func reconcile[TInput any, TExisting any, K comparable](
 			continue
 		}
 		if err := config.delete(ctx, existing); err != nil {
-			return nil, err
+			return result, err
 		}
+		result.Deleted = append(result.Deleted, existing)
 	}
 
 	// Create/Update pass — upsert each desired input
-	results := make([]TExisting, 0, len(inputs))
 	for _, input := range inputs {
 		if existing, found := existingByKey[config.getInputKey(input)]; found {
-			if result, err := config.update(ctx, existing, input); err != nil {
-				return nil, err
+			if updated, err := config.update(ctx, existing, input); err != nil {
+				return result, err
 			} else {
-				results = append(results, result)
+				result.Updated = append(result.Updated, updated)
 			}
-		} else if result, err := config.create(ctx, input); err != nil {
-			return nil, err
+		} else if created, err := config.create(ctx, input); err != nil {
+			return result, err
 		} else {
-			results = append(results, result)
+			result.Created = append(result.Created, created)
 		}
 	}
 
-	return results, nil
+	return result, nil
+}
+
+// mergeReconcileResults combines two reconciliation outcomes without modifying either input.
+func mergeReconcileResults[T any](first, second model.ReconcileResult[T]) model.ReconcileResult[T] {
+	return model.ReconcileResult[T]{
+		Created: append(append([]T(nil), first.Created...), second.Created...),
+		Updated: append(append([]T(nil), first.Updated...), second.Updated...),
+		Deleted: append(append([]T(nil), first.Deleted...), second.Deleted...),
+	}
 }
