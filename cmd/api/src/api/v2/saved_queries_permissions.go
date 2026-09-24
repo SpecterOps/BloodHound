@@ -45,9 +45,14 @@ var (
 	ErrInvalidSelfShare   = errors.New("invalidSelfShare")
 	ErrForbidden          = errors.New("forbidden")
 	ErrInvalidPublicShare = errors.New("invalidPublicShare")
+	ErrNotModifiable      = errors.New("notModifiable")
 )
 
 func CanUpdateSavedQueriesPermission(user model.User, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopes) error {
+	if dbSavedQueryScope.ReadOnly {
+		return ErrNotModifiable
+	}
+
 	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
 	hasPrivilegedRole :=
 		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
@@ -167,6 +172,8 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Cannot share query to self", request), response)
 		} else if errors.Is(err, ErrInvalidPublicShare) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Public query cannot be shared to users. You must set your query to private first", request), response)
+		} else if errors.Is(err, ErrNotModifiable) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "This shared query is not modifiable", request), response)
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 		}
@@ -228,6 +235,11 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 	} else if dbSavedQueryScope, err := s.DB.GetScopeForSavedQuery(request.Context(), savedQueryID, user.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		if dbSavedQueryScope.ReadOnly {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "This shared query is not modifiable", request), response)
+			return
+		}
+
 		// Check if the user is attempting to unshare a query from themselves
 		if slices.Contains(deleteRequest.UserIds, user.ID) {
 			if !dbSavedQueryScope.Shared {

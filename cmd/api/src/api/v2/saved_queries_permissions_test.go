@@ -133,6 +133,17 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			expectedErr: v2.ErrForbidden,
 		},
 		{
+			name:    "Non-admin owned, readonly error",
+			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
+			user:    nonAdminUser1,
+			payload: v2.SavedQueryPermissionRequest{
+				UserIDs: []uuid.UUID{nonAdminUser2.ID},
+				Public:  false,
+			},
+			scope:       database.SavedQueryScopes{ReadOnly: true},
+			expectedErr: v2.ErrNotModifiable,
+		},
+		{
 			name:    "Non-admin owned, query shared to self error",
 			comment: "Non-privileged user cannot share their own private query to themselves",
 			user:    nonAdminUser1,
@@ -345,6 +356,17 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 		},
 
 		// Admin owned queries
+		{
+			name:    "Admin-owned, readonly error",
+			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
+			user:    adminUser,
+			payload: v2.SavedQueryPermissionRequest{
+				UserIDs: []uuid.UUID{adminUser.ID},
+				Public:  false,
+			},
+			scope:       database.SavedQueryScopes{ReadOnly: true},
+			expectedErr: v2.ErrNotModifiable,
+		},
 		{
 			name:    "Admin-owned, query shared to self error",
 			comment: "Admin cannot share their own query to themselves",
@@ -1294,6 +1316,44 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 						// and just writes 204 with no additional DB calls.
 					},
 					expectedStatus: http.StatusNoContent,
+				},
+			},
+		},
+		{
+			name:         "can't updated read only query (400)",
+			savedQueryID: savedQueryID,
+			steps: []step{
+				{
+					name: "public -> private",
+					buildRequest: func(t *testing.T, url string) *http.Request {
+						payload := v2.SavedQueryPermissionRequest{
+							UserIDs: []uuid.UUID{},
+							Public:  false,
+						}
+
+						req, err := http.NewRequestWithContext(
+							createContextWithAdminOwnerId(adminUserID),
+							http.MethodPut,
+							url,
+							must.MarshalJSONReader(payload),
+						)
+						require.NoError(t, err)
+						req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+						return req
+					},
+					setupMocks: func() {
+						mockDB.EXPECT().
+							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
+							Return(database.SavedQueryScopes{
+								ReadOnly: true,
+								Owned:    true,
+								Public:   true,
+								Shared:   false,
+							}, nil)
+						// CanUpdateSavedQueriesPermission will return ErrNotModifiable
+					},
+					expectedStatus:     http.StatusBadRequest,
+					expectedBodySubstr: "This shared query is not modifiable",
 				},
 			},
 		},
