@@ -76,6 +76,15 @@ const meta = {
                 defaultValue: { summary: 'false' },
             },
         },
+        snapPoints: {
+            control: 'object',
+            description:
+                'Snap positions for a top or bottom drawer. Numbers from 0 to 1 are fractions of the viewport height; larger numbers are pixels. Strings may use px or rem units.',
+            table: {
+                category: 'Drawer',
+                type: { summary: '(number | string)[]' },
+            },
+        },
         defaultOpen: {
             control: false,
             description: 'Whether the drawer starts open when using uncontrolled state.',
@@ -219,8 +228,9 @@ const DirectionalDrawer = ({
     className,
     modal,
     showSwipeHandle,
-}: Pick<DrawerStoryArgs, 'swipeDirection' | 'className' | 'modal' | 'showSwipeHandle'>) => (
-    <Drawer swipeDirection={swipeDirection} modal={modal} showSwipeHandle={showSwipeHandle}>
+    snapPoints,
+}: Pick<DrawerStoryArgs, 'swipeDirection' | 'className' | 'modal' | 'showSwipeHandle' | 'snapPoints'>) => (
+    <Drawer swipeDirection={swipeDirection} modal={modal} showSwipeHandle={showSwipeHandle} snapPoints={snapPoints}>
         <DrawerTrigger render={<Button variant='secondary' />}>Open {swipeDirection} drawer</DrawerTrigger>
         <DrawerContent className={className}>
             <DrawerHeader>
@@ -249,6 +259,7 @@ export const Left: Story = {
             className={args.className}
             modal={args.modal}
             showSwipeHandle={args.showSwipeHandle}
+            snapPoints={args.snapPoints}
         />
     ),
 };
@@ -264,6 +275,7 @@ export const Top: Story = {
             className={args.className}
             modal={args.modal}
             showSwipeHandle={args.showSwipeHandle}
+            snapPoints={args.snapPoints}
         />
     ),
 };
@@ -281,6 +293,45 @@ export const Bottom: Story = {
             className={args.className}
             modal={args.modal}
             showSwipeHandle={args.showSwipeHandle}
+            snapPoints={args.snapPoints}
         />
+    ),
+};
+
+export const SnapPoints: Story = {
+    args: { swipeDirection: 'down', snapPoints: [0.4, 1], showSwipeHandle: true },
+    parameters: {
+        docs: {
+            description: {
+                story: 'Drag the handle on this bottom drawer to switch between 40% and full viewport height.',
+            },
+        },
+    },
+    render: ({ className, ...drawerProps }) => (
+        <Drawer {...drawerProps}>
+            <DrawerTrigger render={<Button variant='secondary' />}>Open snap drawer</DrawerTrigger>
+            <DrawerContent className={className}>
+                <DrawerHeader>
+                    <div>
+                        <DrawerTitle>Snap points</DrawerTitle>
+                        <DrawerDescription>Drag the drawer to expand it.</DrawerDescription>
+                    </div>
+                    <DrawerClose
+                        aria-label='Close drawer'
+                        className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
+                        <X aria-hidden='true' size={20} />
+                    </DrawerClose>
+                </DrawerHeader>
+                <DrawerBody>
+                    <ul className='divide-y'>
+                        {Array.from({ length: 20 }, (_, index) => (
+                            <li className='py-3' key={index}>
+                                Item {index + 1}
+                            </li>
+                        ))}
+                    </ul>
+                </DrawerBody>
+            </DrawerContent>
+        </Drawer>
     ),
 };
