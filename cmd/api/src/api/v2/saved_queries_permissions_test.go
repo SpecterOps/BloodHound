@@ -50,11 +50,11 @@ var (
 )
 
 // helper to build scopes more succinctly
-func newSavedQueryScope(owned, public, shared bool) database.SavedQueryScopeMap {
-	return database.SavedQueryScopeMap{
-		model.SavedQueryScopeOwned:  owned,
-		model.SavedQueryScopePublic: public,
-		model.SavedQueryScopeShared: shared,
+func newSavedQueryScope(owned, public, shared bool) database.SavedQueryScopes {
+	return database.SavedQueryScopes{
+		Owned:  owned,
+		Public: public,
+		Shared: shared,
 	}
 }
 
@@ -128,7 +128,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 		user                    model.User
 		savedQueryBelongsToUser bool
 		payload                 v2.SavedQueryPermissionRequest
-		scope                   database.SavedQueryScopeMap
+		scope                   database.SavedQueryScopes
 		expectedErr             error
 	}{
 		// Non-admin owned queries
@@ -799,10 +799,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, ErrMockDatabaseError)
 			},
 			expectedStatus:     http.StatusInternalServerError,
@@ -833,10 +833,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 			},
 			expectedStatus:     http.StatusBadRequest,
@@ -863,10 +863,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: true,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: true,
+						Shared: false,
 					}, nil)
 			},
 			expectedStatus:     http.StatusForbidden,
@@ -914,10 +914,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 
 				mockDB.EXPECT().
@@ -970,10 +970,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 
 				mockDB.EXPECT().
@@ -1020,10 +1020,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 
 				mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
@@ -1074,10 +1074,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().CreateSavedQueryPermissionsToUsers(gomock.Any(), gomock.Any(), userID2, userID3).Return([]model.SavedQueriesPermissions{
 					{
@@ -1133,10 +1133,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().
 					CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).
@@ -1178,10 +1178,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 				mockDB.EXPECT().
 					DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1209,10 +1209,10 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 					Return(true, nil)
 				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().
 					DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1277,10 +1277,10 @@ func TestResources_ShareSavedQueriesPermissions_SavingPermissionsErrors(t *testi
 	}
 
 	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeShared: false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopes{
+		Owned:  false,
+		Public: false,
+		Shared: false,
 	}, nil)
 	mockDB.EXPECT().CreateSavedQueryPermissionsToUsers(gomock.Any(), gomock.Any(), userId2, userId3).Return(nil, fmt.Errorf("Error!"))
 
@@ -1355,10 +1355,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(false, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  false,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  false,
+								Public: true,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1396,10 +1396,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(true, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						// CanUpdateSavedQueriesPermission returns nil; handler sees already-public
 						// and just writes 204 with no additional DB calls.
@@ -1436,10 +1436,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(true, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						// CanUpdateSavedQueriesPermission will return ErrInvalidPublicShare
 					},
@@ -1477,10 +1477,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(true, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1512,10 +1512,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(true, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: false,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: false,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							CreateSavedQueryPermissionsToUsers(
@@ -1583,10 +1583,10 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 							Return(true, nil)
 						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: false,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: false,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							CreateSavedQueryPermissionsToUsers(

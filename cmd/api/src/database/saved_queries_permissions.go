@@ -32,14 +32,18 @@ type SavedQueriesPermissionsData interface {
 	CreateSavedQueryPermissionToPublic(ctx context.Context, queryID int64) (model.SavedQueriesPermissions, error)
 	CreateSavedQueryPermissionsToUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) ([]model.SavedQueriesPermissions, error)
 	DeleteSavedQueryPermissionsForUsers(ctx context.Context, queryID int64, userIDs ...uuid.UUID) error
-	GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error)
+	GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopes, error)
 	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
 	IsSavedQuerySharedToUser(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 	IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 }
 
-// SavedQueryScopeMap holds the information of a saved query's scope [IE: owned, shared, public]
-type SavedQueryScopeMap map[model.SavedQueryScope]bool
+type SavedQueryScopes struct {
+	Owned    bool
+	Shared   bool
+	Public   bool
+	ReadOnly bool
+}
 
 // GetSavedQueryPermissions - returns permission data if the user owns the query or the query is public
 func (s *BloodhoundDB) GetSavedQueryPermissions(ctx context.Context, queryID int64) ([]model.SavedQueriesPermissions, error) {
@@ -102,20 +106,15 @@ func (s *BloodhoundDB) DeleteSavedQueryPermissionsForUsers(ctx context.Context, 
 	return CheckError(result.Delete(&model.SavedQueriesPermissions{}))
 }
 
-// GetScopeForSavedQuery will return a map of the possible scopes given a query id and a user id
-func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error) {
+// GetScopeForSavedQuery returns the possible scopes for a query and user.
+func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopes, error) {
 	var (
 		err    error
-		scopes = SavedQueryScopeMap{
-			model.SavedQueryScopePublic:   false,
-			model.SavedQueryScopeOwned:    false,
-			model.SavedQueryScopeShared:   false,
-			model.SavedQueryScopeReadonly: false,
-		}
+		scopes = SavedQueryScopes{}
 	)
 
 	// Check if the query was shared with the user publicly
-	if scopes[model.SavedQueryScopePublic], err = s.IsSavedQueryPublic(ctx, queryID); err != nil {
+	if scopes.Public, err = s.IsSavedQueryPublic(ctx, queryID); err != nil {
 		return scopes, err
 	}
 
@@ -126,16 +125,16 @@ func (s *BloodhoundDB) GetScopeForSavedQuery(ctx context.Context, queryID int64,
 	}
 
 	// Check if the user owns the query
-	scopes[model.SavedQueryScopeOwned] = userID.String() == savedQuery.UserID
+	scopes.Owned = userID.String() == savedQuery.UserID
 
 	// Check if the user has had the query shared to them
-	if scopes[model.SavedQueryScopeShared], err = s.IsSavedQuerySharedToUser(ctx, queryID, userID); err != nil {
+	if scopes.Shared, err = s.IsSavedQuerySharedToUser(ctx, queryID, userID); err != nil {
 		return scopes, err
 	}
 
 	// Determine if the query should be readonly
 	// Currently, this is only the case if the query has an extensionID
-	scopes[model.SavedQueryScopeReadonly] = (savedQuery.SchemaExtensionID != nil)
+	scopes.ReadOnly = (savedQuery.SchemaExtensionID != nil)
 
 	return scopes, nil
 }

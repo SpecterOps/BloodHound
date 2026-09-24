@@ -47,7 +47,7 @@ var (
 	ErrInvalidPublicShare = errors.New("invalidPublicShare")
 )
 
-func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bool, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopeMap) error {
+func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bool, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopes) error {
 	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
 	hasPrivilegedRole :=
 		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
@@ -57,10 +57,10 @@ func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bo
 	if hasPrivilegedRole {
 		if createRequest.Public && savedQueryBelongsToUser {
 			return nil
-		} else if len(createRequest.UserIDs) == 0 && (savedQueryBelongsToUser || dbSavedQueryScope[model.SavedQueryScopePublic]) {
+		} else if len(createRequest.UserIDs) == 0 && (savedQueryBelongsToUser || dbSavedQueryScope.Public) {
 			return nil
 		} else if len(createRequest.UserIDs) > 0 && !createRequest.Public {
-			if dbSavedQueryScope[model.SavedQueryScopePublic] {
+			if dbSavedQueryScope.Public {
 				return ErrInvalidPublicShare
 			}
 			if savedQueryBelongsToUser {
@@ -72,7 +72,7 @@ func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bo
 				return nil
 			}
 		}
-	} else if savedQueryBelongsToUser && !dbSavedQueryScope[model.SavedQueryScopePublic] {
+	} else if savedQueryBelongsToUser && !dbSavedQueryScope.Public {
 		if len(createRequest.UserIDs) > 0 && !createRequest.Public {
 			for _, sharedUserID := range createRequest.UserIDs {
 				if sharedUserID == user.ID {
@@ -177,7 +177,7 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 	} else {
 		// Query set to public
 		if createRequest.Public {
-			if dbSavedQueryScope[model.SavedQueryScopePublic] {
+			if dbSavedQueryScope.Public {
 				response.WriteHeader(http.StatusNoContent)
 			} else {
 				if savedPermission, err := s.DB.CreateSavedQueryPermissionToPublic(request.Context(), savedQueryID); err != nil {
@@ -195,7 +195,7 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 			}
 			// Sharing a query
 		} else if len(createRequest.UserIDs) > 0 && !createRequest.Public {
-			if dbSavedQueryScope[model.SavedQueryScopePublic] {
+			if dbSavedQueryScope.Public {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Public query cannot be shared to users. You must set your query to private first", request), response)
 			} else {
 				if savedPermissions, err := s.DB.CreateSavedQueryPermissionsToUsers(request.Context(), savedQueryID, createRequest.UserIDs...); err != nil {

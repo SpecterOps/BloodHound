@@ -502,12 +502,12 @@ func (s Resources) checkModifyPermissions(ctx context.Context, savedQueryID int6
 		return err
 	}
 
-	if scopes[model.SavedQueryScopeReadonly] {
+	if scopes.ReadOnly {
 		return errNotModifiable
-	} else if !scopes[model.SavedQueryScopeOwned] {
+	} else if !scopes.Owned {
 		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 			return errUserHasNotAccess
-		} else if !scopes[model.SavedQueryScopePublic] {
+		} else if !scopes.Public {
 			return errUserHasNotAccess
 		}
 	}
