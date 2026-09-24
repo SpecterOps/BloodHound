@@ -16,7 +16,7 @@
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 import { createContext, useContext, useMemo, type ComponentProps } from 'react';
 import { TypographyVariants } from '../Typography';
-import { cn } from '../utils';
+import { cn, cnWithState } from '../utils';
 
 type DrawerContextProps = {
     hasSnapPoints: boolean;
@@ -81,7 +81,7 @@ function DrawerOverlay({ className, ...props }: DrawerPrimitive.Backdrop.Props) 
     return (
         <DrawerPrimitive.Backdrop
             data-slot='drawer-overlay'
-            className={cn(
+            className={cnWithState(
                 'cn-drawer-overlay fixed inset-0 z-[1410] min-h-dvh bg-black/40 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity [transition-duration:450ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] select-none data-[ending-style]:pointer-events-none data-[ending-style]:opacity-0 data-[ending-style]:[transition-duration:calc(var(--drawer-swipe-strength)*400ms)] data-[snap-points]:[--drawer-overlay-min-opacity:0.5] data-[starting-style]:opacity-0 data-[swiping]:[transition-duration:0ms]',
                 className
             )}
@@ -119,7 +119,7 @@ function DrawerContent({ className, children, ...props }: DrawerPrimitive.Popup.
                     data-slot='drawer-popup'
                     data-swipe-axis={swipeAxis}
                     data-snap-points={hasSnapPoints ? '' : undefined}
-                    className={cn(
+                    className={cnWithState(
                         // Base.
                         'cn-drawer-popup group/drawer-popup pointer-events-auto fixed z-[1500] bg-neutral-1 text-main shadow-xl m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] [transform:translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,height,opacity,filter] [transition-duration:450ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords]',
                         // Nested.
@@ -185,7 +185,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
     return (
         <DrawerPrimitive.Title
             data-slot='drawer-title'
-            className={cn('cn-drawer-title', TypographyVariants({ variant: 'h2' }), className)}
+            className={cnWithState('cn-drawer-title', TypographyVariants({ variant: 'h2' }), className)}
             {...props}
         />
     );
@@ -195,7 +195,7 @@ function DrawerDescription({ className, ...props }: DrawerPrimitive.Description.
     return (
         <DrawerPrimitive.Description
             data-slot='drawer-description'
-            className={cn('cn-drawer-description text-balance text-text-muted', className)}
+            className={cnWithState('cn-drawer-description text-balance text-text-muted', className)}
             {...props}
         />
     );
