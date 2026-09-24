@@ -196,6 +196,14 @@ describe('GraphControls', () => {
             verticalSpacing: 5,
         };
 
+        it('does not render layout controls when layoutControls is not provided', () => {
+            setup();
+
+            expect(screen.queryByRole('button', { name: /Graph direction/ })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /Horizontal spacing/ })).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /Vertical spacing/ })).not.toBeInTheDocument();
+        });
+
         it('changes direction through the direction icon menu', async () => {
             const { user } = setup({ layoutControls });
 

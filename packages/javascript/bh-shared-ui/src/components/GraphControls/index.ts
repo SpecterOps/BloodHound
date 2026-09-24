@@ -17,7 +17,6 @@
 export {
     default as GraphControls,
     defaultGraphSpacing,
-    getGraphSpacingScale,
     graphDirections,
     maximumGraphSpacing,
     minimumGraphSpacing,

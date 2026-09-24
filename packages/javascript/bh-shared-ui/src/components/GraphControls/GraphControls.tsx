@@ -61,7 +61,6 @@ export interface GraphLayoutControlOptions {
 export const defaultGraphSpacing = 5;
 export const maximumGraphSpacing = 10;
 export const minimumGraphSpacing = 0;
-export const getGraphSpacingScale = (spacing: number) => 0.5 + spacing * 0.1;
 
 const directionIcons = {
     down: faArrowDown,
