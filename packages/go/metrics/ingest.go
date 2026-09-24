@@ -60,6 +60,32 @@ const (
 	IngestSourceClient IngestSource = "client"
 )
 
+// IngestStage identifies a bounded stage of ingest processing. Publishers must
+// declare typed constants for their stage label values.
+type IngestStage string
+
+const (
+	IngestStageDecodeConvert           IngestStage = "decode_convert"
+	IngestStageNodePrepare             IngestStage = "node_prepare"
+	IngestStageNodeDeduplicate         IngestStage = "node_deduplicate"
+	IngestStageNodeBatchUpdate         IngestStage = "node_batch_update"
+	IngestStageRelationshipResolution  IngestStage = "relationship_resolution"
+	IngestStageRelationshipPrepare     IngestStage = "relationship_prepare"
+	IngestStageRelationshipDeduplicate IngestStage = "relationship_deduplicate"
+	IngestStageRelationshipBatchUpdate IngestStage = "relationship_batch_update"
+)
+
+// IngestResult identifies the bounded result of an ingest stage.
+// IDs, filenames, tenants, object values, error text, and other unbounded values
+// must never be used as result label values.
+type IngestResult string
+
+const (
+	IngestResultSuccess IngestResult = "success"
+	IngestResultPartial IngestResult = "partial"
+	IngestResultFailure IngestResult = "failure"
+)
+
 // IngestFileFormat represents the format of the uploaded file.
 type IngestFileFormat string
 
@@ -86,6 +112,48 @@ const (
 )
 
 var (
+	ingestStageDurationBuckets = []float64{
+		0.001,
+		0.005,
+		0.01,
+		0.025,
+		0.05,
+		0.1,
+		0.25,
+		0.5,
+		1,
+		2.5,
+		5,
+		10,
+		30,
+		60,
+		120,
+		300,
+	}
+
+	// ingestStageDuration measures accumulated active stage time per non-empty graphify chunk.
+	ingestStageDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "stage_duration_seconds",
+			Help:      "Accumulated active time spent in an ingest stage for one non-empty graphify chunk",
+			Buckets:   ingestStageDurationBuckets,
+		},
+		[]string{"stage", "result"},
+	)
+
+	// ingestStageItems tracks individual processed items by outcome, emitted with aggregated additions per graphify chunk.
+	ingestStageItems = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "stage_items_total",
+			Help:      "Total number of individual items processed by an ingest stage, partitioned by outcome",
+		},
+		[]string{"stage", "outcome"},
+	)
+
 	// ingestTasks tracks ingest task creation attempts (both successful and failed).
 	// This counter is used for volume analytics, trend analysis, and failure rate tracking.
 	//
@@ -143,12 +211,51 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 	ingestTaskQueueLatency.WithLabelValues(string(source)).Observe(time.Since(taskCreatedAt).Seconds())
 }
 
+// RecordIngestStage records accumulated active duration and individual processed
+// item outcomes for one non-empty ingest stage and graphify chunk. Publishers must
+// supply bounded typed stage constants. The histogram records a derived chunk result,
+// while the counter records individual outcomes through aggregated additions.
+// Invalid measurements are ignored.
+func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int, failedItemCount int) {
+	if duration < 0 || itemCount <= 0 || failedItemCount < 0 || failedItemCount > itemCount {
+		return
+	}
+
+	var (
+		result              IngestResult
+		successfulItemCount = itemCount - failedItemCount
+	)
+
+	switch failedItemCount {
+	case 0:
+		result = IngestResultSuccess
+	case itemCount:
+		result = IngestResultFailure
+	default:
+		result = IngestResultPartial
+	}
+
+	ingestStageDuration.WithLabelValues(string(stage), string(result)).Observe(duration.Seconds())
+
+	if successfulItemCount > 0 {
+		ingestStageItems.WithLabelValues(string(stage), string(IngestResultSuccess)).Add(float64(successfulItemCount))
+	}
+
+	if failedItemCount > 0 {
+		ingestStageItems.WithLabelValues(string(stage), string(IngestResultFailure)).Add(float64(failedItemCount))
+	}
+}
+
 // RegisterIngestMetrics registers all ingest-subsystem Prometheus metrics with the provided registerer.
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 	if err := registerer.Register(ingestTasks); err != nil {
 		return fmt.Errorf("failed to register ingest task counter: %w", err)
 	} else if err := registerer.Register(ingestTaskQueueLatency); err != nil {
 		return fmt.Errorf("failed to register ingest task queue latency summary: %w", err)
+	} else if err := registerer.Register(ingestStageDuration); err != nil {
+		return fmt.Errorf("failed to register ingest stage duration histogram: %w", err)
+	} else if err := registerer.Register(ingestStageItems); err != nil {
+		return fmt.Errorf("failed to register ingest stage item counter: %w", err)
 	} else {
 		return nil
 	}
