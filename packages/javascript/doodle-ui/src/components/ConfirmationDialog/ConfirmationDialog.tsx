@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,18 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogDescription,
-    DialogPortal,
-    DialogTitle,
-    Input,
-} from 'doodle-ui';
-import React, { ReactNode, useCallback, useState } from 'react';
+import * as React from 'react';
+import { ReactNode, useCallback, useState } from 'react';
+import { Button } from '../Button';
+import { Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '../Dialog';
+import { Input } from '../Input';
 
 const ConfirmationDialog: React.FC<{
     open: boolean;
@@ -73,9 +66,9 @@ const ConfirmationDialog: React.FC<{
 
     const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
         <>
-            {iconPosition === 'left' ? icon : null}
+            {iconPosition === 'left' && icon}
             {buttonText}
-            {iconPosition === 'right' ? icon : null}
+            {iconPosition === 'right' && icon}
         </>
     );
 
@@ -120,5 +113,6 @@ const ConfirmationDialog: React.FC<{
         </Dialog>
     );
 };
+ConfirmationDialog.displayName = 'ConfirmationDialog';
 
-export default ConfirmationDialog;
+export { ConfirmationDialog };
