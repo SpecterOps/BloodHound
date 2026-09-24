@@ -21473,8 +21473,31 @@
           "404": {
             "$ref": "#/components/responses/not-found"
           },
+          "422": {
+            "description": "Graph exceeds the supported on-demand exposure calculation size",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
+          },
+          "504": {
+            "description": "Exposure calculation timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           }
         }
       }
@@ -21573,8 +21596,31 @@
           "404": {
             "$ref": "#/components/responses/not-found"
           },
+          "422": {
+            "description": "Graph exceeds the supported on-demand exposure calculation size",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
+          },
+          "504": {
+            "description": "Exposure calculation timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           }
         }
       }

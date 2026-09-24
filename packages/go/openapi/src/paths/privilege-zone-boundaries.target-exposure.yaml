@@ -69,4 +69,17 @@ post:
     401: { $ref: "./../responses/unauthorized.yaml" }
     403: { $ref: "./../responses/forbidden.yaml" }
     404: { $ref: "./../responses/not-found.yaml" }
+    422:
+      description: Graph exceeds the supported on-demand exposure calculation size
+      content:
+        application/json:
+          schema:
+            $ref: "./../schemas/api.error-wrapper.yaml"
+    429: { $ref: "./../responses/too-many-requests.yaml" }
     500: { $ref: "./../responses/internal-server-error.yaml" }
+    504:
+      description: Exposure calculation timed out
+      content:
+        application/json:
+          schema:
+            $ref: "./../schemas/api.error-wrapper.yaml"
