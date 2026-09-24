@@ -861,14 +861,8 @@ paths:
     $ref: './paths/privilege-zone-boundaries.control-policies.id.yaml'
   /api/v2/privilege-zone-boundaries/finding-exposure:
     $ref: './paths/privilege-zone-boundaries.finding-exposure.yaml'
-  /api/v2/privilege-zone-boundaries/exposure-jobs:
-    $ref: './paths/privilege-zone-boundaries.exposure-jobs.yaml'
   /api/v2/privilege-zone-boundaries/target-exposure:
     $ref: './paths/privilege-zone-boundaries.target-exposure.yaml'
-  /api/v2/privilege-zone-boundaries/exposure-jobs/latest:
-    $ref: './paths/privilege-zone-boundaries.exposure-jobs.latest.yaml'
-  /api/v2/privilege-zone-boundaries/exposure-jobs/{job_id}:
-    $ref: './paths/privilege-zone-boundaries.exposure-jobs.id.yaml'
 
   # risk posture
   /api/v2/posture-stats:

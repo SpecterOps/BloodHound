@@ -377,36 +377,6 @@ class BHEAPIClient {
             options
         );
 
-    startPrivilegeZoneExposureJob = (
-        scopeKind: types.PrivilegeZoneExposureScopeKind,
-        scopeId: string,
-        options?: RequestOptions
-    ) =>
-        this.baseClient.post<BasicResponse<types.PrivilegeZoneExposureJob>>(
-            '/api/v2/privilege-zone-boundaries/exposure-jobs',
-            { scope_kind: scopeKind, scope_id: scopeId },
-            options
-        );
-
-    getPrivilegeZoneExposureJob = (jobId: number, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<types.PrivilegeZoneExposureJob>>(
-            `/api/v2/privilege-zone-boundaries/exposure-jobs/${jobId}`,
-            options
-        );
-
-    getLatestPrivilegeZoneExposureJob = (
-        scopeKind: types.PrivilegeZoneExposureScopeKind,
-        scopeId: string,
-        options?: RequestOptions
-    ) =>
-        this.baseClient.get<BasicResponse<types.PrivilegeZoneExposureJob>>(
-            '/api/v2/privilege-zone-boundaries/exposure-jobs/latest',
-            {
-                ...options,
-                params: { ...options?.params, scope_kind: scopeKind, scope_id: scopeId },
-            }
-        );
-
     searchAssetGroupTags = (body: { query: string; tag_type: number }, options?: RequestOptions) =>
         this.baseClient.post<AssetGroupTagSearchResponse>(`/api/v2/asset-group-tags/search`, body, options);
 

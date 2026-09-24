@@ -261,32 +261,6 @@ export interface PrivilegeZoneTargetExposure extends Omit<PrivilegeZoneFindingEx
     target_zone_id: number;
 }
 
-export type PrivilegeZoneExposureScopeKind = 'target_zone';
-export type PrivilegeZoneExposureJobStatus = 'pending' | 'running' | 'complete' | 'failed' | 'cancelled';
-
-export interface PrivilegeZoneExposure {
-    job_id: number;
-    source_zone_id: number;
-    target_zone_id: number;
-    source_identity_total: number;
-    direct_exposed_count: number;
-    derived_exposed_count: number;
-    direct_exposed_percentage: number;
-    derived_exposed_percentage: number;
-}
-
-export interface PrivilegeZoneExposureJob extends Created {
-    id: number;
-    scope_kind: PrivilegeZoneExposureScopeKind;
-    scope_id: string;
-    status: PrivilegeZoneExposureJobStatus;
-    input_fingerprint: string;
-    error_message: string | null;
-    started_at: string | null;
-    completed_at: string | null;
-    results?: PrivilegeZoneExposure[];
-}
-
 export const SeedTypeObjectId = 1 as const;
 export const SeedTypeCypher = 2 as const;
 
