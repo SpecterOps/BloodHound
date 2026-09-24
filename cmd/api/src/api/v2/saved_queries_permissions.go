@@ -47,7 +47,7 @@ var (
 	ErrInvalidPublicShare = errors.New("invalidPublicShare")
 )
 
-func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bool, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopes) error {
+func CanUpdateSavedQueriesPermission(user model.User, createRequest SavedQueryPermissionRequest, dbSavedQueryScope database.SavedQueryScopes) error {
 	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
 	hasPrivilegedRole :=
 		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
@@ -55,15 +55,15 @@ func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bo
 			user.Roles.Has(model.Role{Name: auth.RolePowerUser})
 
 	if hasPrivilegedRole {
-		if createRequest.Public && savedQueryBelongsToUser {
+		if createRequest.Public && dbSavedQueryScope.Owned {
 			return nil
-		} else if len(createRequest.UserIDs) == 0 && (savedQueryBelongsToUser || dbSavedQueryScope.Public) {
+		} else if len(createRequest.UserIDs) == 0 && (dbSavedQueryScope.Owned || dbSavedQueryScope.Public) {
 			return nil
 		} else if len(createRequest.UserIDs) > 0 && !createRequest.Public {
 			if dbSavedQueryScope.Public {
 				return ErrInvalidPublicShare
 			}
-			if savedQueryBelongsToUser {
+			if dbSavedQueryScope.Owned {
 				for _, sharedUserID := range createRequest.UserIDs {
 					if sharedUserID == user.ID {
 						return ErrInvalidSelfShare
@@ -72,7 +72,7 @@ func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bo
 				return nil
 			}
 		}
-	} else if savedQueryBelongsToUser && !dbSavedQueryScope.Public {
+	} else if dbSavedQueryScope.Owned && !dbSavedQueryScope.Public {
 		if len(createRequest.UserIDs) > 0 && !createRequest.Public {
 			for _, sharedUserID := range createRequest.UserIDs {
 				if sharedUserID == user.ID {
@@ -160,13 +160,9 @@ func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if createRequest.Public && len(createRequest.UserIDs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Public cannot be true while user_ids is populated", request), response)
-	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "Query does not exist", request), response)
-	} else if err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else if dbSavedQueryScope, err := s.DB.GetScopeForSavedQuery(request.Context(), savedQueryID, user.ID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := CanUpdateSavedQueriesPermission(user, savedQueryBelongsToUser, createRequest, dbSavedQueryScope); err != nil {
+	} else if err := CanUpdateSavedQueriesPermission(user, createRequest, dbSavedQueryScope); err != nil {
 		if errors.Is(err, ErrInvalidSelfShare) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Cannot share query to self", request), response)
 		} else if errors.Is(err, ErrInvalidPublicShare) {
@@ -229,13 +225,12 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFromMalformed, request), response)
 	} else if err = json.NewDecoder(request.Body).Decode(&deleteRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else if dbSavedQueryScope, err := s.DB.GetScopeForSavedQuery(request.Context(), savedQueryID, user.ID); err != nil {
+		api.HandleDatabaseError(request, response, err)
 	} else {
 		// Check if the user is attempting to unshare a query from themselves
 		if slices.Contains(deleteRequest.UserIds, user.ID) {
-			if isShared, err := s.DB.IsSavedQuerySharedToUser(request.Context(), savedQueryID, user.ID); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else if !isShared {
+			if !dbSavedQueryScope.Shared {
 				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query that they don't own, or hasn't been shared with them
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
 				return
@@ -245,10 +240,7 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 			isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
 			if !isAdmin {
 				// If a user is not admin, then they need to own the query in order to unshare it
-				if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); err != nil {
-					api.HandleDatabaseError(request, response, err)
-					return
-				} else if !savedQueryBelongsToUser {
+				if !dbSavedQueryScope.Owned {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Query does not belong to the user", request), response)
 					return
 				}
