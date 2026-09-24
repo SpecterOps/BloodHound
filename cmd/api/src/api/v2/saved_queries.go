@@ -565,18 +565,13 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
-		savedQuery      model.SavedQuery
 	)
 
 	if user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if err = s.checkModifyPermissions(request.Context(), savedQuery.ID, user); err != nil {
+	} else if err = s.checkModifyPermissions(request.Context(), savedQueryID, user); err != nil {
 		if errors.Is(err, errNotModifiable) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be deleted", request), response)
 		} else if errors.Is(err, errUserHasNotAccess) {
