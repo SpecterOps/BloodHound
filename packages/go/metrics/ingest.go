@@ -71,6 +71,8 @@ const (
 	IngestStageNodeBatchUpdate         IngestStage = "node_batch_update"
 	IngestStageRelationshipResolution  IngestStage = "relationship_resolution"
 	IngestStageRelationshipPrepare     IngestStage = "relationship_prepare"
+	IngestStageDNRelationshipPrepare   IngestStage = "dn_relationship_prepare"
+	IngestStageSessionPrepare          IngestStage = "session_prepare"
 	IngestStageRelationshipDeduplicate IngestStage = "relationship_deduplicate"
 	IngestStageRelationshipBatchUpdate IngestStage = "relationship_batch_update"
 )

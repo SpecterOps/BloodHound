@@ -20,6 +20,7 @@ import (
 	"iter"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
@@ -32,6 +33,11 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
+type relationshipIngester struct {
+	ingestContext     *IngestContext
+	stageMeasurements graphifyChunkStageMeasurements
+}
+
 // IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
 //
 // This function first calls resolveRelationships to resolve node identifiers based on name and kind.
@@ -40,16 +46,31 @@ import (
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs                                 = errorlist.NewBuilder()
-		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships, ingestCtx.UseRawObjectIDs)
+		ingester = relationshipIngester{ingestContext: ingestCtx}
 	)
+	defer ingester.stageMeasurements.publish()
+
+	return ingester.ingestRelationships(sourceKind, relationships)
+}
+
+func (s *relationshipIngester) ingestRelationships(sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+	var (
+		errs                  = errorlist.NewBuilder()
+		resolvedRelationships []ein.IngestibleRelationship
+		resolveErrors         error
+		stageStartedAt        time.Time
+	)
+
+	stageStartedAt = time.Now()
+	resolvedRelationships, resolveErrors = endpoint.ResolveAll(s.ingestContext.Ctx, s.ingestContext.EndpointResolver, relationships, s.ingestContext.UseRawObjectIDs)
+	s.stageMeasurements.relationshipResolution.add(time.Since(stageStartedAt), len(relationships), len(relationships)-len(resolvedRelationships))
 
 	if resolveErrors != nil {
 		errs.Add(resolveErrors)
 	}
 
-	for update := range ingestibleRelationshipsToUpdates(ingestCtx, resolvedRelationships, sourceKind) {
-		if err := maybeSubmitRelationshipUpdate(ingestCtx, update); err != nil {
+	for update := range s.ingestibleRelationshipsToUpdates(resolvedRelationships, sourceKind) {
+		if err := s.maybeSubmitRelationshipUpdate(update); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -59,21 +80,35 @@ func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relati
 
 // maybeSubmitRelationshipUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
-func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.RelationshipUpdate) error {
-	// Track that we processed this relationship (regardless of whether it's written)
-	ingestCtx.Stats.RelationshipsProcessed.Add(1)
+func (s *relationshipIngester) maybeSubmitRelationshipUpdate(update graph.RelationshipUpdate) error {
+	var (
+		stageStartedAt time.Time
+	)
 
-	if !ingestCtx.HasChangelog() {
+	// Track that we processed this relationship (regardless of whether it's written)
+	s.ingestContext.Stats.RelationshipsProcessed.Add(1)
+
+	if !s.ingestContext.HasChangelog() {
 		// No changelog: always update via dawgs batch
-		return ingestCtx.Batch.UpdateRelationshipBy(update)
+		stageStartedAt = time.Now()
+		err := s.ingestContext.Batch.UpdateRelationshipBy(update)
+		if err != nil {
+			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
+		} else {
+			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
+		}
+		return err
 	}
 
+	stageStartedAt = time.Now()
 	sourceObjectID, err := update.Start.Properties.Get(common.ObjectID.String()).String()
 	if err != nil {
+		s.stageMeasurements.relationshipDeduplicate.add(time.Since(stageStartedAt), 1, 1)
 		return fmt.Errorf("get source objectid: %w", err)
 	}
 	targetObjectID, err := update.End.Properties.Get(common.ObjectID.String()).String()
 	if err != nil {
+		s.stageMeasurements.relationshipDeduplicate.add(time.Since(stageStartedAt), 1, 1)
 		return fmt.Errorf("get target objectid: %w", err)
 	}
 
@@ -84,19 +119,28 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 		update.Relationship.Properties,
 	)
 
-	shouldSubmit, err := ingestCtx.Manager.ResolveChange(change)
+	shouldSubmit, err := s.ingestContext.Manager.ResolveChange(change)
 	if err != nil {
+		s.stageMeasurements.relationshipDeduplicate.add(time.Since(stageStartedAt), 1, 1)
 		return fmt.Errorf("resolve edge change: %w", err)
 	}
+	s.stageMeasurements.relationshipDeduplicate.add(time.Since(stageStartedAt), 1, 0)
 
 	if shouldSubmit {
 		// New/modified: update via dawgs batch
-		return ingestCtx.Batch.UpdateRelationshipBy(update)
+		stageStartedAt = time.Now()
+		err = s.ingestContext.Batch.UpdateRelationshipBy(update)
+		if err != nil {
+			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
+		} else {
+			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
+		}
+		return err
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
-		slog.WarnContext(ingestCtx.Ctx, "Changelog submit dropped",
+	if ok := s.ingestContext.Manager.Submit(s.ingestContext.Ctx, change); !ok {
+		slog.WarnContext(s.ingestContext.Ctx, "Changelog submit dropped",
 			slog.String("source_object_id", sourceObjectID),
 			slog.String("target_object_id", targetObjectID),
 			slog.String("kind", update.Relationship.Kind.String()))
@@ -105,13 +149,17 @@ func maybeSubmitRelationshipUpdate(ingestCtx *IngestContext, update graph.Relati
 	return nil
 }
 
-func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
+func (s *relationshipIngester) ingestDNRelationship(nextRel ein.IngestibleRelationship) error {
+	var (
+		stageStartedAt = time.Now()
+	)
+
+	nextRel.RelProps[common.LastSeen.String()] = s.ingestContext.IngestTime
 	// The source is a distinguished name, which is always normalized to
 	// upper case for resolution regardless of use_raw_object_id.
 	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
 	// The target is an object id; only normalize it when not preserving raw casing.
-	if !batch.UseRawObjectIDs {
+	if !s.ingestContext.UseRawObjectIDs {
 		nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 	}
 
@@ -120,7 +168,7 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
-			common.LastSeen:      batch.IngestTime,
+			common.LastSeen:      s.ingestContext.IngestTime,
 		}), nextRel.Source.Kind),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -129,7 +177,7 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
-			common.LastSeen: batch.IngestTime,
+			common.LastSeen: s.ingestContext.IngestTime,
 		}), nextRel.Target.Kind),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -137,16 +185,26 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 		},
 	}
 
-	return maybeSubmitRelationshipUpdate(batch, update)
+	s.stageMeasurements.dnRelationshipPrepare.add(time.Since(stageStartedAt), 1, 0)
+	return s.maybeSubmitRelationshipUpdate(update)
 }
 
 func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleRelationship) error {
+	var (
+		ingester = relationshipIngester{ingestContext: batch}
+	)
+	defer ingester.stageMeasurements.publish()
+
+	return ingester.ingestDNRelationships(relationships)
+}
+
+func (s *relationshipIngester) ingestDNRelationships(relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
-		if err := ingestDNRelationship(batch, next); err != nil {
+		if err := s.ingestDNRelationship(next); err != nil {
 			slog.Error("Error ingesting relationship", attr.Error(err))
 			errs.Add(err)
 		}
@@ -154,18 +212,22 @@ func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleR
 	return errs.Combined()
 }
 
-func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) error {
+func (s *relationshipIngester) ingestSession(nextSession ein.IngestibleSession) error {
+	var (
+		stageStartedAt = time.Now()
+	)
+
 	nextSession.Target = strings.ToUpper(nextSession.Target)
 	nextSession.Source = strings.ToUpper(nextSession.Source)
 
 	update := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
-			common.LastSeen: batch.IngestTime,
+			common.LastSeen: s.ingestContext.IngestTime,
 			ad.LogonType:    nextSession.LogonType,
 		}), ad.HasSession),
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Source,
-			common.LastSeen: batch.IngestTime,
+			common.LastSeen: s.ingestContext.IngestTime,
 		}), ad.Computer),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -173,7 +235,7 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 		},
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Target,
-			common.LastSeen: batch.IngestTime,
+			common.LastSeen: s.ingestContext.IngestTime,
 		}), ad.User),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -181,16 +243,26 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 		},
 	}
 
-	return maybeSubmitRelationshipUpdate(batch, update)
+	s.stageMeasurements.sessionPrepare.add(time.Since(stageStartedAt), 1, 0)
+	return s.maybeSubmitRelationshipUpdate(update)
 }
 
 func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) error {
+	var (
+		ingester = relationshipIngester{ingestContext: batch}
+	)
+	defer ingester.stageMeasurements.publish()
+
+	return ingester.ingestSessions(sessions)
+}
+
+func (s *relationshipIngester) ingestSessions(sessions []ein.IngestibleSession) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range sessions {
-		if err := ingestSession(batch, next); err != nil {
+		if err := s.ingestSession(next); err != nil {
 			slog.Error("Error ingesting sessions", attr.Error(err))
 			errs.Add(err)
 		}
@@ -200,10 +272,11 @@ func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) erro
 
 // ingestibleRelationshipsToUpdates transforms a list of ingestible relationships into
 // graph.RelationshipUpdate objects as an iterator.
-func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
+func (s *relationshipIngester) ingestibleRelationshipsToUpdates(rels []ein.IngestibleRelationship, sourceKind graph.Kind) iter.Seq[graph.RelationshipUpdate] {
 	return func(yield func(graph.RelationshipUpdate) bool) {
 		for _, rel := range rels {
-			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
+			stageStartedAt := time.Now()
+			rel.RelProps[common.LastSeen.String()] = s.ingestContext.IngestTime
 
 			var (
 				startKinds = MergeNodeKinds(sourceKind, rel.Source.Kind)
@@ -213,7 +286,7 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 				endObjID   = rel.Target.Value
 			)
 
-			if !batch.UseRawObjectIDs {
+			if !s.ingestContext.UseRawObjectIDs {
 				startObjID = strings.ToUpper(startObjID)
 				endObjID = strings.ToUpper(endObjID)
 			}
@@ -221,19 +294,20 @@ func ingestibleRelationshipsToUpdates(batch *IngestContext, rels []ein.Ingestibl
 			update := graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: startObjID,
-					common.LastSeen: batch.IngestTime,
+					common.LastSeen: s.ingestContext.IngestTime,
 				}), startKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
 				StartIdentityKind:       sourceKind,
 				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: endObjID,
-					common.LastSeen: batch.IngestTime,
+					common.LastSeen: s.ingestContext.IngestTime,
 				}), endKinds...),
 				EndIdentityKind:       sourceKind,
 				EndIdentityProperties: []string{common.ObjectID.String()},
 				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
 			}
 
+			s.stageMeasurements.relationshipPrepare.add(time.Since(stageStartedAt), 1, 0)
 			if !yield(update) {
 				break
 			}

@@ -44,6 +44,8 @@ type graphifyChunkStageMeasurements struct {
 	nodeBatchUpdate         graphifyStageMeasurement
 	relationshipResolution  graphifyStageMeasurement
 	relationshipPrepare     graphifyStageMeasurement
+	dnRelationshipPrepare   graphifyStageMeasurement
+	sessionPrepare          graphifyStageMeasurement
 	relationshipDeduplicate graphifyStageMeasurement
 	relationshipBatchUpdate graphifyStageMeasurement
 }
@@ -62,6 +64,8 @@ func (s *graphifyChunkStageMeasurements) publish() {
 	publishIngestStage(ingestmetrics.IngestStageNodeBatchUpdate, s.nodeBatchUpdate)
 	publishIngestStage(ingestmetrics.IngestStageRelationshipResolution, s.relationshipResolution)
 	publishIngestStage(ingestmetrics.IngestStageRelationshipPrepare, s.relationshipPrepare)
+	publishIngestStage(ingestmetrics.IngestStageDNRelationshipPrepare, s.dnRelationshipPrepare)
+	publishIngestStage(ingestmetrics.IngestStageSessionPrepare, s.sessionPrepare)
 	publishIngestStage(ingestmetrics.IngestStageRelationshipDeduplicate, s.relationshipDeduplicate)
 	publishIngestStage(ingestmetrics.IngestStageRelationshipBatchUpdate, s.relationshipBatchUpdate)
 }
