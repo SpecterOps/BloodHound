@@ -97,6 +97,21 @@ export const getZoneNameFromKinds = (
     return match?.name;
 };
 
+export const getLabelNamesFromKinds = (tags: AssetGroupTag[] | undefined, kinds: string[] | undefined): string[] => {
+    const kindsSet = new Set(kinds);
+
+    return (
+        tags
+            ?.filter((tag) => {
+                if (tag.type !== AssetGroupTagTypeLabel) return false;
+
+                const tagKind = tagNameToKind(tag.name);
+                return kindsSet.has(tagKind);
+            })
+            .map((tag) => tag.name) ?? []
+    );
+};
+
 export const getOwnedTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.type === AssetGroupTagTypeOwned);
 
 export const getTierZeroTag = (tags: AssetGroupTag[]) => tags.find((tag) => tag.position === HighestPrivilegePosition);

@@ -299,6 +299,12 @@ func TestService_ToggleFlag(t *testing.T) {
 			Enabled:       false,
 			UserUpdatable: true,
 		}
+		zoneNodeFlag = services.FeatureFlag{
+			ID:            10,
+			Key:           services.FeatureZoneNode,
+			Enabled:       false,
+			UserUpdatable: true,
+		}
 	)
 
 	type args struct {
@@ -322,6 +328,9 @@ func TestService_ToggleFlag(t *testing.T) {
 
 	enabledFindingsPrioritizationFlag := findingsPrioritizationFlag
 	enabledFindingsPrioritizationFlag.Enabled = true
+
+	enabledZoneNodeFlag := zoneNodeFlag
+	enabledZoneNodeFlag.Enabled = true
 
 	testCases := []testCase{
 		{
@@ -351,6 +360,26 @@ func TestService_ToggleFlag(t *testing.T) {
 				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 			},
 			want: want{flag: findingsPrioritizationFlag},
+		},
+		{
+			name: "Success: requests no-post-processing analysis when zone nodes are enabled",
+			args: args{ctx: ctx, featureID: zoneNodeFlag.ID},
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, zoneNodeFlag.ID).Return(zoneNodeFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, enabledZoneNodeFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.ZoneNodeFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
+			},
+			want: want{flag: enabledZoneNodeFlag},
+		},
+		{
+			name: "Success: requests no-post-processing analysis when zone nodes are disabled",
+			args: args{ctx: ctx, featureID: enabledZoneNodeFlag.ID},
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, enabledZoneNodeFlag.ID).Return(enabledZoneNodeFlag, nil)
+				m.database.EXPECT().SetFlag(ctx, zoneNodeFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.ZoneNodeFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
+			},
+			want: want{flag: zoneNodeFlag},
 		},
 		{
 			name: "Error: returns ErrNotUserUpdatable when the flag is not user updatable",
