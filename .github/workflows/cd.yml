@@ -81,4 +81,5 @@ jobs:
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+      docker_repository: ${{ secrets.DOCKER_REPOSITORY }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
