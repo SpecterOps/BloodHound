@@ -32,7 +32,7 @@ const ConfirmationDialog: React.FC<{
     text: string | JSX.Element;
     onCancel: () => void;
     onConfirm: () => void;
-    challengeTxt?: string;
+    challengeText?: string;
     isLoading?: boolean;
     error?: string;
     cancelIcon?: ReactNode;
@@ -47,7 +47,7 @@ const ConfirmationDialog: React.FC<{
     onCancel,
     isLoading,
     error,
-    challengeTxt = '',
+    challengeText = '',
     onConfirm,
     cancelIcon,
     confirmIcon,
@@ -55,19 +55,19 @@ const ConfirmationDialog: React.FC<{
     cancelText = 'Cancel',
     confirmText = 'Confirm',
 }) => {
-    const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
+    const [challengeTextReply, setChallengeTextReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
         onCancel();
         setTimeout(() => {
-            setChallengeTxtReply('');
+            setChallengeTextReply('');
         }, 1000);
     }, [onCancel]);
 
     const handleConfirm = useCallback(() => {
         onConfirm();
         setTimeout(() => {
-            setChallengeTxtReply('');
+            setChallengeTextReply('');
         }, 1000);
     }, [onConfirm]);
 
@@ -85,15 +85,15 @@ const ConfirmationDialog: React.FC<{
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
-                    {challengeTxt && (
+                    {challengeText && (
                         <DialogDescription asChild className='text-sm'>
                             <div className='pb-1'>
-                                Please input "{challengeTxt}" prior to clicking confirm.
+                                Please input "{challengeText}" prior to clicking confirm.
                                 <Input
-                                    placeholder={challengeTxt}
+                                    placeholder={challengeText}
                                     variant='outlined'
-                                    onChange={(e) => setChallengeTxtReply(e.target.value)}
-                                    value={challengeTxtReply}
+                                    onChange={(e) => setChallengeTextReply(e.target.value)}
+                                    value={challengeTextReply}
                                     data-testid='confirmation-dialog_challenge-text'
                                 />
                             </div>
@@ -110,7 +110,7 @@ const ConfirmationDialog: React.FC<{
                         </Button>
                         <Button
                             onClick={handleConfirm}
-                            disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
+                            disabled={isLoading || challengeText.toLowerCase() !== challengeTextReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
                             {renderButtonContent(confirmText, confirmIcon)}
                         </Button>
