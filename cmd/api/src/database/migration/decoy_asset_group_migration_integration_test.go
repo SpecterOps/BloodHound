@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	decoyPreviousMigrationVersion int64 = 20260610180916
+	decoyPreviousMigrationVersion int64 = 20260615130000
 	decoyMigrationVersion         int64 = 20260618120000
 )
 
@@ -44,22 +44,10 @@ type decoyMigrationTagRecord struct {
 }
 
 func newDecoyMigrationProvider(t *testing.T, testContext gooseTestContext) *goose.Provider {
-	var (
-		provider *goose.Provider
-		err      error
-	)
-
 	t.Helper()
+	require.NotNil(t, testContext.migrator.GooseProvider)
 
-	provider, err = goose.NewProvider(
-		goose.DialectPostgres,
-		testContext.migrator.SqlDB,
-		testContext.migrator.GooseFS,
-		goose.WithAllowOutofOrder(true),
-	)
-	require.NoError(t, err)
-
-	return provider
+	return testContext.migrator.GooseProvider
 }
 
 func getDecoyMigrationTableCounts(t *testing.T, databaseConnection *gorm.DB) decoyMigrationTableCounts {

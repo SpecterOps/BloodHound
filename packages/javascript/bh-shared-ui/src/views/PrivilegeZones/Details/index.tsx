@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import Details from './Details';
 
+export * from './constants';
 export { default as EntityRulesInformation } from './EntityRulesInformation';
 export { ObjectsAccordion } from './ObjectsAccordion';
 export { SelectedDetails } from './SelectedDetails';

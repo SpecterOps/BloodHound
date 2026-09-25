@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/metrics"
 )
 
 const (
@@ -47,6 +48,10 @@ type Pipeline interface {
 	IngestTasks(context.Context) error
 	// Analyze provides a way to analyze and enhance graph data, including post processing
 	Analyze(context.Context) error
+	// Optimize vacuums dead tuples from the graph database after analysis
+	Optimize(context.Context) error
+	// OptimizeOnBoot vacuums dead tuples from the graph database on startup
+	OptimizeOnBoot(context.Context) error
 }
 
 type Daemon struct {
@@ -80,6 +85,8 @@ func (s *Daemon) Start(ctx context.Context) {
 
 	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.OptimizeOnBoot)
+
 	for {
 		select {
 		case <-pruningTicker.C:
@@ -91,6 +98,8 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusIngesting, s.pipeline.IngestTasks)
 
 			s.WithDatapipeStatus(ctx, model.DatapipeStatusAnalyzing, s.pipeline.Analyze)
+
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusOptimizing, s.pipeline.Optimize)
 
 			datapipeLoopTimer.Reset(s.tickInterval)
 
@@ -113,16 +122,19 @@ func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeSt
 		return
 	}
 
-	defer func() {
-		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
-			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", attr.Error(err))
-		}
-	}()
-
 	if err := s.db.SetDatapipeStatus(pipelineContext, status); err != nil {
 		slog.ErrorContext(pipelineContext, "Error setting datapipe status", attr.Error(err))
 		return
 	}
+	metrics.RecordDatapipeStatus(status)
+
+	defer func() {
+		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle); err != nil {
+			slog.ErrorContext(pipelineContext, "Error setting datapipe status to idle", attr.Error(err))
+		} else {
+			metrics.RecordDatapipeStatus(model.DatapipeStatusIdle)
+		}
+	}()
 
 	if err := action(pipelineContext); err != nil {
 		slog.ErrorContext(pipelineContext, "Datapipe action failed", attr.Error(err))

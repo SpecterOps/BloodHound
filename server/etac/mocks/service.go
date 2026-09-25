@@ -134,6 +134,80 @@ func (_c *MockService_CheckUserAccess_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// FilterEnvironmentsByAccess provides a mock function for the type MockService
+func (_mock *MockService) FilterEnvironmentsByAccess(ctx context.Context, user users.User, requestedIDs []string) ([]string, error) {
+	ret := _mock.Called(ctx, user, requestedIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FilterEnvironmentsByAccess")
+	}
+
+	var r0 []string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User, []string) ([]string, error)); ok {
+		return returnFunc(ctx, user, requestedIDs)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User, []string) []string); ok {
+		r0 = returnFunc(ctx, user, requestedIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, users.User, []string) error); ok {
+		r1 = returnFunc(ctx, user, requestedIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockService_FilterEnvironmentsByAccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FilterEnvironmentsByAccess'
+type MockService_FilterEnvironmentsByAccess_Call struct {
+	*mock.Call
+}
+
+// FilterEnvironmentsByAccess is a helper method to define mock.On call
+//   - ctx context.Context
+//   - user users.User
+//   - requestedIDs []string
+func (_e *MockService_Expecter) FilterEnvironmentsByAccess(ctx interface{}, user interface{}, requestedIDs interface{}) *MockService_FilterEnvironmentsByAccess_Call {
+	return &MockService_FilterEnvironmentsByAccess_Call{Call: _e.mock.On("FilterEnvironmentsByAccess", ctx, user, requestedIDs)}
+}
+
+func (_c *MockService_FilterEnvironmentsByAccess_Call) Run(run func(ctx context.Context, user users.User, requestedIDs []string)) *MockService_FilterEnvironmentsByAccess_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_FilterEnvironmentsByAccess_Call) Return(strings []string, err error) *MockService_FilterEnvironmentsByAccess_Call {
+	_c.Call.Return(strings, err)
+	return _c
+}
+
+func (_c *MockService_FilterEnvironmentsByAccess_Call) RunAndReturn(run func(ctx context.Context, user users.User, requestedIDs []string) ([]string, error)) *MockService_FilterEnvironmentsByAccess_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ShouldFilterForETAC provides a mock function for the type MockService
 func (_mock *MockService) ShouldFilterForETAC(user users.User) bool {
 	ret := _mock.Called(user)

@@ -86,6 +86,9 @@ func NewDefaultConfiguration() (Configuration, error) {
 			TLS:                             TLSConfiguration{},
 			SAML:                            SAMLConfiguration{},
 			GraphDriver:                     neo4j.DriverName, // Default to PG as the graph driver
+			DefaultAdmin: DefaultAdminConfiguration{
+				Enabled: true,
+			},
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
 			},

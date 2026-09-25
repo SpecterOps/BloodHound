@@ -810,6 +810,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 		envKindColumnAliases = map[string]string{
 			"id":                  "se.id",
 			"schema_extension_id": "se.schema_extension_id",
+			"display_name":        "ext.display_name",
 			"is_builtin":          "ext.is_builtin",
 			"name":                "k.name",
 			"environment_kind_id": "se.environment_kind_id",
@@ -847,6 +848,7 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 			ext.display_name as schema_extension_display_name,
 			se.environment_kind_id,
 			k.name as environment_kind_name,
+			sn.display_name as environment_kind_display_name,
 			se.source_kind_id,
 			se.created_at,
 			se.updated_at,
@@ -854,8 +856,9 @@ func (s *BloodhoundDB) GetEnvironmentsFiltered(ctx context.Context, filters mode
 		FROM %s se
 		INNER JOIN %s k ON se.environment_kind_id = k.id
 		INNER JOIN %s ext ON se.schema_extension_id = ext.id
+		INNER JOIN %s sn ON se.environment_kind_id = sn.kind_id
 		%s
-		ORDER BY se.id`, model.SchemaEnvironment{}.TableName(), model.Kind{}.TableName(), model.GraphSchemaExtension{}.TableName(), whereClause)
+		ORDER BY se.id`, model.SchemaEnvironment{}.TableName(), model.Kind{}.TableName(), model.GraphSchemaExtension{}.TableName(), model.GraphSchemaNodeKind{}.TableName(), whereClause)
 
 	if err := CheckError(s.db.WithContext(ctx).Raw(query, sqlFilter.params...).Scan(&result)); err != nil {
 		return nil, err
@@ -1366,23 +1369,34 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 // GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
 // of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
 // during ingest are also upserted.
+//
+// Source kinds (from the source_kinds registry, e.g. Base, AZBase, or an OpenGraph source kind like GithubBase) are also
+// included in the map and flagged with IsSourceKind. This allows PrimaryDisplayKind to generically treat any source kind as
+// a base/fallback kind rather than relying on hardcoded knowledge of the built-in AD and Azure base kinds.
 func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.PrimaryDisplayKinds, error) {
+	var (
+		primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
+		isSourceKind        = false
+	)
+
 	if customNodeKinds, err := s.GetCustomNodeKinds(ctx); err != nil {
 		return nil, err
 	} else {
-		var primaryDisplayKinds = make(graphschema.PrimaryDisplayKinds)
 		for _, customNodeKind := range customNodeKinds {
-			primaryDisplayKinds[graph.StringKind(customNodeKind.KindName)] = graphschema.DisplayKind{
-				Name: customNodeKind.KindName,
-				Icon: graphschema.DisplayNodeIcon{
-					Name:  customNodeKind.Config.Icon.Name,
-					Type:  customNodeKind.Config.Icon.Type,
-					Color: customNodeKind.Config.Icon.Color,
-				},
-			}
+			primaryDisplayKinds.Add(customNodeKind.KindName, customNodeKind.Config.Icon.Name, customNodeKind.Config.Icon.Color, customNodeKind.Config.Icon.Type, isSourceKind)
 		}
-		return primaryDisplayKinds, nil
 	}
+
+	if sourceKinds, err := s.GetSourceKinds(ctx); err != nil {
+		return nil, err
+	} else {
+		isSourceKind = true
+		for _, sourceKind := range sourceKinds {
+			primaryDisplayKinds.Add(sourceKind.Name, "", "", "", isSourceKind)
+		}
+	}
+
+	return primaryDisplayKinds, nil
 }
 
 // entity panel vars

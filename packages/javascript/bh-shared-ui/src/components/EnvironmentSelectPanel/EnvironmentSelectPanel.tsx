@@ -16,14 +16,12 @@
 
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Card, Checkbox, DialogTitle, FormField, FormItem, FormLabel, Input } from 'doodle-ui';
+import { Card, CheckboxWithLabel, DialogTitle, FormField, FormItem, Input } from 'doodle-ui';
 import { Environment, EnvironmentRequest } from 'js-client-library';
-import { Minus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { CreateUserRequestForm } from '../..';
 import { useAvailableEnvironments } from '../../hooks/useAvailableEnvironments/useAvailableEnvironments';
-import { cn } from '../../utils';
 import { UpdateUserRequestForm } from '../UpdateUserForm';
 
 const EnvironmentSelectPanel: React.FC<{
@@ -152,30 +150,17 @@ const EnvironmentSelectPanelInner: React.FC<{
                             control={form.control}
                             render={() => (
                                 <FormItem className='flex flex-row items-center'>
-                                    <Checkbox
-                                        checked={areAllEnvironmentsSelected || areAllEnvironmentsIndeterminate}
+                                    <CheckboxWithLabel
+                                        label='Select All Environments'
+                                        checked={
+                                            areAllEnvironmentsIndeterminate
+                                                ? 'indeterminate'
+                                                : areAllEnvironmentsSelected
+                                        }
                                         id='allEnvironments'
                                         onCheckedChange={handleSelectAllEnvironmentsChange}
-                                        className={cn(
-                                            areAllEnvironmentsSelected &&
-                                                '!bg-primary border-neutral-dark-1 dark:!bg-neutral-light-2'
-                                        )}
-                                        icon={
-                                            areAllEnvironmentsIndeterminate && (
-                                                <Minus
-                                                    className='h-full w-full bg-neutral-2 text-neutral-dark-1 dark:text-neutral-light-2'
-                                                    absoluteStrokeWidth={true}
-                                                    strokeWidth={3}
-                                                />
-                                            )
-                                        }
                                         data-testid='create-user-dialog_select-all-environments-checkbox'
                                     />
-                                    <FormLabel
-                                        htmlFor='allEnvironments'
-                                        className='ml-3 w-full cursor-pointer font-normal'>
-                                        Select All Environments
-                                    </FormLabel>
                                 </FormItem>
                             )}
                         />
@@ -195,12 +180,14 @@ const EnvironmentSelectPanelInner: React.FC<{
                                             control={form.control}
                                             render={() => (
                                                 <FormItem className='flex flex-row items-center'>
-                                                    <Checkbox
+                                                    <CheckboxWithLabel
+                                                        label={item.name}
                                                         checked={
                                                             selectedEnvironments &&
                                                             selectedEnvironments.includes(item.id)
                                                         }
-                                                        className='m-3 data-[state=checked]:bg-primary data-[state=checked]:border-neutral-dark-2'
+                                                        className='data-[state=checked]:bg-primary data-[state=checked]:border-neutral-dark-2'
+                                                        fieldClassName='m-3'
                                                         id={item.id}
                                                         onCheckedChange={(checked) =>
                                                             handleEnvironmentSelectChange(item.id, checked)
@@ -208,11 +195,6 @@ const EnvironmentSelectPanelInner: React.FC<{
                                                         value={item.name}
                                                         data-testid='create-user-dialog_environments-checkboxes'
                                                     />
-                                                    <FormLabel
-                                                        htmlFor={item.id}
-                                                        className='mr-3 w-full cursor-pointer font-normal'>
-                                                        {item.name}
-                                                    </FormLabel>
                                                 </FormItem>
                                             )}
                                         />

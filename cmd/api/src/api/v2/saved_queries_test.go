@@ -189,7 +189,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myQuery", "Match(n) return n", "", nil, nil, "").Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint \"idx_saved_queries_composite_index\""))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -232,7 +232,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{}, fmt.Errorf("foo"))
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myCustomQuery1", "Match(n) return n", "An example description", nil, nil, "").Return(model.SavedQuery{}, fmt.Errorf("foo"))
 
 	router := mux.NewRouter()
 	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
@@ -275,7 +275,57 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 
 	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 
-	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, payload["name"], payload["query"], payload["description"]).Return(model.SavedQuery{
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myCustomQuery1", "Match(n) return n", "An example description", nil, nil, "").Return(model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        fmt.Sprintf("%v", payload["name"]),
+		Query:       fmt.Sprintf("%v", payload["query"]),
+		Description: fmt.Sprintf("%v", payload["description"]),
+	}, nil)
+
+	router := mux.NewRouter()
+	router.HandleFunc(endpoint, resources.CreateSavedQuery).Methods("POST")
+
+	// Act
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, req)
+
+	// Assert
+	assert.Equal(t, http.StatusCreated, response.Code)
+	assert.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"myCustomQuery1","query":"Match(n) return n","description":"An example description","id":0,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
+}
+
+func TestResources_CreateSavedQuery_IgnoresExtraFields(t *testing.T) {
+	// Setup
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries"
+	userId, err := uuid2.FromString("ac83d188-cb30-430b-953a-9e0ecab45e2c")
+	require.NoError(t, err)
+
+	payload := map[string]any{
+		"user_id":      "ac83d188-cb30-430b-953a-9e0ecabfffff",
+		"query":        "Match(n) return n",
+		"name":         "myCustomQuery1",
+		"description":  "An example description",
+		"extension_id": 7,
+		"category":     "VeryNiceQuery",
+	}
+
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, bytes.NewReader(marshalledPayload))
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	// this is really the key assertion - CreateSavedQuery is not passed an extensionId or category
+	mockDB.EXPECT().CreateSavedQuery(gomock.Any(), userId, "myCustomQuery1", "Match(n) return n", "An example description", nil, nil, "").Return(model.SavedQuery{
 		UserID:      userId.String(),
 		Name:        fmt.Sprintf("%v", payload["name"]),
 		Query:       fmt.Sprintf("%v", payload["query"]),
@@ -692,6 +742,63 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 		"query":       "notFoo",
 		"name":        "notBar",
 		"description": "notBaz",
+	}
+
+	marshalledPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "PUT", fmt.Sprintf(endpoint, "1"), bytes.NewReader(marshalledPayload))
+	require.NoError(t, err)
+
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+
+	handler := http.HandlerFunc(resources.UpdateSavedQuery)
+
+	// Act
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, req)
+
+	// Assert
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.JSONEq(t, `{"data":{"user_id":"ac83d188-cb30-430b-953a-9e0ecab45e2c","name":"foo","query":"bar","description":"baz","id":1,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, response.Body.String())
+}
+
+func TestResources_UpdateSavedQuery_OwnPrivateQuery_CannotUpdateExtraFields_Success(t *testing.T) {
+	// Setup
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/saved-queries/{%s}"
+	savedQueryId := "1"
+
+	userId, err := uuid2.FromString("ac83d188-cb30-430b-953a-9e0ecab45e2c")
+	require.NoError(t, err)
+
+	savedQuery := model.SavedQuery{
+		UserID:      userId.String(),
+		Name:        "foo",
+		Query:       "bar",
+		Description: "baz",
+		BigSerial: model.BigSerial{
+			ID: int64(1),
+		},
+	}
+
+	mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+	mockDB.EXPECT().UpdateSavedQuery(gomock.Any(), gomock.Any()).Return(savedQuery, nil)
+
+	payload := map[string]any{
+		"user_id":      "ac83d188-cb30-430b-953a-9e0ecabfffff",
+		"query":        "notFoo",
+		"name":         "notBar",
+		"description":  "notBaz",
+		"extension_id": 7,
+		"category":     "NotAFoo",
 	}
 
 	marshalledPayload, err := json.Marshal(payload)
@@ -2433,6 +2540,18 @@ func TestResources_GetSavedQuery(t *testing.T) {
 				ID: 2,
 			},
 		}
+		extensionId     = int32(7)
+		testSavedQuery3 = model.SavedQuery{
+			UserID:      uuid2.Nil.String(),
+			Name:        "Test3Query",
+			Query:       "match (n:Base) return n",
+			Description: "test description 3",
+			BigSerial: model.BigSerial{
+				ID: 3,
+			},
+			Category:          "very fun queries",
+			SchemaExtensionID: &extensionId,
+		}
 	)
 
 	type mock struct {
@@ -2623,6 +2742,28 @@ func TestResources_GetSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   fmt.Sprintf(`{"data":{"user_id":"%s","name":"Test2Query","query":"match (n:Base) return n","description":"test description 2","id":2,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, user2Id),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - public query with extension id and category",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mock) {
+					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(3)).Return(testSavedQuery3, nil)
+					mock.mockDatabase.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(3), user1Id).Return(true, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() *http.Request {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/3", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "3"})
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   fmt.Sprintf(`{"data":{"user_id":"%s","name":"Test3Query","query":"match (n:Base) return n","description":"test description 3","category":"very fun queries","extension_id":7,"id":3,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false}}}`, uuid2.Nil.String()),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -2875,6 +3016,43 @@ func TestResources_ListSavedQueries(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   fmt.Sprintf(`{"count":1, "data":[{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "description":"", "id":1, "name":"TestQuery", "query":"match (n:Base) return n", "scope":"owned", "updated_at":"0001-01-01T00:00:00Z", "user_id":"%s"}], "limit":10000, "skip":0}`, user1Id),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
+			name: "success - return public queries",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mock) {
+					extensionId := int32(7)
+					mock.mockDatabase.EXPECT().ListSavedQueries(gomock.Any(), string(model.SavedQueryScopePublic), user1Id, "id", model.SQLFilter{}, 0, 10000).Return([]model.ScopedSavedQuery{{
+						SavedQuery: model.SavedQuery{
+							UserID:      user1Id.String(),
+							Name:        "TestQuery",
+							Query:       "match (n:Base) return n",
+							Description: "",
+							BigSerial: model.BigSerial{
+								ID: 1,
+							},
+							Category:          "myCategory",
+							SchemaExtensionID: &extensionId,
+						},
+						Scope: "public",
+					}}, 1, nil)
+				},
+			},
+			args: args{
+				func() *http.Request {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries", nil)
+					require.NoError(t, err)
+					query := req.URL.Query()
+					query.Add("scope", "public")
+					req.URL.RawQuery = query.Encode()
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   fmt.Sprintf(`{"count":1, "data":[{"created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "description":"", "id":1, "name":"TestQuery", "query":"match (n:Base) return n", "scope":"public", "updated_at":"0001-01-01T00:00:00Z", "user_id":"%s", "category":"myCategory", "extension_id": 7}], "limit":10000, "skip":0}`, user1Id),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

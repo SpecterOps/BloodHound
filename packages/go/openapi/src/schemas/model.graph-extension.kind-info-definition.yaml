@@ -16,25 +16,10 @@
 type: object
 description: |
   A map of named info panels used in extension definitions.
-  Each property key is a stable panel identifier, and each property value
-  must be a valid KindInfo object with title, position, and content.
-propertyNames:
-  pattern: '^[a-z0-9_-]{1,128}$'
-  description: "Keys may only include lowercase alphanumeric characters, hyphens, and underscores"
+  Each property key is a stable panel identifier and must match the pattern
+  `^[a-z0-9_-]{1,128}$` (lowercase alphanumeric characters, hyphens, and underscores only).
+  Each property value must be a valid KindInfo object with title, position, and content.
 additionalProperties:
-  type: object
-  required: [title, position]
-  properties:
-    title:
-      type: string
-      example: "Entity Panel Section"
-    position:
-      type: integer
-      minimum: 1
-    markdown:
-      type: object
-      required: [content]
-      properties:
-        content:
-          type: string
-          example: "This is markdown content for the info panel"
+  allOf:
+    - $ref: "./model.kind-info-base.yaml"
+    - $ref: "./model.kind-info-markdown.yaml"

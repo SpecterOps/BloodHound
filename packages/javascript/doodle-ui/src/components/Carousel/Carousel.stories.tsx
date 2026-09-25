@@ -76,9 +76,9 @@ export const Default: Story = {
                     ))}
                 </CarouselContent>
                 <div className='flex justify-center items-center my-1'>
-                    <CarouselPrev />
+                    <CarouselPrev aria-label='previous slide' />
                     <CarouselDots />
-                    <CarouselNext />
+                    <CarouselNext aria-label='next slide' />
                 </div>
             </Carousel>
         );
@@ -107,9 +107,9 @@ export const Autoplay: Story = {
                     ))}
                 </CarouselContent>
                 <div className='flex justify-center items-center my-1'>
-                    <CarouselPrev />
+                    <CarouselPrev aria-label='previous slide' />
                     <CarouselDots />
-                    <CarouselNext />
+                    <CarouselNext aria-label='next slide' />
                 </div>
             </Carousel>
         );

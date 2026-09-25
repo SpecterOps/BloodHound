@@ -26,7 +26,8 @@ const NoDataFallback: React.FC<NoDataFallbackProps> = ({ fallback, colSpan }) =>
 
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} className='h-24 text-center'>
+            {/* tabIndex for screen reader support*/}
+            <TableCell colSpan={colSpan} className='h-24 text-center' tabIndex={0}>
                 No results.
             </TableCell>
         </TableRow>

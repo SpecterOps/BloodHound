@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 type Permission struct {
@@ -53,6 +55,8 @@ var ErrNoRoleFound = errors.New("no role was found")
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
+	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
+	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error)
 }
 
 type Service struct {
@@ -69,4 +73,12 @@ func (s *Service) GetRole(ctx context.Context, id int32) (Role, error) {
 
 func (s *Service) GetPermission(ctx context.Context, id int) (Permission, error) {
 	return s.db.GetPermission(ctx, id)
+}
+
+func (s *Service) ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error) {
+	return s.db.ListRoles(ctx, queryFilters, sortItems)
+}
+
+func (s *Service) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error) {
+	return s.db.ListPermissions(ctx, queryFilters, sortItems)
 }

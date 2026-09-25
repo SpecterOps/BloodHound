@@ -116,8 +116,9 @@ func (s *Route) CheckFeatureFlag(ff featureFlag, flagKey string) *Route {
 
 // WithFilters wires the query parameter filter middleware onto the route, validating any filters against
 // the supplied params.Filterable definition and enriching the request context with the parsed filters.
-func (s *Route) WithFilters(filterable params.Filterable) *Route {
-	s.handler.Use(middleware.FilterMiddleware(filterable))
+// Query parameters named in additionalIgnoredParameters are skipped during filter parsing.
+func (s *Route) WithFilters(filterable params.Filterable, additionalIgnoredParameters ...string) *Route {
+	s.handler.Use(middleware.FilterMiddleware(filterable, additionalIgnoredParameters...))
 	return s
 }
 
@@ -211,4 +212,9 @@ func (s Router) DELETE(template string, handlerFunc func(http.ResponseWriter, *h
 
 func (s Router) PATCH(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	return s.HandleFunc(template, handlerFunc).Methods(http.MethodPatch)
+}
+
+func (s *Route) Name(name string) *Route {
+	s.mux.Name(name)
+	return s
 }

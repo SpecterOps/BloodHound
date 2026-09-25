@@ -17,12 +17,21 @@
 import type { AxiosResponse } from 'axios';
 import { EnvironmentRequest } from './requests';
 import {
+    AlertAttempt,
+    AlertEvent,
+    AlertEventType,
     AssetGroupTag,
     AssetGroupTagCertificationRecord,
     AssetGroupTagHistoryRecord,
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
+    CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -34,6 +43,7 @@ import {
     NodeDetailsWithInfo,
     NodeKindResponse,
     NodeSourceTypes,
+    Notification,
     RelationshipDetails,
     RelationshipDetailsWithInfo,
     RelationshipKindResponse,
@@ -43,7 +53,6 @@ import {
     TimestampFields,
     Webhook,
     WebhookSecret,
-    WebhookTest,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -188,6 +197,25 @@ export type PostureHistoryData = {
 export type PostureHistoryResponse = TimeWindowedResponse<PostureHistoryData[]> & {
     data_type: string;
 };
+
+export type ZoneProtectedAssetScoreData = {
+    date: string;
+    exposed_count: number;
+    protected_count: number;
+    total_count: number;
+    // The protected share of the zone, expressed as a fraction between 0 and 1.
+    value: number;
+};
+
+export type ZoneProtectedAssetScoreView = {
+    start: string;
+    end: string;
+    environments: string[];
+    asset_group_tag_id: number;
+    data: ZoneProtectedAssetScoreData[];
+};
+
+export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
 
 type DatapipeStatus = {
     status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
@@ -343,7 +371,74 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
+// ---------------------------------------------------------------------------
+//  Collectors - Clients
+// ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
+
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Support Bundles (Management Operations)
+// ---------------------------------------------------------------------------
+export enum ManagementOperationStatus {
+    QUEUED = 'queued',
+    RUNNING = 'running',
+    SUCCEEDED = 'succeeded',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export enum ArtifactStatus {
+    PENDING = 'pending',
+    UPLOADING = 'uploading',
+    COMPLETE = 'complete',
+    FAILED = 'failed',
+    CANCELED = 'canceled',
+}
+
+export type ManagementOperation = {
+    id: string;
+    client_id: string;
+    artifact_id: string | null;
+    // total byte size of the artifact to download
+    artifact_size: number | null;
+    artifact_status: ArtifactStatus | null;
+    type: 'support_bundle';
+    status: ManagementOperationStatus;
+    started_at: string | null;
+    completed_at: string | null;
+};
+
+export type SupportBundleSummaryStatus = {
+    last_finished: ManagementOperation | null;
+    current: ManagementOperation | null;
+};
+
+export type SupportBundleDownloadURLResponse = BasicResponse<{
+    download_url: string;
+    expires_at: string;
+    file_name: string;
+    size: number;
+}>;
+// ---------------------------------------------------------------------------
 
 export type EdgeType = {
     id: number;
@@ -391,6 +486,8 @@ export type Extension = {
 
 export type GetExtensionsResponse = BasicResponse<{ extensions: Extension[] }>;
 
+export type FindingTypeResponse = BasicResponse<{ finding: string; title: string }[]>;
+
 export type FindingSchema = {
     id: number;
     name: string;
@@ -408,7 +505,10 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+
 export type UnifiedFinding = {
+    id: number;
     severity: string;
     finding: string;
     title: string;
@@ -416,7 +516,7 @@ export type UnifiedFinding = {
     platform: string;
     environment_id: string;
     environment_name: string;
-    zone_id: number;
+    asset_group_tag_id: number;
     zone_name: string;
     source_principal_id: string;
     source_principal_name: string;
@@ -424,24 +524,51 @@ export type UnifiedFinding = {
     target_principal_id: string;
     target_principal_name: string;
     target_principal_kind: string;
-    status: string;
+    status: FindingStatus;
     first_seen: string;
     last_seen: string;
+    prioritization_rank?: number | null;
+    is_cross_platform?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
 export type CreateWebhookResponse = {
     webhook: Webhook;
     hmac_secret: string;
 };
-
-export type GetWebhooksResponse = PaginatedResponse<Webhook[]>;
+export type GetWebhooksResponse = PaginatedResponse<{ webhooks: Webhook[] }>;
 export type GetWebhookResponse = BasicResponse<{ webhook: Webhook }>;
-export type RotateWebhookSecretResponse = BasicResponse<WebhookSecret>;
-export type WebhookTestResponse = BasicResponse<WebhookTest>;
+export type RotateWebhookSecretResponse = BasicResponse<{ webhook_secret: WebhookSecret }>;
+
+export type WebhookTestResponse = BasicResponse<{
+    status_code?: number | null;
+    error?: string | null;
+}>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export type GetAlertEventsResponse = PaginatedResponse<{ events: AlertEvent[] }>;
+export type GetAlertEventResponse = BasicResponse<{ event: AlertEvent }>;
+export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEventType[] }>;
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+type AlertPayload = { alert: Notification };
+export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
+export type GetAlertResponse = BasicResponse<AlertPayload>;
+export type CreateAlertResponse = BasicResponse<AlertPayload>;
+export type UpdateAlertResponse = BasicResponse<AlertPayload>;
+export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
+export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 
@@ -454,3 +581,6 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;

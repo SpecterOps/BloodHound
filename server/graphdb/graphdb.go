@@ -20,6 +20,8 @@
 package graphdb
 
 import (
+	"context"
+
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -33,6 +35,18 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+// GraphDBRequestAdapter is the stable cross-slice API exposing the graph read
+// capabilities other feature slices depend on.
+type GraphDBRequestAdapter interface {
+	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
+}
+
+// NewGraphDBRequestAdapter constructs a GraphDBRequestAdapter backed by the graph database
+// and the pgx connection pool.
+func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) GraphDBRequestAdapter {
+	return appdb.NewStore(graphDatabase, pool)
+}
+
 // Register builds the graphdb store -> service -> handler chain and attaches the graphdb
 // routes to the provided router. It is called from the modules registry and receives
 // only the infrastructure it directly needs: the router, the pgx pool (for kind
@@ -41,10 +55,10 @@ import (
 func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, rateLimit func() mux.MiddlewareFunc, dogTags dogtags.Service) {
 	var (
 		store          = appdb.NewStore(graphDatabase, pool)
-		service        = services.NewService(store)
 		etacService    = etac.Register(pool, dogTags)
 		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
-		handlerSet     = handlers.NewHandlersContainer(service, nodeAuthorizer)
+		service        = services.NewService(store, nodeAuthorizer)
+		handlerSet     = handlers.NewHandlersContainer(service)
 	)
 
 	routes.Register(routerInst, handlerSet, rateLimit)

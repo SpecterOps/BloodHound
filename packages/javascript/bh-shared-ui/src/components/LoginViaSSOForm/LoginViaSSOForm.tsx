@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 import { Button } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import React from 'react';
@@ -66,11 +66,11 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
                     <Button size='large' type='submit' className='w-full' disabled={selectedProviderSlug === ''}>
                         CONTINUE
                     </Button>
-                    <Box mt={2}>
-                        <Button size='large' type='button' onClick={onCancel} variant={'tertiary'} className='w-full'>
+                    <div className='mt-4'>
+                        <Button size='large' type='button' onClick={onCancel} variant='secondary' className='w-full'>
                             CANCEL
                         </Button>
-                    </Box>
+                    </div>
                 </Grid>
             </Grid>
         </form>

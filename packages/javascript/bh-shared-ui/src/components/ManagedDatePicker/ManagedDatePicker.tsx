@@ -143,7 +143,7 @@ export const ManagedDatePicker: FC<Props> = ({
     return (
         <>
             <DatePicker
-                className='bg-transparent dark:bg-transparent pl-2'
+                className='pl-2'
                 aria-label={hint} // "Start date" or "End date"
                 aria-invalid={Boolean(validationError)}
                 aria-describedby={validationError ? `${formatId} ${errorId}` : formatId}
@@ -156,7 +156,7 @@ export const ManagedDatePicker: FC<Props> = ({
                 placeholder={placeholder}
                 // `value` only represents input buffer
                 value={inputDateString}
-                variant='underlined'
+                variant='outlined'
                 calendarProps={{
                     fromDate: fromDate,
                     mode: 'single',

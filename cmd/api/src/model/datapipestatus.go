@@ -25,19 +25,33 @@ import (
 type DatapipeStatus string
 
 const (
-	DatapipeStatusIdle      DatapipeStatus = "idle"
-	DatapipeStatusIngesting DatapipeStatus = "ingesting"
-	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
-	DatapipeStatusPurging   DatapipeStatus = "purging"
-	DatapipeStatusPruning   DatapipeStatus = "pruning"
-	DatapipeStatusStarting  DatapipeStatus = "starting"
+	DatapipeStatusIdle       DatapipeStatus = "idle"
+	DatapipeStatusIngesting  DatapipeStatus = "ingesting"
+	DatapipeStatusAnalyzing  DatapipeStatus = "analyzing"
+	DatapipeStatusPurging    DatapipeStatus = "purging"
+	DatapipeStatusPruning    DatapipeStatus = "pruning"
+	DatapipeStatusStarting   DatapipeStatus = "starting"
+	DatapipeStatusOptimizing DatapipeStatus = "optimizing"
 )
+
+func AllDatapipeStatuses() []DatapipeStatus {
+	return []DatapipeStatus{
+		DatapipeStatusIdle,
+		DatapipeStatusIngesting,
+		DatapipeStatusAnalyzing,
+		DatapipeStatusPurging,
+		DatapipeStatusPruning,
+		DatapipeStatusStarting,
+		DatapipeStatusOptimizing,
+	}
+}
 
 type DatapipeStatusWrapper struct {
 	Status                  DatapipeStatus `json:"status"`
 	UpdatedAt               time.Time      `json:"updated_at"`
 	LastCompleteAnalysisAt  time.Time      `json:"last_complete_analysis_at"`
 	LastAnalysisRunAt       time.Time      `json:"last_analysis_run_at"`
+	LastCompleteOptimizeAt  time.Time      `json:"last_complete_optimize_at"`
 	NextScheduledAnalysisAt null.Time      `json:"next_scheduled_analysis_at"`
 }
 

@@ -145,9 +145,7 @@ const PrivilegeZones: FC = () => {
                             const id = value === zonesPath ? tagId : ownedId;
                             switch (value) {
                                 case certificationsPath:
-                                    return navigate(`/${privilegeZonesPath}/${certificationsPath}`, {
-                                        discardQueryParams: true,
-                                    });
+                                    return navigate(`/${privilegeZonesPath}/${certificationsPath}`);
                                 case historyPath:
                                     return navigate(`/${privilegeZonesPath}/${historyPath}`, {
                                         discardQueryParams: true,

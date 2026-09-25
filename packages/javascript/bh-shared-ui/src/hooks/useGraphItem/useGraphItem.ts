@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+    GraphEdge,
     GraphNode,
     NodeDetails,
     NodeDetailsWithInfo,
@@ -22,8 +23,17 @@ import {
     RelationshipDetailsWithInfo,
 } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient, REL_ID_PREFIX } from '../../utils';
+import { AzureNodeKind } from '../../graphSchema';
+import {
+    apiClient,
+    entityInformationEndpoints,
+    EntityKinds,
+    ParsedQueryItem,
+    parseItemId,
+    REL_ID_PREFIX,
+} from '../../utils';
 import { escapeCypherString } from '../../utils/cypher';
+import { useExploreParams } from '../useExploreParams';
 
 export const isRelationshipResponse = (
     response: RelationshipDetails | RelationshipDetailsWithInfo | NodeDetails | NodeDetailsWithInfo
@@ -53,11 +63,58 @@ export const useGetRelationshipById = (id?: number) => {
     });
 };
 
+// The only built in node kinds whose entity endpoints return runtime-derived properties that the generic
+// node-by-id endpoint omits. Each adds a related-node id computed via a relationship traversal at request time:
+// AZApp -> service_principal_id, AZServicePrincipal -> appid, AZFederatedIdentityCredential ->
+// federatedidentitycredentialappid. All other properties (e.g. isTierZero) are derivable from the base node.
+const ENRICHABLE_NODE_KINDS = new Set<EntityKinds>([
+    AzureNodeKind.App,
+    AzureNodeKind.ServicePrincipal,
+    AzureNodeKind.FederatedIdentityCredential,
+]);
+
+const getEnrichableNodeKind = (kinds: NodeDetails['kinds']): EntityKinds | undefined => {
+    for (const kind of kinds) {
+        if (ENRICHABLE_NODE_KINDS.has(kind.name as EntityKinds)) return kind.name as EntityKinds;
+    }
+
+    return undefined;
+};
+
+// The generic node-by-id endpoint does not include the runtime-derived properties (e.g. an AZApp's service
+// principal id) that the kind-specific entity endpoints add. For the enrichable node kinds we fetch those
+// properties from the same endpoints the entity panel relied on previously and merge them into the node
+// properties.
+const enrichBuiltInNodeProperties = async (
+    node: NodeDetails | NodeDetailsWithInfo,
+    signal?: AbortSignal
+): Promise<NodeDetails | NodeDetailsWithInfo> => {
+    const enrichableKind = getEnrichableNodeKind(node.kinds);
+    const objectId = node.properties.objectid;
+
+    if (!enrichableKind || !objectId) return node;
+
+    try {
+        const properties = await entityInformationEndpoints[enrichableKind](objectId, { signal }).then(
+            (res) => res.data.data.props
+        );
+
+        return { ...node, properties: { ...node.properties, ...properties } };
+    } catch (error) {
+        if (signal?.aborted) throw error;
+        return node;
+    }
+};
+
 export const useGetNodeById = (id?: number) => {
     return useQuery({
         queryKey: ['getNodeById', id],
-        queryFn: async () => {
-            return apiClient.getNodeByID(id!, { params: { 'include-info': true } }).then((res) => res.data.data);
+        queryFn: async ({ signal }) => {
+            const node = await apiClient
+                .getNodeByID(id!, { params: { 'include-info': true }, signal })
+                .then((res) => res.data.data);
+
+            return enrichBuiltInNodeProperties(node, signal);
         },
         enabled: !!id,
         retryOnMount: false,
@@ -68,18 +125,62 @@ export const useGetNodeById = (id?: number) => {
 };
 
 export const useGraphItem = (itemId?: string | null) => {
-    const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
+    const parsed = parseItemId(itemId ?? '');
+    const isCypherBased = parsed.itemType !== 'none';
+    const cypherQuery = useCypherGraphItem(parsed);
 
+    const isRelationship = !!itemId?.includes(REL_ID_PREFIX);
     const relationshipId = isRelationship && itemId ? parseInt(itemId.slice(REL_ID_PREFIX.length)) : undefined;
     const relQuery = useGetRelationshipById(relationshipId);
 
     const nodeId = itemId ? parseInt(itemId) : undefined;
     const nodeQuery = useGetNodeById(nodeId);
 
-    return isRelationship ? relQuery : nodeQuery;
+    if (isCypherBased) return cypherQuery;
+    if (isRelationship) return relQuery;
+    return nodeQuery;
+};
+
+const useCypherGraphItem = (parsed: ParsedQueryItem) => {
+    const cypherRelationshipQuery = useRelationshipCypher(parsed.cypherQuery);
+    const cypherNodeQuery = useNodeByObjectId(parsed.id);
+
+    return parsed.itemType === 'edge' ? cypherRelationshipQuery : cypherNodeQuery;
+};
+
+const useRelationshipCypher = (query: string) => {
+    const { setExploreParams } = useExploreParams();
+    return useQuery({
+        queryKey: ['relationshipCypher', query],
+        queryFn: async () => {
+            return apiClient.cypherSearch(query, undefined, true).then((res) => {
+                const edges = res.data?.data?.edges;
+                if (!edges || edges.length === 0) {
+                    return undefined;
+                }
+
+                const firstElement: GraphEdge = edges[0];
+                setExploreParams({ selectedItem: `rel_${firstElement.id}` });
+
+                const relationship: RelationshipDetails = {
+                    relationship_id: firstElement.id,
+                    kind: { name: firstElement.kind, relationship_kind_id: null },
+                    properties: { lastSeen: firstElement.properties?.lastseen ?? '' },
+                };
+
+                return relationship;
+            });
+        },
+
+        enabled: !!query,
+        retry: false,
+        refetchOnWindowFocus: false,
+        keepPreviousData: true,
+    });
 };
 
 export const useNodeByObjectId = (objectId?: string) => {
+    const { setExploreParams } = useExploreParams();
     return useQuery({
         queryKey: ['getGraphNodeByObjectId', objectId],
         queryFn: async () => {
@@ -99,6 +200,7 @@ export const useNodeByObjectId = (objectId?: string) => {
                     const firstElement: GraphNode = Object.values(nodes)[0];
                     const id = Object.keys(nodes)[0];
 
+                    setExploreParams({ selectedItem: id });
                     const node: NodeDetails = {
                         node_id: parseInt(id),
                         kinds: firstElement.kinds.map((kind) => {

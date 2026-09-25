@@ -17,7 +17,7 @@ import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
 import { useQueryClient } from 'react-query';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
-import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
+import { getLabelNamesFromKinds, getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
 import { EntityField, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -43,6 +43,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
 
     const tagsQuery = useTagsQuery();
     const zoneName = getZoneNameFromKinds(tagsQuery?.data, kindNames);
+    const labelNames = getLabelNamesFromKinds(tagsQuery?.data, kindNames);
 
     useEffect(() => {
         if (!previousEntity || !selectedNode.node_id || previousEntity !== selectedNode.node_id) {
@@ -72,10 +73,11 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
                     properties={selectedNode.properties}
                 />
                 <BasicObjectInfoFields
-                    nodeType={primaryKind}
+                    properties={selectedNode.properties}
                     handleSourceNodeSelected={handleSourceNodeSelected}
-                    {...selectedNode.properties}
+                    nodeType={primaryKind}
                     zone={zoneName}
+                    labels={labelNames}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

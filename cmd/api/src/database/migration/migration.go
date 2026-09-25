@@ -23,6 +23,7 @@ import (
 	"io/fs"
 	"log/slog"
 
+	"github.com/pressly/goose/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/gorm"
@@ -46,7 +47,7 @@ type Migrator struct {
 	ExtensionsData []Source
 	DB             *gorm.DB
 	SqlDB          *sql.DB
-	GooseFS        fs.FS
+	GooseProvider  *goose.Provider
 }
 
 // Migration contains information about a specific migration such as the file location, it's Source, and Version. Can be removed after v11 release
@@ -58,15 +59,26 @@ type Migration struct {
 
 // NewMigrator returns a new Migrator with the FossMigrations Source predefined.
 func NewMigrator(db *gorm.DB) (*Migrator, error) {
-	sqlDB, err := db.DB()
-	if err != nil {
+	var (
+		sqlDB               *sql.DB
+		fossMigrationsSubFS fs.FS
+		gooseProvider       *goose.Provider
+		err                 error
+	)
+	if sqlDB, err = db.DB(); err != nil {
 		slog.Error("Failed to connect to database: %v", attr.Error(err))
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
-	fossMigrationsSubFS, err := fs.Sub(FossMigrations, "migrations")
-	if err != nil {
+	if fossMigrationsSubFS, err = fs.Sub(FossMigrations, "migrations"); err != nil {
 		slog.Error("Failed to open foss migrations directory: %v", attr.Error(err))
 		return nil, fmt.Errorf("failed to open foss migrations directory: %v", err)
+	}
+	if gooseProvider, err = goose.NewProvider(goose.DialectPostgres,
+		sqlDB,
+		MergedFS(fossMigrationsSubFS),
+		goose.WithAllowOutofOrder(true)); err != nil {
+		slog.Error("Failed to create new Goose Provider: %v", attr.Error(err))
+		return nil, fmt.Errorf("failed to create new goose provider: %v", err)
 	}
 	return &Migrator{
 		// Deprecated: Sources supports legacy v8 stepwise migrations. Can be removed after v11 is released.
@@ -76,8 +88,9 @@ func NewMigrator(db *gorm.DB) (*Migrator, error) {
 		ExtensionsData: []Source{
 			{FileSystem: ExtensionMigrations, Directory: "extensions"},
 		},
-		GooseFS: MergedFS(fossMigrationsSubFS),
-		DB:      db,
-		SqlDB:   sqlDB,
+		GooseProvider: gooseProvider,
+		DB:            db,
+		SqlDB:         sqlDB,
 	}, nil
+
 }

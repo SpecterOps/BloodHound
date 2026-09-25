@@ -18,13 +18,13 @@ import { faAnglesDown, faAnglesUp, faChevronDown, faChevronUp } from '@fortaweso
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Button,
-    Checkbox,
+    CheckboxWithLabel,
     Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
     DialogTitle,
-    Label,
+    TextButton,
 } from 'doodle-ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SearchInput } from '../../../../components/SearchInput';
@@ -77,28 +77,26 @@ const EdgeFilteringDialog = ({
     return (
         <Dialog open={isOpen}>
             <DialogContent maxWidth='md' className='flex flex-col h-[80vh]'>
-                <div className='flex items-start justify-between'>
+                <div className='flex items-start justify-between mt-1'>
                     <div>
                         <DialogTitle>{title}</DialogTitle>
-                        <DialogDescription className='ml-1 mt-1'>{description}</DialogDescription>
+                        <DialogDescription className='ml-1'>{description}</DialogDescription>
                     </div>
-                    <div className='flex gap-1'>
-                        <Button
-                            variant='text'
-                            size='small'
+                    <div className='flex gap-5'>
+                        <TextButton
+                            className='text-sm'
                             disabled={isSearching}
                             onClick={() => setExpandSignal((s) => s + 1)}>
-                            <FontAwesomeIcon icon={faAnglesDown} className='mr-1' />
+                            <FontAwesomeIcon icon={faAnglesDown} />
                             Expand All
-                        </Button>
-                        <Button
-                            variant='text'
-                            size='small'
+                        </TextButton>
+                        <TextButton
+                            className='text-sm'
                             disabled={isSearching}
                             onClick={() => setCollapseSignal((s) => s + 1)}>
-                            <FontAwesomeIcon icon={faAnglesUp} className='mr-1' />
+                            <FontAwesomeIcon icon={faAnglesUp} />
                             Collapse All
-                        </Button>
+                        </TextButton>
                     </div>
                 </div>
 
@@ -360,21 +358,16 @@ const EdgesView = ({ edgeTypes, checked, setChecked, searchQuery = '' }: EdgesVi
                     const edgeIsChecked = checked.find((element) => element.edgeType === edgeType)?.checked ?? false;
                     return (
                         <li key={index} className='w-1/2 min-w-0 pr-4'>
-                            <div className='flex items-start gap-2'>
-                                <Checkbox
+                            <div className='flex items-start gap-2 m-1'>
+                                <CheckboxWithLabel
+                                    label={<HighlightMatch text={edgeType} query={searchQuery} />}
+                                    labelClassName='break-words min-w-0 w-full cursor-pointer hover:underline'
                                     id={edgeType}
                                     aria-label={edgeType}
                                     name={edgeType}
                                     checked={edgeIsChecked}
                                     onCheckedChange={(value) => changeCheckbox(value, edgeType)}
-                                    className='mt-0.5 shrink-0'
                                 />
-                                <Label
-                                    size={'small'}
-                                    htmlFor={edgeType}
-                                    className='break-words min-w-0 w-full cursor-pointer hover:underline'>
-                                    <HighlightMatch text={edgeType} query={searchQuery} />
-                                </Label>
                             </div>
                         </li>
                     );
@@ -455,6 +448,14 @@ const IndeterminateListItem = ({
     const isExpanded = forceExpanded || showCollapsibleContent;
     const toggleCollapsibleContent = () => setShowCollapsibleContent((v) => !v);
 
+    const handleRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const clickedCheckboxOrLabel = (event.target as HTMLElement).closest('[role="checkbox"], label');
+
+        if (!clickedCheckboxOrLabel) {
+            toggleCollapsibleContent();
+        }
+    };
+
     return (
         <li className='list-none'>
             <div className='flex items-center py-1 group'>
@@ -462,21 +463,24 @@ const IndeterminateListItem = ({
                     role='button'
                     tabIndex={0}
                     className='flex items-center gap-2 flex-1 cursor-pointer p-1 text-left rounded-l peer hover:bg-neutral-3'
-                    onClick={toggleCollapsibleContent}
+                    onClick={handleRowClick}
                     onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return;
+
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             toggleCollapsibleContent();
                         }
                     }}>
-                    <Checkbox
+                    <CheckboxWithLabel
+                        label={name}
                         aria-label={name}
                         checked={checkedState}
                         onCheckedChange={() => handleCheck()}
                         onClick={(e) => e.stopPropagation()}
                         icon={isIndeterminate ? <span className='block w-2/3 mx-auto h-0.5 bg-current' /> : undefined}
+                        className='text-sm font-medium'
                     />
-                    <span className='text-sm font-medium'>{name}</span>
                 </div>
                 <button
                     type='button'

@@ -46,6 +46,7 @@ type EnvironmentSelector struct {
 type EnvironmentProperties struct {
 	Type            string      `json:"type"`
 	KindId          null.Int32  `json:"environment_kind_id,omitzero"`
+	KindName        null.String `json:"environment_kind_name,omitzero"`
 	KindDisplayName null.String `json:"environment_kind_display_name,omitzero"`
 }
 

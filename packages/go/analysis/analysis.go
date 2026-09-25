@@ -139,6 +139,14 @@ const (
 	pipelineStepStatusSkipped        = "skipped"
 )
 
+// pipelineStepIntent communicates whether a step is expected to run before dispatch.
+type pipelineStepIntent string
+
+const (
+	pipelineStepIntentExecute pipelineStepIntent = "execute"
+	pipelineStepIntentSkip    pipelineStepIntent = "skip"
+)
+
 type analysisErrors struct {
 	adPost      bool
 	azurePost   bool
@@ -195,6 +203,25 @@ func (s analysisPipeline) String() string {
 
 	for _, pipelineStep := range s {
 		steps = append(steps, pipelineStep.String())
+	}
+
+	return strings.Join(steps, ",")
+}
+
+// AnalysisStepsIntentString returns a comma-separated list of each step and its intent
+// (execute or skipped) for the given analysisSteps bitmask. This mirrors the
+// shape of the pipeline result String() used for the "Finished" log line, but
+// communicates intent before dispatch rather than completion.
+func (s analysisPipeline) AnalysisStepsIntentString(analysisSteps model.AnalysisSteps) string {
+	steps := make([]string, 0, len(s))
+
+	for _, pipelineStep := range s {
+		intent := pipelineStepIntentSkip
+		if pipelineStep.shouldRun(analysisSteps) {
+			intent = pipelineStepIntentExecute
+		}
+
+		steps = append(steps, fmt.Sprintf("%s:%s", pipelineStep.String(), intent))
 	}
 
 	return strings.Join(steps, ",")
@@ -379,7 +406,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		slog.String("namespace", "analysis"),
 		slog.String("fn", "RunAnalysisOperations"),
 		slog.Int("analysis_steps_bits", analysisSteps.Bits()),
-		slog.String("pipeline_steps", pipeline.String()),
+		slog.String("pipeline_steps", pipeline.AnalysisStepsIntentString(analysisSteps)),
 	)
 
 	pipelineResult := pipeline.dispatchAnalysisSteps(analysisPipelineRun{

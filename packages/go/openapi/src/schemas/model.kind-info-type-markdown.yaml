@@ -14,12 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-type: object
-required: [markdown]
-properties:
-  markdown:
-    type: object
-    required: [content]
-    properties:
-      content:
-        type: string
+allOf:
+  - $ref: "./model.kind-info-markdown.yaml"
+  - type: object
+    required: [markdown]

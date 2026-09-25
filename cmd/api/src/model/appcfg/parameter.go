@@ -58,6 +58,8 @@ const (
 	TimeoutLimit                        ParameterKey = "api.timeout_limit"
 	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
 	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
+	GraphStorageOptimizationKey         ParameterKey = "analysis.graph_storage_optimization"
+	CustomSubClaimKey                   ParameterKey = "auth.custom_sub_claim_key"
 )
 
 const (
@@ -92,6 +94,8 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
 	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
@@ -102,9 +106,11 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 }
 
 // IsProtectedKey These keys should not be updatable by users
+// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
+// paramDefinitions which is used by GET /config
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey:
+	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey, CustomSubClaimKey:
 		return true
 	default:
 		return false
@@ -161,6 +167,10 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &ClientMetricsParameter{}
 	case APITokenExpiration:
 		v = &APITokenExpirationParameter{}
+	case GraphStorageOptimizationKey:
+		v = &GraphStorageOptimizationParameter{}
+	case CustomSubClaimKey:
+		v = &CustomSubClaimKeyParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -239,7 +249,6 @@ func (s *PasswordExpiration) UnmarshalJSON(data []byte) error {
 
 		return nil
 	}
-
 }
 
 func GetPasswordExpiration(ctx context.Context, service ParameterService) time.Duration {
@@ -266,7 +275,7 @@ type Neo4jParameters struct {
 }
 
 func GetNeo4jParameters(ctx context.Context, service ParameterService) Neo4jParameters {
-	var result = Neo4jParameters{
+	result := Neo4jParameters{
 		WriteFlushSize: neo4j.DefaultWriteFlushSize,
 		BatchWriteSize: neo4j.DefaultBatchWriteSize,
 	}
@@ -327,7 +336,6 @@ func (s *PruneTTLParameters) UnmarshalJSON(data []byte) error {
 		if duration, err := iso8601.FromString(pTTL.HasSessionEdgeTTL); err != nil {
 			return errors.New("missing or invalid has_session_edge_ttl")
 		} else {
-
 			s.HasSessionEdgeTTL = duration.ToDuration()
 		}
 
@@ -394,7 +402,7 @@ type TrustedProxiesParameters struct {
 }
 
 func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) int {
-	var result = TrustedProxiesParameters{
+	result := TrustedProxiesParameters{
 		TrustedProxies: 0,
 	}
 
@@ -476,7 +484,7 @@ type SessionTTLHoursParameter struct {
 }
 
 func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
-	var result = SessionTTLHoursParameter{
+	result := SessionTTLHoursParameter{
 		Hours: DefaultSessionTTLHours, // Default to a logged in auth session time to live of 8 hours
 	}
 
@@ -669,6 +677,58 @@ func GetAPITokenExpirationParameter(ctx context.Context, service ParameterServic
 			slog.Int("invalid_expiration_period", result.ExpirationPeriod),
 			slog.String("parameter_key", string(APITokenExpiration)))
 		result.ExpirationPeriod = 90
+	}
+
+	return result
+}
+
+// GraphStorageOptimization
+type GraphStorageOptimizationParameter struct {
+	AfterBoot          bool `json:"after_boot"`
+	AfterAnalysis      bool `json:"after_analysis"`
+	MinIntervalSeconds int  `json:"min_interval_seconds"`
+}
+
+func GetGraphStorageOptimizationParameter(ctx context.Context, service ParameterService) GraphStorageOptimizationParameter {
+	result := GraphStorageOptimizationParameter{
+		AfterBoot:          false,
+		AfterAnalysis:      false,
+		MinIntervalSeconds: 86400,
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, GraphStorageOptimizationKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch graph storage optimization configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid graph storage optimization configuration supplied; returning default values",
+			attr.Error(err),
+			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+	} else if result.MinIntervalSeconds < 0 {
+		slog.WarnContext(ctx, "Invalid negative min interval seconds supplied, returning default value.",
+			slog.Int("invalid_min_interval_seconds", result.MinIntervalSeconds),
+			slog.String("parameter_key", string(GraphStorageOptimizationKey)))
+		result.MinIntervalSeconds = 86400
+	}
+
+	return result
+}
+
+type CustomSubClaimKeyParameter struct {
+	ClaimKey string `json:"claim_key"`
+}
+
+func GetCustomSubClaimParameter(ctx context.Context, service ParameterService) CustomSubClaimKeyParameter {
+	result := CustomSubClaimKeyParameter{
+		ClaimKey: "",
+	}
+
+	if cfg, err := service.GetConfigurationParameter(ctx, CustomSubClaimKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch Custom sub Claim Key configuration; returning default value")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(
+			ctx, "Invalid Custom sub Claim Key configuration supplied; returning default values",
+			attr.Error(err),
+			slog.String("parameter_key", string(CustomSubClaimKey)),
+		)
 	}
 
 	return result

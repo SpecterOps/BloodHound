@@ -16,7 +16,6 @@
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Button,
     FormControl,
     FormField,
     FormItem,
@@ -26,6 +25,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    TextButton,
 } from 'doodle-ui';
 import { FC } from 'react';
 import { UseFormReturn } from 'react-hook-form';
@@ -50,8 +50,7 @@ const ActionField: FC<{
                                     <SelectValue placeholder='Select' {...field} />
                                 </SelectTrigger>
                             </FormControl>
-                            <Button
-                                variant={'text'}
+                            <TextButton
                                 aria-label='clear action'
                                 disabled={!field.value}
                                 className={cn('w-1/12 p-0', { invisible: !field.value })}
@@ -59,7 +58,7 @@ const ActionField: FC<{
                                     form.setValue(field.name, '');
                                 }}>
                                 <FontAwesomeIcon icon={faClose} />
-                            </Button>
+                            </TextButton>
                         </div>
                         <SelectContent>
                             {actionMap.map((action, index) => {

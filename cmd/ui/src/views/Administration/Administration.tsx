@@ -28,10 +28,10 @@ const Administration: React.FC = () => {
     const { routes: adminRoutes, areRoutesLoading } = useSubNavRoutes(adminSections, fullyAuthenticated);
 
     return (
-        <Box className='flex h-full'>
+        <div className='flex h-full'>
             <Box flexGrow={1} position='relative' minWidth={0}>
                 <div>
-                    <Container maxWidth='xl'>
+                    <Container maxWidth='xl' disableGutters>
                         <Box py={2}>
                             <Suspense
                                 fallback={
@@ -72,7 +72,7 @@ const Administration: React.FC = () => {
                     </Container>
                 </div>
             </Box>
-        </Box>
+        </div>
     );
 };
 

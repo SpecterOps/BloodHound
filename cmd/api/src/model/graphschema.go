@@ -25,10 +25,13 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/specterops/bloodhound/packages/go/safetemplate"
+	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -36,6 +39,7 @@ var (
 	ErrGraphExtensionBuiltIn    = errors.New("cannot modify a built-in graph extension")
 	ErrGraphExtensionValidation = errors.New("graph schema validation error")
 	ErrGraphDBRefreshKinds      = errors.New("error refreshing graph db kinds")
+	ErrFeatureFlag              = errors.New("error checking if feature flag is enabled")
 
 	ErrDuplicateGraphSchemaExtensionName         = errors.New("duplicate graph schema extension name")
 	ErrDuplicateGraphSchemaExtensionNamespace    = errors.New("duplicate graph schema extension namespace")
@@ -59,6 +63,7 @@ var (
 	ErrTooManyKindInfoEntries  = errors.New("too many kind info entries: maximum 100 allowed per kind")
 	ErrInvalidKindInfoPosition = errors.New("invalid kind info position: must be >= 0")
 	ErrInvalidKindInfoContent  = errors.New("invalid kind info content: must be a JSON object of the form {\"markdown\":{\"content\":\"...\"}}")
+	ErrInvalidKindInfoTemplate = errors.New("invalid kind info markdown template")
 )
 
 func ErrIsGraphSchemaDuplicateError(err error) bool {
@@ -118,28 +123,42 @@ func (s *ReservedKindError) Error() string {
 }
 
 // validateKindInfoContent verifies that entity panel content matches the expected
-// JSON structure: {"markdown":{"content":"..."}}. It validates structure only; it does
-// not sanitize or inspect the markdown for unsafe HTML (see BED-8764).
+// JSON structure: {"markdown":{"content":"..."}} and that the markdown content is a
+// parseable Go template using the same utility functions registered by the read
+// path renderer. It does not sanitize or inspect the markdown for unsafe HTML
+// (see BED-8764).
 func validateKindInfoContent(content json.RawMessage) error {
+	if content, err := (KindInfoInput{Content: content}).MarkdownContent(); err != nil {
+		return err
+	} else if _, err := template.New("kind-info-markdown").
+		Funcs(safetemplate.FuncMap()).
+		Parse(content); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidKindInfoTemplate, err)
+	}
+	return nil
+}
+
+// MarkdownContent extracts the inner markdown content string from the KindInfoInput's
+// Content JSON ({"markdown":{"content":"..."}}). It returns ErrInvalidKindInfoContent
+// if the content does not match the expected structure.
+func (s KindInfoInput) MarkdownContent() (string, error) {
 	var (
 		contentWrapper struct {
 			Markdown struct {
 				Content *string `json:"content"`
 			} `json:"markdown"`
 		}
-		decoder = json.NewDecoder(strings.NewReader(string(content)))
+		decoder = json.NewDecoder(strings.NewReader(string(s.Content)))
 	)
 
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&contentWrapper); err != nil {
-		return ErrInvalidKindInfoContent
+		return "", ErrInvalidKindInfoContent
+	} else if contentWrapper.Markdown.Content == nil {
+		return "", ErrInvalidKindInfoContent
 	}
 
-	if contentWrapper.Markdown.Content == nil {
-		return ErrInvalidKindInfoContent
-	}
-
-	return nil
+	return *contentWrapper.Markdown.Content, nil
 }
 
 // validateKindInfo validates a map of KindInfo entries
@@ -273,6 +292,7 @@ type SchemaEnvironment struct {
 	SchemaExtensionDisplayName string
 	EnvironmentKindId          int32
 	EnvironmentKindName        string
+	EnvironmentKindDisplayName string
 	SourceKindId               int32
 }
 
@@ -305,10 +325,11 @@ type SchemaFinding struct {
 	ID                int32
 	Type              SchemaFindingType
 	SchemaExtensionId int32
-	EnvironmentId     int32
-	KindId            int32
-	Name              string
-	DisplayName       string
+	// EnvironmentId stores the environment kind ID (DAWGs `kind` table)
+	EnvironmentId int32
+	KindId        int32
+	Name          string
+	DisplayName   string
 	// PZ Variant Display Title
 	PZDisplayName null.String
 	CreatedAt     time.Time
@@ -454,7 +475,30 @@ type GraphSchemaRelationshipKindWithNamedSchema struct {
 
 type GraphSchemaRelationshipKindsWithNamedSchema []GraphSchemaRelationshipKindWithNamedSchema
 
+// GraphExtensionUpsertResult contains the persisted extension and entity outcomes from an extension upsert.
+type GraphExtensionUpsertResult struct {
+	ExtensionExisted           bool                 // indicates whether the extension was created or updated, used when determining appropriate API response
+	Extension                  GraphSchemaExtension // Persisted graph schema extension record used for logging
+	NodeKindsResult            ReconcileResult[GraphSchemaNodeKind]
+	RelationshipKindsResult    ReconcileResult[GraphSchemaRelationshipKind]
+	KindInfosResult            ReconcileResult[GraphSchemaKindInfo]
+	EnvironmentsResult         ReconcileResult[SchemaEnvironment]
+	RelationshipFindingsResult ReconcileResult[SchemaFinding]
+	SavedQueriesResult         ReconcileResult[SavedQuery]
+	PZRulesResult              ReconcileResult[AssetGroupTagSelector]
+}
+
 // Graph Extension Upsert Input
+
+type SavedQueriesInput []SavedQueryInput
+
+type SavedQueryInput struct {
+	QueryKey    string
+	Name        string
+	Query       string
+	Description string
+	Category    string
+}
 
 type GraphExtensionInput struct {
 	ExtensionInput            ExtensionInput
@@ -462,6 +506,25 @@ type GraphExtensionInput struct {
 	NodeKindsInput            NodesInput
 	EnvironmentsInput         EnvironmentsInput
 	RelationshipFindingsInput RelationshipFindingsInput
+	PZRulesInput              PZRulesInput
+	SavedQueriesInput         SavedQueriesInput
+}
+
+type (
+	PZRulesInput []PZRuleInput
+	PZRuleInput  struct {
+		ExtensionRuleId string
+		Name            string
+		Description     string
+		Seeds           []SelectorSeedInput
+		Enabled         bool
+		AllowDisable    bool
+	}
+)
+
+type SelectorSeedInput struct {
+	Type  SelectorType
+	Value string
 }
 
 // Validate performs comprehensive validation on a GraphExtensionInput
@@ -472,6 +535,8 @@ func (s GraphExtensionInput) Validate() error {
 		environments      = make(map[string]any, 0)
 		findings          = make(map[string]any, 0)
 	)
+
+	// Schema Validation
 	if strings.TrimSpace(s.ExtensionInput.Name) == "" {
 		return errors.New("graph schema extension name is required")
 	} else if strings.TrimSpace(s.ExtensionInput.Version) == "" {
@@ -486,6 +551,7 @@ func (s GraphExtensionInput) Validate() error {
 		return errors.New("graph schema node kinds are required")
 	}
 
+	// Node kind validation
 	for _, kind := range s.NodeKindsInput {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema node kind %s is missing extension namespace prefix", kind.Name)
@@ -504,6 +570,7 @@ func (s GraphExtensionInput) Validate() error {
 		nodeKinds[kind.Name] = struct{}{}
 	}
 
+	// Relationship Kinds Validation
 	for _, kind := range s.RelationshipKindsInput {
 		if kindName, found := strings.CutPrefix(kind.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema edge kind %s is missing extension namespace prefix", kind.Name)
@@ -522,6 +589,7 @@ func (s GraphExtensionInput) Validate() error {
 		relationshipKinds[kind.Name] = struct{}{}
 	}
 
+	// Environments Validation
 	for _, environment := range s.EnvironmentsInput {
 		if environmentKindName, found := strings.CutPrefix(environment.EnvironmentKindName, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema environment kind %s is missing extension namespace prefix", environment.EnvironmentKindName)
@@ -556,6 +624,7 @@ func (s GraphExtensionInput) Validate() error {
 		environments[environment.EnvironmentKindName] = struct{}{}
 	}
 
+	// Findings Validation
 	for _, relationshipFindingInput := range s.RelationshipFindingsInput {
 		if findingName, found := strings.CutPrefix(relationshipFindingInput.Name, fmt.Sprintf("%s_", s.ExtensionInput.Namespace)); !found {
 			return fmt.Errorf("graph schema relationship finding %s is missing extension namespace prefix", relationshipFindingInput.Name)
@@ -573,25 +642,98 @@ func (s GraphExtensionInput) Validate() error {
 		}
 		findings[relationshipFindingInput.Name] = struct{}{}
 	}
+
+	// PZ Rules and Saved Query Validation
+	if err := s.PZRulesInput.Validate(s.ExtensionInput.Namespace); err != nil {
+		return err
+	} else if err := s.SavedQueriesInput.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-type RelationshipFindingsInput []RelationshipFindingInput
-type RelationshipFindingInput struct {
-	Name                 string
-	DisplayName          string
-	PZDisplayName        string
-	RelationshipKindName string // edge kind
-	EnvironmentKindName  string
-	RemediationInput     RemediationInput
+// Validate performs comprehensive validation on a PZRulesInput payload
+func (s PZRulesInput) Validate(extensionNamespace string) error {
+	ruleNames := make(map[string]struct{}, len(s))
+	ruleIds := make(map[string]struct{}, len(s))
+
+	for _, rule := range s {
+		if strings.TrimSpace(rule.ExtensionRuleId) == "" {
+			return fmt.Errorf("privilege zone rule requires a 'key' value")
+		} else if strings.TrimSpace(rule.Name) == "" {
+			return fmt.Errorf("privilege zone rule name is required")
+		} else if _, ok := ruleNames[rule.Name]; ok {
+			return fmt.Errorf("duplicate privilege zone rule name: %s", rule.Name)
+		} else if _, ok := ruleIds[rule.ExtensionRuleId]; ok {
+			return fmt.Errorf("duplicate privilege zone rule key: %s", rule.ExtensionRuleId)
+		} else if len(rule.Seeds) != 1 {
+			return fmt.Errorf("privilege zone rule %s requires exactly one seed", rule.Name)
+		}
+
+		seed := rule.Seeds[0]
+		if strings.TrimSpace(seed.Value) == "" {
+			return fmt.Errorf("privilege zone rule %s has a seed with an empty value", rule.Name)
+		} else if seed.Type != SelectorTypeCypher {
+			return fmt.Errorf("privilege zone rule %s must be of cypher type", rule.Name)
+		} else if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), seed.Value); err != nil {
+			return fmt.Errorf("privilege zone rule %s contains invalid Cypher seed: %w", rule.Name, err)
+		}
+		ruleNames[rule.Name] = struct{}{}
+		ruleIds[rule.ExtensionRuleId] = struct{}{}
+	}
+	return nil
 }
 
-type EnvironmentsInput []EnvironmentInput
-type EnvironmentInput struct {
-	EnvironmentKindName string
-	SourceKindName      string
-	PrincipalKinds      []string
+func (s SavedQueriesInput) Validate() error {
+	var (
+		savedQueryKeys  = make(map[string]any, len(s))
+		savedQueryNames = make(map[string]any, len(s))
+	)
+
+	for _, savedQueryInput := range s {
+		if strings.TrimSpace(savedQueryInput.QueryKey) == "" {
+			return errors.New("graph schema saved query key is required")
+		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
+			return errors.New("graph schema saved query name is required")
+		} else if strings.TrimSpace(savedQueryInput.Query) == "" {
+			return errors.New("graph schema saved query text is required")
+		}
+		if _, found := savedQueryKeys[savedQueryInput.QueryKey]; found {
+			return fmt.Errorf("duplicate graph schema saved query key: %s", savedQueryInput.QueryKey)
+		} else if _, found := savedQueryNames[savedQueryInput.Name]; found {
+			return fmt.Errorf("duplicate graph schema saved query name: %s", savedQueryInput.Name)
+		}
+		if _, err := frontend.ParseCypher(frontend.DefaultCypherContext(), savedQueryInput.Query); err != nil {
+			return fmt.Errorf("graph schema saved query %s contains invalid Cypher: %w", savedQueryInput.Name, err)
+		}
+		savedQueryKeys[savedQueryInput.QueryKey] = struct{}{}
+		savedQueryNames[savedQueryInput.Name] = struct{}{}
+	}
+
+	return nil
 }
+
+type (
+	RelationshipFindingsInput []RelationshipFindingInput
+	RelationshipFindingInput  struct {
+		Name                 string
+		DisplayName          string
+		PZDisplayName        string
+		RelationshipKindName string // edge kind
+		EnvironmentKindName  string
+		RemediationInput     RemediationInput
+	}
+)
+
+type (
+	EnvironmentsInput []EnvironmentInput
+	EnvironmentInput  struct {
+		EnvironmentKindName string
+		SourceKindName      string
+		PrincipalKinds      []string
+	}
+)
 
 type ExtensionInput struct {
 	Name        string
@@ -607,24 +749,29 @@ func (s ExtensionInput) GetDisplayName() string {
 	return s.Name
 }
 
-type NodesInput []NodeInput
-type NodeInput struct {
-	Name          string
-	DisplayName   string         // human-readable name
-	Description   string         // human-readable description of the node kind
-	IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
-	Icon          string         // font-awesome icon for the registered node kind
-	IconColor     string         // icon hex color
-	Info          KindInfoInputs // entity panel definitions for this node kind
-}
+type (
+	NodesInput []NodeInput
+	NodeInput  struct {
+		Name          string
+		DisplayName   string         // human-readable name
+		Description   string         // human-readable description of the node kind
+		IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+		Icon          string         // font-awesome icon for the registered node kind
+		IconColor     string         // icon hex color
+		Info          KindInfoInputs // entity panel definitions for this node kind
+	}
+)
 
-type RelationshipsInput []RelationshipInput
-type RelationshipInput struct {
-	Name          string
-	Description   string
-	IsTraversable bool           // indicates whether the edge-kind is a traversable path
-	Info          KindInfoInputs // entity panel definitions for this relationship kind
-}
+type (
+	RelationshipsInput []RelationshipInput
+	RelationshipInput  struct {
+		Name          string
+		Description   string
+		IsTraversable bool           // indicates whether the edge-kind is a traversable path
+		Info          KindInfoInputs // entity panel definitions for this relationship kind
+	}
+)
+
 type RemediationInput struct {
 	ShortDescription string
 	LongDescription  string
@@ -667,7 +814,28 @@ type GraphExtensionPayload struct {
 	GraphSchemaNodeKinds         []GraphSchemaNodeKindsPayload         `json:"node_kinds"`
 	GraphEnvironments            []EnvironmentPayload                  `json:"environments"`
 	GraphRelationshipFindings    []RelationshipFindingsPayload         `json:"relationship_findings"`
+	SavedQueries                 *SavedQueriesPayload                  `json:"queries,omitempty"`
+	PZRules                      *PZRulesPayload                       `json:"pz_rules,omitempty"`
 }
+
+// SelectorSeedPayload is the JSON shape of a single privilege-zone selector seed within pz_rules.
+type SelectorSeedPayload struct {
+	Type  SelectorType `json:"type"`
+	Value string       `json:"value"`
+}
+
+// PZRulePayload is the JSON shape of a single privilege-zone rule (asset group tag selector) within pz_rules.
+type PZRulePayload struct {
+	Name         string                `json:"name"`
+	Description  string                `json:"description,omitempty"`
+	Seeds        []SelectorSeedPayload `json:"seeds"`
+	RuleKey      string                `json:"key"`
+	Enabled      *bool                 `json:"enabled,omitempty"`
+	AllowDisable *bool                 `json:"allow_disable,omitempty"`
+}
+
+// PZRulesPayload is the list of privilege-zone rules in the pz_rules component.
+type PZRulesPayload []PZRulePayload
 
 type GraphSchemaExtensionPayload struct {
 	Name        string `json:"name"`
@@ -719,6 +887,16 @@ type RemediationPayload struct {
 	ShortRemediation string `json:"short_remediation"`
 	LongRemediation  string `json:"long_remediation"`
 }
+
+type SavedQueryPayload struct {
+	QueryKey    string `json:"query_key"`
+	Name        string `json:"name"`
+	Query       string `json:"query"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+}
+
+type SavedQueriesPayload []SavedQueryPayload
 
 // parseInfoPayload converts the typed KindInfoPayload map to a KindInfoInputs slice
 func parseInfoPayload(infoPayload map[string]KindInfoPayload) (KindInfoInputs, error) {
@@ -781,9 +959,11 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 			NodeKindsInput:         make(NodesInput, 0),
 			RelationshipKindsInput: make(RelationshipsInput, 0),
 			EnvironmentsInput:      make(EnvironmentsInput, 0),
+			SavedQueriesInput:      make(SavedQueriesInput, 0),
 		}
-		infoInputs KindInfoInputs
-		err        error
+		infoInputs    KindInfoInputs
+		selectorSeeds []SelectorSeedInput
+		err           error
 	)
 
 	for _, nodeKindPayload := range s.GraphSchemaNodeKinds {
@@ -836,6 +1016,43 @@ func (s GraphExtensionPayload) ToGraphExtensionInput() (GraphExtensionInput, err
 				LongRemediation:  findingPayload.Remediation.LongRemediation,
 			},
 		})
+	}
+
+	// Optional components are only mapped when present
+	if s.PZRules != nil {
+		graphExtension.PZRulesInput = make(PZRulesInput, 0, len(*s.PZRules))
+		for _, rulePayload := range *s.PZRules {
+			selectorSeeds = make([]SelectorSeedInput, 0, len(rulePayload.Seeds))
+			for _, seedPayload := range rulePayload.Seeds {
+				selectorSeeds = append(selectorSeeds, SelectorSeedInput(seedPayload))
+			}
+
+			ruleEnabled := true
+			if rulePayload.Enabled != nil {
+				ruleEnabled = *rulePayload.Enabled
+			}
+
+			ruleAllowDisable := true
+			if rulePayload.AllowDisable != nil {
+				ruleAllowDisable = *rulePayload.AllowDisable
+			}
+
+			graphExtension.PZRulesInput = append(graphExtension.PZRulesInput, PZRuleInput{
+				ExtensionRuleId: rulePayload.RuleKey,
+				Name:            rulePayload.Name,
+				Description:     rulePayload.Description,
+				Seeds:           selectorSeeds,
+				Enabled:         ruleEnabled,
+				AllowDisable:    ruleAllowDisable,
+			})
+		}
+	}
+
+	if s.SavedQueries != nil {
+		graphExtension.SavedQueriesInput = make(SavedQueriesInput, 0, len(*s.SavedQueries))
+		for _, savedQueryPayload := range *s.SavedQueries {
+			graphExtension.SavedQueriesInput = append(graphExtension.SavedQueriesInput, SavedQueryInput(savedQueryPayload))
+		}
 	}
 	return graphExtension, nil
 }

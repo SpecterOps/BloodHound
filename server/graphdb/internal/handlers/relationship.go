@@ -80,7 +80,10 @@ func BuildRelationshipView(relationship services.Relationship, includeKindInfo b
 				Title:              kindInfo.Title,
 				Position:           kindInfo.Position,
 				RelationshipKindID: int(*relationship.Kind.ID),
-				Markdown:           buildMarkdownView(kindInfo.Content),
+				Markdown: MarkdownView{
+					Content:       kindInfo.RenderedMarkdown,
+					TemplateError: kindInfo.TemplateError,
+				},
 			})
 		}
 	}
@@ -124,6 +127,10 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 	relationship, err := s.graphDB.GetRelationship(ctx, relationshipID, includeKindInfo)
 	if errors.Is(err, services.ErrRelationshipNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "relationship not found", response)
+		return
+	}
+	if errors.Is(err, services.ErrNodeAccessDenied) {
+		responses.WriteError(ctx, http.StatusForbidden, "forbidden", response)
 		return
 	}
 	if err != nil {

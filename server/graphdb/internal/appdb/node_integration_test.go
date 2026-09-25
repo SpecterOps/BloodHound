@@ -357,3 +357,57 @@ func TestStore_GetNodeKindsByNames_Integration(t *testing.T) {
 		})
 	}
 }
+
+func TestStore_FetchNodesByObjectIDsAndKinds_Integration(t *testing.T) {
+	var (
+		store, _, graphDB = setupStoreWithGraph(t)
+		ctx               = context.Background()
+	)
+
+	// Seed a User node, a Group node and a Computer node, each with an objectid.
+	err := graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		nodes := []struct {
+			kind     string
+			objectID string
+		}{
+			{"User", "OID-USER-1"},
+			{"Group", "OID-GROUP-1"},
+			{"Computer", "OID-COMPUTER-1"},
+		}
+		for _, seed := range nodes {
+			props := graph.NewProperties()
+			props.Set("objectid", seed.objectID)
+			if _, err := tx.CreateNode(props, graph.StringKind(seed.kind)); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	t.Run("returns_nodes_matching_kind_and_object_id", func(t *testing.T) {
+		nodes, err := store.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{graph.StringKind("User")}, "OID-USER-1")
+		require.NoError(t, err)
+		require.Equal(t, 1, nodes.Len())
+
+		objectID, err := nodes.Pick().Properties.Get("objectid").String()
+		require.NoError(t, err)
+		assert.Equal(t, "OID-USER-1", objectID)
+	})
+
+	t.Run("excludes_nodes_of_other_kinds", func(t *testing.T) {
+		nodes, err := store.FetchNodesByObjectIDsAndKinds(ctx, graph.Kinds{graph.StringKind("User")}, "OID-GROUP-1")
+		require.NoError(t, err)
+		assert.Equal(t, 0, nodes.Len())
+	})
+
+	t.Run("matches_any_supplied_kind", func(t *testing.T) {
+		nodes, err := store.FetchNodesByObjectIDsAndKinds(
+			ctx,
+			graph.Kinds{graph.StringKind("User"), graph.StringKind("Group")},
+			"OID-USER-1", "OID-GROUP-1", "OID-COMPUTER-1",
+		)
+		require.NoError(t, err)
+		assert.Equal(t, 2, nodes.Len())
+	})
+}

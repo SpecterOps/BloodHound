@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Checkbox } from 'doodle-ui';
+import { CheckboxWithLabel } from 'doodle-ui';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
 import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
@@ -47,7 +47,8 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClic
         })}>
         <div className='w-full text-left flex justify-between items-center'>
             <div className='flex justify-between items-center'>
-                <Checkbox
+                <CheckboxWithLabel
+                    label={item.value}
                     ref={(checkbox) => {
                         checkbox?.setAttribute('inert', '');
                     }}
@@ -62,7 +63,6 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClic
                     }}
                     checked={isSelected}
                 />
-                <span>{item.value}</span>
             </div>
         </div>
         <div>

@@ -28,10 +28,35 @@ import (
 	"gorm.io/gorm"
 )
 
+// HasPendingMigrations returns true if the legacy table still exists, the goose DB table does not exist, or if the goose provider reports that there are pending migrations.
+func (s *Migrator) HasPendingMigrations(ctx context.Context) (bool, error) {
+	if hasLegacyTable, err := s.HasMigrationTable(); err != nil {
+		return false, fmt.Errorf("failed to check if legacy migration table exists: %w", err)
+	} else if hasLegacyTable {
+		return true, nil
+	} else if hasGooseDbTable, err := s.hasGooseDbTable(); err != nil {
+		return false, fmt.Errorf("failed to check if goose migration table exists: %w", err)
+	} else if !hasGooseDbTable {
+		return true, nil
+	} else if hasPendingMigrations, err := s.GooseProvider.HasPending(ctx); err != nil {
+		return false, fmt.Errorf("failed to check for pending migrations: %w", err)
+	} else {
+		return hasPendingMigrations, nil
+	}
+}
+
 // HasMigrationTable is a utility for checking if migration schema is initialized. We assume that
 // if the `migrations` table exists, the schema must be initialized, and vice versa.
 func (s *Migrator) HasMigrationTable() (bool, error) {
 	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'migrations');`
+
+	var hasTable bool
+	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
+}
+
+// hasGooseDbTable is a utility for checking if goose_db is initialized.
+func (s *Migrator) hasGooseDbTable() (bool, error) {
+	const tableCheckSQL = `select exists(select * from information_schema.tables where table_schema = current_schema() and table_name = 'goose_db_version');`
 
 	var hasTable bool
 	return hasTable, s.DB.Raw(tableCheckSQL).Scan(&hasTable).Error
@@ -114,21 +139,11 @@ func (s *Migrator) ExecuteGooseMigrations(ctx context.Context) error {
 		}
 	}
 
-	provider, err := goose.NewProvider(
-		goose.DialectPostgres,
-		s.SqlDB,
-		s.GooseFS,
-		goose.WithAllowOutofOrder(true),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create goose provider: %w", err)
-	}
-
-	if _, err := provider.Up(ctx); err != nil {
+	if _, err := s.GooseProvider.Up(ctx); err != nil {
 		return fmt.Errorf("failed to execute up migrations: %w", err)
 	}
 
-	if err := s.populateMigrationDescription(provider); err != nil {
+	if err := s.populateMigrationDescription(s.GooseProvider); err != nil {
 		slog.Warn("Failed to populate description column", slog.Any("error", err))
 	}
 

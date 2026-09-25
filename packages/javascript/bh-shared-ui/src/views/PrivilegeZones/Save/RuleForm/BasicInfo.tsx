@@ -122,6 +122,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                         <FormControl>
                                             <Input
                                                 {...field}
+                                                variant='outlined'
                                                 type='text'
                                                 autoComplete='off'
                                                 data-testid='privilege-zones_save_rule-form_name-input'

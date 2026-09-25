@@ -21,7 +21,7 @@ import { forwardRef } from 'react';
 export const MaskedInput = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     return (
         <InputMask {...props} id={props.name} mask='9999-99-99' maskPlaceholder='' placeholder='yyyy-mm-dd' ref={ref}>
-            <Input id={props.name} variant={'outlined'} className='rounded bg-neutral-light-1 dark:bg-neutral-dark-1' />
+            <Input id={props.name} variant='outlined' className='rounded bg-neutral-light-1 dark:bg-neutral-dark-1' />
         </InputMask>
     );
 });

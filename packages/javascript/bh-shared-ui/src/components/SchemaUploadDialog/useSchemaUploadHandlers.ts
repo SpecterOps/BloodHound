@@ -16,7 +16,7 @@
 import { isAxiosError, RequestOptions } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
-import { extensionsKeys } from '../../hooks';
+import { customNodeKindsKeys, extensionsKeys } from '../../hooks';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
 import { FileForIngest, FileStatus } from '../FileUploadDialog';
@@ -78,6 +78,7 @@ export const useSchemaUploadHandlers = () => {
                 onSuccess: () => {
                     setNewFileStatus(FileStatus.DONE);
                     queryClient.invalidateQueries({ queryKey: extensionsKeys.all });
+                    queryClient.invalidateQueries({ queryKey: customNodeKindsKeys.all });
                 },
             }
         );

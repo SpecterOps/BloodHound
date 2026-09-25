@@ -105,6 +105,19 @@ describe('ObjectsAccordion', () => {
         expect(useTagMembersInfiniteQuerySpy).toBeCalledWith('42', 'asc', ['env-1'], 'User', false);
     });
 
+    it('disables the sortable header only while its accordion is closed', async () => {
+        render(<ObjectsAccordion tagId={'42'} onObjectClick={vi.fn()} kindCounts={{ User: 1 }} totalCount={1} />);
+
+        const sortButton = screen.getByRole('button', { name: 'Sort by User' });
+
+        expect(sortButton).toBeDisabled();
+        expect(sortButton).toHaveClass('disabled:!text-text-main');
+
+        await userEvent.click(screen.getByTestId('privilege-zones_details_User-accordion_open-toggle-button'));
+
+        expect(sortButton).toBeEnabled();
+    });
+
     it('navigates to object details when clicking an object row', async () => {
         render(<ObjectsAccordion tagId={'42'} onObjectClick={mockNavigate} kindCounts={{ User: 1 }} totalCount={1} />);
 

@@ -30,6 +30,9 @@ export enum ActiveDirectoryNodeKind {
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
     IssuancePolicy = 'IssuancePolicy',
+    Site = 'Site',
+    SiteServer = 'SiteServer',
+    SiteSubnet = 'SiteSubnet',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -65,6 +68,12 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'CertTemplate';
         case ActiveDirectoryNodeKind.IssuancePolicy:
             return 'IssuancePolicy';
+        case ActiveDirectoryNodeKind.Site:
+            return 'Site';
+        case ActiveDirectoryNodeKind.SiteServer:
+            return 'SiteServer';
+        case ActiveDirectoryNodeKind.SiteSubnet:
+            return 'SiteSubnet';
         default:
             return undefined;
     }
@@ -81,6 +90,7 @@ export enum ActiveDirectoryRelationshipKind {
     AddMember = 'AddMember',
     HasSession = 'HasSession',
     Contains = 'Contains',
+    ServerIs = 'ServerIs',
     GPLink = 'GPLink',
     AllowedToDelegate = 'AllowedToDelegate',
     CoerceToTGT = 'CoerceToTGT',
@@ -183,6 +193,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'HasSession';
         case ActiveDirectoryRelationshipKind.Contains:
             return 'Contains';
+        case ActiveDirectoryRelationshipKind.ServerIs:
+            return 'ServerIs';
         case ActiveDirectoryRelationshipKind.GPLink:
             return 'GPLink';
         case ActiveDirectoryRelationshipKind.AllowedToDelegate:
@@ -475,6 +487,8 @@ export enum ActiveDirectoryKindProperties {
     MSA = 'msa',
     DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
     DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
+    CustomExplicitDenyAcesCount = 'customexplicitdenyacescount',
+    CustomInheritedDenyAcesCount = 'custominheriteddenyacescount',
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
@@ -500,6 +514,9 @@ export enum ActiveDirectoryKindProperties {
     NetBIOS = 'netbios',
     AdminSDHolderProtected = 'adminsdholderprotected',
     ServicePrincipalNames = 'serviceprincipalnames',
+    ServerReference = 'serverreference',
+    SiteObject = 'siteobject',
+    ObjectClass = 'objectclass',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
 }
@@ -731,6 +748,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Does Any ACE Grant Owner Rights';
         case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
             return 'Does Any Inherited ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.CustomExplicitDenyAcesCount:
+            return 'Custom Explicit Deny ACEs Count';
+        case ActiveDirectoryKindProperties.CustomInheritedDenyAcesCount:
+            return 'Custom Inherited Deny ACEs Count';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
@@ -781,6 +802,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'AdminSDHolder Protected';
         case ActiveDirectoryKindProperties.ServicePrincipalNames:
             return 'Service Principal Names';
+        case ActiveDirectoryKindProperties.ServerReference:
+            return 'Server Reference';
+        case ActiveDirectoryKindProperties.SiteObject:
+            return 'Site Object';
+        case ActiveDirectoryKindProperties.ObjectClass:
+            return 'Object Class';
         case ActiveDirectoryKindProperties.GPOStatusRaw:
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:
@@ -850,6 +877,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ServerIs,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -914,6 +942,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ServerIs,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

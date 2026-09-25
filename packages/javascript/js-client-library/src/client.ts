@@ -16,11 +16,16 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import {
+    AlertRetryRequest,
     ClearDatabaseRequest,
+    CreateAlertRequest,
     CreateAssetGroupRequest,
     CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
+    CreateCollectorJobProfileRequest,
+    CreateCollectorJobScheduleRequest,
+    CreateCollectorJobSecretRequest,
     CreateOIDCProviderRequest,
     CreateOpenHoundClientRequest,
     CreateScheduledJobRequest,
@@ -37,12 +42,15 @@ import {
     PutUserAuthSecretRequest,
     QueryScope,
     RequestOptions,
+    UpdateAlertRequest,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
     UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateCertificationRequest,
+    UpdateCollectorJobProfileRequest,
+    UpdateCollectorJobScheduleRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -53,6 +61,7 @@ import {
     UpdateUserQueryRequest,
     UpdateUserRequest,
     UpdateWebhookRequest,
+    WebhookTestRequest,
 } from './requests';
 import {
     ActiveDirectoryDataQualityResponse,
@@ -70,14 +79,27 @@ import {
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
+    CollectorJobProfileResponse,
+    CreateAlertResponse,
     CreateAuthTokenResponse,
+    CreateCollectorJobScheduleResponse,
+    CreateCollectorJobSecretResponse,
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    FindingTypeResponse,
+    GetAlertAttemptsResponse,
+    GetAlertEventTypesResponse,
+    GetAlertResponse,
+    GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobProfilesResponse,
+    GetCollectorJobScheduleResponse,
+    GetCollectorJobSecretResponse,
+    GetCollectorJobTypesResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -86,6 +108,7 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
+    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -99,23 +122,29 @@ import {
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
+    ManagementOperation,
     OpenGraphDataQualityResponse,
     PaginatedResponse,
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
     PostureResponse,
     PreviewSelectorsResponse,
+    RetryAlertAttemptResponse,
     RotateWebhookSecretResponse,
+    RunCollectorJobProfileResponse,
     SavedQuery,
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
+    SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
+    UpdateCollectorJobScheduleResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
+    WebhookTestResponse,
+    ZoneProtectedAssetScoreResponse,
 } from './responses';
 import * as types from './types';
-import { FindingAssetsResponse } from './types';
 
 /** Return the value as a string with the given prefix */
 const prefixValue = (prefix: string, value: any) => (value ? `${prefix}:${value.toString()}` : undefined);
@@ -503,7 +532,7 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
     getFindings = (key: string, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+        this.baseClient.get<BasicResponse<types.FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
 
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
@@ -582,6 +611,9 @@ class BHEAPIClient {
      */
     getAvailableFindingTypes = (environmentId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/domains/${environmentId}/available-types`, options);
+
+    getAllFindingTypes = (options?: RequestOptions) =>
+        this.baseClient.get<FindingTypeResponse>(`/api/v2/attack-paths/finding-types`, options);
 
     getFindingSchemas = (skip: number = 0, options?: RequestOptions) =>
         this.baseClient.get<FindingSchemaResponse>(
@@ -738,6 +770,13 @@ class BHEAPIClient {
             paramsSerializer: { indexes: null },
         });
 
+    getZoneProtectedAssetScore = (environments: string[], assetGroupTagId: number, options?: RequestOptions) =>
+        this.baseClient.get<ZoneProtectedAssetScoreResponse>('/api/v2/asset-scores/zone-protected-asset-score', {
+            ...options,
+            params: { ...options?.params, environments, asset_group_tag_id: assetGroupTagId },
+            paramsSerializer: { indexes: null },
+        });
+
     /* explore search */
 
     getPathfindingResult = (startNode: string, endNode: string, options?: RequestOptions) =>
@@ -772,6 +811,82 @@ class BHEAPIClient {
 
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
+    /* collector job profiles */
+
+    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+            ...options,
+            params: {
+                ...options?.params,
+                job_profile_id: `eq:${profileId}`,
+                sort_by: '-recorded_at',
+                skip: 0,
+                limit: 1,
+            },
+        });
+
+    getCollectorJobTypes = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobTypesResponse>('/api/v2/collector-job-types', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+
+    createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+
+    updateCollectorJobSchedule = (
+        scheduleId: number,
+        request: UpdateCollectorJobScheduleRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
+            `/api/v2/collector-job-schedules/${scheduleId}`,
+            request,
+            options
+        );
+
+    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.post<RunCollectorJobProfileResponse>(
+            '/api/v2/collector-job-queue',
+            { job_profile_id: profileId },
+            options
+        );
+
+    createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+
+    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+
+    updateCollectorJobProfile = (
+        profileId: number,
+        payload: UpdateCollectorJobProfileRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<CollectorJobProfileResponse>(
+            `/api/v2/collector-job-profiles/${profileId}`,
+            payload,
+            options
+        );
+
+    getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+
+    createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
+
     /* clients */
 
     getClients = (
@@ -796,8 +911,28 @@ class BHEAPIClient {
             )
         );
 
-    requestSupportBundle = (clientId: string, type: string, options?: RequestOptions) =>
-        this.baseClient.post(`/api/v2/clients/${clientId}/management`, { type }, options);
+    requestSupportBundle = (clientId: string, operation_type: string, options?: RequestOptions) =>
+        this.baseClient.post<ManagementOperation>(
+            `/api/v2/clients/${clientId}/management`,
+            { operation_type },
+            options
+        );
+
+    downloadSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.get(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, {
+            ...options,
+            responseType: 'blob',
+        });
+
+    requestSupportBundleDownloadURL = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.post<SupportBundleDownloadURLResponse>(
+            `/api/v2/clients/${clientId}/artifacts/${artifactId}/download-url`,
+            undefined,
+            options
+        );
+
+    deleteSupportBundleArtifact = (clientId: string, artifactId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/clients/${clientId}/artifacts/${artifactId}`, options);
 
     createClient = (
         client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest | CreateOpenHoundClientRequest,
@@ -805,7 +940,7 @@ class BHEAPIClient {
     ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
-        this.baseClient.get(`/api/v2/clients/${clientId}`, options);
+        this.baseClient.get<types.Client>(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
@@ -1880,6 +2015,21 @@ class BHEAPIClient {
             )
         );
 
+    getGPOSitesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/gpos/${id}/sites`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getGPOControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/controllers`,
@@ -2649,6 +2799,102 @@ class BHEAPIClient {
             )
         );
 
+    getSiteV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/linked-gpos`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedServersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/siteservers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedSubnetsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/sitesubnets`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteServerV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/siteservers/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteSubnetV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sitesubnets/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
     getMetaV2 = (id: string, options?: RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
 
     getShortestPathV2 = (startNode: string, endNode: string, relationshipKinds?: string, options?: RequestOptions) =>
@@ -2781,7 +3027,7 @@ class BHEAPIClient {
         return this.baseClient.post<BasicResponse<CreateWebhookResponse>>('/api/v2/alert-webhooks', payload, options);
     };
 
-    getWebhooks = (skip?: number, limit?: number, sort_by?: types.WebhookSortBy, options?: RequestOptions) =>
+    getWebhooks = ({ skip, limit, sort_by, name }: types.GetWebhooksParams = {}, options?: RequestOptions) =>
         this.baseClient.get<GetWebhooksResponse>('/api/v2/alert-webhooks', {
             ...options,
             params: {
@@ -2789,6 +3035,7 @@ class BHEAPIClient {
                 skip,
                 limit,
                 sort_by,
+                name: name ? `~eq:${name}` : undefined,
             },
             paramsSerializer: { indexes: null },
         });
@@ -2802,13 +3049,73 @@ class BHEAPIClient {
         this.baseClient.patch<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, payload, options);
 
     deleteWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.delete<GetWebhookResponse>(`api/v2/alert-webhooks/${webhookId}`, options);
+        this.baseClient.delete(`api/v2/alert-webhooks/${webhookId}`, options);
 
     rotateWebhookSecret = (webhookId: string, options?: RequestOptions) =>
         this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/rotate-secret`, options);
 
-    testWebhook = (webhookId: string, options?: RequestOptions) =>
-        this.baseClient.post<RotateWebhookSecretResponse>(`api/v2/alert-webhooks/${webhookId}/test`, options);
+    testWebhook = (webhookId: string, payload: WebhookTestRequest, options?: RequestOptions) =>
+        this.baseClient.post<WebhookTestResponse>(`api/v2/alert-webhooks/${webhookId}/test`, payload, options);
+
+    /* alerts */
+    createAlert = (payload: CreateAlertRequest, options?: RequestOptions) => {
+        return this.baseClient.post<CreateAlertResponse>('/api/v2/alerts', payload, options);
+    };
+
+    getAlerts = (
+        skip?: number,
+        limit?: number,
+        sort_by?: types.AlertsSortBy,
+        name?: string,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertsResponse>('/api/v2/alerts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                name: name ? `~eq:${name}` : undefined,
+            },
+            paramsSerializer: { indexes: null },
+        });
+
+    getAlertEventTypes = (options?: RequestOptions) =>
+        this.baseClient.get<GetAlertEventTypesResponse>('/api/v2/alert-event-types', {
+            ...options,
+        });
+
+    getAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetAlertResponse>(`api/v2/alerts/${alertId}`, options);
+
+    updateAlert = (alertId: string, payload: UpdateAlertRequest, options?: RequestOptions) =>
+        this.baseClient.patch<GetAlertResponse>(`api/v2/alerts/${alertId}`, payload, options);
+
+    deleteAlert = (alertId: string, options?: RequestOptions) =>
+        this.baseClient.delete(`api/v2/alerts/${alertId}`, options);
+
+    getAlertAttempts = (
+        { skip, limit, sort_by, alert_id, channel_id, event_id, succeeded }: types.AlertAttemptsParams = {},
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<GetAlertAttemptsResponse>('/api/v2/alert-attempts', {
+            ...options,
+            params: {
+                ...options?.params,
+                skip,
+                limit,
+                sort_by,
+                alert_id: alert_id ? `eq:${alert_id}` : undefined,
+                channel_id: channel_id ? `eq:${channel_id}` : undefined,
+                event_id: event_id ? `eq:${event_id}` : undefined,
+                succeeded,
+            },
+            paramsSerializer: { indexes: null },
+        });
+
+    retryAlertAttempt = (payload: AlertRetryRequest, options?: RequestOptions) =>
+        this.baseClient.post<RetryAlertAttemptResponse>('api/v2/alert-attempts/retry', payload, options);
 }
 
 export default BHEAPIClient;

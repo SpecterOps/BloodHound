@@ -38,9 +38,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	bhceSAML "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 
@@ -132,7 +134,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -229,7 +231,7 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -365,7 +367,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -608,7 +610,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -748,7 +750,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -1267,7 +1269,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			request := testCase.buildRequest(t.Name())
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -1927,7 +1929,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			request := testCase.buildRequest(t.Name())
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -2098,7 +2100,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -2249,7 +2251,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil, nil, nil, nil)
 
 			response := httptest.NewRecorder()
 
@@ -2278,8 +2280,9 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
-		responseCode   int
-		responseHeader http.Header
+		responseCode     int
+		responseHeader   http.Header
+		validateResponse func(t *testing.T, header http.Header)
 	}
 	type testData struct {
 		name         string
@@ -2411,8 +2414,19 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 				mock.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
 			},
 			expected: expected{
-				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"?SAMLRequest=fMuxqsJAEIXhVwnT3%2BtoORghYBPQRsXCbgkDBpKZdc8s%2BPiSVFbCXxw4fHukecrS1XjaRV9VEc17ngyyHC3VYuIJI8TSrJAY5NqdT7L7Z0mAlhjd6Ivk3yYXDx98oqY%2FtkTNXQtGt2X2QNXeEMmiJWbe%2Fq3dmGXtQZvDJwAA%2F%2F8%3D&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=y1tzz0uKcHIGTzUzyfo6wkJKJ7%2FLhD7vH6mmCV7W0eKlL58z6w3M%2BWCoGaBtXldzx4tSTB2RWEqCpYTw9gM%2BjoA9dBPLlzBxN0Sz97XxzgA9chdd4gTXyjcMHntNmsRqkrzcnLJmKJppL3LhIjmxt%2BDhya8MU0URHiZWGj%2BYxjFr0PQm5wOHHSjZH8J51r9lYPth4vO76XlYI64WefD1eH3RhRtskXC%2F7FQJ1KHpE6X1cbWjrGsPT7TdojDA8dJvV0nf9VUiO0CSgWFpIq%2BZZoYJDqsUiwvX0iR6z%2F3K4oNsbgp9NQ1lJD57tuNQVBx3YYvA6R52FQ64hSb2LjtpRQ%3D%3D"}},
+				responseCode: http.StatusFound,
+				validateResponse: func(t *testing.T, header http.Header) {
+					location := header.Get("Location")
+					require.NotEmpty(t, location)
+
+					locationURL, err := url.Parse(location)
+					require.Nil(t, err)
+
+					query := locationURL.Query()
+					assert.NotEmpty(t, query.Get("SAMLRequest"))
+					assert.Equal(t, "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", query.Get("SigAlg"))
+					assert.NotEmpty(t, query.Get("Signature"))
+				},
 			},
 		},
 		{
@@ -2468,7 +2482,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
@@ -2479,7 +2493,11 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			status, header, _ := test.ProcessResponse(t, response)
 
 			assert.Equal(t, testCase.expected.responseCode, status)
-			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.validateResponse != nil {
+				testCase.expected.validateResponse(t, header)
+			} else {
+				assert.Equal(t, testCase.expected.responseHeader, header)
+			}
 		})
 	}
 }
@@ -2594,7 +2612,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, &saml.InvalidResponseError{
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{}, &saml.InvalidResponseError{
 					PrivateErr: errors.New("error"),
 				})
 			},
@@ -2635,7 +2653,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, errors.New("error"))
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2674,7 +2692,10 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2713,19 +2734,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, nil)
 			},
@@ -2770,19 +2794,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -2851,19 +2878,23 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(
+					gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -2939,19 +2970,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						},
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
 					{
 						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
@@ -3020,19 +3054,22 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 						ID: int32(1),
 					},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
+								NameFormat:   model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: "username",
+								}},
 							}},
 						}},
-					}},
-				}, nil)
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
 					SSOProviderID: null.Int32{
@@ -3129,29 +3166,32 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleAdministrator}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
-							}},
-						},
-							{
-								FriendlyName: "role",
-								Name:         model.MicrosoftClaimsRole,
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
 								NameFormat:   model.ObjectIDAttributeNameFormat,
 								Values: []saml.AttributeValue{{
 									Type:  model.XMLTypeString,
-									Value: auth.RoleAdministrator,
+									Value: "username",
 								}},
 							},
-						},
-					}},
-				}, nil)
+								{
+									FriendlyName: "role",
+									Name:         model.MicrosoftClaimsRole,
+									NameFormat:   model.ObjectIDAttributeNameFormat,
+									Values: []saml.AttributeValue{{
+										Type:  model.XMLTypeString,
+										Value: auth.RoleAdministrator,
+									}},
+								},
+							},
+						}},
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
@@ -3231,35 +3271,122 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					SSOProviderID: null.Int32From(1),
 					Roles:         model.Roles{model.Role{Name: auth.RoleUser}},
 				}, nil)
-				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
-					AttributeStatements: []saml.AttributeStatement{{
-						Attributes: []saml.Attribute{{
-							FriendlyName: "uid",
-							Name:         model.XMLSOAPClaimsEmailAddress,
-							NameFormat:   model.ObjectIDAttributeNameFormat,
-							Values: []saml.AttributeValue{{
-								Type:  model.XMLTypeString,
-								Value: "username",
-							}},
-						},
-							{
-								FriendlyName: "role",
-								Name:         model.MicrosoftClaimsRole,
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{
+						AttributeStatements: []saml.AttributeStatement{{
+							Attributes: []saml.Attribute{{
+								FriendlyName: "uid",
+								Name:         model.XMLSOAPClaimsEmailAddress,
 								NameFormat:   model.ObjectIDAttributeNameFormat,
 								Values: []saml.AttributeValue{{
 									Type:  model.XMLTypeString,
-									Value: auth.RoleUser,
+									Value: "username",
 								}},
 							},
-						},
-					}},
-				}, nil)
+								{
+									FriendlyName: "role",
+									Name:         model.MicrosoftClaimsRole,
+									NameFormat:   model.ObjectIDAttributeNameFormat,
+									Values: []saml.AttributeValue{{
+										Type:  model.XMLTypeString,
+										Value: auth.RoleUser,
+									}},
+								},
+							},
+						}},
+					}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
 				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
+		{
+			name: "Error: CreateSAMLConsumedIdentifiers replay detected - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(database.ErrSAMLIdentifierAlreadyConsumed)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+SSO+response"}},
+			},
+		},
+		{
+			name: "Error: CreateSAMLConsumedIdentifiers DB failure - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &bhctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&bhceSAML.ValidatedResponse{
+					Assertion: &saml.Assertion{}}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLConsumedIdentifiers(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Your+SSO+connection+failed%2C+please+try+again"}},
 			},
 		},
 	}
@@ -3282,7 +3409,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, dogtags.NewTestService(testCase.dogTagsOverrides))
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, dogtags.NewTestService(testCase.dogTagsOverrides), nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 

@@ -19,21 +19,31 @@ import { Typography } from 'doodle-ui';
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useAppName } from '../providers/AppNameProvider';
+import { cn } from '../utils';
 
 type PageWithTitleProps = ContainerProps<
     'div',
     {
         title?: string;
+        actions?: React.ReactNode;
         pageDescription?: JSX.Element;
         children?: React.ReactNode;
         fullWidth?: boolean;
     }
 >;
 
-const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, children, fullWidth, ...rest }) => {
+const PageWithTitle: React.FC<PageWithTitleProps> = ({
+    title,
+    actions,
+    pageDescription,
+    children,
+    fullWidth,
+    className,
+    ...rest
+}) => {
     const appName = useAppName();
     return (
-        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className='pt-4 px-0 xl:px-6'>
+        <Container maxWidth={fullWidth ? false : 'xl'} {...rest} className={cn('pt-4', className)}>
             {title && (
                 <Helmet>
                     <title>
@@ -42,11 +52,10 @@ const PageWithTitle: React.FC<PageWithTitleProps> = ({ title, pageDescription, c
                 </Helmet>
             )}
             <Box component={'header'} className='pb-4'>
-                {title && (
-                    <Typography variant='h1' className='mb-4'>
-                        {title}
-                    </Typography>
-                )}
+                <div className='mb-4 flex justify-between gap-2'>
+                    {title && <Typography variant='h1'>{title}</Typography>}
+                    {actions && actions}
+                </div>
                 {pageDescription}
             </Box>
             {children}

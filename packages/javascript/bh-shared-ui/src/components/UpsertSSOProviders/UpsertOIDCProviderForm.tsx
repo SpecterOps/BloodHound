@@ -74,7 +74,7 @@ const UpsertOIDCProviderForm: FC<{
     };
 
     return (
-        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' noValidate onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -88,11 +88,13 @@ const UpsertOIDCProviderForm: FC<{
                                     message: 'OIDC Provider Name must be alphanumeric.',
                                 },
                             }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'name'}
+                                    inputRef={ref}
+                                    id='name'
                                     variant='standard'
+                                    required
                                     fullWidth
                                     name='name'
                                     label='OIDC Provider Name'
@@ -109,12 +111,14 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='client_id'
                             rules={{ required: 'Client ID is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'clientId'}
+                                    inputRef={ref}
+                                    id='clientId'
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='clientId'
                                     label='Client ID'
                                     error={!!errors.client_id}
@@ -128,13 +132,15 @@ const UpsertOIDCProviderForm: FC<{
                             control={control}
                             name='issuer'
                             rules={{ required: 'Issuer is required' }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'issuer'}
+                                    inputRef={ref}
+                                    id='issuer'
                                     variant='standard'
                                     fullWidth
                                     name='issuer'
+                                    required
                                     label='Issuer'
                                     error={!!errors.issuer}
                                     helperText={errors.issuer?.message || 'OIDC Issuer'}

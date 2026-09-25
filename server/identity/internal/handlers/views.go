@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
 
@@ -91,4 +92,111 @@ func BuildRoleView(role services.Role) RoleView {
 // satisfying the responses.JSONViewer contract.
 func (s RoleView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+// RoleListView is the JSON shape returned by the identity handlers for a list of
+// roles. It wraps the roles under a "roles" key so the payload matches the
+// data.roles envelope the GET /api/v2/roles endpoint has always returned.
+type RoleListView struct {
+	Roles []RoleView `json:"roles"`
+}
+
+// BuildRoleListView projects a slice of services.Role into the list view the
+// handlers return in their JSON envelope.
+func BuildRoleListView(roles []services.Role) RoleListView {
+	var views = make([]RoleView, 0, len(roles))
+	for _, role := range roles {
+		views = append(views, BuildRoleView(role))
+	}
+
+	return RoleListView{Roles: views}
+}
+
+// JSONView marshals the view to the byte slice expected by responses.WriteBasic,
+// satisfying the responses.JSONViewer contract.
+func (s RoleListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// ValidFilters implements params.Filterable, describing the role fields that may
+// be filtered on and the operators each supports. It reproduces the legacy
+// GET /api/v2/roles contract so the filter middleware validates identically.
+func (s RoleListView) ValidFilters() map[string]params.FilterableField {
+	var numericOperators = []params.FilterOperator{
+		params.Equals,
+		params.NotEquals,
+		params.GreaterThan,
+		params.GreaterThanOrEquals,
+		params.LessThan,
+		params.LessThanOrEquals,
+	}
+
+	return map[string]params.FilterableField{
+		"name":       {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"id":         {Operators: numericOperators},
+		"created_at": {Operators: numericOperators},
+		"updated_at": {Operators: numericOperators},
+		"deleted_at": {Operators: numericOperators},
+	}
+}
+
+// IsSortable implements params.Sortable, reporting the role fields the sort
+// middleware may order on.
+func (s RoleListView) IsSortable(field string) bool {
+	switch field {
+	case "name", "description", "id", "created_at", "updated_at", "deleted_at":
+		return true
+	default:
+		return false
+	}
+}
+
+// PermissionListView is the JSON shape returned for a permission collection.
+type PermissionListView struct {
+	Permissions []PermissionView `json:"permissions"`
+}
+
+// BuildPermissionListView projects domain permissions into the response view.
+func BuildPermissionListView(permissions []services.Permission) PermissionListView {
+	var views = make([]PermissionView, 0, len(permissions))
+	for _, permission := range permissions {
+		views = append(views, BuildPermissionView(permission))
+	}
+
+	return PermissionListView{Permissions: views}
+}
+
+// JSONView marshals the list view for responses.WriteBasic.
+func (s PermissionListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// ValidFilters describes the query filters supported.
+func (s PermissionListView) ValidFilters() map[string]params.FilterableField {
+	var numericOperators = []params.FilterOperator{
+		params.Equals,
+		params.NotEquals,
+		params.GreaterThan,
+		params.GreaterThanOrEquals,
+		params.LessThan,
+		params.LessThanOrEquals,
+	}
+
+	return map[string]params.FilterableField{
+		"authority":  {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"name":       {Operators: []params.FilterOperator{params.Equals, params.NotEquals}, IsStringData: true},
+		"id":         {Operators: numericOperators},
+		"created_at": {Operators: numericOperators},
+		"updated_at": {Operators: numericOperators},
+	}
+}
+
+// IsSortable reports the permission fields accepted by sort_by.
+func (s PermissionListView) IsSortable(field string) bool {
+	switch field {
+	case "authority", "name", "id", "created_at", "updated_at":
+		return true
+	default:
+		return false
+	}
 }

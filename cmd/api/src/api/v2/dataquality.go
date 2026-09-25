@@ -56,13 +56,13 @@ func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request
 		if userSessionCompleteness, err := ad.FetchUserSessionCompleteness(tx); err != nil {
 			return err
 		} else {
-			result["LocalGroupCompleteness"] = userSessionCompleteness
+			result["SessionCompleteness"] = userSessionCompleteness
 		}
 
 		if localGroupCompleteness, err := ad.FetchLocalGroupCompleteness(tx); err != nil {
 			return err
 		} else {
-			result["SessionCompleteness"] = localGroupCompleteness
+			result["LocalGroupCompleteness"] = localGroupCompleteness
 		}
 
 		return nil

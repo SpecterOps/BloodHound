@@ -38,7 +38,9 @@ const renderFilterDialog = async (open = true) => {
     render(<FileIngestFilterDialog onConfirm={onConfirmMock} />);
 
     const user = userEvent.setup();
-    const filterButton = await screen.findByTestId('file_ingest_log-open_filter_dialog');
+    const filterButton = await screen.getByRole('button', {
+        name: /open file ingest filters/i,
+    });
 
     if (open) {
         await user.click(filterButton);

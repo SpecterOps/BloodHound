@@ -36,7 +36,7 @@ const meta = {
         docs: {
             description: {
                 component: `
-### When to use
+### When to use:
 
 - **Use this for external links**
 

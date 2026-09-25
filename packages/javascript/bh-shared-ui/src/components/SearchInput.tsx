@@ -36,18 +36,14 @@ export function SearchInput({
     value,
 }: Props) {
     return (
-        <div
-            className={cn(
-                'px-2 flex items-center w-1/7 border-b border-neutral-dark-1 dark:border-neutral-light-1',
-                className
-            )}>
-            <AppIcon.MagnifyingGlass className='w-6 h-6 p-0.5' />
+        <div className={cn('flex-grow relative', className)}>
+            <AppIcon.MagnifyingGlass className='absolute right-2 top-[50%] -mt-[8px] pointer-events-none' />
             <Input
                 disabled={disabled}
                 id={id}
+                variant='outlined'
                 aria-label={placeholder}
                 placeholder={placeholder}
-                className='h-8 border-none bg-transparent dark:bg-transparent placeholder-neutral-dark-1 dark:placeholder-neutral-light-1 focus-visible:ring-0 focus-visible:ring-offset-0 px-2'
                 onChange={(e) => onInputChange(e.target.value)}
                 value={value}
             />

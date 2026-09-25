@@ -46,16 +46,18 @@ var (
 )
 
 var (
-	ErrDuplicateAGName             = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
-	ErrDuplicateAGTagSelectorName  = errors.New("duplicate asset group tag selector name")
-	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
-	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
-	ErrDuplicateEmail              = errors.New("duplicate user email address")
-	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
-	ErrDuplicateKindName           = errors.New("duplicate kind name")
-	ErrDuplicateGlyph              = errors.New("duplicate glyph")
-	ErrPositionOutOfRange          = errors.New("position out of range")
+	ErrDuplicateAGName               = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag                = errors.New("duplicate asset group tag")
+	ErrDuplicateAGTagSelectorName    = errors.New("duplicate asset group tag selector name")
+	ErrDuplicateAGTagSelectorRuleKey = errors.New("duplicate asset group tag selector rule key")
+	ErrDuplicateSSOProviderName      = errors.New("duplicate sso provider name")
+	ErrDuplicateUserPrincipal        = errors.New("duplicate user principal name")
+	ErrDuplicateEmail                = errors.New("duplicate user email address")
+	ErrDuplicateCustomNodeKindName   = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName             = errors.New("duplicate kind name")
+	ErrDuplicateGlyph                = errors.New("duplicate glyph")
+	ErrPositionOutOfRange            = errors.New("position out of range")
+	ErrSAMLIdentifierAlreadyConsumed = errors.New("SAMLResponse or assertion has already been consumed")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -100,8 +102,6 @@ type Database interface {
 	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
 	GetRole(ctx context.Context, id int32) (model.Role, error)
 
-	// Permissions
-	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(ctx context.Context, id int) (model.Permission, error)
 
 	// Users
@@ -132,6 +132,7 @@ type Database interface {
 	SSOProviderData
 	OIDCProviderData
 	SAMLProviderData
+	SAMLConsumedData
 
 	// Sessions
 	CreateUserSession(ctx context.Context, userSession model.UserSession) (model.UserSession, error)
@@ -319,6 +320,5 @@ func (s *BloodhoundDB) PopulateExtensionData(ctx context.Context) error {
 		slog.ErrorContext(ctx, "Failed to execute extension data population", attr.Error(err))
 		return err
 	}
-
 	return nil
 }

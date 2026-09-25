@@ -4,6 +4,9 @@
 # Codex
 .codex
 
+# Augment
+.augment
+
 # Temporary backup files
 *.bak
 
@@ -34,6 +37,9 @@ integration-config-local.json
 # coverage files
 coverage/
 coverage.*
+
+# DORA metrics generated files
+.dora/trends/
 
 # Log files
 logs
@@ -467,3 +473,11 @@ go-test-results.json
 # Playwright generated
 cmd/ui/playwright
 
+#########
+# DORA Metrics
+#################
+# Local configuration overrides (may contain sensitive data)
+.dora.local.yaml
+# DORA data directory (contains SQLite DB and authentication tokens)
+.dora/
+.claude/

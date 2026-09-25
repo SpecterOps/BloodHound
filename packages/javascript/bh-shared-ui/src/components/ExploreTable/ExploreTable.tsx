@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DataTable, ScrollArea } from 'doodle-ui';
+import { DataTable } from 'doodle-ui';
 import fileDownload from 'js-file-download';
 import { json2csv } from 'json-2-csv';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
@@ -41,19 +41,15 @@ const tableProps: DataTableProps['TableProps'] = {
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm',
+    className: 'sticky top-0 z-10 shadow-sm text-base',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'px-2 text-center',
+    className: 'px-2 py-4 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
     className: 'truncate group relative p-0 pl-2',
-};
-
-const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.bhGraphId,
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -89,13 +85,20 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            selectedColumns,
-            exploreTableData,
-        });
+    const {
+        columnOptionsForDropdown,
+        sortedFilteredRows,
+        tableColumns,
+        resultsCount,
+        columnOrder,
+        setColumnOrder,
+        tableOptions,
+    } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        selectedColumns,
+        exploreTableData,
+    });
 
     const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 
@@ -203,31 +206,30 @@ const ExploreTable = ({
                     resultsCount={resultsCount}
                     SearchInputProps={searchInputProps}
                 />
-                <ScrollArea>
-                    <MemoDataTable
-                        TableHeaderProps={tableHeaderProps}
-                        TableHeadProps={tableHeadProps}
-                        TableProps={tableProps}
-                        TableCellProps={tableCellProps}
-                        columnPinning={columnPinning}
-                        setColumnPinning={handleSetColumnPinning}
-                        onRowClick={handleRowClick}
-                        selectedRow={selectedItem || undefined}
-                        data={sortedFilteredRows}
-                        columns={tableColumns as DataTableProps['columns']}
-                        tableOptions={tableOptions}
-                        virtualizationOptions={virtualizationOptions}
-                        columnSizing={columnSizing}
-                        onColumnSizingChange={setColumnSizing}
-                        columnOrder={columnOrder}
-                        onColumnOrderChange={(newOrder) => {
-                            setColumnOrder(newOrder);
-                        }}
-                        growLastColumn
-                        enableResizing
-                        enableDragAndDrop
-                    />
-                </ScrollArea>
+                <MemoDataTable
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    TableProps={tableProps}
+                    TableCellProps={tableCellProps}
+                    columnPinning={columnPinning}
+                    setColumnPinning={handleSetColumnPinning}
+                    onRowClick={handleRowClick}
+                    selectedRow={selectedItem || undefined}
+                    data={sortedFilteredRows}
+                    columns={tableColumns as DataTableProps['columns']}
+                    tableOptions={tableOptions}
+                    virtualizationOptions={virtualizationOptions}
+                    columnSizing={columnSizing}
+                    onColumnSizingChange={setColumnSizing}
+                    columnOrder={columnOrder}
+                    onColumnOrderChange={(newOrder) => {
+                        setColumnOrder(newOrder);
+                    }}
+                    className='overflow-auto h-full'
+                    growLastColumn
+                    enableResizing
+                    enableDragAndDrop
+                />
             </div>
         </div>
     );

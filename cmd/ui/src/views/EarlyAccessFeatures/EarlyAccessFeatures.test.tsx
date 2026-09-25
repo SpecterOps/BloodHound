@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createAuthStateWithPermissions, Flag, mockGetConfigurationHandler, Permission } from 'bh-shared-ui';
+import { Flag, Permission } from 'bh-shared-ui';
+import { createAuthStateWithPermissions, mockGetConfigurationHandler } from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitForElementToBeRemoved } from 'src/test-utils';

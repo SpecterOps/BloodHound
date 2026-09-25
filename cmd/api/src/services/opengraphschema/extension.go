@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -29,28 +31,142 @@ import (
 // updates the in memory kinds map.
 func (s *OpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	var (
-		err          error
-		schemaExists bool
+		err    error
+		result model.GraphExtensionUpsertResult
 	)
 
+	if openGraphExtension.PZRulesInput != nil {
+		if tierManagementEnabled, featureFlagErr := s.featureFlag.IsEnabled(ctx, appcfg.FeatureTierManagement); featureFlagErr != nil {
+			return false, fmt.Errorf("%w: %w", model.ErrFeatureFlag, featureFlagErr)
+		} else if !tierManagementEnabled {
+			slog.WarnContext(ctx, "Skipping extension privilege zone rules because tier management is disabled",
+				slog.String("extension_name", openGraphExtension.ExtensionInput.Name),
+			)
+			openGraphExtension.PZRulesInput = nil
+		}
+	}
+
 	if err = openGraphExtension.Validate(); err != nil {
-		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
-	} else if schemaExists, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
+		return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+	}
+
+	// Separated due to markdown needing a stateful and long lived validation object.
+	for _, nodeKind := range openGraphExtension.NodeKindsInput {
+		if err = s.validateKindInfoMarkdown(nodeKind.Info); err != nil {
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+	for _, relationshipKind := range openGraphExtension.RelationshipKindsInput {
+		if err = s.validateKindInfoMarkdown(relationshipKind.Info); err != nil {
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+	for _, finding := range openGraphExtension.RelationshipFindingsInput {
+		if err = s.validateRemediationMarkdown(finding.RemediationInput); err != nil {
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+		}
+	}
+
+	slog.InfoContext(ctx,
+		"Validated OpenGraph extension",
+		slog.String("extension_name", openGraphExtension.ExtensionInput.Name),
+		slog.String("extension_version", openGraphExtension.ExtensionInput.Version),
+	)
+
+	if result, err = s.openGraphSchemaRepository.UpsertOpenGraphExtension(ctx, openGraphExtension); err != nil {
 		// Translate database-level errors to validation errors for consistent API responses
 		if model.ErrIsGraphSchemaDuplicateError(err) {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
 		// Translate kind info database errors to validation errors
 		if errors.Is(err, model.ErrKindInfoKindNotFound) ||
 			errors.Is(err, model.ErrKindInfoDuplicatePosition) ||
 			errors.Is(err, model.ErrKindInfoDuplicateInfoKey) {
-			return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
+			return false, fmt.Errorf("%w: %w", model.ErrGraphExtensionValidation, err)
 		}
-		return schemaExists, fmt.Errorf("graph schema upsert error: %w", err)
+		return false, fmt.Errorf("graph schema upsert error: %w", err)
 	} else if err = s.graphDBKindRepository.RefreshKinds(ctx); err != nil {
-		return schemaExists, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
+		return false, fmt.Errorf("%w: %w", model.ErrGraphDBRefreshKinds, err)
 	}
-	return schemaExists, nil
+
+	logExtensionUpsertCompletion(ctx, result)
+	return result.ExtensionExisted, nil
+}
+
+// logExtensionUpsertCompletion records the persisted reconciliation counts for a successful extension upsert.
+func logExtensionUpsertCompletion(ctx context.Context, result model.GraphExtensionUpsertResult) {
+	var extensionOperation string
+
+	if result.ExtensionExisted {
+		extensionOperation = "updated"
+	} else {
+		extensionOperation = "created"
+	}
+
+	slog.InfoContext(ctx,
+		"Completed OpenGraph extension upsert",
+		slog.Int64("extension_id", int64(result.Extension.ID)),
+		slog.String("extension_name", result.Extension.Name),
+		slog.String("extension_version", result.Extension.Version),
+		slog.String("extension_operation", extensionOperation),
+		slog.Group("node_kinds",
+			slog.Int("count_created", len(result.NodeKindsResult.Created)),
+			slog.Int("count_updated", len(result.NodeKindsResult.Updated)),
+			slog.Int("count_deleted", len(result.NodeKindsResult.Deleted)),
+		),
+		slog.Group("relationship_kinds",
+			slog.Int("count_created", len(result.RelationshipKindsResult.Created)),
+			slog.Int("count_updated", len(result.RelationshipKindsResult.Updated)),
+			slog.Int("count_deleted", len(result.RelationshipKindsResult.Deleted)),
+		),
+		slog.Group("kind_info",
+			slog.Int("count_created", len(result.KindInfosResult.Created)),
+			slog.Int("count_updated", len(result.KindInfosResult.Updated)),
+			slog.Int("count_deleted", len(result.KindInfosResult.Deleted)),
+		),
+		slog.Group("environments",
+			slog.Int("count_created", len(result.EnvironmentsResult.Created)),
+			slog.Int("count_updated", len(result.EnvironmentsResult.Updated)),
+			slog.Int("count_deleted", len(result.EnvironmentsResult.Deleted)),
+		),
+		slog.Group("relationship_findings",
+			slog.Int("count_created", len(result.RelationshipFindingsResult.Created)),
+			slog.Int("count_updated", len(result.RelationshipFindingsResult.Updated)),
+			slog.Int("count_deleted", len(result.RelationshipFindingsResult.Deleted)),
+		),
+		slog.Group("saved_queries",
+			slog.Int("count_created", len(result.SavedQueriesResult.Created)),
+			slog.Int("count_updated", len(result.SavedQueriesResult.Updated)),
+			slog.Int("count_deleted", len(result.SavedQueriesResult.Deleted)),
+		),
+		slog.Group("pz_rules",
+			slog.Int("count_created", len(result.PZRulesResult.Created)),
+			slog.Int("count_updated", len(result.PZRulesResult.Updated)),
+			slog.Int("count_deleted", len(result.PZRulesResult.Deleted)),
+		),
+	)
+}
+
+// validateKindInfoMarkdown runs markdown safety validation over each kind-info entry's content.
+func (s *OpenGraphSchemaService) validateKindInfoMarkdown(info model.KindInfoInputs) error {
+	for _, infoEntry := range info {
+		if content, err := infoEntry.MarkdownContent(); err != nil {
+			return err
+		} else if err := s.markdownValidator.validate(content); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateRemediationMarkdown runs markdown safety validation over a finding's remediation fields.
+func (s *OpenGraphSchemaService) validateRemediationMarkdown(remediation model.RemediationInput) error {
+	for _, field := range []string{remediation.ShortDescription, remediation.LongDescription, remediation.ShortRemediation, remediation.LongRemediation} {
+		if err := s.markdownValidator.validate(field); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetGraphSchemaExtensions retrieves extensions from the repository with filtering, sorting, and pagination

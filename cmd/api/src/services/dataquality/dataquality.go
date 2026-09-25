@@ -151,6 +151,18 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 									stat.IssuancePolicies = int(count)
 									aggregation.IssuancePolicies += int(count)
 
+								case ad.Site:
+									stat.Sites = int(count)
+									aggregation.Sites += int(count)
+
+								case ad.SiteServer:
+									stat.SiteServers = int(count)
+									aggregation.SiteServers += int(count)
+
+								case ad.SiteSubnet:
+									stat.SiteSubnets = int(count)
+									aggregation.SiteSubnets += int(count)
+
 								case ad.Domain:
 									// Do nothing. Only ADDataQualityAggregation stats have domain stats and the domain stats are handled in the outer domain loop
 								}
@@ -495,9 +507,9 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 	}
 
 	// OpenGraph node and relationship counts
-	if openGraphExtensionManagementFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphExtensionManagement); err != nil {
-		return fmt.Errorf("could not get open graph extension management feature flag: %w", err)
-	} else if openGraphExtensionManagementFlag.Enabled {
+	if openGraphDataQualityFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphDataQuality); err != nil {
+		return fmt.Errorf("could not get open graph data quality feature flag: %w", err)
+	} else if openGraphDataQualityFlag.Enabled {
 		if stats, aggregations, err := openGraphStats(ctx, db, graphDB); err != nil {
 			return fmt.Errorf("could not get open graph stats: %w", err)
 		} else {

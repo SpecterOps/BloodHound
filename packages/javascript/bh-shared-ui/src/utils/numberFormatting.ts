@@ -50,3 +50,9 @@ export const abbreviatedNumber = (
 export const commaSeparatedNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
 };
+
+export const floatToPercent = (num: number) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+    }).format(num);
+};

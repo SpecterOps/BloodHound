@@ -21,6 +21,9 @@ import PasswordDialog from './PasswordDialog';
 
 const testCurrentPassword = 'aA1!aaaaaaaa';
 const testValidPassword = 'bB1!bbbbbbbb';
+const currentPasswordLabel = /^Current Password\s*\*$/;
+const newPasswordLabel = /^New Password\s*\*$/;
+const confirmPasswordLabel = /^New Password Confirmation\s*\*$/;
 
 describe('PasswordDialog', () => {
     it('renders correctly with requiresCurrentPassword false', () => {
@@ -32,8 +35,8 @@ describe('PasswordDialog', () => {
 
         expect(screen.getByText('Change Password')).toBeInTheDocument();
         expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
-        expect(screen.getByLabelText('New Password')).toBeInTheDocument();
-        expect(screen.getByLabelText('New Password Confirmation')).toBeInTheDocument();
+        expect(screen.getByLabelText(newPasswordLabel)).toBeInTheDocument();
+        expect(screen.getByLabelText(confirmPasswordLabel)).toBeInTheDocument();
         expect(screen.queryByLabelText('Force Password Reset?')).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
@@ -55,9 +58,9 @@ describe('PasswordDialog', () => {
         );
 
         expect(screen.getByText('Change Password')).toBeInTheDocument();
-        expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
-        expect(screen.getByLabelText('New Password')).toBeInTheDocument();
-        expect(screen.getByLabelText('New Password Confirmation')).toBeInTheDocument();
+        expect(screen.getByLabelText(currentPasswordLabel)).toBeInTheDocument();
+        expect(screen.getByLabelText(newPasswordLabel)).toBeInTheDocument();
+        expect(screen.getByLabelText(confirmPasswordLabel)).toBeInTheDocument();
         expect(screen.queryByLabelText('Force Password Reset?')).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
@@ -129,6 +132,7 @@ describe('PasswordDialog', () => {
 
         expect(screen.getByText('Current password is required')).toBeInTheDocument();
         expect(screen.getByText('Confirmation password is required')).toBeInTheDocument();
+        expect(screen.getByLabelText(currentPasswordLabel)).toHaveFocus();
 
         expect(testOnSave).not.toHaveBeenCalled();
     });
@@ -151,11 +155,11 @@ describe('PasswordDialog', () => {
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
-        await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
+        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
 
-        await user.type(screen.getByLabelText('New Password'), 'aA1!');
+        await user.type(screen.getByLabelText(newPasswordLabel), 'aA1!');
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), 'aA1!');
+        await user.type(screen.getByLabelText(confirmPasswordLabel), 'aA1!');
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -180,11 +184,11 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
+        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
 
-        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword + 'extracharacters');
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword + 'extracharacters');
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -209,9 +213,9 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -236,11 +240,11 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
+        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
 
-        await user.type(screen.getByLabelText('New Password'), testCurrentPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testCurrentPassword);
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), testCurrentPassword);
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testCurrentPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -258,8 +262,8 @@ describe('PasswordDialog', () => {
         render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
         expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
 
-        await user.type(screen.getByLabelText('New Password'), testValidPassword);
-        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -287,11 +291,11 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText('Current Password'), testCurrentPassword);
+        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
 
-        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -321,9 +325,9 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText('New Password'), testValidPassword);
+        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
 
-        await user.type(screen.getByLabelText('New Password Confirmation'), testValidPassword);
+        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 

@@ -15,7 +15,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 put:
-  description: "**Experimental** - Upserts the OpenGraph extension"
+  description: |
+    **Experimental** - Upserts the OpenGraph extension.
+
+    The request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{"pz_rules":[...]}`) and `saved_queries.json` (`{"queries":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.
+
+    Each recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.
   tags:
     - OpenGraph (Experimental)
     - Community
@@ -23,6 +28,7 @@ put:
   operationId: UpsertOpenGraphExtension
   summary: Upserts the OpenGraph Extension
   requestBody:
+    description: An OpenGraph extension JSON payload or ZIP bundle.
     required: true
     content:
       application/json:
@@ -50,7 +56,7 @@ put:
                       title: "Overview"
                       position: 1
                       markdown:
-                        content: "This is an overview panel for Node Kind 1"
+                        content: "This is an overview panel for **{{ .Properties.name | upper }}** (node {{ .NodeID }})"
                     details:
                       title: "Additional Details"
                       position: 2
@@ -75,7 +81,7 @@ put:
                       title: "Abuse Info"
                       position: 1
                       markdown:
-                        content: "Information about how this relationship can be abused"
+                        content: "Information about how the {{ .Kind.Name }} relationship from {{ .Source.Properties.name }} to {{ .Target.Properties.name }} can be abused"
               environments:
                 - environment_kind: OGE_Environment_Kind
                   source_kind: OGExtension
@@ -92,6 +98,12 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+              queries:
+                - query_key: all-node-kind-1
+                  name: All Node Kind 1
+                  query: MATCH (n:OGE_Node_Kind_1) RETURN n
+                  description: Lists all OGE_Node_Kind_1 nodes.
+                  category: Asset Management
           Active Directory:
             summary: Active Directory Example
             description: An example Active Directory OpenGraph Extension. As a note, the Active Directory objects in the DB do not currently conform to the expected validation rules. This will change in the future. The example provided is how an Active Directory extension would look in the OpenGraph framework.
@@ -172,6 +184,10 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+      application/zip:
+        schema:
+          type: string
+          format: binary
   responses:
     200:
       description: OK
@@ -185,6 +201,8 @@ put:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    415:
+      $ref: './../responses/unsupported-media-type.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

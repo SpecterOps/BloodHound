@@ -16,6 +16,7 @@
     },
     "graph_driver": "neo4j",
     "default_admin": {
+        "enabled": true,
         "principal_name": "admin",
         "email_address": "admin@example.com",
         "password": "SFdzJoW2GT7Fn68aEieKn7S1S2DLdXnw",

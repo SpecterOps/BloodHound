@@ -54,4 +54,36 @@ describe('useExploreTableRowsAndColumns', () => {
             expect(row.bhGraphId).not.toBe(nodeIdProperty);
         });
     });
+
+    describe('decoy status', () => {
+        it('includes the node decoy status in the table row', () => {
+            const exploreTableData = {
+                nodes: {
+                    '100': {
+                        label: 'TestNode',
+                        kind: 'User',
+                        kinds: ['User'],
+                        objectId: 'obj-123',
+                        lastSeen: '2026-01-01',
+                        isTierZero: false,
+                        isOwnedObject: false,
+                        isDecoyObject: true,
+                        properties: {},
+                    },
+                },
+                node_keys: ['isDecoyObject'],
+            };
+
+            const { result } = renderHook(() =>
+                useExploreTableRowsAndColumns({
+                    onKebabMenuClick: vi.fn(),
+                    searchInput: '',
+                    selectedColumns: {},
+                    exploreTableData,
+                })
+            );
+
+            expect(result.current.rows[0].isDecoyObject).toBe(true);
+        });
+    });
 });

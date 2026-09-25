@@ -21,7 +21,7 @@ import { AdcsEsc14ScenarioALinux } from '../AdcsEsc14ScenarioA';
 const LinuxAbuse: FC = () => {
     return (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className='my-4'>
                 The write access to the AltSecurityIdentities may enable an ADCS ESC14 Scenario A attack.
             </Typography>
             <AdcsEsc14ScenarioALinux />

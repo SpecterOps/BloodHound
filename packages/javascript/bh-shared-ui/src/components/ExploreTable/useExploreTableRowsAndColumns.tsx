@@ -40,7 +40,13 @@ import ExploreTableHeaderCell from './ExploreTableHeaderCell';
 
 const columnHelper = createColumnHelper<MungedTableRowWithGraphId>();
 
-type DataTableProps = React.ComponentProps<typeof DataTable>;
+type DataTableProps = React.ComponentProps<typeof DataTable<MungedTableRowWithGraphId, unknown>>;
+
+type ExploreTableMeta = {
+    sortBy?: keyof MungedTableRowWithGraphId;
+    sortOrder?: 'asc' | 'desc';
+    handleSort: (sortByColumn: keyof MungedTableRowWithGraphId) => void;
+};
 
 const filterKeys: (keyof MungedTableRowWithGraphId)[] = ['label', 'objectid'];
 
@@ -72,6 +78,7 @@ const useExploreTableRowsAndColumns = ({
                           lastSeen: node.lastSeen,
                           isTierZero: node.isTierZero,
                           isOwnedObject: node.isOwnedObject,
+                          isDecoyObject: node.isDecoyObject,
                           ...node.properties,
                       } satisfies MungedTableRowWithGraphId;
 
@@ -124,12 +131,14 @@ const useExploreTableRowsAndColumns = ({
             const bestGuessAtDataType = typeof firstTruthyValueInFirst10Rows;
             const headerLabel = formatPotentiallyUnknownLabel(String(key));
             return columnHelper.accessor(String(key), {
-                header: () => {
+                header: ({ table }) => {
+                    const tableMeta = table.options.meta as ExploreTableMeta;
+
                     return (
                         <ExploreTableHeaderCell
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                            onClick={() => handleSort(key)}
+                            sortBy={tableMeta.sortBy}
+                            sortOrder={tableMeta.sortOrder}
+                            onClick={() => tableMeta.handleSort(key)}
                             headerKey={key}
                             dataType={bestGuessAtDataType}
                         />
@@ -155,7 +164,7 @@ const useExploreTableRowsAndColumns = ({
                 },
             });
         },
-        [handleSort, sortOrder, sortBy, firstTenRows]
+        [firstTenRows]
     );
 
     const kebabColumDefinition = useMemo(
@@ -239,6 +248,14 @@ const useExploreTableRowsAndColumns = ({
     const [prevColumnOrderArr, setPrevColumnOrderArr] = useState<string[]>(columnOrderArr);
     const [columnOrder, setColumnOrder] = useState<string[]>(columnOrderArr);
 
+    const tableOptions = useMemo<DataTableProps['tableOptions']>(
+        () => ({
+            getRowId: (row) => row.bhGraphId,
+            meta: { sortBy, sortOrder, handleSort },
+        }),
+        [handleSort, sortBy, sortOrder]
+    );
+
     if (prevColumnOrderArr !== columnOrderArr) {
         setPrevColumnOrderArr(columnOrderArr);
         setColumnOrder(columnOrderArr);
@@ -253,6 +270,7 @@ const useExploreTableRowsAndColumns = ({
         columnOrderArr,
         columnOrder,
         setColumnOrder,
+        tableOptions,
     };
 };
 

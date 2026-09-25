@@ -16,7 +16,7 @@
 
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button, Tooltip } from 'doodle-ui';
+import { TextButton, Tooltip } from 'doodle-ui';
 import { FC, ReactNode, useState } from 'react';
 import { cn, copyToClipboard } from '../utils';
 
@@ -49,14 +49,12 @@ const LabelWithCopy: FC<{
             className={cn('h-6 flex items-center', className)}>
             {label}
             <Tooltip tooltip='Copied' open={copied} contentProps={{ side: 'right' }}>
-                <Button
+                <TextButton
                     onClick={handleCopy}
-                    variant='text'
-                    size='small'
                     aria-label='Copy to clipboard'
-                    className={cn('text-inherit', { invisible: !(!hoverOnly || hoverActive) })}>
+                    className={cn('text-inherit text-sm', { invisible: !(!hoverOnly || hoverActive) })}>
                     <FontAwesomeIcon icon={faCopy} />
-                </Button>
+                </TextButton>
             </Tooltip>
         </div>
     );

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { RelationshipDetailsWithInfo } from 'js-client-library';
 import { apiClient } from '../../../utils/api';
-import { parseItemId } from '../../../utils/parseItemId';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
     ExploreGraphQuery,
@@ -25,24 +25,17 @@ import {
     sharedGraphQueryOptions,
 } from './utils';
 
-const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
-    const { relationshipQueryItemId, searchType } = paramOptions;
-
-    if (searchType !== 'composition' || !relationshipQueryItemId) {
-        return {
-            enabled: false,
-        };
-    }
-
-    const { itemType, sourceId, edgeType, targetId } = parseItemId(relationshipQueryItemId);
+const compositionSearchGraphQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    relationshipDetails: RelationshipDetailsWithInfo | undefined
+): ExploreGraphQueryOptions => {
+    const { searchType } = paramOptions;
 
     if (
-        itemType !== 'edge' ||
-        !sourceId ||
-        !edgeType ||
-        !targetId ||
-        isNaN(Number(sourceId)) ||
-        isNaN(Number(targetId))
+        searchType !== 'composition' ||
+        !relationshipDetails ||
+        !relationshipDetails.source_node_id ||
+        !relationshipDetails.target_node_id
     ) {
         return {
             enabled: false,
@@ -51,16 +44,23 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
 
     return {
         ...sharedGraphQueryOptions,
-        queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
+        queryKey: [ExploreGraphQueryKey, searchType, relationshipDetails.relationship_id.toString()],
         queryFn: ({ signal }) =>
-            apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
-                const data = res.data;
-                if (!data.data.nodes) {
-                    throw new Error('empty result set');
-                }
+            apiClient
+                .getEdgeComposition(
+                    relationshipDetails.source_node_id!,
+                    relationshipDetails.target_node_id!,
+                    relationshipDetails.kind.name,
+                    { signal }
+                )
+                .then((res) => {
+                    const data = res.data;
+                    if (!data.data.nodes) {
+                        throw new Error('empty result set');
+                    }
 
-                return data;
-            }),
+                    return data;
+                }),
         refetchOnWindowFocus: false,
     };
 };
@@ -69,9 +69,12 @@ const getCompositionErrorMessage = (): ExploreGraphQueryError => {
     return { message: 'Query failed. Please try again.', key: 'edgeCompositionGraphQuery' };
 };
 
-export const compositionSearchQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery => {
+export const compositionSearchQuery = (
+    paramOptions: Partial<ExploreQueryParams>,
+    relationshipDetails: RelationshipDetailsWithInfo | undefined
+): ExploreGraphQuery => {
     return {
-        getQueryConfig: () => compositionSearchGraphQuery(paramOptions),
+        getQueryConfig: () => compositionSearchGraphQuery(paramOptions, relationshipDetails),
         getErrorMessage: getCompositionErrorMessage,
     };
 };

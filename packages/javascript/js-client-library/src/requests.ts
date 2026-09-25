@@ -16,6 +16,7 @@
 
 import { AxiosRequestConfig } from 'axios';
 import {
+    AlertsSortBy,
     AssetGroupTagSelector,
     AssetGroupTagSelectorAutoCertifyType,
     AssetGroupTagSelectorSeed,
@@ -23,6 +24,7 @@ import {
     AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
+    CollectorJobSecret,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -99,6 +101,7 @@ export interface CreateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
+    provided_identifier?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -119,6 +122,7 @@ export interface UpdateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
+    provided_identifier?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {
@@ -297,6 +301,9 @@ export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'
 
 export type UpdateConfigurationRequest = ConfigurationPayload;
 
+// ---------------------------------------------------------------------------
+//  Alert - Webhooks
+// ---------------------------------------------------------------------------
 export interface CreateWebhookRequest {
     type: WebhookType;
     name: string;
@@ -309,8 +316,106 @@ export interface UpdateWebhookRequest {
     name?: string;
     description?: string;
     url?: string;
+    disabled?: boolean;
 }
 
 export interface GetWebhookRequest {
     id: string;
 }
+
+export interface WebhookTestRequest {
+    event_type: string;
+    version: number | null;
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Events
+// ---------------------------------------------------------------------------
+export interface GetAlertEventRequest {
+    id: string;
+}
+
+// ---------------------------------------------------------------------------
+//  Alert - Alerts
+// ---------------------------------------------------------------------------
+
+export interface AlertSubscription {
+    channel_id: string;
+    event_type: string;
+    version: number;
+    disabled: boolean;
+}
+
+export interface CreateAlertForm {
+    name: string;
+    description: string;
+    channelId: string;
+}
+
+export interface CreateAlertRequest {
+    name: string;
+    description: string;
+    subscriptions: AlertSubscription[] | [];
+}
+
+export interface GetAlertRequest {
+    id: string;
+}
+
+export type GetAlertsParams = {
+    skip?: number;
+    limit?: number;
+    sort_by?: AlertsSortBy;
+    name?: string;
+};
+
+export interface UpdateAlertRequest {
+    name?: string;
+    description?: string;
+    disabled?: boolean;
+    subscriptions?: AlertSubscription[];
+}
+
+export interface DeleteAlertRequest {
+    id: string;
+}
+
+export interface AlertRetryRequest {
+    alert_id: string;
+    channel_id: string;
+    event_id: string;
+}
+
+export interface CreateCollectorJobProfileRequest {
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
+export interface UpdateCollectorJobProfileRequest {
+    name?: string;
+    params?: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
+    value: string;
+};
+
+export interface CreateCollectorJobScheduleRequest {
+    name: string;
+    rrule: string;
+    priority?: number;
+    disabled?: boolean;
+    profile_ids?: number[];
+}
+
+export type UpdateCollectorJobScheduleRequest = Partial<CreateCollectorJobScheduleRequest>;

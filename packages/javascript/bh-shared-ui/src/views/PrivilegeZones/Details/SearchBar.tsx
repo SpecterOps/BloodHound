@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, Popover, PopoverAnchor, PopoverContent } from 'doodle-ui';
+import { Input, Popover, PopoverAnchor, PopoverContent, TextButton } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import {
     AssetGroupTag,
@@ -112,10 +112,10 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
         <div className='min-w-96 px-2 mr-2'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverAnchor>
-                    <div className='flex items-center'>
-                        <AppIcon.MagnifyingGlass className='-mr-4' />
+                    <div className='relative'>
+                        <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
                         <Input
-                            variant='underlined'
+                            variant='outlined'
                             placeholder='Search'
                             className='pl-8'
                             {...getInputProps({ ref: inputRef })}
@@ -152,9 +152,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                 'bg-secondary text-neutral-1 dark:bg-secondary-variant-2':
                                                                     highlightedIndex === globalIndex,
                                                             })}>
-                                                            <Button
-                                                                className='overflow-hidden justify-start w-full no-underline'
-                                                                variant='text'>
+                                                            <TextButton className='overflow-hidden justify-start w-full no-underline'>
                                                                 <span
                                                                     className={cn('truncate', {
                                                                         'text-neutral-1':
@@ -162,7 +160,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                                     })}>
                                                                     {item.name}
                                                                 </span>
-                                                            </Button>
+                                                            </TextButton>
                                                         </li>
                                                     );
                                                 })}

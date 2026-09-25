@@ -795,52 +795,52 @@ func ConvertAzureManagementGroupUserAccessAdminToRels(data models.ManagementGrou
 
 func ConvertAzureManagementGroup(data models.ManagementGroup, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
-			ObjectID: data.Id,
-			PropertyMap: map[string]any{
-				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): ingestTime,
-				common.DisplayName.String():   strings.ToUpper(data.Properties.DisplayName),
-			},
-			Labels: []graph.Kind{azure.ManagementGroup},
-		}, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: data.TenantId,
-				Kind:  azure.Tenant,
-			},
-			IngestibleEndpoint{
-				Kind:  azure.ManagementGroup,
-				Value: data.Id,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{},
-				RelType:  azure.Contains,
-			},
-		)
+		ObjectID: data.Id,
+		PropertyMap: map[string]any{
+			azure.TenantID.String():       strings.ToUpper(data.TenantId),
+			common.LastCollected.String(): ingestTime,
+			common.DisplayName.String():   strings.ToUpper(data.Properties.DisplayName),
+		},
+		Labels: []graph.Kind{azure.ManagementGroup},
+	}, NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: data.TenantId,
+			Kind:  azure.Tenant,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.ManagementGroup,
+			Value: data.Id,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Contains,
+		},
+	)
 }
 
 func ConvertAzureResourceGroup(data models.ResourceGroup, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
-			ObjectID: data.Id,
-			PropertyMap: map[string]any{
-				common.Name.String():          data.Name,
-				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): ingestTime,
-			},
-			Labels: []graph.Kind{azure.ResourceGroup},
-		}, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: data.SubscriptionId,
-				Kind:  azure.Subscription,
-			},
-			IngestibleEndpoint{
-				Kind:  azure.ResourceGroup,
-				Value: data.Id,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{},
-				RelType:  azure.Contains,
-			},
-		)
+		ObjectID: data.Id,
+		PropertyMap: map[string]any{
+			common.Name.String():          data.Name,
+			azure.TenantID.String():       strings.ToUpper(data.TenantId),
+			common.LastCollected.String(): ingestTime,
+		},
+		Labels: []graph.Kind{azure.ResourceGroup},
+	}, NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: data.SubscriptionId,
+			Kind:  azure.Subscription,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.ResourceGroup,
+			Value: data.Id,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Contains,
+		},
+	)
 }
 
 func ConvertAzureResourceGroupContributorToRels(data models.ResourceGroupContributors) []IngestibleRelationship {
@@ -918,32 +918,32 @@ func ConvertAzureResourceGroupUserAccessAdminToRels(data models.ResourceGroupUse
 func ConvertAzureRole(data models.Role, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	roleObjectId := fmt.Sprintf("%s@%s", data.Id, data.TenantId)
 	return IngestibleNode{
-			ObjectID: roleObjectId,
-			PropertyMap: map[string]any{
-				common.Name.String():          fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName),
-				common.Description.String():   data.Description,
-				common.DisplayName.String():   data.DisplayName,
-				common.Enabled.String():       data.IsEnabled,
-				azure.IsBuiltIn.String():      data.IsBuiltIn,
-				azure.RoleTemplateID.String(): data.TemplateId,
-				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): ingestTime,
-			},
-			Labels: []graph.Kind{azure.Role},
-		}, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: data.TenantId,
-				Kind:  azure.Tenant,
-			},
-			IngestibleEndpoint{
-				Kind:  azure.Role,
-				Value: roleObjectId,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{},
-				RelType:  azure.Contains,
-			},
-		)
+		ObjectID: roleObjectId,
+		PropertyMap: map[string]any{
+			common.Name.String():          fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName),
+			common.Description.String():   data.Description,
+			common.DisplayName.String():   data.DisplayName,
+			common.Enabled.String():       data.IsEnabled,
+			azure.IsBuiltIn.String():      data.IsBuiltIn,
+			azure.RoleTemplateID.String(): data.TemplateId,
+			azure.TenantID.String():       strings.ToUpper(data.TenantId),
+			common.LastCollected.String(): ingestTime,
+		},
+		Labels: []graph.Kind{azure.Role},
+	}, NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: data.TenantId,
+			Kind:  azure.Tenant,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.Role,
+			Value: roleObjectId,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Contains,
+		},
+	)
 }
 
 func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignment, data models.RoleAssignments, roleObjectId string) []IngestibleRelationship {
@@ -1354,23 +1354,23 @@ func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, I
 	}
 
 	return IngestibleNode{
-			ObjectID:    data.Id,
-			PropertyMap: properties,
-			Labels:      []graph.Kind{azure.User},
-		}, NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: data.TenantId,
-				Kind:  azure.Tenant,
-			},
-			IngestibleEndpoint{
-				Kind:  azure.User,
-				Value: data.Id,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{},
-				RelType:  azure.Contains,
-			},
-		)
+		ObjectID:    data.Id,
+		PropertyMap: properties,
+		Labels:      []graph.Kind{azure.User},
+	}, NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: data.TenantId,
+			Kind:  azure.Tenant,
+		},
+		IngestibleEndpoint{
+			Kind:  azure.User,
+			Value: data.Id,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.Contains,
+		},
+	)
 }
 
 func ConvertAzureVirtualMachine(data models.VirtualMachine, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
@@ -1992,9 +1992,7 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
 		rels = make([]IngestibleRelationship, 0)
-		// The AZRole identity is left in its raw casing here; node ingestion
-		// (normalizeEinNodeProperties) applies the use_raw_object_id-aware
-		// casing normalization to the node's ObjectID.
+		// Raw casing here; node ingestion applies use_raw_object_id-aware normalization.
 		combinedObjectId = fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId)
 	)
 
@@ -2055,11 +2053,10 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
-		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role.
-		// The identity is left in its raw casing here; graphify's relationship ingestion (ingestibleRelationshipsToUpdates)
-		// applies the use_raw_object_id-aware casing normalization to relationship endpoints, matching the casing
-		// applied to the AZRole node's own objectid during node ingestion.
-		combinedObjectId := fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId)
+		// No approvers: create the edge from the tenant's PrivilegedRoleAdministratorRole node to the target role.
+		// Uppercase the lowercase well-known constant to match the collector-sourced node objectid; under
+		// use_raw_object_id, relationship ingestion no longer normalizes it, so uppercasing here avoids a split node.
+		combinedObjectId := fmt.Sprintf("%s@%s", strings.ToUpper(azure.PrivilegedRoleAdministratorRole), policyAssignment.TenantId)
 
 		rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
 			Value: combinedObjectId,

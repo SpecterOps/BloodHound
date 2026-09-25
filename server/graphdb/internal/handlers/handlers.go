@@ -30,21 +30,15 @@ type GraphDB interface {
 	GetNode(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error)
 }
 
-// NodeAuthorizer decides whether the caller (provided via ctx) may access a given node.
-type NodeAuthorizer interface {
-	CanAccessNode(ctx context.Context, node services.Node) bool
-}
-
 // Handlers is a dependency injection container for graphdb handlers.
 type Handlers struct {
-	graphDB        GraphDB
-	nodeAuthorizer NodeAuthorizer
+	graphDB GraphDB
 }
 
 // NewHandlersContainer initializes the Handlers dependency injection container.
-func NewHandlersContainer(graphDB GraphDB, nodeAuthorizer NodeAuthorizer) *Handlers {
+
+func NewHandlersContainer(graphDB GraphDB) *Handlers {
 	return &Handlers{
-		graphDB:        graphDB,
-		nodeAuthorizer: nodeAuthorizer,
+		graphDB: graphDB,
 	}
 }

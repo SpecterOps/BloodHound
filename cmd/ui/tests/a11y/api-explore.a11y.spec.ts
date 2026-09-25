@@ -14,16 +14,48 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../fixtures';
+import { test } from 'bh-playwright-testing';
 
-test.describe('API Explorer page accessibility', () => {
-    test('explore page has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.goto('/ui/api-explorer');
+test.describe('WCAG A/AA Violations - Explore - API Explorer', () => {
+    test.beforeEach(async ({ goAndWaitFor, page }) => {
+        await goAndWaitFor('/ui/api-explorer', page.getByRole('textbox', { name: 'Filter by tag or path' }));
+    });
 
-        // Wait for the filter input to load
-        await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
+    test('default state', async ({ checkA11y }) => {
+        await checkA11y();
+    });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+    test('expanded resource', async ({ page, checkA11y }) => {
+        await page.getByRole('button', { name: 'get /api/version' }).click();
+        await page.getByText('Returns the supported API versions.').waitFor({ state: 'visible' });
+
+        await checkA11y();
+    });
+
+    test('expanded disabled resource', async ({ page, checkA11y }) => {
+        await page.getByRole('button', { name: 'get /api/v2/saml', exact: true }).click();
+        await page.getByText('Deprecated: This endpoint').waitFor({ state: 'visible' });
+
+        await checkA11y();
+    });
+
+    test('filter with no results', async ({ page, checkA11y }) => {
+        await page.getByRole('textbox', { name: 'Filter by tag or path' }).fill('no-matching-api-resource');
+        await page.getByRole('heading', { name: 'No operations defined in spec!' }).waitFor({ state: 'visible' });
+
+        await checkA11y();
+    });
+
+    test('expanded Schemas', async ({ page, checkA11y }) => {
+        // Set filter for empty reponse for easier view of Schemas
+        await page.getByRole('textbox', { name: 'Filter by tag or path' }).fill('no-matching-api-resource');
+
+        // Expand a schema and its property
+        await page.getByRole('button', { name: 'api.error-detail' }).click();
+        await page.getByRole('button', { name: '[...]' }).first().click();
+
+        await page.getByText('The context in which the').waitFor({ state: 'visible' });
+
+        await checkA11y();
     });
 });

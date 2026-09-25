@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Cell, Header } from '@tanstack/react-table';
+import { IconButton } from '../Button';
 import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
@@ -119,18 +120,16 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
                 zIndex: zIndex,
                 left: leftValue,
             }}>
-            <div ref={ref} className='flex'>
+            <div ref={ref} className='flex items-center'>
                 {enableDragging && header?.id !== 'empty-column' && (
                     <Tooltip tooltip='Drag to reorder'>
-                        <button
-                            className={cn(
-                                'rounded-sm p-1 focus:outline-none focus-visible:focus-ring',
-                                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                            )}
+                        <IconButton
+                            aria-label='Drag to reorder'
+                            className={cn('rounded-sm', isDragging ? 'cursor-grabbing' : 'cursor-grab')}
                             {...attributes}
                             {...listeners}>
-                            <FontAwesomeIcon icon={faGripVertical} className='text-sm mr-2' />
-                        </button>
+                            <FontAwesomeIcon icon={faGripVertical} />
+                        </IconButton>
                     </Tooltip>
                 )}
                 {props.children}

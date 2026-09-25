@@ -20,6 +20,13 @@
           "name": "Charlie Brown",
           "environmentid": "LARGEDOGAREA-001"
         }
+      },
+      {
+        "id": "DOG-001",
+        "kinds": ["dogpark_Dog", "dogpark_Entity"],
+        "properties": {
+          "name": "Jerry"
+        }
       }
     ],
     "edges": [

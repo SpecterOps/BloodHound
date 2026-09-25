@@ -16,10 +16,10 @@
 
 import { List, ListItem, Skeleton, Tooltip } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import memoize from 'memoize-one';
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps, areEqual } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
+import { SelectedNode } from '../../types';
 import NodeIcon from '../NodeIcon';
 
 const ITEM_SIZE = 32;
@@ -50,6 +50,8 @@ const InnerElement = ({ style, ...rest }: any) => (
     />
 );
 
+type EntityPanelNodeClick = (item: SelectedNode) => void;
+
 interface InfiniteScrollingTableProps {
     fetchDataCallback: ({ skip, limit }: { skip: number; limit: number }) => Promise<{
         data: any[];
@@ -58,15 +60,14 @@ interface InfiniteScrollingTableProps {
         skip: number;
     }>;
     itemCount?: number;
-    onClick?: (item: any) => void;
+    onClick?: EntityPanelNodeClick;
 }
 
-const createItemData = memoize((items, onClick) => ({
-    items,
-    onClick,
-}));
-
-const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
+const Row = memo(function Row({
+    data,
+    index,
+    style,
+}: ListChildComponentProps<{ items: Record<number, any>; onClick?: EntityPanelNodeClick }>) {
     const tableStyle = useStyles();
 
     const { items, onClick } = data;
@@ -84,50 +85,32 @@ const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
         );
     }
 
-    const normalizedItem = {
+    const normalizedItem: SelectedNode = {
         id: item.objectID || item.props?.objectid || '',
         name: item.name || item.objectID || item.props?.name || item.props?.objectid || 'Unknown',
         type: item.label || item.kind || '',
     };
 
-    if (onClick) {
-        return (
-            <ListItem
-                className={itemClass}
-                onClick={() => {
-                    onClick(normalizedItem);
-                }}
-                style={{
-                    ...style,
-                    padding: '0 8px',
-                }}
-                data-testid='entity-row'>
-                <NodeIcon nodeType={normalizedItem.type} />
-                <Tooltip title={normalizedItem.name}>
-                    <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {normalizedItem.name}
-                    </div>
-                </Tooltip>
-            </ListItem>
-        );
-    } else {
-        return (
-            <ListItem
-                className={itemClass}
-                style={{
-                    ...style,
-                    padding: '0 8px',
-                }}
-                data-testid='entity-row'>
-                <NodeIcon nodeType={normalizedItem.type} />
-                <Tooltip title={normalizedItem.name}>
-                    <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {normalizedItem.name}
-                    </div>
-                </Tooltip>
-            </ListItem>
-        );
-    }
+    const handleClick = onClick ? () => onClick(normalizedItem) : undefined;
+
+    return (
+        <ListItem
+            className={itemClass}
+            onClick={handleClick}
+            style={{
+                ...style,
+                padding: '0 8px',
+                cursor: onClick ? 'pointer' : 'default',
+            }}
+            data-testid='entity-row'>
+            <NodeIcon nodeType={normalizedItem.type} />
+            <Tooltip title={normalizedItem.name}>
+                <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {normalizedItem.name}
+                </div>
+            </Tooltip>
+        </ListItem>
+    );
 }, areEqual);
 
 const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
@@ -137,7 +120,7 @@ const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
 }) => {
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, any>>({});
-    const itemData = createItemData(items, onClick);
+    const itemData = useMemo(() => ({ items, onClick }), [items, onClick]);
     const isItemLoaded = (index: number) => !!items[index];
 
     const loadMoreItems = async (startIndex: number, stopIndex: number) => {

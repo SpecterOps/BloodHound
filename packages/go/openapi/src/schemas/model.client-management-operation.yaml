@@ -23,9 +23,9 @@ allOf:
         format: uuid
         readOnly: true
       artifact_id:
-        readOnly: true
-        allOf:
-          - $ref: './null.uuid.yaml'
+        type: string
+        format: uuid
+        nullable: true
       type:
         readOnly: true
         allOf:
@@ -35,10 +35,14 @@ allOf:
         allOf:
           - $ref: './enum.client-management-operation-status.yaml'
       requested_by_user_id:
-        readOnly: true
-        allOf:
-          - $ref: './null.uuid.yaml'
+        type: string
+        format: uuid
+        nullable: true
       created_at:
+        type: string
+        format: date-time
+        readOnly: true
+      updated_at:
         type: string
         format: date-time
         readOnly: true

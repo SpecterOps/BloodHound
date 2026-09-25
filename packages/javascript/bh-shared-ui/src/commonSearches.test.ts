@@ -96,4 +96,27 @@ describe('common search list', () => {
             expect(query.query).toContain(decoyExclusion);
         });
     });
+
+    test.each([
+        {
+            commonSearches: CommonSearchesAGI,
+            decoyExclusion: `none(n IN nodes(p) WHERE COALESCE(n.system_tags, '') CONTAINS 'decoy')`,
+            mode: 'AGI',
+        },
+        {
+            commonSearches: CommonSearchesAGT,
+            decoyExclusion: 'none(n IN nodes(p) WHERE n:Tag_Decoy)',
+            mode: 'AGT',
+        },
+    ])('AD Sites queries exclude Decoy nodes in $mode mode', ({ commonSearches, decoyExclusion }) => {
+        const adSitesQueries = commonSearches.find(
+            (commonSearchType) =>
+                commonSearchType.category === 'Active Directory' && commonSearchType.subheader === 'AD Sites'
+        )?.queries;
+
+        expect(adSitesQueries).toHaveLength(5);
+        adSitesQueries?.forEach((query) => {
+            expect(query.query).toContain(decoyExclusion);
+        });
+    });
 });

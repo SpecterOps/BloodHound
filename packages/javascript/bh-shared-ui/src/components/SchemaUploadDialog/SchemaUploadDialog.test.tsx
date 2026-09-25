@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient } from 'react-query';
-import { extensionsKeys } from '../../hooks';
+import { customNodeKindsKeys, extensionsKeys } from '../../hooks';
 import { withoutErrorLogging } from '../../mocks';
 import { render, waitFor } from '../../test-utils';
 import { SchemaUploadDialog } from './SchemaUploadDialog';
@@ -221,7 +221,7 @@ describe('SchemaUploadDialog', () => {
         });
     });
 
-    it('invalidates the extensions query after a successful upload', async () => {
+    it('invalidates the extensions and custom node kinds queries after a successful upload', async () => {
         const queryClient = new QueryClient({
             defaultOptions: {
                 queries: {
@@ -241,6 +241,7 @@ describe('SchemaUploadDialog', () => {
 
         await waitFor(() => {
             expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: extensionsKeys.all });
+            expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: customNodeKindsKeys.all });
         });
     });
 

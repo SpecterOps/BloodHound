@@ -53,6 +53,43 @@ func newTestContext() context.Context {
 	return bhctx.Set(context.Background(), bhCtx)
 }
 
+func TestWriteJSON(t *testing.T) {
+	var (
+		ctx        = newTestContext()
+		validData  = []byte(`{"start":"2024-01-01T00:00:00Z","environments":["a"],"data":{"findings":[]}}`)
+		marshalErr = errors.New("marshal failed")
+	)
+
+	t.Run("writes data at top level with no envelope on success", func(t *testing.T) {
+		var (
+			viewerMock = mocks.NewMockJSONViewer(t)
+			recorder   = httptest.NewRecorder()
+		)
+
+		viewerMock.EXPECT().JSONView().Return(validData, nil)
+
+		responses.WriteJSON(ctx, viewerMock, http.StatusOK, recorder)
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.JSONEq(t, string(validData), recorder.Body.String())
+	})
+
+	t.Run("writes 500 error when JSONView fails", func(t *testing.T) {
+		var (
+			viewerMock = mocks.NewMockJSONViewer(t)
+			recorder   = httptest.NewRecorder()
+		)
+
+		viewerMock.EXPECT().JSONView().Return(nil, marshalErr)
+
+		responses.WriteJSON(ctx, viewerMock, http.StatusOK, recorder)
+
+		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "Failed to marshal response")
+	})
+}
+
 func TestWriteBasic(t *testing.T) {
 	var (
 		ctx        = newTestContext()

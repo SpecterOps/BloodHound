@@ -8,6 +8,7 @@
     "connection": "postgresql://"
   },
   "default_admin": {
+    "enabled": true,
     "principal_name": "admin",
     "password": "admin",
     "first_name": "BloodHound",

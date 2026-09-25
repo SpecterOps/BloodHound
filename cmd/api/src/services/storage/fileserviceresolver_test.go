@@ -16,6 +16,7 @@
 package storage_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -212,7 +213,7 @@ func TestNewDefaultFileServices(t *testing.T) {
 	require.NoError(t, os.MkdirAll(configuration.RetainedFilesDirectory(), 0o750))
 
 	// Act
-	fileServices, err := api_storage.NewDefaultFileServices(configuration)
+	fileServices, err := api_storage.NewDefaultFileServices(context.Background(), configuration)
 
 	// Assert
 	require.NoError(t, err)
@@ -229,6 +230,158 @@ func TestNewDefaultFileServices(t *testing.T) {
 		localStore, ok := storageFileService.Storage.(*storage.LocalStore)
 		require.True(t, ok)
 		require.NoError(t, localStore.Close())
+	}
+}
+
+func TestNewDefaultFileServices_ConfiguredS3Provider(t *testing.T) {
+	// Arrange
+	var (
+		workDir            = t.TempDir()
+		collectorsBasePath = t.TempDir()
+		configuration      = newTestStorageConfiguration(workDir, collectorsBasePath)
+	)
+
+	require.NoError(t, os.MkdirAll(configuration.TempDirectory(), 0o750))
+	require.NoError(t, os.MkdirAll(configuration.RetainedFilesDirectory(), 0o750))
+
+	configuration.Storage = config.StorageConfiguration{
+		InstanceBucket: config.BucketConfiguration{
+			Name:   "test-bucket",
+			Region: "us-east-1",
+		},
+		FileServices: map[string]config.FileServiceConfiguration{
+			string(storage.FileServiceIngest): {
+				Provider: "s3",
+				Prefix:   "/test/ingest/",
+			},
+		},
+	}
+
+	// Act
+	fileServices, err := api_storage.NewDefaultFileServices(context.Background(), configuration)
+
+	// Assert
+	require.NoError(t, err)
+	require.Len(t, fileServices, 4)
+
+	ingestFileService, ok := fileServices[storage.FileServiceIngest].(*storage.StorageFileService)
+	require.True(t, ok)
+	require.IsType(t, &storage.Store{}, ingestFileService.Storage)
+
+	for serviceName, fileService := range fileServices {
+		if serviceName == storage.FileServiceIngest {
+			continue
+		}
+
+		storageFileService, ok := fileService.(*storage.StorageFileService)
+		require.True(t, ok)
+
+		localStore, ok := storageFileService.Storage.(*storage.LocalStore)
+		require.True(t, ok)
+		require.NoError(t, localStore.Close())
+	}
+}
+
+func TestNewDefaultFileServices_RejectsInvalidConfiguration(t *testing.T) {
+	t.Parallel()
+
+	type testData struct {
+		name                  string
+		storageConfiguration  config.StorageConfiguration
+		additionalDefinitions []api_storage.FileServiceDefinition
+		errContains           string
+	}
+
+	validBucketConfiguration := config.BucketConfiguration{
+		Name:   "test-bucket",
+		Region: "us-east-1",
+	}
+
+	tests := []testData{
+		{
+			name: "unsupported provider",
+			storageConfiguration: config.StorageConfiguration{
+				FileServices: map[string]config.FileServiceConfiguration{
+					string(storage.FileServiceIngest): {Provider: "unknown"},
+				},
+			},
+			errContains: `file service "ingest": unsupported file service provider "unknown"`,
+		},
+		{
+			name: "missing S3 prefix",
+			storageConfiguration: config.StorageConfiguration{
+				InstanceBucket: validBucketConfiguration,
+				FileServices: map[string]config.FileServiceConfiguration{
+					string(storage.FileServiceIngest): {Provider: "s3"},
+				},
+			},
+			errContains: `file service "ingest": s3 prefix is required`,
+		},
+		{
+			name: "missing bucket name",
+			storageConfiguration: config.StorageConfiguration{
+				InstanceBucket: config.BucketConfiguration{Region: "us-east-1"},
+				FileServices: map[string]config.FileServiceConfiguration{
+					string(storage.FileServiceIngest): {Provider: "s3", Prefix: "ingest"},
+				},
+			},
+			errContains: "storage.instance_bucket.name is required",
+		},
+		{
+			name: "missing bucket region",
+			storageConfiguration: config.StorageConfiguration{
+				InstanceBucket: config.BucketConfiguration{Name: "test-bucket"},
+				FileServices: map[string]config.FileServiceConfiguration{
+					string(storage.FileServiceIngest): {Provider: "s3", Prefix: "ingest"},
+				},
+			},
+			errContains: "storage.instance_bucket.region is required",
+		},
+		{
+			name: "unknown file service",
+			storageConfiguration: config.StorageConfiguration{
+				FileServices: map[string]config.FileServiceConfiguration{
+					"unknown": {Provider: "local"},
+				},
+			},
+			errContains: `configuration references unknown file service "unknown"`,
+		},
+		{
+			name: "overlapping S3 prefixes",
+			storageConfiguration: config.StorageConfiguration{
+				InstanceBucket: validBucketConfiguration,
+				FileServices: map[string]config.FileServiceConfiguration{
+					string(storage.FileServiceIngest):   {Provider: "s3", Prefix: "files"},
+					string(storage.FileServiceRetained): {Provider: "s3", Prefix: "files/retained"},
+				},
+			},
+			errContains: "overlap",
+		},
+		{
+			name:                 "duplicate service definition",
+			storageConfiguration: config.StorageConfiguration{},
+			additionalDefinitions: []api_storage.FileServiceDefinition{
+				{Name: storage.FileServiceIngest, LocalPath: t.TempDir()},
+			},
+			errContains: `duplicate file service definition "ingest"`,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			configuration := config.Configuration{Storage: testCase.storageConfiguration}
+
+			fileServices, err := api_storage.NewDefaultFileServices(
+				context.Background(),
+				configuration,
+				testCase.additionalDefinitions...,
+			)
+
+			require.ErrorContains(t, err, testCase.errContains)
+			require.Nil(t, fileServices)
+		})
 	}
 }
 
@@ -286,7 +439,7 @@ func TestNewDefaultFileServices_ReturnsError(t *testing.T) {
 			configuration := testCase.setup(t)
 
 			// Act
-			fileServices, err := api_storage.NewDefaultFileServices(configuration)
+			fileServices, err := api_storage.NewDefaultFileServices(context.Background(), configuration)
 
 			// Assert
 			require.Error(t, err)

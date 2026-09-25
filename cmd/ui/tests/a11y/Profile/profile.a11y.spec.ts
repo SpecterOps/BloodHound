@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { test } from 'bh-playwright-testing';
 import { hideBySelector, restoreHidden } from 'bh-playwright-testing/axe';
 import {
     installCreateUserTokenStub,
@@ -22,23 +23,19 @@ import {
     installResetPasswordStub,
     installUserTokensStub,
 } from 'bh-playwright-testing/stubs';
-import { expectNoAccessibilityViolations, test } from '../../fixtures';
 
 const password = process.env.A11Y_TEST_PASSWORD;
 
 test.describe('WCAG A/AA violations - Profile', () => {
-    test.beforeEach('setup', async ({ page }) => {
-        await page.goto('/ui/my-profile');
+    test.beforeEach('setup', async ({ page, goAndWaitFor }) => {
+        await goAndWaitFor('/ui/my-profile', page.getByRole('heading', { name: 'User Information' }));
     });
 
-    test('Profile page', async ({ page, makeAxeBuilder }, testInfo) => {
-        await page.getByRole('heading', { name: 'User Information' }).waitFor({ state: 'visible' });
-
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+    test('Profile page', async ({ checkA11y }) => {
+        await checkA11y();
     });
 
-    test('API Key Management dialog - Create token', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('API Key Management dialog - Create token', async ({ page, checkA11y }) => {
         // Render the empty token list and stub the create token call so the flow can complete
         await installUserTokensStub(page, { tokens: [] });
         await installCreateUserTokenStub(page);
@@ -53,8 +50,10 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await page.getByText('No tokens available').waitFor({ state: 'visible' });
 
         // Token management dialog with no tokens
-        let results = await makeAxeBuilder().include('[data-testid="user-token-management-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page, attachmentNamePrefix: 'create-token-empty' });
+        await checkA11y({
+            attachmentNamePrefix: 'create-token-empty',
+            include: '[data-testid="user-token-management-dialog"]',
+        });
 
         await page.getByRole('button', { name: 'Create Token' }).click();
         await page.getByRole('heading', { name: 'Create User Token' }).waitFor({ state: 'visible' });
@@ -63,22 +62,23 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await hideBySelector(page, '[data-testid="user-token-management-dialog"]');
 
         // Create token form
-        results = await makeAxeBuilder().include('[data-testid="create-user-token-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page, attachmentNamePrefix: 'create-token-form' });
+        await checkA11y({
+            attachmentNamePrefix: 'create-token-form',
+            include: '[data-testid="create-user-token-dialog"]',
+        });
 
         await page.getByRole('textbox', { name: 'Token Name' }).fill('Playwright Token');
         await page.getByRole('button', { name: 'Save' }).click();
         await page.getByText('Below is the new authentication token.').waitFor({ state: 'visible' });
 
         // Token list with new token
-        results = await makeAxeBuilder().include('[data-testid="user-token-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
             attachmentNamePrefix: 'create-token-success',
+            include: '[data-testid="user-token-dialog"]',
         });
     });
 
-    test('API Key Management dialog - Revoke token', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('API Key Management dialog - Revoke token', async ({ page, checkA11y }) => {
         await installUserTokensStub(page);
         await installDeleteUserTokenStub(page);
 
@@ -89,9 +89,8 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await hideBySelector(page, '#content-wrapper');
 
         // List of current tokens
-        let results = await makeAxeBuilder().include('[data-testid="user-token-management-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
+            include: '[data-testid="user-token-management-dialog"]',
             attachmentNamePrefix: 'revoke-token-list',
         });
 
@@ -104,16 +103,15 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await page.getByRole('heading', { name: 'Auth Token' }).waitFor({ state: 'visible' });
 
         // Revoke confirmation dialog for the stubbed token
-        results = await makeAxeBuilder().include('[data-testid="token-revoke-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
             attachmentNamePrefix: 'revoke-token-confirmation',
+            include: '[data-testid="token-revoke-dialog"]',
         });
 
         // Successful confirmation returns to token list
     });
 
-    test('Reset Password dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Reset Password dialog', async ({ page, checkA11y }) => {
         // Stub the update password call so the flow can complete without changing the real password
         await installResetPasswordStub(page);
 
@@ -125,10 +123,9 @@ test.describe('WCAG A/AA violations - Profile', () => {
         const hiddenContent = await hideBySelector(page, '#content-wrapper');
 
         // Password change form
-        let results = await makeAxeBuilder().include('[data-testid="password-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
             attachmentNamePrefix: 'password-change-form',
+            include: '[data-testid="password-dialog"]',
         });
 
         // Fill out password change form to get failed validation state
@@ -144,10 +141,9 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await saveButton.click();
 
         // Password change failed validation state
-        results = await makeAxeBuilder().include('[data-testid="password-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
             attachmentNamePrefix: 'password-change-validation',
+            include: '[data-testid="password-dialog"]',
         });
 
         await restoreHidden(hiddenContent);
@@ -158,14 +154,13 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await saveButton.click();
 
         // Password change success toast
-        results = await makeAxeBuilder().include('.SnackbarContainer-root').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, {
-            page,
+        await checkA11y({
             attachmentNamePrefix: 'password-change-success',
+            include: '.SnackbarContainer-root',
         });
     });
 
-    test('Multi-Factor Authentication dialog', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Multi-Factor Authentication dialog', async ({ page, checkA11y }) => {
         await installMFAEnrollmentStub(page);
 
         // Open dialog
@@ -178,8 +173,7 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await page.getByText('To set up multi-factor authentication,').waitFor({ state: 'visible' });
 
         // Configure MFA dialog - input password
-        let results = await makeAxeBuilder().include('[data-testid="enable-2fa-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page, attachmentNamePrefix: 'mfa-password' });
+        await checkA11y({ attachmentNamePrefix: 'mfa-password', include: '[data-testid="enable-2fa-dialog"]' });
 
         const passwordInput = page.getByRole('textbox', { name: 'Password' });
         await passwordInput.fill(password);
@@ -190,15 +184,13 @@ test.describe('WCAG A/AA violations - Profile', () => {
         await page.getByRole('textbox', { name: 'One-Time Password' }).waitFor({ state: 'visible' });
 
         // Configure MFA dialog - input OTP
-        results = await makeAxeBuilder().include('[data-testid="enable-2fa-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page, attachmentNamePrefix: 'mfa-otp' });
+        await checkA11y({ attachmentNamePrefix: 'mfa-otp', include: '[data-testid="enable-2fa-dialog"]' });
 
         const otpInput = page.getByRole('textbox', { name: 'One-Time Password' });
         await otpInput.fill('123456');
         await nextButton.click();
 
         // Configure MFA dialog - success
-        results = await makeAxeBuilder().include('[data-testid="enable-2fa-dialog"]').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page, attachmentNamePrefix: 'mfa-success' });
+        await checkA11y({ attachmentNamePrefix: 'mfa-success', include: '[data-testid="enable-2fa-dialog"]' });
     });
 });

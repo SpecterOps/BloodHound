@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs"
@@ -250,6 +251,7 @@ func migrateEdges(ctx context.Context, sourceDB, destinationDB graph.Database, n
 }
 
 type PGMigrator struct {
+	db                  database.Database
 	graphSchema         graph.Schema
 	graphDBSwitch       *graph.DatabaseSwitch
 	ServerCtx           context.Context
@@ -259,8 +261,9 @@ type PGMigrator struct {
 	cfg                 config.Configuration
 }
 
-func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
+func NewPGMigrator(serverCtx context.Context, cfg config.Configuration, db database.Database, graphSchema graph.Schema, graphDBSwitch *graph.DatabaseSwitch) *PGMigrator {
 	return &PGMigrator{
+		db:            db,
 		graphSchema:   graphSchema,
 		graphDBSwitch: graphDBSwitch,
 		ServerCtx:     serverCtx,
@@ -303,6 +306,10 @@ func (s *PGMigrator) SwitchPostgreSQL(response http.ResponseWriter, request *htt
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else {
+		if err := s.db.ResetLastGraphOptimizeTime(request.Context()); err != nil {
+			slog.ErrorContext(request.Context(), "Error resetting last graph optimize time", attr.Error(err))
+		}
+
 		s.graphDBSwitch.Switch(pgDB)
 		response.WriteHeader(http.StatusOK)
 
@@ -320,6 +327,10 @@ func (s *PGMigrator) SwitchNeo4j(response http.ResponseWriter, request *http.Req
 			"error": fmt.Errorf("failed updating graph database driver preferences: %w", err),
 		}, http.StatusInternalServerError, response)
 	} else {
+		if err := s.db.ResetLastGraphOptimizeTime(request.Context()); err != nil {
+			slog.ErrorContext(request.Context(), "Error resetting last graph optimize time", attr.Error(err))
+		}
+
 		s.graphDBSwitch.Switch(neo4jDB)
 		response.WriteHeader(http.StatusOK)
 

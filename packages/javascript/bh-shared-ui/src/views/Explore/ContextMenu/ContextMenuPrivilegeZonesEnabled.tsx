@@ -92,6 +92,7 @@ const ContextMenu: FC<{
                 top: contextMenu?.mouseY || 0,
             }}
             anchorReference='anchorPosition'
+            onClose={onClose}
             onClick={onClose}
             keepMounted>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>

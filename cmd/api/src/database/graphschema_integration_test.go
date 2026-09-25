@@ -3239,6 +3239,14 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 					assert.Falsef(t, env.UpdatedAt.IsZero(), "Environment - updated_at is zero")
 					assert.Falsef(t, env.DeletedAt.Valid, "Environment - deleted_at should be null")
 
+					// Validate kind name fields when specified on the expected environment
+					if want.EnvironmentKindName != "" {
+						assert.Equalf(t, want.EnvironmentKindName, env.EnvironmentKindName, "Environment - environment_kind_name mismatch")
+					}
+					if want.EnvironmentKindDisplayName != "" {
+						assert.Equalf(t, want.EnvironmentKindDisplayName, env.EnvironmentKindDisplayName, "Environment - environment_kind_display_name mismatch")
+					}
+
 					found = true
 					break
 				}
@@ -3291,10 +3299,12 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
+				// CreateEnvironment returns environment_kind_name but not environment_kind_display_name
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:   extension.ID,
+					EnvironmentKindId:   envKind.ID,
+					EnvironmentKindName: nodeKind.Name,
+					SourceKindId:        int32(sourceKind.ID),
 				}
 
 				// Create new environment
@@ -3338,8 +3348,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
-				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, SourceKindId: int32(sourceKind.ID)}
-				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, SourceKindId: int32(sourceKind.ID)}
+				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, EnvironmentKindName: nodeKind1.Name, EnvironmentKindDisplayName: nodeKind1.DisplayName, SourceKindId: int32(sourceKind.ID)}
+				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, EnvironmentKindName: nodeKind2.Name, EnvironmentKindDisplayName: nodeKind2.DisplayName, SourceKindId: int32(sourceKind.ID)}
 
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment1.SchemaExtensionId, environment1.EnvironmentKindId, environment1.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating Environment 1")
@@ -3371,8 +3381,8 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind1 := getKindByName(t, testSuite, nodeKind1.Name)
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
-				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, SourceKindId: int32(sourceKind.ID)}
-				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, SourceKindId: int32(sourceKind.ID)}
+				environment1 := model.SchemaEnvironment{SchemaExtensionId: extension1.ID, EnvironmentKindId: environmentKind1.ID, EnvironmentKindName: nodeKind1.Name, EnvironmentKindDisplayName: nodeKind1.DisplayName, SourceKindId: int32(sourceKind.ID)}
+				environment2 := model.SchemaEnvironment{SchemaExtensionId: extension2.ID, EnvironmentKindId: environmentKind2.ID, EnvironmentKindName: nodeKind2.Name, EnvironmentKindDisplayName: nodeKind2.DisplayName, SourceKindId: int32(sourceKind.ID)}
 
 				_, err := testSuite.BHDatabase.CreateEnvironment(testSuite.Context, environment1.SchemaExtensionId, environment1.EnvironmentKindId, environment1.SourceKindId)
 				require.NoError(t, err, "unexpected error occurred when creating Environment 1")
@@ -3401,9 +3411,11 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          envKind.ID,
+					EnvironmentKindName:        nodeKind.Name,
+					EnvironmentKindDisplayName: nodeKind.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 
 				newEnvironment := createTestEnvironment(t, testSuite, environment.SchemaExtensionId, environment.EnvironmentKindId, environment.SourceKindId)
@@ -3467,14 +3479,18 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
 				environment1 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind1.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind1.ID,
+					EnvironmentKindName:        nodeKind1.Name,
+					EnvironmentKindDisplayName: nodeKind1.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 				environment2 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind2.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind2.ID,
+					EnvironmentKindName:        nodeKind2.Name,
+					EnvironmentKindDisplayName: nodeKind2.DisplayName,
+					SourceKindId:               int32(sourceKind.ID),
 				}
 
 				// Create Environment 1
@@ -3511,14 +3527,18 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				environmentKind2 := getKindByName(t, testSuite, nodeKind2.Name)
 
 				environment1 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind1.ID,
-					SourceKindId:      int32(sourceKindA.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind1.ID,
+					EnvironmentKindName:        nodeKind1.Name,
+					EnvironmentKindDisplayName: nodeKind1.DisplayName,
+					SourceKindId:               int32(sourceKindA.ID),
 				}
 				environment2 := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: environmentKind2.ID,
-					SourceKindId:      int32(sourceKindB.ID),
+					SchemaExtensionId:          extension.ID,
+					EnvironmentKindId:          environmentKind2.ID,
+					EnvironmentKindName:        nodeKind2.Name,
+					EnvironmentKindDisplayName: nodeKind2.DisplayName,
+					SourceKindId:               int32(sourceKindB.ID),
 				}
 
 				// Create Environment 1
@@ -3551,10 +3571,12 @@ func TestDatabase_Environments_CRUD(t *testing.T) {
 				envKind := getKindByName(t, testSuite, nodeKind.Name)
 				sourceKind := registerAndGetKind(t, testSuite, "Source_Kind_1")
 
+				// CreateEnvironment returns environment_kind_name but not environment_kind_display_name
 				environment := model.SchemaEnvironment{
-					SchemaExtensionId: extension.ID,
-					EnvironmentKindId: envKind.ID,
-					SourceKindId:      int32(sourceKind.ID),
+					SchemaExtensionId:   extension.ID,
+					EnvironmentKindId:   envKind.ID,
+					EnvironmentKindName: nodeKind.Name,
+					SourceKindId:        int32(sourceKind.ID),
 				}
 
 				// Create Environment
@@ -3650,7 +3672,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					KindId:            1,
 					Type:              model.SchemaFindingTypeRelationship,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3674,7 +3696,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding := model.SchemaFinding{
 					SchemaExtensionId: extension.ID,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 					PZDisplayName:     null.StringFrom("zone display name"),
@@ -3697,7 +3719,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3729,7 +3751,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3760,7 +3782,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 					SchemaExtensionId: extension.ID,
 					Type:              model.SchemaFindingTypeRelationship,
 					KindId:            1,
-					EnvironmentId:     environment.ID,
+					EnvironmentId:     environment.EnvironmentKindId,
 					Name:              "finding",
 					DisplayName:       "display name",
 				}
@@ -3813,7 +3835,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding1 := model.SchemaFinding{
 					SchemaExtensionId: createdExtension.ID,
 					KindId:            edgeKind.ID,
-					EnvironmentId:     createdEnvironment.ID,
+					EnvironmentId:     createdEnvironment.EnvironmentKindId,
 					Name:              "Finding_1",
 					DisplayName:       "Finding 1",
 				}
@@ -3822,7 +3844,7 @@ func TestDatabase_Findings_CRUD(t *testing.T) {
 				finding2 := model.SchemaFinding{
 					SchemaExtensionId: createdExtension.ID,
 					KindId:            edgeKind.ID,
-					EnvironmentId:     createdEnvironment.ID,
+					EnvironmentId:     createdEnvironment.EnvironmentKindId,
 					Name:              "Finding_2",
 					DisplayName:       "Finding 2",
 				}
@@ -3889,7 +3911,7 @@ func TestDatabase_Remediations_CRUD(t *testing.T) {
 			SchemaExtensionId: extension.ID,
 			KindId:            nodeKind.ID,
 			Type:              model.SchemaFindingTypeRelationship,
-			EnvironmentId:     environment.ID,
+			EnvironmentId:     environment.EnvironmentKindId,
 			Name:              "finding",
 			DisplayName:       "display name",
 		})
@@ -4271,7 +4293,6 @@ func TestDatabase_PrincipalKinds_CRUD(t *testing.T) {
 }
 
 func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
-	t.Parallel()
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
@@ -4288,7 +4309,7 @@ func TestDeleteSchemaExtension_CascadeDeletesAllDependents(t *testing.T) {
 		SchemaExtensionId: extension.ID,
 		Type:              model.SchemaFindingTypeRelationship,
 		KindId:            edgeKind.ID,
-		EnvironmentId:     environment.ID,
+		EnvironmentId:     environment.EnvironmentKindId,
 		Name:              "CascadeTestFinding",
 		DisplayName:       "Cascade Test Finding",
 	})
@@ -4363,12 +4384,12 @@ func TestDatabase_GetSchemaFindings(t *testing.T) {
 		require.NoError(t, err)
 
 		extensionId := ext.ID
-		environmentId := env.ID
+		environmentKindId := env.EnvironmentKindId
 		if i%3 == 0 {
 			extensionId = ext2.ID
-			environmentId = env2.ID
+			environmentKindId = env2.EnvironmentKindId
 		}
-		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentId, "F_"+strconv.Itoa(i), "", "")
+		finding, err := testSuite.BHDatabase.CreateSchemaFinding(testCtx, model.SchemaFindingTypeRelationship, extensionId, kind.KindId, environmentKindId, "F_"+strconv.Itoa(i), "", "")
 		require.NoError(t, err)
 		finding.Kind = graph.StringKind(kindName)
 
@@ -4826,7 +4847,7 @@ func TestUpdateSchemaFinding(t *testing.T) {
 			Type:              model.SchemaFindingTypeRelationship,
 			SchemaExtensionId: ext.ID,
 			KindId:            int32(relKind.ID),
-			EnvironmentId:     env.ID,
+			EnvironmentId:     env.EnvironmentKindId,
 			Name:              "TestFinding",
 			DisplayName:       "Original Display Name",
 		})

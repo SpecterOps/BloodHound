@@ -19,8 +19,8 @@
     current:
       nullable: true
       allOf:
-        - $ref: './model.client-management-operation.yaml'
+        - $ref: './model.client-support-bundle.yaml'
     last_finished:
       nullable: true
       allOf:
-        - $ref: './model.client-management-operation.yaml'
+        - $ref: './model.client-support-bundle.yaml'

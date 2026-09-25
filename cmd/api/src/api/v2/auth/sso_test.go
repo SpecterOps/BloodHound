@@ -185,7 +185,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	t.Run("successfully list auth providers with filtering", func(t *testing.T) {
 		// filtering by name
 		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "created_at", model.SQLFilter{
-			SQLString: "name = 'OIDC Provider 1'",
+			SQLString: "name = E'OIDC Provider 1'",
 		}).Return([]model.SSOProvider{ssoProviders[0]}, nil)
 		const reqUrl = endpoint + "?name=eq:OIDC Provider 1"
 
@@ -505,7 +505,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
@@ -641,7 +641,7 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil)
+			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, nil, nil)
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()

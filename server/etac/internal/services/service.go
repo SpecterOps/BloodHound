@@ -83,6 +83,54 @@ func (s *Service) ShouldFilterForETAC(user users.User) bool {
 	return true
 }
 
+// FilterEnvironmentsByAccess returns the environment IDs the user is allowed to query.
+// It returns nil when ETAC filtering does not apply, such as when the user has
+// access to all environments.
+func (s *Service) FilterEnvironmentsByAccess(ctx context.Context, user users.User, requestedIDs []string) ([]string, error) {
+	if !s.ShouldFilterForETAC(user) {
+		if len(requestedIDs) == 0 {
+			return nil, nil
+		}
+		return requestedIDs, nil
+	}
+
+	allowedList, err := s.appdb.GetEnvironmentTargetedAccessControlForUser(ctx, user.GetID())
+	if err != nil {
+		return nil, err
+	}
+
+	var allowlist []string
+	for _, envAccess := range allowedList {
+		allowlist = append(allowlist, envAccess.EnvironmentID)
+	}
+
+	if len(allowlist) == 0 {
+		return []string{""}, nil
+	}
+
+	if len(requestedIDs) == 0 {
+		return allowlist, nil
+	}
+
+	allowedSet := make(map[string]struct{}, len(allowlist))
+	for _, environmentID := range allowlist {
+		allowedSet[environmentID] = struct{}{}
+	}
+
+	var intersection []string
+	for _, environmentID := range requestedIDs {
+		if _, ok := allowedSet[environmentID]; ok {
+			intersection = append(intersection, environmentID)
+		}
+	}
+
+	if len(intersection) == 0 {
+		return []string{""}, nil
+	}
+
+	return intersection, nil
+}
+
 // checkUserAccessToEnvironments reports whether the user is permitted to access
 // every environment in the supplied list. Users with access to all environments
 // are always permitted.

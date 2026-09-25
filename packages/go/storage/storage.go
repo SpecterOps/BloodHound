@@ -62,6 +62,12 @@ type ListOptions struct {
 	Limit     int
 }
 
+type DeleteOptions struct {
+	// PruneEmptyParents removes empty parent directories after deleting a file.
+	// Storage backends without physical directories ignore this option.
+	PruneEmptyParents bool
+}
+
 // Storage serves as a storage abstraction that can be used to store and manage files
 // in a variety of storage backends.
 type Storage interface {
@@ -77,6 +83,10 @@ type Storage interface {
 	// Delete removes a file.
 	Delete(ctx context.Context, name string) error
 
+	// PruneEmptyParents removes empty parent directories after deleting a file.
+	// Storage backends without physical directories may implement this as a no-op.
+	PruneEmptyParents(ctx context.Context, name string) error
+
 	// Exists checks whether a file exists.
 	Exists(ctx context.Context, name string) (bool, error)
 
@@ -88,6 +98,9 @@ type Storage interface {
 
 	// Move moves an object. Is done by a copy and a delete.
 	Move(ctx context.Context, srcName, dstName string, options WriteOptions) error
+
+	// GetPresignedURL returns a presigned url to download the given file from the storage backend.
+	GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error)
 }
 
 // FileService serves as an abstraction to handle files with different storage backends. This serves as
@@ -111,6 +124,9 @@ type FileService interface {
 	// is not found, no error is returned.
 	DeleteFile(ctx context.Context, name string) error
 
+	// DeleteFileWithOptions deletes a file and applies backend-specific cleanup options.
+	DeleteFileWithOptions(ctx context.Context, name string, opts DeleteOptions) error
+
 	// WriteTempFile handles the creation of a temp file when given an io.Reader. A prefix
 	// can also be used to define how the temp file is created. WriteOptions can also be
 	// specified.
@@ -123,6 +139,9 @@ type FileService interface {
 	// ListFiles lists the files at a given location in the storage backend. This can be done
 	// recursively, or with a limit on the specified directory.
 	ListFiles(ctx context.Context, name string, opts ListOptions) ([]FileInfo, error)
+
+	// GetPresignedURL returns a presigned url to download the given file from the storage backend.
+	GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error)
 }
 
 type StorageFileService struct {
@@ -172,6 +191,20 @@ func (s *StorageFileService) DeleteFile(ctx context.Context, name string) error 
 	return s.Storage.Delete(ctx, name)
 }
 
+func (s *StorageFileService) DeleteFileWithOptions(ctx context.Context, name string, options DeleteOptions) error {
+	// Do not check whether the file exists before deleting. Pruning must remain
+	// retryable when an earlier attempt deleted the file but did not finish cleanup.
+	if err := s.Storage.Delete(ctx, name); err != nil {
+		return err
+	}
+
+	if options.PruneEmptyParents {
+		return s.Storage.PruneEmptyParents(ctx, name)
+	}
+
+	return nil
+}
+
 func (s *StorageFileService) WriteTempFile(ctx context.Context, prefix string, reader io.Reader, opts WriteOptions) (string, error) {
 	id, err := randomID()
 	if err != nil {
@@ -219,4 +252,8 @@ func MoveFileBetweenServices(
 	}
 
 	return sourceService.DeleteFile(ctx, sourceName)
+}
+
+func (s *StorageFileService) GetPresignedURL(ctx context.Context, name string, ttl time.Duration) (string, error) {
+	return s.Storage.GetPresignedURL(ctx, name, ttl)
 }

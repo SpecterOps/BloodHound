@@ -19,6 +19,7 @@ package routes
 import (
 	"fmt"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -26,9 +27,20 @@ import (
 )
 
 // Register attaches the identity endpoints to the given router instance.
-func Register(routerInst *router.Router, handlers *handlers.Handlers) {
-	var permissions = auth.Permissions()
+func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
+	var (
+		permissions         = auth.Permissions()
+		roleList            = handlers.RoleListView{}
+		permissionList      = handlers.PermissionListView{}
+		roleListRoute       = routerInst.GET("/api/v2/roles", handler.ListRoles)
+		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
+		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
+		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
+	)
 
-	routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handlers.GetRole).RequirePermissions(permissions.AuthManageSelf)
-	routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handlers.GetPermission).RequirePermissions(permissions.AuthManageSelf)
+	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute)
+	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
+	roleRoute.RequirePermissions(permissions.AuthManageSelf)
+	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
+	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
 }

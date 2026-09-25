@@ -17,14 +17,11 @@
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import { Button, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
+import { IconButton, Input, InputProps, Label, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
-import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import { ExportColumns } from './explore-table-utils';
-
-const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full dark:text-black';
 
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
@@ -82,22 +79,19 @@ const TableControls = <TData, TValue>({
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
-                    <div className='flex justify-center items-center relative'>
+                    <div className='flex justify-center items-center relative w-full'>
                         <Label htmlFor='explore-table-search' className='sr-only'>
                             Explore Table Search
                         </Label>
                         <Input
                             id='explore-table-search'
+                            variant='outlined'
                             data-testid='explore-table-search'
                             disabled={noResults}
-                            className={cn('border-0 w-48 rounded-none border-b-2 border-black bg-inherit', {
-                                [DISABLED_CLASSNAME]: noResults,
-                                'border-neutral-400': noResults,
-                            })}
                             {...SearchInputProps}
                         />
                         <FontAwesomeIcon
-                            className={cn('absolute right-2', { [DISABLED_CLASSNAME]: noResults })}
+                            className={cn('absolute right-2 pointer-events-none', { [DISABLED_CLASSNAME]: noResults })}
                             icon={faSearch}
                         />
                     </div>
@@ -105,14 +99,14 @@ const TableControls = <TData, TValue>({
                 {onDownloadClick && (
                     <Menu>
                         <MenuTrigger asChild>
-                            <button
+                            <IconButton
+                                variant='secondary'
                                 aria-disabled={noResults}
                                 data-testid='download-button'
                                 aria-label='Download CSV'
-                                className={cn({ [DISABLED_CLASSNAME]: noResults })}
                                 disabled={noResults}>
-                                <FontAwesomeIcon className={ICON_CLASSES} icon={faDownload} />
-                            </button>
+                                <FontAwesomeIcon icon={faDownload} />
+                            </IconButton>
                         </MenuTrigger>
                         <MenuContent align='start'>
                             <MenuItem onSelect={() => handleConfirmExport('all')}>All Columns</MenuItem>
@@ -121,15 +115,13 @@ const TableControls = <TData, TValue>({
                     </Menu>
                 )}
                 {onExpandClick && (
-                    <div
-                        role='button'
-                        tabIndex={0}
+                    <IconButton
+                        variant='secondary'
                         onClick={onExpandClick}
-                        onKeyDown={adaptClickHandlerToKeyDown(onExpandClick)}
                         data-testid='expand-button'
                         aria-label='Expand table view'>
-                        <FontAwesomeIcon className={ICON_CLASSES} icon={faExpand} />
-                    </div>
+                        <FontAwesomeIcon icon={faExpand} />
+                    </IconButton>
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
@@ -142,14 +134,13 @@ const TableControls = <TData, TValue>({
                     />
                 )}
                 {onCloseClick && (
-                    <Button
-                        variant='text'
+                    <IconButton
+                        variant='secondary'
                         onClick={onCloseClick}
-                        onKeyDown={adaptClickHandlerToKeyDown(onCloseClick)}
                         data-testid='close-button'
                         aria-label='Close table view'>
-                        <FontAwesomeIcon className={ICON_CLASSES} icon={faClose} />
-                    </Button>
+                        <FontAwesomeIcon icon={faClose} />
+                    </IconButton>
                 )}
             </div>
         </div>

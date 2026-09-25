@@ -73,7 +73,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onLoginViaSSO, loading 
                         <Button
                             size='large'
                             type='button'
-                            variant={'secondary'}
+                            variant='secondary'
                             onClick={onLoginViaSSO}
                             className='w-full'
                             disabled={loading}>

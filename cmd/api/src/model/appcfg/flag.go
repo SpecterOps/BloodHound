@@ -46,10 +46,15 @@ const (
 	FeatureClientBearerAuth             = "client_bearer_auth"
 	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureManagedOpenHoundCollection   = "managed_openhound_collection"
 	FeatureAPIKeyExpirationSupport      = "api_key_expiration_support"
 	FeatureCollectorSupportBundle       = "collector_support_bundle"
+	FeatureArtifactExpirationCleanup    = "artifact_expiration_cleanup"
 	FeatureVariableAnalysisMode         = "variable_analysis_mode"
 	FeatureUseRawObjectID               = "use_raw_object_id"
+	FeatureOpenGraphDataQuality         = "opengraph_data_quality"
+	FeatureFindingsPrioritizationV0     = "findings_prioritization_v0"
+	FeatureZoneNode                     = "zone_node"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
