@@ -224,6 +224,115 @@ func TestParseConfiguration_Storage(t *testing.T) {
 	}, configuration.Storage.FileServices["work"])
 }
 
+func TestConfiguration_SecretStore(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		name          string
+		configuration string
+		environment   []string
+		expected      config.SecretStoreConfiguration
+	}{
+		{
+			name:          "omitted",
+			configuration: `{}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/local",
+			},
+		},
+		{
+			name:          "empty section inherits defaults",
+			configuration: `{"secret_store": {}}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/local",
+			},
+		},
+		{
+			name:          "prefix override preserves default provider",
+			configuration: `{"secret_store": {"prefix": "bhe/custom"}}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/custom",
+			},
+		},
+		{
+			name:          "provider override preserves default prefix",
+			configuration: `{"secret_store": {"provider": "configured-provider"}}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "configured-provider",
+				Prefix:   "bhe/local",
+			},
+		},
+		{
+			name:          "region override preserves default provider and prefix",
+			configuration: `{"secret_store": {"region": "us-east-1"}}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/local",
+				Region:   "us-east-1",
+			},
+		},
+		{
+			name: "json configuration",
+			configuration: `{"secret_store": {
+				"provider": "aws",
+				"prefix": "bhe/custom",
+				"region": "us-east-1"
+			}}`,
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/custom",
+				Region:   "us-east-1",
+			},
+		},
+		{
+			name:          "environment configuration",
+			configuration: `{}`,
+			environment: []string{
+				"BHE_SECRET_STORE_PROVIDER=aws",
+				"BHE_SECRET_STORE_PREFIX=bhe/environment",
+				"BHE_SECRET_STORE_REGION=us-west-2",
+			},
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/environment",
+				Region:   "us-west-2",
+			},
+		},
+		{
+			name: "environment overrides json configuration",
+			configuration: `{"secret_store": {
+				"provider": "configured-provider",
+				"prefix": "bhe/custom",
+				"region": "us-east-1"
+			}}`,
+			environment: []string{
+				"BHE_SECRET_STORE_PROVIDER=aws",
+				"BHE_SECRET_STORE_PREFIX=bhe/environment",
+				"BHE_SECRET_STORE_REGION=us-west-2",
+			},
+			expected: config.SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/environment",
+				Region:   "us-west-2",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			configuration, err := config.ParseConfiguration([]byte(testCase.configuration))
+			require.NoError(t, err)
+			require.NoError(t, config.SetValuesFromEnv(config.BHAPIEnvironmentVariablePrefix, &configuration, testCase.environment))
+			assert.Equal(t, testCase.expected, configuration.SecretStore)
+		})
+	}
+}
+
 func TestParseConfiguration_DefaultAdminEnabled(t *testing.T) {
 	var testCases = []struct {
 		name            string
