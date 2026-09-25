@@ -177,6 +177,7 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 				ObjectId:      "HIDDEN",
 				IsTierZero:    false,
 				IsOwnedObject: false,
+				IsDecoyObject: false,
 				LastSeen:      time.Time{},
 				Properties:    nil,
 				Hidden:        true,

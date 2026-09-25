@@ -73,6 +73,10 @@ export const selectOwnedAssetGroupId = (state: AppState): number => {
     return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'owned')?.id;
 };
 
+export const selectDecoyAssetGroupId = (state: AppState): number | undefined => {
+    return state.assetgroups.assetGroups.find((assetGroup) => assetGroup.tag === 'decoy')?.id;
+};
+
 // use `createSelector` to memoize this selector because it returns an array which is
 // always different from the previous render because === on reference types will be false
 const selectAssetGroups = (state: AppState) => state.assetgroups.assetGroups;

@@ -41,6 +41,7 @@ import {
 } from 'doodle-ui';
 import {
     AssetGroupTag,
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeZone,
     CreateAssetGroupTagRequest,
@@ -96,6 +97,9 @@ export const TagForm: FC = () => {
 
     const tagsQuery = useTagsQuery();
     const tagQuery = useAssetGroupTagInfo(tagId);
+    const isDecoyTag = tagQuery.data?.type === AssetGroupTagTypeDecoy;
+    const canDeleteTag = tagQuery.isSuccess && !isDecoyTag && showDeleteButton();
+    const isNameInputDisabled = disableNameInput || isDecoyTag;
 
     const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
@@ -322,7 +326,7 @@ export const TagForm: FC = () => {
                     </Card>
                     {showSalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-2 mt-4 min-w-96 max-w-[672px]'>
-                        {showDeleteButton() && (
+                        {canDeleteTag && (
                             <TextButton
                                 data-testid='privilege-zones_save_tag-form_delete-button'
                                 fontColor='primary'
@@ -488,7 +492,7 @@ export const TagForm: FC = () => {
                                                         variant='outlined'
                                                         type='text'
                                                         autoComplete='off'
-                                                        disabled={disableNameInput}
+                                                        disabled={isNameInputDisabled}
                                                         data-testid='privilege-zones_save_tag-form_name-input'
                                                     />
                                                 </FormControl>
@@ -651,7 +655,7 @@ export const TagForm: FC = () => {
                         </Card>
                         {showSalesMessage && <SalesMessage />}
                         <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
-                            {showDeleteButton() && (
+                            {canDeleteTag && (
                                 <TextButton
                                     fontColor='primary'
                                     data-testid='privilege-zones_save_tag-form_delete-button'
