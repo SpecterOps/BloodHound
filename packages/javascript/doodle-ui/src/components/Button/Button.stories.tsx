@@ -13,14 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faInfo, faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DocsPage } from '@storybook/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
 import { useTheme } from '@storybook/theming';
-import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Button, IconButton as IconButtonComponent, TextButton as TextButtonComponent } from './Button';
+import { Button, TextButton as TextButtonComponent } from './Button';
 
 const ButtonDocsPage = () => {
     const theme = useTheme();
@@ -80,9 +79,18 @@ Use a Button when a user remains in the current context and triggers an action, 
 
 ### Forms and rendered elements
 
-Button defaults to \`type="button"\`. Set \`type="submit"\` or \`type="reset"\` explicitly when needed in a form.
+Button defaults to \`type="button"\`, preventing it from unintentionally submitting a containing form. Pass \`type="submit"\` when the Button should submit the form:
 
- Use the Base UI \`render\` prop when another element needs to provide the rendered structure. This replaces the former \`asChild\` pattern and avoids nesting interactive elements.
+\`\`\`tsx
+<form onSubmit={handleSubmit}>
+    <Button>Cancel</Button>
+    <Button type='submit'>Save</Button>
+</form>
+\`\`\`
+
+The Cancel Button renders with \`type="button"\`, while the Save Button keeps the supplied \`type="submit"\`. You can also pass \`type="reset"\` when native form reset behavior is intended.
+
+Use the Base UI \`render\` prop when another element needs to provide the rendered structure. This replaces the former \`asChild\` pattern and avoids nesting interactive elements.
 
 ### Deprecated APIs
 
@@ -143,7 +151,6 @@ Using the correct element provides expected keyboard behavior and helps assistiv
 export default meta;
 type ButtonStory = StoryObj<typeof meta>;
 type TextButtonStory = StoryObj<typeof TextButtonComponent>;
-type IconButtonStory = StoryObj<typeof IconButtonComponent>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const DefaultType: ButtonStory = {
@@ -174,7 +181,7 @@ export const DefaultType: ButtonStory = {
     parameters: {
         docs: {
             description: {
-                story: `Button defaults to \`type="button"\` so it does not unintentionally submit a containing form. Set \`type="submit"\` or \`type="reset"\` explicitly when needed.`,
+                story: `Button defaults to \`type="button"\` so it does not unintentionally submit a containing form. Use the type control to verify that an explicitly supplied \`type="submit"\` or \`type="reset"\` overrides the default.`,
             },
         },
     },
@@ -320,124 +327,6 @@ Use TextButton for lower-emphasis actions that keep the user in the current cont
                     <FontAwesomeIcon icon={faListUl} />
                     Disabled
                 </TextButtonComponent>
-            </div>
-        </>
-    ),
-};
-
-export const IconButton: IconButtonStory = {
-    args: {
-        variant: 'default',
-        disabled: false,
-        size: 16,
-        'aria-label': 'Show information',
-    },
-    argTypes: {
-        variant: {
-            options: ['default', 'primary', 'secondary'],
-            control: 'select',
-        },
-        children: {
-            control: false,
-            table: {
-                disable: true,
-            },
-        },
-        'aria-label': {
-            description: 'Required accessible name describing the action performed by the icon button.',
-            control: 'text',
-            table: {
-                category: 'Accessibility',
-                type: {
-                    summary: 'string',
-                },
-            },
-        },
-        size: {
-            description:
-                'Sets the icon width and height in pixels. Defaults to 16. The square button resizes with the icon.',
-            control: {
-                type: 'number',
-                min: 8,
-                step: 1,
-            },
-            table: {
-                category: 'Appearance',
-                defaultValue: {
-                    summary: '16',
-                },
-                type: {
-                    summary: 'number',
-                },
-            },
-        },
-    },
-    parameters: {
-        controls: {
-            exclude: ['fontColor'],
-        },
-        docs: {
-            description: {
-                story: `### Sizing
-
-The \`size\` prop sets the icon's width and height in pixels. The button automatically resizes around the icon while preserving its square shape and consistent padding.
-
-\`\`\`tsx
-<IconButton aria-label='Open filters' size={16}>
-    <FilterIcon />
-</IconButton>
-\`\`\`
-
-The default icon size is \`16px\`. By default, the button adds \`8px\` of padding on every side, so its total width and height are the icon size plus \`16px\`. For example, \`size={16}\` produces a \`32px × 32px\` button.
-
-Use the \`size\` prop to resize the icon and button together. Use \`className\` only when you need to override spacing or other presentation.
-
-### Accessible label
-
-- Because an icon usually does not provide an accessible name, every \`IconButton\` requires an \`aria-label\`. The label should describe the action performed by the button.
-
-\`\`\`tsx
-<IconButton aria-label='Open settings'>
-    <SettingsIcon />
-</IconButton>
-\`\`\`
-
-Do not use the icon's name as the label when it does not describe the action. For example, prefer \`"Show filter options"\` over \`"Filter icon"\`.
-
-*** Coming Soon *** -
-Tooltip for IconButton`,
-            },
-        },
-    },
-    render: ({ ...buttonProps }) => (
-        <>
-            {/* Storybook controls affect only this button */}
-            <div className='flex justify-center mb-10'>
-                <IconButtonComponent {...buttonProps}>
-                    <FontAwesomeIcon icon={faInfo} />
-                </IconButtonComponent>
-            </div>
-            <hr className='mb-10' />
-            {/* These buttons remain static */}
-            <div className='flex items-center gap-4'>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Trash Icon' size={18}>
-                        <FontAwesomeIcon icon={faTrash} />
-                    </IconButtonComponent>
-                    Primary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Filter' size={24} variant='secondary'>
-                        <AppIcon.FilterOutline />
-                    </IconButtonComponent>
-                    Secondary
-                </div>
-                <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Filter Icon' variant='primary' disabled size={24}>
-                        <AppIcon.FilterOutline />
-                    </IconButtonComponent>
-                    Disabled
-                </div>
             </div>
         </>
     ),

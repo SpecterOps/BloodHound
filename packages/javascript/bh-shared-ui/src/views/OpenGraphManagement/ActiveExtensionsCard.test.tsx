@@ -286,10 +286,16 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('disables delete button for built-in extensions', async () => {
+        const user = userEvent.setup();
         render(<ActiveExtensionsCard />);
 
-        const activeDirectoryDeleteButton = await screen.findByLabelText('Delete Active Directory');
+        const activeDirectoryDeleteButton = await screen.findByRole('button', { name: 'Delete Active Directory' });
         expect(activeDirectoryDeleteButton).toBeDisabled();
+
+        await user.hover(activeDirectoryDeleteButton.parentElement!);
+        const tooltips = await screen.findAllByRole('tooltip');
+        expect(tooltips).toHaveLength(1);
+        expect(tooltips[0]).toHaveTextContent('Built-in extensions cannot be deleted.');
 
         const azureDeleteButton = screen.getByLabelText('Delete Azure');
         expect(azureDeleteButton).toBeDisabled();
@@ -299,11 +305,17 @@ describe('ActiveExtensionsCard', () => {
     });
 
     it('disables delete button for user without correct permissions', async () => {
+        const user = userEvent.setup();
         checkPermissionMock.mockReturnValue(false);
         render(<ActiveExtensionsCard />);
 
-        const customExtensionDeleteButton = await screen.findByLabelText('Delete Custom Extension');
+        const customExtensionDeleteButton = await screen.findByRole('button', { name: 'Delete Custom Extension' });
         expect(customExtensionDeleteButton).toBeDisabled();
+
+        await user.hover(customExtensionDeleteButton.parentElement!);
+        const tooltips = await screen.findAllByRole('tooltip');
+        expect(tooltips).toHaveLength(1);
+        expect(tooltips[0]).toHaveTextContent('You do not have permission to delete this extension.');
     });
 
     it('disables confirm button until extension name is typed correctly', async () => {

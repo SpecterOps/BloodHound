@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
+import { Button, ButtonVariants, CheckboxWithLabel, Icon } from 'doodle-ui';
 import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -382,6 +382,7 @@ const CypherSearchInner = ({
                             </Button>
                             <SaveQueryActionMenu saveAs={handleSaveAs} />
 
+                            {/* below is a link, rather than a Button, as it launches to a new page */}
                             <a
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noopener noreferrer'
@@ -394,7 +395,9 @@ const CypherSearchInner = ({
                                     }),
                                     'group px-1.5'
                                 )}>
-                                <AppIcon.Info size={24} />
+                                <Icon aria-label='Learn more about Cypher (opens in a new tab)'>
+                                    <AppIcon.Info size={24} />
+                                </Icon>
                             </a>
 
                             <Button

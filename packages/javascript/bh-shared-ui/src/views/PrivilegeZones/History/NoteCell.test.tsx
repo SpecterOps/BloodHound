@@ -91,6 +91,18 @@ describe('NoteCell component', () => {
         expect(screen.getByTestId('lined-paper-icon')).toBeInTheDocument();
     });
 
+    it('displays a single tooltip for a note button', async () => {
+        const user = userEvent.setup();
+
+        render(<NoteCell row={{ original: defaultItem }} />);
+
+        await user.hover(screen.getByRole('button', { name: 'Show note' }));
+
+        const tooltips = await screen.findAllByRole('tooltip');
+        expect(tooltips).toHaveLength(1);
+        expect(tooltips[0]).toHaveTextContent('Show note');
+    });
+
     it('calls setSelected with correct data on click', () => {
         (useHistoryTableContext as jest.Mock).mockReturnValue({
             selected: null,

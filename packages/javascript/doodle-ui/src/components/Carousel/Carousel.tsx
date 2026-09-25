@@ -19,7 +19,8 @@ import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-reac
 import * as React from 'react';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, IconButton } from '../Button';
+import { Button } from '../Button';
+import { IconButton } from '../IconButton';
 import { cn } from '../utils';
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -251,7 +252,9 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
 });
 CarouselDots.displayName = 'CarouselDots';
 
-const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof IconButton>>(
+type CarouselNextProps = Omit<React.ComponentPropsWithoutRef<typeof IconButton>, 'children'>;
+
+const CarouselNext = React.forwardRef<HTMLButtonElement, CarouselNextProps>(
     ({ ...props }, ref) => {
         const { scrollNext, canScrollNext } = useCarousel();
 
