@@ -186,6 +186,8 @@ public static readonly string SiteObject = "siteobject";
 public static readonly string ObjectClass = "objectclass";
 public static readonly string GPOStatusRaw = "gpostatusraw";
 public static readonly string GPOStatus = "gpostatus";
+public static readonly string DisabledExtensions = "disabledextensions";
+public static readonly string DisabledExtensionsCollected = "disabledextensionscollected";
 
 }
 }

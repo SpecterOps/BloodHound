@@ -21,10 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -88,7 +91,18 @@ func WriteGraphToDatabase(db graph.Database, g *Graph) error {
 			}
 			props.Set("name", node.Caption)
 
-			if dbNode, err := tx.CreateNode(props, graph.StringsToKinds(node.Labels)...); err != nil {
+			// Determine node kinds and add Base and AZBase
+			nodeKinds := graph.StringsToKinds(node.Labels)
+			isAD := slices.ContainsFunc(nodeKinds, func(k graph.Kind) bool { return slices.Contains(ad.NodeKinds(), k) })
+			isAzure := slices.ContainsFunc(nodeKinds, func(k graph.Kind) bool { return slices.Contains(azure.NodeKinds(), k) })
+			if isAD {
+				nodeKinds = append(nodeKinds, ad.Entity)
+			}
+			if isAzure {
+				nodeKinds = append(nodeKinds, azure.Entity)
+			}
+
+			if dbNode, err := tx.CreateNode(props, nodeKinds...); err != nil {
 				return fmt.Errorf("could not create node `%s`: %w", node.ID, err)
 			} else {
 				nodeMap[node.ID] = dbNode.ID
@@ -136,12 +150,13 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
+		kLowercase := strings.ToLower(k)
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
 				return nil, fmt.Errorf("could not process time function `%s`: %w", v, err)
 			} else {
-				out.Set(k, ts)
+				out.Set(kLowercase, ts)
 			}
 		case strings.HasPrefix(v, "BOOL:"):
 			_, val, found := strings.Cut(v, "BOOL:")
@@ -150,10 +165,30 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else if boolVal, err := strconv.ParseBool(val); err != nil {
 				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
 			} else {
-				out.Set(k, boolVal)
+				out.Set(kLowercase, boolVal)
+			}
+		case strings.HasPrefix(v, "STRLIST:"):
+			_, val, found := strings.Cut(v, "STRLIST:")
+			if !found {
+				return nil, fmt.Errorf("could not process list value `%s`", v)
+			}
+			listVal := strings.Split(val, ",")
+			for i := range listVal {
+				listVal[i] = strings.TrimSpace(listVal[i])
+			}
+			out.Set(kLowercase, listVal)
+		case strings.HasPrefix(v, "DECIMAL:"):
+			_, val, found := strings.Cut(v, "DECIMAL:")
+			if !found {
+				return nil, fmt.Errorf("could not process decimal value `%s`", v)
+			}
+			if floatVal, err := strconv.ParseFloat(val, 64); err != nil {
+				return nil, fmt.Errorf("could not process decimal value `%s`: %w", v, err)
+			} else {
+				out.Set(kLowercase, floatVal)
 			}
 		default:
-			out.Set(k, v)
+			out.Set(kLowercase, v)
 		}
 	}
 	return out, nil
