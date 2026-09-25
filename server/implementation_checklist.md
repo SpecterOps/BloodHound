@@ -108,6 +108,8 @@ View types decouple the wire format from the domain model.
 -   [ ] Create a `XxxView` struct with `json:` tags for every response shape
 -   [ ] Add a `BuildXxxView(domain services.Xxx) XxxView` function that projects the domain type to the view
 -   [ ] Implement `JSONView() ([]byte, error)` on each view type to satisfy `responses.JSONViewer`
+-   [ ] **For list/collection endpoints that accept sort or filter query parameters**, declare the query-parameter contract here by implementing `params.Sortable` (`IsSortable(field string) bool`) and/or `params.Filterable` (`ValidFilters() map[string]params.FilterableField`) on the list view (or a dedicated `XxxSchema` struct). Step 7 wires these into the route.
+-   [ ] List only the columns that are actually sortable/filterable against the underlying table. **Do not expose a field just because the domain or `Serial`/`Basic` model embeds it** — see [Handling `deleted_at` and other phantom columns](#handling-deleted_at-and-other-phantom-columns).
 
 📖 See [JSON Views Pattern](#json-views-pattern) for code example.
 
@@ -121,7 +123,9 @@ The handler interface is defined here (consumer side) to enable independent mock
 -   [ ] Add `//go:generate go tool mockery` at the top of the file
 -   [ ] Implement the `Handlers` struct and `NewHandlersContainer` constructor
 -   [ ] Implement each `http.HandlerFunc` on `Handlers` (extract request values, call service, write response)
--   [ ] Add a package-level `handleXxxError(ctx, err, response)` helper that maps sentinel errors to HTTP status codes using `errors.Is`
+-   [ ] Add a package-level `handleXxxError(ctx, err, response)` helper that maps sentinel errors to HTTP status codes using `errors.Is` (see [Error mapping](#error-mapping))
+-   [ ] For endpoints with query-parameter middleware, read the parsed values from the request context via `bhCtx := bhctx.Get(ctx)` (fields `bhCtx.Filters`, `bhCtx.Sort`, `bhCtx.Skip`, `bhCtx.Limit`) — never re-parse raw query strings in the handler
+-   [ ] Preserve the legacy response envelope: use `responses.WriteBasic(...)` for single objects and `responses.WritePaginated(ctx, view, bhCtx.Limit, bhCtx.Skip, count, http.StatusOK, response)` for paginated lists (see [Preserve the response envelope](#preserve-the-response-envelope))
 -   [ ] Write unit tests in `handlers_test.go` using the generated `MockMyFeature`
     -   Use `httptest.NewRecorder()` to capture responses
     -   Pass `request.Context()` to mock expectations (not `mock.Anything`)
@@ -134,6 +138,11 @@ The handler interface is defined here (consumer side) to enable independent mock
 
 -   [ ] Call `routerInst.GET/PUT/DELETE(...)` with the correct path
 -   [ ] Attach `.RequirePermissions(...)` or `.RequireAuth()` to enforce authorization
+-   [ ] Match the **exact permission(s)** the legacy route enforced — verify against `cmd/api/src/api/registration/v2.go` (or wherever the old route was registered) before deleting it in Step 11
+-   [ ] For endpoints that accept query parameters, opt into the shared middleware with the fluent builders (a nil/absent schema is a pass-through). Invalid values are rejected by the middleware as `400 Bad Request`:
+    -   `.WithFilters(schema, ignoredParams...)` — validates `filter` params against `params.Filterable`; pass app-specific params to skip (e.g. `api.QueryParameterEnvironmentId`)
+    -   `.WithSort(schema)` — validates `sort_by` params against `params.Sortable`
+    -   `.WithPaging(params.PagingConfig{DefaultLimit: N, AllowUnlimited: bool})` — parses and validates `skip` and `limit`
 -   [ ] Write a route registration test in `routes_test.go` that:
     -   Asserts every method+path is registered using `muxRouter.Match`
     -   Dispatches unauthenticated requests and asserts 401 Unauthorized (validates middleware is attached)
@@ -195,12 +204,59 @@ Now that the new module is registered, update the e2e test to use it instead of 
 
 ## Step 12 – Prepare for code review
 
+-   [ ] If the endpoint's contract changed (path, query params, sortable/filterable fields, response shape), update the OpenAPI docs — see [Update the OpenAPI docs](#update-the-openapi-docs)
 -   [ ] Run `just prepare-for-codereview` and fix any issues it reports
 -   [ ] Confirm all tests pass: `go test ./server/<feature>/...` and `go test -tags integration ./server/<feature>/...`
 -   [ ] Open a PR with the title format: `<conventional-commit-tag>: <Title> <Jira tag>`
     -   Example: `feat: add datapipe status endpoint BED-8715`
 
 > **What `just prepare-for-codereview` does:** Runs `just deps`, `just modsync`, `just generate` (generates mocks, adds license headers, runs goimports, formats code, bundles OpenAPI docs), `just license`, `just analysis`, and `just show`.
+
+---
+
+## Common migration pitfalls
+
+These issues recur across endpoint migrations. Check for them explicitly.
+
+### Handling `deleted_at` and other phantom columns
+
+Legacy list endpoints frequently derived their sortable/filterable columns from the domain model. Models that embed `Serial`/`Basic` (`lib/go/api/v2/views/view.go`) inherit `created_at`, `updated_at`, **and `deleted_at`** — but many tables (e.g. `relationship_findings`, `list_findings`) have no `deleted_at` column, so sorting or filtering on it has no valid mapping.
+
+When you encounter this while migrating an endpoint:
+
+-   [ ] **Do not** carry `deleted_at` (or any other embedded field with no backing column) into the new `IsSortable`/`ValidFilters` schema
+-   [ ] A request that sorts or filters on `deleted_at` must be rejected as `400 Bad Request` — this happens automatically once the schema omits the column, since the sort/filter middleware validates against the schema
+-   [ ] Update the OpenAPI docs so the endpoint no longer advertises `deleted_at` as sortable/filterable (see below)
+
+> This is an intentional, documented behavior change from the legacy endpoint, which advertised `deleted_at` as sortable even though the underlying query could never satisfy it.
+
+### Update the OpenAPI docs
+
+Any change to an endpoint's contract (path, query params, sortable/filterable fields, response shape) must be reflected in the OpenAPI spec.
+
+-   [ ] Edit the **source** YAML under `packages/go/openapi/src/` (`paths/`, `parameters/`, `schemas/`, `responses/`)
+-   [ ] Regenerate the bundled `packages/go/openapi/doc/openapi.json` with `just gen-spec` (also run by `just prepare-for-codereview`)
+-   [ ] Commit the YAML source and `openapi.json` together — a diff to one without the other is a review smell
+
+### Error mapping
+
+-   [ ] Map each service sentinel to the **same** HTTP status the legacy handler returned, using `errors.Is` inside `handleXxxError`
+-   [ ] Reuse the shared `api.ErrorResponseDetails*` constants for error messages instead of inventing new wording
+
+### Preserve the response envelope
+
+-   [ ] Match the legacy JSON shape byte-for-byte: field names/`json:` tags, nullability, and any always-empty or never-populated fields
+-   [ ] Use `responses.WriteBasic` for single objects and `responses.WritePaginated` for paginated lists, matching whichever the legacy endpoint used
+-   [ ] Assert the full wire contract in the e2e test so a shape regression fails loudly
+
+### Deterministic sort order
+
+-   [ ] Provide a default `ORDER BY` for when no sort is requested, matching the legacy default
+-   [ ] Append stable tie-breaker column(s) to every sort so pagination stays consistent across pages
+
+### Re-validate runtime-dependent columns in the service layer
+
+-   [ ] When the valid sort/filter set depends on runtime state (e.g. the resolved finding type on the attack-path details route), the schema declares the union of valid columns and the **service layer re-validates** each column, returning a sentinel the handler maps to `400`
 
 ---
 

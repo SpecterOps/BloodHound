@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -151,6 +152,18 @@ type listPermissionsResponseEnvelope struct {
 	} `json:"data"`
 }
 
+// listUsersResponseEnvelope is the JSON envelope shape returned by the
+// GET /api/v2/bloodhound-users handler.
+type listUsersResponseEnvelope struct {
+	Data struct {
+		Users []struct {
+			PrincipalName string  `json:"principal_name"`
+			EmailAddress  *string `json:"email_address"`
+			FirstName     *string `json:"first_name"`
+		} `json:"users"`
+	} `json:"data"`
+}
+
 // newListRolesHandler wires the identity slice's ListRoles handler backed by
 // the given database, wrapped in the same filter and sort middleware the route
 // applies in production (see routes.Register). The middleware parses and
@@ -180,6 +193,37 @@ func newListPermissionsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	)
 
 	return handler.ServeHTTP
+}
+
+// newListUsersHandler wires the identity slice's ListUsers handler through the
+// production sort and filter middleware. Sort is the outer middleware so that an
+// invalid sort is rejected before filter validation, matching the legacy handler.
+func newListUsersHandler(db *database.BloodhoundDB) http.HandlerFunc {
+	var (
+		handlerSet = newIdentityHandlers(db)
+		userList   = handlers.UserListView{}
+		handler    = middleware.SortMiddleware(userList)(
+			middleware.FilterMiddleware(userList)(http.HandlerFunc(handlerSet.ListUsers)),
+		)
+	)
+
+	return handler.ServeHTTP
+}
+
+// seedUser inserts a user row directly via the pool with every non-defaulted
+// column populated so the strict pgx scanners in ListUsers do not encounter
+// NULLs. It returns the seeded principal name for convenience.
+func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string, supportAccount bool) string {
+	t.Helper()
+
+	_, err := pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES (gen_random_uuid(), $1, $2, $3, $4, now(), false, true, false, $5, now(), now())`,
+		principalName, principalName+"-first", principalName+"-last", principalName+"@example.com", supportAccount,
+	)
+	require.NoError(t, err)
+
+	return principalName
 }
 
 func TestIdentity_GetPermission(t *testing.T) {
@@ -565,6 +609,204 @@ func TestIdentity_ListPermissions(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				assertBody: func(t *testing.T, body []byte) {
 					assert.Contains(t, string(body), api.ErrorResponseDetailsFilterPredicateNotSupported)
+				},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			recorder := httptest.NewRecorder()
+			testMock.handler.ServeHTTP(recorder, testCase.buildRequest(t))
+
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.responseHeader, recorder.Result().Header)
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
+}
+
+func TestIdentity_ListUsers(t *testing.T) {
+	type mock struct {
+		handler http.Handler
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		assertBody     func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func(t *testing.T) *http.Request
+		expected     expected
+	}
+
+	var (
+		db      = setupIdentityDB(t)
+		ctx     = context.Background()
+		handler = newListUsersHandler(db)
+	)
+
+	// Seed two regular users and one support account. The support account must
+	// never appear in the response, mirroring the legacy support_account = false
+	// filter the migrated handler applies.
+	userA := seedUser(t, ctx, db.Pool(), "user-a", false)
+	userB := seedUser(t, ctx, db.Pool(), "user-b", false)
+	supportUser := seedUser(t, ctx, db.Pool(), "support", true)
+
+	testMock := mock{handler: http.HandlerFunc(handler)}
+
+	newRequest := func(t *testing.T, query url.Values) *http.Request {
+		t.Helper()
+		reqCtx := context.WithValue(ctx, bhctx.ValueKey, &bhctx.Context{})
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, "/api/v2/bloodhound-users", nil)
+		require.NoError(t, err)
+		req.URL.RawQuery = query.Encode()
+		return req
+	}
+
+	principalsIn := func(envelope listUsersResponseEnvelope) []string {
+		names := make([]string, 0, len(envelope.Data.Users))
+		for _, user := range envelope.Data.Users {
+			names = append(names, user.PrincipalName)
+		}
+		return names
+	}
+
+	tt := []testData{
+		{
+			name: "Success: regular users are returned and support accounts excluded - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listUsersResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+
+					names := principalsIn(envelope)
+					assert.Contains(t, names, userA)
+					assert.Contains(t, names, userB)
+					assert.NotContains(t, names, supportUser, "support accounts must be excluded from the list")
+				},
+			},
+		},
+		{
+			name: "Success: users are sorted by principal_name - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"principal_name"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listUsersResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					for i := 1; i < len(envelope.Data.Users); i++ {
+						assert.LessOrEqual(t, envelope.Data.Users[i-1].PrincipalName, envelope.Data.Users[i].PrincipalName, "users should be sorted by principal_name ascending")
+					}
+				},
+			},
+		},
+		{
+			name: "Success: users are filtered by email_address - 200",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"email_address": {"eq:" + userA + "@example.com"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					var envelope listUsersResponseEnvelope
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Users, 1)
+					assert.Equal(t, userA, envelope.Data.Users[0].PrincipalName)
+				},
+			},
+		},
+		{
+			name: "Error: sort column is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"invalidColumn"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsNotSortable)
+				},
+			},
+		},
+		{
+			name: "Error: deleted_at sort column is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"deleted_at"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsNotSortable)
+				},
+			},
+		},
+		{
+			name: "Error: filter column is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"foo": {"eq:bar"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsColumnNotFilterable)
+				},
+			},
+		},
+		{
+			name: "Error: filter predicate is malformed - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"email_address": {"invalidPredicate:foo"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsBadQueryParameterFilters)
+				},
+			},
+		},
+		{
+			name: "Error: filter predicate is not supported - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"first_name": {"gt:0"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsFilterPredicateNotSupported)
+				},
+			},
+		},
+		{
+			name: "Error: sort error takes precedence over filter error - 400",
+			buildRequest: func(t *testing.T) *http.Request {
+				return newRequest(t, url.Values{"sort_by": {"invalidColumn"}, "foo": {"eq:bar"}})
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				assertBody: func(t *testing.T, body []byte) {
+					assert.Contains(t, string(body), api.ErrorResponseDetailsNotSortable)
+					assert.NotContains(t, string(body), api.ErrorResponseDetailsColumnNotFilterable)
 				},
 			},
 		},

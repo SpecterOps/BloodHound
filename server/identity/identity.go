@@ -37,3 +37,21 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool, rateLimit func() mu
 
 	routes.Register(routerInst, handlerSet, rateLimit)
 }
+
+// RegisterUserListAlias builds the identity store -> service -> handler chain and
+// registers the list-users endpoint at the provided path, applying the supplied
+// rate-limit middleware factory when it is non-nil. It supports enterprise
+// backwards-compatibility aliases (e.g. /api/v2/bhe-users) without leaking
+// enterprise-specific paths into the shared identity route table.
+func RegisterUserListAlias(routerInst *router.Router, pool *pgxpool.Pool, path string, rateLimitMiddleware func() mux.MiddlewareFunc) {
+	var (
+		store      = appdb.NewStore(pool)
+		svc        = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+		route      = routes.RegisterUserListRoute(routerInst, handlerSet, path)
+	)
+
+	if rateLimitMiddleware != nil {
+		router.With(rateLimitMiddleware, route)
+	}
+}
