@@ -8703,7 +8703,7 @@
       "delete": {
         "operationId": "DeleteSavedQuery",
         "summary": "Delete a saved query",
-        "description": "Delete an existing saved query by ID",
+        "description": "Delete an existing saved query by ID. Note that only queries owned by the requesting user and public queries if requested by an admin can be deleted. Queries associated with an extension cannot be deleted.\n",
         "tags": [
           "Cypher",
           "Community",
@@ -8748,7 +8748,7 @@
       "put": {
         "operationId": "UpdateSavedQuery",
         "summary": "Update a saved query",
-        "description": "Update an existing saved query by ID",
+        "description": "Update an existing saved query by ID. Note that only queries owned by the requesting user and public queries if requested by an admin can be updated. Queries associated with an extension cannot be updated.\n",
         "tags": [
           "Cypher",
           "Community",
@@ -26517,6 +26517,9 @@
             "format": "int64"
           },
           "public": {
+            "type": "boolean"
+          },
+          "readonly": {
             "type": "boolean"
           }
         }
