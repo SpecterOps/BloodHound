@@ -77,7 +77,7 @@ var (
 	ErrParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
-func graphRelatedEntityType(request *http.Request, graphDb graph.Database, primaryDisplayKinds graphschema.PrimaryDisplayKinds, options relatedEntityTypeOptions, allowList []string) (any, int, *api.ErrorWrapper) {
+func graphRelatedEntityType(request *http.Request, graphDb graph.Database, options relatedEntityTypeOptions) (graph.PathSet, int, *api.ErrorWrapper) {
 	var (
 		pathSet  graph.PathSet
 		err      error
@@ -164,7 +164,7 @@ func graphRelatedEntityType(request *http.Request, graphDb graph.Database, prima
 		return nil, 0, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", options.relatedEntityString), request)
 	}
 
-	return pathSetToBloodHoundGraphETAC(primaryDisplayKinds, pathSet, allowList), pathSet.Len(), nil
+	return pathSet, pathSet.Len(), nil
 }
 
 func nodeSetToOrderedSlice(nodeSet graph.NodeSet) []*graph.Node {
@@ -327,11 +327,15 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 			sourceObjectID:      objectID,
 			sourceKind:          sourceKind,
 		}
-		if data, _, apiErr := graphRelatedEntityType(request, s.Graph, primaryDisplayKinds, options, allowList); apiErr != nil {
+		pathSet, _, apiErr := graphRelatedEntityType(request, s.Graph, options)
+		if apiErr != nil {
 			api.WriteErrorResponse(ctx, apiErr, response)
-		} else {
-			api.WriteJSONResponse(ctx, data, http.StatusOK, response)
+			return
 		}
+
+		// node paths converted to bloodhoundGraph.BloodHoundGraph nodes/edges and redacted for ETAC if conditions apply
+		graphResponse := pathSetToBloodHoundGraphETAC(primaryDisplayKinds, pathSet, allowList)
+		api.WriteJSONResponse(ctx, graphResponse, http.StatusOK, response)
 	} else {
 		options := relatedEntityTypeOptions{
 			relatedEntityString: relatedEntityType,
