@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -192,6 +193,12 @@ func resolveFileServiceDefinitions(cfg config.Configuration, definitions []FileS
 		definitionsByName[definition.Name] = struct{}{}
 
 		if serviceConfiguration, configured = cfg.Storage.FileServices[string(definition.Name)]; configured {
+			slog.Info(fmt.Sprintf(
+				"file service %s configured using storage configuration with provider %s and prefix %s",
+				definition.Name,
+				serviceConfiguration.Provider,
+				serviceConfiguration.Prefix,
+			))
 			provider, err = parseFileServiceProvider(serviceConfiguration.Provider)
 			if err != nil {
 				return nil, false, fmt.Errorf("file service %q: %w", definition.Name, err)
@@ -212,6 +219,7 @@ func resolveFileServiceDefinitions(cfg config.Configuration, definitions []FileS
 			s3Prefixes[prefix] = definition.Name
 		}
 
+		slog.Info(fmt.Sprintf("resolved file service definition for %s with provider %s", definition.Name, provider))
 		resolvedDefinitions = append(resolvedDefinitions, resolvedFileServiceDefinition{
 			definition: definition,
 			provider:   provider,
@@ -285,6 +293,7 @@ func NewDefaultFileServices(ctx context.Context, cfg config.Configuration, addit
 	}
 
 	if s3Required {
+		slog.InfoContext(ctx, "S3 Client is required, instantiating client")
 		if s3Client, err = createS3Client(ctx, cfg.Storage.InstanceBucket); err != nil {
 			return nil, err
 		}
@@ -298,6 +307,7 @@ func NewDefaultFileServices(ctx context.Context, cfg config.Configuration, addit
 				resolvedDefinition.prefix,
 				s3Client,
 			)
+			slog.InfoContext(ctx, fmt.Sprintf("FileService %s created using S3 backing", resolvedDefinition.definition.Name))
 		case fileServiceProviderLocal:
 			localStore, fileService, err = createLocalStore(resolvedDefinition.definition.LocalPath)
 			if err != nil {
@@ -306,6 +316,7 @@ func NewDefaultFileServices(ctx context.Context, cfg config.Configuration, addit
 
 			openedStores = append(openedStores, localStore)
 			fileServices[resolvedDefinition.definition.Name] = fileService
+			slog.InfoContext(ctx, fmt.Sprintf("FileService %s created using local storage backing", resolvedDefinition.definition.Name))
 		}
 
 		logFileServiceInitialized(ctx, cfg.Storage.InstanceBucket, resolvedDefinition)
