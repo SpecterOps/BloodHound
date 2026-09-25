@@ -243,9 +243,11 @@ func rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry ein.IngestibleEndpoint
 
 // resolveIngestibleEndpoint attempts to resolve an IngestibleEndpoint by querying the database
 // based on its MatchBy strategy (Property or Name). If successful, it returns a new endpoint
-// where MatchBy is set to MatchByID and Value contains the resolved object ID. If the endpoint
-// is already resolved (MatchByObjectId), it returns it unchanged. useRawObjectIDs is forwarded to
-// rewriteLegacyNameMatchIngestibleEndpoint to determine the casing behavior of legacy "name" matches.
+// where MatchBy is set to MatchByID, Value contains the resolved object ID, and Resolved is set
+// to true to mark that the endpoint references a pre-existing node found by property/name
+// matching. If the endpoint already uses MatchByID, it is returned unchanged with Resolved left
+// as false. useRawObjectIDs is forwarded to rewriteLegacyNameMatchIngestibleEndpoint to determine
+// the casing behavior of legacy "name" matches.
 func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleEndpoint, useRawObjectIDs bool) (ein.IngestibleEndpoint, error) {
 	if ingestEntry, err := rewriteLegacyNameMatchIngestibleEndpoint(ingestEntry, useRawObjectIDs); err != nil {
 		return ingestEntry, err
@@ -258,9 +260,10 @@ func resolveIngestibleEndpoint(tx graph.Transaction, ingestEntry ein.IngestibleE
 				return ingestEntry, newPropertyMatcherError(ingestEntry, err)
 			} else {
 				return ein.IngestibleEndpoint{
-					Kind:    ingestEntry.Kind,
-					MatchBy: ein.MatchByID,
-					Value:   objectID,
+					Kind:     ingestEntry.Kind,
+					MatchBy:  ein.MatchByID,
+					Value:    objectID,
+					Resolved: true,
 				}, nil
 			}
 
