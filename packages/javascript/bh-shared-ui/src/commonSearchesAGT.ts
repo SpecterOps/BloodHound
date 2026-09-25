@@ -277,6 +277,11 @@ RETURN p\nLIMIT 1000`,
                 query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
             },
             {
+                name: 'Enrollment rights on certificate templates published to Enterprise CA with vulnerable RPC endpoint (ESC11)',
+                description: '',
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.rpcencryptionenforced = False\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'Domain controllers with weak certificate binding enabled',
                 description: '',
                 query: `MATCH p = (s:Computer)-[:DCFor]->(:Domain)\nWHERE s.strongcertificatebindingenforcementraw = 0 OR s.strongcertificatebindingenforcementraw = 1\nRETURN p\nLIMIT 1000`,
@@ -561,12 +566,17 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'All coerce and NTLM relay edges',
                 description: '',
-                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500`,
+                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToADCSRPC|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500`,
             },
             {
                 name: 'ESC8-vulnerable Enterprise CAs',
                 description: '',
                 query: `MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n`,
+            },
+            {
+                name: 'ESC11-vulnerable Enterprise CAs',
+                description: '',
+                query: `MATCH (n:EnterpriseCA)\nWHERE n.rpcencryptionenforced = False\nRETURN n`,
             },
             {
                 name: 'Computers with the outgoing NTLM setting set to Deny all',

