@@ -69,8 +69,9 @@ const useExploreTableRowsAndColumns = ({
         () =>
             exploreTableData?.nodes
                 ? Object.entries(exploreTableData?.nodes).map(([key, node]) => {
-                      // To avoid extra enumerations for spread operators, the known properties are manually set
+                      // Spread properties first so they cannot overwrite canonical graph fields
                       const flattenedNode = {
+                          ...node.properties,
                           bhGraphId: key,
                           label: node.label,
                           kind: node.kind,
@@ -79,7 +80,6 @@ const useExploreTableRowsAndColumns = ({
                           isTierZero: node.isTierZero,
                           isOwnedObject: node.isOwnedObject,
                           isDecoyObject: node.isDecoyObject,
-                          ...node.properties,
                       } satisfies MungedTableRowWithGraphId;
 
                       return flattenedNode;

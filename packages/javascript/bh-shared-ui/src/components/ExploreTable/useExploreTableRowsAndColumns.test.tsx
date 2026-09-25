@@ -56,7 +56,7 @@ describe('useExploreTableRowsAndColumns', () => {
     });
 
     describe('decoy status', () => {
-        it('includes the node decoy status in the table row', () => {
+        it('is not overwritten by a node property with the same name', () => {
             const exploreTableData = {
                 nodes: {
                     '100': {
@@ -68,7 +68,7 @@ describe('useExploreTableRowsAndColumns', () => {
                         isTierZero: false,
                         isOwnedObject: false,
                         isDecoyObject: true,
-                        properties: {},
+                        properties: { isDecoyObject: false },
                     },
                 },
                 node_keys: ['isDecoyObject'],
