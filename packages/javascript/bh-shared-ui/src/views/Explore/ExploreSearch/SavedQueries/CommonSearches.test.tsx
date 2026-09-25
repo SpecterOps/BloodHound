@@ -134,7 +134,7 @@ describe('CommonSearches', () => {
 
         expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
-        await user.click(within(testListBox).getByRole('option', { name: 'All', exact: true }));
+        await user.click(within(testListBox).getByRole('option', { name: 'All' }));
 
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
     });
@@ -163,7 +163,7 @@ describe('CommonSearches', () => {
         expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
         //select Azure
-        await user.click(within(testListBox).getByRole('option', { name: 'Azure', exact: true }));
+        await user.click(within(testListBox).getByRole('option', { name: 'Azure' }));
 
         //Azure query present
         expect(screen.getByText(/All members of high privileged roles/i)).toBeInTheDocument();
@@ -194,7 +194,7 @@ describe('CommonSearches', () => {
         expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
         //select AD
-        await user.click(within(testListBox).getByRole('option', { name: 'Active Directory', exact: true }));
+        await user.click(within(testListBox).getByRole('option', { name: 'Active Directory' }));
 
         //AD query present
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
