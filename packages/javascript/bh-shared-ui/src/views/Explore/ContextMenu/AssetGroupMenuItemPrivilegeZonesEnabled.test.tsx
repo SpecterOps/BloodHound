@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { Menu, MenuContent } from 'doodle-ui';
 import { NodeDetails } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -114,11 +115,15 @@ describe('AssetGroupMenuItem', () => {
 
     it('shows a loading state', async () => {
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getOwnedTag}
-            />,
+            <Menu open modal={false}>
+                <MenuContent>
+                    <AssetGroupMenuItem
+                        addNodePayload={{} as any}
+                        removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                        tagIdentifierFn={getOwnedTag}
+                    />
+                </MenuContent>
+            </Menu>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -137,11 +142,15 @@ describe('AssetGroupMenuItem', () => {
 
         await withoutErrorLogging(async () => {
             render(
-                <AssetGroupMenuItem
-                    addNodePayload={{} as any}
-                    removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                    tagIdentifierFn={getOwnedTag}
-                />,
+                <Menu open modal={false}>
+                    <MenuContent>
+                        <AssetGroupMenuItem
+                            addNodePayload={{} as any}
+                            removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                            tagIdentifierFn={getOwnedTag}
+                        />
+                    </MenuContent>
+                </Menu>,
                 {
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                 }
@@ -156,12 +165,16 @@ describe('AssetGroupMenuItem', () => {
         const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                removeNodePathFn={() => '/privilege-zones/zones/1/details'}
-                tagIdentifierFn={getTierZeroTag}
-                showConfirmationOnAdd={true}
-            />,
+            <Menu open modal={false}>
+                <MenuContent>
+                    <AssetGroupMenuItem
+                        addNodePayload={{} as any}
+                        removeNodePathFn={() => '/privilege-zones/zones/1/details'}
+                        tagIdentifierFn={getTierZeroTag}
+                        showConfirmationOnAdd={true}
+                    />
+                </MenuContent>
+            </Menu>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -188,11 +201,15 @@ describe('AssetGroupMenuItem', () => {
         const mutateSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getOwnedTag}
-            />,
+            <Menu open modal={false}>
+                <MenuContent>
+                    <AssetGroupMenuItem
+                        addNodePayload={{} as any}
+                        removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                        tagIdentifierFn={getOwnedTag}
+                    />
+                </MenuContent>
+            </Menu>,
             {
                 route: ROUTE_WITH_SELECTED_ITEM_PARAM,
             }
@@ -216,11 +233,15 @@ describe('AssetGroupMenuItem', () => {
         );
 
         render(
-            <AssetGroupMenuItem
-                addNodePayload={{} as any}
-                removeNodePathFn={() => '/privilege-zones/labels/1/details'}
-                tagIdentifierFn={getOwnedTag}
-            />,
+            <Menu open modal={false}>
+                <MenuContent>
+                    <AssetGroupMenuItem
+                        addNodePayload={{} as any}
+                        removeNodePathFn={() => '/privilege-zones/labels/1/details'}
+                        tagIdentifierFn={getOwnedTag}
+                    />
+                </MenuContent>
+            </Menu>,
             { route: ROUTE_WITH_SELECTED_ITEM_PARAM }
         );
 

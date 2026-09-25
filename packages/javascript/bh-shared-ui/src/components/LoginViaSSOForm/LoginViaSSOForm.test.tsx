@@ -69,7 +69,7 @@ describe('LoginViaSSOForm', () => {
         await user.click(screen.getByLabelText(/choose your sso provider/i));
         expect(await screen.findAllByRole('option')).toHaveLength(2);
         for (const testSSOProvider of testSSOProviders) {
-            expect(screen.getByText(testSSOProvider.name)).toBeInTheDocument();
+            expect(screen.getByRole('option', { name: testSSOProvider.name })).toBeInTheDocument();
         }
     });
 
@@ -92,7 +92,7 @@ describe('LoginViaSSOForm', () => {
 
         await user.click(screen.getByLabelText(/choose your sso provider/i));
         expect(await screen.findAllByRole('option')).toHaveLength(2);
-        await user.click(screen.getByText(testSSOProviders[0].name));
+        await user.click(screen.getByRole('option', { name: testSSOProviders[0].name }));
         expect(screen.getByRole('button', { name: /continue$/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /continue$/i }));
         expect(testOnSubmit).toHaveBeenCalledWith(testSSOProviders[0].slug);

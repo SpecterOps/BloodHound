@@ -15,8 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import { Button, IconButton, Input } from 'doodle-ui';
+
+import {
+    Button,
+    IconButton,
+    Input,
+    Label,
+    Menu,
+    MenuContent,
+    MenuItem,
+    MenuTrigger,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from 'doodle-ui';
 import { useState } from 'react';
 import { AppIcon } from '../../../../components';
 import { useSavedQueriesContext } from '../../providers';
@@ -45,9 +59,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     } = props;
     const { selectedQuery } = useSavedQueriesContext();
 
-    const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
-    const [sourcesOpen, setSourcesOpen] = useState<boolean>(false);
-
     const [showImportDialog, setShowImportDialog] = useState<boolean>(false);
 
     const handleInput = (val: string) => {
@@ -56,17 +67,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
 
     const handlePlatformFilter = (val: string) => {
         queryFilterHandler(searchTerm, val, categoryFilter, source);
-    };
-
-    const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
-        const raw = event.target.value;
-        const newVal = typeof raw === 'string' ? raw.split(',') : raw;
-        if (newVal.includes('')) {
-            queryFilterHandler(searchTerm, platform, [], source);
-            setCategoriesOpen(false);
-            return;
-        }
-        queryFilterHandler(searchTerm, platform, newVal, source);
     };
 
     const handleSourceFilter = (val: string) => {
@@ -113,61 +113,76 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </IconButton>
                     </div>
                 </div>
-                <div className='flex w-full items-center justify-between flex-row'>
-                    <FormControl size='small' className='w-full z-10'>
-                        <InputLabel id='platforms-label'>Platforms</InputLabel>
+                <div className='grid w-full grid-cols-3 items-center gap-2'>
+                    <div className='min-w-0'>
+                        <Label htmlFor='platform-filter'>Platforms</Label>
                         <Select
-                            labelId='platforms-label'
-                            id='demo-simple-select-helper'
-                            className='z-10'
-                            value={platform}
-                            label='Platforms'
-                            onChange={(e) => handlePlatformFilter(e.target.value)}>
-                            <MenuItem value=''>All</MenuItem>
-                            <MenuItem value='Active Directory'>Active Directory</MenuItem>
-                            <MenuItem value='Azure'>Azure</MenuItem>
-                            <MenuItem value='Saved Queries'>Saved Queries</MenuItem>
+                            value={platform || '__all__'}
+                            onValueChange={(value) => handlePlatformFilter(value === '__all__' ? '' : value)}>
+                            <SelectTrigger id='platform-filter'>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='__all__'>All</SelectItem>
+                                <SelectItem value='Active Directory'>Active Directory</SelectItem>
+                                <SelectItem value='Azure'>Azure</SelectItem>
+                                <SelectItem value='Saved Queries'>Saved Queries</SelectItem>
+                            </SelectContent>
                         </Select>
-                    </FormControl>
-                    <FormControl size='small' className='w-full ml-2 z-10'>
-                        <InputLabel id='category-filter-label'>Categories</InputLabel>
-                        <Select
-                            labelId='category-filter-label'
-                            id='category-filter'
-                            className='z-10'
-                            value={categoryFilter}
-                            label='categories'
-                            open={categoriesOpen}
-                            onOpen={() => setCategoriesOpen(true)}
-                            onClose={() => setCategoriesOpen(false)}
-                            multiple
-                            onChange={handleCategoryChange}>
-                            <MenuItem value=''>All Categories</MenuItem>
-                            {categories.map((category) => (
-                                <MenuItem key={category} value={category}>
-                                    {category}
+                    </div>
+                    <div className='min-w-0'>
+                        <Label htmlFor='category-filter'>Categories</Label>
+                        <Menu>
+                            <MenuTrigger asChild>
+                                <Button id='category-filter' variant='secondary' className='w-full justify-between'>
+                                    <span
+                                        className='truncate'
+                                        title={categoryFilter.length ? categoryFilter.join(', ') : 'All Categories'}>
+                                        {categoryFilter.length ? categoryFilter.join(', ') : 'All Categories'}
+                                    </span>
+                                </Button>
+                            </MenuTrigger>
+                            <MenuContent
+                                className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
+                                aria-label='Categories'>
+                                <MenuItem onSelect={() => queryFilterHandler(searchTerm, platform, [], source)}>
+                                    All Categories
                                 </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl size='small' className='w-full ml-2 z-10'>
-                        <InputLabel id='source-filter-label'>Source</InputLabel>
+                                {categories.map((category) => (
+                                    <MenuItem
+                                        key={category}
+                                        role='menuitemcheckbox'
+                                        aria-checked={categoryFilter.includes(category)}
+                                        onSelect={(event) => {
+                                            event.preventDefault();
+                                            const values = categoryFilter.includes(category)
+                                                ? categoryFilter.filter((value) => value !== category)
+                                                : [...categoryFilter, category];
+                                            queryFilterHandler(searchTerm, platform, values, source);
+                                        }}>
+                                        {categoryFilter.includes(category) ? '✓ ' : ''}
+                                        {category}
+                                    </MenuItem>
+                                ))}
+                            </MenuContent>
+                        </Menu>
+                    </div>
+                    <div className='min-w-0'>
+                        <Label htmlFor='source-filter'>Source</Label>
                         <Select
-                            labelId='source-filter-label'
-                            id='source-filter'
-                            className='z-10'
-                            value={source || ''}
-                            label='source'
-                            open={sourcesOpen}
-                            onOpen={() => setSourcesOpen(true)}
-                            onClose={() => setSourcesOpen(false)}
-                            onChange={(e) => handleSourceFilter(e.target.value)}>
-                            <MenuItem value=''>All Sources</MenuItem>
-                            <MenuItem value='prebuilt'>Prebuilt</MenuItem>
-                            <MenuItem value='personal'>Personal</MenuItem>
-                            <MenuItem value='shared'>Shared</MenuItem>
+                            value={source || '__all__'}
+                            onValueChange={(value) => handleSourceFilter(value === '__all__' ? '' : value)}>
+                            <SelectTrigger id='source-filter'>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='__all__'>All Sources</SelectItem>
+                                <SelectItem value='prebuilt'>Prebuilt</SelectItem>
+                                <SelectItem value='personal'>Personal</SelectItem>
+                                <SelectItem value='shared'>Shared</SelectItem>
+                            </SelectContent>
                         </Select>
-                    </FormControl>
+                    </div>
                 </div>
             </div>
             <ImportQueryDialog open={showImportDialog} onClose={() => setShowImportDialog(false)} />
