@@ -118,11 +118,18 @@ patch:
     404:
       $ref: './../responses/not-found.yaml'
     409:
-      description: A collector job schedule with the given name already exists
+      description: Conflict
       content:
         application/json:
           schema:
             $ref: './../schemas/api.error-wrapper.yaml'
+          example:
+            http_status: 409
+            timestamp: 2026-09-25T19:27:45.865Z
+            request_id: 5fa85f64-5717-4562-b3fc-2c963f66afa7
+            errors:
+              - context: ""
+                message: A collector job schedule with the given name already exists
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
