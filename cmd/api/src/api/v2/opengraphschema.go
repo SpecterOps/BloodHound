@@ -91,9 +91,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	} else if graphExtensionInput, err = payload.ToGraphExtensionInput(); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
-	}
-
-	if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
+	} else if updated, err = s.OpenGraphSchemaService.UpsertOpenGraphExtension(ctx, graphExtensionInput); err != nil {
 		switch {
 		case strings.Contains(err.Error(), model.ErrGraphExtensionValidation.Error()) ||
 			strings.Contains(err.Error(), model.ErrGraphExtensionBuiltIn.Error()):

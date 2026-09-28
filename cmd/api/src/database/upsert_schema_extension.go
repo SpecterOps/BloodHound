@@ -38,13 +38,18 @@ const CustomNodeIconType = "font-awesome"
 // in place with their IDs preserved, and new rows are created. All mutations run inside a single
 // transaction that rolls back on any error.
 //
-// Returns true if the extension already existed before this call, false if it was newly created.
+// Returns the persisted extension and reconciliation results after a successful commit.
 // Returns ErrGraphExtensionBuiltIn if the named extension is a built-in and cannot be modified.
-func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
+func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (model.GraphExtensionUpsertResult, error) {
 	var (
-		err          error
-		schemaExists bool
-		extension    model.GraphSchemaExtension
+		err                         error
+		schemaExists                bool
+		extension                   model.GraphSchemaExtension
+		reconciledNodeKinds         kindReconcileResult[model.GraphSchemaNodeKind]
+		reconciledRelationshipKinds kindReconcileResult[model.GraphSchemaRelationshipKind]
+		reconciledEnvironments      model.ReconcileResult[model.SchemaEnvironment]
+		reconciledFindings          model.ReconcileResult[model.SchemaFinding]
+		reconciledSavedQueries      model.ReconcileResult[model.SavedQuery]
 
 		tx                      = s.db.WithContext(ctx).Begin()
 		bloodhoundDBTransaction = BloodhoundDB{db: tx, idResolver: s.idResolver}
@@ -55,39 +60,49 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 	}()
 
 	if err = tx.Error; err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed creating pgsql transaction: %w", err)
 	} else if extension, schemaExists, err = bloodhoundDBTransaction.findOrCreateExtension(ctx, graphExtensionInput.ExtensionInput); err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to find or create opengraph extension: %w", err)
 	} else if existingNodeKinds, err := bloodhoundDBTransaction.GetGraphSchemaNodeKindsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing node kinds: %w", err)
-	} else if reconciledNodeKinds, err := reconcile(ctx, graphExtensionInput.NodeKindsInput, existingNodeKinds, bloodhoundDBTransaction.nodeKindReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile node kinds: %w", err)
-	} else if err := bloodhoundDBTransaction.upsertCustomIcons(ctx, reconciledNodeKinds); err != nil {
-		return schemaExists, fmt.Errorf("failed to upsert custom node icons: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing node kinds: %w", err)
+	} else if reconciledNodeKinds, err = bloodhoundDBTransaction.reconcileNodeKinds(ctx, extension.ID, graphExtensionInput.NodeKindsInput, existingNodeKinds); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile node kinds: %w", err)
+	} else if err := bloodhoundDBTransaction.upsertCustomIcons(ctx, append(append(model.GraphSchemaNodeKinds{}, reconciledNodeKinds.Kinds.Created...), reconciledNodeKinds.Kinds.Updated...)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to upsert custom node icons: %w", err)
 	} else if existingRelationshipKinds, err := bloodhoundDBTransaction.GetGraphSchemaRelationshipKindsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing relationship kinds: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.RelationshipKindsInput, existingRelationshipKinds, bloodhoundDBTransaction.relationshipKindReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile relationship kinds: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing relationship kinds: %w", err)
+	} else if reconciledRelationshipKinds, err = bloodhoundDBTransaction.reconcileRelationshipKinds(ctx, extension.ID, graphExtensionInput.RelationshipKindsInput, existingRelationshipKinds); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile relationship kinds: %w", err)
 	} else if existingEnvironments, err := bloodhoundDBTransaction.GetEnvironmentsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing environments: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.EnvironmentsInput, existingEnvironments, bloodhoundDBTransaction.environmentReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile environments: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing environments: %w", err)
+	} else if reconciledEnvironments, err = reconcile(ctx, graphExtensionInput.EnvironmentsInput, existingEnvironments, bloodhoundDBTransaction.environmentReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile environments: %w", err)
 	} else if existingFindings, err := bloodhoundDBTransaction.GetSchemaFindingsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing findings: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile findings: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing findings: %w", err)
+	} else if reconciledFindings, err = reconcile(ctx, graphExtensionInput.RelationshipFindingsInput, existingFindings, bloodhoundDBTransaction.findingReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile findings: %w", err)
 	} else if existingSavedQueries, err := bloodhoundDBTransaction.GetSavedQueriesByExtensionID(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing saved queries: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile saved queries: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing saved queries: %w", err)
+	} else if reconciledSavedQueries, err = reconcile(ctx, graphExtensionInput.SavedQueriesInput, existingSavedQueries, bloodhoundDBTransaction.savedQueryReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile saved queries: %w", err)
 	} else if existingSelectors, err := bloodhoundDBTransaction.GetAssetGroupTagSelectorsByExtensionId(ctx, extension.ID); err != nil {
-		return schemaExists, fmt.Errorf("failed to fetch existing asset group tag selectors: %w", err)
-	} else if _, err := reconcile(ctx, graphExtensionInput.PZRulesInput, existingSelectors, bloodhoundDBTransaction.pzRulesReconcileConfig(extension.ID)); err != nil {
-		return schemaExists, fmt.Errorf("failed to reconcile PZ rules: %w", err)
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to fetch existing asset group tag selectors: %w", err)
+	} else if reconciledPZRules, err := reconcile(ctx, graphExtensionInput.PZRulesInput, existingSelectors, bloodhoundDBTransaction.pzRulesReconcileConfig(extension.ID)); err != nil {
+		return model.GraphExtensionUpsertResult{}, fmt.Errorf("failed to reconcile PZ rules: %w", err)
 	} else if err = tx.Commit().Error; err != nil {
-		return schemaExists, err
+		return model.GraphExtensionUpsertResult{}, err
 	} else {
-		return schemaExists, nil
+		return model.GraphExtensionUpsertResult{
+			ExtensionExisted:           schemaExists,
+			Extension:                  extension,
+			NodeKindsResult:            reconciledNodeKinds.Kinds,
+			RelationshipKindsResult:    reconciledRelationshipKinds.Kinds,
+			KindInfosResult:            mergeReconcileResults(reconciledNodeKinds.KindInfo, reconciledRelationshipKinds.KindInfo),
+			EnvironmentsResult:         reconciledEnvironments,
+			RelationshipFindingsResult: reconciledFindings,
+			SavedQueriesResult:         reconciledSavedQueries,
+			PZRulesResult:              reconciledPZRules,
+		}, nil
 	}
 }
 
@@ -250,10 +265,29 @@ func (s *BloodhoundDB) savedQueryReconcileConfig(extensionID int32) reconcileCon
 	}
 }
 
-// nodeKindReconcileConfig returns the reconcileConfig for node kinds, keyed by name.
-// extensionId is closed over by the create callback.
-func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfig[model.NodeInput, model.GraphSchemaNodeKind, string] {
-	return reconcileConfig[model.NodeInput, model.GraphSchemaNodeKind, string]{
+// kindReconcileResult contains the persisted kind and nested kind-info outcomes from a reconciliation.
+type kindReconcileResult[T any] struct {
+	Kinds    model.ReconcileResult[T]
+	KindInfo model.ReconcileResult[model.GraphSchemaKindInfo]
+}
+
+// reconcileNodeKinds reconciles an extension's node kinds and their nested kind-info records.
+func (s *BloodhoundDB) reconcileNodeKinds(ctx context.Context, extensionId int32, inputs model.NodesInput, existingKinds model.GraphSchemaNodeKinds) (kindReconcileResult[model.GraphSchemaNodeKind], error) {
+	var (
+		result            kindReconcileResult[model.GraphSchemaNodeKind]
+		err               error
+		existingKindInfos = map[int32][]model.GraphSchemaKindInfo{}
+	)
+
+	for _, existingKind := range existingKinds {
+		if kindInfos, err := s.GetKindInfos(ctx, existingKind.KindId); err != nil {
+			return result, fmt.Errorf("failed to fetch existing node kind info: %w", err)
+		} else {
+			existingKindInfos[existingKind.KindId] = kindInfos
+		}
+	}
+
+	config := reconcileConfig[model.NodeInput, model.GraphSchemaNodeKind, string]{
 		getInputKey:    func(input model.NodeInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaNodeKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.NodeInput) (model.GraphSchemaNodeKind, error) {
@@ -261,9 +295,10 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 			if createdKind, err := s.CreateGraphSchemaNodeKind(ctx, input.Name, extensionId,
 				input.DisplayName, input.Description, input.IsDisplayKind, input.Icon, input.IconColor); err != nil {
 				return model.GraphSchemaNodeKind{}, err
-			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, &createdKind.ID, nil)); err != nil {
+			} else if kindInfoResult, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, &createdKind.ID, nil)); err != nil {
 				return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to create node kind info: %w", err)
 			} else {
+				result.KindInfo = mergeReconcileResults(result.KindInfo, kindInfoResult)
 				return createdKind, nil
 			}
 		},
@@ -279,10 +314,10 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 				return model.GraphSchemaNodeKind{}, err
 			} else {
 				// Now reconcile info entries for this node kind
-				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
-					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to fetch existing node kind info: %w", err)
-				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, &updatedKind.ID, nil)); err != nil {
+				if kindInfoResult, err := reconcile(ctx, input.Info, existingKindInfos[existing.KindId], s.kindInfoReconcileConfig(updatedKind.KindId, &updatedKind.ID, nil)); err != nil {
 					return model.GraphSchemaNodeKind{}, fmt.Errorf("failed to reconcile node kind info: %w", err)
+				} else {
+					result.KindInfo = mergeReconcileResults(result.KindInfo, kindInfoResult)
 				}
 
 				return updatedKind, nil
@@ -300,27 +335,50 @@ func (s *BloodhoundDB) nodeKindReconcileConfig(extensionId int32) reconcileConfi
 					return fmt.Errorf("failed to ensure stub for non-display schema node kind %q: %w", existing.Name, err)
 				}
 			}
+
 			// Deleting from schema_node_kinds automatically nulls the schema_node_kind_id FK
 			// in custom_node_kinds via ON DELETE SET NULL.
-			return s.DeleteGraphSchemaNodeKind(ctx, existing.ID)
+			if err := s.DeleteGraphSchemaNodeKind(ctx, existing.ID); err != nil {
+				return err
+			}
+
+			result.KindInfo = mergeReconcileResults(result.KindInfo, model.ReconcileResult[model.GraphSchemaKindInfo]{Deleted: existingKindInfos[existing.KindId]})
+			return nil
 		},
 	}
+
+	result.Kinds, err = reconcile(ctx, inputs, existingKinds, config)
+	return result, err
 }
 
-// relationshipKindReconcileConfig returns the reconcileConfig for relationship kinds, keyed by name.
-// extensionId is closed over by the create callback.
-func (s *BloodhoundDB) relationshipKindReconcileConfig(extensionId int32) reconcileConfig[model.RelationshipInput, model.GraphSchemaRelationshipKind, string] {
-	return reconcileConfig[model.RelationshipInput, model.GraphSchemaRelationshipKind, string]{
+// reconcileRelationshipKinds reconciles an extension's relationship kinds and their nested kind-info records.
+func (s *BloodhoundDB) reconcileRelationshipKinds(ctx context.Context, extensionID int32, inputs model.RelationshipsInput, existingKinds model.GraphSchemaRelationshipKinds) (kindReconcileResult[model.GraphSchemaRelationshipKind], error) {
+	var (
+		result            kindReconcileResult[model.GraphSchemaRelationshipKind]
+		err               error
+		existingKindInfos = map[int32][]model.GraphSchemaKindInfo{}
+	)
+
+	for _, existingKind := range existingKinds {
+		if kindInfos, err := s.GetKindInfos(ctx, existingKind.KindId); err != nil {
+			return result, fmt.Errorf("failed to fetch existing relationship kind info: %w", err)
+		} else {
+			existingKindInfos[existingKind.KindId] = kindInfos
+		}
+	}
+
+	config := reconcileConfig[model.RelationshipInput, model.GraphSchemaRelationshipKind, string]{
 		getInputKey:    func(input model.RelationshipInput) string { return input.Name },
 		getExistingKey: func(existing model.GraphSchemaRelationshipKind) string { return existing.Name },
 		create: func(ctx context.Context, input model.RelationshipInput) (model.GraphSchemaRelationshipKind, error) {
 			// Create the relationship kind first
-			if createdKind, err := s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionId,
+			if createdKind, err := s.CreateGraphSchemaRelationshipKind(ctx, input.Name, extensionID,
 				input.Description, input.IsTraversable); err != nil {
 				return model.GraphSchemaRelationshipKind{}, err
-			} else if _, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, nil, &createdKind.ID)); err != nil {
+			} else if kindInfoResult, err := reconcile(ctx, input.Info, []model.GraphSchemaKindInfo{}, s.kindInfoReconcileConfig(createdKind.KindId, nil, &createdKind.ID)); err != nil {
 				return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to create relationship kind info: %w", err)
 			} else {
+				result.KindInfo = mergeReconcileResults(result.KindInfo, kindInfoResult)
 				return createdKind, nil
 			}
 		},
@@ -333,19 +391,26 @@ func (s *BloodhoundDB) relationshipKindReconcileConfig(extensionId int32) reconc
 				return model.GraphSchemaRelationshipKind{}, err
 			} else {
 				// Now reconcile info entries for this relationship kind
-				if existingInfos, err := s.GetKindInfos(ctx, updatedKind.KindId); err != nil {
-					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to fetch existing relationship kind info: %w", err)
-				} else if _, err := reconcile(ctx, input.Info, existingInfos, s.kindInfoReconcileConfig(updatedKind.KindId, nil, &updatedKind.ID)); err != nil {
+				if kindInfoResult, err := reconcile(ctx, input.Info, existingKindInfos[existing.KindId], s.kindInfoReconcileConfig(updatedKind.KindId, nil, &updatedKind.ID)); err != nil {
 					return model.GraphSchemaRelationshipKind{}, fmt.Errorf("failed to reconcile relationship kind info: %w", err)
+				} else {
+					result.KindInfo = mergeReconcileResults(result.KindInfo, kindInfoResult)
 				}
 
 				return updatedKind, nil
 			}
 		},
 		delete: func(ctx context.Context, existing model.GraphSchemaRelationshipKind) error {
-			return s.DeleteGraphSchemaRelationshipKind(ctx, existing.ID)
+			if err := s.DeleteGraphSchemaRelationshipKind(ctx, existing.ID); err != nil {
+				return err
+			}
+			result.KindInfo = mergeReconcileResults(result.KindInfo, model.ReconcileResult[model.GraphSchemaKindInfo]{Deleted: existingKindInfos[existing.KindId]})
+			return nil
 		},
 	}
+
+	result.Kinds, err = reconcile(ctx, inputs, existingKinds, config)
+	return result, err
 }
 
 // environmentReconcileConfig returns the reconcileConfig for environments.

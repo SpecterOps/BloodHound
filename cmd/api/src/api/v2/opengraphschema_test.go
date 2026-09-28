@@ -385,12 +385,12 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 		},
 		{
-			name: "success - inserted new graph extension from zip bundle",
+			name: "success_-_inserted_new_graph_extension_from_zip_bundle",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					var expectedGraphExtension = serviceGraphExtension
 					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
-						ExtensionRuleId: "TEST_tier_zero_admins",
+						ExtensionRuleId: "tier_zero_admins",
 						Name:            "Tier Zero Admins",
 						Description:     "Seeds for tier zero",
 						Enabled:         true,
