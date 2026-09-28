@@ -166,13 +166,14 @@ describe('Privilege Zones History Filter Dialog', () => {
     });
 
     it('should close the dialog when the Cancel button is clicked', async () => {
-        const { screen, user, openDialog } = await setup({});
-        await openDialog();
-        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        const user = userEvent.setup();
 
+        const { screen, openDialog } = await setup({});
+        await openDialog();
+        expect(screen.getByText('Filter')).toBeInTheDocument();
         await user.click(screen.getByRole('button', { name: /Cancel/ }));
 
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByText('Filter')).not.toBeInTheDocument();
     });
 
     it('calls setFilters when the Confirm button is clicked', async () => {

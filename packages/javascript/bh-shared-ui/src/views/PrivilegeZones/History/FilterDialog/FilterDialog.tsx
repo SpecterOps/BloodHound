@@ -23,6 +23,7 @@ import {
     Form,
     IconButton,
     TextButton,
+    Tooltip,
     VisuallyHidden,
 } from 'doodle-ui';
 import { DateTime } from 'luxon';
@@ -85,7 +86,9 @@ const FilterDialog: FC<{
                     onClick={() => {
                         setOpen((prev) => !prev);
                     }}>
-                    <AppIcon.FilterOutline />
+                    <Tooltip tooltip='Filters'>
+                        <AppIcon.FilterOutline />
+                    </Tooltip>
                 </IconButton>
             </DialogTrigger>
 

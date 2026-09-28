@@ -29,12 +29,6 @@ type Props = {
     /** Text to display in input when not focused */
     hint?: string;
 
-    /** The id of the underlying input */
-    id?: string;
-
-    /** The name of the underlying input */
-    name?: string;
-
     /** Callback executed when the date changes; `isValid` is false if `dateStr` is not a valid date */
     onDateChange: (dateStr: string, isValid: boolean) => void;
 
@@ -55,8 +49,6 @@ type Props = {
 export const ManagedDatePicker: FC<Props> = ({
     fromDate = fiveYearsAgo(),
     hint = DATE_FORMAT_MASK,
-    id,
-    name,
     onDateChange,
     toDate = now(),
     validationError: validationErrorProp = '',
@@ -155,8 +147,6 @@ export const ManagedDatePicker: FC<Props> = ({
                 aria-label={hint} // "Start date" or "End date"
                 aria-invalid={Boolean(validationError)}
                 aria-describedby={validationError ? `${formatId} ${errorId}` : formatId}
-                id={id}
-                name={name}
                 onBlur={() => {
                     setPlaceholder(hint);
                     validateInput(inputDateString);

@@ -49,6 +49,7 @@ import {
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useTagLimits } from '../../../../hooks';
 import {
@@ -429,19 +430,25 @@ export const TagForm: FC = () => {
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <div className='flex gap-2 items-center'>
-                                                    <FormLabel htmlFor='analysis_enabled'>Enable Analysis</FormLabel>
+                                                <FormLabel
+                                                    className='flex gap-2 items-center'
+                                                    htmlFor='analysis_enabled'>
+                                                    Enable Analysis
                                                     <Tooltip
                                                         tooltip={
                                                             'Enables Analysis to produce Attack Path Findings for the Zone.'
                                                         }
                                                         contentProps={{
-                                                            className: 'max-w-80',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
-                                                        }}
-                                                    />
-                                                </div>
+                                                        }}>
+                                                        <span>
+                                                            <AppIcon.Info />
+                                                        </span>
+                                                    </Tooltip>
+                                                </FormLabel>
                                                 <div className='mb-4'>
                                                     <FormControl>
                                                         <Switch
@@ -514,21 +521,25 @@ export const TagForm: FC = () => {
                                             name='require_certify'
                                             render={({ field }) => (
                                                 <FormItem className='gap-2'>
-                                                    <div className='flex gap-2 items-center'>
-                                                        <FormLabel htmlFor='enable-certification'>
-                                                            Enable Certification
-                                                        </FormLabel>
+                                                    <FormLabel
+                                                        className='flex gap-2 items-center'
+                                                        htmlFor='enable-certification'>
+                                                        Enable Certification
                                                         <Tooltip
                                                             tooltip={
                                                                 'Require manual review and approval of object membership in the Zone.'
                                                             }
                                                             contentProps={{
-                                                                className: 'max-w-80',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                                 side: 'right',
                                                                 align: 'end',
-                                                            }}
-                                                        />
-                                                    </div>
+                                                            }}>
+                                                            <span>
+                                                                <AppIcon.Info />
+                                                            </span>
+                                                        </Tooltip>
+                                                    </FormLabel>
                                                     <div>
                                                         <FormControl>
                                                             <Switch
@@ -552,19 +563,23 @@ export const TagForm: FC = () => {
                                             name='glyph'
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <div className='flex gap-2 items-center'>
-                                                        <FormLabel>Apply Custom Glyph</FormLabel>
+                                                    <FormLabel className='flex gap-2 items-center'>
+                                                        Apply Custom Glyph
                                                         <Tooltip
                                                             tooltip={
                                                                 'Custom glyphs visually mark nodes in the graph for quick context.'
                                                             }
                                                             contentProps={{
-                                                                className: 'max-w-80',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                                 side: 'right',
                                                                 align: 'end',
-                                                            }}
-                                                        />
-                                                    </div>
+                                                            }}>
+                                                            <span>
+                                                                <AppIcon.Info />
+                                                            </span>
+                                                        </Tooltip>
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             data-testid='privilege-zones_save_tag-form_glyph-input'
