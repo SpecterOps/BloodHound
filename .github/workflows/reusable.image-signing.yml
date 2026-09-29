@@ -58,7 +58,7 @@ jobs:
         id: digest
         shell: bash
         run: | 
-          DIGEST_REF="docker inspect --format='{{infex .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
+          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Sign Image with Cosign Keyless
@@ -101,7 +101,7 @@ jobs:
         id: digest
         shell: bash
         run: | 
-          DIGEST_REF="docker inspect --format='{{infex .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
+          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Verify Fulcio Keyless Signature
