@@ -114,6 +114,30 @@ build-shared-ui *ARGS="":
 build-doodle-ui *ARGS="":
   @cd packages/javascript/doodle-ui && yarn build
 
+# Build a one-file macOS arm64 standalone artifact. The runtime root must be a
+# self-contained PostgreSQL distribution; it is embedded in the executable and
+# extracted on first launch, so end users do not install PostgreSQL themselves.
+build-standalone target='darwin-arm64' postgres_runtime_root='':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [[ "{{target}}" != "darwin-arm64" ]]; then
+    echo "unsupported standalone target: {{target}}" >&2
+    exit 1
+  fi
+  if [[ -z "{{postgres_runtime_root}}" ]]; then
+    echo "usage: just build-standalone darwin-arm64 <self-contained-postgres-runtime-root>" >&2
+    exit 1
+  fi
+  bash scripts/standalone/package-postgres-runtime.sh "{{postgres_runtime_root}}"
+  BUILD_PATH="{{absolute_path('cmd/api/src/api/static/assets')}}" yarn workspace bloodhound-ui vite build
+  cd cmd/api/src
+  GOOS=darwin GOARCH=arm64 go build -tags standalone_release -o "{{absolute_path('dist/bloodhound-darwin-arm64')}}" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
+
+# Build a self-contained PostgreSQL runtime suitable for embedding in the
+# macOS arm64 standalone artifact.
+build-standalone-postgres-runtime version='18.6' output_directory='build/standalone/postgres-darwin-arm64':
+  @bash scripts/standalone/build-postgres-runtime.sh "{{version}}" "{{absolute_path(output_directory)}}"
+
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:
   @just imagemagick convert -background none ./cmd/ui/public/logo-light.svg -define icon:auto-resize ./cmd/ui/public/favicon-light.ico

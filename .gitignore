@@ -50,6 +50,8 @@ bh-api-log.json
 # misc. artifacts
 cmd/api/src/api/static/assets/*
 !cmd/api/src/api/static/assets/keep
+cmd/api/src/standalone/assets/*
+!cmd/api/src/standalone/assets/keep
 
 ################
 # Boilerplate Settings (modify as needed)

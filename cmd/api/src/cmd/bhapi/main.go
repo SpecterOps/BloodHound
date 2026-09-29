@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/services"
+	"github.com/specterops/bloodhound/cmd/api/src/standalone"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/bhlog"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -42,8 +43,10 @@ func printVersion() {
 
 func main() {
 	var (
-		configFilePath string
-		versionFlag    bool
+		configFilePath          string
+		standaloneMode          bool
+		standaloneDataDirectory string
+		versionFlag             bool
 	)
 
 	// Eagerly set logging format if valid environment variable is set
@@ -59,13 +62,43 @@ func main() {
 
 	flag.BoolVar(&versionFlag, "version", false, "Get binary version.")
 	flag.StringVar(&configFilePath, "configfile", bootstrap.DefaultConfigFilePath(), "Configuration file to load.")
+	flag.BoolVar(&standaloneMode, "standalone", false, "Run with the bundled local PostgreSQL runtime.")
+	flag.StringVar(&standaloneDataDirectory, "standalone-data-dir", "", "Directory for standalone PostgreSQL data and configuration.")
 	flag.Parse()
 
 	if versionFlag {
 		printVersion()
 	}
 
-	cfg, err := config.GetConfiguration(configFilePath, config.NewDefaultConfiguration)
+	var cfg config.Configuration
+	var err error
+	var standaloneInstance standalone.Instance
+
+	if standaloneMode {
+		if standaloneDataDirectory == "" {
+			standaloneDataDirectory, err = standalone.DefaultDataDirectory()
+			if err != nil {
+				slog.Error("Unable to determine standalone data directory", attr.Error(err))
+				os.Exit(1)
+			}
+		}
+
+		standaloneInstance, err = standalone.Prepare(standalone.Options{
+			DataDirectory: standaloneDataDirectory,
+			APIPort:       8080,
+		})
+		if err == nil {
+			err = standaloneInstance.Postgres.Start()
+		}
+		if err != nil {
+			slog.Error("Unable to start standalone PostgreSQL", attr.Error(err))
+			os.Exit(1)
+		}
+		cfg = standaloneInstance.Configuration
+		slog.Info("Standalone PostgreSQL started", slog.String("url", "http://127.0.0.1:8080/ui"))
+	} else {
+		cfg, err = config.GetConfiguration(configFilePath, config.NewDefaultConfiguration)
+	}
 	if err != nil {
 		slog.Error(
 			"Unable to read configuration",
@@ -133,7 +166,13 @@ func main() {
 		Entrypoint:          services.Entrypoint,
 	}
 
-	if err := initializer.Launch(context.Background(), true); err != nil {
+	err = initializer.Launch(context.Background(), true)
+	if standaloneMode {
+		if stopErr := standaloneInstance.Postgres.Stop(); stopErr != nil {
+			slog.Error("Unable to stop standalone PostgreSQL", attr.Error(stopErr))
+		}
+	}
+	if err != nil {
 		slog.Error(
 			"Failed starting the server",
 			attr.Error(err),
