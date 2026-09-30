@@ -225,6 +225,6 @@ describe('CommonSearches', () => {
         await user.click(queriesToggle);
         expect(handleToggle).toBeCalled();
         expect(handleToggle).toBeCalledTimes(1);
-        expect(screen.getByText(/chevron-down/i)).toBeInTheDocument();
+        expect(screen.getByText(/chevron-up/i)).toBeInTheDocument();
     });
 });
