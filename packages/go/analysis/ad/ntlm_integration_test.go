@@ -724,3 +724,71 @@ func fetchNTLMPrereqs(ctx context.Context, db graph.Database) (localGroupData *a
 		return localGroupData, computers, domains, cache, nil
 	}
 }
+
+func TestPostNTLMRelayADCSRPC(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		require.NoError(t, setupCoerceAndNTLMToADCS(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCSRPC"))
+
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCSRPC)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to adcs rpc edges in integration test; %v", err)
+			} else {
+
+				require.Len(t, results, 1)
+				rel := results[0]
+
+				start, end, err := ops.FetchRelationshipNodes(tx, rel)
+				require.NoError(t, err)
+
+				require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup.ID)
+				require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer.ID)
+			}
+			return nil
+		})
+	})
+}
+
+func TestNTLMRelayToADCSRPCComposition(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		require.NoError(t, setupCoerceAndNTLMToADCS(t.Context(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCSRPC"))
+
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.And(
+					query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCSRPC),
+				)
+			})); err != nil {
+				t.Fatalf("error fetching ntlm to adcs rpc edges in integration test; %v", err)
+			} else {
+				require.Len(t, results, 1)
+				edge := results[0]
+
+				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(t.Context(), db, edge)
+				require.NoError(t, err)
+
+				nodes := composition.AllNodes()
+				require.Len(t, nodes, 7)
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.CertTemplate1))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.RootCA))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Domain))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.NTAuthStore))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup))
+			}
+			return nil
+		})
+	})
+}
