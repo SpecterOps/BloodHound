@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	ADCSESC13,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToSMB,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	ADCSESC9b,
 	ADCSESC10a,
 	ADCSESC10b,
+	ADCSESC13,
 ]
 
 // All post-processed edges

@@ -2320,22 +2320,21 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13Harness1.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			sink := newTestESCSink(t, db, ad.ADCSESC13)
 
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
 			for _, certChains := range cache.GetECAHostedChainedDomains() {
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
+				db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+					if err := adAnalysis.PostADCSESC13(context.Background(), tx, sink, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					}
 					return nil
 				})
 			}
 
-			err = operation.Done()
-			require.Nil(t, err)
+			sink.Done()
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
@@ -2375,22 +2374,21 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13Harness2.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			sink := newTestESCSink(t, db, ad.ADCSESC13)
 
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
 			for _, certChains := range cache.GetECAHostedChainedDomains() {
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
+				db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+					if err := adAnalysis.PostADCSESC13(context.Background(), tx, sink, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					}
 					return nil
 				})
 			}
 
-			err = operation.Done()
-			require.Nil(t, err)
+			sink.Done()
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
@@ -2435,22 +2433,21 @@ func TestADCSESC13(t *testing.T) {
 			harness.ESC13HarnessECA.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ESC13")
+			sink := newTestESCSink(t, db, ad.ADCSESC13)
 
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
 			for _, certChains := range cache.GetECAHostedChainedDomains() {
-				operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					if err := adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
+				db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+					if err := adAnalysis.PostADCSESC13(context.Background(), tx, sink, localGroupData, certChains, cache); err != nil {
 						t.Logf("failed post processing for %s: %v", ad.ADCSESC13.String(), err)
 					}
 					return nil
 				})
 			}
 
-			err = operation.Done()
-			require.Nil(t, err)
+			sink.Done()
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
