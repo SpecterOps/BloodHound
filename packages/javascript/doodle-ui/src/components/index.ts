@@ -27,6 +27,7 @@ export * from './ComboBadge';
 export * from './DataTable';
 export * from './DatePicker';
 export * from './Dialog';
+export * from './Drawer';
 export * from './Form';
 export * from './Input';
 export * from './Label';

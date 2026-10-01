@@ -22,6 +22,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Calls `cn` but abstracts the logic of checking whether className is a state function or a string
+ * @param inputs
+ * TODO: Update spots around the app that currently check `typeof className === 'function' ? className(state) : className`
+ */
+export function cnWithState<State>(
+    ...inputs: (ClassValue | ((state: State) => ClassValue))[]
+): (state: State) => string {
+    return (state) => cn(...inputs.map((input) => (typeof input === 'function' ? input(state) : input)));
+}
+
+/**
  *
  * @param color if using a theme color, use the css global var. Otherwise, just use the custom color value
  * @returns string
