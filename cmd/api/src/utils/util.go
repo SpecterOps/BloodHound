@@ -33,13 +33,23 @@ import (
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
+const (
+	// MinimumSharpHoundVersion applies to all SharpHound ingest requests.
+	MinimumSharpHoundVersion = "2.0.3"
+	// MinimumAzureHoundVersion applies only when use_raw_object_id is enabled.
+	MinimumAzureHoundVersion = "3.0.0"
+)
+
 var (
 	ErrInvalidSharpHoundVersion   = errors.New("invalid sharphound version string")
 	ErrInvalidCollectorVersion    = errors.New("invalid collector version string")
-	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v2.0.3 or above")
-	ErrRecommendAzureHoundVersion = errors.New("please upgrade to azurehound v3.0.0 or above")
+	ErrRecommendSharphoundVersion = errors.New("please upgrade to sharphound v" + MinimumSharpHoundVersion + " or above")
+	ErrRecommendAzureHoundVersion = errors.New("please upgrade to azurehound v" + MinimumAzureHoundVersion + " or above")
 	ErrInvalidClientType          = errors.New("invalid client type")
 	ErrInvalidUUID                = errors.New("invalid UUID")
+
+	minimumSharpHoundVersion = semver.MustParse(MinimumSharpHoundVersion)
+	minimumAzureHoundVersion = semver.MustParse(MinimumAzureHoundVersion)
 )
 
 type ClientType int
@@ -60,31 +70,66 @@ type ClientVersion struct {
 	BuildMetadata string
 }
 
-// IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and that
-// the version of the client is not EOL (currently SHS v1.x and SHS < v2.0.3). When useRawObjectIDsEnabled
-// is true, AzureHound versions below v3.0.0 are also rejected.
+// CollectorUpgradeRequiredError identifies a parsed collector version that is below
+// the supported minimum. Its fields can also be used for user-facing upgrade guidance.
+type CollectorUpgradeRequiredError struct {
+	Collector       string
+	DetectedVersion string
+	RequiredVersion string
+	cause           error
+}
+
+func (s *CollectorUpgradeRequiredError) Error() string {
+	return fmt.Sprintf("%s %s is outdated. Upgrade to %s %s or later.", s.Collector, s.DetectedVersion, s.Collector, s.RequiredVersion)
+}
+
+func (s *CollectorUpgradeRequiredError) Unwrap() error {
+	return s.cause
+}
+
+func newCollectorUpgradeRequiredError(userAgent, collector, requiredVersion string, cause error) error {
+	_, detectedVersion, _ := strings.Cut(userAgent, "/")
+	return &CollectorUpgradeRequiredError{
+		Collector:       collector,
+		DetectedVersion: detectedVersion,
+		RequiredVersion: requiredVersion,
+		cause:           cause,
+	}
+}
+
+// IsValidClientVersion checks the version from a user agent to ensure it's a valid UserAgent and meets
+// MinimumSharpHoundVersion. When useRawObjectIDsEnabled is true, MinimumAzureHoundVersion is also enforced.
 // Returns the parsed ClientVersion and an error when invalid.
 func IsValidClientVersion(userAgent string, useRawObjectIDsEnabled bool) (ClientVersion, error) {
 	if version, err := ParseClientVersion(userAgent); err != nil {
 		return version, fmt.Errorf("error parsing client version: %w", err)
 	} else if version.ClientType == ClientTypeAzureHound {
-		if version.Major < 3 && useRawObjectIDsEnabled {
-			return version, fmt.Errorf("azurehound version below v3.0.0 detected and Use Raw Object ID flag is enabled: %w", ErrRecommendAzureHoundVersion)
+		if useRawObjectIDsEnabled && version.isBelowMinimum(minimumAzureHoundVersion) {
+			return version, newCollectorUpgradeRequiredError(userAgent, "AzureHound", MinimumAzureHoundVersion, ErrRecommendAzureHoundVersion)
 		}
 		return version, nil
 	} else if version.ClientType == ClientTypeOpenHound {
 		return version, nil
 	} else if version.ClientType == ClientTypeSharpHound {
-		if version.Major < 2 {
-			return version, fmt.Errorf("sharphound v1.x detected: %w", ErrRecommendSharphoundVersion)
-		} else if version.Major == 2 && version.Minor == 0 && version.Patch < 3 {
-			return version, fmt.Errorf("sharphound v2.0.2 or lower detected: %w", ErrRecommendSharphoundVersion)
+		if version.isBelowMinimum(minimumSharpHoundVersion) {
+			return version, newCollectorUpgradeRequiredError(userAgent, "SharpHound", MinimumSharpHoundVersion, ErrRecommendSharphoundVersion)
 		} else {
 			return version, nil
 		}
 	} else { // unknown client type
 		return version, ErrInvalidClientType
 	}
+}
+
+// isBelowMinimum compares only the major, minor, and patch components, preserving the
+// existing policy that ignores revision, prerelease, and build metadata for minimum versions.
+func (s ClientVersion) isBelowMinimum(minimum *semver.Version) bool {
+	if s.Major != int(minimum.Major()) {
+		return s.Major < int(minimum.Major())
+	} else if s.Minor != int(minimum.Minor()) {
+		return s.Minor < int(minimum.Minor())
+	}
+	return s.Patch < int(minimum.Patch())
 }
 
 // ParseClientVersion extracts the client type from a user agent string and delegates to

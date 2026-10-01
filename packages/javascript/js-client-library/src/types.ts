@@ -540,6 +540,13 @@ export type ScheduledJobDisplay = {
     domain_results: DomainResult[];
 };
 
+export type CollectorUpgrade = {
+    collector: string;
+    detected_version: string;
+    required_version: string;
+    message: string;
+};
+
 export type Client = {
     configured_user: string;
     events: {
@@ -575,6 +582,7 @@ export type Client = {
     issuer_address: string;
     issuer_address_override: string;
     support_bundle_summary: SupportBundleSummaryStatus;
+    collector_upgrade?: CollectorUpgrade;
 };
 
 export type FileIngestJob = TimestampFields & {

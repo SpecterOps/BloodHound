@@ -19,7 +19,13 @@ parameters:
 post:
   operationId: IngestData
   summary: Endpoint for data ingestion
-  description: Ingests data from collector clients
+  description: >-
+    Ingests data from collector clients. An outdated collector receives HTTP 400
+    with its detected version and the required upgrade version. No ingest task is
+    created for rejected data. When use_raw_object_id is enabled and the authenticated
+    client has a running or ingesting job, that job is failed with the rejection reason and upgrade instruction in
+    its status_message, visible in the Finished Jobs Log. Malformed or unknown
+    user agents receive HTTP 400 without being classified as outdated collectors.
   tags:
     - Client Ingest
     - Enterprise

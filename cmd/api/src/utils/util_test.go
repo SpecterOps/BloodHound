@@ -180,6 +180,29 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.ErrorIs(t, err, utils.ErrInvalidClientType)
 }
 
+func TestIsValidClientVersion_MinimumVersionBoundaries(t *testing.T) {
+	var testCases = []struct {
+		userAgent              string
+		useRawObjectIDsEnabled bool
+		expectedError          error
+	}{
+		{userAgent: "sharphound/2.0.2.99", expectedError: utils.ErrRecommendSharphoundVersion},
+		{userAgent: "sharphound/2.0.3.0-rc1"},
+		{userAgent: "sharphound/2.1.0.0"},
+		{userAgent: "sharphound/3.0.0.0"},
+		{userAgent: "azurehound/v2.9.9"},
+		{userAgent: "azurehound/v2.9.9", useRawObjectIDsEnabled: true, expectedError: utils.ErrRecommendAzureHoundVersion},
+		{userAgent: "azurehound/v3.0.0-rc1+docker", useRawObjectIDsEnabled: true},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.userAgent, func(t *testing.T) {
+			_, err := utils.IsValidClientVersion(testCase.userAgent, testCase.useRawObjectIDsEnabled)
+			require.ErrorIs(t, err, testCase.expectedError)
+		})
+	}
+}
+
 func TestParseClientVersion(t *testing.T) {
 	version, err := utils.ParseClientVersion("sharphound/2.0.6.0")
 

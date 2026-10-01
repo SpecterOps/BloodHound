@@ -54,6 +54,30 @@ allOf:
         $ref: './null.string.yaml'
       version:
         type: string
+      collector_upgrade:
+        type: object
+        description: >-
+          Present only when use_raw_object_id is enabled and the latest reported
+          collector version is below the server's supported minimum. Omitted when
+          the flag is disabled or the version is supported, unknown, or malformed.
+        required:
+          - collector
+          - detected_version
+          - required_version
+          - message
+        properties:
+          collector:
+            type: string
+            example: SharpHound
+          detected_version:
+            type: string
+            example: 2.0.2.0
+          required_version:
+            type: string
+            example: 2.0.3
+          message:
+            type: string
+            example: SharpHound 2.0.2.0 is outdated. Upgrade to SharpHound 2.0.3 or later.
       user_sid:
         $ref: './null.string.yaml'
       type:
