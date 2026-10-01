@@ -29,19 +29,29 @@ type TriggerProps = React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigg
 
 const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Trigger>, TriggerProps>(
     (props, ref) => {
-        const { children, asChild = children == null || React.isValidElement(children), className, type, ...rest } =
-            props;
+        const {
+            children,
+            asChild = children == null || React.isValidElement(children),
+            className,
+            onFocusCapture,
+            type,
+            ...rest
+        } = props;
 
         return (
             <TooltipPrimitive.Trigger
                 ref={ref}
                 className={cn('focus:outline-none focus-visible:focus-ring', className)}
                 asChild={asChild}
-                type={asChild ? type : (type ?? 'button')}
+                onFocusCapture={(event) => {
+                    onFocusCapture?.(event);
+                    if (!event.currentTarget.matches(':focus-visible')) event.preventDefault();
+                }}
+                type={asChild ? type : type ?? 'button'}
                 {...rest}>
                 {children ?? (
                     // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-                    <span role='img' tabIndex={0} className='inline-flex items-center justify-center'>
+                    <span role='img' tabIndex={0} className='inline-flex items-center justify-center rounded-full'>
                         <AppIcon.Info size={16} aria-hidden='true' />
                     </span>
                 )}
@@ -112,11 +122,8 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         contentWidth,
         contentProps = {},
     } = props;
-    const defaultTriggerLabel = !children && !renderTrigger
-        ? typeof tooltip === 'string'
-            ? tooltip
-            : 'Show more information'
-        : undefined;
+    const defaultTriggerLabel =
+        !children && !renderTrigger ? (typeof tooltip === 'string' ? tooltip : 'Show more information') : undefined;
     const trigger = renderTrigger ? (
         <TooltipTrigger {...triggerProps} asChild={false} />
     ) : (
