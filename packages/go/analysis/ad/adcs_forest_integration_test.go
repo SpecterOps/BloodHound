@@ -291,9 +291,8 @@ func TestADCSESC3SelectsPublishersForTargetDomain(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.NoError(t, err)
 
-			enrollOnBehalfOfOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance - EnrollOnBehalfOf")
-			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, enrollOnBehalfOfOperation))
-			require.NoError(t, enrollOnBehalfOfOperation.Done())
+			_, err = adAnalysis.PostEnrollOnBehalfOf(t.Context(), db, cache)
+			require.NoError(t, err)
 
 			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance")
 			for _, certificateChains := range cache.GetECAHostedChainedDomains() {
@@ -576,9 +575,8 @@ func TestEnrollOnBehalfOfRequiresSharedHostedCAChains(t *testing.T) {
 			_, cache, err := FetchADCSPrereqs(db)
 			require.NoError(t, err)
 
-			operation := post.NewPostRelationshipOperation(t.Context(), db, "EnrollOnBehalfOf shared hosted CA chains")
-			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, operation))
-			require.NoError(t, operation.Done())
+			_, err = adAnalysis.PostEnrollOnBehalfOf(t.Context(), db, cache)
+			require.NoError(t, err)
 
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				for _, agentTemplate := range []*graph.Node{validAgent, noNTAuthAgent, noHostAgent, otherDomainAgent} {

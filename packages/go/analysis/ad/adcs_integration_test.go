@@ -411,15 +411,10 @@ func TestEnrollOnBehalfOf(t *testing.T) {
 			harness.EnrollOnBehalfOfHarness3.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnrollOnBehalfOf 3")
-
 			_, cache, err := FetchADCSPrereqs(db)
 			require.Nil(t, err)
 
-			if err := adAnalysis.PostEnrollOnBehalfOf(cache, operation); err != nil {
-				t.Logf("failed post processing for %s: %v", ad.EnrollOnBehalfOf.String(), err)
-			}
-			err = operation.Done()
+			_, err = adAnalysis.PostEnrollOnBehalfOf(context.Background(), db, cache)
 			require.Nil(t, err)
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
