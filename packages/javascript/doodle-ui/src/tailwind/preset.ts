@@ -18,9 +18,11 @@ import animate from 'tailwindcss-animate';
 
 export default {
     theme: {
+        // Font stacks resolve through CSS variables (defaults set in plugin.ts) so consumers can swap
+        // typefaces at runtime, e.g. for theme presets.
         fontFamily: {
-            sans: ['Figtree', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
-            heading: ['"Nunito Sans"', '"Avenir Next"', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
+            sans: ['var(--font-body)'],
+            heading: ['var(--font-heading)'],
         },
         container: {
             center: true,

@@ -20,6 +20,8 @@ const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
 const focusRingOffsetWidth = '2px';
+const bodyFontFamily = 'Figtree, "Segoe UI", Helvetica, Arial, sans-serif';
+const headingFontFamily = '"Nunito Sans", "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
@@ -27,6 +29,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // SHARED (same in light and dark)
             '--common-dark': common.dark,
             '--common-white': common.white,
+
+            // TYPOGRAPHY
+            '--font-body': bodyFontFamily,
+            '--font-heading': headingFontFamily,
 
             // // UTILITIES / risk level
             // '--risk-critical': palette.purple.A300,

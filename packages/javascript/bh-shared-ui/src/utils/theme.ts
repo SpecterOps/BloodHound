@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { Palette } from '@mui/material/styles/createPalette';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { ThemePresetConfig } from '../constants';
 
 /**
  * This function sets the name of our current theme as a class on the html document root. This will ensure the correct styles are applied to components attached elsewhere in the DOM, such as modals and popover menus.
@@ -29,6 +31,88 @@ export const setRootClass = (value: 'dark' | 'light') => {
     root.classList.remove('dark', 'light');
     root.classList.add(value);
     return value;
+};
+
+const neutralSteps = ['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'] as const;
+
+// Maps a MUI palette onto the doodle-ui color variables for the active mode.
+const getModeColorVariables = (palette: Palette): Record<string, string> => {
+    const variables: Record<string, string> = {
+        '--primary': palette.primary.main,
+        '--primary-main': palette.primary.main,
+        '--primary-variant': palette.primary.dark,
+        '--bhe-main': palette.primary.main,
+        '--radio-indicator-fill': palette.primary.main,
+        '--select-item-checked-text': palette.primary.main,
+        '--data-table-row-selected-outline': palette.primary.main,
+        '--secondary': palette.secondary.main,
+        '--secondary-main': palette.secondary.main,
+        '--secondary-variant': palette.secondary.dark,
+        '--focus-ring': palette.secondary.main,
+        '--checkbox-hover': palette.secondary.main,
+        '--input-outlined-border-hover': palette.secondary.main,
+        '--textarea-border-hover': palette.secondary.main,
+        '--radio-border-hover': palette.secondary.main,
+        '--select-border-focus': palette.secondary.main,
+        '--text-main': palette.color.primary,
+        '--link': palette.color.links,
+        '--link-main': palette.color.links,
+        '--error': palette.color.error,
+    };
+
+    neutralSteps.forEach((step, index) => {
+        variables[`--neutral-${index + 1}`] = palette.neutral[step];
+    });
+
+    return variables;
+};
+
+/**
+ * Builds the CSS variables needed for Tailwind/doodle-ui styled components to follow a theme preset.
+ * Fonts are always included. Colors are only included when the preset overrides the doodle-ui design tokens.
+ *
+ * @param preset - the selected theme preset
+ * @param darkMode - whether dark mode is enabled
+ *
+ * @returns a map of CSS variable names to values
+ */
+export const getThemePresetCssVariables = (preset: ThemePresetConfig, darkMode: boolean): Record<string, string> => {
+    const variables: Record<string, string> = {
+        '--font-body': preset.bodyFontFamily,
+        '--font-heading': preset.headingFontFamily,
+    };
+
+    if (!preset.overridesDoodleColors) return variables;
+
+    // Components often pair fixed light/dark tokens (e.g. `bg-neutral-light-2 dark:bg-neutral-dark-2`), so both
+    // palettes are mapped regardless of the active mode.
+    neutralSteps.forEach((step, index) => {
+        variables[`--neutral-light-${index + 1}`] = preset.lightPalette.neutral[step];
+        variables[`--neutral-dark-${index + 1}`] = preset.darkPalette.neutral[step];
+    });
+
+    return { ...variables, ...getModeColorVariables(darkMode ? preset.darkPalette : preset.lightPalette) };
+};
+
+let appliedThemeVariableNames: string[] = [];
+
+/**
+ * Applies a theme preset's CSS variables as inline styles on the html document root, so they take precedence over
+ * the doodle-ui `:root` and `.dark` defaults. Variables set by a previous preset that the new one does not set are
+ * removed, restoring the doodle-ui defaults.
+ *
+ * @param preset - the selected theme preset
+ * @param darkMode - whether dark mode is enabled
+ */
+export const applyThemePresetCssVariables = (preset: ThemePresetConfig, darkMode: boolean) => {
+    const rootStyle = window.document.documentElement.style;
+    const variables = getThemePresetCssVariables(preset, darkMode);
+
+    appliedThemeVariableNames.filter((name) => !(name in variables)).forEach((name) => rootStyle.removeProperty(name));
+
+    Object.entries(variables).forEach(([name, value]) => rootStyle.setProperty(name, value));
+
+    appliedThemeVariableNames = Object.keys(variables);
 };
 
 /**

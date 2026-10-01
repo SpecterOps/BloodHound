@@ -585,32 +585,47 @@ export type ThemePreset = 'default' | 'comicSans' | 'serif';
 export type ThemePresetConfig = {
     id: ThemePreset;
     label: string;
+    // Font stacks are also exposed to Tailwind/doodle-ui through the --font-body and --font-heading CSS variables.
+    bodyFontFamily: string;
+    headingFontFamily: string;
     typography: Partial<Theme['typography']>;
     lightPalette: Palette;
     darkPalette: Palette;
+    // When true, the preset palettes override the doodle-ui color CSS variables so Tailwind-styled components
+    // match the MUI theme. The default preset leaves the doodle-ui design tokens untouched.
+    overridesDoodleColors: boolean;
 };
 
 export const themePresets: Record<ThemePreset, ThemePresetConfig> = {
     default: {
         id: 'default',
         label: 'Default',
+        bodyFontFamily,
+        headingFontFamily,
         typography,
         lightPalette,
         darkPalette,
+        overridesDoodleColors: false,
     },
     comicSans: {
         id: 'comicSans',
         label: 'Comic Sans',
+        bodyFontFamily: comicSansFontFamily,
+        headingFontFamily: comicSansFontFamily,
         typography: comicSansTypography,
         lightPalette: comicSansLightPalette,
         darkPalette: comicSansDarkPalette,
+        overridesDoodleColors: true,
     },
     serif: {
         id: 'serif',
         label: 'Serif',
+        bodyFontFamily: serifFontFamily,
+        headingFontFamily: serifFontFamily,
         typography: serifTypography,
         lightPalette: serifLightPalette,
         darkPalette: serifDarkPalette,
+        overridesDoodleColors: true,
     },
 };
 
