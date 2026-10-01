@@ -76,11 +76,6 @@ jobs:
         include:
           - target: cli
           - target: enterprise
-    env:
-      DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
-      DOCKER_REPOSITORY: ${{ vars.DOCKER_REPOSITORY }}
-      DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
     steps:
       - name: Install Cosign
