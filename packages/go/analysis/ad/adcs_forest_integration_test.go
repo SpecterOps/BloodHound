@@ -644,11 +644,14 @@ func TestGoldenCertCreationAndCompositionUseOnlyQualifyingHosts(t *testing.T) {
 			chainedDomains := cache.GetECAHostedChainedDomains()
 			require.Contains(t, chainedDomains, enterpriseCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "GoldenCert exact host scoping")
-			require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				return adAnalysis.PostGoldenCert(ctx, tx, outC, chainedDomains[enterpriseCA.ID.Uint64()])
+			goldenCertTracker, err := post.FetchTracker(t.Context(), db, graph.Kinds{ad.GoldenCert})
+			require.NoError(t, err)
+
+			goldenCertSink := post.NewFilteredRelationshipSink(t.Context(), "GoldenCert exact host scoping", db, goldenCertTracker)
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				return adAnalysis.PostGoldenCert(t.Context(), tx, goldenCertSink, chainedDomains[enterpriseCA.ID.Uint64()])
 			}))
-			require.NoError(t, edgeOperation.Done())
+			goldenCertSink.Done()
 
 			var goldenCertEdge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
