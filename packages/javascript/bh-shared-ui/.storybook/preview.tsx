@@ -19,10 +19,12 @@ import '@fontsource/nunito-sans/600.css';
 import '@fontsource/nunito-sans/700.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview, ReactRenderer } from '@storybook/react';
-import { StoryProviders } from './StoryProviders';
+import { mswLoader } from './msw';
 import './storybook.css';
+import { StoryProviders } from './StoryProviders';
 
 const preview: Preview = {
+    loaders: [mswLoader],
     parameters: {
         backgrounds: { disable: true },
         controls: { matchers: { date: /Date$/i } },
@@ -33,7 +35,10 @@ const preview: Preview = {
             defaultTheme: 'light',
         }),
         (Story, context) => (
-            <StoryProviders key={context.id} initialEntries={context.parameters.router?.initialEntries}>
+            <StoryProviders
+                key={context.id}
+                initialEntries={context.parameters.router?.initialEntries}
+                themeName={context.globals.theme}>
                 <Story />
             </StoryProviders>
         ),

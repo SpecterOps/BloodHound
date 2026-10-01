@@ -27,6 +27,7 @@ const getAbsolutePath = (packageName: string) => dirname(require.resolve(join(pa
 
 const config: StorybookConfig = {
     stories: ['../src/**/*.stories.@(ts|tsx)'],
+    staticDirs: ['./public'],
     addons: [
         '@storybook/addon-links',
         '@storybook/addon-essentials',

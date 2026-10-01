@@ -18,7 +18,7 @@ import { faRefresh, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton } from '@mui/material';
 import { cn } from '../../utils';
-import { FileForIngest, FileStatus } from '../FileUploadDialog/types';
+import { FileForIngest, FileStatus } from '../FileUploadDialog';
 
 const FileStatusListItem: React.FC<{
     file: FileForIngest;
@@ -52,21 +52,21 @@ const FileStatusListItem: React.FC<{
                 />
             )}
 
-            <div>
+            <div className='flex shrink-0 items-center pr-1'>
                 {file.status === FileStatus.READY && (
                     <IconButton
                         onClick={onRemove}
                         aria-label='Remove item'
-                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
-                        <FontAwesomeIcon size='xs' icon={faTimes} />
+                        className='hover:bg-slate-400 rounded-sm w-6 h-6'>
+                        <FontAwesomeIcon size='2xs' icon={faTimes} />
                     </IconButton>
                 )}
                 {file.status === FileStatus.FAILURE && (
                     <IconButton
                         onClick={() => onRefresh(file)}
                         aria-label='Retry upload'
-                        className='hover:bg-slate-400 rounded-sm w-4 h-3 m-2 justify-self-end'>
-                        <FontAwesomeIcon size='xs' icon={faRefresh} />
+                        className='hover:bg-slate-400 rounded-sm w-6 h-6'>
+                        <FontAwesomeIcon size='2xs' icon={faRefresh} />
                     </IconButton>
                 )}
             </div>

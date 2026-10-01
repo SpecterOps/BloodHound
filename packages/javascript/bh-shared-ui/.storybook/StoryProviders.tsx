@@ -13,19 +13,27 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, useState } from 'react';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import { createTheme } from '@mui/material/styles';
+import { ReactNode, useMemo, useState } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { MemoryRouter } from 'react-router-dom';
-import { AppNameProvider } from '../src';
+import { AppNameProvider, darkPalette, lightPalette, themeZIndex, themedComponents, typography } from '../src';
 import { AnnouncementProvider } from '../src/providers/AnnouncementProvider';
 
 interface StoryProvidersProps {
     children: ReactNode;
     initialEntries?: string[];
+    themeName?: string;
 }
 
-export const StoryProviders = ({ children, initialEntries = ['/'] }: StoryProvidersProps) => {
+export const StoryProviders = ({ children, initialEntries = ['/'], themeName = 'light' }: StoryProvidersProps) => {
+    const theme = useMemo(() => {
+        const palette = themeName === 'dark' ? darkPalette : lightPalette;
+        const baseTheme = createTheme({ palette, typography, zIndex: themeZIndex });
+        return createTheme(baseTheme, { components: themedComponents(palette) });
+    }, [themeName]);
     const [queryClient] = useState(
         () =>
             new QueryClient({
@@ -35,15 +43,18 @@ export const StoryProviders = ({ children, initialEntries = ['/'] }: StoryProvid
 
     return (
         <HelmetProvider>
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter
-                    initialEntries={initialEntries}
-                    future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-                    <AppNameProvider name='BloodHound Community Edition'>
-                        <AnnouncementProvider>{children}</AnnouncementProvider>
-                    </AppNameProvider>
-                </MemoryRouter>
-            </QueryClientProvider>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <QueryClientProvider client={queryClient}>
+                    <MemoryRouter
+                        initialEntries={initialEntries}
+                        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+                        <AppNameProvider name='BloodHound Community Edition'>
+                            <AnnouncementProvider>{children}</AnnouncementProvider>
+                        </AppNameProvider>
+                    </MemoryRouter>
+                </QueryClientProvider>
+            </ThemeProvider>
         </HelmetProvider>
     );
 };

@@ -23,7 +23,7 @@ Static output is written to `packages/javascript/bh-shared-ui/storybook-static/`
 
 ### Adding stories
 
-Place `*.stories.tsx` beside the component and import the component directly. 
+Place `*.stories.tsx` beside the component and import the component directly.
 Add `tags: ['autodocs']` for a generated Docs page.
 Stories are type-checked but excluded from the published Rollup output.
 
@@ -31,7 +31,9 @@ The preview provides the application fonts, Tailwind/DoodleUI styles, React Quer
 an in-memory router, Helmet, app name, and announcements.
 Light/dark mode uses DoodleUI CSS variables and the document root class, so portal content
 follows the selected theme. The toolbar button toggles directly between light and dark,
-using the same themes addon as DoodleUI. The preview does not install an MUI theme provider or baseline.
+using the same themes addon as DoodleUI. The preview also installs the application's
+MUI theme provider, palettes, typography, component overrides, z-index values, and
+`CssBaseline`, so tables, legacy surfaces, and upload dialogs match the selected theme.
 Each story gets its own query client; queries do not retry or refetch on window focus.
 
 Set the initial route when a component needs router context:
@@ -44,5 +46,55 @@ parameters: {
 }
 ```
 
-API mocking, Redux state, and notification providers are not configured yet. For connected components, add story-specific
-fixtures and providers before rendering them; the starter stories do not require a backend.
+### Mocking connected components
+
+`Components/FileIngest` mocks business logic at the HTTP boundary while keeping the
+real component, React Query hooks, permissions, feature flags, notifications, filters,
+and upload dialog. Stories cover the feature flag enabled/disabled paths and all three permission levels,
+empty/loading/error states, file details and uploads. Filters and pagination can be explored in the main example.
+Play functions exercise interactions and assert their results.
+
+The preview starts MSW before rendering and resets handlers on every story load.
+Unhandled `/api/` requests are errors. Use a **factory** rather than a shared array
+to reset mutable state on navigation or interaction reruns:
+
+```tsx
+parameters: {
+    msw: {
+        handlers: () => createFileIngestHandlers({
+            feature: 'enabled',
+            permission: 'read',
+            history: 'populated',
+        })
+    }
+}
+```
+
+`FileIngest.stories.mocks.ts` implements API response envelopes and filter query
+operators, paginates 24 deterministic jobs, and keeps uploaded files in memory.
+Only the selected story's handlers are installed. The `file-error` scenario fails
+each file once so its real retry action can recover. Loading scenarios keep requests
+pending until navigation.
+
+The named `FileIngestExample` adds the notification provider and upload context/dialog.
+`StoryNotifications` presents actual notifications with `NotificationSnackbar`, keeping
+displayed-key bookkeeping per mount because `AppNotifications` uses module-level state.
+Its authenticated wrapper loads `/self` before mounting `FileIngest`, matching the
+application route and avoiding a false mount-time permission warning. Redux is
+unnecessary for this page. Other connected stories should provide their actual contexts.
+
+For connected components with different API scenarios, render only the primary story
+inline in Docs with a `docs.page` template using `Title`, `Description`, and
+`Primary` from `@storybook/blocks`. All scenarios remain available in the sidebar. Inline rendering inherits the toolbar theme, and keeping
+one live example prevents scenarios from overwriting each other's MSW handlers.
+
+The worker in `.storybook/public/` is MSW's unmodified generated asset. After an MSW
+upgrade, regenerate it from this package directory with the standard command:
+
+```sh
+yarn exec msw init .storybook/public
+```
+
+Mocks simulate uploads and UI results; they do not parse collector data or ingest a
+graph. The stories display current component behavior, including five-second history
+polling and existing upload failure behavior.

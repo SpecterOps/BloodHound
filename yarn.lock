@@ -7040,6 +7040,7 @@ __metadata:
     "@storybook/addon-interactions": "npm:^8.3.6"
     "@storybook/addon-links": "npm:^8.1.5"
     "@storybook/addon-themes": "npm:^8.1.5"
+    "@storybook/blocks": "npm:^8.3.6"
     "@storybook/manager-api": "npm:^8.1.5"
     "@storybook/preview-api": "npm:8.6.17"
     "@storybook/react": "npm:^8.3.6"
