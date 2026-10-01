@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/lab/arrows"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -2553,4 +2554,85 @@ func TestADCSESC13(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestADCSESC16(t *testing.T) {
+	var (
+		testContext = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB     = testContext.Graph.Database
+	)
+
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
+	require.NoError(t, err)
+
+	var (
+		expectedEdges = make([]arrows.Edge, 0)
+		otherEdges    = make([]arrows.Edge, 0)
+	)
+
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.ADCSESC16.String() {
+			expectedEdges = append(expectedEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
+	require.NoError(t, arrows.WriteGraphToDatabase(graphDB, &fixture))
+
+	operation := post.NewPostRelationshipOperation(context.Background(), graphDB, "ADCS Post Process Test - ADCSESC16")
+	localGroupData, cache, err := FetchADCSPrereqs(graphDB)
+	require.NoError(t, err)
+
+	for _, certChains := range cache.GetECAHostedChainedDomains() {
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+			return adAnalysis.PostADCSESC16(ctx, tx, outC, localGroupData, certChains, cache)
+		})
+	}
+
+	require.NoError(t, operation.Done())
+
+	require.NoError(t, graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.ADCSESC16)
+		}))
+		require.NoError(t, err)
+		require.Len(t, edges, len(expectedEdges))
+
+		for _, expectedEdge := range expectedEdges {
+			fromNode, found := findESC16FixtureNodeByID(fixture.Nodes, expectedEdge.FromID)
+			require.True(t, found, "source node with ID %s not found", expectedEdge.FromID)
+			toNode, found := findESC16FixtureNodeByID(fixture.Nodes, expectedEdge.ToID)
+			require.True(t, found, "destination node with ID %s not found", expectedEdge.ToID)
+
+			fromIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+			}))
+			require.NoError(t, err)
+			require.Len(t, fromIDs, 1)
+
+			toIDs, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+			}))
+			require.NoError(t, err)
+			require.Len(t, toIDs, 1)
+
+			edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), graphDB, fromIDs[0], toIDs[0], ad.ADCSESC16)
+			require.NoError(t, err)
+			require.NotNil(t, edge)
+		}
+
+		return nil
+	}))
+}
+
+func findESC16FixtureNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
+	for index := range nodes {
+		if nodes[index].ID == id {
+			return &nodes[index], true
+		}
+	}
+
+	return nil, false
 }
