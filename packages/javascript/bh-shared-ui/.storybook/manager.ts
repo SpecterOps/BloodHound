@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { addons } from '@storybook/manager-api';
+import { themes } from '@storybook/theming';
 
-import { DoodleUIPlugin, DoodleUIPreset } from '../doodle-ui/src/tailwind';
-import type { Config } from 'tailwindcss';
-
-export default {
-    content: ['./src/**/*.{js,ts,jsx,tsx}', '../doodle-ui/src/**/*.{js,ts,jsx,tsx}', './.storybook/**/*.{ts,tsx}'],
-    darkMode: ['class'],
-    plugins: [DoodleUIPlugin],
-    presets: [DoodleUIPreset],
-} satisfies Config;
+addons.setConfig({ theme: themes.dark });
