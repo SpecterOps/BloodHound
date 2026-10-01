@@ -180,8 +180,8 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
 				} else {
-					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserGroupID)
+					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+						return PostCoerceAndRelayNTLMToSMB(ctx, tx, ntlmSink, ntlmCache, innerComputer, authenticatedUserGroupID)
 					}); err != nil {
 						slog.WarnContext(
 							ctx,
@@ -234,6 +234,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 // ntlmPostProcessedEdges lists the NTLM edge kinds which are post-processed using the delta-change-apply method
 var ntlmPostProcessedEdges = graph.Kinds{
+	ad.CoerceAndRelayNTLMToSMB,
 	ad.CoerceAndRelayNTLMToADCS,
 }
 
@@ -573,7 +574,7 @@ func GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx context.Context, db graph.Dat
 
 // PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
-func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
+func PostCoerceAndRelayNTLMToSMB(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
 	} else if err != nil {
@@ -600,11 +601,11 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRe
 			allAdminPrincipals.Remove(computer.ID.Uint64())
 
 			if allAdminPrincipals.Cardinality() > 0 {
-				outC <- post.EnsureRelationshipJob{
+				sink.Submit(ctx, post.EnsureRelationshipJob{
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
-				}
+				})
 			}
 		}
 	}
