@@ -300,3 +300,81 @@ func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
 		assert.Equal(t, "Target-Id", endObjectID)
 	})
 }
+
+func TestIngestibleRelationshipsToUpdates_IdentityKind(t *testing.T) {
+	t.Run("unresolved endpoints use the ingest batch source kind as identity kind", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background())
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "source-id", Kind: ad.User},
+					ein.IngestibleEndpoint{Value: "target-id", Kind: ad.Group},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, ad.Entity))
+		)
+
+		require.Len(t, updates, 1)
+		require.True(t, updates[0].StartIdentityKind.Is(ad.Entity))
+		require.True(t, updates[0].EndIdentityKind.Is(ad.Entity))
+	})
+
+	t.Run("property-resolved endpoints use the resolved kind as identity kind", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background())
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "S-1-5-32-512", Kind: ad.Group, MatchBy: ein.MatchByID, Resolved: true},
+					ein.IngestibleEndpoint{Value: "target-id", Kind: ad.User, MatchBy: ein.MatchByID, Resolved: true},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.StringKind("custom-source")))
+		)
+
+		require.Len(t, updates, 1)
+		require.True(t, updates[0].StartIdentityKind.Is(ad.Group))
+		require.True(t, updates[0].EndIdentityKind.Is(ad.User))
+	})
+
+	t.Run("mixed resolution: only resolved endpoints switch identity kind", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background())
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "source-id", Kind: ad.User},
+					ein.IngestibleEndpoint{Value: "S-1-5-32-512", Kind: ad.Group, MatchBy: ein.MatchByID, Resolved: true},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.StringKind("custom-source")))
+		)
+
+		require.Len(t, updates, 1)
+		require.True(t, updates[0].StartIdentityKind.Is(graph.StringKind("custom-source")))
+		require.True(t, updates[0].EndIdentityKind.Is(ad.Group))
+	})
+
+	t.Run("property-resolved endpoints without a kind filter drop the identity label restriction", func(t *testing.T) {
+		var (
+			ingestCtx = NewIngestContext(context.Background())
+			rels      = []ein.IngestibleRelationship{
+				ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "S-1-5-32-512", Kind: graph.EmptyKind, MatchBy: ein.MatchByID, Resolved: true},
+					ein.IngestibleEndpoint{Value: "target-id", Kind: graph.EmptyKind, MatchBy: ein.MatchByID, Resolved: true},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				),
+			}
+
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.StringKind("custom-source")))
+		)
+
+		require.Len(t, updates, 1)
+		require.True(t, updates[0].StartIdentityKind.Is(graph.EmptyKind))
+		require.True(t, updates[0].EndIdentityKind.Is(graph.EmptyKind))
+	})
+}
