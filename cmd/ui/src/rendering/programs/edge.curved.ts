@@ -36,7 +36,7 @@ import { bezier } from 'src/rendering/utils/bezier';
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
     SEGMENTS_PER_EDGE = POINTS / 2 - 1,
-    ATTRIBUTES = 6,
+    ATTRIBUTES = 8,
     STRIDE = POINTS * ATTRIBUTES;
 
 export default class CurvedEdgeProgram extends AbstractEdgeProgram {
@@ -48,6 +48,9 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
     colorLocation: GLint;
     normalLocation: GLint;
     radiusLocation: GLint;
+    distanceLocation: GLint;
+    dashedLocation: GLint;
+    dimensionsLocation: WebGLUniformLocation;
     matrixLocation: WebGLUniformLocation;
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
@@ -67,6 +70,11 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         this.colorLocation = gl.getAttribLocation(this.program, 'a_color');
         this.normalLocation = gl.getAttribLocation(this.program, 'a_normal');
         this.radiusLocation = gl.getAttribLocation(this.program, 'a_radius');
+        this.distanceLocation = gl.getAttribLocation(this.program, 'a_distance');
+        this.dashedLocation = gl.getAttribLocation(this.program, 'a_dashed');
+        const dimensionsLocation = gl.getUniformLocation(this.program, 'u_dimensions');
+        if (dimensionsLocation === null) throw new Error('Edge program: missing dimensionsLocation');
+        this.dimensionsLocation = dimensionsLocation;
 
         // Uniform locations
         const matrixLocation = gl.getUniformLocation(this.program, 'u_matrix');
@@ -107,6 +115,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         gl.enableVertexAttribArray(this.normalLocation);
         gl.enableVertexAttribArray(this.colorLocation);
         gl.enableVertexAttribArray(this.radiusLocation);
+        gl.enableVertexAttribArray(this.distanceLocation);
+        gl.enableVertexAttribArray(this.dashedLocation);
 
         gl.vertexAttribPointer(
             this.positionLocation,
@@ -132,6 +142,22 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             false,
             ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
             20
+        );
+        gl.vertexAttribPointer(
+            this.distanceLocation,
+            1,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            24
+        );
+        gl.vertexAttribPointer(
+            this.dashedLocation,
+            1,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            28
         );
     }
 
@@ -192,11 +218,16 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         // previously calculated clamp value.
 
         const points = [];
+        let fullDistance = 0;
+        let previousPoint = start;
 
-        for (let t = 0; t <= clamp; t += RESOLUTION) {
+        for (let t = 0; t < 1; t += RESOLUTION) {
             const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
-            points.push(pointOnCurve);
+            fullDistance += bezier.getLineLength(previousPoint, pointOnCurve);
+            previousPoint = pointOnCurve;
+            if (t <= clamp) points.push(pointOnCurve);
         }
+        fullDistance += bezier.getLineLength(previousPoint, end);
 
         // Prevent rendering this edge if it is short enough that there is only one point before our clamp value
         if (points.length < 2) {
@@ -211,7 +242,11 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         const array = this.array;
         const color = floatColor(data.color);
 
+        let distance = 0;
+        const dashed = data.dashed ? 1 : 0;
+
         for (let j = 0; j < points.length; j++) {
+            if (j > 0) distance += bezier.getLineLength(points[j - 1], points[j]);
             // Handle special cases, since we do not need to calculate a miter join for the endcaps
             const isFirstPoint = j === 0;
             const isLastPoint = j === points.length - 1;
@@ -241,6 +276,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = distance;
+            array[i++] = dashed;
 
             // First point flipped
             array[i++] = points[j].x;
@@ -249,16 +286,19 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = -vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = distance;
+            array[i++] = dashed;
         }
 
         // Add one final point at the exact clamp position if we have the space. makes up any gap between the edge's
         // last full segment and the arrowhead.
         const bufferEnd = STRIDE * (offset + 1);
-        if (i + 12 <= bufferEnd) {
+        if (i + 2 * ATTRIBUTES <= bufferEnd) {
             const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
             const previousPoint = points[points.length - 1];
 
             if (finalPoint.x !== previousPoint.x || finalPoint.y !== previousPoint.y) {
+                distance += bezier.getLineLength(previousPoint, finalPoint);
                 const finalNormal = bezier.getNormals(previousPoint, finalPoint);
                 const vOffset = {
                     x: finalNormal.x * thickness,
@@ -271,6 +311,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
                 array[i++] = vOffset.x;
                 array[i++] = color;
                 array[i++] = 0;
+                array[i++] = distance;
+                array[i++] = dashed;
 
                 // First point flipped
                 array[i++] = finalPoint.x;
@@ -279,6 +321,15 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
                 array[i++] = -vOffset.x;
                 array[i++] = color;
                 array[i++] = 0;
+                array[i++] = distance;
+                array[i++] = dashed;
+            }
+        }
+
+        // Arrowhead clamping changes with zoom. Fit the same dash pattern to the visible curve each time.
+        if (distance > 0) {
+            for (let index = STRIDE * offset + 6; index < i; index += ATTRIBUTES) {
+                array[index] *= fullDistance / distance;
             }
         }
 
@@ -330,6 +381,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
 
         // Binding uniforms
         gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
+        gl.uniform2f(this.dimensionsLocation, params.width, params.height);
         gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
         gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
 

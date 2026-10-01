@@ -20,11 +20,16 @@ precision mediump float;
 varying vec4 v_color;
 varying vec2 v_normal;
 varying float v_thickness;
+varying highp float v_distance;
+varying float v_dashed;
 
 const float feather = 0.001;
 const vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
 
 void main(void) {
+  // Eight-pixel dashes and six-pixel gaps at the default zoom; arrowheads stay solid.
+  if (v_dashed > 0.5 && mod(v_distance, 14.0) >= 8.0) discard;
+
   float dist = length(v_normal) * v_thickness;
 
   float t = smoothstep(

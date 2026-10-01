@@ -24,6 +24,7 @@ export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
 export * from './useCustomNodeKinds';
 export * from './useDataQualityStats';
 export { default as useDebouncedValue } from './useDebouncedValue';
+export * from './useEdgeTraversability';
 export * from './useEnvironmentIdList';
 export * from './useEnvironmentParams';
 export * from './useExecuteOnFileDrag';

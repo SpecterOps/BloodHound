@@ -23,18 +23,22 @@ import {
     mockSourceKindsHandler,
     singleNodeResponse,
 } from 'bh-shared-ui/testing';
+import { MultiDirectedGraph } from 'graphology';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
 
+const captureGraph = vi.hoisted(() => vi.fn());
+
 // Mock sigma here to avoid rendering conflicts in jsdom
 vi.mock('src/components/SigmaChart', async () => {
     const { forwardRef, useImperativeHandle } = await import('react');
 
     return {
-        default: forwardRef((_props, ref) => {
+        default: forwardRef<unknown, { graph?: MultiDirectedGraph }>((props, ref) => {
+            captureGraph(props.graph);
             useImperativeHandle(ref, () => ({
                 runStandardLayout: vi.fn(),
                 runSequentialLayout: vi.fn(),
@@ -96,6 +100,7 @@ const buildGraphShapedCypherResponse = () => {
 };
 
 const server = setupServer(
+    rest.get('/api/v2/extensions-edges', (_req, res, ctx) => res(ctx.json({ data: [] }))),
     rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
         return res(ctx.json(cypherTestResponse));
     }),
@@ -185,6 +190,62 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GraphView', () => {
+    it('applies traversability when metadata arrives without replacing the graph', async () => {
+        let releaseMetadata!: () => void;
+        const metadataReady = new Promise<void>((resolve) => {
+            releaseMetadata = resolve;
+        });
+        const edges = ['AdminTo', 'Enroll', 'CustomFact', 'Unknown'].map((kind, index) => ({
+            id: index + 1,
+            source: '1',
+            target: kind === 'CustomFact' ? '1' : '2',
+            label: kind,
+            kind,
+            lastSeen: '',
+        }));
+        server.use(
+            rest.get('/api/v2/features', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: [
+                            { key: 'opengraph_extension_management', enabled: true },
+                            { key: 'tier_management_engine', enabled: false },
+                        ],
+                    })
+                )
+            ),
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: { nodes: { '1': searchedNode, '2': { ...searchedNode, objectId: 'other-node' } }, edges },
+                    })
+                )
+            ),
+            rest.get('/api/v2/extensions-edges', async (_req, res, ctx) => {
+                await metadataReady;
+                return res(
+                    ctx.json({
+                        data: [
+                            { name: 'AdminTo', is_traversable: true },
+                            { name: 'Enroll', is_traversable: false },
+                            { name: 'CustomFact', is_traversable: false },
+                        ],
+                    })
+                );
+            })
+        );
+        render(<GraphView />, { route: '/explore?searchType=cypher&cypherSearch=encodedquery' });
+        await waitFor(() => expect(captureGraph.mock.lastCall?.[0]?.size).toBe(4));
+        const graph = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph;
+        expect(graph.getEdgeAttribute('rel_2', 'dashed')).toBe(true);
+        expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(false);
+        releaseMetadata();
+        await waitFor(() => expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(true));
+        expect(graph.getEdgeAttribute('rel_1', 'dashed')).toBe(false);
+        expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(true);
+        expect(graph.getEdgeAttribute('rel_4', 'dashed')).toBe(false);
+        expect(captureGraph.mock.lastCall?.[0]).toBe(graph);
+    });
     it('renders a hidden h1 with the text Explore for screen readers', async () => {
         render(<GraphView />, { route: `/explore?searchType=cypher&cypherSearch=encodedquery` });
         const hiddenHeading = screen.getByRole('heading', { level: 1, name: /explore/i });
