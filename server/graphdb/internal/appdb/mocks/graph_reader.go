@@ -29,6 +29,10 @@ import (
 	reflect "reflect"
 
 	pgx "github.com/jackc/pgx/v5"
+	model "github.com/specterops/bloodhound/cmd/api/src/model"
+	appcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	queries "github.com/specterops/bloodhound/cmd/api/src/queries"
+	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -118,4 +122,128 @@ func (mr *MockpgxQuerierMockRecorder) Query(ctx, sql any, args ...any) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, sql}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockpgxQuerier)(nil).Query), varargs...)
+}
+
+// MockappDatabase is a mock of appDatabase interface.
+type MockappDatabase struct {
+	ctrl     *gomock.Controller
+	recorder *MockappDatabaseMockRecorder
+	isgomock struct{}
+}
+
+// MockappDatabaseMockRecorder is the mock recorder for MockappDatabase.
+type MockappDatabaseMockRecorder struct {
+	mock *MockappDatabase
+}
+
+// NewMockappDatabase creates a new mock instance.
+func NewMockappDatabase(ctrl *gomock.Controller) *MockappDatabase {
+	mock := &MockappDatabase{ctrl: ctrl}
+	mock.recorder = &MockappDatabaseMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockappDatabase) EXPECT() *MockappDatabaseMockRecorder {
+	return m.recorder
+}
+
+// GetFlagByKey mocks base method.
+func (m *MockappDatabase) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.FeatureFlag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFlagByKey", arg0, arg1)
+	ret0, _ := ret[0].(appcfg.FeatureFlag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFlagByKey indicates an expected call of GetFlagByKey.
+func (mr *MockappDatabaseMockRecorder) GetFlagByKey(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockappDatabase)(nil).GetFlagByKey), arg0, arg1)
+}
+
+// GetGraphSchemaRelationshipKinds mocks base method.
+func (m *MockappDatabase) GetGraphSchemaRelationshipKinds(arg0 context.Context, arg1 model.Filters, arg2 model.Sort, arg3, arg4 int) (model.GraphSchemaRelationshipKinds, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphSchemaRelationshipKinds", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(model.GraphSchemaRelationshipKinds)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetGraphSchemaRelationshipKinds indicates an expected call of GetGraphSchemaRelationshipKinds.
+func (mr *MockappDatabaseMockRecorder) GetGraphSchemaRelationshipKinds(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphSchemaRelationshipKinds", reflect.TypeOf((*MockappDatabase)(nil).GetGraphSchemaRelationshipKinds), arg0, arg1, arg2, arg3, arg4)
+}
+
+// GetPrimaryDisplayKinds mocks base method.
+func (m *MockappDatabase) GetPrimaryDisplayKinds(arg0 context.Context) (graphschema.PrimaryDisplayKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPrimaryDisplayKinds", arg0)
+	ret0, _ := ret[0].(graphschema.PrimaryDisplayKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrimaryDisplayKinds indicates an expected call of GetPrimaryDisplayKinds.
+func (mr *MockappDatabaseMockRecorder) GetPrimaryDisplayKinds(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryDisplayKinds", reflect.TypeOf((*MockappDatabase)(nil).GetPrimaryDisplayKinds), arg0)
+}
+
+// MockcypherRunner is a mock of cypherRunner interface.
+type MockcypherRunner struct {
+	ctrl     *gomock.Controller
+	recorder *MockcypherRunnerMockRecorder
+	isgomock struct{}
+}
+
+// MockcypherRunnerMockRecorder is the mock recorder for MockcypherRunner.
+type MockcypherRunnerMockRecorder struct {
+	mock *MockcypherRunner
+}
+
+// NewMockcypherRunner creates a new mock instance.
+func NewMockcypherRunner(ctrl *gomock.Controller) *MockcypherRunner {
+	mock := &MockcypherRunner{ctrl: ctrl}
+	mock.recorder = &MockcypherRunnerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockcypherRunner) EXPECT() *MockcypherRunnerMockRecorder {
+	return m.recorder
+}
+
+// PrepareCypherQuery mocks base method.
+func (m *MockcypherRunner) PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (queries.PreparedQuery, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareCypherQuery", rawCypher, queryComplexityLimit)
+	ret0, _ := ret[0].(queries.PreparedQuery)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PrepareCypherQuery indicates an expected call of PrepareCypherQuery.
+func (mr *MockcypherRunnerMockRecorder) PrepareCypherQuery(rawCypher, queryComplexityLimit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareCypherQuery", reflect.TypeOf((*MockcypherRunner)(nil).PrepareCypherQuery), rawCypher, queryComplexityLimit)
+}
+
+// RawCypherQuery mocks base method.
+func (m *MockcypherRunner) RawCypherQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, primaryDisplayKinds, pQuery, includeProperties)
+	ret0, _ := ret[0].(model.UnifiedGraph)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RawCypherQuery indicates an expected call of RawCypherQuery.
+func (mr *MockcypherRunnerMockRecorder) RawCypherQuery(ctx, primaryDisplayKinds, pQuery, includeProperties any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockcypherRunner)(nil).RawCypherQuery), ctx, primaryDisplayKinds, pQuery, includeProperties)
 }

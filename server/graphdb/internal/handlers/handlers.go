@@ -28,6 +28,7 @@ import (
 type GraphDB interface {
 	GetRelationship(ctx context.Context, id int64, includeKindInfo bool) (services.Relationship, error)
 	GetNode(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error)
+	ExpandGraph(ctx context.Context, request services.GraphExpansionRequest) (services.GraphExpansion, error)
 }
 
 // Handlers is a dependency injection container for graphdb handlers.

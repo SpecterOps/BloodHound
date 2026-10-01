@@ -24,10 +24,19 @@ import (
 
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services/mocks"
+	"github.com/specterops/bloodhound/server/users"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type testAccessControl struct {
+	shouldFilter bool
+}
+
+func (s testAccessControl) ShouldFilterForETAC(users.User) bool {
+	return s.shouldFilter
+}
 
 // int32Ptr is a helper function that returns a pointer to an int32 value.
 func int32Ptr(v int32) *int32 {
@@ -159,7 +168,7 @@ func TestService_GetNode(t *testing.T) {
 			var (
 				databaseMock  = mocks.NewMockDatabase(t)
 				accessChecker = newAllowAllNodeAccessChecker(t)
-				svc           = services.NewService(databaseMock, accessChecker)
+				svc           = services.NewService(databaseMock, accessChecker, testAccessControl{})
 			)
 
 			tt.setupMock(databaseMock)
@@ -200,7 +209,7 @@ func TestService_GetNode_RendersKindInfoMarkdown(t *testing.T) {
 		},
 	}, nil)
 
-	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t), testAccessControl{}).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 1)
@@ -237,7 +246,7 @@ func TestService_GetNode_PreservesTemplateErrorsPerKindInfo(t *testing.T) {
 		},
 	}, nil)
 
-	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t), testAccessControl{}).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 2)
@@ -264,7 +273,7 @@ func TestService_GetNode_IgnoresEmptyKindInfoContent(t *testing.T) {
 		{InfoKey: "empty", NodeKindID: &nodeKindID},
 	}, nil)
 
-	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetNode(ctx, nodeID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t), testAccessControl{}).GetNode(ctx, nodeID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 1)
@@ -305,7 +314,7 @@ func TestService_FetchNodesByObjectIDsAndKinds(t *testing.T) {
 			var (
 				databaseMock  = mocks.NewMockDatabase(t)
 				accessChecker = newAllowAllNodeAccessChecker(t)
-				svc           = services.NewService(databaseMock, accessChecker)
+				svc           = services.NewService(databaseMock, accessChecker, testAccessControl{})
 			)
 
 			tt.setupMock(databaseMock)

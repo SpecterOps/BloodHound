@@ -53,6 +53,72 @@ func (_m *MockGraphDB) EXPECT() *MockGraphDB_Expecter {
 	return &MockGraphDB_Expecter{mock: &_m.Mock}
 }
 
+// ExpandGraph provides a mock function for the type MockGraphDB
+func (_mock *MockGraphDB) ExpandGraph(ctx context.Context, request services.GraphExpansionRequest) (services.GraphExpansion, error) {
+	ret := _mock.Called(ctx, request)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExpandGraph")
+	}
+
+	var r0 services.GraphExpansion
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.GraphExpansionRequest) (services.GraphExpansion, error)); ok {
+		return returnFunc(ctx, request)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.GraphExpansionRequest) services.GraphExpansion); ok {
+		r0 = returnFunc(ctx, request)
+	} else {
+		r0 = ret.Get(0).(services.GraphExpansion)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, services.GraphExpansionRequest) error); ok {
+		r1 = returnFunc(ctx, request)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockGraphDB_ExpandGraph_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExpandGraph'
+type MockGraphDB_ExpandGraph_Call struct {
+	*mock.Call
+}
+
+// ExpandGraph is a helper method to define mock.On call
+//   - ctx context.Context
+//   - request services.GraphExpansionRequest
+func (_e *MockGraphDB_Expecter) ExpandGraph(ctx interface{}, request interface{}) *MockGraphDB_ExpandGraph_Call {
+	return &MockGraphDB_ExpandGraph_Call{Call: _e.mock.On("ExpandGraph", ctx, request)}
+}
+
+func (_c *MockGraphDB_ExpandGraph_Call) Run(run func(ctx context.Context, request services.GraphExpansionRequest)) *MockGraphDB_ExpandGraph_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.GraphExpansionRequest
+		if args[1] != nil {
+			arg1 = args[1].(services.GraphExpansionRequest)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockGraphDB_ExpandGraph_Call) Return(graphExpansion services.GraphExpansion, err error) *MockGraphDB_ExpandGraph_Call {
+	_c.Call.Return(graphExpansion, err)
+	return _c
+}
+
+func (_c *MockGraphDB_ExpandGraph_Call) RunAndReturn(run func(ctx context.Context, request services.GraphExpansionRequest) (services.GraphExpansion, error)) *MockGraphDB_ExpandGraph_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetNode provides a mock function for the type MockGraphDB
 func (_mock *MockGraphDB) GetNode(ctx context.Context, id int64, includeKindInfo bool) (services.Node, error) {
 	ret := _mock.Called(ctx, id, includeKindInfo)

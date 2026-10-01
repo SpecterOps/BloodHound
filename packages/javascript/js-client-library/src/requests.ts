@@ -48,6 +48,15 @@ export type FilterExpression<
 export type NumberFilter = FilterExpression<number, ComparisonOperator>;
 export type EqualityFilter<Value extends string | boolean> = FilterExpression<Value>;
 
+export type GraphExpansionDirection = 'inbound' | 'outbound';
+
+export interface GraphExpansionRequest {
+    node_id: number;
+    direction: GraphExpansionDirection;
+    limit?: number;
+    include_properties?: boolean;
+}
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
