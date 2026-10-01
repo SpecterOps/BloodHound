@@ -101,7 +101,7 @@ func TestManagedServiceAccountDNSCompositions(t *testing.T) {
 
 	var (
 		operation = post.NewPostRelationshipOperation(suite.Context, suite.GraphDB, "ADCS managed service account composition test")
-		sink      = newTestESCSink(t, suite.GraphDB, ad.ADCSESC6a)
+		sink      = newTestESCSink(t, suite.GraphDB, ad.ADCSESC6a, ad.ADCSESC9a)
 	)
 
 	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
@@ -111,7 +111,7 @@ func TestManagedServiceAccountDNSCompositions(t *testing.T) {
 		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 			if err := adAnalysis.PostADCSESC6a(ctx, tx, sink, localGroupData, certChains, cache); err != nil {
 				return err
-			} else if err := adAnalysis.PostADCSESC9a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
+			} else if err := adAnalysis.PostADCSESC9a(ctx, tx, sink, localGroupData, certChains, cache); err != nil {
 				return err
 			} else {
 				return adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache)
