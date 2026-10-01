@@ -37,6 +37,10 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+var syncLAPSPasswordPostProcessedEdges = graph.Kinds{
+	ad.SyncLAPSPassword,
+}
+
 func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -47,38 +51,60 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 		attr.Scope("process"),
 	)()
 
-	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, syncLAPSPasswordPostProcessedEdges); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
-	} else {
-		operation := post.NewPostRelationshipOperation(ctx, db, "SyncLAPSPassword Post Processing")
-		for _, domain := range domainNodes {
-			innerDomain := domain
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if lapsSyncers, err := getLAPSSyncers(tx, innerDomain, localGroupData); err != nil {
-					return err
-				} else if lapsSyncers.Cardinality() == 0 {
-					return nil
-				} else if computers, err := getLAPSComputersForDomain(tx, innerDomain); err != nil {
-					return err
-				} else {
-					for _, computer := range computers {
-						lapsSyncers.Each(func(value uint64) bool {
-							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-								FromID: graph.ID(value),
-								ToID:   computer,
-								Kind:   ad.SyncLAPSPassword,
-							})
-							return true
-						})
-					}
-
-					return nil
-				}
-			})
-		}
-
-		return &operation.Stats, operation.Done()
 	}
+
+	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	syncLAPSPasswordTracker, err := post.FetchTracker(ctx, db, syncLAPSPasswordPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostSyncLAPSPassword", db, syncLAPSPasswordTracker)
+	defer sink.Done()
+
+	for _, domain := range domainNodes {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if lapsSyncers, err := getLAPSSyncers(tx, domain, localGroupData); err != nil {
+				return err
+			} else if lapsSyncers.Cardinality() == 0 {
+				return nil
+			} else if computers, err := getLAPSComputersForDomain(tx, domain); err != nil {
+				return err
+			} else {
+				submitted := true
+
+				for _, computer := range computers {
+					lapsSyncers.Each(func(value uint64) bool {
+						submitted = sink.Submit(ctx, post.EnsureRelationshipJob{
+							FromID: graph.ID(value),
+							ToID:   computer,
+							Kind:   ad.SyncLAPSPassword,
+						})
+
+						return submitted
+					})
+
+					if !submitted {
+						return fmt.Errorf("unable to submit to channel in PostSyncLAPSPassword")
+					}
+				}
+
+				return nil
+			}
+		}); err != nil {
+			return sink.Stats(), err
+		}
+	}
+
+	return sink.Stats(), nil
 }
 
 var dcSyncPostProcessedEdges = graph.Kinds{
