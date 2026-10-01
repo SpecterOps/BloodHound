@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	EnterpriseCAFor,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	ExecuteDCOM,
 	TrustedForNTAuth,
 	IssuedSignedBy,
+	EnterpriseCAFor,
 ]
 
 // All post-processed edges
