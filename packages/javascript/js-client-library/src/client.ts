@@ -90,6 +90,7 @@ import {
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
+    FindingsInsightsResponse,
     FindingTypeResponse,
     GetAlertAttemptsResponse,
     GetAlertEventTypesResponse,
@@ -536,6 +537,9 @@ class BHEAPIClient {
 
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
+
+    getFindingsInsights = (options?: RequestOptions) =>
+        this.baseClient.get<FindingsInsightsResponse>('/api/v2/attack-paths/findings/insights', options);
 
     /**
      * getFindingDetails returns data associated with a finding for a given environment

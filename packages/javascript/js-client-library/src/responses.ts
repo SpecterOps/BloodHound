@@ -218,8 +218,9 @@ export type ZoneProtectedAssetScoreView = {
 export type ZoneProtectedAssetScoreResponse = BasicResponse<ZoneProtectedAssetScoreView>;
 
 type DatapipeStatus = {
-    status: 'idle' | 'ingesting' | 'analyzing' | 'purging';
+    status: 'idle' | 'ingesting' | 'analyzing' | 'purging' | 'pruning' | 'starting' | 'optimizing';
     last_complete_analysis_at: string;
+    last_analysis_run_at: string;
     updated_at: string;
 };
 
@@ -532,6 +533,75 @@ export type UnifiedFinding = {
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
+
+export type FindingsInsightsConcentrationItem = {
+    id: string;
+    name: string;
+    count: number;
+    percentage: number;
+};
+
+export type FindingsInsightsWarningCode =
+    | 'no_completed_analysis'
+    | 'new_data_awaiting_analysis'
+    | 'stale_environment_data'
+    | 'environment_uncollected'
+    | 'previous_analysis_incomplete';
+
+export type FindingsInsightsWarning = {
+    code: FindingsInsightsWarningCode;
+    message: string;
+    recommended_action: 'run_analysis' | 'collect_data';
+    environment_ids?: string[];
+};
+
+export type FindingsInsights = {
+    generated_at: string;
+    scope: {
+        environment_count: number;
+        platforms: string[];
+        active_zone_count: number;
+        oldest_collection_at?: string;
+        newest_collection_at?: string;
+    };
+    findings: {
+        total: number;
+        current: { total: number; active: number; accepted: number };
+        archived: { total: number; remediated: number; deprecated: number; orphaned: number };
+    };
+    changes: {
+        analysis_started_at?: string;
+        new_current: number;
+        archived: number;
+        accepted_top_priority: number;
+        unranked_current: number;
+    };
+    risk: {
+        prioritization_enabled: boolean;
+        current_by_severity: { critical: number; high: number; moderate: number; low: number };
+        critical_or_high_total: number;
+        accepted_critical_or_high: number;
+        cross_platform_total: number;
+        concentration: {
+            top_priority: {
+                total: number;
+                environments: FindingsInsightsConcentrationItem[];
+                zones: FindingsInsightsConcentrationItem[];
+            };
+            all_current: {
+                total: number;
+                environments: FindingsInsightsConcentrationItem[];
+                zones: FindingsInsightsConcentrationItem[];
+            };
+        };
+    };
+    quality: {
+        status: 'healthy' | 'attention';
+        warnings: FindingsInsightsWarning[];
+    };
+};
+
+export type FindingsInsightsResponse = BasicResponse<FindingsInsights>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
