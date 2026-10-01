@@ -16,7 +16,7 @@
 
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, Menu, MenuContent, MenuTrigger } from 'doodle-ui';
+import { IconButton, Menu, MenuContent, MenuTrigger, Tooltip } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
 
 const GraphMenu: FC<{
@@ -28,11 +28,13 @@ const GraphMenu: FC<{
 
     return (
         <Menu>
-            <MenuTrigger asChild>
-                <IconButton aria-label={label} data-testid={testId}>
-                    <FontAwesomeIcon icon={icon} />
-                </IconButton>
-            </MenuTrigger>
+            <Tooltip tooltip={label}>
+                <MenuTrigger asChild>
+                    <IconButton aria-label={label} data-testid={testId} hideTooltip>
+                        <FontAwesomeIcon icon={icon} />
+                    </IconButton>
+                </MenuTrigger>
+            </Tooltip>
             <MenuContent side='top' align='start'>
                 {children}
             </MenuContent>

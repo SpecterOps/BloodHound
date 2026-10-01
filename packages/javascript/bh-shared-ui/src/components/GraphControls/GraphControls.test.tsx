@@ -147,7 +147,11 @@ describe('GraphControls', () => {
             expect(await screen.findByRole('tooltip', { name: 'Reset Graph' })).toBeVisible();
 
             await user.unhover(reset);
-            act(() => layout.focus());
+            await user.tab();
+            await user.tab();
+            await user.tab();
+
+            expect(layout).toHaveFocus();
             expect(await screen.findByRole('tooltip', { name: 'Layout' })).toBeVisible();
         });
 
