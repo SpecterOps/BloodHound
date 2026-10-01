@@ -16,6 +16,7 @@
 
 import { FlatGraphResponse, GraphResponse, StyledGraphEdge, StyledGraphNode, type GraphData } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
+import { DECOY_OBJECT_TAG, TAG_DECOY_AGT } from '../../../constants';
 import { BUILTIN_EDGE_CATEGORIES } from '../../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 import { getInitialPathFilters } from '../utils';
 
@@ -75,6 +76,9 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
                 objectId: node.data.objectid || '',
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
+                isDecoyObject:
+                    !!(node.data.system_tags && node.data.system_tags.indexOf(DECOY_OBJECT_TAG) !== -1) ||
+                    !!node.data.kinds?.includes(TAG_DECOY_AGT),
                 lastSeen: lastSeen,
             };
         } else if (isLink(item)) {
