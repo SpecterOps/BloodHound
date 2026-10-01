@@ -2031,7 +2031,6 @@ PostProcessedRelationships: [
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC13,
-	EnrollOnBehalfOf,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToSMB,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	IssuedSignedBy,
 	EnterpriseCAFor,
 	ExtendedByPolicy,
+	EnrollOnBehalfOf,
 ]
 
 // All post-processed edges
