@@ -225,7 +225,7 @@ func TestService_GetRelationship(t *testing.T) {
 			var (
 				databaseMock  = mocks.NewMockDatabase(t)
 				accessChecker = newAllowAllNodeAccessChecker(t)
-				svc           = services.NewService(databaseMock, accessChecker)
+				svc           = services.NewService(databaseMock, accessChecker, testAccessControl{})
 			)
 
 			tt.setupMock(databaseMock)
@@ -291,7 +291,7 @@ func TestService_GetRelationship_RendersRelationshipContext(t *testing.T) {
 	expectRelationshipEndpointNode(databaseMock, ctx, 100, "User", sourceNodeKindID, map[string]any{"name": "alice"})
 	expectRelationshipEndpointNode(databaseMock, ctx, 200, "Group", targetNodeKindID, map[string]any{"name": "admins"})
 
-	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t)).GetRelationship(ctx, relationshipID, true)
+	result, err := services.NewService(databaseMock, newAllowAllNodeAccessChecker(t), testAccessControl{}).GetRelationship(ctx, relationshipID, true)
 
 	require.NoError(t, err)
 	require.Len(t, result.KindInfos, 1)
@@ -320,7 +320,7 @@ func TestService_GetRelationship_ReturnsAccessDeniedForEndpoint(t *testing.T) {
 	databaseMock.EXPECT().GetNode(ctx, int64(100)).Return(services.Node{ID: 100}, nil)
 	databaseMock.EXPECT().GetNodeKindsByNames(ctx, []string(nil)).Return([]services.Kind(nil), nil)
 
-	result, err := services.NewService(databaseMock, newDenyAllNodeAccessChecker(t)).GetRelationship(ctx, relationshipID, false)
+	result, err := services.NewService(databaseMock, newDenyAllNodeAccessChecker(t), testAccessControl{}).GetRelationship(ctx, relationshipID, false)
 
 	assert.ErrorIs(t, err, services.ErrNodeAccessDenied)
 	assert.Empty(t, result)
@@ -350,7 +350,7 @@ func TestService_GetRelationship_ReturnsAccessDeniedForUnresolvedKindEndpoint(t 
 	accessChecker.EXPECT().CanAccessNode(mock.Anything, mock.Anything).Return(true).Once()
 	accessChecker.EXPECT().CanAccessNode(mock.Anything, mock.Anything).Return(false).Once()
 
-	result, err := services.NewService(databaseMock, accessChecker).GetRelationship(ctx, relationshipID, false)
+	result, err := services.NewService(databaseMock, accessChecker, testAccessControl{}).GetRelationship(ctx, relationshipID, false)
 
 	assert.ErrorIs(t, err, services.ErrNodeAccessDenied)
 	assert.Empty(t, result)

@@ -23,6 +23,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
@@ -42,6 +44,8 @@ type Deps struct {
 	Router              *router.Router
 	Pool                *pgxpool.Pool
 	Graph               graph.Database
+	AppDB               database.Database
+	GraphQuery          queries.Graph
 	RateLimitMiddleware func() mux.MiddlewareFunc
 	DogTags             dogtags.Service
 	AlertPublisher      alerts.Publisher
@@ -60,6 +64,12 @@ func Register(deps Deps) {
 	if deps.Graph == nil {
 		panic("modules: Register requires a non-nil Graph")
 	}
+	if deps.AppDB == nil {
+		panic("modules: Register requires a non-nil AppDB")
+	}
+	if deps.GraphQuery == nil {
+		panic("modules: Register requires a non-nil GraphQuery")
+	}
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
@@ -75,6 +85,6 @@ func Register(deps Deps) {
 	appcfg.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
 	featureflags.Register(deps.Router, deps.Pool)
-	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.AppDB, deps.GraphQuery, deps.RateLimitMiddleware, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
 }

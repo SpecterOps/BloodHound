@@ -20,6 +20,10 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 )
@@ -54,15 +58,34 @@ type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
+type appDatabase interface {
+	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
+	GetGraphSchemaRelationshipKinds(context.Context, model.Filters, model.Sort, int, int) (model.GraphSchemaRelationshipKinds, int, error)
+	GetPrimaryDisplayKinds(context.Context) (graphschema.PrimaryDisplayKinds, error)
+}
+
+type cypherRunner interface {
+	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (queries.PreparedQuery, error)
+	RawCypherQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
+}
+
 // Store reads graph entity data from the graph database and resolves entity kinds against
 // the schema kind tables. Callers receive services-layer sentinels rather than raw driver
 // errors.
 type Store struct {
-	graph graphReader
-	db    pgxQuerier
+	graph       graphReader
+	db          pgxQuerier
+	appDB       appDatabase
+	cypherQuery cypherRunner
 }
 
 // NewStore returns a Store backed by the provided graph database and pgx connection pool.
 func NewStore(graphDatabase graphReader, db pgxQuerier) *Store {
 	return &Store{graph: graphDatabase, db: db}
+}
+
+// NewStoreWithExpansion returns a Store with the extra app database and Cypher
+// runner dependencies needed by graph expansion.
+func NewStoreWithExpansion(graphDatabase graphReader, db pgxQuerier, appDB appDatabase, cypherQuery cypherRunner) *Store {
+	return &Store{graph: graphDatabase, db: db, appDB: appDB, cypherQuery: cypherQuery}
 }
