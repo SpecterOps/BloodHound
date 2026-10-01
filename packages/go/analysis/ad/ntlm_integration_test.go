@@ -44,19 +44,32 @@ import (
 )
 
 func setupCoerceAndNTLMToADCS(ctx context.Context, db graph.Database, opMessage string) error {
-	operation := post.NewPostRelationshipOperation(ctx, db, opMessage)
+	tracker, err := post.FetchTracker(ctx, db, graph.Kinds{ad.CoerceAndRelayNTLMToADCS})
+	if err != nil {
+		return err
+	}
+
+	var (
+		operation = post.NewPostRelationshipOperation(ctx, db, opMessage)
+		sink      = post.NewFilteredRelationshipSink(ctx, opMessage, db, tracker)
+	)
 
 	if localGroupData, cache, err := FetchADCSPrereqs(db); err != nil {
 		operation.Done()
+		sink.Done()
 		return err
 	} else if ntlmCache, err := adAnalysis.NewNTLMCache(ctx, db, localGroupData); err != nil {
 		operation.Done()
+		sink.Done()
 		return err
-	} else if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, cache, ntlmCache); err != nil {
+	} else if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, sink, cache, ntlmCache); err != nil {
 		operation.Done()
+		sink.Done()
 		return err
 	} else {
-		return operation.Done()
+		err := operation.Done()
+		sink.Done()
+		return err
 	}
 }
 
