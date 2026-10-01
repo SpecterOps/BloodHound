@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
-	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/algo"
 	"github.com/specterops/dawgs/cardinality"
@@ -987,8 +986,6 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		return &aggregateStats, err
 	} else if err := LinkWellKnownNodes(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if deleteTransitEdgesStats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, ad.PostProcessedRelationships()); err != nil {
-		return &aggregateStats, err
 	} else if localGroupData, err := FetchLocalGroupData(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if dcSyncStats, err := PostDCSync(ctx, db, localGroupData); err != nil {
@@ -1010,7 +1007,6 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 	} else if ntlmStats, err := PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled); err != nil {
 		return &aggregateStats, err
 	} else {
-		aggregateStats.Merge(deleteTransitEdgesStats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(hasTrustKeyStats)
 		aggregateStats.Merge(dcSyncStats)

@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -1121,12 +1120,6 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 	} else {
 		aggregateStats.Merge(userRoleStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
-	}
-
-	if stats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships()); err != nil {
-		return &aggregateStats, err
-	} else {
-		aggregateStats.Merge(stats)
 	}
 
 	if executeCommandStats, err := ExecuteCommand(ctx, db); err != nil {
