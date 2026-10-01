@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 // CreateApproverEdge processes a single AZTenant node to create AZRoleApprover edges for all qualifying AZRole nodes.
@@ -49,14 +48,16 @@ import (
 //   - ctx: Context for the operation
 //   - db: Graph database instance
 //   - tenantNode: The AZTenant node to process
-//   - operation: Post-processing operation tracker for creating edges
+//   - readerPool: Parallel reader pool used to process each qualifying AZRole
+//   - sink: Delta-change-apply sink that creates new AZRoleApprover edges and prunes stale ones
 //
 // Returns error if any step fails during processing.
 func CreateApproverEdge(
 	ctx context.Context,
 	db graph.Database,
 	tenantNode *graph.Node,
-	operation post.StatTrackedOperation[post.EnsureRelationshipJob],
+	readerPool *ops.Operation[any],
+	sink *post.FilteredRelationshipSink,
 ) error {
 	// Extract the tenant's objectid to match against AZRole tenantid properties
 	tenantObjectID, err := tenantNode.Properties.Get(common.ObjectID.String()).String()
@@ -96,10 +97,10 @@ func CreateApproverEdge(
 
 	// Step 3: Process each qualifying AZRole to create appropriate AZRoleApprover edges
 	for _, fetchedAZRole := range fetchedAZRoles {
-		if err := operation.Operation.SubmitReader(func(
+		if err := readerPool.SubmitReader(func(
 			ctx context.Context,
 			tx graph.Transaction,
-			outC chan<- post.EnsureRelationshipJob,
+			_ chan<- any,
 		) error {
 			// Step 3a: Read the primaryApprovers lists (user and group GUIDs)
 			userApproversID, err := fetchedAZRole.Properties.Get(
@@ -121,10 +122,10 @@ func CreateApproverEdge(
 			// Step 3b: Determine approver strategy based on whether specific approvers are configured
 			if len(principalIDs) == 0 {
 				// Step 3b.i-iii: No specific approvers - use default admin roles
-				return handleDefaultAdminRoles(ctx, db, outC, tenantNode, fetchedAZRole)
+				return handleDefaultAdminRoles(ctx, db, sink, tenantNode, fetchedAZRole)
 			} else {
 				// Step 3c.i-ii: Specific approvers configured - use the specified GUIDs
-				return handlePrincipalApprovers(ctx, db, outC, principalIDs, fetchedAZRole)
+				return handlePrincipalApprovers(ctx, db, sink, principalIDs, fetchedAZRole)
 			}
 		}); err != nil {
 			return err
@@ -146,7 +147,7 @@ func CreateApproverEdge(
 func handleDefaultAdminRoles(
 	ctx context.Context,
 	db graph.Database,
-	outC chan<- post.EnsureRelationshipJob,
+	sink *post.FilteredRelationshipSink,
 	tenantNode, fetchedAZRole *graph.Node,
 ) error {
 	// Step 3b.ii: Find Global Administrator and Privileged Role Administrator roles in this tenant
@@ -172,7 +173,7 @@ func handleDefaultAdminRoles(
 	// Step 3b.iii: Create AZRoleApprover edges from each default admin role to the target AZRole
 	for _, fetchedNode := range fetchedNodes {
 		// Enqueue creation of AZRoleApprover edge: from admin role → target AZRole
-		channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+		sink.Submit(ctx, post.EnsureRelationshipJob{
 			FromID: fetchedNode.ID,
 			ToID:   fetchedAZRole.ID,
 			Kind:   azure.AZRoleApprover,
@@ -196,7 +197,7 @@ func handleDefaultAdminRoles(
 func handlePrincipalApprovers(
 	ctx context.Context,
 	db graph.Database,
-	outC chan<- post.EnsureRelationshipJob,
+	sink *post.FilteredRelationshipSink,
 	principalIDs []string,
 	fetchedAZRole *graph.Node,
 ) error {
@@ -240,7 +241,7 @@ func handlePrincipalApprovers(
 		}
 
 		// Step 3c.ii.2: Create AZRoleApprover edge from approver node to target AZRole
-		if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+		if !sink.Submit(ctx, post.EnsureRelationshipJob{
 			FromID: fetchedNode.ID,
 			ToID:   fetchedAZRole.ID,
 			Kind:   azure.AZRoleApprover,
