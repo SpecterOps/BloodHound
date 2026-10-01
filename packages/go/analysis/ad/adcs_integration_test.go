@@ -62,13 +62,9 @@ func TestTrustedForNTAuth(t *testing.T) {
 		},
 		func(harness integration.HarnessDetails, db graph.Database) {
 			// post `TrustedForNTAuth` edges
-			operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - TrustedForNTAuth")
-
-			if err := adAnalysis.PostTrustedForNTAuth(context.Background(), db, operation); err != nil {
+			if _, err := adAnalysis.PostTrustedForNTAuth(context.Background(), db); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.TrustedForNTAuth.String(), err)
 			}
-
-			operation.Done()
 
 			db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchStartNodes(
