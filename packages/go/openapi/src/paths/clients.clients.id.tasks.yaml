@@ -31,6 +31,9 @@ post:
   description: >
     **Deprecated**: This endpoint will no longer be supported in future releases.
     Please use `POST /api/v2/clients/{client_id}/jobs` instead.
+    When use_raw_object_id is enabled, known outdated collectors receive HTTP 400
+    before a job is created, with error context collector_upgrade_required and
+    an actionable upgrade message, matching the jobs endpoint.
   tags:
     - Clients
     - Enterprise

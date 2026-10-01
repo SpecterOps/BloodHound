@@ -940,7 +940,7 @@ class BHEAPIClient {
     ) => this.baseClient.post('/api/v2/clients', client, options);
 
     getClient = (clientId: string, options?: RequestOptions) =>
-        this.baseClient.get<types.Client>(`/api/v2/clients/${clientId}`, options);
+        this.baseClient.get<BasicResponse<types.Client>>(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,

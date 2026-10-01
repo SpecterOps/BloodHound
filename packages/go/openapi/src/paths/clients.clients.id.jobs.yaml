@@ -27,7 +27,13 @@ parameters:
 post:
   operationId: CreateClientScheduledJob
   summary: Creates a scheduled job
-  description: Creates a new scheduled job
+  description: >-
+    Creates a new scheduled job. When use_raw_object_id is enabled, a collector
+    whose last reported version is below the supported minimum receives HTTP 400
+    before a job is created. The response includes an error with context
+    collector_upgrade_required and a message identifying the detected version and
+    required upgrade. Missing, malformed, or unknown collector versions are not
+    classified as outdated by this check.
   tags:
     - Clients
     - Enterprise

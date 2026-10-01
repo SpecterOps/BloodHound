@@ -19,21 +19,47 @@ package utils_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 )
 
+// versionBelowMinimum exercises the boundary directly rather than assuming a
+// particular configured minimum. Versions consist of major.minor.patch here.
+func versionBelowMinimum(t *testing.T, minimum string) string {
+	t.Helper()
+	parsedMinimum, err := semver.StrictNewVersion(minimum)
+	require.NoError(t, err)
+
+	switch {
+	case parsedMinimum.Patch() > 0:
+		return fmt.Sprintf("%d.%d.%d", parsedMinimum.Major(), parsedMinimum.Minor(), parsedMinimum.Patch()-1)
+	case parsedMinimum.Minor() > 0:
+		return fmt.Sprintf("%d.%d.0", parsedMinimum.Major(), parsedMinimum.Minor()-1)
+	case parsedMinimum.Major() > 0:
+		return fmt.Sprintf("%d.0.0", parsedMinimum.Major()-1)
+	default:
+		t.Fatal("cannot test a version below 0.0.0")
+		return ""
+	}
+}
+
 func TestIsValidClientVersion(t *testing.T) {
 	var (
-		err error
+		err               error
+		sharpHoundMinimum = semver.MustParse(utils.MinimumSharpHoundVersion)
+		azureHoundMinimum = semver.MustParse(utils.MinimumAzureHoundVersion)
+		sharpHoundBelow   = versionBelowMinimum(t, utils.MinimumSharpHoundVersion)
+		azureHoundBelow   = versionBelowMinimum(t, utils.MinimumAzureHoundVersion)
 	)
 
 	azureHoundVersion, err := utils.IsValidClientVersion("azurehound/0.0.0", false)
@@ -83,30 +109,29 @@ func TestIsValidClientVersion(t *testing.T) {
 	_, err = utils.IsValidClientVersion("azurehound/0.0.0-alpha", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
-	// When the UseRawObjectIDs flag is enabled, AzureHound versions below v3.0.0 are rejected.
-	_, err = utils.IsValidClientVersion("azurehound/2.9.9", true)
+	_, err = utils.IsValidClientVersion("azurehound/v"+azureHoundBelow, true)
 	require.ErrorIs(t, err, utils.ErrRecommendAzureHoundVersion)
 
-	azureHoundV3Version, err := utils.IsValidClientVersion("azurehound/3.0.0", true)
+	azureHoundMinimumVersion, err := utils.IsValidClientVersion("azurehound/v"+utils.MinimumAzureHoundVersion, true)
 	require.Nil(t, err)
-	require.Equal(t, utils.ClientTypeAzureHound, azureHoundV3Version.ClientType)
-	require.Equal(t, 3, azureHoundV3Version.Major)
+	require.Equal(t, utils.ClientTypeAzureHound, azureHoundMinimumVersion.ClientType)
+	require.Equal(t, int(azureHoundMinimum.Major()), azureHoundMinimumVersion.Major)
 
-	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/2.0.3.0", false)
+	sharpHoundversion, err := utils.IsValidClientVersion("sharphound/"+utils.MinimumSharpHoundVersion+".0", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundversion.ClientType)
-	require.Equal(t, 2, sharpHoundversion.Major)
-	require.Equal(t, 0, sharpHoundversion.Minor)
-	require.Equal(t, 3, sharpHoundversion.Patch)
+	require.Equal(t, int(sharpHoundMinimum.Major()), sharpHoundversion.Major)
+	require.Equal(t, int(sharpHoundMinimum.Minor()), sharpHoundversion.Minor)
+	require.Equal(t, int(sharpHoundMinimum.Patch()), sharpHoundversion.Patch)
 	require.Equal(t, 0, sharpHoundversion.Extra)
 	require.Empty(t, sharpHoundversion.Prerelease)
 
-	sharpHoundRCVersion, err := utils.IsValidClientVersion("sharphound/2.0.3.0-rc1", false)
+	sharpHoundRCVersion, err := utils.IsValidClientVersion("sharphound/"+utils.MinimumSharpHoundVersion+".0-rc1", false)
 	require.Nil(t, err)
 	require.Equal(t, utils.ClientTypeSharpHound, sharpHoundRCVersion.ClientType)
-	require.Equal(t, 2, sharpHoundRCVersion.Major)
-	require.Equal(t, 0, sharpHoundRCVersion.Minor)
-	require.Equal(t, 3, sharpHoundRCVersion.Patch)
+	require.Equal(t, int(sharpHoundMinimum.Major()), sharpHoundRCVersion.Major)
+	require.Equal(t, int(sharpHoundMinimum.Minor()), sharpHoundRCVersion.Minor)
+	require.Equal(t, int(sharpHoundMinimum.Patch()), sharpHoundRCVersion.Patch)
 	require.Equal(t, 0, sharpHoundRCVersion.Extra)
 	require.Equal(t, "rc1", sharpHoundRCVersion.Prerelease)
 
@@ -114,17 +139,17 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-rcfoo", false)
+	_, err = utils.IsValidClientVersion("sharphound/"+utils.MinimumSharpHoundVersion+".0-rcfoo", false)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.3.0-alpha", false)
+	_, err = utils.IsValidClientVersion("sharphound/"+utils.MinimumSharpHoundVersion+".0-alpha", false)
 	require.ErrorIs(t, err, utils.ErrInvalidSharpHoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/2.0.2.0", false)
+	_, err = utils.IsValidClientVersion("sharphound/"+sharpHoundBelow+".0", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
-	_, err = utils.IsValidClientVersion("sharphound/1.9.3.0", false)
+	_, err = utils.IsValidClientVersion("sharphound/"+sharpHoundBelow+".99", false)
 	require.NotNil(t, err)
 	require.ErrorIs(t, err, utils.ErrRecommendSharphoundVersion)
 
@@ -181,22 +206,27 @@ func TestIsValidClientVersion(t *testing.T) {
 }
 
 func TestIsValidClientVersion_MinimumVersionBoundaries(t *testing.T) {
-	var testCases = []struct {
-		userAgent              string
-		useRawObjectIDsEnabled bool
-		expectedError          error
-	}{
-		{userAgent: "sharphound/2.0.2.99", expectedError: utils.ErrRecommendSharphoundVersion},
-		{userAgent: "sharphound/2.0.3.0-rc1"},
-		{userAgent: "sharphound/2.1.0.0"},
-		{userAgent: "sharphound/3.0.0.0"},
-		{userAgent: "azurehound/v2.9.9"},
-		{userAgent: "azurehound/v2.9.9", useRawObjectIDsEnabled: true, expectedError: utils.ErrRecommendAzureHoundVersion},
-		{userAgent: "azurehound/v3.0.0-rc1+docker", useRawObjectIDsEnabled: true},
-	}
+	var (
+		sharpHoundBelow = versionBelowMinimum(t, utils.MinimumSharpHoundVersion)
+		azureHoundBelow = versionBelowMinimum(t, utils.MinimumAzureHoundVersion)
+		testCases       = []struct {
+			userAgent              string
+			useRawObjectIDsEnabled bool
+			expectedError          error
+		}{
+			{userAgent: "sharphound/" + sharpHoundBelow + ".99", expectedError: utils.ErrRecommendSharphoundVersion},
+			{userAgent: "sharphound/" + utils.MinimumSharpHoundVersion + ".0-rc1"},
+			{userAgent: "sharphound/" + utils.MinimumSharpHoundVersion + ".99"},
+			{userAgent: fmt.Sprintf("sharphound/%d.0.0.0", semver.MustParse(utils.MinimumSharpHoundVersion).Major()+1)},
+			{userAgent: "azurehound/v" + azureHoundBelow},
+			{userAgent: "azurehound/v" + azureHoundBelow, useRawObjectIDsEnabled: true, expectedError: utils.ErrRecommendAzureHoundVersion},
+			{userAgent: "azurehound/v" + utils.MinimumAzureHoundVersion + "-rc1+docker", useRawObjectIDsEnabled: true},
+			{userAgent: fmt.Sprintf("azurehound/v%d.0.0", semver.MustParse(utils.MinimumAzureHoundVersion).Major()+1), useRawObjectIDsEnabled: true},
+		}
+	)
 
 	for _, testCase := range testCases {
-		t.Run(testCase.userAgent, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s/raw_ids=%t", testCase.userAgent, testCase.useRawObjectIDsEnabled), func(t *testing.T) {
 			_, err := utils.IsValidClientVersion(testCase.userAgent, testCase.useRawObjectIDsEnabled)
 			require.ErrorIs(t, err, testCase.expectedError)
 		})
