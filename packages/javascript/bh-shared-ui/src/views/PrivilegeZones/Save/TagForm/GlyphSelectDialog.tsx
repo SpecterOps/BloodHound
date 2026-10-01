@@ -30,7 +30,6 @@ import {
     IconButton,
     Input,
     TextButton,
-    Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
@@ -150,25 +149,23 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    // TODO BED-6062
-                                    <Tooltip
-                                        tooltip='Clear selection'
-                                        contentProps={{
-                                            className: 'max-w-80 dark:bg-neutral-dark-5 border-0',
-                                        }}>
-                                        <IconButton
-                                            aria-label='Clear selection'
-                                            onClick={handleClear}
-                                            className='focus-visible:rounded-sm'
-                                            aria-describedby='Clear selection'>
-                                            <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
-                                                <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
-                                                <CardContent className='first:pt-0 p-0'>
-                                                    <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                                </CardContent>
-                                            </Card>
-                                        </IconButton>
-                                    </Tooltip>
+                                    <Card className='flex size-16 items-center justify-center relative dark:bg-neutral-4'>
+                                        <CardContent className='flex size-full items-center justify-center first:pt-0 p-0'>
+                                            <IconButton
+                                                aria-label='Clear selection'
+                                                className='absolute inset-0 !size-full !p-0 focus-visible:rounded-lg'
+                                                onClick={handleClear}
+                                                size={64}>
+                                                <span className='relative size-full'>
+                                                    <FontAwesomeIcon
+                                                        icon={faClose}
+                                                        className='absolute right-1 top-1 !size-4'
+                                                    />
+                                                </span>
+                                            </IconButton>
+                                            <FontAwesomeIcon icon={selectedIcon} size='2xl' />
+                                        </CardContent>
+                                    </Card>
                                 )}
                             </div>
 
