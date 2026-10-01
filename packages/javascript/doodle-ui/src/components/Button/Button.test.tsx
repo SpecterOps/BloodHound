@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
-import { Button } from './Button';
+import { Button, TextButton } from './Button';
 
 describe('Button', () => {
     it('defaults to type button', () => {
@@ -53,5 +53,19 @@ describe('Button', () => {
         expect(button.classList.contains('dark:active:text-common-white')).toBe(true);
         expect(button.classList.contains('disabled:opacity-50')).toBe(true);
         expect(button.classList.contains('opacity-50')).toBe(false);
+    });
+});
+
+describe('TextButton', () => {
+    it('defaults to type button', () => {
+        render(<TextButton>Text Button</TextButton>);
+
+        expect(screen.getByRole('button', { name: 'Text Button' }).getAttribute('type')).toBe('button');
+    });
+
+    it('accepts type submit', () => {
+        render(<TextButton type='submit'>Submit</TextButton>);
+
+        expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
     });
 });
