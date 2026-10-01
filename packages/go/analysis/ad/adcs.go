@@ -106,14 +106,17 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
 	}
 
+	enterpriseCAForStats, err := PostEnterpriseCAFor(ctx, db, enterpriseCertAuthorities)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
+	}
+
 	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
 	operation.Stats.Merge(trustedForNTAuthStats)
 	operation.Stats.Merge(issuedSignedByStats)
+	operation.Stats.Merge(enterpriseCAForStats)
 
-	if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
-		operation.Done()
-		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-	} else if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
+	if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
 		operation.Done()
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
 	} else {
