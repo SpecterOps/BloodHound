@@ -107,6 +107,7 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 // escPostProcessedEdges lists the ADCS edge kinds produced by processEnterpriseCAWithValidCertChainToDomain which
 // have been migrated to the delta-change-apply method
 var escPostProcessedEdges = graph.Kinds{
+	ad.ADCSESC9b,
 	ad.ADCSESC9a,
 	ad.ADCSESC6b,
 	ad.ADCSESC6a,
@@ -366,7 +367,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -377,7 +378,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC9b(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC9b missing property",
