@@ -363,7 +363,74 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 				}
 				return nil
 			})
+		})
+	})
+}
 
+func TestPostNTLMRelaySMBMissingRestrictOutboundNTLMFailsClosed(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToSMB.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		// Simulate a computer whose NTLM registry data was never collected: the
+		// derived RestrictOutboundNTLM property is absent. NewNTLMCache must fail
+		// closed and exclude it from the unprotected cache so no edge is created.
+		require.NoError(t, db.WriteTransaction(t.Context(), func(tx graph.Transaction) error {
+			computer2 := harness.NTLMCoerceAndRelayNTLMToSMB.Computer2
+			computer2.Properties.Delete(ad.RestrictOutboundNTLM.String())
+			return tx.UpdateNode(computer2)
+		}))
+
+		operation := post.NewPostRelationshipOperation(t.Context(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToSMB - Missing RestrictOutboundNTLM")
+
+		grouplocalGroupData, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(t.Context(), db)
+		require.NoError(t, err)
+		ntlmCache, err := adAnalysis.NewNTLMCache(t.Context(), db, grouplocalGroupData)
+		require.NoError(t, err)
+
+		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+			for _, computer := range computers {
+				innerComputer := computer
+
+				if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+					continue
+				}
+
+				domainSid, _ := innerComputer.Properties.Get(ad.DomainSID.String()).String()
+
+				if authenticatedUserID, ok := authenticatedUsers[domainSid]; !ok {
+					t.Fatalf("authenticated user not found for %s", domainSid)
+				} else if err = adAnalysis.PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserID); err != nil {
+					t.Logf("failed post processing for %s: %v", ad.CoerceAndRelayNTLMToSMB.String(), err)
+				}
+			}
+			return nil
+		})
+		require.NoError(t, err)
+
+		err = operation.Done()
+		require.NoError(t, err)
+
+		// Computer2 had its RestrictOutboundNTLM property removed, so only the
+		// Group2 -> Computer9 edge (whose computer keeps `false`) should remain.
+		db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+				return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToSMB)
+			})); err != nil {
+				t.Fatalf("error fetching NTLM to SMB edges in integration test; %v", err)
+			} else {
+				require.Len(t, results, 1)
+
+				for _, result := range results {
+					start, end, err := ops.FetchRelationshipNodes(tx, result)
+					require.NoError(t, err)
+
+					require.Equal(t, start.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Group2.ID)
+					require.Equal(t, end.ID, harness.NTLMCoerceAndRelayNTLMToSMB.Computer9.ID)
+				}
+			}
+			return nil
 		})
 	})
 }
