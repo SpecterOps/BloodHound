@@ -25,6 +25,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/etac"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
@@ -52,12 +54,12 @@ func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) 
 // only the infrastructure it directly needs: the router, the pgx pool (for kind
 // resolution), the graph database (for graph reads) and the rate limit middleware
 // factory applied to the registered routes.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, rateLimit func() mux.MiddlewareFunc, dogTags dogtags.Service) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, appDatabase database.Database, graphQuery queries.Graph, rateLimit func() mux.MiddlewareFunc, dogTags dogtags.Service) {
 	var (
-		store          = appdb.NewStore(graphDatabase, pool)
+		store          = appdb.NewStoreWithExpansion(graphDatabase, pool, appDatabase, graphQuery)
 		etacService    = etac.Register(pool, dogTags)
 		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
-		service        = services.NewService(store, nodeAuthorizer)
+		service        = services.NewService(store, nodeAuthorizer, etacService)
 		handlerSet     = handlers.NewHandlersContainer(service)
 	)
 

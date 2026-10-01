@@ -24,6 +24,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/server/users"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -38,12 +41,17 @@ type Database interface {
 	GetNodeKindsByNames(ctx context.Context, names []string) ([]Kind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
+	ExpandGraph(ctx context.Context, nodeID int64, direction string, limit int) (model.UnifiedGraph, error)
 }
 
 // NodeAccessChecker determines whether the caller in ctx may access a node.
 // Implementations may use ETAC or another authorization policy.
 type NodeAccessChecker interface {
 	CanAccessNode(ctx context.Context, node Node) bool
+}
+
+type AccessControl interface {
+	ShouldFilterForETAC(user users.User) bool
 }
 
 // Kind is the domain representation of a relationship or node kind, pairing the kind name
@@ -84,13 +92,15 @@ var ErrNodeAccessDenied = errors.New("node access denied")
 type Service struct {
 	db                Database
 	nodeAccessChecker NodeAccessChecker
+	accessControl     AccessControl
 }
 
 // NewService constructs a Service backed by the supplied Database implementation.
-func NewService(databaseInterface Database, nodeAccessChecker NodeAccessChecker) *Service {
+func NewService(databaseInterface Database, nodeAccessChecker NodeAccessChecker, accessControl AccessControl) *Service {
 	return &Service{
 		db:                databaseInterface,
 		nodeAccessChecker: nodeAccessChecker,
+		accessControl:     accessControl,
 	}
 }
 
@@ -99,3 +109,5 @@ func NewService(databaseInterface Database, nodeAccessChecker NodeAccessChecker)
 func (s *Service) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error) {
 	return s.db.FetchNodesByObjectIDsAndKinds(ctx, kinds, objectIDs...)
 }
+
+const QueryFitnessLowerBoundExplore = queries.DefaultQueryFitnessLowerBoundExplore

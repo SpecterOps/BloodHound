@@ -35,9 +35,11 @@ func Register(routerInst *router.Router, handlerSet *handlers.Handlers, rateLimi
 		permissions       = auth.Permissions()
 		relationshipRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationships/{%s}", handlers.URIPathVariableRelationshipID), handlerSet.GetRelationshipByID)
 		nodeRoute         = routerInst.GET(fmt.Sprintf("/api/v2/nodes/{%s}", handlers.URIPathVariableNodeID), handlerSet.GetNodeByID)
+		expandGraphRoute  = routerInst.POST("/api/v2/graphs/expand", handlerSet.ExpandGraph)
 	)
 
-	router.With(rateLimit, relationshipRoute, nodeRoute)
+	router.With(rateLimit, relationshipRoute, nodeRoute, expandGraphRoute)
 	relationshipRoute.RequirePermissions(permissions.GraphDBRead)
 	nodeRoute.RequirePermissions(permissions.GraphDBRead)
+	expandGraphRoute.RequirePermissions(permissions.GraphDBRead)
 }
