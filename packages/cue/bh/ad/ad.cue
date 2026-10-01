@@ -2045,7 +2045,6 @@ PostProcessedRelationships: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	HasTrustKeys,
 ]
 
 DCAPostProcessedRelationships: [
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	DCSync,
 	ProtectAdminGroups,
 	SyncLAPSPassword,
+	HasTrustKeys,
 ]
 
 // All post-processed edges
