@@ -390,51 +390,233 @@ export const darkPalette = createPalette({
 const bodyFontFamily = 'Figtree, "Segoe UI", Helvetica, Arial, sans-serif';
 const headingFontFamily = '"Nunito Sans", "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif';
 
-export const typography: Partial<Theme['typography']> = {
-    fontFamily: bodyFontFamily,
+// Builds a typography config from a body and heading font stack so theme presets can swap
+// typefaces while keeping the shared sizing, weight, and spacing scale.
+const buildTypography = (bodyFont: string, headingFont: string): Partial<Theme['typography']> => ({
+    fontFamily: bodyFont,
     h1: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 600,
         fontSize: '1.8rem',
         lineHeight: 2,
         letterSpacing: 0,
     },
     h2: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 600,
         fontSize: '1.5rem',
         lineHeight: 1.5,
         letterSpacing: 0,
     },
     h3: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 600,
         fontSize: '1.2rem',
         lineHeight: 1.25,
         letterSpacing: 0,
     },
     h4: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 600,
         fontSize: '1.25rem',
         lineHeight: 1.5,
         letterSpacing: 0,
     },
     h5: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 700,
         fontSize: '1.125rem',
         lineHeight: 1.5,
         letterSpacing: 0.25,
     },
     h6: {
-        fontFamily: headingFontFamily,
+        fontFamily: headingFont,
         fontWeight: 700,
         fontSize: '1.0rem',
         lineHeight: 1.5,
         letterSpacing: 0.25,
     },
+});
+
+export const typography: Partial<Theme['typography']> = buildTypography(bodyFontFamily, headingFontFamily);
+
+// Font stacks for the alternate theme presets. Comic Sans and the serif stack both rely on
+// fonts that ship with the operating system, so no additional @fontsource imports are needed.
+const comicSansFontFamily = '"Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive';
+const serifFontFamily = 'Georgia, "Times New Roman", "Noto Serif", serif';
+
+const comicSansTypography = buildTypography(comicSansFontFamily, comicSansFontFamily);
+const serifTypography = buildTypography(serifFontFamily, serifFontFamily);
+
+// Playful palette paired with the Comic Sans preset.
+const comicSansLightPalette = createPalette({
+    mode: 'light',
+    primary: {
+        main: '#D6336C',
+        dark: '#A61E4D',
+    },
+    secondary: {
+        main: '#7048E8',
+        dark: '#5F3DC4',
+    },
+    color: {
+        primary: '#1D1B20',
+        links: '#7048E8',
+        error: '#B44641',
+    },
+    neutral: {
+        primary: '#FFF0F6',
+        secondary: '#FFE3EF',
+        tertiary: '#FFD6E8',
+        quaternary: '#FCC2DC',
+        quinary: '#F7A8C9',
+    },
+    background: {
+        paper: '#FFF0F6',
+        default: '#FFE3EF',
+    },
+    low: 'rgb(255, 195, 15)',
+    moderate: 'rgb(255, 97, 66)',
+    high: 'rgb(205, 0, 117)',
+    critical: 'rgb(76, 29, 143)',
+});
+
+const comicSansDarkPalette = createPalette({
+    mode: 'dark',
+    primary: {
+        main: '#F06595',
+        dark: '#D6336C',
+    },
+    secondary: {
+        main: '#B197FC',
+        dark: '#9775FA',
+    },
+    color: {
+        primary: '#FFFFFF',
+        links: '#F7A8C9',
+        error: '#E9827C',
+    },
+    neutral: {
+        primary: '#1A1015',
+        secondary: '#241820',
+        tertiary: '#2A1A22',
+        quaternary: '#331F29',
+        quinary: '#3D2531',
+    },
+    background: {
+        paper: '#2A1A22',
+        default: '#1A1015',
+    },
+    low: 'rgb(255, 195, 15)',
+    moderate: 'rgb(255, 97, 66)',
+    high: 'rgb(205, 0, 117)',
+    critical: 'rgb(76, 29, 143)',
+});
+
+// Warm, sepia-toned palette paired with the Serif preset.
+const serifLightPalette = createPalette({
+    mode: 'light',
+    primary: {
+        main: '#5F3A1E',
+        dark: '#4A2C14',
+    },
+    secondary: {
+        main: '#8C6D3F',
+        dark: '#6B5230',
+    },
+    color: {
+        primary: '#2B2017',
+        links: '#8C5A2B',
+        error: '#B44641',
+    },
+    neutral: {
+        primary: '#FBF6EE',
+        secondary: '#F3E9D8',
+        tertiary: '#EADDC6',
+        quaternary: '#E0CFB2',
+        quinary: '#D4BF9B',
+    },
+    background: {
+        paper: '#FBF6EE',
+        default: '#F3E9D8',
+    },
+    low: 'rgb(255, 195, 15)',
+    moderate: 'rgb(255, 97, 66)',
+    high: 'rgb(205, 0, 117)',
+    critical: 'rgb(76, 29, 143)',
+});
+
+const serifDarkPalette = createPalette({
+    mode: 'dark',
+    primary: {
+        main: '#C89B6A',
+        dark: '#A67C4E',
+    },
+    secondary: {
+        main: '#D9B382',
+        dark: '#C89B6A',
+    },
+    color: {
+        primary: '#F5ECE0',
+        links: '#E0B07A',
+        error: '#E9827C',
+    },
+    neutral: {
+        primary: '#1C1812',
+        secondary: '#241F17',
+        tertiary: '#2A241C',
+        quaternary: '#332C22',
+        quinary: '#3D3428',
+    },
+    background: {
+        paper: '#2A241C',
+        default: '#1C1812',
+    },
+    low: 'rgb(255, 195, 15)',
+    moderate: 'rgb(255, 97, 66)',
+    high: 'rgb(205, 0, 117)',
+    critical: 'rgb(76, 29, 143)',
+});
+
+// Theme presets bundle a typeface with light/dark palettes. Dark mode continues to toggle between
+// the light and dark palette within the selected preset.
+export type ThemePreset = 'default' | 'comicSans' | 'serif';
+
+export type ThemePresetConfig = {
+    id: ThemePreset;
+    label: string;
+    typography: Partial<Theme['typography']>;
+    lightPalette: Palette;
+    darkPalette: Palette;
 };
+
+export const themePresets: Record<ThemePreset, ThemePresetConfig> = {
+    default: {
+        id: 'default',
+        label: 'Default',
+        typography,
+        lightPalette,
+        darkPalette,
+    },
+    comicSans: {
+        id: 'comicSans',
+        label: 'Comic Sans',
+        typography: comicSansTypography,
+        lightPalette: comicSansLightPalette,
+        darkPalette: comicSansDarkPalette,
+    },
+    serif: {
+        id: 'serif',
+        label: 'Serif',
+        typography: serifTypography,
+        lightPalette: serifLightPalette,
+        darkPalette: serifDarkPalette,
+    },
+};
+
+export const themePresetList: ThemePresetConfig[] = Object.values(themePresets);
+
+export const defaultThemePreset: ThemePreset = 'default';
 
 // Temporary until MUI dialogs migrate to doodle-ui, to fix z-index issue with the side nav bar.
 export const themeZIndex: ThemeOptions['zIndex'] = {
