@@ -146,6 +146,10 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	return sink.Stats(), nil
 }
 
+var protectAdminGroupsPostProcessedEdges = graph.Kinds{
+	ad.ProtectAdminGroups,
+}
+
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -156,16 +160,27 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 		attr.Scope("process"),
 	)()
 
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, protectAdminGroupsPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
 	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
 	if err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	}
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ProtectAdminGroups Post Processing")
+	// Pull a subgraph to compare against for tracking changes
+	protectAdminGroupsTracker, err := post.FetchTracker(ctx, db, protectAdminGroupsPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostProtectAdminGroups", db, protectAdminGroupsTracker)
+	defer sink.Done()
 
 	for _, domain := range domainNodes {
-
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			if adminSDHolderIDs, err := getAdminSDHolder(tx, domain); graph.IsErrNotFound(err) {
 				// No AdminSDHolder IDs found for this domain
 				return nil
@@ -179,18 +194,23 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 			} else {
 				fromID := adminSDHolderIDs[0] // AdminSDHolder should be unique per domain
 				for _, toID := range protectedObjectIDs {
-					channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+					if !sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: fromID,
 						ToID:   toID,
 						Kind:   ad.ProtectAdminGroups,
-					})
+					}) {
+						return fmt.Errorf("unable to submit to channel in PostProtectAdminGroups")
+					}
 				}
+
 				return nil
 			}
-		})
+		}); err != nil {
+			return sink.Stats(), err
+		}
 	}
 
-	return &operation.Stats, operation.Done()
+	return sink.Stats(), nil
 }
 
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
