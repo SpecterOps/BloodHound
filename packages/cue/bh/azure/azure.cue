@@ -997,5 +997,5 @@ InboundOutboundRelationshipKinds: [
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 
 PostProcessedRelationships: [
-	SyncedToEntraUser,
+
 ]
