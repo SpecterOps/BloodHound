@@ -261,16 +261,12 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 		harness.ExtendedByPolicyHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - ExtendedByPolicy")
-
 		certTemplates, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.CertTemplate)
 		require.Nil(t, err)
 
-		if err := adAnalysis.PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
+		if _, err := adAnalysis.PostExtendedByPolicyBinding(context.Background(), db, certTemplates); err != nil {
 			t.Fatalf("failed post processing for %s: %v", ad.ExtendedByPolicy.String(), err)
 		}
-
-		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, harness.ExtendedByPolicyHarness.CertTemplate1.ID, harness.ExtendedByPolicyHarness.IssuancePolicy0.ID, ad.ExtendedByPolicy); err != nil {
