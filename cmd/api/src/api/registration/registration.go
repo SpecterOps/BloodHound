@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -54,6 +53,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 
 	routerInst.UsePostrouting(
 		middleware.PanicHandler,
+		middleware.DefaultRateLimitMiddleware(db),
 		middleware.AuthMiddleware(authenticator),
 		middleware.CompressionMiddleware,
 	)
@@ -75,22 +75,17 @@ func RegisterFossRoutes(
 	openGraphSchemaService v2.OpenGraphSchemaService,
 	alertPublisher alerts.Publisher,
 ) {
-	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(rdms)
-	},
-		// Health Endpoint
-		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
-			response.WriteHeader(http.StatusOK)
-		}),
+	// Health Endpoint
+	routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
 
-		// Redirect root resource to the UI
-		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
-		}),
-	)
+	// Redirect root resource to the UI
+	routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
+		http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
+	})
 
-	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
-	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
+	// Static assets inherit the shared route-level limiter along with the API endpoints.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)
