@@ -96,12 +96,15 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		attr.Scope("routine"),
 	)()
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
-
-	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
-		operation.Done()
+	trustedForNTAuthStats, err := PostTrustedForNTAuth(ctx, db)
+	if err != nil {
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
-	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
+	}
+
+	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
+	operation.Stats.Merge(trustedForNTAuthStats)
+
+	if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 		operation.Done()
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
 	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
