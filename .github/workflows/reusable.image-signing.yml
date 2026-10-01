@@ -53,6 +53,7 @@ jobs:
       id-token: write
     env:
       COSIGN_YES: "true"
+      DOCKER_IMAGE: ${{ inputs.dockerhub_image_reference }}
 
     steps:
       - name: Install Cosign
@@ -67,13 +68,13 @@ jobs:
 
       - name: Pull Image
         shell: bash
-        run: docker pull ${{ inputs.dockerhub_image_reference }}
+        run: docker pull ${DOCKER_IMAGE}
 
       - name: Obtain Image Digest
         id: digest
         shell: bash
         run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
+          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Sign Image with Cosign Keyless
@@ -91,6 +92,8 @@ jobs:
         include:
           - target: cli
           - target: enterprise
+    env:
+      DOCKER_IMAGE: ${{ inputs.dockerhub_image_reference }}
 
     steps:
       - name: Install Cosign
@@ -105,13 +108,13 @@ jobs:
 
       - name: Pull Image
         shell: bash
-        run: docker pull ${{ inputs.dockerhub_image_reference }}
+        run: docker pull ${DOCKER_IMAGE}
 
       - name: Obtain Image Digest
         id: digest
         shell: bash
         run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${{ inputs.dockerhub_image_reference }}"
+          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Verify Fulcio Keyless Signature
