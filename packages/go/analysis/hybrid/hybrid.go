@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 func fetchTenants(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
@@ -69,8 +68,19 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		return &emptyStats, fmt.Errorf("fetching Entra tenants: %w", err)
 	}
 
-	// Spin up a new parallel operation to speed up processing
-	operation := post.NewPostRelationshipOperation(ctx, db, "Hybrid Attack Paths Post Processing")
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, hybridPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	hybridTracker, err := post.FetchTracker(ctx, db, hybridPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "Hybrid Attack Paths Post Processing", db, hybridTracker)
+	defer sink.Done()
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (
@@ -126,44 +136,41 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			}
 		}
 
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			for azUser, adUser := range entraToADMap {
-				SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
-					FromID: adUser,
-					ToID:   azUser,
-					Kind:   azure.SyncedToEntraUser,
-				}
-
-				if !channels.Submit(ctx, outC, SyncedToEntraUserRelationship) {
-					return nil
-				}
-
-				SyncedToADUserRelationship := post.EnsureRelationshipJob{
-					FromID: azUser,
-					ToID:   adUser,
-					Kind:   adSchema.SyncedToADUser,
-				}
-
-				if !channels.Submit(ctx, outC, SyncedToADUserRelationship) {
-					return nil
-				}
+		for azUser, adUser := range entraToADMap {
+			SyncedToEntraUserRelationship := post.EnsureRelationshipJob{
+				FromID: adUser,
+				ToID:   azUser,
+				Kind:   azure.SyncedToEntraUser,
 			}
 
-			return nil
-		}); err != nil {
-			return err
+			if !sink.Submit(ctx, SyncedToEntraUserRelationship) {
+				return fmt.Errorf("unable to submit %s relationship to the sink", azure.SyncedToEntraUser)
+			}
+
+			SyncedToADUserRelationship := post.EnsureRelationshipJob{
+				FromID: azUser,
+				ToID:   adUser,
+				Kind:   adSchema.SyncedToADUser,
+			}
+
+			if !sink.Submit(ctx, SyncedToADUserRelationship) {
+				return fmt.Errorf("unable to submit %s relationship to the sink", adSchema.SyncedToADUser)
+			}
 		}
 
 		return tx.Commit()
 	})
-
-	// Because we need to close the operation either way at this stage, we attempt to close it and then report either or
-	// both errors in one line
-	if opErr := operation.Done(); opErr != nil || err != nil {
-		return &operation.Stats, fmt.Errorf("marking operation as done: %w; transaction error (if any): %v", opErr, err)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("hybrid post-processing transaction error: %w", err)
 	}
 
-	return &operation.Stats, nil
+	return sink.Stats(), nil
+}
+
+// hybridPostProcessedEdges lists the AD-Azure hybrid edge kinds which are post-processed using the delta-change-apply method
+var hybridPostProcessedEdges = graph.Kinds{
+	azure.SyncedToEntraUser,
+	adSchema.SyncedToADUser,
 }
 
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
