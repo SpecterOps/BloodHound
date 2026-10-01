@@ -76,6 +76,7 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), managementResource.SSOLoginHandler)
 	routerInst.PathPrefix(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(managementResource.SSOCallbackHandler))
 	routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata)
+<<<<<<< Updated upstream
 
 <<<<<<< Updated upstream
 		// User management for all BloodHound users
@@ -105,6 +106,30 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.GetMFAActivationStatus).AuthorizeUserManagementAccess().RequireUserId()
 	routerInst.POST(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.ActivateMFA).AuthorizeUserManagementAccess().RequireUserId()
 
+=======
+
+	// Permissions
+	routerInst.GET("/api/v2/permissions", managementResource.ListPermissions).RequirePermissions(permissions.AuthManageSelf)
+
+	// User management for all BloodHound users
+	routerInst.GET("/api/v2/bloodhound-users", managementResource.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers)
+	routerInst.POST("/api/v2/bloodhound-users", managementResource.CreateUser).RequirePermissions(permissions.AuthManageUsers)
+	// returns user data without any sensitive information.
+	routerInst.GET("/api/v2/bloodhound-users-minimal", managementResource.ListActiveUsersMinimal).RequirePermissions(permissions.AuthReadUsersMinimal)
+
+	routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.GetUser).RequirePermissions(permissions.AuthManageUsers)
+	routerInst.PATCH(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.UpdateUser).RequirePermissions(permissions.AuthManageUsers)
+	routerInst.DELETE(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.DeleteUser).RequirePermissions(permissions.AuthManageUsers)
+
+	routerInst.PUT(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/secret", api.URIPathVariableUserID), managementResource.PutUserAuthSecret).AuthorizeUserManagementAccess().RequireUserId()
+	routerInst.DELETE(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/secret", api.URIPathVariableUserID), managementResource.ExpireUserAuthSecret).AuthorizeUserManagementAccess().RequireUserId()
+
+	routerInst.POST(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa", api.URIPathVariableUserID), managementResource.EnrollMFA).AuthorizeUserManagementAccess().RequireUserId()
+	routerInst.DELETE(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa", api.URIPathVariableUserID), managementResource.DisenrollMFA).AuthorizeUserManagementAccess().RequireUserId()
+	routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.GetMFAActivationStatus).AuthorizeUserManagementAccess().RequireUserId()
+	routerInst.POST(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.ActivateMFA).AuthorizeUserManagementAccess().RequireUserId()
+
+>>>>>>> Stashed changes
 	routerInst.POST("/api/v2/tokens", managementResource.CreateAuthToken).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
 	routerInst.GET("/api/v2/tokens", managementResource.ListAuthTokens).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
 	routerInst.DELETE(fmt.Sprintf("/api/v2/tokens/{%s}", api.URIPathVariableTokenID), managementResource.DeleteAuthToken).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
@@ -148,8 +173,14 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuditLogRead)
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 		// App Config API
 		routerInst.PUT("/api/v2/config", resources.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration),
+=======
+	// App Config API
+	routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration)
+	routerInst.PUT("/api/v2/config", resources.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration)
+>>>>>>> Stashed changes
 =======
 	// App Config API
 	routerInst.GET("/api/v2/config", resources.GetApplicationConfigurations).RequirePermissions(permissions.AppReadApplicationConfiguration)
@@ -275,6 +306,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/domains/{%s}/adcs-escalations", api.URIPathVariableObjectID), resources.ListADCSEscalations).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags)
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 		// GPO Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}", api.URIPathVariableObjectID), resources.GetGPOEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/computers", api.URIPathVariableObjectID), resources.ListADGPOAffectedComputers).RequirePermissions(permissions.GraphDBRead),
@@ -284,6 +316,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/tier-zero", api.URIPathVariableObjectID), resources.ListADGPOAffectedTierZero).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/ous", api.URIPathVariableObjectID), resources.ListADGPOAffectedContainers).RequirePermissions(permissions.GraphDBRead),
 =======
+=======
+>>>>>>> Stashed changes
 	// GPO Entity API
 	routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}", api.URIPathVariableObjectID), resources.GetGPOEntityInfo).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/computers", api.URIPathVariableObjectID), resources.ListADGPOAffectedComputers).RequirePermissions(permissions.GraphDBRead)
@@ -291,6 +325,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/tier-zero", api.URIPathVariableObjectID), resources.ListADGPOAffectedTierZero).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/gpos/{%s}/ous", api.URIPathVariableObjectID), resources.ListADGPOAffectedContainers).RequirePermissions(permissions.GraphDBRead)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 	// AIACA Entity API
@@ -355,6 +392,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).RequirePermissions(permissions.GraphDBRead)
+<<<<<<< Updated upstream
 
 <<<<<<< Updated upstream
 		// Site Entity API
@@ -377,12 +415,18 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
 		routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement),
 =======
+=======
+
+>>>>>>> Stashed changes
 	// Data Quality Stats API
 	routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags)
 	routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags)
 	routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement)
 	routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 	// Custom Node Management
