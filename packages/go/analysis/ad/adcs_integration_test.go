@@ -94,19 +94,15 @@ func TestIssuedSignedBy(t *testing.T) {
 		harness.IssuedSignedByHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - IssuedSignedBy")
-
 		if rootCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.RootCA); err != nil {
 			t.Logf("failed fetching rootCA nodes: %v", err)
 		} else if enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
 		} else if aiaCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.AIACA); err != nil {
 			t.Logf("failed fetching AIACA nodes: %v", err)
-		} else if err := adAnalysis.PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
+		} else if _, err := adAnalysis.PostIssuedSignedBy(context.Background(), db, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.IssuedSignedBy.String(), err)
 		}
-
-		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
