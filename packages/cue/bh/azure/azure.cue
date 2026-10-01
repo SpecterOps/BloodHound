@@ -997,7 +997,6 @@ InboundOutboundRelationshipKinds: [
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])
 
 PostProcessedRelationships: [
-	ExecuteCommand,
 	SyncedToEntraUser,
 	AZRoleApprover,
 ]
