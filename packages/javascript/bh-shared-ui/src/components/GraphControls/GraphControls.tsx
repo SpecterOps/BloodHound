@@ -23,7 +23,7 @@ import {
     faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, MenuItem, Tooltip } from 'doodle-ui';
+import { IconButton, MenuItem } from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useCallback, useRef, useState } from 'react';
@@ -112,19 +112,12 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     return (
         <div className='relative'>
             <div data-testid='explore_graph-controls' className='flex gap-1 pointer-events-auto'>
-                <Tooltip
-                    tooltip='Reset Graph'
-                    triggerProps={{ className: 'pointer-events-auto' }}
-                    contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
-                    <div>
-                        <IconButton
-                            aria-label='Reset Graph'
-                            onClick={onReset}
-                            data-testid='explore_graph-controls_reset-button'>
-                            <FontAwesomeIcon aria-hidden='true' icon={faCropAlt} />
-                        </IconButton>
-                    </div>
-                </Tooltip>
+                <IconButton
+                    aria-label='Reset Graph'
+                    onClick={onReset}
+                    data-testid='explore_graph-controls_reset-button'>
+                    <FontAwesomeIcon aria-hidden='true' icon={faCropAlt} />
+                </IconButton>
 
                 <GraphMenu
                     label={`${!showNodeLabels || !showEdgeLabels ? 'Show' : 'Hide'} Labels`}
@@ -179,21 +172,14 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                     </MenuItem>
                 </GraphMenu>
 
-                <Tooltip
-                    tooltip='Search'
-                    triggerProps={{ className: 'pointer-events-auto' }}
-                    contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
-                    <div>
-                        <IconButton
-                            ref={searchButtonRef}
-                            aria-label='Search'
-                            onClick={() => setIsCurrentSearchOpen(true)}
-                            disabled={isCurrentSearchOpen}
-                            data-testid='explore_graph-controls_search-current-results'>
-                            <FontAwesomeIcon icon={faMagnifyingGlass} />
-                        </IconButton>
-                    </div>
-                </Tooltip>
+                <IconButton
+                    ref={searchButtonRef}
+                    aria-label='Search'
+                    onClick={() => setIsCurrentSearchOpen(true)}
+                    disabled={isCurrentSearchOpen}
+                    data-testid='explore_graph-controls_search-current-results'>
+                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                </IconButton>
             </div>
             {isCurrentSearchOpen && (
                 <div
