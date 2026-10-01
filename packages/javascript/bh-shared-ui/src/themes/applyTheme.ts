@@ -16,7 +16,7 @@
 
 import { darken, getContrastRatio, getLuminance, lighten } from '@mui/material/styles';
 import createPalette, { Palette } from '@mui/material/styles/createPalette';
-import { darkPalette, lightPalette } from '../constants';
+import { darkPalette, lightPalette, themePresets, typography } from '../constants';
 import type { ThemeColors, ThemeEffect, ThemeMode, ThemePackage } from './types';
 
 const readableVariant = (background: string, foreground: string): string => {
@@ -128,10 +128,34 @@ const emptyColors: ThemeColors = {
     neutral: ['#000000', '#000000', '#000000', '#000000', '#000000'],
 };
 const themeVariableNames = Object.keys(cssVariablesFor(emptyColors, emptyColors, emptyColors));
+const wingdingsFontFamily = '"Wingdings", "Webdings", "Segoe UI Symbol", "Apple Symbols", sans-serif';
+
+export const typographyForTheme = (theme: ThemePackage | undefined) => {
+    if (theme?.font !== 'wingdings') return typography;
+
+    return {
+        ...typography,
+        fontFamily: wingdingsFontFamily,
+        h1: { ...typography.h1, fontFamily: wingdingsFontFamily },
+        h2: { ...typography.h2, fontFamily: wingdingsFontFamily },
+        h3: { ...typography.h3, fontFamily: wingdingsFontFamily },
+        h4: { ...typography.h4, fontFamily: wingdingsFontFamily },
+        h5: { ...typography.h5, fontFamily: wingdingsFontFamily },
+        h6: { ...typography.h6, fontFamily: wingdingsFontFamily },
+    };
+};
 
 export const applyThemeToDocument = (theme: ThemePackage | undefined, mode: ThemeMode, effects: ThemeEffect[]) => {
     const root = document.documentElement;
     for (const variable of themeVariableNames) root.style.removeProperty(variable);
+    root.style.setProperty(
+        '--font-body',
+        theme?.font === 'wingdings' ? wingdingsFontFamily : themePresets.default.bodyFontFamily
+    );
+    root.style.setProperty(
+        '--font-heading',
+        theme?.font === 'wingdings' ? wingdingsFontFamily : themePresets.default.headingFontFamily
+    );
 
     root.classList.toggle('theme-installed', !!theme);
     root.classList.toggle('theme-retro-windows', theme?.id === 'retro-windows');

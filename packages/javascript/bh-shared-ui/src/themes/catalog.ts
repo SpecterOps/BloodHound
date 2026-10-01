@@ -33,4 +33,12 @@ export const themeCatalog: readonly ThemeCatalogEntry[] = [
         packagePath: 'themes/synthwave.json',
         preview: ['#211538', '#BA68FF', '#30D5C8'],
     },
+    {
+        id: 'wingdings',
+        name: 'Wingdings',
+        author: 'BloodHound Hackathon',
+        description: 'High-contrast ink and paper colors with Wingdings lettering where installed.',
+        packagePath: 'themes/wingdings.json',
+        preview: ['#FAFAF7', '#222222', '#15537A'],
+    },
 ];

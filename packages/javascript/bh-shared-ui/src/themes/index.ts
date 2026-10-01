@@ -17,6 +17,5 @@
 export * from './applyTheme';
 export * from './catalog';
 export * from './ThemeEffects';
-export * from './ThemeMarketplaceSection';
 export * from './types';
 export * from './useThemePackages';

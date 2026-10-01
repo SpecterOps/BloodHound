@@ -63,6 +63,7 @@ export const parseThemePackage = (value: unknown, expectedId: string): ThemePack
         typeof value.name !== 'string' ||
         typeof value.author !== 'string' ||
         typeof value.description !== 'string' ||
+        (value.font !== undefined && value.font !== 'wingdings') ||
         !isThemeColors(value.variants.light) ||
         !isThemeColors(value.variants.dark) ||
         !validEffects

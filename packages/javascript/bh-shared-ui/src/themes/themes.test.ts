@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getContrastRatio } from '@mui/material/styles';
-import { darkPalette, lightPalette } from '../constants';
-import { applyThemeToDocument, paletteForTheme } from './applyTheme';
+import { darkPalette, lightPalette, themePresets } from '../constants';
+import { applyThemeToDocument, paletteForTheme, typographyForTheme } from './applyTheme';
 import type { ThemeColors, ThemePackage } from './types';
 import { parseThemePackage } from './validate';
 
@@ -57,6 +57,8 @@ describe('theme packages', () => {
         expect(() =>
             parseThemePackage({ ...theme, variants: { ...theme.variants, dark: colors('red', '#1C1C24') } }, theme.id)
         ).toThrow('Invalid theme package');
+        expect(parseThemePackage({ ...theme, id: 'wingdings', font: 'wingdings' }, 'wingdings').font).toBe('wingdings');
+        expect(() => parseThemePackage({ ...theme, font: 'url(evil)' }, theme.id)).toThrow('Invalid theme package');
     });
 
     it('switches light and dark tokens, then restores defaults', () => {
@@ -103,5 +105,24 @@ describe('theme packages', () => {
 
         expect(getContrastRatio(cssVariant, installedTheme.variants.dark.onPrimary)).toBeGreaterThanOrEqual(4.5);
         expect(cssVariant).toBe(muiVariant);
+    });
+
+    it('applies Wingdings to CSS and MUI typography and restores the default font', () => {
+        const wingdingsTheme: ThemePackage = { ...theme, id: 'wingdings', font: 'wingdings' };
+
+        applyThemeToDocument(wingdingsTheme, 'dark', []);
+        expect(document.documentElement.style.getPropertyValue('--font-body')).toContain('Wingdings');
+        expect(document.documentElement.style.getPropertyValue('--font-heading')).toContain('Wingdings');
+        expect(typographyForTheme(wingdingsTheme).fontFamily).toContain('Wingdings');
+        expect(typographyForTheme(wingdingsTheme).h1?.fontFamily).toContain('Wingdings');
+
+        applyThemeToDocument(theme, 'light', []);
+        expect(document.documentElement.style.getPropertyValue('--font-body')).toBe(
+            themePresets.default.bodyFontFamily
+        );
+        expect(document.documentElement.style.getPropertyValue('--font-heading')).toBe(
+            themePresets.default.headingFontFamily
+        );
+        expect(typographyForTheme(theme).fontFamily).not.toContain('Wingdings');
     });
 });

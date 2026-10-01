@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export type ThemeMode = 'light' | 'dark';
+export type ThemeFont = 'wingdings';
 
 export type ThemeColors = {
     primary: string;
@@ -38,6 +39,7 @@ export type ThemePackage = {
     author: string;
     description: string;
     variants: Record<ThemeMode, ThemeColors>;
+    font?: ThemeFont;
     availableEffects?: Array<'clippy' | 'retro-cursor'>;
 };
 
