@@ -99,28 +99,23 @@ func TestManagedServiceAccountDNSCompositions(t *testing.T) {
 	NewRelationship(t, &suite, attacker, gmsaUser, ad.GenericAll)
 	NewRelationship(t, &suite, attacker, smsaUser, ad.GenericAll)
 
-	var (
-		operation = post.NewPostRelationshipOperation(suite.Context, suite.GraphDB, "ADCS managed service account composition test")
-		sink      = newTestESCSink(t, suite.GraphDB, ad.ADCSESC6a, ad.ADCSESC9a)
-	)
+	sink := newTestESCSink(t, suite.GraphDB, ad.ADCSESC6a, ad.ADCSESC9a, ad.ADCSESC10a)
 
 	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
 	require.NoError(t, err)
 
 	for _, certChains := range cache.GetECAHostedChainedDomains() {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			if err := adAnalysis.PostADCSESC6a(ctx, tx, sink, localGroupData, certChains, cache); err != nil {
+		require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+			if err := adAnalysis.PostADCSESC6a(suite.Context, tx, sink, localGroupData, certChains, cache); err != nil {
 				return err
-			} else if err := adAnalysis.PostADCSESC9a(ctx, tx, sink, localGroupData, certChains, cache); err != nil {
+			} else if err := adAnalysis.PostADCSESC9a(suite.Context, tx, sink, localGroupData, certChains, cache); err != nil {
 				return err
 			} else {
-				return adAnalysis.PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache)
+				return adAnalysis.PostADCSESC10a(suite.Context, tx, sink, localGroupData, certChains, cache)
 			}
-		})
+		}))
 	}
 
-	// The readers feeding the sink must finish before the sink is flushed
-	require.NoError(t, operation.Done())
 	sink.Done()
 
 	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
