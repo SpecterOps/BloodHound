@@ -64,7 +64,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			SlowQueryThreshold:              100, // Threshold in ms for caching queries
 			MaxGraphQueryCacheSize:          100, // Number of cache items for graph queries
 			MaxAPICacheSize:                 200, // Number of cache items for API utilities
-			MetricsPort:                     ":2112",
+			MetricsPort:                     "127.0.0.1:2112",
 			RootURL:                         serde.MustParseURL("http://localhost"),
 			WorkDir:                         "/opt/bhe/work",
 			LogLevel:                        "INFO",
