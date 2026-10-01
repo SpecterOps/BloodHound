@@ -2020,9 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	AdminTo,
-	CanPSRemote,
-	ExecuteDCOM,
 	TrustedForNTAuth,
 	IssuedSignedBy,
 	EnterpriseCAFor,
@@ -2054,6 +2051,9 @@ DCAPostProcessedRelationships: [
 	SyncLAPSPassword,
 	HasTrustKeys,
 	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
 ]
 
 // All post-processed edges
