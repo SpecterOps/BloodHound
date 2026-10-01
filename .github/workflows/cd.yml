@@ -39,7 +39,7 @@ jobs:
     with:
       container_image_repository_name: |
         docker.io/specterops/bloodhound
-        590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
+        ${{ vars.ECR_REPOSITORY }}
       build_target: bloodhound
       build_context: .
       image_sbom: true
