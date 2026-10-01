@@ -19,7 +19,6 @@
 package ad_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -294,14 +293,14 @@ func TestADCSESC3SelectsPublishersForTargetDomain(t *testing.T) {
 			_, err = adAnalysis.PostEnrollOnBehalfOf(t.Context(), db, cache)
 			require.NoError(t, err)
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance")
+			esc3Sink := newTestESCSink(t, db, ad.ADCSESC3)
 			for _, certificateChains := range cache.GetECAHostedChainedDomains() {
 				certificateChains := certificateChains
-				require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					return adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certificateChains, cache)
+				require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+					return adAnalysis.PostADCSESC3(t.Context(), tx, esc3Sink, localGroupData, certificateChains, cache)
 				}))
 			}
-			require.NoError(t, edgeOperation.Done())
+			esc3Sink.Done()
 
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				fetchEdge := func(principal, domain *graph.Node) (*graph.Relationship, error) {
