@@ -1970,6 +1970,131 @@
         }
       }
     },
+    "/api/v2/bloodhound-users/{user_id}/preferences": {
+      "parameters": [
+        {
+          "name": "user_id",
+          "description": "UUID of the authenticated user. Access to another user's preferences is forbidden, including for administrators.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetUserPreferences",
+        "summary": "Get User Preferences",
+        "description": "Requires AuthManageSelf. Returns the authenticated user's opaque UI storage\nverbatim, without a JSON envelope or base64 encoding. An existing user with\nno preferences receives an empty body. Reading does not create a row.\nThe frontend owns the encoding, schema, and schema migrations.\n",
+        "tags": [
+          "BloodHound Users",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "Opaque UI storage, at most 65536 bytes. An empty body represents default UI preferences.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "maxLength": 65536
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpsertUserPreferences",
+        "summary": "Replace User Preferences",
+        "description": "Requires AuthManageSelf. Replaces the authenticated user's entire opaque UI\nstorage, creating the preference row if necessary. Only the owner may write;\nAuthManageUsers does not grant access to another user's preferences.\nThe body must use application/octet-stream and contain at most 65536 bytes.\nAn empty body resets UI storage. Concurrent writes use last-write-wins\nsemantics. The server does not decode, validate, or merge the contents.\nAudit records contain the user ID and byte count, never the blob contents.\n",
+        "tags": [
+          "BloodHound Users",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "Complete opaque UI storage. Send a zero-byte body to reset it, retaining the required Content-Type header.",
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "maxLength": 65536
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "UI storage was saved successfully. No response body."
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "413": {
+            "description": "UI storage exceeds the 65536-byte limit. Existing preferences are unchanged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/bloodhound-users/{user_id}/secret": {
       "parameters": [
         {
@@ -28528,25 +28653,6 @@
           }
         }
       },
-      "binary-response": {
-        "description": "**OK**\nThis response will contain binary content.\n",
-        "headers": {
-          "Content-Disposition": {
-            "schema": {
-              "type": "string"
-            }
-          }
-        },
-        "content": {
-          "application/octet-stream": {
-            "schema": {
-              "type": "string",
-              "format": "binary"
-            },
-            "example": "[this request has a binary response]"
-          }
-        }
-      },
       "unsupported-media-type": {
         "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
         "content": {
@@ -28565,6 +28671,25 @@
                 }
               ]
             }
+          }
+        }
+      },
+      "binary-response": {
+        "description": "**OK**\nThis response will contain binary content.\n",
+        "headers": {
+          "Content-Disposition": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/octet-stream": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            },
+            "example": "[this request has a binary response]"
           }
         }
       },

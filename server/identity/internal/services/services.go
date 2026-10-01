@@ -24,6 +24,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/specterops/bloodhound/packages/go/params"
 )
 
@@ -53,6 +55,8 @@ type Role struct {
 var ErrNoRoleFound = errors.New("no role was found")
 
 type Database interface {
+	GetUserPreferences(ctx context.Context, userID uuid.UUID) ([]byte, error)
+	UpsertUserPreferences(ctx context.Context, userID uuid.UUID, storage []byte) error
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)

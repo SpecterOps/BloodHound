@@ -25,10 +25,10 @@ import {
     useKeybindings,
     usePermissions,
     useSubNavRoutes,
+    useUserPreferences,
 } from 'bh-shared-ui';
 import { Switch } from 'doodle-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
-import { setDarkMode } from 'src/ducks/global/actions.ts';
 
 import * as routes from 'src/routes/constants';
 import { adminSections } from 'src/routes/constants';
@@ -109,6 +109,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
 };
 
 export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
+    const { isReady: preferencesReady, isSaving: preferencesSaving, updatePreferences } = useUserPreferences();
     const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
     const dispatch = useAppDispatch();
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -119,7 +120,9 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     };
 
     const handleToggleDarkMode = () => {
-        dispatch(setDarkMode(!darkMode));
+        if (preferencesReady && !preferencesSaving) {
+            void updatePreferences({ darkMode: !darkMode }).catch(() => {});
+        }
     };
 
     useKeybindings({
@@ -177,7 +180,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
                  workaround applies the property without triggering type errors
                 */
                 <div ref={(node) => node?.setAttribute('inert', '')}>
-                    <Switch checked={darkMode} />
+                    <Switch checked={darkMode} disabled={!preferencesReady || preferencesSaving} />
                 </div>
             ),
             icon: <AppIcon.EclipseCircle size={24} />,

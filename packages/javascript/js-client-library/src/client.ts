@@ -1275,6 +1275,20 @@ class BHEAPIClient {
     getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
+    /** Returns the current user's opaque preferences as bytes, without JSON decoding. */
+    getUserPreferences = (userId: string, options?: RequestOptions) =>
+        this.baseClient.get<ArrayBuffer>(`/api/v2/bloodhound-users/${userId}/preferences`, {
+            ...options,
+            responseType: 'arraybuffer',
+        });
+
+    /** Replaces the current user's preferences. An empty buffer resets UI storage. */
+    upsertUserPreferences = (userId: string, storage: ArrayBuffer, options?: RequestOptions) =>
+        this.baseClient.put<void>(`/api/v2/bloodhound-users/${userId}/preferences`, storage, {
+            ...options,
+            headers: { ...options?.headers, 'Content-Type': 'application/octet-stream' },
+        });
+
     createUser = (user: CreateUserRequest, options?: RequestOptions) =>
         this.baseClient.post('/api/v2/bloodhound-users', user, options);
 

@@ -46,6 +46,7 @@ type queryExecer interface {
 
 type pgxQuerier interface {
 	queryExecer
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 type permission struct {

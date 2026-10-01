@@ -119,6 +119,7 @@
         "./SSOConfiguration": "./dist/SSOConfiguration.js",
         "./Users": "./dist/Users.js",
         "./UserProfile": "./dist/UserProfile.js",
+        "./UserPreferences": "./dist/UserPreferences.js",
         "./OpenGraphManagement": "./dist/OpenGraphManagement.js"
     }
 }

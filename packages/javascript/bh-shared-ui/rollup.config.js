@@ -23,6 +23,7 @@ export default {
         index: 'src/index.ts',
         'testing/index': 'src/testing/index.ts',
         UserProfile: 'src/UserProfile.ts',
+        UserPreferences: 'src/UserPreferences.ts',
         ApiExplorer: 'src/ApiExplorer.ts',
         FileIngest: 'src/FileIngest.ts',
         SSOConfiguration: 'src/SSOConfiguration.ts',

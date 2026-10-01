@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ROUTE_PRIVILEGE_ZONES, SubNavSection } from 'bh-shared-ui';
+import { Permission, ROUTE_PRIVILEGE_ZONES, SubNavSection } from 'bh-shared-ui';
 import { lazy } from 'react';
 
 export const ROUTE_HOME = '/';
@@ -36,6 +36,7 @@ export const ROUTE_ADMINISTRATION_DB_MANAGEMENT = ROUTE_ADMINISTRATION + 'databa
 export const ROUTE_ADMINISTRATION_MANAGE_USERS = ROUTE_ADMINISTRATION + 'manage-users';
 export const ROUTE_ADMINISTRATION_SSO_CONFIGURATION = ROUTE_ADMINISTRATION + 'sso-configuration';
 export const ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES = ROUTE_ADMINISTRATION + 'early-access-features';
+export const ROUTE_ADMINISTRATION_USER_PREFERENCES = ROUTE_ADMINISTRATION + 'user-preferences';
 export const ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION = ROUTE_ADMINISTRATION + 'bloodhound-configuration';
 export const ROUTE_ADMINISTRATION_OPENGRAPH_MANAGEMENT = ROUTE_ADMINISTRATION + 'opengraph-management';
 export const ROUTE_API_EXPLORER = '/api-explorer';
@@ -96,6 +97,13 @@ export const adminSections: SubNavSection[] = [
     {
         title: 'Configuration',
         items: [
+            {
+                label: 'User Preferenecs',
+                path: ROUTE_ADMINISTRATION_USER_PREFERENCES,
+                component: lazy(() => import('bh-shared-ui/UserPreferences')),
+                adminOnly: false,
+                permissions: [Permission.AUTH_MANAGE_SELF],
+            },
             {
                 label: 'BloodHound Configuration',
                 path: ROUTE_ADMINISTRATION_BLOODHOUND_CONFIGURATION,

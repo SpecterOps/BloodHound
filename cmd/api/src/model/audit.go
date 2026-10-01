@@ -45,9 +45,10 @@ const (
 	AuditLogActionLoginAttempt              AuditLogAction = "LoginAttempt"
 	AuditLogActionUnauthorizedAccessAttempt AuditLogAction = "UnauthorizedAccessAttempt"
 
-	AuditLogActionCreateUser AuditLogAction = "CreateUser"
-	AuditLogActionUpdateUser AuditLogAction = "UpdateUser"
-	AuditLogActionDeleteUser AuditLogAction = "DeleteUser"
+	AuditLogActionCreateUser            AuditLogAction = "CreateUser"
+	AuditLogActionUpdateUser            AuditLogAction = "UpdateUser"
+	AuditLogActionDeleteUser            AuditLogAction = "DeleteUser"
+	AuditLogActionUpdateUserPreferences AuditLogAction = "UpdateUserPreferences"
 
 	AuditLogActionCreateAssetGroup AuditLogAction = "CreateAssetGroup"
 	AuditLogActionUpdateAssetGroup AuditLogAction = "UpdateAssetGroup"

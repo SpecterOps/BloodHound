@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
@@ -34,6 +35,8 @@ import (
 
 // Identity defines the identity service boundary for the identity handlers package.
 type Identity interface {
+	GetUserPreferences(ctx context.Context, userID uuid.UUID) ([]byte, error)
+	UpsertUserPreferences(ctx context.Context, userID uuid.UUID, storage []byte) error
 	GetRole(ctx context.Context, id int32) (services.Role, error)
 	GetPermission(ctx context.Context, id int) (services.Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
@@ -133,8 +136,10 @@ func (s *Handlers) ListPermissions(response http.ResponseWriter, request *http.R
 func handleIdentityError(request *http.Request, response http.ResponseWriter, err error) {
 	var ctx = request.Context()
 
-	if errors.Is(err, services.ErrNoRoleFound) || errors.Is(err, services.ErrNoPermissionFound) {
+	if errors.Is(err, services.ErrNoRoleFound) || errors.Is(err, services.ErrNoPermissionFound) || errors.Is(err, services.ErrUserNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, response)
+	} else if errors.Is(err, services.ErrUserPreferencesTooLarge) {
+		responses.WriteError(ctx, http.StatusRequestEntityTooLarge, services.ErrUserPreferencesTooLarge.Error(), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
 	} else {

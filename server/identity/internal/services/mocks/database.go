@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	mock "github.com/stretchr/testify/mock"
@@ -186,6 +187,74 @@ func (_c *MockDatabase_GetRole_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+// GetUserPreferences provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) GetUserPreferences(ctx context.Context, userID uuid.UUID) ([]byte, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserPreferences")
+	}
+
+	var r0 []byte
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]byte, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) []byte); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_GetUserPreferences_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserPreferences'
+type MockDatabase_GetUserPreferences_Call struct {
+	*mock.Call
+}
+
+// GetUserPreferences is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *MockDatabase_Expecter) GetUserPreferences(ctx interface{}, userID interface{}) *MockDatabase_GetUserPreferences_Call {
+	return &MockDatabase_GetUserPreferences_Call{Call: _e.mock.On("GetUserPreferences", ctx, userID)}
+}
+
+func (_c *MockDatabase_GetUserPreferences_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockDatabase_GetUserPreferences_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_GetUserPreferences_Call) Return(bytes []byte, err error) *MockDatabase_GetUserPreferences_Call {
+	_c.Call.Return(bytes, err)
+	return _c
+}
+
+func (_c *MockDatabase_GetUserPreferences_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) ([]byte, error)) *MockDatabase_GetUserPreferences_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListPermissions provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error) {
 	ret := _mock.Called(ctx, queryFilters, sortItems)
@@ -330,6 +399,69 @@ func (_c *MockDatabase_ListRoles_Call) Return(roles []services.Role, err error) 
 }
 
 func (_c *MockDatabase_ListRoles_Call) RunAndReturn(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)) *MockDatabase_ListRoles_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpsertUserPreferences provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) UpsertUserPreferences(ctx context.Context, userID uuid.UUID, storage []byte) error {
+	ret := _mock.Called(ctx, userID, storage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertUserPreferences")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, []byte) error); ok {
+		r0 = returnFunc(ctx, userID, storage)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDatabase_UpsertUserPreferences_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertUserPreferences'
+type MockDatabase_UpsertUserPreferences_Call struct {
+	*mock.Call
+}
+
+// UpsertUserPreferences is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - storage []byte
+func (_e *MockDatabase_Expecter) UpsertUserPreferences(ctx interface{}, userID interface{}, storage interface{}) *MockDatabase_UpsertUserPreferences_Call {
+	return &MockDatabase_UpsertUserPreferences_Call{Call: _e.mock.On("UpsertUserPreferences", ctx, userID, storage)}
+}
+
+func (_c *MockDatabase_UpsertUserPreferences_Call) Run(run func(ctx context.Context, userID uuid.UUID, storage []byte)) *MockDatabase_UpsertUserPreferences_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_UpsertUserPreferences_Call) Return(err error) *MockDatabase_UpsertUserPreferences_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDatabase_UpsertUserPreferences_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID, storage []byte) error) *MockDatabase_UpsertUserPreferences_Call {
 	_c.Call.Return(run)
 	return _c
 }

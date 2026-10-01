@@ -23,6 +23,7 @@ import {
     MainNav,
     MainNavData,
     NotificationsProvider,
+    UserPreferencesProvider,
     darkPalette,
     lightPalette,
     reactRouterFutureFlags,
@@ -35,11 +36,12 @@ import {
     useStyles,
 } from 'bh-shared-ui';
 import { createBrowserHistory } from 'history';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
-import { initialize } from 'src/ducks/auth/authSlice';
+import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
+import { setDarkMode } from 'src/ducks/global/actions';
 import { PRIVILEGE_ZONES_ROUTE, ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initializeBHEClient } from 'src/utils';
@@ -136,6 +138,16 @@ export const Inner: React.FC = () => {
 };
 
 const App: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const userId = useAppSelector((state) => state.auth.user?.id);
+    const isAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+    const preferenceUserId = isAuthenticated ? userId : undefined;
+    const applyDarkMode = useCallback(
+        (enabled: boolean) => {
+            dispatch(setDarkMode(enabled));
+        },
+        [dispatch]
+    );
     const darkModeEnabled = useAppSelector((state) => state.global.view.darkMode);
     setRootClass(darkModeEnabled ? 'dark' : 'light');
 
@@ -165,13 +177,18 @@ const App: React.FC = () => {
                 <BrowserRouter future={reactRouterFutureFlags} basename='/ui' history={history}>
                     <AppNameProvider name='BloodHound Community Edition'>
                         <NotificationsProvider>
-                            <AnnouncementProvider>
-                                <DialogProviders>
-                                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                                        <Inner />
-                                    </ErrorBoundary>
-                                </DialogProviders>
-                            </AnnouncementProvider>
+                            <UserPreferencesProvider
+                                key={preferenceUserId ?? 'signed-out'}
+                                userId={preferenceUserId}
+                                onDarkModeChange={applyDarkMode}>
+                                <AnnouncementProvider>
+                                    <DialogProviders>
+                                        <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                                            <Inner />
+                                        </ErrorBoundary>
+                                    </DialogProviders>
+                                </AnnouncementProvider>
+                            </UserPreferencesProvider>
                         </NotificationsProvider>
                     </AppNameProvider>
                 </BrowserRouter>
