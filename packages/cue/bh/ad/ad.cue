@@ -2048,8 +2048,6 @@ PostProcessedRelationships: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	GPOAppliesTo,
-	CanApplyGPO,
 	HasTrustKeys,
 ]
 
