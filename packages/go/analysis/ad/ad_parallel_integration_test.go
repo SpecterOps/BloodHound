@@ -19,11 +19,9 @@
 package ad_test
 
 import (
-	"context"
 	"testing"
 
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
-	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -87,14 +85,14 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 	NewRelationship(t, &suite, ntAuthStore, domain, ad.NTAuthStoreFor)
 	NewRelationship(t, &suite, rootCA, domain, ad.RootCAFor)
 
-	operation := post.NewPostRelationshipOperation(suite.Context, suite.GraphDB, "ADCS Post Process Test - ESC6a MSA")
+	sink := newTestESCSink(t, suite.GraphDB, ad.ADCSESC6a)
 
 	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
 	require.NoError(t, err)
 
 	for _, certChains := range cache.GetECAHostedChainedDomains() {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			if err := adAnalysis.PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); err != nil {
+		suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+			if err := adAnalysis.PostADCSESC6a(suite.Context, tx, sink, localGroupData, certChains, cache); err != nil {
 				t.Logf("failed post processing for %s: %v", ad.ADCSESC6a.String(), err)
 				return err
 			}
@@ -102,7 +100,7 @@ func TestPostADCSESC6a_ManagedServiceAccounts(t *testing.T) {
 		})
 	}
 
-	require.NoError(t, operation.Done())
+	sink.Done()
 
 	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
 		results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
