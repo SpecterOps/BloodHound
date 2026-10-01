@@ -36,11 +36,23 @@ func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit f
 		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
 		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
 		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
+		userListRoute       = RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
 	)
 
-	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute)
+	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute, userListRoute)
 	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
 	roleRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
+}
+
+// RegisterUserListRoute registers the list-users route at the given path and returns it. It is
+// exported so the enterprise /api/v2/bhe-users backwards-compat alias can reuse the same route.
+func RegisterUserListRoute(routerInst *router.Router, handler *handlers.Handlers, path string) *router.Route {
+	var (
+		permissions = auth.Permissions()
+		userList    = handlers.UserListView{}
+	)
+
+	return routerInst.GET(path, handler.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers).WithSort(userList).WithFilters(userList)
 }
