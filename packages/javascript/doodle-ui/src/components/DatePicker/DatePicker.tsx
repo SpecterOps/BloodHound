@@ -20,7 +20,7 @@ import { InputHTMLAttributes, forwardRef, useState } from 'react';
 import { Calendar, CalendarProps } from '../Calendar';
 import { IconButton } from '../IconButton';
 import { Input, InputProps } from '../Input';
-import { Popover, PopoverContent } from '../Popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { cn } from '../utils';
 
 interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement>, InputProps {
@@ -54,11 +54,13 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                             className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
                         />
                     )}
-                    <span className='absolute right-2 top-1.5 h-6 opacity-50 hover:opacity-100 peer-hover:opacity-100'>
-                        <IconButton className='p-0 h-6' aria-label='Choose Date'>
+                    <PopoverTrigger asChild>
+                        <IconButton
+                            className='absolute right-2 top-1.5 p-0 h-6 opacity-50 hover:opacity-100 peer-hover:opacity-100'
+                            aria-label='Choose Date'>
                             <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
                         </IconButton>
-                    </span>
+                    </PopoverTrigger>
                 </div>
                 <PopoverContent
                     align='end'

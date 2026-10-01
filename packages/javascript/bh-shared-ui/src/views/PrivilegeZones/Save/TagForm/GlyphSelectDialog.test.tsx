@@ -48,6 +48,14 @@ describe('Glyph Select Dialog', () => {
         expect(screen.getAllByText('lightbulb')).toHaveLength(2);
     });
 
+    it('clears the selected icon when clicking the card', async () => {
+        render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
+
+        await user.click(screen.getByRole('button', { name: 'Clear selection' }));
+
+        expect(screen.getByText('None Selected')).toBeInTheDocument();
+    });
+
     it('calls the passed in cancel handler when clicking the Cancel button', async () => {
         render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
 
