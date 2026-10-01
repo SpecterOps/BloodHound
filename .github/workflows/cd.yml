@@ -76,6 +76,9 @@ jobs:
     needs: bloodhound-container-image
     name: Sign Docker Image using Cosign
     uses: ./.github/workflows/reusable.image-signing.yml
+    permissions:
+      contents: read
+      id-token: write
     with:
       dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
     secrets:
