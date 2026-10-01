@@ -72,17 +72,42 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			attr.Scope("routine"),
 		)()
 
-		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+		// Clear old post-processed edges that will not have a `firstseen` property
+		if err := post.MigrationForDCAPostProcessedEdges(ctx, db, escPostProcessedEdges); err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed migrating ADCS ESC edges to DCA: %w", err)
+		}
+
+		// Pull a subgraph to compare against for tracking changes
+		escTracker, err := post.FetchTracker(ctx, db, escPostProcessedEdges)
+		if err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching ADCS ESC edge tracker: %w", err)
+		}
+
+		var (
+			operation = post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
+			escSink   = post.NewFilteredRelationshipSink(ctx, "ADCS ESC Post Processing", db, escTracker)
+		)
 
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
 
 		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation)
+			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation, escSink)
 		}
 
-		return &operation.Stats, cache, operation.Done()
+		// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+		operationErr := operation.Done()
+		escSink.Done()
+		operation.Stats.Merge(escSink.Stats())
+
+		return &operation.Stats, cache, operationErr
 	}
+}
+
+// escPostProcessedEdges lists the ADCS edge kinds produced by processEnterpriseCAWithValidCertChainToDomain which
+// have been migrated to the delta-change-apply method
+var escPostProcessedEdges = graph.Kinds{
+	ad.GoldenCert,
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
@@ -144,9 +169,9 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 	return enrollOnBehalfOfStats, nil
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], escSink *post.FilteredRelationshipSink) {
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -157,7 +182,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostGoldenCert(ctx, tx, outC, certChains); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostGoldenCert(ctx, tx, escSink, certChains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for GoldenCert missing property",
