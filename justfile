@@ -114,29 +114,48 @@ build-shared-ui *ARGS="":
 build-doodle-ui *ARGS="":
   @cd packages/javascript/doodle-ui && yarn build
 
-# Build a one-file macOS arm64 standalone artifact. The runtime root must be a
+# Build a one-file standalone artifact. The runtime root must be a
 # self-contained PostgreSQL distribution; it is embedded in the executable and
 # extracted on first launch, so end users do not install PostgreSQL themselves.
 build-standalone target='darwin-arm64' postgres_runtime_root='':
   #!/usr/bin/env bash
   set -euo pipefail
-  if [[ "{{target}}" != "darwin-arm64" ]]; then
+  target_name="{{target}}"
+  repository_root="{{justfile_directory()}}"
+  case "${target_name}" in
+    darwin-arm64)
+      target_os=darwin
+      target_arch=arm64
+      ;;
+    linux-amd64)
+      target_os=linux
+      target_arch=amd64
+      ;;
+    *)
     echo "unsupported standalone target: {{target}}" >&2
     exit 1
-  fi
+      ;;
+  esac
   if [[ -z "{{postgres_runtime_root}}" ]]; then
-    echo "usage: just build-standalone darwin-arm64 <self-contained-postgres-runtime-root>" >&2
+    echo "usage: just build-standalone <darwin-arm64|linux-amd64> <self-contained-postgres-runtime-root>" >&2
     exit 1
   fi
-  bash scripts/standalone/package-postgres-runtime.sh "{{postgres_runtime_root}}"
+  bash scripts/standalone/package-postgres-runtime.sh "{{postgres_runtime_root}}" "${target_name}"
   BUILD_PATH="{{absolute_path('cmd/api/src/api/static/assets')}}" yarn workspace bloodhound-ui vite build
   cd cmd/api/src
-  GOOS=darwin GOARCH=arm64 go build -tags standalone_release -o "{{absolute_path('dist/bloodhound-darwin-arm64')}}" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
+  GOOS="${target_os}" GOARCH="${target_arch}" go build -tags standalone_release -o "${repository_root}/dist/bloodhound-${target_name}" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
 # Build a self-contained PostgreSQL runtime suitable for embedding in the
 # macOS arm64 standalone artifact.
 build-standalone-postgres-runtime version='18.6' output_directory='build/standalone/postgres-darwin-arm64':
   @bash scripts/standalone/build-postgres-runtime.sh "{{version}}" "{{absolute_path(output_directory)}}"
+
+# Build a self-contained PostgreSQL runtime for the Linux amd64 standalone
+# artifact. It uses a Linux amd64 build container and does not require a local
+# PostgreSQL installation.
+build-standalone-postgres-runtime-linux version='18.6' output_directory='build/standalone/postgres-linux-amd64':
+  @docker build --platform linux/amd64 -f scripts/standalone/Dockerfile.postgres-linux -t bhce-standalone-postgres-linux:{{version}} scripts/standalone
+  @docker run --rm --platform linux/amd64 -v "{{justfile_directory()}}:/workspace" bhce-standalone-postgres-linux:{{version}} "{{version}}" "/workspace/{{output_directory}}"
 
 # updates favicon.ico, logo192.png and logo512.png from logo.svg
 update-favicon:

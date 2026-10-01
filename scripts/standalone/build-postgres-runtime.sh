@@ -44,9 +44,14 @@ rm -rf "${output_directory}"
 mkdir -p "${output_directory}"
 
 cd "${source_directory}"
+if [[ "$(uname -s)" == "Linux" ]]; then
+    export LDFLAGS="${LDFLAGS:-} -Wl,-rpath,'\$\$ORIGIN/../lib'"
+fi
+
 ./configure \
     --prefix="${output_directory}" \
     --disable-nls \
+    --disable-rpath \
     --without-gssapi \
     --without-icu \
     --without-ldap \
@@ -54,12 +59,28 @@ cd "${source_directory}"
     --without-pam \
     --without-readline \
     --without-zstd
-make -j"$(sysctl -n hw.ncpu)"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    build_jobs="$(sysctl -n hw.ncpu)"
+else
+    build_jobs="$(nproc)"
+fi
+
+make -j"${build_jobs}"
 make install
 make -C contrib/pg_trgm install
 make -C contrib/intarray install
 
-if otool -L "${output_directory}/bin/postgres" | grep -qE '/opt/homebrew|/usr/local'; then
-    echo "PostgreSQL runtime is not portable; it contains a Homebrew or /usr/local dependency" >&2
-    exit 1
-fi
+case "$(uname -s)" in
+    Darwin)
+        if otool -L "${output_directory}/bin/postgres" | grep -qE '/opt/homebrew|/usr/local'; then
+            echo "PostgreSQL runtime is not portable; it contains a Homebrew or /usr/local dependency" >&2
+            exit 1
+        fi
+        ;;
+    Linux)
+        file "${output_directory}/bin/postgres" | grep -q 'ELF 64-bit.*x86-64' || {
+            echo "PostgreSQL runtime is not a Linux amd64 executable" >&2
+            exit 1
+        }
+        ;;
+esac
