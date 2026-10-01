@@ -24,7 +24,7 @@ import {
     DialogTitle,
     Input,
 } from 'doodle-ui';
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
     open: boolean;
@@ -32,52 +32,25 @@ const ConfirmationDialog: React.FC<{
     text: string | JSX.Element;
     onCancel: () => void;
     onConfirm: () => void;
-    challengeText?: string;
+    challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-    cancelIcon?: ReactNode;
-    confirmIcon?: ReactNode;
-    iconPosition?: 'left' | 'right';
-    cancelText?: string;
-    confirmText?: string;
-}> = ({
-    open,
-    title,
-    text,
-    onCancel,
-    isLoading,
-    error,
-    challengeText = '',
-    onConfirm,
-    cancelIcon,
-    confirmIcon,
-    iconPosition = 'left',
-    cancelText = 'Cancel',
-    confirmText = 'Confirm',
-}) => {
-    const [challengeTextReply, setChallengeTextReply] = useState<string>('');
+}> = ({ open, title, text, onCancel, isLoading, error, challengeTxt = '', onConfirm }) => {
+    const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
         onCancel();
         setTimeout(() => {
-            setChallengeTextReply('');
+            setChallengeTxtReply('');
         }, 1000);
     }, [onCancel]);
 
     const handleConfirm = useCallback(() => {
         onConfirm();
         setTimeout(() => {
-            setChallengeTextReply('');
+            setChallengeTxtReply('');
         }, 1000);
     }, [onConfirm]);
-
-    const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
-        <>
-            {iconPosition === 'left' && icon}
-            {buttonText}
-            {iconPosition === 'right' && icon}
-        </>
-    );
 
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
@@ -85,15 +58,15 @@ const ConfirmationDialog: React.FC<{
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
-                    {challengeText && (
+                    {challengeTxt && (
                         <DialogDescription asChild className='text-sm'>
                             <div className='pb-1'>
-                                Please input "{challengeText}" prior to clicking confirm.
+                                Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
-                                    placeholder={challengeText}
+                                    placeholder={challengeTxt}
                                     variant='outlined'
-                                    onChange={(e) => setChallengeTextReply(e.target.value)}
-                                    value={challengeTextReply}
+                                    onChange={(e) => setChallengeTxtReply(e.target.value)}
+                                    value={challengeTxtReply}
                                     data-testid='confirmation-dialog_challenge-text'
                                 />
                             </div>
@@ -106,13 +79,13 @@ const ConfirmationDialog: React.FC<{
                             onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>
-                            {renderButtonContent(cancelText, cancelIcon)}
+                            Cancel
                         </Button>
                         <Button
                             onClick={handleConfirm}
-                            disabled={isLoading || challengeText.toLowerCase() !== challengeTextReply.toLowerCase()}
+                            disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
-                            {renderButtonContent(confirmText, confirmIcon)}
+                            Confirm
                         </Button>
                     </DialogActions>
                 </DialogContent>

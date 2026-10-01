@@ -385,16 +385,14 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 		},
 		{
-			name: "success_-_inserted_new_graph_extension_from_zip_bundle",
+			name: "success - inserted new graph extension from zip bundle",
 			fields: fields{
 				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
 					var expectedGraphExtension = serviceGraphExtension
 					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
-						ExtensionRuleId: "tier_zero_admins",
-						Name:            "Tier Zero Admins",
-						Description:     "Seeds for tier zero",
-						Enabled:         true,
-						AllowDisable:    true,
+						Name:        "Tier Zero Admins",
+						Description: "Seeds for tier zero",
+						AutoCertify: model.SelectorAutoCertifyMethodAllMembers,
 						Seeds: []model.SelectorSeedInput{{
 							Type:  model.SelectorTypeCypher,
 							Value: "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n",
@@ -437,19 +435,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					pzRulesWriter, err = zipWriter.Create("pz_rules.json")
 					require.NoError(t, err)
 					_, err = pzRulesWriter.Write([]byte(`{
-						"pz_rules": [
-							{
-							"key": "tier_zero_admins",
+						"rules": [{
 							"name": "Tier Zero Admins",
 							"description": "Seeds for tier zero",
-							"enabled": true,
-							"allow_disable": true,
+							"auto_certify": true,
 							"seeds": [{
 								"type": 2,
 								"value": "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n"
 							}]
-							}
-						]
+						}]
 					}`))
 					require.NoError(t, err)
 					savedQueriesWriter, err = zipWriter.Create("saved_queries.json")

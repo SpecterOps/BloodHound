@@ -40,8 +40,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -166,10 +168,13 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	seedRelationship(t, ctx, graphDatabase, &harness)
 	seedRelationshipKindInfo(t, ctx, bhDatabase, dbPool, &harness)
 
-	store := appdb.NewStore(graphDatabase, dbPool)
+	graphQueryCache, err := cache.NewCache(cache.Config{MaxSize: 100})
+	require.NoError(t, err)
+
+	store := appdb.NewStoreWithExpansion(graphDatabase, dbPool, bhDatabase, queries.NewGraphQuery(graphDatabase, graphQueryCache, config.Configuration{}))
 	etacService := etac.Register(dbPool, dogtags.NewDefaultService())
 	nodeAuthorizer := authz.NewNodeAuthorizer(etacService)
-	handlerSet := handlers.NewHandlersContainer(services.NewService(store, nodeAuthorizer))
+	handlerSet := handlers.NewHandlersContainer(services.NewService(store, nodeAuthorizer, etacService))
 
 	harness.handler = mux.NewRouter()
 	harness.handler.Use(withAuthenticatedUser)
@@ -181,6 +186,7 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 		fmt.Sprintf("/api/v2/relationships/{%s}", handlers.URIPathVariableRelationshipID),
 		handlerSet.GetRelationshipByID,
 	).Methods("GET")
+	harness.handler.HandleFunc("/api/v2/graphs/expand", handlerSet.ExpandGraph).Methods("POST")
 
 	return harness
 }
@@ -232,8 +238,19 @@ func seedRelationship(t *testing.T, ctx context.Context, graphDB graph.Database,
 			return err
 		}
 
+		secondGroup, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "second-group@test.local",
+			common.ObjectID: uuid.Must(uuid.NewV4()).String(),
+		}), ad.Entity, ad.Group)
+		if err != nil {
+			return err
+		}
+
 		relationship, err := tx.CreateRelationshipByIDs(user.ID, group.ID, ad.MemberOf, graph.NewProperties())
 		if err != nil {
+			return err
+		}
+		if _, err := tx.CreateRelationshipByIDs(user.ID, secondGroup.ID, ad.MemberOf, graph.NewProperties()); err != nil {
 			return err
 		}
 
@@ -263,6 +280,33 @@ func seedRelationshipKindInfo(t *testing.T, ctx context.Context, bloodhoundDB *d
 		Content:  json.RawMessage(`{"markdown":{"content":"relationship kind info markdown"}}`),
 	})
 	require.NoError(t, err)
+}
+
+func TestExpandGraph(t *testing.T) {
+	var (
+		harness  = newGraphDBHarness(t)
+		body     = fmt.Sprintf(`{"node_id":%d,"direction":"outbound","limit":1,"include_properties":true}`, harness.sourceNodeID)
+		request  = httptest.NewRequest(http.MethodPost, "/api/v2/graphs/expand", strings.NewReader(body))
+		recorder = httptest.NewRecorder()
+	)
+	request.Header.Set("Content-Type", "application/json")
+
+	harness.handler.ServeHTTP(recorder, request)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var envelope struct {
+		Data handlers.GraphExpansionResponse `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+
+	assert.Equal(t, 1, envelope.Data.Limit)
+	assert.True(t, envelope.Data.Truncated)
+	require.Len(t, envelope.Data.Edges, 1)
+	assert.Len(t, envelope.Data.Nodes, 2)
+	assert.NotEmpty(t, envelope.Data.NodeKeys)
+	assert.Contains(t, envelope.Data.Nodes, envelope.Data.Edges[0].Source)
+	assert.Contains(t, envelope.Data.Nodes, envelope.Data.Edges[0].Target)
 }
 
 func TestGetRelationshipByID(t *testing.T) {

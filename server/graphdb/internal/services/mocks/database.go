@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 	"github.com/specterops/dawgs/graph"
 	mock "github.com/stretchr/testify/mock"
@@ -52,6 +53,84 @@ type MockDatabase_Expecter struct {
 
 func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 	return &MockDatabase_Expecter{mock: &_m.Mock}
+}
+
+// ExpandGraph provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) ExpandGraph(ctx context.Context, nodeID int64, direction string, limit int) (model.UnifiedGraph, error) {
+	ret := _mock.Called(ctx, nodeID, direction, limit)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExpandGraph")
+	}
+
+	var r0 model.UnifiedGraph
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, int) (model.UnifiedGraph, error)); ok {
+		return returnFunc(ctx, nodeID, direction, limit)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, int) model.UnifiedGraph); ok {
+		r0 = returnFunc(ctx, nodeID, direction, limit)
+	} else {
+		r0 = ret.Get(0).(model.UnifiedGraph)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, int) error); ok {
+		r1 = returnFunc(ctx, nodeID, direction, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_ExpandGraph_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExpandGraph'
+type MockDatabase_ExpandGraph_Call struct {
+	*mock.Call
+}
+
+// ExpandGraph is a helper method to define mock.On call
+//   - ctx context.Context
+//   - nodeID int64
+//   - direction string
+//   - limit int
+func (_e *MockDatabase_Expecter) ExpandGraph(ctx interface{}, nodeID interface{}, direction interface{}, limit interface{}) *MockDatabase_ExpandGraph_Call {
+	return &MockDatabase_ExpandGraph_Call{Call: _e.mock.On("ExpandGraph", ctx, nodeID, direction, limit)}
+}
+
+func (_c *MockDatabase_ExpandGraph_Call) Run(run func(ctx context.Context, nodeID int64, direction string, limit int)) *MockDatabase_ExpandGraph_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_ExpandGraph_Call) Return(unifiedGraph model.UnifiedGraph, err error) *MockDatabase_ExpandGraph_Call {
+	_c.Call.Return(unifiedGraph, err)
+	return _c
+}
+
+func (_c *MockDatabase_ExpandGraph_Call) RunAndReturn(run func(ctx context.Context, nodeID int64, direction string, limit int) (model.UnifiedGraph, error)) *MockDatabase_ExpandGraph_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // FetchNodesByObjectIDsAndKinds provides a mock function for the type MockDatabase

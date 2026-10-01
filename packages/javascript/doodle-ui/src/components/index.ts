@@ -41,7 +41,6 @@ export * from './RiskBadge';
 export * from './ScrollArea';
 export * from './Select';
 export * from './Skeleton';
-export * from './Slider';
 export * from './Switch';
 export * from './Table';
 export * from './Tabs';

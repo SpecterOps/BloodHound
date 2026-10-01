@@ -39,8 +39,6 @@ const (
 	Equals              FilterOperator = "eq"
 	NotEquals           FilterOperator = "neq"
 	ApproximatelyEquals FilterOperator = "~eq"
-	IsNull              FilterOperator = "eqnull"
-	IsNotNull           FilterOperator = "neqnull"
 )
 
 // Validation sentinels classify why a set of query parameter filters failed validation. Callers should
@@ -79,7 +77,7 @@ func (s *FilterValidationError) Unwrap() error {
 // ParseFilterOperator validates a raw operator string and returns the corresponding FilterOperator.
 func ParseFilterOperator(raw string) (FilterOperator, error) {
 	switch operator := FilterOperator(raw); operator {
-	case GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, Equals, NotEquals, ApproximatelyEquals, IsNull, IsNotNull:
+	case GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, Equals, NotEquals, ApproximatelyEquals:
 		return operator, nil
 	default:
 		return "", fmt.Errorf("%w: unknown predicate %q", ErrMalformedFilter, raw)

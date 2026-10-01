@@ -39,6 +39,7 @@ import {
     FileIngestCompletedTask,
     FileIngestJob,
     GraphData,
+    GraphExpansionData,
     NodeDetails,
     NodeDetailsWithInfo,
     NodeKindResponse,
@@ -97,6 +98,8 @@ export type Environment = {
 };
 
 export type GraphResponse = BasicResponse<GraphData>;
+
+export type GraphExpansionResponse = BasicResponse<GraphExpansionData>;
 
 export type ActiveDirectoryQualityStat = TimestampFields & {
     users: number;

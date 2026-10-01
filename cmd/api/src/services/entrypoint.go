@@ -180,7 +180,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			datapipeDaemon         = datapipe.NewDaemon(pipeline, startDelay, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
 			routerInst             = router.NewRouter(cfg, authorizer, fmt.Sprintf(bootstrap.ContentSecurityPolicy, "", "", "", "", "", ""))
 			authenticator          = api.NewAuthenticator(cfg, connections.RDMS, api.NewAuthExtensions(cfg, connections.RDMS))
-			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS, connections.Graph, connections.RDMS)
+			openGraphSchemaService = opengraphschema.NewOpenGraphSchemaService(connections.RDMS, connections.Graph)
 			alertPublisher         = alerts.NewAlertEventPublisher()
 		)
 
@@ -188,9 +188,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
 		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   connections.RDMS.Pool(),
-			Graph:  connections.Graph,
+			Router:     &routerInst,
+			Pool:       connections.RDMS.Pool(),
+			Graph:      connections.Graph,
+			AppDB:      connections.RDMS,
+			GraphQuery: graphQuery,
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
 			},

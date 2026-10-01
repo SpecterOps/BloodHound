@@ -191,7 +191,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                                 TableHeadProps={{
                                     className: 'text-s first:!w-8 pl-3 first:pl-0 first:text-center',
                                 }}
-                                TableBodyProps={{ className: 'text-s' }}
+                                TableBodyProps={{ className: 'text-s font-roboto' }}
                                 TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
                                 columns={columns}
                                 data={filteredUsers}

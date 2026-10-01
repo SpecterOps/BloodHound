@@ -427,6 +427,12 @@ export type GraphEdges = GraphEdge[];
 
 export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
 
+export type GraphExpansionData = GraphData & {
+    edge_keys?: string[];
+    limit: number;
+    truncated: boolean;
+};
+
 export type StyledGraphNode = {
     color: string;
     data: GraphNodeSpreadWithProperties;

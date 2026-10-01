@@ -16,7 +16,7 @@
 import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
-import { getLabelNamesFromKinds, getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
+import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
 import { EntityField, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -40,7 +40,6 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
 
     const tagsQuery = useTagsQuery();
     const zoneName = getZoneNameFromKinds(tagsQuery?.data, kindNames);
-    const labelNames = getLabelNamesFromKinds(tagsQuery?.data, kindNames);
 
     useEffect(() => {
         if (!previousEntity || !selectedNode.node_id || previousEntity !== selectedNode.node_id) {
@@ -66,7 +65,6 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
                     handleSourceNodeSelected={handleSourceNodeSelected}
                     nodeType={primaryKind}
                     zone={zoneName}
-                    labels={labelNames}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

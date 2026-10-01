@@ -33,6 +33,15 @@ import { ConfigurationPayload } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
+export type GraphExpansionDirection = 'inbound' | 'outbound';
+
+export interface GraphExpansionRequest {
+    node_id: number;
+    direction: GraphExpansionDirection;
+    limit?: number;
+    include_properties?: boolean;
+}
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
@@ -101,7 +110,6 @@ export interface CreateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
-    provided_identifier?: string;
 }
 
 export interface CreateAzureHoundClientRequest {
@@ -122,7 +130,6 @@ export interface UpdateSharpHoundClientRequest {
     auth_type?: AuthenticationMethod;
     issuer_address?: string;
     issuer_address_override?: string;
-    provided_identifier?: string;
 }
 
 export interface UpdateAzureHoundClientRequest {
