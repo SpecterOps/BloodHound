@@ -975,21 +975,50 @@ func CreateAZRoleApproverEdge(
 		attr.Scope("process"),
 	)()
 
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, roleApproverPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	roleApproverTracker, err := post.FetchTracker(ctx, db, roleApproverPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
 	// Step 0: Identify each AZTenant labeled node in the database.
-	operation := post.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)
 	if err != nil {
-		return &operation.Stats, err
+		return &post.AtomicPostProcessingStats{}, err
 	}
+
+	var (
+		readerPool = ops.StartNewOperation[any](ops.OperationContext{
+			Parent:     ctx,
+			DB:         db,
+			NumReaders: post.MaximumDatabaseParallelWorkers,
+		})
+		sink = post.NewFilteredRelationshipSink(ctx, "AZRoleApprover Post Processing", db, roleApproverTracker)
+	)
 
 	// Process each tenant to create AZRoleApprover edges for roles requiring approval
 	for _, tenantNode := range tenantNodes {
-		if err := CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
-			return &operation.Stats, err
+		if err := CreateApproverEdge(ctx, db, tenantNode, readerPool, sink); err != nil {
+			readerPool.Done()
+			sink.Done()
+			return &post.AtomicPostProcessingStats{}, err
 		}
 	}
 
-	return &operation.Stats, operation.Done()
+	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+	readerErr := readerPool.Done()
+	sink.Done()
+
+	return sink.Stats(), readerErr
+}
+
+var roleApproverPostProcessedEdges = graph.Kinds{
+	azure.AZRoleApprover,
 }
 
 func FixManagementGroupNames(ctx context.Context, db graph.Database, useRawObjectIDs bool) error {
