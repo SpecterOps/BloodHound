@@ -29,10 +29,9 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
-	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+func PostADCSESC13(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
@@ -58,7 +57,7 @@ func PostADCSESC13(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 							domainID := graph.ID(domain)
 							if groupIsContainedOrTrusted(tx, group, domainID) {
 								filtered.Each(func(source uint64) bool {
-									channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+									sink.Submit(ctx, post.EnsureRelationshipJob{
 										FromID: graph.ID(source),
 										ToID:   group.ID,
 										Kind:   ad.ADCSESC13,
