@@ -13,62 +13,262 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faRefresh, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
-import { AppIcon } from './AppIcon';
+import { Button } from 'doodle-ui';
+import { useState } from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 
-const meta: Meta<typeof ConfirmationDialog> = {
+const meta = {
     title: 'Components/ConfirmationDialog',
     component: ConfirmationDialog,
+    parameters: {
+        layout: 'centered',
+    },
     tags: ['autodocs'],
-    parameters: { layout: 'centered' },
     argTypes: {
-        cancelIcon: { control: false },
-        confirmIcon: { control: false },
-        text: { control: 'text' },
+        open: {
+            control: false,
+        },
+        text: {
+            description: 'Accepts string or JSX element.  Wrap sting in quotes.',
+        },
+        cancelIcon: {
+            description: 'Ex: `<FontAwesomeIcon icon={faRefresh} />`',
+            control: false,
+        },
+        confirmIcon: {
+            description: 'Ex: `<FontAwesomeIcon icon={faTrash} />`',
+            control: false,
+        },
+        iconPosition: {
+            description: 'Icons can be positioned `left` or `right` within the button.',
+        },
+        cancelText: {
+            description: 'Custom text for the Cancel button.',
+        },
+        confirmText: {
+            description: 'Custom text for the Confirm button.',
+        },
+        challengeText: {
+            description:
+                'When populated with a value, adds another validation step where the user must enter the provided `challengeText` value in order to proceed.',
+        },
+        isLoading: {
+            description: 'When `true`, action button are disabled.',
+        },
+        error: {
+            description: 'Displays supplied error message.',
+        },
     },
-    args: {
-        open: false,
-        title: 'Confirm action',
-        text: 'Do you want to continue?',
-        onCancel: fn(),
-        onConfirm: fn(),
-    },
-};
+} satisfies Meta<typeof ConfirmationDialog>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const FullExample: Story = {
+    args: {
+        open: false,
+        title: 'Title',
+        text: 'Prompt text goes here',
+        onCancel: fn(),
+        onConfirm: fn(),
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Full Example</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text.toString()}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                    cancelIcon={<FontAwesomeIcon icon={faRefresh} />}
+                    confirmIcon={<FontAwesomeIcon icon={faTrash} />}
+                    iconPosition={args.iconPosition}
+                    cancelText={args.cancelText}
+                    confirmText={args.confirmText}
+                    challengeText={args.challengeText}
+                    error={args.error}
+                    isLoading={args.isLoading}
+                />
+            </>
+        );
+    },
+};
+
+export const Basic: Story = {
+    args: {
+        open: false,
+        title: 'Title',
+        text: 'Prompt text goes here',
+        onCancel: fn(),
+        onConfirm: fn(),
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Basic</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text.toString()}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                />
+            </>
+        );
+    },
+};
+
+export const OptionalIcons: Story = {
+    args: {
+        open: false,
+        title: 'Optional Icons',
+        text: 'Icons can be applied to each button',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Optional Button Icons</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                    cancelIcon={args.cancelIcon}
+                    confirmIcon={args.confirmIcon}
+                />
+            </>
+        );
+    },
+};
+
+export const ConfirmIconOnly: Story = {
+    args: {
+        open: false,
+        title: 'Confirm Icon Only',
+        text: 'Icons can be applied to either / or / both ',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Confirm Icon Only</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                    confirmIcon={args.confirmIcon}
+                />
+            </>
+        );
+    },
+};
+
+export const IconPosition: Story = {
+    args: {
+        open: false,
+        title: 'Icon Position',
+        text: 'Icons can be positioned left or right within the button.  This setting applies to both buttons.',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+        iconPosition: 'right',
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Icon Position</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                    cancelIcon={args.cancelIcon}
+                    confirmIcon={args.confirmIcon}
+                    iconPosition={args.iconPosition}
+                    confirmText='Delete'
+                />
+            </>
+        );
+    },
+};
+
+export const CustomButtonText: Story = {
+    args: {
+        open: false,
+        title: 'Custom Button Text',
+        text: 'Button text can be customized.',
+        onCancel: fn(),
+        onConfirm: fn(),
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
+    },
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Custom Button Text</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                    cancelText='No'
+                    confirmText='Yes'
+                />
+            </>
+        );
+    },
+};
 
 export const ChallengeText: Story = {
     args: {
-        title: 'Delete item',
-        text: 'This action cannot be undone.',
-        challengeText: 'DELETE',
-        confirmText: 'Delete',
+        open: false,
+        title: 'Challenge Text',
+        text: 'Are you really sure you want to do this?',
+        onCancel: fn(),
+        onConfirm: fn(),
+        challengeText: 'confirm',
+        cancelIcon: <FontAwesomeIcon icon={faRefresh} />,
+        confirmIcon: <FontAwesomeIcon icon={faTrash} />,
     },
-};
-
-export const Loading: Story = {
-    args: {
-        isLoading: true,
-    },
-};
-
-export const Error: Story = {
-    args: {
-        error: 'The action could not be completed. Please try again.',
-    },
-};
-
-export const CustomActions: Story = {
-    args: {
-        cancelText: 'Go back',
-        confirmText: 'Continue',
-        cancelIcon: <AppIcon.CaretDown size={16} />,
-        confirmIcon: <AppIcon.Checkmark size={16} />,
-        iconPosition: 'right',
+    render: function Render(args) {
+        const [showDialog, setShowDialog] = useState(args.open);
+        return (
+            <>
+                <Button onClick={() => setShowDialog(true)}>Challenge Text</Button>
+                <ConfirmationDialog
+                    open={showDialog}
+                    title={args.title}
+                    text={args.text}
+                    challengeText={args.challengeText}
+                    onCancel={() => setShowDialog(false)}
+                    onConfirm={() => setShowDialog(false)}
+                />
+            </>
+        );
     },
 };
