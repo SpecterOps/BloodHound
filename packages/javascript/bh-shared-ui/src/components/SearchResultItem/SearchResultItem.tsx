@@ -37,7 +37,8 @@ const SearchResultItem: FC<{
     style?: React.CSSProperties;
     keyword?: string;
     showDistinguishedName?: boolean;
-}> = ({ style, item, index, highlightedIndex, keyword, getItemProps, showDistinguishedName = false }) => {
+    showKind?: boolean;
+}> = ({ style, item, index, highlightedIndex, keyword, getItemProps, showDistinguishedName = false, showKind = false }) => {
     return (
         <ListItem
             dense
@@ -90,6 +91,20 @@ const SearchResultItem: FC<{
                                 </Tooltip>
                             )}
                         </div>
+                        {showKind && (
+                            <Typography
+                                variant='caption'
+                                data-testid='explore_search_result-kind'
+                                className={cn(
+                                    // TODO: Tokenize when available
+                                    'ml-4 w-36 shrink-0 truncate text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
+                                    {
+                                        'text-common-white dark:text-common-dark': highlightedIndex === index,
+                                    }
+                                )}>
+                                {item.kind}
+                            </Typography>
+                        )}
                     </div>
                 }
             />

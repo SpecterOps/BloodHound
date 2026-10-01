@@ -174,6 +174,7 @@ const ExploreSearchCombobox: React.FC<{
                                         keyword={keyword}
                                         getItemProps={getItemProps}
                                         showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
+                                        showKind
                                     />
                                 );
                             })
