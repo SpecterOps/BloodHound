@@ -238,6 +238,8 @@ const initGraphEdges = (
                 color: options.darkMode ? '#6c6c6c' : '#55595C',
                 type: 'arrow',
                 label: edge.label,
+                kind: edge.kind,
+                dashed: false,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: key,

@@ -16,14 +16,14 @@
 
 import { AbstractEdgeProgram } from 'sigma/rendering/webgl/programs/common/edge';
 import { RenderParams } from 'sigma/rendering/webgl/programs/common/program';
-import vertexShaderSource from 'sigma/rendering/webgl/shaders/edge.clamped.vert.glsl';
-import fragmentShaderSource from 'sigma/rendering/webgl/shaders/edge.frag.glsl';
 import { EdgeDisplayData, NodeDisplayData } from 'sigma/types';
 import { canUse32BitsIndices, floatColor } from 'sigma/utils';
+import { fragmentShaderSource } from 'src/rendering/shaders/edge.curved.frag';
+import { vertexShaderSource } from 'src/rendering/shaders/edge.curved.vert';
 import { getNodeRadius } from 'src/rendering/utils/utils';
 
 const POINTS = 4,
-    ATTRIBUTES = 6,
+    ATTRIBUTES = 8,
     STRIDE = POINTS * ATTRIBUTES;
 
 export default class EdgeClampedProgram extends AbstractEdgeProgram {
@@ -35,6 +35,9 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
     colorLocation: GLint;
     normalLocation: GLint;
     radiusLocation: GLint;
+    distanceLocation: GLint;
+    dashedLocation: GLint;
+    dimensionsLocation: WebGLUniformLocation;
     matrixLocation: WebGLUniformLocation;
     sqrtZoomRatioLocation: WebGLUniformLocation;
     correctionRatioLocation: WebGLUniformLocation;
@@ -53,6 +56,11 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         this.colorLocation = gl.getAttribLocation(this.program, 'a_color');
         this.normalLocation = gl.getAttribLocation(this.program, 'a_normal');
         this.radiusLocation = gl.getAttribLocation(this.program, 'a_radius');
+        this.distanceLocation = gl.getAttribLocation(this.program, 'a_distance');
+        this.dashedLocation = gl.getAttribLocation(this.program, 'a_dashed');
+        const dimensionsLocation = gl.getUniformLocation(this.program, 'u_dimensions');
+        if (dimensionsLocation === null) throw new Error('Edge program: missing dimensionsLocation');
+        this.dimensionsLocation = dimensionsLocation;
 
         // Uniform locations
         const matrixLocation = gl.getUniformLocation(this.program, 'u_matrix');
@@ -93,6 +101,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         gl.enableVertexAttribArray(this.normalLocation);
         gl.enableVertexAttribArray(this.colorLocation);
         gl.enableVertexAttribArray(this.radiusLocation);
+        gl.enableVertexAttribArray(this.distanceLocation);
+        gl.enableVertexAttribArray(this.dashedLocation);
 
         gl.vertexAttribPointer(
             this.positionLocation,
@@ -119,12 +129,28 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
             ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
             20
         );
+        gl.vertexAttribPointer(
+            this.distanceLocation,
+            1,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            24
+        );
+        gl.vertexAttribPointer(
+            this.dashedLocation,
+            1,
+            gl.FLOAT,
+            false,
+            ATTRIBUTES * Float32Array.BYTES_PER_ELEMENT,
+            28
+        );
     }
 
     process(
         sourceData: NodeDisplayData,
         targetData: NodeDisplayData,
-        data: EdgeDisplayData & { inverseSqrtZoomRatio: number },
+        data: EdgeDisplayData & { inverseSqrtZoomRatio: number; dashed?: boolean },
         hidden: boolean,
         offset: number
     ): void {
@@ -141,6 +167,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
             x2 = targetData.x,
             y2 = targetData.y,
             color = floatColor(data.color);
+        const distance = Math.hypot(x2 - x1, y2 - y1);
+        const dashed = data.dashed ? 1 : 0;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
 
         // Computing normals
@@ -169,6 +197,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = n2;
         array[i++] = color;
         array[i++] = 0;
+        array[i++] = 0;
+        array[i++] = dashed;
 
         // First point flipped
         array[i++] = x1;
@@ -177,6 +207,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = -n2;
         array[i++] = color;
         array[i++] = 0;
+        array[i++] = 0;
+        array[i++] = dashed;
 
         // Second point
         array[i++] = x2;
@@ -185,6 +217,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = n2;
         array[i++] = color;
         array[i++] = radius;
+        array[i++] = distance;
+        array[i++] = dashed;
 
         // Second point flipped
         array[i++] = x2;
@@ -192,7 +226,9 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = -n1;
         array[i++] = -n2;
         array[i++] = color;
-        array[i] = -radius;
+        array[i++] = -radius;
+        array[i++] = distance;
+        array[i] = dashed;
     }
 
     computeIndices(): void {
@@ -230,6 +266,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
 
         // Binding uniforms
         gl.uniformMatrix3fv(this.matrixLocation, false, params.matrix);
+        gl.uniform2f(this.dimensionsLocation, params.width, params.height);
         gl.uniform1f(this.sqrtZoomRatioLocation, Math.sqrt(params.ratio));
         gl.uniform1f(this.correctionRatioLocation, params.correctionRatio);
 

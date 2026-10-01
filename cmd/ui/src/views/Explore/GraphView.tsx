@@ -36,6 +36,7 @@ import {
     useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
+    useEdgeTraversability,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
@@ -85,6 +86,7 @@ const GraphView: FC = () => {
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
+    const { data: edgeTraversability } = useEdgeTraversability();
 
     // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
     useAutomaticGraphActions(graphQuery.data);
@@ -142,6 +144,14 @@ const GraphView: FC = () => {
             setGraphologyGraph(graph);
         }
     }, [graphQuery.data, graphOptions]);
+
+    // Update styles when schema metadata arrives without rebuilding the graph or its layout.
+    useEffect(() => {
+        graphologyGraph?.updateEachEdgeAttributes(
+            (_edgeId, attributes) => ({ ...attributes, dashed: edgeTraversability.get(attributes.kind) === false }),
+            { attributes: ['dashed'] }
+        );
+    }, [graphologyGraph, edgeTraversability]);
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(

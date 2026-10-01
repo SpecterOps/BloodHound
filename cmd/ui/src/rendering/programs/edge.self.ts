@@ -25,7 +25,7 @@ import CurvedEdgeProgram from './edge.curved';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
-    ATTRIBUTES = 6,
+    ATTRIBUTES = 8,
     // These self edges have essentially static dimensions so we can approximate the arrowhead
     // clamp with a constant t value (instead of the approximation we use for curved edges)
     CLAMP_APPROXIMATION_T = 0.91,
@@ -109,7 +109,13 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         const array = this.array;
         const color = floatColor(data.color);
 
+        let distance = 0;
+        const dashed = data.dashed ? 1 : 0;
+        // Self-loop geometry follows the zoom-scaled node radius. Keep its dash length at the default zoom.
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+
         for (let j = 0; j < points.length; j++) {
+            if (j > 0) distance += bezier.getLineLength(points[j - 1], points[j]);
             // Handle special cases, since we do not need to calculate a miter join for the endcaps
             const isFirstPoint = j === 0;
             const isLastPoint = j === points.length - 1;
@@ -139,6 +145,8 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = distance / inverseSqrtZoomRatio;
+            array[i++] = dashed;
 
             // First point flipped
             array[i++] = points[j].x;
@@ -147,6 +155,8 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = -vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = distance / inverseSqrtZoomRatio;
+            array[i++] = dashed;
         }
         // zero out any remaining buffer slots
         while (i < STRIDE * (offset + 1)) {
