@@ -158,68 +158,84 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
-	hostedChainedDomains := cache.GetECAHostedChainedDomains()
+var enrollOnBehalfOfPostProcessedEdges = graph.Kinds{
+	ad.EnrollOnBehalfOf,
+}
 
-	return operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
-		type schemaSplit struct {
-			versionOneTemplates []*graph.Node
-			versionTwoTemplates []*graph.Node
-		}
-		splitsByTargetCA := make(map[graph.ID]schemaSplit)
-		splitForTargetCA := func(enterpriseCAID graph.ID) schemaSplit {
-			if split, ok := splitsByTargetCA[enterpriseCAID]; ok {
-				return split
-			}
-			versionOneTemplates, versionTwoTemplates := splitCertTemplatesBySchemaVersion(cache.GetPublishedTemplateCache(enterpriseCAID))
-			split := schemaSplit{versionOneTemplates: versionOneTemplates, versionTwoTemplates: versionTwoTemplates}
-			splitsByTargetCA[enterpriseCAID] = split
+func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, cache *ADCSCache) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, enrollOnBehalfOfPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	enrollOnBehalfOfTracker, err := post.FetchTracker(ctx, db, enrollOnBehalfOfPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostEnrollOnBehalfOf", db, enrollOnBehalfOfTracker)
+	defer sink.Done()
+
+	hostedChainedDomains := cache.GetECAHostedChainedDomains()
+	submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
+
+	type schemaSplit struct {
+		versionOneTemplates []*graph.Node
+		versionTwoTemplates []*graph.Node
+	}
+	splitsByTargetCA := make(map[graph.ID]schemaSplit)
+	splitForTargetCA := func(enterpriseCAID graph.ID) schemaSplit {
+		if split, ok := splitsByTargetCA[enterpriseCAID]; ok {
 			return split
 		}
+		versionOneTemplates, versionTwoTemplates := splitCertTemplatesBySchemaVersion(cache.GetPublishedTemplateCache(enterpriseCAID))
+		split := schemaSplit{versionOneTemplates: versionOneTemplates, versionTwoTemplates: versionTwoTemplates}
+		splitsByTargetCA[enterpriseCAID] = split
+		return split
+	}
 
-		submitRelationship := func(result post.EnsureRelationshipJob) bool {
-			if targets, ok := submittedTargetsBySource[result.FromID]; ok {
-				if _, ok := targets[result.ToID]; ok {
-					return true
-				}
-				targets[result.ToID] = struct{}{}
-			} else {
-				submittedTargetsBySource[result.FromID] = map[graph.ID]struct{}{result.ToID: {}}
+	submitRelationship := func(result post.EnsureRelationshipJob) bool {
+		if targets, ok := submittedTargetsBySource[result.FromID]; ok {
+			if _, ok := targets[result.ToID]; ok {
+				return true
 			}
-
-			return channels.Submit(ctx, outC, result)
+			targets[result.ToID] = struct{}{}
+		} else {
+			submittedTargetsBySource[result.FromID] = map[graph.ID]struct{}{result.ToID: {}}
 		}
 
-		for _, enrollmentAgentChains := range hostedChainedDomains {
-			enrollmentAgentTemplates := cache.GetPublishedTemplateCache(enrollmentAgentChains.EnterpriseCA.ID)
-			if len(enrollmentAgentTemplates) == 0 {
+		return sink.Submit(ctx, result)
+	}
+
+	for _, enrollmentAgentChains := range hostedChainedDomains {
+		enrollmentAgentTemplates := cache.GetPublishedTemplateCache(enrollmentAgentChains.EnterpriseCA.ID)
+		if len(enrollmentAgentTemplates) == 0 {
+			continue
+		}
+
+		for _, targetChains := range hostedChainedDomains {
+			if !enterpriseCAChainsShareDomain(enrollmentAgentChains, targetChains) {
 				continue
 			}
 
-			for _, targetChains := range hostedChainedDomains {
-				if !enterpriseCAChainsShareDomain(enrollmentAgentChains, targetChains) {
-					continue
+			split := splitForTargetCA(targetChains.EnterpriseCA.ID)
+
+			for _, result := range EnrollOnBehalfOfVersionTwo(split.versionTwoTemplates, enrollmentAgentTemplates) {
+				if !submitRelationship(result) {
+					return sink.Stats(), nil
 				}
+			}
 
-				split := splitForTargetCA(targetChains.EnterpriseCA.ID)
-
-				for _, result := range EnrollOnBehalfOfVersionTwo(split.versionTwoTemplates, enrollmentAgentTemplates) {
-					if !submitRelationship(result) {
-						return nil
-					}
-				}
-
-				for _, result := range EnrollOnBehalfOfVersionOne(split.versionOneTemplates, enrollmentAgentTemplates) {
-					if !submitRelationship(result) {
-						return nil
-					}
+			for _, result := range EnrollOnBehalfOfVersionOne(split.versionOneTemplates, enrollmentAgentTemplates) {
+				if !submitRelationship(result) {
+					return sink.Stats(), nil
 				}
 			}
 		}
+	}
 
-		return nil
-	})
+	return sink.Stats(), nil
 }
 
 func enterpriseCAChainsShareDomain(first, second *EnterpriseCAChainedDomains) bool {
