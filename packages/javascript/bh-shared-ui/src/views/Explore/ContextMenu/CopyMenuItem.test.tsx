@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { Menu, MenuContent } from 'doodle-ui';
 import { NodeDetails } from 'js-client-library';
 import { setupServer } from 'msw/node';
 import * as hooks from '../../../hooks';
 import { mockSourceKindsHandler } from '../../../mocks';
-import { render } from '../../../test-utils';
+import { fireEvent, render } from '../../../test-utils';
 import CopyMenuItem from './CopyMenuItem';
 
 const server = setupServer(mockSourceKindsHandler());
@@ -39,7 +40,13 @@ describe('CopyMenuItem', () => {
 
     const setup = () => {
         useExploreSelectedItemSpy.mockReturnValue({ selectedItemQuery: { data: selectedNode } } as any);
-        const screen = render(<CopyMenuItem />);
+        const screen = render(
+            <Menu open modal={false}>
+                <MenuContent>
+                    <CopyMenuItem />
+                </MenuContent>
+            </Menu>
+        );
         return screen;
     };
 
@@ -59,7 +66,7 @@ describe('CopyMenuItem', () => {
         expect(objectIdOption).toBeInTheDocument();
         expect(cypherOption).toBeInTheDocument();
 
-        await user.click(nameOption);
+        fireEvent.click(nameOption);
 
         const clipboardText = await navigator.clipboard.readText();
         expect(clipboardText).toBe(selectedNode.properties.name);

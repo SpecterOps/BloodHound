@@ -147,18 +147,18 @@ const GraphView: FC = () => {
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
             setSelectedItem(event.node);
-            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+            setContextMenu({ mouseX: event.event.original.clientX, mouseY: event.event.original.clientY });
         },
-        [contextMenu, setContextMenu, setSelectedItem]
+        [setContextMenu, setSelectedItem]
     );
 
-    /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
     const handleKebabMenuClick = useCallback(
         (nodeInfo: NodeClickInfo) => {
             if (!nodeInfo.id) return;
-            handleContextMenu({ event: { x: nodeInfo.x, y: nodeInfo.y }, node: nodeInfo.id } as SigmaNodeEventPayload);
+            setSelectedItem(nodeInfo.id);
+            setContextMenu({ mouseX: nodeInfo.x, mouseY: nodeInfo.y });
         },
-        [handleContextMenu]
+        [setSelectedItem, setContextMenu]
     );
 
     useKeybindings({

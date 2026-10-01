@@ -90,14 +90,14 @@ describe('QuerySearchFilter', () => {
 
         expect(testPlatforms).toBeInTheDocument();
 
-        expect(screen.queryByText('All')).not.toBeInTheDocument();
+        expect(testPlatforms).toHaveTextContent('All');
 
         await user.click(testPlatforms);
 
-        const testPlatformAll = screen.getByText('All');
-        const testPlatformAD = screen.getByText('Active Directory');
-        const testPlatformAzure = screen.getByText('Azure');
-        const testPlatformSavedQueries = screen.getByText('Saved Queries');
+        const testPlatformAll = screen.getByRole('option', { name: 'All' });
+        const testPlatformAD = screen.getByRole('option', { name: 'Active Directory' });
+        const testPlatformAzure = screen.getByRole('option', { name: 'Azure' });
+        const testPlatformSavedQueries = screen.getByRole('option', { name: 'Saved Queries' });
 
         expect(testPlatformAll).toBeInTheDocument();
         expect(testPlatformAD).toBeInTheDocument();
