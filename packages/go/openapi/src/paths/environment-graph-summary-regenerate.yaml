@@ -1,0 +1,28 @@
+post:
+  operationId: RegenerateEnvironmentGraphSummary
+  summary: Regenerate environment graph summaries in the background
+  description: >-
+    Requires GraphDBWrite. Starts an exact, consistent-snapshot computation for
+    all environments and every populated group level. Only changed summary
+    rows are inserted, updated, or deleted. An existing regeneration continues
+    if another request is made while it is running.
+  tags: [Graph, Enterprise]
+  responses:
+    '202':
+      description: Regeneration is running
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: '../schemas/environment-graph-summary-state.yaml'
+    '401':
+      $ref: './../responses/unauthorized.yaml'
+    '403':
+      $ref: './../responses/forbidden.yaml'
+    '404':
+      description: Environment graph feature is disabled
+    '500':
+      $ref: './../responses/internal-server-error.yaml'

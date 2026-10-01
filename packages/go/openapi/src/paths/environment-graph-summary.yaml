@@ -1,0 +1,21 @@
+get:
+  operationId: GetEnvironmentGraphSummaryState
+  summary: Read environment graph summary regeneration status
+  tags: [Graph, Enterprise]
+  responses:
+    '200':
+      description: Current status
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: '../schemas/environment-graph-summary-state.yaml'
+    '401':
+      $ref: './../responses/unauthorized.yaml'
+    '404':
+      description: Environment graph feature is disabled
+    '500':
+      $ref: './../responses/internal-server-error.yaml'

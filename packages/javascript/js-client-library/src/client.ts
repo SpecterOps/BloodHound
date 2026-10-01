@@ -88,6 +88,9 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    EnvironmentGraph,
+    EnvironmentGraphOverview,
+    EnvironmentGraphSummaryState,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
     FindingTypeResponse,
@@ -295,6 +298,29 @@ class BHEAPIClient {
 
     getAvailableEnvironments = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<Environment[]>>('/api/v2/available-domains', options);
+
+    getEnvironmentGraphOverview = (environmentIds: string[], options?: RequestOptions) =>
+        this.baseClient.post<BasicResponse<EnvironmentGraphOverview>>(
+            '/api/v2/environment-graph/overview',
+            { environment_ids: environmentIds },
+            options
+        );
+
+    getEnvironmentGraphSummaryState = (options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<EnvironmentGraphSummaryState>>('/api/v2/environment-graph/summary', options);
+
+    regenerateEnvironmentGraphSummary = (options?: RequestOptions) =>
+        this.baseClient.post<BasicResponse<EnvironmentGraphSummaryState>>(
+            '/api/v2/environment-graph/summary/regenerate',
+            {},
+            options
+        );
+
+    getEnvironmentGraph = (environmentId: string, group?: string, options?: RequestOptions) =>
+        this.baseClient.get<BasicResponse<EnvironmentGraph>>('/api/v2/environment-graph', {
+            ...options,
+            params: { environment_id: environmentId, group: group || undefined },
+        });
 
     /* audit */
     getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);

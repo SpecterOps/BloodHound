@@ -21,10 +21,11 @@ import { setParamsFactory } from '../../utils/searchParams/searchParams';
 import { EdgeCheckboxType } from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
+export type ExploreTab = ExploreSearchTab | 'environments';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition' | 'aclinheritance';
 
 export type ExploreQueryParams = {
-    exploreSearchTab: ExploreSearchTab | null;
+    exploreSearchTab: ExploreTab | null;
     primarySearch: string | null;
     secondarySearch: string | null;
     tertiarySearch: string | null;
@@ -42,17 +43,20 @@ export const acceptedExploreSearchTabs = {
     node: 'node',
     pathfinding: 'pathfinding',
     cypher: 'cypher',
-} satisfies MappedStringLiteral<ExploreSearchTab, ExploreSearchTab>;
+    environments: 'environments',
+} satisfies MappedStringLiteral<ExploreTab, ExploreTab>;
 
-export const parseSearchTab = (paramValue: string | null): ExploreSearchTab | null => {
+export const parseSearchTab = (paramValue: string | null): ExploreTab | null => {
     if (paramValue && paramValue in acceptedExploreSearchTabs) {
-        return paramValue as ExploreSearchTab;
+        return paramValue as ExploreTab;
     }
     return null;
 };
 
 export const acceptedSearchTypes = {
-    ...acceptedExploreSearchTabs,
+    node: 'node',
+    pathfinding: 'pathfinding',
+    cypher: 'cypher',
     relationship: 'relationship',
     composition: 'composition',
     aclinheritance: 'aclinheritance',

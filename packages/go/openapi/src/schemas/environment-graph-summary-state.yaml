@@ -1,0 +1,16 @@
+type: object
+required: [status, started_at, completed_at, error, generation]
+properties:
+  status:
+    type: string
+    enum: [empty, running, ready, failed]
+  started_at:
+    type: string
+    format: date-time
+    nullable: true
+  completed_at:
+    type: string
+    format: date-time
+    nullable: true
+  error: {type: string}
+  generation: {type: integer, format: int64, minimum: 0}

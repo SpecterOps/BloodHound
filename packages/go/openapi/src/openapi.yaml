@@ -374,6 +374,14 @@ paths:
   # graph
   /api/v2/graphs/kinds:
     $ref: './paths/graph.kinds.yaml'
+  /api/v2/environment-graph/overview:
+    $ref: './paths/environment-graph-overview.yaml'
+  /api/v2/environment-graph/summary:
+    $ref: './paths/environment-graph-summary.yaml'
+  /api/v2/environment-graph/summary/regenerate:
+    $ref: './paths/environment-graph-summary-regenerate.yaml'
+  /api/v2/environment-graph:
+    $ref: './paths/environment-graph.yaml'
   /api/v2/pathfinding:
     $ref: './paths/graph.pathfinding.yaml'
   /api/v2/graph-search:

@@ -98,6 +98,31 @@ export type Environment = {
 
 export type GraphResponse = BasicResponse<GraphData>;
 
+/** Saved environment and group summaries; final entity groups are loaded live. */
+export type EnvironmentGraphOverview = {
+    edges: { source: string; target: string; kind: string; count: number }[];
+    state: EnvironmentGraphSummaryState;
+};
+
+export type EnvironmentGraphSummaryState = {
+    status: 'empty' | 'running' | 'ready' | 'failed';
+    started_at: string | null;
+    completed_at: string | null;
+    error: string;
+    generation: number;
+};
+
+export type EnvironmentGraph = {
+    environment_id: string;
+    group: string;
+    count: number;
+    clusters: { id: string; count: number }[];
+    nodes: { id: string; label: string; kind: string }[];
+    edges: { id: string; source: string; target: string; kind: string }[];
+    summary_edges: EnvironmentGraphOverview['edges'];
+    edges_truncated: boolean;
+};
+
 export type ActiveDirectoryQualityStat = TimestampFields & {
     users: number;
     computers: number;

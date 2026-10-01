@@ -14,7 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { acceptedSearchTypes, parseSearchType } from '../useExploreParams';
+import { acceptedSearchTypes, parseSearchTab, parseSearchType } from '../useExploreParams';
+
+it('accepts environments as a tab without accepting it as a query type', () => {
+    expect(parseSearchTab('environments')).toBe('environments');
+    expect(parseSearchType('environments')).toBeNull();
+});
 
 describe('useExploreParams', () => {
     describe('parseSearchType', () => {

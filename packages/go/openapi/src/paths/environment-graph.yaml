@@ -1,0 +1,91 @@
+get:
+  operationId: GetEnvironmentGraph
+  summary: Explore an environment graph
+  description: >-
+    Experimental, feature-flagged environment drill-down. Returns at most 16
+    disjoint entity groups with precomputed counts and links, or 128 entities
+    with up to 1024 live relationships between those entities. Group boundaries
+    remain stable until the next manual regeneration.
+    Requires GraphDBRead and access to the requested environment. Relationships
+    to entities outside the current group are summarized at their first shared
+    ancestor level.
+  tags: [Graph, Enterprise]
+  parameters:
+    - name: environment_id
+      in: query
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 1024}
+    - name: group
+      in: query
+      description: Inclusive decimal graph ID range returned by a previous response. Omit for the entire environment.
+      schema: {type: string, pattern: '^[0-9]+:[0-9]+$'}
+  responses:
+    '200':
+      description: Bounded environment graph view
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                required: [environment_id, group, count, clusters, nodes, edges, summary_edges, edges_truncated]
+                properties:
+                  environment_id: {type: string}
+                  group: {type: string}
+                  count: {type: integer, format: int64, minimum: 0}
+                  clusters:
+                    type: array
+                    maxItems: 16
+                    items:
+                      type: object
+                      required: [id, count]
+                      properties:
+                        id: {type: string}
+                        count: {type: integer, format: int64, minimum: 1}
+                  nodes:
+                    type: array
+                    maxItems: 128
+                    items:
+                      type: object
+                      required: [id, label, kind]
+                      properties:
+                        id: {type: string}
+                        label: {type: string}
+                        kind: {type: string}
+                  edges:
+                    type: array
+                    maxItems: 1024
+                    items:
+                      type: object
+                      required: [id, source, target, kind]
+                      properties:
+                        id: {type: string}
+                        source: {type: string}
+                        target: {type: string}
+                        kind: {type: string}
+                  summary_edges:
+                    type: array
+                    description: Directed relationships between immediate child groups, aggregated by kind.
+                    items:
+                      type: object
+                      required: [source, target, kind, count]
+                      properties:
+                        source: {type: string}
+                        target: {type: string}
+                        kind: {type: string}
+                        count: {type: integer, format: int64, minimum: 1}
+                  edges_truncated: {type: boolean}
+    '400':
+      $ref: './../responses/bad-request.yaml'
+    '401':
+      $ref: './../responses/unauthorized.yaml'
+    '403':
+      $ref: './../responses/forbidden.yaml'
+    '404':
+      description: Environment graph feature is disabled
+    '500':
+      $ref: './../responses/internal-server-error.yaml'
+    '504':
+      description: Environment graph query exceeded its 15 second deadline
