@@ -25,6 +25,7 @@ const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
 const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
 const UserProfile = React.lazy(() => import('bh-shared-ui/UserProfile'));
+const Marketplace = React.lazy(() => import('src/views/Marketplace'));
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui/ApiExplorer'));
@@ -72,6 +73,13 @@ export const ROUTES: Routable[] = [
         exact: true,
         path: routes.ROUTE_PZ_SPLAT,
         component: PrivilegeZones,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        exact: true,
+        path: routes.ROUTE_MARKETPLACE,
+        component: Marketplace,
         authenticationRequired: true,
         navigation: true,
     },

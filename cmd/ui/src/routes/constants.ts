@@ -27,6 +27,7 @@ export const ROUTE_USER_DISABLED = '/user-disabled';
 export const ROUTE_TWO_FACTOR_AUTHENTICATION = '/login-2fa';
 export const ROUTE_EXPIRED_PASSWORD = '/expired-password';
 export const ROUTE_MY_PROFILE = '/my-profile';
+export const ROUTE_MARKETPLACE = '/marketplace';
 export const ROUTE_DOWNLOAD_COLLECTORS = '/download-collectors';
 export const ROUTE_ADMINISTRATION = '/administration/';
 export const ROUTE_ADMINISTRATION_ROOT = ROUTE_ADMINISTRATION + '*';
