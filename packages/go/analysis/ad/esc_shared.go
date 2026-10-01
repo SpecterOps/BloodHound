@@ -36,50 +36,69 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
-	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
-		return err
-	} else {
-		for _, node := range ntAuthStoreNodes {
-			innerNode := node
+var trustedForNTAuthPostProcessedEdges = graph.Kinds{
+	ad.TrustedForNTAuth,
+}
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
-					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						slog.WarnContext(
-							ctx,
-							"Unable to post-process TrustedForNTAuth edge for NTAuthStore due to missing adcs data",
-							slog.Uint64("nt_auth_store_id", uint64(innerNode.ID)),
-							attr.Error(err),
-						)
-						return nil
-					}
-					return err
-				} else {
-					for _, thumbprint := range thumbprints {
-						if thumbprint != "" {
-							if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
-								return err
-							} else {
-								for _, sourceNodeID := range sourceNodeIDs {
-									if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-										FromID: sourceNodeID,
-										ToID:   innerNode.ID,
-										Kind:   ad.TrustedForNTAuth,
-									}) {
-										return nil
-									}
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, trustedForNTAuthPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	trustedForNTAuthTracker, err := post.FetchTracker(ctx, db, trustedForNTAuthPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostTrustedForNTAuth", db, trustedForNTAuthTracker)
+	defer sink.Done()
+
+	for _, node := range ntAuthStoreNodes {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if thumbprints, err := node.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
+				if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
+					slog.WarnContext(
+						ctx,
+						"Unable to post-process TrustedForNTAuth edge for NTAuthStore due to missing adcs data",
+						slog.Uint64("nt_auth_store_id", uint64(node.ID)),
+						attr.Error(err),
+					)
+					return nil
+				}
+				return err
+			} else {
+				for _, thumbprint := range thumbprints {
+					if thumbprint != "" {
+						if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
+							return err
+						} else {
+							for _, sourceNodeID := range sourceNodeIDs {
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
+									FromID: sourceNodeID,
+									ToID:   node.ID,
+									Kind:   ad.TrustedForNTAuth,
+								}) {
+									return nil
 								}
 							}
 						}
 					}
 				}
-				return nil
-			})
+			}
+			return nil
+		}); err != nil {
+			return sink.Stats(), err
 		}
 	}
 
-	return nil
+	return sink.Stats(), nil
 }
 
 func PostIssuedSignedBy(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {

@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	TrustedForNTAuth,
 	IssuedSignedBy,
 	EnterpriseCAFor,
 	GoldenCert,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	AdminTo,
 	CanPSRemote,
 	ExecuteDCOM,
+	TrustedForNTAuth,
 ]
 
 // All post-processed edges
