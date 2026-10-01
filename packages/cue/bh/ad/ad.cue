@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	DCSync,
 	ProtectAdminGroups,
 	SyncLAPSPassword,
 	CanRDP,
@@ -2053,7 +2052,8 @@ PostProcessedRelationships: [
 
 DCAPostProcessedRelationships: [
 	Owns,
-	WriteOwner
+	WriteOwner,
+	DCSync,
 ]
 
 // All post-processed edges
