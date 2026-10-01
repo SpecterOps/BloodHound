@@ -19,7 +19,6 @@ package routes
 import (
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -27,7 +26,7 @@ import (
 )
 
 // Register attaches the identity endpoints to the given router instance.
-func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
+func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
 		permissions         = auth.Permissions()
 		roleList            = handlers.RoleListView{}
@@ -38,7 +37,6 @@ func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit f
 		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
 	)
 
-	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute)
 	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
 	roleRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)

@@ -40,9 +40,10 @@ func With(limiterFactory func() mux.MiddlewareFunc, routes ...*Route) {
 
 // Router is a wrapper for the mux.Router type. It adds service-specific functionality to HTTP handler routes created.
 type Router struct {
-	globalMiddleware []mux.MiddlewareFunc
-	mux              *mux.Router
-	authorizer       auth.Authorizer
+	globalMiddleware         []mux.MiddlewareFunc
+	routeMiddlewareFactories []func() mux.MiddlewareFunc
+	mux                      *mux.Router
+	authorizer               auth.Authorizer
 }
 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
@@ -158,6 +159,27 @@ func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
 }
 
+// WithRouteMiddleware registers a middleware factory that is invoked once per
+// route created by register, so each route receives its own middleware
+// instance (e.g. an independent rate-limit bucket) rather than a shared one.
+func (s *Router) WithRouteMiddleware(middlewareFactory func() mux.MiddlewareFunc, register func() error) error {
+	previousFactories := s.routeMiddlewareFactories
+	s.routeMiddlewareFactories = append(append([]func() mux.MiddlewareFunc{}, previousFactories...), middlewareFactory)
+	defer func() {
+		s.routeMiddlewareFactories = previousFactories
+	}()
+
+	return register()
+}
+
+func (s Router) buildRouteMiddleware() []mux.MiddlewareFunc {
+	instances := make([]mux.MiddlewareFunc, 0, len(s.routeMiddlewareFactories))
+	for _, factory := range s.routeMiddlewareFactories {
+		instances = append(instances, factory())
+	}
+	return instances
+}
+
 // MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
 // matched route template without dispatching the request, e.g. the Prometheus metrics middleware.
 func (s Router) MuxRouter() *mux.Router {
@@ -177,6 +199,7 @@ func (s Router) Handler() http.Handler {
 
 func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 	middlewareWrapper := middleware.NewWrapper(handler)
+	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
 		handler: middlewareWrapper,
@@ -186,6 +209,7 @@ func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 
 func (s Router) HandleFunc(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	middlewareWrapper := middleware.NewWrapper(http.HandlerFunc(handlerFunc))
+	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
 		handler:    middlewareWrapper,
