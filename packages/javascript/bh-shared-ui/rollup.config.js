@@ -54,6 +54,7 @@ export default {
         '@fortawesome/react-fontawesome',
         '@mona-health/react-input-mask',
         '@mui/material',
+        '@mui/material/styles',
         '@mui/material/styles/createPalette',
         '@mui/styles',
         '@mui/styles/makeStyles',

@@ -580,7 +580,7 @@ const serifDarkPalette = createPalette({
 
 // Theme presets bundle a typeface with light/dark palettes. Dark mode continues to toggle between
 // the light and dark palette within the selected preset.
-export type ThemePreset = 'default' | 'comicSans' | 'serif';
+export type ThemePreset = string;
 
 export type ThemePresetConfig = {
     id: ThemePreset;

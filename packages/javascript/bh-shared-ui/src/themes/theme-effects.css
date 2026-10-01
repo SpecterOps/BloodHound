@@ -1,0 +1,102 @@
+/* Copyright 2026 Specter Ops, Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+html.theme-retro-windows button,
+html.theme-retro-windows input,
+html.theme-retro-windows select {
+    border-radius: 2px;
+}
+
+html.theme-installed #global-navigation {
+    background-color: var(--neutral-2);
+}
+
+html.theme-cursor,
+html.theme-cursor body {
+    cursor:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='28' viewBox='0 0 24 28'%3E%3Cpath d='M2 1v22l5-5 4 8 4-2-4-8h8Z' fill='white' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E")
+            2 1,
+        auto;
+}
+
+html.theme-cursor a,
+html.theme-cursor button,
+html.theme-cursor [role='button'] {
+    cursor:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='28' viewBox='0 0 24 28'%3E%3Cpath d='M2 1v22l5-5 4 8 4-2-4-8h8Z' fill='white' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E")
+            2 1,
+        pointer;
+}
+
+html.theme-cursor input,
+html.theme-cursor textarea,
+html.theme-cursor [contenteditable='true'] {
+    cursor: text;
+}
+
+.theme-assistant {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1390;
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    max-width: min(360px, calc(100vw - 40px));
+    font-family: Tahoma, Verdana, sans-serif;
+    color: #000;
+}
+
+.theme-assistant-bubble {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px 25px 14px 14px;
+    background: #fff8c6;
+    border: 2px solid #555;
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 #333;
+    font-size: 13px;
+}
+
+.theme-assistant-close {
+    position: absolute;
+    right: 4px;
+    top: 2px;
+    background: transparent;
+    border: 0;
+    color: #000;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.theme-assistant-character {
+    position: relative;
+    flex: none;
+    font-size: 72px;
+    line-height: 1;
+    transform: rotate(-15deg);
+}
+
+.theme-assistant-eyes {
+    position: absolute;
+    top: 17px;
+    left: 21px;
+    font-size: 14px;
+    letter-spacing: 3px;
+    transform: rotate(15deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .theme-assistant-character {
+        animation: theme-assistant-wave 3s ease-in-out infinite;
+    }
+}
+
+@keyframes theme-assistant-wave {
+    50% {
+        transform: rotate(-9deg) translateY(-4px);
+    }
+}
