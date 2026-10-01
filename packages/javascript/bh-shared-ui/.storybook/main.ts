@@ -14,28 +14,44 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { StorybookConfig } from '@storybook/react-vite';
-import { createRequire } from 'module';
-import { dirname, join } from 'path';
+import autoprefixer from 'autoprefixer';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import tailwindcss from 'tailwindcss';
+import tailwindConfig from './tailwind.config';
 
 const require = createRequire(import.meta.url);
 
 const getAbsolutePath = (packageName: string) => dirname(require.resolve(join(packageName, 'package.json')));
 
 const config: StorybookConfig = {
-    stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+    stories: ['../src/**/*.stories.@(ts|tsx)'],
     addons: [
         '@storybook/addon-links',
         '@storybook/addon-essentials',
         '@storybook/addon-interactions',
         '@storybook/addon-a11y',
         '@storybook/addon-themes',
-    ],
+    ].map(getAbsolutePath),
     framework: {
         name: getAbsolutePath('@storybook/react-vite'),
         options: {},
     },
-    docs: {
-        autodocs: 'tag',
+    docs: { autodocs: 'tag' },
+    async viteFinal(config) {
+        const { mergeConfig } = await import('vite');
+        return mergeConfig(config, {
+            resolve: {
+                alias: {
+                    'doodle-ui': fileURLToPath(new URL('../../doodle-ui/src', import.meta.url)),
+                    'js-client-library': fileURLToPath(new URL('../../js-client-library/src', import.meta.url)),
+                },
+            },
+            css: {
+                postcss: { plugins: [tailwindcss(tailwindConfig), autoprefixer()] },
+            },
+        });
     },
 };
 

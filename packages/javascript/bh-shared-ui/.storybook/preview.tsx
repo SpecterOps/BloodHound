@@ -19,25 +19,24 @@ import '@fontsource/nunito-sans/600.css';
 import '@fontsource/nunito-sans/700.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview, ReactRenderer } from '@storybook/react';
+import { StoryProviders } from './StoryProviders';
 import '../src/storybook.css';
 
 const preview: Preview = {
     parameters: {
         backgrounds: { disable: true },
-        controls: {
-            matchers: {
-                date: /Date$/i,
-            },
-        },
+        controls: { matchers: { date: /Date$/i } },
     },
     decorators: [
         withThemeByClassName<ReactRenderer>({
-            themes: {
-                light: '',
-                dark: 'dark',
-            },
+            themes: { light: '', dark: 'dark' },
             defaultTheme: 'light',
         }),
+        (Story, context) => (
+            <StoryProviders key={context.id} initialEntries={context.parameters.router?.initialEntries}>
+                <Story />
+            </StoryProviders>
+        ),
     ],
 };
 
