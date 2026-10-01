@@ -29,7 +29,7 @@ const meta: Meta<typeof ConfirmationDialog> = {
         text: { control: 'text' },
     },
     args: {
-        open: true,
+        open: false,
         title: 'Confirm action',
         text: 'Do you want to continue?',
         onCancel: fn(),

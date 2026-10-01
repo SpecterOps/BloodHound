@@ -20,7 +20,7 @@ import '@fontsource/nunito-sans/700.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview, ReactRenderer } from '@storybook/react';
 import { StoryProviders } from './StoryProviders';
-import '../src/storybook.css';
+import './storybook.css';
 
 const preview: Preview = {
     parameters: {
