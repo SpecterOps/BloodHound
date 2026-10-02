@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
 	SyncedToADUser,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	ADCSESC6b,
 	ADCSESC9a,
 	ADCSESC9b,
+	ADCSESC10a,
 ]
 
 // All post-processed edges
