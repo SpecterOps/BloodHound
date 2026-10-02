@@ -145,15 +145,32 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	// NTLM must be enabled through the feature flag
 	if !ntlmEnabled {
 		operation.Done()
-		return &operation.Stats, nil
+
+		// Delta-tracked edges are no longer cleared up front, so prune any NTLM edges left over from when the flag was enabled
+		if ntlmSink, err := newNTLMSink(ctx, db); err != nil {
+			return &operation.Stats, err
+		} else {
+			ntlmSink.Done()
+			return &operation.Stats, nil
+		}
 	}
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
-	if ntlmCache, err := NewNTLMCache(ctx, db, localGroupData); err != nil {
+	ntlmCache, err := NewNTLMCache(ctx, db, localGroupData)
+	if err != nil {
 		operation.Done()
 		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	}
+
+	// The sink is created only after the prerequisites succeed so a failure above does not prune existing edges
+	ntlmSink, err := newNTLMSink(ctx, db)
+	if err != nil {
+		operation.Done()
+		return nil, err
+	}
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for computer := range cursor.Chan() {
 				innerComputer := computer
@@ -197,15 +214,43 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		})
 	}); err != nil {
 		operation.Done()
+		ntlmSink.Done()
 		return nil, err
-	} else {
-		if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, adcsCache, ntlmCache); err != nil {
-			operation.Done()
-			return nil, err
-		}
-
-		return &operation.Stats, operation.Done()
 	}
+
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, ntlmSink, adcsCache, ntlmCache); err != nil {
+		operation.Done()
+		ntlmSink.Done()
+		return nil, err
+	}
+
+	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+	operationErr := operation.Done()
+	ntlmSink.Done()
+	operation.Stats.Merge(ntlmSink.Stats())
+
+	return &operation.Stats, operationErr
+}
+
+// ntlmPostProcessedEdges lists the NTLM edge kinds which are post-processed using the delta-change-apply method
+var ntlmPostProcessedEdges = graph.Kinds{
+	ad.CoerceAndRelayNTLMToADCS,
+}
+
+// newNTLMSink migrates any legacy NTLM edges, fetches the delta tracker and returns a sink for the migrated NTLM edge kinds
+func newNTLMSink(ctx context.Context, db graph.Database) (*post.FilteredRelationshipSink, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, ntlmPostProcessedEdges); err != nil {
+		return nil, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	ntlmTracker, err := post.FetchTracker(ctx, db, ntlmPostProcessedEdges)
+	if err != nil {
+		return nil, err
+	}
+
+	return post.NewFilteredRelationshipSink(ctx, "PostNTLM", db, ntlmTracker), nil
 }
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
@@ -374,7 +419,7 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 		))
 }
 
-func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], sink *post.FilteredRelationshipSink, adcsCache *ADCSCache, ntlmCache NTLMCache) error {
 	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
 		ecaID := graph.ID(eca)
 
@@ -406,14 +451,13 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 					var submitErr error
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
-							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
 								victims.Each(func(target uint64) bool {
-									outC <- post.EnsureRelationshipJob{
+									return sink.Submit(ctx, post.EnsureRelationshipJob{
 										FromID: authUsersGroup,
 										ToID:   graph.ID(target),
 										Kind:   ad.CoerceAndRelayNTLMToADCS,
-									}
-									return true
+									})
 								})
 								return nil
 							}); err != nil {
