@@ -2033,7 +2033,6 @@ PostProcessedRelationships: [
 	ADCSESC13,
 	EnrollOnBehalfOf,
 	SyncedToADUser,
-	ExtendedByPolicy,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	TrustedForNTAuth,
 	IssuedSignedBy,
 	EnterpriseCAFor,
+	ExtendedByPolicy,
 ]
 
 // All post-processed edges

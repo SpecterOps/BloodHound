@@ -227,8 +227,26 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	return nil
 }
 
-func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+var extendedByPolicyPostProcessedEdges = graph.Kinds{
+	ad.ExtendedByPolicy,
+}
+
+func PostExtendedByPolicyBinding(ctx context.Context, db graph.Database, certTemplates []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, extendedByPolicyPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	extendedByPolicyTracker, err := post.FetchTracker(ctx, db, extendedByPolicyPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostExtendedByPolicyBinding", db, extendedByPolicyTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
@@ -250,7 +268,7 @@ func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.Ensure
 								continue
 							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
 								// Create ExtendedByPolicy edge
-								if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
 									FromID: certTemplate.ID,
 									ToID:   issuancePolicy.ID,
 									Kind:   ad.ExtendedByPolicy,
@@ -264,8 +282,11 @@ func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.Ensure
 			}
 			return nil
 		}
-	})
-	return nil
+	}); err != nil {
+		return sink.Stats(), err
+	}
+
+	return sink.Stats(), nil
 }
 
 func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {

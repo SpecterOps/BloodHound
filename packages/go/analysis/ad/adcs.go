@@ -111,17 +111,18 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
 	}
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
-	operation.Stats.Merge(trustedForNTAuthStats)
-	operation.Stats.Merge(issuedSignedByStats)
-	operation.Stats.Merge(enterpriseCAForStats)
-
-	if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
-		operation.Done()
+	extendedByPolicyStats, err := PostExtendedByPolicyBinding(ctx, db, certTemplates)
+	if err != nil {
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
-	} else {
-		return &operation.Stats, operation.Done()
 	}
+
+	aggregateStats := post.NewAtomicPostProcessingStats()
+	aggregateStats.Merge(trustedForNTAuthStats)
+	aggregateStats.Merge(issuedSignedByStats)
+	aggregateStats.Merge(enterpriseCAForStats)
+	aggregateStats.Merge(extendedByPolicyStats)
+
+	return &aggregateStats, nil
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
