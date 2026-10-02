@@ -196,15 +196,11 @@ func TestEnterpriseCAFor(t *testing.T) {
 		harness.EnterpriseCAForHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - EnterpriseCAFor")
-
 		if enterpriseCertAuthorities, err := adAnalysis.FetchNodesByKind(context.Background(), db, ad.EnterpriseCA); err != nil {
 			t.Logf("failed fetching enterpriseCA nodes: %v", err)
-		} else if err := adAnalysis.PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
+		} else if _, err := adAnalysis.PostEnterpriseCAFor(context.Background(), db, enterpriseCertAuthorities); err != nil {
 			t.Logf("failed post processing for %s: %v", ad.EnterpriseCAFor.String(), err)
 		}
-
-		operation.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
