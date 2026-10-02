@@ -15,13 +15,14 @@
 # SPDX-License-Identifier: Apache-2.0
 post:
   operationId: CalculatePrivilegeZoneTargetExposure
-  summary: Calculate reachability into a privilege zone on demand
+  summary: Calculate direct and derived finding exposure entering a privilege zone
   description: |
-    Counts unique identities outside the target privilege zone with a traversable
-    path to any node in that zone. This includes identities outside all privilege
-    zones and paths through other zones. Each percentage uses identities in the
-    corresponding source zone or platform as its denominator. The calculation
-    runs only on request, not during analysis.
+    Direct and derived exposure union the principal identity sets for disallowed boundary findings
+    entering the target zone. Derived exposure includes direct exposure. Both percentages use all
+    principals in the selected source scope; source filters do not restrict transit paths.
+    target_reachable_count separately counts identities outside the target zone with any traversable
+    path into it, including routes containing only allowed crossings. It uses the same source denominator.
+    Group denominators intersect the selected scope with the corresponding source zone or platform.
   tags: [Privilege Zone Boundaries, Enterprise]
   requestBody:
     required: true
@@ -32,6 +33,17 @@ post:
           required: [target_zone_id]
           properties:
             target_zone_id: { type: integer, minimum: 1 }
+            snapshot_revision: { type: string, maxLength: 64 }
+            source_zone_ids:
+              type: array
+              uniqueItems: true
+              items: { type: integer, minimum: 0 }
+              description: Source-zone filter; zero selects identities outside privilege zones. Empty or omitted selects all zones.
+            source_platforms:
+              type: array
+              uniqueItems: true
+              items: { type: string, maxLength: 255 }
+              description: Source-platform names from the exposure breakdown. Empty or omitted selects all platforms.
   responses:
     200:
       description: Target privilege zone exposure by source zone and platform
@@ -46,6 +58,13 @@ post:
                 required:
                   [
                     target_zone_id,
+                    snapshot_revision,
+                    direct_count,
+                    direct_percent,
+                    derived_count,
+                    derived_percent,
+                    target_reachable_count,
+                    target_reachable_percent,
                     identity_total,
                     exposed_count,
                     exposed_percent,
@@ -54,9 +73,25 @@ post:
                   ]
                 properties:
                   target_zone_id: { type: integer }
+                  snapshot_revision: { type: string }
+                  direct_count: { type: integer, minimum: 0 }
+                  direct_percent: { type: number, format: double }
+                  derived_count: { type: integer, minimum: 0 }
+                  derived_percent: { type: number, format: double }
+                  target_reachable_count: { type: integer, minimum: 0 }
+                  target_reachable_percent: { type: number, format: double }
                   identity_total: { type: integer }
-                  exposed_count: { type: integer }
-                  exposed_percent: { type: number, format: double }
+                  exposed_count:
+                    {
+                      type: integer,
+                      description: Compatibility alias for derived_count.,
+                    }
+                  exposed_percent:
+                    {
+                      type: number,
+                      format: double,
+                      description: Compatibility alias for derived_percent.,
+                    }
                   zones:
                     type: array
                     items:

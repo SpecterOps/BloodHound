@@ -21382,8 +21382,8 @@
     "/api/v2/privilege-zone-boundaries/finding-exposure": {
       "post": {
         "operationId": "CalculatePrivilegeZoneFindingExposure",
-        "summary": "Calculate source-identity reachability to one finding on demand",
-        "description": "Counts unique principal nodes with a traversable path to the finding's source principal.\nThis is calculated on request and does not run during analysis. Zone and platform percentages\nuse the number of identities in the respective source zone or platform as their denominator.\n",
+        "summary": "Calculate direct and derived exposure for a boundary finding",
+        "description": "Counts unique principal identities, including the finding source when it is a principal.\nDirect exposure follows upstream traversable paths without crossing a disallowed privilege-zone\nboundary. Derived exposure follows all traversable paths, including allowed crossings, and unions\noverlapping identity sets. Both percentages use all principals in the selected source scope as the\ndenominator; scope filters do not restrict transit paths. Group denominators use the same scope\nintersected with that zone or platform. Dependencies describe immediate upstream disallowed\ncrossings and are paginated; their counts can overlap and must not be summed.\nA new calculation returns a snapshot_revision. Supply it when expanding or paging dependencies\nto reuse the same graph and policy snapshot. Expired revisions return 410; recalculate to refresh.\n",
         "tags": [
           "Privilege Zone Boundaries",
           "Enterprise"
@@ -21401,6 +21401,45 @@
                   "source_principal_id": {
                     "type": "string",
                     "maxLength": 1024
+                  },
+                  "boundary_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$",
+                    "maxLength": 20,
+                    "description": "Optional physical edge context; its source must match source_principal_id."
+                  },
+                  "snapshot_revision": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "dependency_offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "dependency_limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "default": 25
+                  },
+                  "source_zone_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "description": "Source-zone filter; zero selects identities outside privilege zones. Empty or omitted selects all zones."
+                  },
+                  "source_platforms": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 255
+                    },
+                    "description": "Source-platform names from the exposure breakdown. Empty or omitted selects all platforms."
                   }
                 }
               }
@@ -21422,25 +21461,88 @@
                       "type": "object",
                       "required": [
                         "source_principal_id",
+                        "snapshot_revision",
                         "identity_total",
+                        "direct_count",
+                        "direct_percent",
+                        "derived_count",
+                        "derived_percent",
                         "exposed_count",
                         "exposed_percent",
                         "zones",
-                        "platforms"
+                        "platforms",
+                        "dependencies"
                       ],
                       "properties": {
                         "source_principal_id": {
                           "type": "string"
                         },
+                        "boundary_id": {
+                          "type": "string"
+                        },
+                        "cycle_group": {
+                          "type": "string"
+                        },
+                        "snapshot_revision": {
+                          "type": "string"
+                        },
+                        "direct_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "direct_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
+                        "derived_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "derived_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
                         "identity_total": {
                           "type": "integer"
                         },
                         "exposed_count": {
-                          "type": "integer"
+                          "type": "integer",
+                          "description": "Compatibility alias for derived_count."
                         },
                         "exposed_percent": {
                           "type": "number",
-                          "format": "double"
+                          "format": "double",
+                          "description": "Compatibility alias for derived_percent."
+                        },
+                        "dependencies": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "total",
+                            "offset",
+                            "limit"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.privilege-zone-exposure-dependency"
+                              }
+                            },
+                            "total": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "offset": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 100
+                            }
+                          }
                         },
                         "zones": {
                           "type": "array",
@@ -21472,6 +21574,16 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "410": {
+            "description": "Requested exposure snapshot has expired; recalculate exposure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "422": {
             "description": "Graph exceeds the supported on-demand exposure calculation size",
@@ -21505,8 +21617,8 @@
     "/api/v2/privilege-zone-boundaries/target-exposure": {
       "post": {
         "operationId": "CalculatePrivilegeZoneTargetExposure",
-        "summary": "Calculate reachability into a privilege zone on demand",
-        "description": "Counts unique identities outside the target privilege zone with a traversable\npath to any node in that zone. This includes identities outside all privilege\nzones and paths through other zones. Each percentage uses identities in the\ncorresponding source zone or platform as its denominator. The calculation\nruns only on request, not during analysis.\n",
+        "summary": "Calculate direct and derived finding exposure entering a privilege zone",
+        "description": "Direct and derived exposure union the principal identity sets for disallowed boundary findings\nentering the target zone. Derived exposure includes direct exposure. Both percentages use all\nprincipals in the selected source scope; source filters do not restrict transit paths.\ntarget_reachable_count separately counts identities outside the target zone with any traversable\npath into it, including routes containing only allowed crossings. It uses the same source denominator.\nGroup denominators intersect the selected scope with the corresponding source zone or platform.\n",
         "tags": [
           "Privilege Zone Boundaries",
           "Enterprise"
@@ -21524,6 +21636,28 @@
                   "target_zone_id": {
                     "type": "integer",
                     "minimum": 1
+                  },
+                  "snapshot_revision": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "source_zone_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "description": "Source-zone filter; zero selects identities outside privilege zones. Empty or omitted selects all zones."
+                  },
+                  "source_platforms": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 255
+                    },
+                    "description": "Source-platform names from the exposure breakdown. Empty or omitted selects all platforms."
                   }
                 }
               }
@@ -21545,6 +21679,13 @@
                       "type": "object",
                       "required": [
                         "target_zone_id",
+                        "snapshot_revision",
+                        "direct_count",
+                        "direct_percent",
+                        "derived_count",
+                        "derived_percent",
+                        "target_reachable_count",
+                        "target_reachable_percent",
                         "identity_total",
                         "exposed_count",
                         "exposed_percent",
@@ -21555,15 +21696,44 @@
                         "target_zone_id": {
                           "type": "integer"
                         },
+                        "snapshot_revision": {
+                          "type": "string"
+                        },
+                        "direct_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "direct_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
+                        "derived_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "derived_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
+                        "target_reachable_count": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "target_reachable_percent": {
+                          "type": "number",
+                          "format": "double"
+                        },
                         "identity_total": {
                           "type": "integer"
                         },
                         "exposed_count": {
-                          "type": "integer"
+                          "type": "integer",
+                          "description": "Compatibility alias for derived_count."
                         },
                         "exposed_percent": {
                           "type": "number",
-                          "format": "double"
+                          "format": "double",
+                          "description": "Compatibility alias for derived_percent."
                         },
                         "zones": {
                           "type": "array",
@@ -28395,6 +28565,24 @@
                 "type": "integer",
                 "format": "int64"
               },
+              "DirectExposureCount": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true,
+                "description": "Direct principal exposure in boundary mode; null for legacy analysis."
+              },
+              "DirectExposurePercentage": {
+                "type": "number",
+                "format": "double",
+                "nullable": true,
+                "description": "Direct exposure divided by ExposureIdentityTotal, on a 0 to 1 scale."
+              },
+              "ExposureIdentityTotal": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true,
+                "description": "Shared principal denominator for direct and derived exposure."
+              },
               "Severity": {
                 "type": "string",
                 "enum": [
@@ -28775,11 +28963,76 @@
           }
         }
       },
+      "model.privilege-zone-exposure-dependency": {
+        "type": "object",
+        "required": [
+          "boundary_id",
+          "source_principal_id",
+          "source_name",
+          "target_principal_id",
+          "target_name",
+          "relationship_kind",
+          "source_zone_id",
+          "target_zone_id",
+          "direct_count",
+          "derived_count",
+          "identity_total",
+          "cycle_group"
+        ],
+        "properties": {
+          "boundary_id": {
+            "type": "string",
+            "description": "Physical boundary edge identifier within this graph snapshot.",
+            "pattern": "^[0-9]+$"
+          },
+          "source_principal_id": {
+            "type": "string"
+          },
+          "source_name": {
+            "type": "string"
+          },
+          "target_principal_id": {
+            "type": "string"
+          },
+          "target_name": {
+            "type": "string"
+          },
+          "relationship_kind": {
+            "type": "string"
+          },
+          "source_zone_id": {
+            "type": "integer"
+          },
+          "target_zone_id": {
+            "type": "integer"
+          },
+          "direct_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "derived_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "identity_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cycle_group": {
+            "type": "string",
+            "description": "Nonempty snapshot-local identifier for mutually dependent boundaries; empty for an acyclic boundary."
+          }
+        }
+      },
       "model.privilege-zone-finding-exposure-group": {
         "type": "object",
         "required": [
           "name",
           "identity_total",
+          "direct_count",
+          "direct_percent",
+          "derived_count",
+          "derived_percent",
           "exposed_count",
           "exposed_percent"
         ],
@@ -28794,10 +29047,36 @@
           "identity_total": {
             "type": "integer"
           },
+          "direct_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "direct_percent": {
+            "type": "number",
+            "format": "double"
+          },
+          "derived_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "derived_percent": {
+            "type": "number",
+            "format": "double"
+          },
           "exposed_count": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Compatibility alias for derived_count."
           },
           "exposed_percent": {
+            "type": "number",
+            "format": "double",
+            "description": "Compatibility alias for derived_percent."
+          },
+          "target_reachable_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "target_reachable_percent": {
             "type": "number",
             "format": "double"
           }

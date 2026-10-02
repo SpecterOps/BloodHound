@@ -15,11 +15,17 @@
 # SPDX-License-Identifier: Apache-2.0
 post:
   operationId: CalculatePrivilegeZoneFindingExposure
-  summary: Calculate source-identity reachability to one finding on demand
+  summary: Calculate direct and derived exposure for a boundary finding
   description: |
-    Counts unique principal nodes with a traversable path to the finding's source principal.
-    This is calculated on request and does not run during analysis. Zone and platform percentages
-    use the number of identities in the respective source zone or platform as their denominator.
+    Counts unique principal identities, including the finding source when it is a principal.
+    Direct exposure follows upstream traversable paths without crossing a disallowed privilege-zone
+    boundary. Derived exposure follows all traversable paths, including allowed crossings, and unions
+    overlapping identity sets. Both percentages use all principals in the selected source scope as the
+    denominator; scope filters do not restrict transit paths. Group denominators use the same scope
+    intersected with that zone or platform. Dependencies describe immediate upstream disallowed
+    crossings and are paginated; their counts can overlap and must not be summed.
+    A new calculation returns a snapshot_revision. Supply it when expanding or paging dependencies
+    to reuse the same graph and policy snapshot. Expired revisions return 410; recalculate to refresh.
   tags: [Privilege Zone Boundaries, Enterprise]
   requestBody:
     required: true
@@ -32,6 +38,25 @@ post:
             source_principal_id:
               type: string
               maxLength: 1024
+            boundary_id:
+              type: string
+              pattern: "^[0-9]+$"
+              maxLength: 20
+              description: Optional physical edge context; its source must match source_principal_id.
+            snapshot_revision: { type: string, maxLength: 64 }
+            dependency_offset: { type: integer, minimum: 0, default: 0 }
+            dependency_limit:
+              { type: integer, minimum: 1, maximum: 100, default: 25 }
+            source_zone_ids:
+              type: array
+              uniqueItems: true
+              items: { type: integer, minimum: 0 }
+              description: Source-zone filter; zero selects identities outside privilege zones. Empty or omitted selects all zones.
+            source_platforms:
+              type: array
+              uniqueItems: true
+              items: { type: string, maxLength: 255 }
+              description: Source-platform names from the exposure breakdown. Empty or omitted selects all platforms.
   responses:
     200:
       description: Finding exposure by source zone and platform
@@ -43,35 +68,82 @@ post:
             properties:
               data:
                 type: object
-                required: [source_principal_id, identity_total, exposed_count, exposed_percent, zones, platforms]
+                required:
+                  [
+                    source_principal_id,
+                    snapshot_revision,
+                    identity_total,
+                    direct_count,
+                    direct_percent,
+                    derived_count,
+                    derived_percent,
+                    exposed_count,
+                    exposed_percent,
+                    zones,
+                    platforms,
+                    dependencies,
+                  ]
                 properties:
                   source_principal_id: { type: string }
+                  boundary_id: { type: string }
+                  cycle_group: { type: string }
+                  snapshot_revision: { type: string }
+                  direct_count: { type: integer, minimum: 0 }
+                  direct_percent: { type: number, format: double }
+                  derived_count: { type: integer, minimum: 0 }
+                  derived_percent: { type: number, format: double }
                   identity_total: { type: integer }
-                  exposed_count: { type: integer }
-                  exposed_percent: { type: number, format: double }
+                  exposed_count:
+                    {
+                      type: integer,
+                      description: Compatibility alias for derived_count.,
+                    }
+                  exposed_percent:
+                    {
+                      type: number,
+                      format: double,
+                      description: Compatibility alias for derived_percent.,
+                    }
+                  dependencies:
+                    type: object
+                    required: [items, total, offset, limit]
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: "./../schemas/model.privilege-zone-exposure-dependency.yaml"
+                      total: { type: integer, minimum: 0 }
+                      offset: { type: integer, minimum: 0 }
+                      limit: { type: integer, minimum: 1, maximum: 100 }
                   zones:
                     type: array
                     items:
-                      $ref: './../schemas/model.privilege-zone-finding-exposure-group.yaml'
+                      $ref: "./../schemas/model.privilege-zone-finding-exposure-group.yaml"
                   platforms:
                     type: array
                     items:
-                      $ref: './../schemas/model.privilege-zone-finding-exposure-group.yaml'
-    400: { $ref: './../responses/bad-request.yaml' }
-    401: { $ref: './../responses/unauthorized.yaml' }
-    403: { $ref: './../responses/forbidden.yaml' }
-    404: { $ref: './../responses/not-found.yaml' }
+                      $ref: "./../schemas/model.privilege-zone-finding-exposure-group.yaml"
+    400: { $ref: "./../responses/bad-request.yaml" }
+    401: { $ref: "./../responses/unauthorized.yaml" }
+    403: { $ref: "./../responses/forbidden.yaml" }
+    404: { $ref: "./../responses/not-found.yaml" }
+    410:
+      description: Requested exposure snapshot has expired; recalculate exposure.
+      content:
+        application/json:
+          schema:
+            $ref: "./../schemas/api.error-wrapper.yaml"
     422:
       description: Graph exceeds the supported on-demand exposure calculation size
       content:
         application/json:
           schema:
-            $ref: './../schemas/api.error-wrapper.yaml'
-    429: { $ref: './../responses/too-many-requests.yaml' }
-    500: { $ref: './../responses/internal-server-error.yaml' }
+            $ref: "./../schemas/api.error-wrapper.yaml"
+    429: { $ref: "./../responses/too-many-requests.yaml" }
+    500: { $ref: "./../responses/internal-server-error.yaml" }
     504:
       description: Exposure calculation timed out
       content:
         application/json:
           schema:
-            $ref: './../schemas/api.error-wrapper.yaml'
+            $ref: "./../schemas/api.error-wrapper.yaml"

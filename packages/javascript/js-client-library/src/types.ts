@@ -240,25 +240,75 @@ export interface PrivilegeZoneSplitResponse {
     zones?: PrivilegeZone[];
 }
 
-export interface PrivilegeZoneFindingExposureGroup {
+export interface PrivilegeZoneExposureScope {
+    source_zone_ids?: number[];
+    source_platforms?: string[];
+}
+
+export interface PrivilegeZoneFindingExposureRequest extends PrivilegeZoneExposureScope {
+    boundary_id?: string;
+    snapshot_revision?: string;
+    dependency_offset?: number;
+    dependency_limit?: number;
+}
+
+export interface PrivilegeZoneExposureMetrics {
+    identity_total: number;
+    direct_count: number;
+    direct_percent: number;
+    derived_count: number;
+    derived_percent: number;
+    /** Compatibility aliases for derived exposure. */
+    exposed_count: number;
+    exposed_percent: number;
+}
+
+export interface PrivilegeZoneFindingExposureGroup extends PrivilegeZoneExposureMetrics {
     name: string;
     zone_id?: number;
-    identity_total: number;
-    exposed_count: number;
-    exposed_percent: number;
+    target_reachable_count?: number;
+    target_reachable_percent?: number;
 }
 
-export interface PrivilegeZoneFindingExposure {
+export interface PrivilegeZoneExposureDependency {
+    boundary_id: string;
     source_principal_id: string;
+    source_name: string;
+    target_principal_id: string;
+    target_name: string;
+    relationship_kind: string;
+    source_zone_id: number;
+    target_zone_id: number;
+    direct_count: number;
+    derived_count: number;
     identity_total: number;
-    exposed_count: number;
-    exposed_percent: number;
+    cycle_group: string;
+}
+
+export interface PrivilegeZoneExposureDependencies {
+    items: PrivilegeZoneExposureDependency[];
+    total: number;
+    offset: number;
+    limit: number;
+}
+
+export interface PrivilegeZoneFindingExposure extends PrivilegeZoneExposureMetrics {
+    snapshot_revision: string;
+    source_principal_id: string;
+    boundary_id?: string;
+    cycle_group?: string;
     zones: PrivilegeZoneFindingExposureGroup[];
     platforms: PrivilegeZoneFindingExposureGroup[];
+    dependencies: PrivilegeZoneExposureDependencies;
 }
 
-export interface PrivilegeZoneTargetExposure extends Omit<PrivilegeZoneFindingExposure, 'source_principal_id'> {
+export interface PrivilegeZoneTargetExposure extends PrivilegeZoneExposureMetrics {
+    snapshot_revision: string;
     target_zone_id: number;
+    target_reachable_count: number;
+    target_reachable_percent: number;
+    zones: PrivilegeZoneFindingExposureGroup[];
+    platforms: PrivilegeZoneFindingExposureGroup[];
 }
 
 export const SeedTypeObjectId = 1 as const;

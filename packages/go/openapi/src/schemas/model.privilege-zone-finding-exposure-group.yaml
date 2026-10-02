@@ -14,10 +14,36 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 type: object
-required: [name, identity_total, exposed_count, exposed_percent]
+required:
+  [
+    name,
+    identity_total,
+    direct_count,
+    direct_percent,
+    derived_count,
+    derived_percent,
+    exposed_count,
+    exposed_percent,
+  ]
 properties:
   name: { type: string }
-  zone_id: { type: integer, description: Present for zone groups; zero denotes identities outside privilege zones. }
+  zone_id:
+    {
+      type: integer,
+      description: Present for zone groups; zero denotes identities outside privilege zones.,
+    }
   identity_total: { type: integer }
-  exposed_count: { type: integer }
-  exposed_percent: { type: number, format: double }
+  direct_count: { type: integer, minimum: 0 }
+  direct_percent: { type: number, format: double }
+  derived_count: { type: integer, minimum: 0 }
+  derived_percent: { type: number, format: double }
+  exposed_count:
+    { type: integer, description: Compatibility alias for derived_count. }
+  exposed_percent:
+    {
+      type: number,
+      format: double,
+      description: Compatibility alias for derived_percent.,
+    }
+  target_reachable_count: { type: integer, minimum: 0 }
+  target_reachable_percent: { type: number, format: double }

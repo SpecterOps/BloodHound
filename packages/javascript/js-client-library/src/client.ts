@@ -363,17 +363,25 @@ class BHEAPIClient {
     deletePrivilegeZoneControlPolicy = (policyId: number, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/privilege-zone-boundaries/control-policies/${policyId}`, options);
 
-    calculatePrivilegeZoneFindingExposure = (sourcePrincipalId: string, options?: RequestOptions) =>
+    calculatePrivilegeZoneFindingExposure = (
+        sourcePrincipalId: string,
+        options?: RequestOptions,
+        exposureOptions?: types.PrivilegeZoneFindingExposureRequest
+    ) =>
         this.baseClient.post<BasicResponse<types.PrivilegeZoneFindingExposure>>(
             '/api/v2/privilege-zone-boundaries/finding-exposure',
-            { source_principal_id: sourcePrincipalId },
+            { ...exposureOptions, source_principal_id: sourcePrincipalId },
             options
         );
 
-    calculatePrivilegeZoneTargetExposure = (targetZoneId: number, options?: RequestOptions) =>
+    calculatePrivilegeZoneTargetExposure = (
+        targetZoneId: number,
+        options?: RequestOptions,
+        scope?: types.PrivilegeZoneExposureScope
+    ) =>
         this.baseClient.post<BasicResponse<types.PrivilegeZoneTargetExposure>>(
             '/api/v2/privilege-zone-boundaries/target-exposure',
-            { target_zone_id: targetZoneId },
+            { ...scope, target_zone_id: targetZoneId },
             options
         );
 

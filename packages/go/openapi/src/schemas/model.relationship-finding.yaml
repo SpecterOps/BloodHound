@@ -15,8 +15,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
-  - $ref: './model.components.int32.id.yaml'
-  - $ref: './model.components.timestamps.yaml'
+  - $ref: "./model.components.int32.id.yaml"
+  - $ref: "./model.components.timestamps.yaml"
   - type: object
     properties:
       FromPrincipal:
@@ -40,7 +40,7 @@ allOf:
         additionalProperties:
           type: object
       ComboGraphRelationID:
-        $ref: './null.int64.yaml'
+        $ref: "./null.int64.yaml"
       Finding:
         type: string
       DomainSID:
@@ -50,10 +50,10 @@ allOf:
       AcceptedUntil:
         type: string
         format: date-time
-      ImpactPercentage: 
+      ImpactPercentage:
         type: number
         format: double
-      ImpactCount: 
+      ImpactCount:
         type: integer
         format: int64
       ExposurePercentage:
@@ -62,6 +62,21 @@ allOf:
       ExposureCount:
         type: integer
         format: int64
+      DirectExposureCount:
+        type: integer
+        format: int64
+        nullable: true
+        description: Direct principal exposure in boundary mode; null for legacy analysis.
+      DirectExposurePercentage:
+        type: number
+        format: double
+        nullable: true
+        description: Direct exposure divided by ExposureIdentityTotal, on a 0 to 1 scale.
+      ExposureIdentityTotal:
+        type: integer
+        format: int64
+        nullable: true
+        description: Shared principal denominator for direct and derived exposure.
       Severity:
         type: string
         enum:
