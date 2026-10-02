@@ -166,11 +166,29 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 	return nil
 }
 
-func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
+var enrollOnBehalfOfPostProcessedEdges = graph.Kinds{
+	ad.EnrollOnBehalfOf,
+}
+
+func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, cache *ADCSCache) (*post.AtomicPostProcessingStats, error) {
 	var (
 		versionOneTemplates = make([]*graph.Node, 0)
 		versionTwoTemplates = make([]*graph.Node, 0)
 	)
+
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, enrollOnBehalfOfPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	enrollOnBehalfOfTracker, err := post.FetchTracker(ctx, db, enrollOnBehalfOfPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostEnrollOnBehalfOf", db, enrollOnBehalfOfTracker)
+	defer sink.Done()
 
 	for _, certTemplate := range cache.GetCertTemplates() {
 		if version, err := certTemplate.Properties.Get(ad.SchemaVersion.String()).Float64(); errors.Is(err, graph.ErrPropertyNotFound) {
@@ -203,31 +221,24 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 			continue
 		} else {
 			chains.Domains.Each(func(domain uint64) bool {
-
-				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					for _, result := range EnrollOnBehalfOfVersionTwo(cache, versionTwoTemplates, publishedCertTemplates, graph.ID(domain)) {
-						if !channels.Submit(ctx, outC, result) {
-							return nil
-						}
+				for _, result := range EnrollOnBehalfOfVersionTwo(cache, versionTwoTemplates, publishedCertTemplates, graph.ID(domain)) {
+					if !sink.Submit(ctx, result) {
+						return false
 					}
-					return nil
-				})
+				}
 
-				operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					for _, result := range EnrollOnBehalfOfVersionOne(cache, versionOneTemplates, publishedCertTemplates, graph.ID(domain)) {
-						if !channels.Submit(ctx, outC, result) {
-							return nil
-						}
+				for _, result := range EnrollOnBehalfOfVersionOne(cache, versionOneTemplates, publishedCertTemplates, graph.ID(domain)) {
+					if !sink.Submit(ctx, result) {
+						return false
 					}
-					return nil
-				})
+				}
 
 				return true
 			})
 		}
 	}
 
-	return nil
+	return sink.Stats(), nil
 }
 
 func EnrollOnBehalfOfVersionOne(cache *ADCSCache, versionOneCertTemplates []*graph.Node, publishedTemplates []*graph.Node, domainID graph.ID) []post.EnsureRelationshipJob {
