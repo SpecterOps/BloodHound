@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 var ErrNoCertParent = errors.New("cert has no parent")
@@ -84,39 +85,45 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		}
 
 		var (
-			operation = post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
-			escSink   = post.NewFilteredRelationshipSink(ctx, "ADCS ESC Post Processing", db, escTracker)
+			readerPool = ops.StartNewOperation[any](ops.OperationContext{
+				Parent:     ctx,
+				DB:         db,
+				NumReaders: post.MaximumDatabaseParallelWorkers,
+			})
+			escSink        = post.NewFilteredRelationshipSink(ctx, "ADCS ESC Post Processing", db, escTracker)
+			aggregateStats = post.NewAtomicPostProcessingStats()
 		)
 
-		operation.Stats.Merge(step1Stats)
-		operation.Stats.Merge(step2Stats)
+		aggregateStats.Merge(step1Stats)
+		aggregateStats.Merge(step2Stats)
 
 		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation, escSink)
+			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, readerPool, escSink)
 		}
 
 		// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
-		operationErr := operation.Done()
+		readerErr := readerPool.Done()
 		escSink.Done()
-		operation.Stats.Merge(escSink.Stats())
+		aggregateStats.Merge(escSink.Stats())
 
-		return &operation.Stats, cache, operationErr
+		return &aggregateStats, cache, readerErr
 	}
 }
 
-// escPostProcessedEdges lists the ADCS edge kinds produced by processEnterpriseCAWithValidCertChainToDomain which
-// have been migrated to the delta-change-apply method
+// escPostProcessedEdges lists the ADCS edge kinds produced by processEnterpriseCAWithValidCertChainToDomain, all of which
+// are post-processed using the delta-change-apply method
 var escPostProcessedEdges = graph.Kinds{
-	ad.ADCSESC10b,
-	ad.ADCSESC10a,
-	ad.ADCSESC9b,
-	ad.ADCSESC9a,
-	ad.ADCSESC6b,
-	ad.ADCSESC6a,
-	ad.ADCSESC4,
-	ad.ADCSESC3,
-	ad.ADCSESC1,
 	ad.GoldenCert,
+	ad.ADCSESC1,
+	ad.ADCSESC3,
+	ad.ADCSESC4,
+	ad.ADCSESC6a,
+	ad.ADCSESC6b,
+	ad.ADCSESC9a,
+	ad.ADCSESC9b,
+	ad.ADCSESC10a,
+	ad.ADCSESC10b,
+	ad.ADCSESC13,
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
@@ -178,9 +185,9 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 	return enrollOnBehalfOfStats, nil
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], escSink *post.FilteredRelationshipSink) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, readerPool *ops.Operation[any], escSink *post.FilteredRelationshipSink) {
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -207,7 +214,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -234,7 +241,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -261,7 +268,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -288,7 +295,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -315,7 +322,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -342,7 +349,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -369,7 +376,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -396,7 +403,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -423,7 +430,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -450,7 +457,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -461,7 +468,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC13(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC13 missing property",
