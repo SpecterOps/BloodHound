@@ -434,22 +434,22 @@ func TestGoldenCert(t *testing.T) {
 		harness.ADCSGoldenCertHarness.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		operation := post.NewPostRelationshipOperation(context.Background(), db, "ADCS Post Process Test - Golden Cert")
-
 		_, cache, err := FetchADCSPrereqs(db)
 		require.Nil(t, err)
 
+		goldenCertTracker, err := post.FetchTracker(context.Background(), db, graph.Kinds{ad.GoldenCert})
+		require.Nil(t, err)
+
+		sink := post.NewFilteredRelationshipSink(context.Background(), "ADCS Post Process Test - Golden Cert", db, goldenCertTracker)
+
 		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if err := adAnalysis.PostGoldenCert(ctx, tx, outC, certChains); err != nil {
-					t.Logf("failed post processing for %s: %v", ad.GoldenCert.String(), err)
-				}
-				return nil
+			err = db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+				return adAnalysis.PostGoldenCert(context.Background(), tx, sink, certChains)
 			})
+			require.Nil(t, err)
 		}
 
-		err = operation.Done()
-		require.Nil(t, err)
+		sink.Done()
 
 		db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 			if results, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {

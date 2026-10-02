@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 var trustedForNTAuthPostProcessedEdges = graph.Kinds{
@@ -205,7 +204,7 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertA
 	return sink.Stats(), nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, certChains *EnterpriseCAChainedDomains) error {
 	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
 		slog.ErrorContext(
 			ctx,
@@ -216,7 +215,7 @@ func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.
 	} else {
 		for _, computer := range hostCAServiceComputers {
 			for _, domain := range certChains.Domains.Slice() {
-				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+				sink.Submit(ctx, post.EnsureRelationshipJob{
 					FromID: computer.ID,
 					ToID:   graph.ID(domain),
 					Kind:   ad.GoldenCert,
