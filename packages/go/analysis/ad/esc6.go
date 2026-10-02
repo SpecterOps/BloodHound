@@ -291,18 +291,24 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 					})
 
-					if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
-						paths.AddPath(terminal.Path())
-
-						// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-						terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-							if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-								finalEnterpriseCAs.Add(end.ID.Uint64())
-								return false
-							}
-							return true
-						})
+					if startNode.Kinds.ContainsOneOf(ad.User) && !certTemplateValidForUserVictim(certTemplate) {
+						if managedServiceAccount, err := isManagedServiceAccount(startNode); err != nil {
+							return err
+						} else if !managedServiceAccount {
+							return nil
+						}
 					}
+
+					paths.AddPath(terminal.Path())
+
+					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
+					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+							finalEnterpriseCAs.Add(end.ID.Uint64())
+							return false
+						}
+						return true
+					})
 					return nil
 				})}); err != nil {
 			return nil, err

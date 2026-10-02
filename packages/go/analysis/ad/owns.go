@@ -18,7 +18,6 @@ package ad
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -294,15 +293,9 @@ func createPostRelFromRaw(rel *graph.Relationship, kind graph.Kind) post.EnsureR
 func isTargetNodeComputerDerived(node *graph.Node) (bool, error) {
 	if node.Kinds.ContainsOneOf(ad.Computer) {
 		return true, nil
-	} else if isGmsa, err := node.Properties.Get(ad.GMSA.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else if isGmsa {
-		return true, nil
-	} else if isMsa, err := node.Properties.Get(ad.MSA.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-		return false, err
-	} else {
-		return isMsa, nil
 	}
+
+	return isManagedServiceAccount(node)
 }
 
 func FetchAdminGroupIds(ctx context.Context, db graph.Database, groupExpansions *algo.ReachabilityCache) (cardinality.Duplex[uint64], error) {
