@@ -386,28 +386,30 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	if certTemplateValidForUserVictim(certTemplate) {
+		return bitmap, nil
+	}
+
 	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
 	// and possess DNS names, so they should not be filtered out of attack paths that
 	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.GMSA.String())),
-				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
-			)),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.MSA.String())),
-				query.Equals(query.NodeProperty(ad.MSA.String()), true),
-			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
 		if !graph.IsErrNotFound(err) {
 			return nil, err
 		}
-	} else if len(userNodes) > 0 && !certTemplateValidForUserVictim(certTemplate) {
-		bitmap.Xor(graph.NodeSetToDuplex(userNodes))
+	} else {
+		for _, userNode := range userNodes {
+			if managedServiceAccount, err := isManagedServiceAccount(userNode); err != nil {
+				return nil, err
+			} else if !managedServiceAccount {
+				bitmap.Remove(userNode.ID.Uint64())
+			}
+		}
 	}
 
 	return bitmap, nil
