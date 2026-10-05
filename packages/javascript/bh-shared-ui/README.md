@@ -46,6 +46,32 @@ parameters: {
 }
 ```
 
+### Reusable component coverage
+
+Stories prioritize controls and patterns that can be composed across screens, rather than
+pages that are shared solely to keep CE and BHE in sync. Alongside the existing stories,
+the reusable examples cover:
+
+| Pattern               | Components                                                                                                                                                                                                     | Examples                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Data display          | `DataTable`, `DetailsAccordion`, `BaseColumnHeader`, `SortableHeader`                                                                                                                                          | Loading, empty data, rich cells, pagination, expansion, disabled items, sorting                                                  |
+| Lists                 | `VirtualizedNodeList`, `InfiniteScrollingTable`, `InfiniteQueryFixedList`, `SearchResultItem`                                                                                                                  | Local pagination, scrolling, loading rows, read-only nodes, name fallback, search highlighting                                   |
+| Selection and actions | `CardWithSwitch`, `DropdownSelector`, `DropdownTriggerContents`, `CreateMenu`, `GraphButton`, `GraphMenu`, `ManagedDatePicker`                                                                                 | Controlled selection, enabled/disabled settings, menu actions, date validation                                                   |
+| File controls         | `FileDrop`, `FileStatusListItem`                                                                                                                                                                               | Single/multiple selection, disabled chooser, progress, completion, failure, remove/retry callbacks                               |
+| Dialogs               | `DeleteConfirmationDialog`, `PasswordDialog`                                                                                                                                                                   | Confirmation challenge, loading/error, self-service/admin modes, required-field validation                                       |
+| Text and feedback     | `HighlightedText`, `TextWithFallback`, `LabelWithCopy`, `MarkdownContent`, `StatusIndicator`, `ProcessingIndicator`, `LoadingOverlay`, `GraphProgress`, `NotificationSnackbar`, `GenericErrorBoundaryFallback` | Literal matching, missing values, copy affordances, formatted Markdown, statuses, loading, notification dismissal, caught errors |
+| Layout and navigation | `PageWithTitle`, `SkipLink`                                                                                                                                                                                    | Actions/description, full width, keyboard skip navigation                                                                        |
+
+Controlled examples update their displayed state and expose callbacks in Actions.
+Interaction stories use `play` functions to exercise selection, pagination, sorting,
+keyboard activation, validation, file selection, retry/removal, and notification dismissal.
+Infinite lists use deterministic local data; file controls do not upload files; password
+and deletion examples only log callbacks. Clipboard examples use the browser clipboard.
+
+Feature pages, authentication/SSO workflows, static help text and icons within `AppIcon`
+are not separate story candidates in this pass. Their reusable building blocks are covered
+here or in DoodleUI, while connected feature coverage can use the HTTP mocking pattern below.
+
 ### Mocking connected components
 
 `Components/FileIngest` mocks business logic at the HTTP boundary while keeping the
@@ -61,11 +87,12 @@ to reset mutable state on navigation or interaction reruns:
 ```tsx
 parameters: {
     msw: {
-        handlers: () => createFileIngestHandlers({
-            feature: 'enabled',
-            permission: 'read',
-            history: 'populated',
-        })
+        handlers: () =>
+            createFileIngestHandlers({
+                feature: 'enabled',
+                permission: 'read',
+                history: 'populated',
+            });
     }
 }
 ```
