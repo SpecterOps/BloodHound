@@ -153,7 +153,8 @@ const GlyphSelectDialog: React.FC<{
                                         <div className='flex size-full items-center justify-center'>
                                             <IconButton
                                                 aria-label='Clear selection'
-                                                className='absolute inset-0 size-full p-0 focus-visible:rounded-lg'
+                                                triggerClassName='absolute inset-0 size-full'
+                                                className='size-full p-0 focus-visible:rounded-lg'
                                                 onClick={handleClear}
                                                 size={64}>
                                                 <span className='relative size-full'>

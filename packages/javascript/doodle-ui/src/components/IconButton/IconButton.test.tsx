@@ -117,6 +117,35 @@ describe('IconButton', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Unavailable action');
     });
 
+    it('applies trigger classes to enabled buttons', () => {
+        render(
+            <IconButton aria-label='Positioned action' triggerClassName='absolute top-2'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'Positioned action' });
+
+        expect(button.classList.contains('absolute')).toBe(true);
+        expect(button.classList.contains('top-2')).toBe(true);
+    });
+
+    it('applies trigger classes to the wrapper for disabled buttons', () => {
+        render(
+            <IconButton aria-label='Positioned action' disabled triggerClassName='absolute top-2'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        const button = screen.getByRole('button', { name: 'Positioned action' });
+        const tooltipTrigger = button.parentElement;
+
+        expect(tooltipTrigger?.classList.contains('absolute')).toBe(true);
+        expect(tooltipTrigger?.classList.contains('top-2')).toBe(true);
+        expect(button.classList.contains('absolute')).toBe(false);
+        expect(button.classList.contains('top-2')).toBe(false);
+    });
+
     it('applies its styles to the button', () => {
         const { container } = render(
             <IconButton aria-label='More information'>

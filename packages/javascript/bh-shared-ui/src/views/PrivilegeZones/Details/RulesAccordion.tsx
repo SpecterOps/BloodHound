@@ -227,7 +227,8 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center h-10'>
                     <IconButton
-                        className={cn('mx-2 rounded-sm transition-transform', { 'rotate-180': isOpen })}
+                        triggerClassName='mx-2'
+                        className={cn('rounded-sm transition-transform', { 'rotate-180': isOpen })}
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}

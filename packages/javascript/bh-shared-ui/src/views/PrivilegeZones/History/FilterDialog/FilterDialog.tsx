@@ -79,7 +79,7 @@ const FilterDialog: FC<{
             <DialogTrigger asChild>
                 <IconButton
                     aria-label='Filters'
-                    className='ml-4'
+                    triggerClassName='ml-4'
                     data-testid='privilege-zones_history_filter-button'
                     size={24}>
                     <AppIcon.FilterOutline />
