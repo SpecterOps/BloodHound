@@ -1,0 +1,74 @@
+---
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Pull Request Size
+
+on:
+  pull_request:
+    branches: [main, "stage/**"]
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  check-pull-request-size:
+    name: Check pull request size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: SpecterOps/pr-size-check@47a422c9146fb4e4c9d90c08e11c1a5aee74ec46 # ratchet:SpecterOps/pr-size-check@v0.1.0
+        with:
+          github-token: ${{ github.token }}
+          max-lines: 1000
+          bypass-label: pr-size-exception
+          count: additions-and-deletions
+          ignored-paths: |
+            **/doc/**
+            **/docs/**
+            **/architecture/**
+            **/rfc/**
+            **/test/**
+            **/tests/**
+            **/testdata/**
+            **/fixtures/**
+            **/__tests__/**
+            **/__mocks__/**
+            **/mocks/**
+            **/.yarn/cache/**
+            **/.yarn/unplugged/**
+            **/.yarn/releases/**
+            **/.npm/**
+            **/.pnpm-store/**
+            **/vendor/**
+            **/go.sum
+            **/yarn.lock
+            **/package-lock.json
+            **/npm-shrinkwrap.json
+            **/pnpm-lock.yaml
+            **/openapi/doc/openapi.json
+            **/*_generated.*
+            **/*.generated.*
+            **/*.gen.*
+            **/*.pb.go
+            **/wire_gen.go
+            **/*.md
+            **/*.mdx
+            **/*.rst
+            **/*.adoc
+            **/*.puml
+            **/*.plantuml
+            **/*.c4
+            **/*_test.*
+            **/*.spec.*
+            **/*.test.*
+            **/*.e2e.*
+            **/*.integration.*
+            .yarn/build-state.yml
+            .yarn/install-state.gz

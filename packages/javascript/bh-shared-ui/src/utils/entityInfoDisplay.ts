@@ -49,12 +49,13 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     for (let i = 0; i < propKeys.length; i++) {
         const key = propKeys[i];
         const value = props[key];
-        // Don't display empty fields or fields with zero date values
+        // Don't display undefined fields, empty objects, or fields with zero date values. Empty arrays,
+        // strings, and null values are intentionally preserved so the UI can distinguish them from
+        // properties that were not collected.
         if (
             value === undefined ||
-            value === '' ||
             value === ZERO_VALUE_API_DATE ||
-            (typeof value === 'object' && isEmpty(value))
+            (value !== null && !Array.isArray(value) && typeof value === 'object' && isEmpty(value))
         )
             continue;
 
@@ -178,7 +179,7 @@ export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;
-    value: string | number | boolean | any[];
+    value: string | number | boolean | any[] | null;
     kind?: EntityPropertyKind;
     keyprop?: string;
 };
@@ -287,11 +288,16 @@ export const DATE_FIELDS = [
     'firstseen',
 ];
 
+export const EMPTY_VALUE_DISPLAY = '—';
+export const EMPTY_ARRAY_DISPLAY = 'NONE';
+
 export const formatPrimitive = (
-    value: string | number | boolean,
+    value: string | number | boolean | null,
     kind?: EntityPropertyKind,
     keyprop?: string
 ): string => {
+    if (value === null || value === '') return EMPTY_VALUE_DISPLAY;
+
     switch (typeof value) {
         case 'number': {
             return formatNumber(value, kind, keyprop);
@@ -312,6 +318,9 @@ export const formatPrimitive = (
 
 export const formatList = (field: EntityField) => {
     const list = field.value as any[];
+
+    if (list.length === 0) return [EMPTY_ARRAY_DISPLAY];
+
     const fields: string[] = [];
     list.forEach((value) => {
         fields.push(formatPrimitive(value, field.kind, field.keyprop));

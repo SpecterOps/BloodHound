@@ -186,6 +186,80 @@ func (_c *MockDatabase_GetRole_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+// ListPermissions provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error) {
+	ret := _mock.Called(ctx, queryFilters, sortItems)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListPermissions")
+	}
+
+	var r0 []services.Permission
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems) ([]services.Permission, error)); ok {
+		return returnFunc(ctx, queryFilters, sortItems)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems) []services.Permission); ok {
+		r0 = returnFunc(ctx, queryFilters, sortItems)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.Permission)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, params.Filters, params.SortItems) error); ok {
+		r1 = returnFunc(ctx, queryFilters, sortItems)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_ListPermissions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListPermissions'
+type MockDatabase_ListPermissions_Call struct {
+	*mock.Call
+}
+
+// ListPermissions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - queryFilters params.Filters
+//   - sortItems params.SortItems
+func (_e *MockDatabase_Expecter) ListPermissions(ctx interface{}, queryFilters interface{}, sortItems interface{}) *MockDatabase_ListPermissions_Call {
+	return &MockDatabase_ListPermissions_Call{Call: _e.mock.On("ListPermissions", ctx, queryFilters, sortItems)}
+}
+
+func (_c *MockDatabase_ListPermissions_Call) Run(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems)) *MockDatabase_ListPermissions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 params.Filters
+		if args[1] != nil {
+			arg1 = args[1].(params.Filters)
+		}
+		var arg2 params.SortItems
+		if args[2] != nil {
+			arg2 = args[2].(params.SortItems)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_ListPermissions_Call) Return(permissions []services.Permission, err error) *MockDatabase_ListPermissions_Call {
+	_c.Call.Return(permissions, err)
+	return _c
+}
+
+func (_c *MockDatabase_ListPermissions_Call) RunAndReturn(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)) *MockDatabase_ListPermissions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListRoles provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error) {
 	ret := _mock.Called(ctx, queryFilters, sortItems)

@@ -36,6 +36,16 @@ const (
 )
 
 var (
+	datapipeStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: model.Namespace,
+			Subsystem: datapipeSubsystem,
+			Name:      "status",
+			Help:      "Current datapipe status.",
+		},
+		[]string{"status"},
+	)
+
 	optimizeStorageDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: model.Namespace,
 		Subsystem: datapipeSubsystem,
@@ -48,6 +58,27 @@ var (
 		OptimizeStoragePipelineStageAnalysis,
 	}
 )
+
+func RecordDatapipeStatus(status model.DatapipeStatus) {
+	for _, knownStatus := range model.AllDatapipeStatuses() {
+		value := 0.0
+		if knownStatus == status {
+			value = 1.0
+		}
+
+		datapipeStatus.WithLabelValues(string(knownStatus)).Set(value)
+	}
+}
+
+// RegisterDatapipeMetrics registers the datapipe Prometheus metrics with the
+// provided registerer.
+func RegisterDatapipeMetrics(registerer prometheus.Registerer) error {
+	if err := registerer.Register(datapipeStatus); err != nil {
+		return fmt.Errorf("failed to register datapipe status gauge: %w", err)
+	}
+
+	return nil
+}
 
 // RecordOptimizeStorageDuration records the duration of an OptimizeStorage
 // call for the given pipeline stage.

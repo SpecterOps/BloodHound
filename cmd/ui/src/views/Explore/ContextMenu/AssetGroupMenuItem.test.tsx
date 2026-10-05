@@ -15,7 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { apiClient, mockGetConfigurationHandler } from 'bh-shared-ui';
+import { apiClient } from 'bh-shared-ui';
+import { mockGetConfigurationHandler } from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';

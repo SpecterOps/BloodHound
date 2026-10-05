@@ -27,6 +27,7 @@ import {
     lightPalette,
     reactRouterFutureFlags,
     setRootClass,
+    themeZIndex,
     themedComponents,
     typography,
     useKeybindings,
@@ -113,7 +114,18 @@ export const Inner: React.FC = () => {
             </Helmet>
             <div className={classes.applicationContainer} id='app-root'>
                 {showNavBar && <MainNav mainNavData={mainNavData} />}
-                <div id='content-wrapper' className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
+                <div
+                    id='content-wrapper'
+                    role='main'
+                    tabIndex={-1}
+                    className='bg-neutral-1 grow overflow-y-auto overflow-x-hidden'>
+                    {showNavBar && (
+                        <a
+                            href='#global-navigation'
+                            className='sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[10000] focus:rounded focus:bg-neutral-1 focus:px-4 focus:py-2 focus:text-primary focus:shadow-lg focus:focus-ring'>
+                            Skip to navigation
+                        </a>
+                    )}
                     <Content />
                 </div>
                 <AppNotifications />
@@ -132,6 +144,7 @@ const App: React.FC = () => {
     let theme = createTheme({
         palette,
         typography,
+        zIndex: themeZIndex,
     });
 
     // suggested by MUI for defining theme options based on other options. https://mui.com/material-ui/customization/theming/#api

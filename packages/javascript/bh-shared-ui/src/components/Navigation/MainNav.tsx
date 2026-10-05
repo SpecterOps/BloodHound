@@ -17,15 +17,16 @@
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton } from 'doodle-ui';
-import { FC, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { useApiVersion, useKeybindings, useNavExpanded } from '../../hooks';
+import { BREAKPOINTS, useApiVersion, useKeybindings, useMediaQuery, useNavExpanded } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 import { ConditionalTooltip } from '../ConditionalTooltip';
 import { AppLink } from './AppLink';
+import { SkipLink } from './SkipLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
 
@@ -159,6 +160,8 @@ const MainNavFooter: FC<{
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isExpanded, setIsExpanded] = useNavExpanded();
+    const isExtraLargeViewport = useMediaQuery(`(min-width: ${BREAKPOINTS.xl})`);
+    const previousIsExtraLargeViewport = useRef(isExtraLargeViewport);
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -181,10 +184,18 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
     useKeybindings(keybindings);
 
+    useEffect(() => {
+        if (previousIsExtraLargeViewport.current === isExtraLargeViewport) return;
+
+        previousIsExtraLargeViewport.current = isExtraLargeViewport;
+        setIsExpanded(isExtraLargeViewport);
+    }, [isExtraLargeViewport, setIsExpanded]);
+
     const handleToggleNav = () => setIsExpanded(!isExpanded);
 
     return (
         <>
+            <SkipLink href='#content-wrapper'>Skip to main content</SkipLink>
             {/* Nav expand/collapse button */}
             <IconButton
                 aria-expanded={isExpanded}
@@ -209,6 +220,9 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             </IconButton>
 
             <nav
+                id='global-navigation'
+                aria-label='Global navigation'
+                tabIndex={-1}
                 className={cn(
                     'flex flex-col flex-none font-medium shadow-md z-nav print:hidden overflow-hidden',
                     'transition-all duration-300 ease-in',

@@ -23,7 +23,7 @@ post:
   description: |
     Manually re-queues an existing alert delivery attempt. The composite key
     in the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored
-    when the attempt has already succeeded.
+    when the attempt has already succeeded, or when the alert, subscription, or channel/webhook is disabled.
   tags:
     - Alerts
     - Enterprise
@@ -36,7 +36,7 @@ post:
           description: |
             Request body for manually re-queueing an alert delivery attempt. The supplied
             composite key identifies the row to retry; the handler is a no-op when the
-            attempt has already succeeded (`succeeded_at IS NOT NULL`).
+            attempt has already succeeded (`succeeded_at IS NOT NULL`) or when the alert, subscription, or channel/webhook is disabled.
           required:
             - alert_id
             - channel_id

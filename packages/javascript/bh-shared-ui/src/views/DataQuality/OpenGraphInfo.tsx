@@ -36,6 +36,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
+const NoDataMessage: React.FC = () => (
+    <div className='flex items-center justify-center h-[400px] bg-neutral-2'>
+        <span className='font-bold text-sm text-contrast leading-normal'>No data to display</span>
+    </div>
+);
+
 export const getLatestStatsByMetricKind = (data: OpenGraphDataQualityStat[]): OpenGraphDataQualityStat[] => {
     const latestStatsByMetricKind = new Map<number, OpenGraphDataQualityStat>();
 
@@ -78,8 +84,12 @@ export const OpenGraphInfo: React.FC<{ contextId: string; onDataError?: () => vo
         return <Layout nodeStats={null} relationshipTotalCount={null} isLoading={true} />;
     }
 
-    if (isError || !openGraphData || !openGraphData.data.length) {
+    if (isError) {
         return null;
+    }
+
+    if (!openGraphData?.data?.length) {
+        return <NoDataMessage />;
     }
 
     const latestStats = getLatestStatsByMetricKind(openGraphData.data);
@@ -103,8 +113,12 @@ export const OpenGraphPlatformInfo: React.FC<{
         return <Layout nodeStats={null} relationshipTotalCount={null} isLoading={true} />;
     }
 
-    if (isError || !platformData || !platformData.data.length) {
+    if (isError) {
         return null;
+    }
+
+    if (!platformData?.data?.length) {
+        return <NoDataMessage />;
     }
 
     const latestStats = getLatestStatsByMetricKind(platformData.data);

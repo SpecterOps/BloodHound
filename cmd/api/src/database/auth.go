@@ -108,25 +108,6 @@ func (s *BloodhoundDB) GetRole(ctx context.Context, id int32) (model.Role, error
 	return role, CheckError(result)
 }
 
-// GetAllPermissions retrieves all rows from the Permissions table
-// SELECT * FROM permissions
-func (s *BloodhoundDB) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {
-	var (
-		permissions model.Permissions
-		cursor      = s.db.WithContext(ctx)
-	)
-
-	if order != "" {
-		cursor = cursor.Order(order)
-	}
-
-	if filter.SQLString != "" {
-		cursor = cursor.Where(filter.SQLString, filter.Params...)
-	}
-
-	return permissions, CheckError(cursor.Find(&permissions))
-}
-
 // GetPermission retrieves a row in the Permissions table corresponding to the ID provided
 // SELECT * FROM permissions WHERE permission_id = ...
 func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permission, error) {
@@ -138,7 +119,7 @@ func (s *BloodhoundDB) GetPermission(ctx context.Context, id int) (model.Permiss
 	return permission, CheckError(result)
 }
 
-// InitializeSecretAuth creates new AuthSecret, User and Installation entries based on the input provided
+// InitializeSecretAuth creates new AuthSecret and User entries based on the input provided
 func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model.User, authSecret model.AuthSecret) (model.Installation, error) {
 	var (
 		updatedAdminUser  = adminUser
@@ -147,16 +128,6 @@ func (s *BloodhoundDB) InitializeSecretAuth(ctx context.Context, adminUser model
 	)
 
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if newInstallationID, err := uuid.NewV4(); err != nil {
-			return err
-		} else {
-			newInstallation.ID = newInstallationID
-
-			if result := tx.Create(&newInstallation); result.Error != nil {
-				return CheckError(result)
-			}
-		}
-
 		if newUserID, err := uuid.NewV4(); err != nil {
 			return err
 		} else {

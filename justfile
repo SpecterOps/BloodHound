@@ -67,7 +67,7 @@ show *FLAGS:
 
 # Run all analyzers
 analyze *FLAGS:
-  @just stbernard analysis {{FLAGS}}
+  @just stbernard analysis --fix {{FLAGS}}
 
 # Run tests
 test *FLAGS:

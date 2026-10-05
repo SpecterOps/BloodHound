@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -37,6 +38,7 @@ import (
 
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -729,6 +731,94 @@ func TestResources_CypherQuery(t *testing.T) {
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func TestResources_CypherQuery_CanceledRequestKeepsAuditOutcomeContextActive(t *testing.T) {
+	type mock struct {
+		database   *dbmocks.MockDatabase
+		graphQuery *mocks.MockGraph
+	}
+	type auditOutcome struct {
+		contextErr error
+		recorded   bool
+	}
+	type testData struct {
+		name       string
+		setupMocks func(context.Context, context.CancelFunc, mock, *auditOutcome)
+	}
+
+	testCases := []testData{
+		{
+			name: "Query",
+			setupMocks: func(_ context.Context, ctxCancelFunc context.CancelFunc, mocks mock, auditOutcome *auditOutcome) {
+				mocks.graphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{StrippedQuery: "query"}, nil)
+				mocks.database.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, entry model.AuditEntry) error {
+					if entry.Action == model.AuditLogActionRunCypherQuery && entry.Status == model.AuditLogStatusFailure {
+						auditOutcome.contextErr = ctx.Err()
+						auditOutcome.recorded = true
+					}
+					return nil
+				}).Times(2)
+				mocks.database.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{}, nil)
+				mocks.graphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any(), true).DoAndReturn(func(context.Context, graphschema.PrimaryDisplayKinds, queries.PreparedQuery, bool) (model.UnifiedGraph, error) {
+					ctxCancelFunc()
+					return model.UnifiedGraph{}, context.Canceled
+				})
+			},
+		},
+		{
+			name: "Mutation",
+			setupMocks: func(requestContext context.Context, ctxCancelFunc context.CancelFunc, mocks mock, auditOutcome *auditOutcome) {
+				bhctx.Get(requestContext).AuthCtx.PermissionOverrides = auth.PermissionOverrides{
+					Enabled:     true,
+					Permissions: model.Permissions{auth.Permissions().GraphDBMutate},
+				}
+				mocks.graphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+					StrippedQuery: "query",
+					HasMutation:   true,
+				}, nil)
+				mocks.database.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, entry model.AuditEntry) error {
+					if entry.Action == model.AuditLogActionMutateGraph && entry.Status == model.AuditLogStatusFailure {
+						auditOutcome.contextErr = ctx.Err()
+						auditOutcome.recorded = true
+					}
+					return nil
+				}).Times(4)
+				mocks.database.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{}, nil)
+				mocks.graphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any(), true).DoAndReturn(func(context.Context, graphschema.PrimaryDisplayKinds, queries.PreparedQuery, bool) (model.UnifiedGraph, error) {
+					ctxCancelFunc()
+					return model.UnifiedGraph{}, context.Canceled
+				})
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				mockController                = gomock.NewController(t)
+				mocks                         = mock{database: dbmocks.NewMockDatabase(mockController), graphQuery: mocks.NewMockGraph(mockController)}
+				requestContext, ctxCancelFunc = context.WithCancel(setupUserCtx(model.User{AllEnvironments: true}))
+				request                       = httptest.NewRequest(http.MethodPost, "/api/v2/graphs/cypher", bytes.NewBufferString(`{"query":"query","include_properties":true}`)).WithContext(requestContext)
+				auditOutcome                  auditOutcome
+			)
+			defer ctxCancelFunc()
+
+			request.Header.Set(headers.ContentType.String(), "application/json")
+			testCase.setupMocks(requestContext, ctxCancelFunc, mocks, &auditOutcome)
+
+			resources := v2.Resources{
+				GraphQuery: mocks.graphQuery,
+				DB:         mocks.database,
+				Authorizer: auth.NewAuthorizer(mocks.database),
+				DogTags:    dogtags.NewTestService(dogtags.TestOverrides{}),
+			}
+			resources.CypherQuery(httptest.NewRecorder(), request)
+
+			assert.True(t, auditOutcome.recorded, "the %s audit outcome must be recorded", testCase.name)
+			assert.NoError(t, auditOutcome.contextErr, "the %s audit outcome write must not inherit a canceled request context", testCase.name)
 		})
 	}
 }

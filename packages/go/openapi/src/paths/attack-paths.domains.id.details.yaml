@@ -109,9 +109,6 @@ get:
     - $ref: './../parameters/query.deleted-at.yaml'
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-      enum:
-        - application/json
-        - text/csv
   responses:
     200:
       description: OK
@@ -139,7 +136,7 @@ get:
                 1,Kerberoasting,0,0,TITANCORP,S-1-5-21-123-123-123,RPATTON@TITANCORP.LOCAL,User,S-1-5-21-124-124-124,true,0001-01-01T00:00:00Z,2022-08-17T23:44:24Z,2024-12-18T15:01:00.176572729Z
         application/json:
           schema:
-            oneOf:
+            anyOf:
               - allOf: # display relationship finding with pagination
                   - $ref: './../schemas/api.response.pagination.yaml'
                   - type: object
@@ -147,11 +144,12 @@ get:
                       data:
                         type: array
                         items:
-                          $ref: './../schemas/model.relationship-finding.yaml'
-                          type: object
-                          properties:
-                            Accepted:
-                              type: boolean
+                          allOf:
+                            - $ref: './../schemas/model.relationship-finding.yaml'
+                            - type: object
+                              properties:
+                                Accepted:
+                                  type: boolean
               - allOf: # display list finding with pagination
                   - $ref: './../schemas/api.response.pagination.yaml'
                   - type: object
@@ -159,11 +157,12 @@ get:
                       data:
                         type: array
                         items:
-                          $ref: './../schemas/model.list-finding.yaml'
-                          type: object
-                          properties:
-                            Accepted:
-                              type: boolean
+                          allOf:
+                            - $ref: './../schemas/model.list-finding.yaml'
+                            - type: object
+                              properties:
+                                Accepted:
+                                  type: boolean
           examples:
             Butterfly Relationship Finding:
               summary: "Butterfly Relationship Finding"
@@ -215,7 +214,7 @@ get:
                     Severity: 'high',
                     Accepted: true,
                   }
-                ]
+                  ]
             Metatree Relationship Finding:
               summary: "Metatree Relationship Finding"
               description: "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero."
@@ -266,7 +265,7 @@ get:
                     Severity: '',
                     Accepted: true,
                   }
-                ]
+                  ]
             Butterfly List Finding:
               summary: "Butterfly List Finding"
               description: "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero."
@@ -298,7 +297,7 @@ get:
                     Severity: 'high',
                     Accepted: true,
                   }
-                ]
+                  ]
             Metatree List Finding:
               summary: "Metatree List Finding"
               description: "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero."
@@ -330,7 +329,7 @@ get:
                     Severity: '',
                     Accepted: true,
                   }
-                ]
+                  ]
     400:
       $ref: './../responses/bad-request.yaml'
     401:

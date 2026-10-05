@@ -65,55 +65,6 @@ func (s Permission) String() string {
 
 type Permissions []Permission
 
-func (s Permissions) IsSortable(column string) bool {
-	switch column {
-	case "authority",
-		"name",
-		"id",
-		"created_at",
-		"updated_at",
-		"deleted_at":
-		return true
-	default:
-		return false
-	}
-}
-
-func (s Permissions) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{
-		"authority":  {Equals, NotEquals},
-		"name":       {Equals, NotEquals},
-		"id":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"updated_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"deleted_at": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-	}
-}
-
-func (s Permissions) IsString(column string) bool {
-	return column == "authority" || column == "name"
-}
-
-func (s Permissions) GetFilterableColumns() []string {
-	columns := make([]string, 0)
-	for column := range s.ValidFilters() {
-		columns = append(columns, column)
-	}
-	return columns
-}
-
-func (s Permissions) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
-	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, fmt.Errorf("the specified column cannot be filtered")
-	} else {
-		stringPredicates := make([]string, 0)
-		for _, predicate := range predicates {
-			stringPredicates = append(stringPredicates, string(predicate))
-		}
-		return stringPredicates, nil
-	}
-}
-
 func (s Permissions) Equals(others Permissions) bool {
 	if len(s) != len(others) {
 		return false

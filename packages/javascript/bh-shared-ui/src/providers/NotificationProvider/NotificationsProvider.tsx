@@ -14,28 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, SvgIcon } from '@mui/material';
-import { SnackbarKey, SnackbarProvider, useSnackbar } from 'notistack';
-import { Dispatch, ReactNode, createContext, useReducer } from 'react';
+import { SnackbarProvider } from 'notistack';
+import { createContext, Dispatch, ReactNode, useReducer } from 'react';
 import { NotificationAction } from './actions';
 import { Notification } from './model';
 import { notificationsReducer } from './reducer';
-
 export const NotificationsContext = createContext<Notification[]>([]);
 export const NotificationsDispatchContext = createContext<Dispatch<NotificationAction> | null>(null);
-
-const useDismissAction = (key: SnackbarKey) => {
-    const { closeSnackbar } = useSnackbar();
-    return (
-        <IconButton size='small' color='inherit' onClick={() => closeSnackbar(key)}>
-            <SvgIcon>
-                <FontAwesomeIcon icon={faTimes} />
-            </SvgIcon>
-        </IconButton>
-    );
-};
 
 interface NotificationProviderProps {
     children?: ReactNode;
@@ -43,11 +28,10 @@ interface NotificationProviderProps {
 
 const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     const [notifications, dispatch] = useReducer(notificationsReducer, []);
-
     return (
         <NotificationsContext.Provider value={notifications}>
             <NotificationsDispatchContext.Provider value={dispatch}>
-                <SnackbarProvider action={useDismissAction}>{children}</SnackbarProvider>
+                <SnackbarProvider>{children}</SnackbarProvider>
             </NotificationsDispatchContext.Provider>
         </NotificationsContext.Provider>
     );

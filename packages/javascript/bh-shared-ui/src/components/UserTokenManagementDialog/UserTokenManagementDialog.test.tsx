@@ -121,6 +121,12 @@ describe('UserTokenManagementDialog', () => {
         it('should display CreateUserTokenDialog', () => {
             expect(screen.getByRole('dialog', { name: 'Create User Token' })).toBeInTheDocument();
         });
+
+        it('should focus the token name when it is required', async () => {
+            await user.click(screen.getByRole('button', { name: 'Save' }));
+
+            await waitFor(() => expect(screen.getByLabelText(/^Token Name/)).toHaveFocus());
+        });
     });
 });
 

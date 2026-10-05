@@ -28,21 +28,24 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
+const (
+	customGolangCILintName = "bloodhound-golangci-lint"
+	customGolangCILintDir  = "tmp/golangci-lint"
+)
+
 // Run golangci-lint for all module paths passed to it
 //
 // This is a single runner that accepts the paths for all passed modules, rather than separate runs for each path
-func Run(cwd string, modPath string, env environment.Environment) (codeclimate.SeverityMap, error) {
-	var (
-		lintEntries []codeclimate.Entry
-		command     = "go"
-		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
-	)
+func Run(cwd string, modPath string, env environment.Environment, fix bool) (codeclimate.SeverityMap, error) {
+	var lintEntries []codeclimate.Entry
 
-	args = append(args, filepath.Join(modPath, "..."))
+	if err := buildCustomGolangCILint(cwd, env); err != nil {
+		return nil, err
+	}
 
 	executionPlan := cmdrunner.ExecutionPlan{
-		Command:        command,
-		Args:           args,
+		Command:        customGolangCILintPath(cwd),
+		Args:           golangCILintArgs(modPath, fix),
 		Path:           cwd,
 		Env:            env.Slice(),
 		SuppressErrors: true,
@@ -66,4 +69,32 @@ func Run(cwd string, modPath string, env environment.Environment) (codeclimate.S
 	}
 
 	return codeclimate.NewSeverityMap(lintEntries), nil
+}
+
+func golangCILintArgs(modPath string, fix bool) []string {
+	args := []string{"run", "--config", ".golangci.json", "--output.code-climate.path", "stdout"}
+	if fix {
+		args = append(args, "--fix")
+	}
+
+	return append(args, "--", filepath.Join(modPath, "..."))
+}
+
+func buildCustomGolangCILint(cwd string, env environment.Environment) error {
+	executionPlan := cmdrunner.ExecutionPlan{
+		Command: "go",
+		Args:    []string{"tool", "golangci-lint", "custom"},
+		Path:    cwd,
+		Env:     env.Slice(),
+	}
+
+	if _, err := cmdrunner.Run(context.TODO(), executionPlan); err != nil {
+		return fmt.Errorf("building custom golangci-lint: %w", err)
+	}
+
+	return nil
+}
+
+func customGolangCILintPath(cwd string) string {
+	return filepath.Join(cwd, customGolangCILintDir, customGolangCILintName)
 }

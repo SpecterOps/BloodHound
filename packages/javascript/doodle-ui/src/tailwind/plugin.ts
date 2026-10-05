@@ -75,6 +75,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
+            '--text-muted': 'var(--text-light)',
             '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
             // '--text-primary': light.primary.main,
@@ -418,7 +419,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--select-trigger-outlined-fill': palette.neutral.dark[50],
             '--select-border-default': palette.neutral.light[400],
             '--select-border-focus': secondaryVariant2,
-            '--select-content-border': palette.neutral.dark[400],
+            '--select-content-border': palette.neutral.light[900],
             '--select-content-fill': palette.neutral.dark[400],
             '--select-item-checked-text': secondaryVariant2,
             '--select-separator-fill': palette.neutral.light[200],

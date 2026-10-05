@@ -17,12 +17,13 @@
 package v2
 
 import (
+	"context"
 	"errors"
-
 	"log/slog"
 	"maps"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -31,12 +32,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/util"
 )
 
-var (
-	errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
-)
+const auditLogOutcomeTimeout = time.Second * 30
+
+var errUnauthorizedGraphMutation = errors.New("unauthorized graph mutation")
 
 type CypherQueryPayload struct {
 	Query             string `json:"query"`
@@ -45,13 +47,30 @@ type CypherQueryPayload struct {
 
 // Helper function to handle error conditions in CypherQuery.
 func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, err error) {
+	var (
+		errorResp          *api.ErrorWrapper
+		errorCategoryLabel string
+	)
+
 	if errors.Is(err, errUnauthorizedGraphMutation) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
-	} else if util.IsNeoTimeoutError(err) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
+		return
+	} else if util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+		errorCategoryLabel = cypherQueryErrorTypeTimeout
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request)
+	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
+		errorCategoryLabel = cypherQueryErrorTypeMemory
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
+	} else if errors.Is(err, ops.ErrGraphQueryExecutionFailed) {
+		errorCategoryLabel = cypherQueryErrorTypeExecute
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		errorCategoryLabel = cypherQueryErrorTypeUnknown
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	}
+
+	cypherQueryErrors.WithLabelValues(errorCategoryLabel).Inc()
+	api.WriteErrorResponse(request.Context(), errorResp, response)
 }
 
 // Helper function to handle processing of property keys.
@@ -95,11 +114,19 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
+		cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeDecode).Inc()
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
 	}
 
 	if preparedQuery, err = s.GraphQuery.PrepareCypherQuery(payload.Query, queries.DefaultQueryFitnessLowerBoundExplore); err != nil {
+		if errors.Is(err, queries.ErrCypherQueryTooComplex) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeFitness).Inc()
+		} else if errors.Is(err, queries.ErrCypherQueryUnparseable) {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeParse).Inc()
+		} else {
+			cypherQueryErrors.WithLabelValues(cypherQueryErrorTypeUnknown).Inc()
+		}
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		return
 	}
@@ -125,7 +152,10 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	auditLogEntry.Status = model.AuditLogStatusFailure
 
 	defer func() {
-		if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
+
+		if err = s.DB.AppendAuditLog(auditContext, auditLogEntry); err != nil {
 			slog.ErrorContext(request.Context(), "Failure to create run cypher query audit log", attr.Error(err))
 		}
 	}()
@@ -207,17 +237,20 @@ func (s Resources) cypherMutation(request *http.Request, primaryDisplayKinds gra
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err != nil {
-		auditLogEntry.Status = model.AuditLogStatusFailure
-	} else {
+	auditLogEntry.Status = model.AuditLogStatusFailure
+	defer func() {
+		auditContext, cancelAudit := context.WithTimeout(context.WithoutCancel(request.Context()), auditLogOutcomeTimeout)
+		defer cancelAudit()
+
+		if auditErr := s.DB.AppendAuditLog(auditContext, auditLogEntry); auditErr != nil {
+			// We want to keep the graph response error because it is more useful to the caller than an audit log error.
+			slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(auditErr))
+		}
+	}()
+
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), primaryDisplayKinds, preparedQuery, includeProperties); err == nil {
 		auditLogEntry.Status = model.AuditLogStatusSuccess
 	}
 
-	if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
-		// We want to keep err scoped because having info on the mutation graph response trumps this error
-		slog.ErrorContext(request.Context(), "Failure to create mutation audit log", attr.Error(err))
-	}
-
 	return graphResponse, err
-
 }

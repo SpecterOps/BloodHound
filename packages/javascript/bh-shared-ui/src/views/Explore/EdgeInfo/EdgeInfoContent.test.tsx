@@ -130,10 +130,9 @@ const selectedEdge: RelationshipDetails = {
     relationship_id: 1,
     kind: { name: 'CustomEdge', relationship_kind_id: 1 },
     properties: {
-        lastSeen: '',
+        lastSeen: '2023-09-07T11:10:33.664596893Z',
         is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
-        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
     source_node_id: 1,
     target_node_id: 2,
@@ -143,10 +142,9 @@ const selectedEdgeHasLapsEnabled: RelationshipDetails = {
     relationship_id: 2,
     kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
     properties: {
-        lastSeen: '',
+        lastSeen: '2023-09-07T11:10:33.664596893Z',
         is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
-        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
     source_node_id: 1,
     target_node_id: 3,
@@ -156,10 +154,9 @@ const selectedEdgeHasLapsDisabled: RelationshipDetails = {
     relationship_id: 3,
     kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
     properties: {
-        lastSeen: '',
+        lastSeen: '2023-09-07T11:10:33.664596893Z',
         is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: false,
-        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
     },
     source_node_id: 1,
     target_node_id: 4,
@@ -170,14 +167,18 @@ const selectedEdgeADCSESC4: RelationshipDetails = {
     kind: { name: ActiveDirectoryRelationshipKind.ADCSESC4, relationship_kind_id: 4 },
 };
 
+const selectedEdgeServerIs: RelationshipDetails = {
+    ...selectedEdge,
+    kind: { name: ActiveDirectoryRelationshipKind.ServerIs, relationship_kind_id: 5 },
+};
+
 const selectedEdgeACLInheritance: RelationshipDetails = {
     relationship_id: 2,
     kind: { name: ActiveDirectoryRelationshipKind.GenericAll, relationship_kind_id: 2 },
     properties: {
-        lastSeen: '',
+        lastSeen: '2023-09-07T11:10:33.664596893Z',
         is_traversable: false,
         [ActiveDirectoryKindProperties.IsACL]: true,
-        [CommonKindProperties.LastSeen]: '2023-09-07T11:10:33.664596893Z',
         [CommonKindProperties.IsInherited]: true,
         [ActiveDirectoryKindProperties.InheritanceHash]: 'test_hash',
     },
@@ -246,6 +247,24 @@ describe('EdgeInfoContent', () => {
         await user.click(inheritanceAccordion);
 
         expect(screen.queryByText(INHERITANCE_DROPDOWN_DESCRIPTION)).toBeInTheDocument();
+    });
+    test('Selecting a ServerIs edge shows its contextual HelpTexts', async () => {
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeServerIs} />);
+
+        const user = userEvent.setup();
+
+        await user.click(await screen.findByText('General'));
+        expect(screen.getByText(/references the Computer/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('Abuse'));
+        expect(screen.getByText(/does not itself grant control/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('OPSEC'));
+        expect(screen.getByText(/creates no activity/)).toBeInTheDocument();
+
+        await user.click(await screen.findByText('References'));
+        expect(screen.getByText('BloodHound: ServerIs')).toBeInTheDocument();
+        expect(screen.getByText('Microsoft: Server-Reference attribute')).toBeInTheDocument();
     });
     describe('EdgeInfoContent support for Deep Linking', () => {
         const test_id = selectedEdgeADCSESC4.relationship_id;

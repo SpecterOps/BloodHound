@@ -17,14 +17,22 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
+import { getDuplicateDisplayNames } from './utils';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
+    // Overrides the accessible name when several inputs share one visible label and assistive tech
+    // needs to tell them apart. Must contain labelText so the spoken name still matches what is on
+    // screen (WCAG 2.5.3 Label in Name). Defaults to labelText.
+    ariaLabel?: string;
+    // Attaches to the input's root element, which excludes the results dropdown rendered alongside
+    // it. Lets a caller reference the field box on its own — e.g. as an HTML5 drag image.
+    inputContainerRef?: React.Ref<HTMLDivElement>;
     inputValue: string;
     autoFocus?: boolean;
     selectedItem: SearchValue | null;
@@ -35,6 +43,8 @@ const ExploreSearchCombobox: React.FC<{
     errorMessage?: string;
 }> = ({
     labelText,
+    ariaLabel,
+    inputContainerRef,
     inputValue,
     selectedItem,
     handleNodeEdited,
@@ -62,6 +72,9 @@ const ExploreSearchCombobox: React.FC<{
         itemToString: (item) => item?.name || item?.objectid || '',
     });
 
+    // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
+    const duplicateDisplayNames = useMemo(() => getDuplicateDisplayNames(data ?? []), [data]);
+
     const disabledText: string = getEmptyResultsText(
         isLoading,
         isFetching,
@@ -86,13 +99,14 @@ const ExploreSearchCombobox: React.FC<{
     return (
         <div style={{ position: 'relative' }}>
             <TextField
+                ref={inputContainerRef}
                 placeholder={labelText}
                 variant={variant}
                 size='small'
                 fullWidth
                 disabled={disabled}
                 inputProps={{
-                    'aria-label': labelText,
+                    'aria-label': ariaLabel ?? labelText,
                 }}
                 InputProps={{
                     style: {
@@ -152,12 +166,14 @@ const ExploreSearchCombobox: React.FC<{
                                             label: item.name,
                                             objectId: item.objectid,
                                             kind: item.type,
+                                            distinguishedName: item.distinguishedname,
                                         }}
                                         index={index}
                                         key={index}
                                         highlightedIndex={highlightedIndex}
                                         keyword={keyword}
                                         getItemProps={getItemProps}
+                                        showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
                                     />
                                 );
                             })

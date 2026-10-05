@@ -25,12 +25,15 @@ import {
     AD_UNKNOWN_VALUE,
     ADSpecificTimeProperties,
     DATE_FIELDS,
+    EMPTY_ARRAY_DISPLAY,
+    EMPTY_VALUE_DISPLAY,
     EntityField,
     formatADSpecificTime,
     formatBoolean,
     formatDateString,
     formatList,
     formatNumber,
+    formatObjectInfoFields,
     formatPrimitive,
     getEntityName,
     NoEntitySelectedHeader,
@@ -122,6 +125,11 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016')).toEqual('2016');
         expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
     });
+
+    it('renders empty strings and null values with an explicit placeholder', () => {
+        expect(formatPrimitive('')).toEqual(EMPTY_VALUE_DISPLAY);
+        expect(formatPrimitive(null)).toEqual(EMPTY_VALUE_DISPLAY);
+    });
 });
 
 describe('Formatting list properties', () => {
@@ -131,6 +139,31 @@ describe('Formatting list properties', () => {
             label: 'test',
         };
         expect(formatList(testEntityField)).toEqual(['test', '5', 'FALSE']);
+    });
+
+    it('renders an empty list as NONE', () => {
+        const testEntityField: EntityField = {
+            value: [],
+            label: 'test',
+        };
+
+        expect(formatList(testEntityField)).toEqual([EMPTY_ARRAY_DISPLAY]);
+    });
+});
+
+describe('Formatting object information fields', () => {
+    it('preserves explicitly set empty arrays, empty strings, and null values', () => {
+        const formattedFields = formatObjectInfoFields({
+            [ActiveDirectoryKindProperties.EffectiveEKUs]: [],
+            emptystring: '',
+            nullvalue: null,
+        });
+
+        expect(formattedFields).toEqual([
+            { kind: 'ad', keyprop: 'effectiveekus', label: 'Effective EKUs:', value: [] },
+            { kind: null, keyprop: 'emptystring', label: 'Emptystring:', value: '' },
+            { kind: null, keyprop: 'nullvalue', label: 'Nullvalue:', value: null },
+        ]);
     });
 });
 

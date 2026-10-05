@@ -24,4 +24,5 @@ export type MultiValueFilterConfig = {
 export type UseMultiValueFilterParams = {
     selection: MultiValueSelection;
     setSelection: (selection: MultiValueSelection) => void;
+    isDefaultSelection: boolean;
 };

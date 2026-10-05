@@ -17,7 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { Dialog } from 'doodle-ui';
 import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen } from '../../test-utils';
-import { setUpQueryClient } from '../../utils';
+import { setUpQueryClient } from '../../testing';
 import { Roles } from '../../utils/roles';
 import UpdateUserForm from './UpdateUserForm';
 

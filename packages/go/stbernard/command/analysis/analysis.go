@@ -37,6 +37,7 @@ const (
 
 type command struct {
 	env               environment.Environment
+	fix               bool
 	outputAllSeverity bool
 }
 
@@ -61,6 +62,7 @@ func (s *command) Name() string {
 func (s *command) Parse(cmdIndex int) error {
 	flagSet := flag.NewFlagSet(Name, flag.ExitOnError)
 
+	flagSet.BoolVar(&s.fix, "fix", false, "apply suggested fixes")
 	flagSet.BoolVar(&s.outputAllSeverity, "all", false, "output all severity")
 
 	flagSet.Usage = func() {
@@ -83,7 +85,7 @@ func (s *command) Run() error {
 		return fmt.Errorf("finding workspace root: %w", err)
 	}
 
-	err = analyzers.Run(paths, s.env, s.outputAllSeverity)
+	err = analyzers.Run(paths, s.env, s.fix, s.outputAllSeverity)
 	if errors.Is(err, analyzers.ErrSeverityExit) {
 		return fmt.Errorf("analyzers found high severity: %w", err)
 	} else if errors.Is(err, analyzers.ErrWarnExit) {

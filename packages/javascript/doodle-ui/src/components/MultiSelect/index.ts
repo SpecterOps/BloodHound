@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export { MultiSelect } from './MultiSelect';
-export type { MultiSelectOption, MultiSelectProps } from './MultiSelect';
+export type { MultiSelectOption, MultiSelectProps, MultiSelectVariant } from './MultiSelect';

@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -232,6 +233,69 @@ func (_c *MockDatabase_GetAnalysisRequest_Call) Return(requestedAnalysis service
 }
 
 func (_c *MockDatabase_GetAnalysisRequest_Call) RunAndReturn(run func(ctx context.Context) (services.RequestedAnalysis, error)) *MockDatabase_GetAnalysisRequest_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpsertAnalysisRequest provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) UpsertAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error {
+	ret := _mock.Called(ctx, requestedBy, analysisMode)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertAnalysisRequest")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, model.AnalysisMode) error); ok {
+		r0 = returnFunc(ctx, requestedBy, analysisMode)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDatabase_UpsertAnalysisRequest_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertAnalysisRequest'
+type MockDatabase_UpsertAnalysisRequest_Call struct {
+	*mock.Call
+}
+
+// UpsertAnalysisRequest is a helper method to define mock.On call
+//   - ctx context.Context
+//   - requestedBy string
+//   - analysisMode model.AnalysisMode
+func (_e *MockDatabase_Expecter) UpsertAnalysisRequest(ctx interface{}, requestedBy interface{}, analysisMode interface{}) *MockDatabase_UpsertAnalysisRequest_Call {
+	return &MockDatabase_UpsertAnalysisRequest_Call{Call: _e.mock.On("UpsertAnalysisRequest", ctx, requestedBy, analysisMode)}
+}
+
+func (_c *MockDatabase_UpsertAnalysisRequest_Call) Run(run func(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode)) *MockDatabase_UpsertAnalysisRequest_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 model.AnalysisMode
+		if args[2] != nil {
+			arg2 = args[2].(model.AnalysisMode)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_UpsertAnalysisRequest_Call) Return(err error) *MockDatabase_UpsertAnalysisRequest_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDatabase_UpsertAnalysisRequest_Call) RunAndReturn(run func(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error) *MockDatabase_UpsertAnalysisRequest_Call {
 	_c.Call.Return(run)
 	return _c
 }

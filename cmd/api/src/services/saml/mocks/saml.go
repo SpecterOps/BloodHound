@@ -30,6 +30,7 @@ import (
 	reflect "reflect"
 
 	saml "github.com/crewjam/saml"
+	saml0 "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -73,10 +74,10 @@ func (mr *MockServiceMockRecorder) MakeAuthenticationRequest(serviceProvider, id
 }
 
 // ParseResponse mocks base method.
-func (m *MockService) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error) {
+func (m *MockService) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml0.ValidatedResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ParseResponse", serviceProvider, req, possibleRequestIDs)
-	ret0, _ := ret[0].(*saml.Assertion)
+	ret0, _ := ret[0].(*saml0.ValidatedResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

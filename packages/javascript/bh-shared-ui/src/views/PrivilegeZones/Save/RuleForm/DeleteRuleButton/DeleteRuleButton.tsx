@@ -32,7 +32,10 @@ const DeleteRuleButton: FC<{
     if (ruleData.is_default) return null;
 
     return (
-        <TextButton data-testid='privilege-zones_save_selector-form_delete-button' onClick={onClick}>
+        <TextButton
+            data-testid='privilege-zones_save_selector-form_delete-button'
+            fontColor='primary'
+            onClick={onClick}>
             <FontAwesomeIcon icon={faTrashCan} /> Delete Rule
         </TextButton>
     );

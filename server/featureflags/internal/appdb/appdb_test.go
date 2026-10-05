@@ -77,57 +77,71 @@ func authenticatedContext(userID uuid.UUID) context.Context {
 }
 
 func TestStore_GetFlagByKey(t *testing.T) {
-	var (
-		ctx   = context.Background()
-		dbErr = errors.New("connection refused")
-	)
+	t.Parallel()
+
+	type args struct {
+		ctx context.Context
+		key string
+	}
+	type want struct {
+		flag services.FeatureFlag
+		err  error
+	}
+
+	dbErr := errors.New("connection refused")
 
 	tests := []struct {
-		name         string
-		expectations func(pool pgxmock.PgxPoolIface)
-		wantFlag     services.FeatureFlag
-		wantErr      error
+		name      string
+		args      args
+		setupMock func(pool pgxmock.PgxPoolIface)
+		want      want
 	}{
 		{
-			name: "returns the feature flag on success",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: returns the feature flag",
+			args: args{ctx: context.Background(), key: services.FeatureOpenHoundSupport},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByKeySQL).WithArgs(services.FeatureOpenHoundSupport, 1).WillReturnRows(
 					pool.NewRows(flagColumns()).AddRow(
 						int32(7), nil, nil, services.FeatureOpenHoundSupport, "OpenHound Support", "desc", true, false,
 					),
 				)
 			},
-			wantFlag: services.FeatureFlag{ID: 7, Key: services.FeatureOpenHoundSupport, Name: "OpenHound Support", Description: "desc", Enabled: true},
+			want: want{flag: services.FeatureFlag{ID: 7, Key: services.FeatureOpenHoundSupport, Name: "OpenHound Support", Description: "desc", Enabled: true}},
 		},
 		{
-			name: "maps zero rows to ErrNotFound",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: maps zero rows to ErrNotFound",
+			args: args{ctx: context.Background(), key: services.FeatureOpenHoundSupport},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByKeySQL).WithArgs(services.FeatureOpenHoundSupport, 1).WillReturnRows(
 					pool.NewRows(flagColumns()),
 				)
 			},
-			wantErr: services.ErrNotFound,
+			want: want{err: services.ErrNotFound},
 		},
 		{
-			name: "propagates other database errors",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: propagates other database errors",
+			args: args{ctx: context.Background(), key: services.FeatureOpenHoundSupport},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByKeySQL).WithArgs(services.FeatureOpenHoundSupport, 1).WillReturnError(dbErr)
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			store, pool := newTestStore(t)
-			tt.expectations(pool)
+			if test.setupMock != nil {
+				test.setupMock(pool)
+			}
 
-			flag, err := store.GetFlagByKey(ctx, services.FeatureOpenHoundSupport)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			flag, err := store.GetFlagByKey(test.args.ctx, test.args.key)
+			if test.want.err != nil {
+				assert.ErrorIs(t, err, test.want.err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantFlag, flag)
+				assert.Equal(t, test.want.flag, flag)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
@@ -135,57 +149,71 @@ func TestStore_GetFlagByKey(t *testing.T) {
 }
 
 func TestStore_GetFlagByID(t *testing.T) {
-	var (
-		ctx   = context.Background()
-		dbErr = errors.New("connection refused")
-	)
+	t.Parallel()
+
+	type args struct {
+		ctx context.Context
+		id  int32
+	}
+	type want struct {
+		flag services.FeatureFlag
+		err  error
+	}
+
+	dbErr := errors.New("connection refused")
 
 	tests := []struct {
-		name         string
-		expectations func(pool pgxmock.PgxPoolIface)
-		wantFlag     services.FeatureFlag
-		wantErr      error
+		name      string
+		args      args
+		setupMock func(pool pgxmock.PgxPoolIface)
+		want      want
 	}{
 		{
-			name: "returns the feature flag on success",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: returns the feature flag",
+			args: args{ctx: context.Background(), id: 11},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByIDSQL).WithArgs(int32(11), 1).WillReturnRows(
 					pool.NewRows(flagColumns()).AddRow(
 						int32(11), nil, nil, services.FeatureAlerts, "Alerts", "desc", false, true,
 					),
 				)
 			},
-			wantFlag: services.FeatureFlag{ID: 11, Key: services.FeatureAlerts, Name: "Alerts", Description: "desc", Enabled: false, UserUpdatable: true},
+			want: want{flag: services.FeatureFlag{ID: 11, Key: services.FeatureAlerts, Name: "Alerts", Description: "desc", Enabled: false, UserUpdatable: true}},
 		},
 		{
-			name: "maps zero rows to ErrNotFound",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: maps zero rows to ErrNotFound",
+			args: args{ctx: context.Background(), id: 11},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByIDSQL).WithArgs(int32(11), 1).WillReturnRows(
 					pool.NewRows(flagColumns()),
 				)
 			},
-			wantErr: services.ErrNotFound,
+			want: want{err: services.ErrNotFound},
 		},
 		{
-			name: "propagates other database errors",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: propagates other database errors",
+			args: args{ctx: context.Background(), id: 11},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectByIDSQL).WithArgs(int32(11), 1).WillReturnError(dbErr)
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			store, pool := newTestStore(t)
-			tt.expectations(pool)
+			if test.setupMock != nil {
+				test.setupMock(pool)
+			}
 
-			flag, err := store.GetFlagByID(ctx, 11)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			flag, err := store.GetFlagByID(test.args.ctx, test.args.id)
+			if test.want.err != nil {
+				assert.ErrorIs(t, err, test.want.err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantFlag, flag)
+				assert.Equal(t, test.want.flag, flag)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
@@ -193,58 +221,71 @@ func TestStore_GetFlagByID(t *testing.T) {
 }
 
 func TestStore_GetAllFlags(t *testing.T) {
-	var (
-		ctx   = context.Background()
-		dbErr = errors.New("connection refused")
-	)
+	t.Parallel()
+
+	type args struct {
+		ctx context.Context
+	}
+	type want struct {
+		flags []services.FeatureFlag
+		err   error
+	}
+
+	dbErr := errors.New("connection refused")
 
 	tests := []struct {
-		name         string
-		expectations func(pool pgxmock.PgxPoolIface)
-		wantFlags    []services.FeatureFlag
-		wantErr      error
+		name      string
+		args      args
+		setupMock func(pool pgxmock.PgxPoolIface)
+		want      want
 	}{
 		{
-			name: "returns every flag from the result set",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: returns every flag from the result set",
+			args: args{ctx: context.Background()},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectAllSQL).WillReturnRows(
 					pool.NewRows(flagColumns()).
 						AddRow(int32(1), nil, nil, services.FeatureOpenHoundSupport, "OpenHound", "", true, false).
 						AddRow(int32(2), nil, nil, services.FeatureAlerts, "Alerts", "", false, true),
 				)
 			},
-			wantFlags: []services.FeatureFlag{
+			want: want{flags: []services.FeatureFlag{
 				{ID: 1, Key: services.FeatureOpenHoundSupport, Name: "OpenHound", Enabled: true, UserUpdatable: false},
 				{ID: 2, Key: services.FeatureAlerts, Name: "Alerts", Enabled: false, UserUpdatable: true},
-			},
+			}},
 		},
 		{
-			name: "returns an empty slice when no flags are configured",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: returns an empty slice when no flags are configured",
+			args: args{ctx: context.Background()},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectAllSQL).WillReturnRows(pool.NewRows(flagColumns()))
 			},
-			wantFlags: []services.FeatureFlag{},
+			want: want{flags: []services.FeatureFlag{}},
 		},
 		{
-			name: "propagates database errors",
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: propagates database errors",
+			args: args{ctx: context.Background()},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedSelectAllSQL).WillReturnError(dbErr)
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			store, pool := newTestStore(t)
-			tt.expectations(pool)
+			if test.setupMock != nil {
+				test.setupMock(pool)
+			}
 
-			flags, err := store.GetAllFlags(ctx)
-			if tt.wantErr != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
+			flags, err := store.GetAllFlags(test.args.ctx)
+			if test.want.err != nil {
+				assert.ErrorIs(t, err, test.want.err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantFlags, flags)
+				assert.Equal(t, test.want.flags, flags)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
@@ -252,6 +293,17 @@ func TestStore_GetAllFlags(t *testing.T) {
 }
 
 func TestStore_SetFlag(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		ctx  context.Context
+		flag services.FeatureFlag
+	}
+	type want struct {
+		err         error
+		errContains string
+	}
+
 	var (
 		userID   = uuid.Must(uuid.NewV4())
 		authCtx  = authenticatedContext(userID)
@@ -261,17 +313,15 @@ func TestStore_SetFlag(t *testing.T) {
 	)
 
 	tests := []struct {
-		name         string
-		ctx          context.Context
-		flag         services.FeatureFlag
-		expectations func(pool pgxmock.PgxPoolIface)
-		wantErr      error
+		name      string
+		args      args
+		setupMock func(pool pgxmock.PgxPoolIface)
+		want      want
 	}{
 		{
-			name: "commits the update without an audit entry when the flag is not user-updatable",
-			ctx:  context.Background(),
-			flag: flag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: commits the update without an audit entry when the flag is not user-updatable",
+			args: args{ctx: context.Background(), flag: flag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
@@ -280,10 +330,9 @@ func TestStore_SetFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "commits both the update and an audit entry when the flag is user-updatable",
-			ctx:  authCtx,
-			flag: userFlag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Success: commits both the update and an audit entry when the flag is user-updatable",
+			args: args{ctx: authCtx, flag: userFlag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
@@ -306,45 +355,41 @@ func TestStore_SetFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "rolls back and returns the error when BeginTx fails",
-			ctx:  context.Background(),
-			flag: flag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: rolls back and returns the error when BeginTx fails",
+			args: args{ctx: context.Background(), flag: flag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin().WillReturnError(dbErr)
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 		{
-			name: "rolls back when the UPDATE fails",
-			ctx:  context.Background(),
-			flag: flag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: rolls back when the UPDATE fails",
+			args: args{ctx: context.Background(), flag: flag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
 					WillReturnError(dbErr)
 				pool.ExpectRollback()
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 		{
-			name: "rolls back and returns ErrNotFound when the UPDATE matches no rows",
-			ctx:  authCtx,
-			flag: userFlag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: rolls back and returns ErrNotFound when the UPDATE matches no rows",
+			args: args{ctx: authCtx, flag: userFlag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
 					WillReturnResult(pgxmock.NewResult("UPDATE", 0))
 				pool.ExpectRollback()
 			},
-			wantErr: services.ErrNotFound,
+			want: want{err: services.ErrNotFound},
 		},
 		{
-			name: "rolls back when the audit insert fails for a user-updatable flag",
-			ctx:  authCtx,
-			flag: userFlag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: rolls back when the audit insert fails for a user-updatable flag",
+			args: args{ctx: authCtx, flag: userFlag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
@@ -357,33 +402,39 @@ func TestStore_SetFlag(t *testing.T) {
 					WillReturnError(dbErr)
 				pool.ExpectRollback()
 			},
-			wantErr: dbErr,
+			want: want{err: dbErr},
 		},
 		{
-			name: "returns an error when no authenticated user is on the context",
-			ctx:  context.Background(),
-			flag: userFlag,
-			expectations: func(pool pgxmock.PgxPoolIface) {
+			name: "Error: returns an error when no authenticated user is on the context",
+			args: args{ctx: context.Background(), flag: userFlag},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
 					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 				pool.ExpectRollback()
 			},
-			wantErr: errors.New("no authenticated user on context"),
+			want: want{errContains: "no authenticated user on context"},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			store, pool := newTestStore(t)
-			tt.expectations(pool)
+			if test.setupMock != nil {
+				test.setupMock(pool)
+			}
 
-			err := store.SetFlag(tt.ctx, tt.flag)
-			if tt.wantErr != nil {
+			err := store.SetFlag(test.args.ctx, test.args.flag)
+			switch {
+			case test.want.err != nil:
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr.Error())
-			} else {
+				assert.ErrorIs(t, err, test.want.err)
+			case test.want.errContains != "":
+				require.Error(t, err)
+				assert.ErrorContains(t, err, test.want.errContains)
+			default:
 				require.NoError(t, err)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())

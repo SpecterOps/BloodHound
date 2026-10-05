@@ -87,6 +87,12 @@ type assetGroupTagSelectorRequest struct {
 	AutoCertify *model.SelectorAutoCertifyMethod `json:"auto_certify"`
 	Description *string                          `json:"description"`
 	Disabled    *bool                            `json:"disabled"`
+	ExtensionId *int32                           `json:"extension_id"`
+	RuleKey     *string                          `json:"rule_key"`
+}
+
+func (s assetGroupTagSelectorRequest) hasExtensionOnlyFields() bool {
+	return s.ExtensionId != nil || s.RuleKey != nil
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -209,6 +215,8 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&createSelectorRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if createSelectorRequest.hasExtensionOnlyFields() {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else if errs := validation.Validate(createSelectorRequest.AssetGroupTagSelector); len(errs) > 0 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if actor, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx); !isUser {
@@ -232,7 +240,15 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 			description = *createSelectorRequest.Description
 		}
 
-		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, createSelectorRequest.Name, description, false, true, autoCertify, createSelectorRequest.Seeds); errors.Is(err, database.ErrDuplicateAGTagSelectorName) {
+		if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), actor, model.AssetGroupTagSelector{
+			AssetGroupTagId: assetTagId,
+			Name:            createSelectorRequest.Name,
+			Description:     description,
+			IsDefault:       false,
+			AllowDisable:    true,
+			AutoCertify:     autoCertify,
+			Seeds:           createSelectorRequest.Seeds,
+		}); errors.Is(err, database.ErrDuplicateAGTagSelectorName) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseAssetGroupTagSelectorDuplicateName, request), response)
 		} else if err != nil {
 			api.HandleDatabaseError(request, response, err)
@@ -273,6 +289,8 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if selUpdateReq.hasExtensionOnlyFields() {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorAssetGroupTagSelectorReadOnlyField, request), response)
 	} else {
 		// we can update DisabledAt on a default selector
 		if selUpdateReq.Disabled != nil {

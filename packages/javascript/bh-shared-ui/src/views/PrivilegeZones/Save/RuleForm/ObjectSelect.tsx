@@ -83,7 +83,7 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
                                             <FontAwesomeIcon icon={faTrashCan} />
                                         </TextButton>
                                     </TableCell>
-                                    <TableCell className='text-center w-[60px]'>
+                                    <TableCell className='text-center w-[30px]'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>
                                     <TableCell className='mr-4 truncate'>

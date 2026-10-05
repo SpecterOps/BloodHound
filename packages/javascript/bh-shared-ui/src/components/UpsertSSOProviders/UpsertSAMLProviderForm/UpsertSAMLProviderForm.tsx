@@ -78,7 +78,7 @@ const UpsertSAMLProviderForm: FC<{
     };
 
     return (
-        <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form autoComplete='off' noValidate onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -93,12 +93,14 @@ const UpsertSAMLProviderForm: FC<{
                                         'SAML Provider Name must be a valid URL slug (e.g., "saml-provider", "test-idp-01", "any-old-slug")',
                                 },
                             }}
-                            render={({ field }) => (
+                            render={({ field: { ref, ...field } }) => (
                                 <TextField
                                     {...field}
-                                    id={'name'}
+                                    inputRef={ref}
+                                    id='name'
                                     variant='standard'
                                     fullWidth
+                                    required
                                     name='name'
                                     label='SAML Provider Name'
                                     error={!!errors.name}
@@ -117,7 +119,7 @@ const UpsertSAMLProviderForm: FC<{
                             render={({ field }) => (
                                 <Box p={1} borderRadius={4} bgcolor={theme.neutral.tertiary}>
                                     <Box display='flex' flexDirection='row' alignItems='center'>
-                                        <Button variant='secondary'>
+                                        <Button ref={field.ref} variant='secondary'>
                                             <label htmlFor='saml-provider-input'>Choose File</label>
                                             <input
                                                 id='saml-provider-input'

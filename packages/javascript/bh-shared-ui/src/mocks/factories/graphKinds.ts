@@ -18,11 +18,11 @@ import { faker } from '@faker-js/faker/locale/en';
 import { GraphKindsResponse } from 'js-client-library';
 
 const createEdgeKinds = (): GraphKindsResponse['data']['kinds'] => {
-    return faker.helpers.uniqueArray(faker.random.word, 10);
+    return faker.helpers.uniqueArray(faker.word.sample, 10);
 };
 
 const createNodeKinds = (): GraphKindsResponse['data']['kinds'] => {
-    return faker.helpers.uniqueArray(faker.random.word, 10);
+    return faker.helpers.uniqueArray(faker.word.sample, 10);
 };
 
 export const createGraphKinds = (nodeKinds?: string[], edgeKinds?: string[]): GraphKindsResponse['data'] => {

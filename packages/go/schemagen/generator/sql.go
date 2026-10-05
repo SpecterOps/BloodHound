@@ -76,6 +76,18 @@ var nodeIcons = map[string]nodeIcon{
 		Icon:  "clipboard-check",
 		Color: "#99B2DD",
 	},
+	"Site": {
+		Icon:  "map-signs",
+		Color: "#2DD4BF",
+	},
+	"SiteServer": {
+		Icon:  "map-marker",
+		Color: "#60A5FA",
+	},
+	"SiteSubnet": {
+		Icon:  "map",
+		Color: "#F59E0B",
+	},
 	"OU": {
 		Icon:  "sitemap",
 		Color: "#FFAA00",
@@ -193,7 +205,7 @@ BEGIN
 
 	RETURN kind_id;
 END $$ LANGUAGE plpgsql;
-	`)
+`)
 
 	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS SMALLINT AS $$
@@ -213,7 +225,7 @@ BEGIN
 
 	RETURN source_kind_id;
 END $$ LANGUAGE plpgsql;
-	`)
+`)
 
 	sb.WriteString(`
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_node_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_display_name TEXT, v_description TEXT, v_is_display_kind BOOLEAN, v_icon TEXT, v_icon_color TEXT) RETURNS void AS $$

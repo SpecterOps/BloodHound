@@ -77,6 +77,8 @@ const GraphView: FC = () => {
             <title>Explore | {appName}</title>
         </Helmet>
     );
+    // For Screen Readers
+    const hiddenHeading = <h1 className='sr-only'>Explore</h1>;
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
@@ -239,14 +241,27 @@ const GraphView: FC = () => {
     if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
+                {hiddenHeading}
                 <GraphProgress loading={graphHasDataQuery.isLoading} />
             </div>
         );
     }
 
-    if (graphHasDataQuery.isError) return <GraphViewErrorAlert />;
+    if (graphHasDataQuery.isError)
+        return (
+            <>
+                {hiddenHeading}
+                <GraphViewErrorAlert />
+            </>
+        );
 
-    if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
+    if (!isWebGLEnabledMemo)
+        return (
+            <>
+                {hiddenHeading}
+                <WebGLDisabledAlert />
+            </>
+        );
 
     /* Event Handlers */
     const handleCloseContextMenu = () => {
@@ -272,6 +287,7 @@ const GraphView: FC = () => {
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
             {title}
+            {hiddenHeading}
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}

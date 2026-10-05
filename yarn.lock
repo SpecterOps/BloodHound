@@ -72,14 +72,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@axe-core/playwright@npm:^4.11.3":
-  version: 4.11.3
-  resolution: "@axe-core/playwright@npm:4.11.3"
+"@axe-core/playwright@npm:^4.13.0":
+  version: 4.13.0
+  resolution: "@axe-core/playwright@npm:4.13.0"
   dependencies:
-    axe-core: "npm:~4.11.4"
+    axe-core: "npm:~4.13.0"
   peerDependencies:
     playwright-core: ">= 1.0.0"
-  checksum: 10/6da87fce93d3fd67db2629d77cb623b63816e9dbea4449be261e67ec8884cd58a3cec57be73074b82e2a0ca47a30369514c56e2d455e3aaf7c192e4a76f1d1bf
+  checksum: 10/2400e309d6f6d96b3f3f12b00a80e32cb0213726fcfc3c457b36d17f7136a3361f02a7523286024d7e8ceba9045a5f9c18edd8bc352f76b549faedce298fada2
   languageName: node
   linkType: hard
 
@@ -1609,17 +1609,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^7.3.0":
-  version: 7.6.0
-  resolution: "@faker-js/faker@npm:7.6.0"
-  checksum: 10/9236ee7a7ab32fcd99fa8cbc046b65b0af4fe714b12e33a39d3e058bef77e53bb0f42fe3331ed578a6db581b22c31f12ed2ba587a4bdb58a9ba0bb5b19f99bc4
-  languageName: node
-  linkType: hard
-
-"@faker-js/faker@npm:^9.0.3":
-  version: 9.9.0
-  resolution: "@faker-js/faker@npm:9.9.0"
-  checksum: 10/b24b1be0fb3090d54abaaa3a814f37d1a7551f1207dcd330a1af2c70f6312a8b95ebb82653577757dd62f4cbbb56caa3c83513053253654dc3e286a05040ecbe
+"@faker-js/faker@npm:^10.6.0":
+  version: 10.6.0
+  resolution: "@faker-js/faker@npm:10.6.0"
+  checksum: 10/f45220ceae76133d831dee8c8f5c8566767bfd857b7f872b5ec58866b68da889dabe96e805a598e095a6c58eae250363a7f335aa0afc513cb2ad5fe69e2a967f
   languageName: node
   linkType: hard
 
@@ -1699,24 +1692,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource/roboto-mono@npm:^4.5.0":
-  version: 4.5.10
-  resolution: "@fontsource/roboto-mono@npm:4.5.10"
-  checksum: 10/cebcf630f3445c60a646cb7c652fab5f73bf2cf99e7468f5219f1ff2304dfbd21223b65b2012b15ccd1aa6ab9c0fb90da2f8422cc330fe1ab89d4bc09a48df93
+"@fontsource/figtree@npm:^5.2.10":
+  version: 5.3.0
+  resolution: "@fontsource/figtree@npm:5.3.0"
+  checksum: 10/d1899a45cb221f81ecad2b9467802dc29402d1189b1c04b27b8caf8547e84abff0bc16220cbeb45955307572056a0c5c17a43c07a0b24729c82e86468cf54d72
   languageName: node
   linkType: hard
 
-"@fontsource/roboto@npm:^4.5.1":
-  version: 4.5.8
-  resolution: "@fontsource/roboto@npm:4.5.8"
-  checksum: 10/490c189f4c04d1aedb5de46799256f73f01a0a38db42943d9c9424c6613f2915413da3df4f26bb15939bf5143419682537717cb0a7cd5b665b50f39c6d5d2a39
-  languageName: node
-  linkType: hard
-
-"@fontsource/roboto@npm:^5.0.13":
-  version: 5.2.10
-  resolution: "@fontsource/roboto@npm:5.2.10"
-  checksum: 10/2fc9e9db66cfab68ff45b573cc2bf20fe8d7e962f09b6edd32d53681fdcd7bdedd65440012683491785583383a585bdbfb67903171159bf4c3520f2f0d26d92a
+"@fontsource/nunito-sans@npm:^5.2.10":
+  version: 5.3.0
+  resolution: "@fontsource/nunito-sans@npm:5.3.0"
+  checksum: 10/4ffde59fb0204d11788e4c24553e0971d79e500180827736b0fea49eb9a8ef52f9f56c3f3a3984633ffec8334c1e465472792e0d44cf6a213745ce552488c946
   languageName: node
   linkType: hard
 
@@ -6310,10 +6296,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:^0.8.3":
-  version: 0.8.13
-  resolution: "@xmldom/xmldom@npm:0.8.13"
-  checksum: 10/f8f3d56fa91d5026885c0c5c00b07eae47647bda0d742ecbf8e51e06bb287ab30222977b20529ee15c364031606225ebca58907a8ecc76a3add6b3f10e6ddfc6
+"@xmldom/xmldom@npm:0.8.15":
+  version: 0.8.15
+  resolution: "@xmldom/xmldom@npm:0.8.15"
+  checksum: 10/521d8e5a9798a47dddb28237d112e47637d638e4f3d60ce1eefa1f397d2439af5a00f781c956b5affc251ef8a1bbc1f8325161d32f7b27c89aacf5ff84f14cf7
   languageName: node
   linkType: hard
 
@@ -6928,22 +6914,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axe-core@npm:^4.11.4, axe-core@npm:~4.11.4":
-  version: 4.11.4
-  resolution: "axe-core@npm:4.11.4"
-  checksum: 10/49095daa422d05d99a90b39301a3b5c971e234a4593403dfd6701df637a3e550bcfd7bd096709c5643564dd069208513247791f367790e0605d15386fb2a7bfe
+"axe-core@npm:^4.13.0, axe-core@npm:~4.13.0":
+  version: 4.13.0
+  resolution: "axe-core@npm:4.13.0"
+  checksum: 10/b9319bedc705fde00e4abd981d8724202cc20102e4ae6d8edfde33cb5265e0fb8f67f32adcb4ad33fbd4a2c8d7ad7ef5af1d933d9ad859bed90e3eae0ee8c52f
   languageName: node
   linkType: hard
 
-"axios@npm:^1.18.0":
-  version: 1.18.1
-  resolution: "axios@npm:1.18.1"
+"axios@npm:^1.20.0":
+  version: 1.20.0
+  resolution: "axios@npm:1.20.0"
   dependencies:
     follow-redirects: "npm:^1.16.0"
-    form-data: "npm:^4.0.5"
+    form-data: "npm:^4.0.6"
     https-proxy-agent: "npm:^5.0.1"
     proxy-from-env: "npm:^2.1.0"
-  checksum: 10/c4cdced3ee0a9bf7dcae189fbc74a124aa079d4f04dbd995e602d39c1419476e8d021f87ee39ac8d8398e5a55e6d0b986238b3645f0d9177ac80de87c2a73f18
+  checksum: 10/0376b6178baecbe0f5d36088f5b5f6c21362ce301e0731f77172f9c89be740bdee20d8ae6ab186340d7cb752020c6a4f1381290e5a5cd10f6f9003941615ac77
   languageName: node
   linkType: hard
 
@@ -6986,12 +6972,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"baseline-browser-mapping@npm:^2.9.0":
-  version: 2.10.0
-  resolution: "baseline-browser-mapping@npm:2.10.0"
+"baseline-browser-mapping@npm:^2.11.12":
+  version: 2.11.20
+  resolution: "baseline-browser-mapping@npm:2.11.20"
   bin:
     baseline-browser-mapping: dist/cli.cjs
-  checksum: 10/8145e076e4299f04c7a412e6ea63803e330153cd89c47b5303f9b56b58078f4c3d5a5b5332c1069da889e76facacca4d43f8940375f7e73ce0a4d96214332953
+  checksum: 10/5263ac0e5f2d5cac5f48fe131a97a2e7a267487934403443282119c7a1a76670762fcb48e42a0eab4501dd1f2bb5021f4033e3fa07d96dddae4ebca6ae3bb24d
   languageName: node
   linkType: hard
 
@@ -7008,12 +6994,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bh-playwright-testing@workspace:packages/javascript/bh-playwright-testing"
   dependencies:
-    "@axe-core/playwright": "npm:^4.11.3"
+    "@axe-core/playwright": "npm:^4.13.0"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
     "@playwright/test": "npm:^1.59.1"
     allure-playwright: "npm:^3.4.3"
-    axe-core: "npm:^4.11.4"
+    axe-core: "npm:^4.13.0"
     dotenv: "npm:^17.4.2"
     eslint: "npm:^9.26.0"
     eslint-config-prettier: "npm:^9.1.0"
@@ -7032,7 +7018,7 @@ __metadata:
     "@emotion/styled": "npm:^11.10.4"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^7.3.0"
+    "@faker-js/faker": "npm:^10.6.0"
     "@fortawesome/fontawesome-free": "npm:^6.7.2"
     "@fortawesome/fontawesome-svg-core": "npm:^6.7.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.7.2"
@@ -7172,9 +7158,9 @@ __metadata:
     "@eslint/compat": "npm:^2.0.3"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^7.3.0"
-    "@fontsource/roboto": "npm:^4.5.1"
-    "@fontsource/roboto-mono": "npm:^4.5.0"
+    "@faker-js/faker": "npm:^10.6.0"
+    "@fontsource/figtree": "npm:^5.2.10"
+    "@fontsource/nunito-sans": "npm:^5.2.10"
     "@fortawesome/fontawesome-free": "npm:^6.7.2"
     "@fortawesome/fontawesome-svg-core": "npm:^6.7.2"
     "@fortawesome/free-solid-svg-icons": "npm:^6.7.2"
@@ -7264,12 +7250,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"brace-expansion@npm:5.0.9":
-  version: 5.0.9
-  resolution: "brace-expansion@npm:5.0.9"
+"brace-expansion@npm:5.0.12":
+  version: 5.0.12
+  resolution: "brace-expansion@npm:5.0.12"
   dependencies:
     balanced-match: "npm:^4.0.2"
-  checksum: 10/d8683d612919212c7cf298861acd1c15101e7e2ad186e7ae9747390e5b3fc9e9b55ce71107570d32985784d9d88fbbe438d725863aed7b0f3d08d5f080535eec
+  checksum: 10/65b550f1836e3b43f512f12afbc3be96616eee5c353e16d70181b7dffec8c08beabffb51d69a3bbdb27d675840725cbab025fda9d10716b5cda7dd864dc7bc4a
   languageName: node
   linkType: hard
 
@@ -7305,18 +7291,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.23.3, browserslist@npm:^4.24.0":
-  version: 4.28.1
-  resolution: "browserslist@npm:4.28.1"
+"browserslist@npm:4.28.8":
+  version: 4.28.8
+  resolution: "browserslist@npm:4.28.8"
   dependencies:
-    baseline-browser-mapping: "npm:^2.9.0"
-    caniuse-lite: "npm:^1.0.30001759"
-    electron-to-chromium: "npm:^1.5.263"
-    node-releases: "npm:^2.0.27"
-    update-browserslist-db: "npm:^1.2.0"
+    baseline-browser-mapping: "npm:^2.11.12"
+    caniuse-lite: "npm:^1.0.30001809"
+    electron-to-chromium: "npm:^1.5.402"
+    node-releases: "npm:^2.0.53"
+    update-browserslist-db: "npm:^1.3.0"
   bin:
     browserslist: cli.js
-  checksum: 10/64f2a97de4bce8473c0e5ae0af8d76d1ead07a5b05fc6bc87b848678bb9c3a91ae787b27aa98cdd33fc00779607e6c156000bed58fefb9cf8e4c5a183b994cdb
+  checksum: 10/9df1d87f915639ebe8f85caf8d58bc0627863dff5e921b6e0394a92f82d279f1b2b324594267d025c80482397150cb4bf5a3ab55fde5d2c1c0f13c064f48b5e9
   languageName: node
   linkType: hard
 
@@ -7410,10 +7396,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30001646, caniuse-lite@npm:^1.0.30001759":
+"caniuse-lite@npm:^1.0.30001646":
   version: 1.0.30001776
   resolution: "caniuse-lite@npm:1.0.30001776"
   checksum: 10/7a140cfcb5b56597139e700ac624df342995ec670e43e17b0b636b4b215ce6f05d3932c16a4b8c740b5fe57bc94ef5cac157f5b0e3ccb049d80c57f409c576a8
+  languageName: node
+  linkType: hard
+
+"caniuse-lite@npm:^1.0.30001809":
+  version: 1.0.30001810
+  resolution: "caniuse-lite@npm:1.0.30001810"
+  checksum: 10/47d7db627c3f3d1a10e06eef9efbb84295c6ef9d959b585b64032cc293637ca7b9b6af7e5d5752972b3e690d9561f14b9561db03890fbc6e38dc1aaa54e51d97
   languageName: node
   linkType: hard
 
@@ -8351,8 +8344,9 @@ __metadata:
     "@dnd-kit/sortable": "npm:^10.0.0"
     "@eslint/eslintrc": "npm:^3.3.5"
     "@eslint/js": "npm:^10.0.1"
-    "@faker-js/faker": "npm:^9.0.3"
-    "@fontsource/roboto": "npm:^5.0.13"
+    "@faker-js/faker": "npm:^10.6.0"
+    "@fontsource/figtree": "npm:^5.2.10"
+    "@fontsource/nunito-sans": "npm:^5.2.10"
     "@fortawesome/fontawesome-svg-core": "npm:^6.5.2"
     "@fortawesome/free-brands-svg-icons": "npm:^6.5.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.5.2"
@@ -8484,10 +8478,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-to-chromium@npm:^1.5.263":
-  version: 1.5.307
-  resolution: "electron-to-chromium@npm:1.5.307"
-  checksum: 10/a72af3f89b83d81d151872c28a0886817b1da973e00629c0189c928ed46efa3e975c856969727bf6ebb32ec5ea8362c96e765f307260beaef3003d50fa5fbc11
+"electron-to-chromium@npm:^1.5.402":
+  version: 1.5.416
+  resolution: "electron-to-chromium@npm:1.5.416"
+  checksum: 10/500da467a02954b3da11167817bbe5b41e8b7ba1774bac7033b9c848768cfdc1bc600df5430d10be2fb4bf448289e1b48db5ecff3405e4dae8ca70fb78b95941
   languageName: node
   linkType: hard
 
@@ -9516,10 +9510,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.5":
-  version: 3.1.5
-  resolution: "fast-uri@npm:3.1.5"
-  checksum: 10/784bef687ca3ecfb4587a05104a4d41101796f0fec72be47a9abed743b10109e69a24d1ad0854ee7d2705912dc2ca9d93e03d35b65df0a3da0339e05b5d83b5c
+"fast-uri@npm:3.1.7":
+  version: 3.1.7
+  resolution: "fast-uri@npm:3.1.7"
+  checksum: 10/6d62ea818841e1b460f60482fd31582faa23ea9d9b33f856412b24c42da11fd72bd003be6696390ec896dbe4e9e78d3bb8d93bf70a511c7f69e5e807ac9b284f
   languageName: node
   linkType: hard
 
@@ -11157,7 +11151,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.3.0"
     "@typescript-eslint/parser": "npm:^7.3.0"
     "@vitest/coverage-v8": "npm:^4.1.0"
-    axios: "npm:1.18.0"
+    axios: "npm:1.20.0"
     eslint: "npm:^9.26.0"
     eslint-config-prettier: "npm:^9.1.0"
     globals: "npm:^17.4.0"
@@ -11211,14 +11205,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:4.3.1":
-  version: 4.3.1
-  resolution: "js-yaml@npm:4.3.1"
+"js-yaml@npm:4.3.2":
+  version: 4.3.2
+  resolution: "js-yaml@npm:4.3.2"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 10/2ce71b5d632abbd77da80447bf860e8a0264e54bffe94840984887d58b023761495b523727547904517a6107a1ef189854b361e0fc44995ee13a84f222d7bd42
+  checksum: 10/05c44b9c73e4901d92703b155e76518df64bf01ac62e4c036b47de4b391e19b72e32656e8954d51b436307f08cc9d0c0d4ec617d061cf2f65fffee9f3114bee7
   languageName: node
   linkType: hard
 
@@ -12875,10 +12869,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-releases@npm:^2.0.27":
-  version: 2.0.27
-  resolution: "node-releases@npm:2.0.27"
-  checksum: 10/f6c78ddb392ae500719644afcbe68a9ea533242c02312eb6a34e8478506eb7482a3fb709c70235b01c32fe65625b68dfa9665113f816d87f163bc3819b62b106
+"node-releases@npm:^2.0.53":
+  version: 2.0.54
+  resolution: "node-releases@npm:2.0.54"
+  checksum: 10/36380abbe4ce6f5bfec7dab13fa8174e67d2c316a9cbedcd01196bd37dbec99ca7214caf7a91f05d27ae17657d5cb55f39c53db216a7992fd9a2e29966ebd2ba
   languageName: node
   linkType: hard
 
@@ -15858,16 +15852,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:7.5.19":
-  version: 7.5.19
-  resolution: "tar@npm:7.5.19"
+"tar@npm:7.5.22":
+  version: 7.5.22
+  resolution: "tar@npm:7.5.22"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
     minipass: "npm:^7.1.2"
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
-  checksum: 10/0b06a0917fe68a4dff361e147db30fd67ae2ee85ab2863d62046a6ccef46f0d1906eed20f92277a436300eaaa0e3cd31d8763d7f02fa389f41d7966e58388db8
+  checksum: 10/129606384b3c895f422aaca48bf316357be6dc7aa35c1066c3f06c28acfff0be5b356e1b0a0be7c53a7a8945534ac06cec6d8e296d170d8a09c8bff67b29300e
   languageName: node
   linkType: hard
 
@@ -16529,9 +16523,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"update-browserslist-db@npm:^1.2.0":
-  version: 1.2.3
-  resolution: "update-browserslist-db@npm:1.2.3"
+"update-browserslist-db@npm:^1.3.0":
+  version: 1.3.2
+  resolution: "update-browserslist-db@npm:1.3.2"
   dependencies:
     escalade: "npm:^3.2.0"
     picocolors: "npm:^1.1.1"
@@ -16539,7 +16533,7 @@ __metadata:
     browserslist: ">= 4.21.0"
   bin:
     update-browserslist-db: cli.js
-  checksum: 10/059f774300efb4b084a49293143c511f3ae946d40397b5c30914e900cd5691a12b8e61b41dd54ed73d3b56c8204165a0333107dd784ccf8f8c81790bcc423175
+  checksum: 10/ca883e9d0fca1b5bfb9d5e7d9468c5ddd1d66ea827566f474875171381ad33b84aa555c138094fb2c6297c680e06482ad8b4c1ad931e8bfab9a4cf36ea9cf006
   languageName: node
   linkType: hard
 

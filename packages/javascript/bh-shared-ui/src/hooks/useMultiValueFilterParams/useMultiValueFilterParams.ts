@@ -77,5 +77,11 @@ export const useMultiValueFilterParams = ({
         });
     };
 
-    return { selection, setSelection };
+    const isDefaultSelection = areSelectionsEqual(selection, normalizedDefaultSelection);
+
+    return {
+        selection,
+        setSelection,
+        isDefaultSelection,
+    };
 };

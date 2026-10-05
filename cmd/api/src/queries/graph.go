@@ -69,13 +69,16 @@ const (
 )
 
 var (
-	ErrUnsupportedDataType   = errors.New("unsupported result type for this query")
-	ErrGraphUnsupported      = errors.New("type 'graph' is not supported for this endpoint")
-	ErrCypherQueryTooComplex = errors.New("cypher query is too complex and is likely to result in poor or unstable database performance")
+	ErrUnsupportedDataType    = errors.New("unsupported result type for this query")
+	ErrGraphUnsupported       = errors.New("type 'graph' is not supported for this endpoint")
+	ErrCypherQueryTooComplex  = errors.New("cypher query is too complex and is likely to result in poor or unstable database performance")
+	ErrCypherQueryUnparseable = errors.New("cypher query could not be parsed")
 )
 
-type ParallelPathDelegate = func(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error)
-type ParallelListDelegate = func(ctx context.Context, db graph.Database, node *graph.Node, skip int, limit int) (graph.NodeSet, error)
+type (
+	ParallelPathDelegate = func(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error)
+	ParallelListDelegate = func(ctx context.Context, db graph.Database, node *graph.Node, skip int, limit int) (graph.NodeSet, error)
+)
 
 type EntityQueryParameters struct {
 	QueryName     string
@@ -143,6 +146,7 @@ type Graph interface {
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
+	GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
@@ -184,7 +188,7 @@ func NewGraphQuery(graphDB graph.Database, cache cache.Cache, cfg config.Configu
 }
 
 func (s *GraphQuery) GetAssetGroupComboNode(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, owningObjectID string, assetGroupTag string) (map[string]any, error) {
-	var graphData = map[string]any{}
+	graphData := map[string]any{}
 
 	return graphData, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if assetGroupNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -425,7 +429,7 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 }
 
 func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool) (NodeSearchResults, error) {
-	var results = NodeSearchResults{}
+	results := NodeSearchResults{}
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)...))); err != nil {
 			return err
@@ -477,7 +481,7 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 
 	queryModel, err := frontend.ParseCypher(parseCtx, rawCypher)
 	if err != nil {
-		return graphQuery, err
+		return graphQuery, fmt.Errorf("%w: %w", ErrCypherQueryUnparseable, err)
 	}
 
 	// Query rewriter targets certain AST elements like relationship types and may rewrite them to add additional
@@ -639,7 +643,6 @@ func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGrap
 	)
 	if includeOpenGraphNodes {
 		return s.searchExactOrFuzzyMatchedNodes(ctx, nil, searchValue, useRawObjectID, searchType, nodes)
-
 	} else {
 		defaultSearchKinds := graph.Kinds{ad.Entity, azure.Entity}
 		if nodes, err = s.searchExactOrFuzzyMatchedNodes(ctx, defaultSearchKinds, searchValue, useRawObjectID, searchType, nodes); err != nil {
@@ -671,12 +674,7 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 		err  error
 	)
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if node, err = tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
-				query.KindIn(query.Node(), kinds...),
-			)
-		}).First(); err != nil {
+		if node, err = getEntityByObjectID(tx, objectID, kinds...); err != nil {
 			return err
 		}
 
@@ -686,6 +684,26 @@ func (s *GraphQuery) GetEntityByObjectId(ctx context.Context, objectID string, k
 	} else {
 		return node, nil
 	}
+}
+
+func (s *GraphQuery) GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
+	switch entityType {
+	case ad.Computer:
+		return adAnalysis.ComputerEntityDetails(ctx, s.Graph, objectID)
+	case ad.SiteServer:
+		return adAnalysis.SiteServerEntityDetails(ctx, s.Graph, objectID)
+	default:
+		return s.GetEntityByObjectId(ctx, objectID, entityType)
+	}
+}
+
+func getEntityByObjectID(tx graph.Transaction, objectID string, kinds ...graph.Kind) (*graph.Node, error) {
+	return tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.NodeProperty(common.ObjectID.String()), objectID),
+			query.KindIn(query.Node(), kinds...),
+		)
+	}).First()
 }
 
 func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any {
@@ -886,7 +904,7 @@ func (s *GraphQuery) FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds gr
 }
 
 func (s *GraphQuery) ValidateOUs(ctx context.Context, ous []string) ([]string, error) {
-	var validated = make([]string, 0)
+	validated := make([]string, 0)
 
 	for _, ou := range ous {
 		if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {

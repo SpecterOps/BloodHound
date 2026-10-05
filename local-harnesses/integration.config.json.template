@@ -16,6 +16,7 @@
         "connection": "neo4j://neo4j:bloodhoundcommunityedition@localhost:37687/"
     },
     "default_admin": {
+        "enabled": true,
         "principal_name": "admin",
         "password": "admin",
         "first_name": "BloodHound",

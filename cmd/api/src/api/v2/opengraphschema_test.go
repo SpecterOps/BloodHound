@@ -16,11 +16,13 @@
 package v2_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -95,6 +97,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					},
 				},
 			},
+			SavedQueries: &model.SavedQueriesPayload{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
+				},
+			},
 		}
 		serviceGraphExtension = model.GraphExtensionInput{
 			ExtensionInput: model.ExtensionInput{
@@ -141,6 +152,15 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 						ShortRemediation: "do x",
 						LongRemediation:  "do x but better",
 					},
+				},
+			},
+			SavedQueriesInput: model.SavedQueriesInput{
+				{
+					QueryKey:    "test-query",
+					Name:        "Test Query",
+					Query:       "MATCH (n) RETURN n",
+					Description: "Test saved query",
+					Category:    "Test Category",
 				},
 			},
 		}
@@ -199,7 +219,7 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 			},
 			want: want{
 				responseCode: http.StatusUnsupportedMediaType,
-				err:          fmt.Errorf("Code: 415 - errors: invalid content-type: [invalid]; Content type must be application/json"),
+				err:          fmt.Errorf("Code: 415 - errors: invalid content-type: [invalid]; Content type must be application/json or application/zip"),
 			},
 		},
 		{
@@ -358,6 +378,91 @@ func TestResources_OpenGraphSchemaIngest(t *testing.T) {
 					require.NoError(t, err)
 					req.Header.Set("content-type", mediatypes.ApplicationJson.String())
 					return req
+				},
+			},
+			want: want{
+				responseCode: http.StatusCreated,
+			},
+		},
+		{
+			name: "success_-_inserted_new_graph_extension_from_zip_bundle",
+			fields: fields{
+				setupOpenGraphServiceMock: func(t *testing.T, mock *schemamocks.MockOpenGraphSchemaService) {
+					var expectedGraphExtension = serviceGraphExtension
+					expectedGraphExtension.PZRulesInput = model.PZRulesInput{{
+						ExtensionRuleId: "tier_zero_admins",
+						Name:            "Tier Zero Admins",
+						Description:     "Seeds for tier zero",
+						Enabled:         true,
+						AllowDisable:    true,
+						Seeds: []model.SelectorSeedInput{{
+							Type:  model.SelectorTypeCypher,
+							Value: "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n",
+						}},
+					}}
+
+					mock.EXPECT().UpsertOpenGraphExtension(gomock.Any(), expectedGraphExtension).Return(false, nil)
+				},
+			},
+			args: args{
+				func() *http.Request {
+					var (
+						schemaExtension       = graphExtension
+						savedQueriesComponent = struct {
+							SavedQueries *model.SavedQueriesPayload `json:"queries"`
+						}{SavedQueries: graphExtension.SavedQueries}
+						zipBuffer           bytes.Buffer
+						jsonPayload         []byte
+						savedQueriesPayload []byte
+						zipWriter           *zip.Writer
+						schemaWriter        io.Writer
+						pzRulesWriter       io.Writer
+						savedQueriesWriter  io.Writer
+						request             *http.Request
+						err                 error
+					)
+
+					schemaExtension.SavedQueries = nil
+					schemaExtension.PZRules = nil
+					jsonPayload, err = json.Marshal(schemaExtension)
+					require.NoError(t, err)
+					savedQueriesPayload, err = json.Marshal(savedQueriesComponent)
+					require.NoError(t, err)
+
+					zipWriter = zip.NewWriter(&zipBuffer)
+					schemaWriter, err = zipWriter.Create("schema.json")
+					require.NoError(t, err)
+					_, err = schemaWriter.Write(jsonPayload)
+					require.NoError(t, err)
+					pzRulesWriter, err = zipWriter.Create("pz_rules.json")
+					require.NoError(t, err)
+					_, err = pzRulesWriter.Write([]byte(`{
+						"pz_rules": [
+							{
+							"key": "tier_zero_admins",
+							"name": "Tier Zero Admins",
+							"description": "Seeds for tier zero",
+							"enabled": true,
+							"allow_disable": true,
+							"seeds": [{
+								"type": 2,
+								"value": "MATCH (n:TEST_GraphSchemaNodeKind_1) RETURN n"
+							}]
+							}
+						]
+					}`))
+					require.NoError(t, err)
+					savedQueriesWriter, err = zipWriter.Create("saved_queries.json")
+					require.NoError(t, err)
+					_, err = savedQueriesWriter.Write(savedQueriesPayload)
+					require.NoError(t, err)
+					require.NoError(t, zipWriter.Close())
+
+					request, err = http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodPut,
+						"/api/v2/extensions", bytes.NewReader(zipBuffer.Bytes()))
+					require.NoError(t, err)
+					request.Header.Set("content-type", mediatypes.ApplicationZip.String())
+					return request
 				},
 			},
 			want: want{

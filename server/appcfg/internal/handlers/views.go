@@ -16,10 +16,13 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
 
@@ -47,4 +50,53 @@ func BuildDatapipeStatusView(status services.DatapipeStatus) DatapipeStatusView 
 // satisfying the responses.JSONViewer contract.
 func (s DatapipeStatusView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+type ParameterView struct {
+	ID          int32                 `json:"id"`
+	Key         services.ParameterKey `json:"key"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Value       types.JSONBObject     `json:"value"`
+	CreatedAt   time.Time             `json:"created_at"`
+	UpdatedAt   time.Time             `json:"updated_at"`
+	DeletedAt   sql.NullTime          `json:"deleted_at"`
+}
+
+type ParameterListView []ParameterView
+
+func BuildParameterView(parameter services.Parameter) ParameterView {
+	return ParameterView{
+		ID:          parameter.ID,
+		Key:         parameter.Key,
+		Name:        parameter.Name,
+		Description: parameter.Description,
+		Value:       parameter.Value,
+		CreatedAt:   parameter.CreatedAt,
+		UpdatedAt:   parameter.UpdatedAt,
+		DeletedAt:   parameter.DeletedAt,
+	}
+}
+
+func BuildParameterListView(parameters services.Parameters) ParameterListView {
+	var parametersView = []ParameterView{}
+
+	for _, parameter := range parameters {
+		parametersView = append(parametersView, BuildParameterView(parameter))
+	}
+
+	return parametersView
+}
+
+func (s ParameterListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// ValidFilters implements params.Filterable, describing the role fields that may
+// be filtered on and the operators each supports. It reproduces the legacy
+// GET /api/v2/roles contract so the filter middleware validates identically.
+func (s ParameterListView) ValidFilters() map[string]params.FilterableField {
+	return map[string]params.FilterableField{
+		"parameter": {Operators: []params.FilterOperator{params.Equals}, IsStringData: true},
+	}
 }

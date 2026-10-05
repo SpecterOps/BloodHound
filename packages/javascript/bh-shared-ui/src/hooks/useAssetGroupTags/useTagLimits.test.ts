@@ -17,7 +17,7 @@
 import { AssetGroupTagTypeLabel, ConfigurationKey } from 'js-client-library';
 import { createAssetGroupTag } from '../../mocks/factories/privilegeZones';
 import { renderHook } from '../../test-utils';
-import { setUpQueryClient } from '../../utils';
+import { setUpQueryClient } from '../../testing';
 import { configurationKeys } from '../useConfiguration';
 import { privilegeZonesKeys } from './useAssetGroupTags';
 import { useTagLimits } from './useTagLimits';

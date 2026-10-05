@@ -33,10 +33,12 @@ on:
         type: string
         required: true
         description: |-
-          The name of the repository where the container image will be stored in the container registry.
-          This repository name uniquely identifies the image within the registry.
+          One or more newline-separated repositories where the container image will be stored.
+          Each repository uniquely identifies the image within its registry.
 
-          Example: 'docker.io/specterops/bloodhound'.
+          Example: |
+            docker.io/specterops/bloodhound
+            590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
       dockerfile:
         type: string
         description: |-
@@ -173,11 +175,19 @@ on:
         required: true
       gh_access_token:
         required: true
+      ecr_aws_access_key_id:
+        required: false
+      ecr_aws_secret_access_key:
+        required: false
+
     outputs:
       image_reference:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
       image_name:
         value: ${{ jobs.build-container-image.outputs.image_name }}
+
+permissions:
+  contents: read
 
 jobs:
   build-container-image:
@@ -205,6 +215,18 @@ jobs:
           token: ${{ secrets.gh_access_token }}
           sparse-checkout-cone-mode: false
           sparse-checkout: .github/actions
+
+      - name: Configure ECR AWS Credentials
+        if: contains(inputs.container_image_repository_name, '.dkr.ecr.')
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # ratchet:aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.ecr_aws_secret_access_key }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        if: contains(inputs.container_image_repository_name, '.dkr.ecr.')
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
 
       - id: container-image-metadata
         uses: ./.github/actions/container-image-metadata

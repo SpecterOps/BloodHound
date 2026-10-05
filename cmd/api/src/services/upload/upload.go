@@ -47,10 +47,13 @@ type FileValidator func(src io.Reader, dst io.Writer) error
 
 func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, ingestSchema payload.Schema, jobID int64) (IngestTaskParams, payload.ValidationReport, error) {
 	var (
-		fileData     = request.Body
-		fileType     model.FileType
-		report       payload.ValidationReport
-		validationFn FileValidator
+		uploadDiagnostic ingestUploadDiagnostic
+		fileData         = request.Body
+		tempFileName     string
+		fileType         model.FileType
+		report           payload.ValidationReport
+		validationFn     FileValidator
+		err              error
 	)
 
 	switch {
@@ -68,15 +71,18 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 		return IngestTaskParams{}, report, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if tempFileName, err := WriteAndValidateFile(ctx, fileService, fileData, ingestFileTempPrefix(jobID), validationFn); err != nil {
+	uploadDiagnostic = startIngestUploadDiagnostic(ctx, jobID, fileType)
+	tempFileName, err = WriteAndValidateFile(ctx, fileService, fileData, ingestFileTempPrefix(jobID), validationFn)
+	uploadDiagnostic.finish(tempFileName, err)
+	if err != nil {
 		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
 		return IngestTaskParams{}, report, err
-	} else {
-		return IngestTaskParams{
-			Filename: tempFileName,
-			FileType: fileType,
-		}, report, nil
 	}
+
+	return IngestTaskParams{
+		Filename: tempFileName,
+		FileType: fileType,
+	}, report, nil
 }
 
 func WriteAndValidateZip(fileData io.Reader, destination io.Writer) error {
@@ -124,6 +130,8 @@ func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempF
 }
 
 func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
+	var storageWriteDiagnostic ingestStorageWriteDiagnostic
+
 	if validationFunc == nil {
 		return "", fmt.Errorf("validation function is required")
 	}
@@ -147,7 +155,9 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 	}()
 
 	// Write to storage while validation happens concurrently.
+	storageWriteDiagnostic = startIngestStorageWriteDiagnostic(ctx, prefix)
 	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, pr, storage.WriteOptions{})
+	storageWriteDiagnostic.finish(tempFileName, writeErr)
 	if writeErr != nil {
 		_ = pr.CloseWithError(writeErr)
 	}

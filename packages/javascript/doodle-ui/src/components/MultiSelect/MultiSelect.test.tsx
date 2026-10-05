@@ -305,4 +305,38 @@ describe('MultiSelect', () => {
 
         expect(screen.getByRole('button', { name: 'All Items' })).toBeInTheDocument();
     });
+
+    it('shows outlined variant override appearance on the selected-valued default', () => {
+        render(
+            <MultiSelect
+                options={options}
+                value={['a']}
+                onValueChange={vi.fn()}
+                placeholder='All Zones'
+                variant='outlined'
+            />
+        );
+
+        const trigger = screen.getByRole('button', {
+            name: /menu item a/i,
+        });
+
+        expect(trigger).toHaveClass('bg-select-trigger-outlined-fill');
+        expect(trigger).toHaveClass('ring-1');
+        expect(trigger).not.toHaveClass('bg-primary');
+    });
+
+    it('forwards data-analytics to the trigger button for custom Pendo trackable ID', () => {
+        render(
+            <MultiSelect
+                options={options}
+                value={[]}
+                onValueChange={vi.fn()}
+                placeholder='All Items'
+                data-analytics='pendo-test-id'
+            />
+        );
+
+        expect(screen.getByRole('button', { name: 'All Items' })).toHaveAttribute('data-analytics', 'pendo-test-id');
+    });
 });

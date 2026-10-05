@@ -209,6 +209,7 @@ type TeleportConfiguration struct {
 }
 
 type DefaultAdminConfiguration struct {
+	Enabled       bool   `json:"enabled"`
 	PrincipalName string `json:"principal_name"`
 	Password      string `json:"password"`
 	EmailAddress  string `json:"email_address"`

@@ -37,6 +37,7 @@ type Identity interface {
 	GetRole(ctx context.Context, id int32) (services.Role, error)
 	GetPermission(ctx context.Context, id int) (services.Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
+	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
@@ -112,6 +113,21 @@ func (s *Handlers) ListRoles(response http.ResponseWriter, request *http.Request
 	}
 
 	responses.WriteBasic(ctx, BuildRoleListView(roles), http.StatusOK, response)
+}
+
+func (s *Handlers) ListPermissions(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	permissions, err := s.identity.ListPermissions(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildPermissionListView(permissions), http.StatusOK, response)
 }
 
 func handleIdentityError(request *http.Request, response http.ResponseWriter, err error) {

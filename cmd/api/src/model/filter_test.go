@@ -151,7 +151,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo = '1notanumber2'",
+				SQLString: "foo = E'1notanumber2'",
 			},
 		},
 		{
@@ -164,7 +164,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo = '1'",
+				SQLString: "foo = E'1'",
 			},
 		},
 		{
@@ -177,7 +177,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo = '1.1'",
+				SQLString: "foo = E'1.1'",
 			},
 		},
 		{
@@ -190,7 +190,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo = 't'",
+				SQLString: "foo = E't'",
 			},
 		},
 		{
@@ -203,7 +203,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo != 'f'",
+				SQLString: "foo != E'f'",
 			},
 		},
 		{
@@ -294,7 +294,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "foo ilike '%12%'",
+				SQLString: "foo ilike E'%12%'",
 			},
 		},
 		{
@@ -332,7 +332,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "some_column = '6' and some_column = '7'",
+				SQLString: "some_column = E'6' and some_column = E'7'",
 			},
 		},
 		{
@@ -351,7 +351,7 @@ func TestBuildSQLFilter(t *testing.T) {
 				}},
 			},
 			output: model.SQLFilter{
-				SQLString: "(some_column = 't' or some_column = 'false')",
+				SQLString: "(some_column = E't' or some_column = E'false')",
 			},
 		},
 		{

@@ -40,6 +40,15 @@ func TestNewAnalysisRequestAdapter(t *testing.T) {
 	})
 }
 
+func TestNewAnalysisRequestSubmitter(t *testing.T) {
+	t.Run("returns non-nil submitter", func(t *testing.T) {
+		pool := new(pgxpool.Pool)
+		submitter := analysis.NewAnalysisRequestSubmitter(pool)
+
+		require.NotNil(t, submitter)
+	})
+}
+
 func TestRegister(t *testing.T) {
 	t.Run("successfully registers analysis routes", func(t *testing.T) {
 		var (

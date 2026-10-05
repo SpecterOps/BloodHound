@@ -31,6 +31,7 @@ import { ENVIRONMENT_AGGREGATION_SUPPORTED_ROUTES } from '../../../routes';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../../types';
 import { cn, useAppNavigate } from '../../../utils';
 import { RuleTabValue, TagTabValue } from '../utils';
+import { disabledStylesOverride } from './constants';
 import { useSelectedDetailsTabsContext } from './SelectedDetailsTabs/SelectedDetailsTabsContext';
 import { SelectedHighlight } from './SelectedHighlight';
 
@@ -106,7 +107,7 @@ export const RulesAccordion: React.FC = () => {
                 type='single'
                 collapsible
                 value={openAccordion}
-                className='w-full min-w-0 rounded-none bg-neutral-2'
+                className='w-full min-w-0 rounded-sm bg-neutral-2'
                 data-testid='privilege-zones_details_rules-accordion'>
                 <RuleAccordionItem
                     section={CustomRulesKey}
@@ -226,7 +227,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center h-10'>
                     <IconButton
-                        className='mx-2 rounded-none'
+                        className='mx-2 rounded-sm'
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         disabled={isAccordionDisabled}
                         data-testid={`privilege-zones_details_${filterKey}-accordion_open-toggle-button`}
@@ -247,12 +248,7 @@ const RuleAccordionItem: React.FC<RuleAccordionItemProps> = ({ section: filterKe
                             sortOrder={sortOrder}
                             classes={{
                                 container: cn({ 'pointer-events-none cursor-default': !isOpen }),
-                                button: cn('font-bold text-base rounded-none', {
-                                    '[&>svg]:hidden': !isOpen || isAccordionDisabled,
-                                    'opacity-50': isAccordionDisabled,
-                                    'disabled:!text-text-main disabled:!opacity-100 disabled:dark:!text-common-white disabled:dark:!opacity-100':
-                                        !isOpen && !isAccordionDisabled,
-                                }),
+                                button: cn((!isOpen || isAccordionDisabled) && disabledStylesOverride),
                             }}
                         />
                     </div>

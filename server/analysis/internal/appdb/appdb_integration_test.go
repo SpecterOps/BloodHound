@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/analysis/internal/appdb"
 	"github.com/specterops/bloodhound/server/analysis/internal/services"
@@ -268,6 +269,127 @@ func TestStore_DeleteAnalysisRequest_Integration(t *testing.T) {
 		require.NoError(t, getErr)
 		assert.Equal(t, services.RequestedAnalysisTypeDeletion, retrieved.RequestType)
 	})
+}
+
+func TestStore_UpsertAnalysisRequest(t *testing.T) {
+	type testContext struct {
+		ctx   context.Context
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
+
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, tc *testContext)
+		assert func(t *testing.T, tc *testContext)
+	}
+
+	testCases := []testCase{
+		{
+			name: "creates a pending analysis request when none exists",
+			setup: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "test-user", model.AnalysisModeNoPostProcessing))
+			},
+			assert: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				retrieved, err := tc.store.GetAnalysisRequest(tc.ctx)
+				require.NoError(t, err)
+				assert.Equal(t, "test-user", retrieved.RequestedBy)
+				assert.Equal(t, services.RequestedAnalysisTypeAnalysis, retrieved.RequestType)
+				assert.Equal(t, int32(model.AnalysisStepsNoPostProcessing().Bits()), getPendingAnalysisSteps(t, tc.ctx, tc.pool))
+			},
+		},
+		{
+			name: "widens queued analysis steps when a broader request arrives",
+			setup: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "tag-editor", model.AnalysisModeNoPostProcessing))
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "admin", model.AnalysisModeFull))
+			},
+			assert: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				retrieved, err := tc.store.GetAnalysisRequest(tc.ctx)
+				require.NoError(t, err)
+				assert.Equal(t, "tag-editor", retrieved.RequestedBy, "existing requester should be preserved when widening")
+				assert.Equal(t, int32(model.AnalysisStepsFull().Bits()), getPendingAnalysisSteps(t, tc.ctx, tc.pool))
+			},
+		},
+		{
+			name: "does not downgrade queued analysis steps when a narrower request arrives",
+			setup: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "admin", model.AnalysisModeFull))
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "tag-editor", model.AnalysisModeNoPostProcessing))
+			},
+			assert: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				retrieved, err := tc.store.GetAnalysisRequest(tc.ctx)
+				require.NoError(t, err)
+				assert.Equal(t, "admin", retrieved.RequestedBy)
+				assert.Equal(t, int32(model.AnalysisStepsFull().Bits()), getPendingAnalysisSteps(t, tc.ctx, tc.pool))
+			},
+		},
+		{
+			name: "leaves the row untouched when the requested bits are unchanged",
+			setup: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "tag-editor-1", model.AnalysisModeNoPostProcessing))
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "tag-editor-2", model.AnalysisModeNoPostProcessing))
+			},
+			assert: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				retrieved, err := tc.store.GetAnalysisRequest(tc.ctx)
+				require.NoError(t, err)
+				assert.Equal(t, "tag-editor-1", retrieved.RequestedBy)
+				assert.Equal(t, int32(model.AnalysisStepsNoPostProcessing().Bits()), getPendingAnalysisSteps(t, tc.ctx, tc.pool))
+			},
+		},
+		{
+			name: "does not overwrite a queued deletion request",
+			setup: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				seedDeletionRequest(t, tc.ctx, tc.pool, "deleter")
+				require.NoError(t, tc.store.UpsertAnalysisRequest(tc.ctx, "admin", model.AnalysisModeFull))
+			},
+			assert: func(t *testing.T, tc *testContext) {
+				t.Helper()
+				retrieved, err := tc.store.GetAnalysisRequest(tc.ctx)
+				require.NoError(t, err)
+				assert.Equal(t, services.RequestedAnalysisTypeDeletion, retrieved.RequestType)
+				assert.Equal(t, "deleter", retrieved.RequestedBy)
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				tc = &testContext{
+					ctx: context.Background(),
+				}
+			)
+
+			tc.store, tc.pool = setupStoreAndPool(t)
+
+			if testCase.setup != nil {
+				testCase.setup(t, tc)
+			}
+
+			testCase.assert(t, tc)
+		})
+	}
+}
+
+func getPendingAnalysisSteps(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32 {
+	t.Helper()
+
+	var analysisSteps int32
+
+	err := pool.QueryRow(ctx, `SELECT analysis_step FROM analysis_request_switch LIMIT 1`).Scan(&analysisSteps)
+	require.NoError(t, err)
+
+	return analysisSteps
 }
 
 func TestStore_CreateAnalysisRequest_ConcurrentCallsDoNotDuplicate(t *testing.T) {

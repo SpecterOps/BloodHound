@@ -28,7 +28,8 @@ import RuleForm from '.';
 import { privilegeZonesKeys } from '../../../../hooks';
 import { zoneHandlers } from '../../../../mocks';
 import { act, render, screen, waitFor, within } from '../../../../test-utils';
-import { apiClient, mockCodemirrorLayoutMethods, setUpQueryClient } from '../../../../utils';
+import { mockCodemirrorLayoutMethods, setUpQueryClient } from '../../../../testing';
+import { apiClient } from '../../../../utils';
 import * as utils from '../utils';
 
 const testSelector: AssetGroupTagSelector = {

@@ -52,8 +52,8 @@ func outputSeverityMap(results codeclimate.SeverityMap, outputAllSeverity bool) 
 //
 // If one or more entries have a severity of "error" this function returns an error stating
 // that a high severity result was found.
-func Run(paths workspace.WorkspacePaths, env environment.Environment, outputAllSeverity bool) error {
-	if golintResults, err := golang.Run(paths.Root, paths.GoModule, env); err != nil {
+func Run(paths workspace.WorkspacePaths, env environment.Environment, fix bool, outputAllSeverity bool) error {
+	if golintResults, err := golang.Run(paths.Root, paths.GoModule, env, fix); err != nil {
 		return fmt.Errorf("golangci-lint: %w", err)
 	} else if eslintResults, err := js.Run(paths.YarnWorkspaces, env); err != nil {
 		return fmt.Errorf("eslint: %w", err)

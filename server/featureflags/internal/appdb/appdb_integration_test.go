@@ -106,31 +106,59 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 }
 
 func TestStore_GetFlagByKey_Integration(t *testing.T) {
-	var (
-		ctx         = context.Background()
-		store, pool = setupStore(t)
-	)
+	type testCase struct {
+		name    string
+		setup   func(t *testing.T, ctx context.Context, pool *pgxpool.Pool)
+		key     string
+		wantErr error
+		assert  func(t *testing.T, flag services.FeatureFlag)
+	}
 
-	_, err := pool.Exec(ctx,
-		"INSERT INTO feature_flags (id, key, name, description, enabled, user_updatable, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
-		int32(9001), "integration_test_flag", "Integration Test Flag", "a flag", true, false)
-	require.NoError(t, err)
+	tests := []testCase{
+		{
+			name: "Success: returns the flag for the supplied key",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+				t.Helper()
+				_, err := pool.Exec(ctx,
+					"INSERT INTO feature_flags (id, key, name, description, enabled, user_updatable, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
+					int32(9001), "integration_test_flag", "Integration Test Flag", "a flag", true, false)
+				require.NoError(t, err)
+			},
+			key: "integration_test_flag",
+			assert: func(t *testing.T, flag services.FeatureFlag) {
+				t.Helper()
+				assert.Equal(t, "integration_test_flag", flag.Key)
+				assert.Equal(t, "Integration Test Flag", flag.Name)
+				assert.True(t, flag.Enabled)
+			},
+		},
+		{
+			name:    "Error: returns ErrNotFound for an unknown key",
+			key:     "does_not_exist_flag",
+			wantErr: services.ErrNotFound,
+		},
+	}
 
-	flag, err := store.GetFlagByKey(ctx, "integration_test_flag")
-	require.NoError(t, err)
-	assert.Equal(t, "integration_test_flag", flag.Key)
-	assert.Equal(t, "Integration Test Flag", flag.Name)
-	assert.True(t, flag.Enabled)
-}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				ctx         = context.Background()
+			)
 
-func TestStore_GetFlagByKey_Integration_NotFound(t *testing.T) {
-	var (
-		ctx      = context.Background()
-		store, _ = setupStore(t)
-	)
+			if testCase.setup != nil {
+				testCase.setup(t, ctx, pool)
+			}
 
-	_, err := store.GetFlagByKey(ctx, "does_not_exist_flag")
-	assert.ErrorIs(t, err, services.ErrNotFound)
+			flag, err := store.GetFlagByKey(ctx, testCase.key)
+			if testCase.wantErr != nil {
+				assert.ErrorIs(t, err, testCase.wantErr)
+			} else {
+				require.NoError(t, err)
+				testCase.assert(t, flag)
+			}
+		})
+	}
 }
 
 // seedFlag inserts a feature_flags row using the table sequence to allocate an id and
@@ -170,126 +198,196 @@ func authedContext(t *testing.T) context.Context {
 }
 
 func TestStore_GetFlagByID_Integration(t *testing.T) {
-	t.Run("returns the flag for the supplied id", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStore(t)
-			id          = seedFlag(t, ctx, pool, "by_id_flag", "ID Flag", true, false)
-		)
+	type testCase struct {
+		name    string
+		setup   func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32
+		id      func(seededID int32) int32
+		wantErr error
+		assert  func(t *testing.T, seededID int32, flag services.FeatureFlag)
+	}
 
-		flag, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, id, flag.ID)
-		assert.Equal(t, "by_id_flag", flag.Key)
-		assert.True(t, flag.Enabled)
-	})
+	tests := []testCase{
+		{
+			name: "Success: returns the flag for the supplied id",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32 {
+				t.Helper()
+				return seedFlag(t, ctx, pool, "by_id_flag", "ID Flag", true, false)
+			},
+			id: func(seededID int32) int32 { return seededID },
+			assert: func(t *testing.T, seededID int32, flag services.FeatureFlag) {
+				t.Helper()
+				assert.Equal(t, seededID, flag.ID)
+				assert.Equal(t, "by_id_flag", flag.Key)
+				assert.True(t, flag.Enabled)
+			},
+		},
+		{
+			name:    "Error: returns ErrNotFound for an unknown id",
+			id:      func(seededID int32) int32 { return 999999 },
+			wantErr: services.ErrNotFound,
+		},
+	}
 
-	t.Run("returns ErrNotFound for an unknown id", func(t *testing.T) {
-		var (
-			ctx      = context.Background()
-			store, _ = setupStore(t)
-		)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				ctx         = context.Background()
+				seededID    int32
+			)
 
-		_, err := store.GetFlagByID(ctx, 999999)
-		assert.ErrorIs(t, err, services.ErrNotFound)
-	})
+			if testCase.setup != nil {
+				seededID = testCase.setup(t, ctx, pool)
+			}
+
+			flag, err := store.GetFlagByID(ctx, testCase.id(seededID))
+			if testCase.wantErr != nil {
+				assert.ErrorIs(t, err, testCase.wantErr)
+			} else {
+				require.NoError(t, err)
+				testCase.assert(t, seededID, flag)
+			}
+		})
+	}
 }
 
 func TestStore_GetAllFlags_Integration(t *testing.T) {
-	t.Run("includes seeded and migration-provided flags", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStore(t)
-			seededID    = seedFlag(t, ctx, pool, "get_all_flag", "Get All Flag", false, true)
-		)
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32
+		assert func(t *testing.T, seededID int32, flags []services.FeatureFlag)
+	}
 
-		flags, err := store.GetAllFlags(ctx)
-		require.NoError(t, err)
-		require.NotEmpty(t, flags, "migrations should populate baseline flags")
+	tests := []testCase{
+		{
+			name: "Success: includes seeded and migration-provided flags",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32 {
+				t.Helper()
+				return seedFlag(t, ctx, pool, "get_all_flag", "Get All Flag", false, true)
+			},
+			assert: func(t *testing.T, seededID int32, flags []services.FeatureFlag) {
+				t.Helper()
+				require.NotEmpty(t, flags, "migrations should populate baseline flags")
 
-		found := false
-		for _, flag := range flags {
-			if flag.ID == seededID {
-				found = true
-				assert.Equal(t, "get_all_flag", flag.Key)
-				assert.False(t, flag.Enabled)
-				assert.True(t, flag.UserUpdatable)
-			}
-		}
-		assert.True(t, found, "seeded flag should appear in the result set")
-	})
+				found := false
+				for _, flag := range flags {
+					if flag.ID == seededID {
+						found = true
+						assert.Equal(t, "get_all_flag", flag.Key)
+						assert.False(t, flag.Enabled)
+						assert.True(t, flag.UserUpdatable)
+					}
+				}
+				assert.True(t, found, "seeded flag should appear in the result set")
+			},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				ctx         = context.Background()
+				seededID    = testCase.setup(t, ctx, pool)
+			)
+
+			flags, err := store.GetAllFlags(ctx)
+			require.NoError(t, err)
+			testCase.assert(t, seededID, flags)
+		})
+	}
 }
 
 func TestStore_SetFlag_Integration(t *testing.T) {
-	t.Run("flips a non-user-updatable flag without writing an audit log", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStore(t)
-			id          = seedFlag(t, ctx, pool, "set_flag_locked", "Locked", false, false)
-		)
+	type testSetupData struct {
+		ctx context.Context
+		id  int32
+	}
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData
+		assert func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error)
+	}
 
-		updated, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		updated.Enabled = true
+	tests := []testCase{
+		{
+			name: "Success: flips a non-user-updatable flag without writing an audit log",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+				id := seedFlag(t, ctx, pool, "set_flag_locked", "Locked", false, false)
+				return testSetupData{ctx: ctx, id: id}
+			},
+			assert: func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error) {
+				t.Helper()
+				require.NoError(t, setErr)
 
-		require.NoError(t, store.SetFlag(ctx, updated))
+				got, err := store.GetFlagByID(data.ctx, data.id)
+				require.NoError(t, err)
+				assert.True(t, got.Enabled)
 
-		got, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		assert.True(t, got.Enabled)
+				var auditCount int
+				require.NoError(t, pool.QueryRow(data.ctx,
+					"SELECT COUNT(*) FROM audit_logs WHERE action = $1",
+					string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
+				).Scan(&auditCount))
+				assert.Zero(t, auditCount, "no audit log should be written for non-user-updatable flags")
+			},
+		},
+		{
+			name: "Success: flips a user-updatable flag and writes an audit log",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+				authenticatedContext := authedContext(t)
+				id := seedFlag(t, authenticatedContext, pool, "set_flag_unlocked", "Unlocked", false, true)
+				return testSetupData{ctx: authenticatedContext, id: id}
+			},
+			assert: func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error) {
+				t.Helper()
+				require.NoError(t, setErr)
 
-		var auditCount int
-		require.NoError(t, pool.QueryRow(ctx,
-			"SELECT COUNT(*) FROM audit_logs WHERE action = $1",
-			string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
-		).Scan(&auditCount))
-		assert.Zero(t, auditCount, "no audit log should be written for non-user-updatable flags")
-	})
+				got, err := store.GetFlagByID(data.ctx, data.id)
+				require.NoError(t, err)
+				assert.True(t, got.Enabled)
 
-	t.Run("flips a user-updatable flag and writes an audit log", func(t *testing.T) {
-		var (
-			ctx         = authedContext(t)
-			store, pool = setupStore(t)
-			id          = seedFlag(t, ctx, pool, "set_flag_unlocked", "Unlocked", false, true)
-		)
+				var auditCount int
+				require.NoError(t, pool.QueryRow(data.ctx,
+					"SELECT COUNT(*) FROM audit_logs WHERE action = $1 AND actor_name = $2",
+					string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
+					"integration-user",
+				).Scan(&auditCount))
+				assert.Equal(t, 1, auditCount, "exactly one audit log should be written")
+			},
+		},
+		{
+			name: "Error: returns an error when no authenticated user is on the context for a user-updatable flag",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+				id := seedFlag(t, ctx, pool, "set_flag_anon", "Anon", false, true)
+				return testSetupData{ctx: ctx, id: id}
+			},
+			assert: func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error) {
+				t.Helper()
+				require.Error(t, setErr)
+				assert.ErrorContains(t, setErr, "no authenticated user on context")
 
-		updated, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		updated.Enabled = true
+				// Transaction should have rolled back, leaving the flag disabled.
+				got, err := store.GetFlagByID(data.ctx, data.id)
+				require.NoError(t, err)
+				assert.False(t, got.Enabled, "rolled-back update must not be visible")
+			},
+		},
+	}
 
-		require.NoError(t, store.SetFlag(ctx, updated))
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				data        = testCase.setup(t, context.Background(), pool)
+			)
 
-		got, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		assert.True(t, got.Enabled)
+			updated, err := store.GetFlagByID(data.ctx, data.id)
+			require.NoError(t, err)
+			updated.Enabled = true
 
-		var auditCount int
-		require.NoError(t, pool.QueryRow(ctx,
-			"SELECT COUNT(*) FROM audit_logs WHERE action = $1 AND actor_name = $2",
-			string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
-			"integration-user",
-		).Scan(&auditCount))
-		assert.Equal(t, 1, auditCount, "exactly one audit log should be written")
-	})
-
-	t.Run("returns an error when no authenticated user is on the context for a user-updatable flag", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStore(t)
-			id          = seedFlag(t, ctx, pool, "set_flag_anon", "Anon", false, true)
-		)
-
-		updated, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		updated.Enabled = true
-
-		err = store.SetFlag(ctx, updated)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "no authenticated user on context")
-
-		// Transaction should have rolled back, leaving the flag disabled.
-		got, err := store.GetFlagByID(ctx, id)
-		require.NoError(t, err)
-		assert.False(t, got.Enabled, "rolled-back update must not be visible")
-	})
+			setErr := store.SetFlag(data.ctx, updated)
+			testCase.assert(t, data, store, pool, setErr)
+		})
+	}
 }

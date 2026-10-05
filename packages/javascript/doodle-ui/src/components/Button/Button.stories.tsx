@@ -15,10 +15,29 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faInfo, faListUl, faStar, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { DocsPage } from '@storybook/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
+import { useTheme } from '@storybook/theming';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { Button, IconButton as IconButtonComponent, TextButton as TextButtonComponent } from './Button';
+
+const ButtonDocsPage = () => {
+    const theme = useTheme();
+
+    return (
+        <div className='button-docs'>
+            <style>{`
+                .button-docs .sb-anchor > h3:first-child {
+                    border-bottom: 1px solid ${theme.appBorderColor};
+                    font-size: 24px;
+                    padding-bottom: 4px;
+                }
+            `}</style>
+            <DocsPage />
+        </div>
+    );
+};
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -28,12 +47,15 @@ const meta = {
         // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
         layout: 'centered',
         docs: {
+            page: ButtonDocsPage,
             description: {
                 component: `
-### Use a Button to perform an action. 
+### Use a Button to perform an action
+
 Use a [Link](http://localhost:6006/?path=/docs/components-link--docs) to navigate to another location.
 
-###Use a Button when a user remains in the current context and triggers an action, such as:
+Use a Button when a user remains in the current context and triggers an action, such as:
+
 - Submitting or resetting a form
 - Saving, creating, deleting, or updating data
 - Opening a dialog, menu, popover, or drawer
@@ -41,8 +63,35 @@ Use a [Link](http://localhost:6006/?path=/docs/components-link--docs) to navigat
 - Starting, stopping, or retrying a process
 - Moving through a multi-step interface without changing the URL.
 
-#### **Avoid choosing by appearance**
+### Choosing a variant
+
+- Use primary for the main action in a section or workflow.
+- Use secondary for supporting actions such as Cancel or Back.
+- Use TextButton for lower-emphasis text actions.
+- Use IconButton for icon-only actions.
+
+### Accessibility
+
+- Give every button a clear accessible name describing its action.
+- Use visible text when possible. Icon-only buttons require an aria-label.
+- Preserve the visible keyboard focus indicator.
+- Do not nest a Button inside a Link or another interactive element.
+- Use disabled only when the action is unavailable. Explain why when the reason is not apparent.
+
+### Forms and rendered elements
+
+Button defaults to \`type="button"\`. Set \`type="submit"\` or \`type="reset"\` explicitly when needed in a form.
+
+ Use the Base UI \`render\` prop when another element needs to provide the rendered structure. This replaces the former \`asChild\` pattern and avoids nesting interactive elements.
+
+### Deprecated APIs
+
+The \`size\` and \`fontColor\` props and the transparent and icon variants are legacy APIs. Prefer the dedicated \`TextButton\` and \`IconButton\` components for new code.
+
+### Avoid choosing by appearance
+
 Buttons and Links may be styled similarly, but their semantics should reflect their behavior:
+
 - Do not use a Link solely because the control looks like text.
 - Do not use a Button solely because the control looks prominent.
 - Do not place a Button inside a Link or a Link inside a Button.
@@ -122,6 +171,13 @@ export const DefaultType: ButtonStory = {
             },
         },
     },
+    parameters: {
+        docs: {
+            description: {
+                story: `Button defaults to \`type="button"\` so it does not unintentionally submit a containing form. Set \`type="submit"\` or \`type="reset"\` explicitly when needed.`,
+            },
+        },
+    },
     render: ({ children, ...buttonProps }) => {
         return <Button {...buttonProps}>{children}</Button>;
     },
@@ -140,6 +196,13 @@ export const Primary: ButtonStory = {
         variant: 'primary',
         children: 'Next',
         disabled: false,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: `Use the primary variant for the main action in a section or workflow. Prefer one primary action per decision area.`,
+            },
+        },
     },
     render: ({ children, ...buttonProps }) => (
         <>
@@ -171,6 +234,13 @@ export const Secondary: ButtonStory = {
         variant: 'secondary',
         children: 'Secondary',
         disabled: false,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: `Use the secondary variant for supporting actions such as Cancel, Back, or an alternative to the primary action.`,
+            },
+        },
     },
     render: ({ variant, children, ...buttonProps }) => (
         <>
@@ -211,6 +281,27 @@ export const TextButton: TextButtonStory = {
             options: ['primary', 'default'],
         },
     },
+    parameters: {
+        docs: {
+            description: {
+                story: `### Usage
+
+Use TextButton for lower-emphasis actions that keep the user in the current context. It is still a button, not a navigation link.
+
+- Use \`fontColor="primary"\` when the action needs additional emphasis.
+- Use \`disabled\` when the action is unavailable.
+- Use \`IconButton\` instead when an action has no visible text label.
+- Use the \`render\` prop when integrating with another component without nesting interactive elements.
+- Use \`className\` for local layout adjustments such as padding, alignment, or width; preserve the standard focus indicator.
+
+~~~tsx
+<TextButton fontColor='primary' onClick={clearFilters}>
+    Clear All
+</TextButton>
+~~~`,
+            },
+        },
+    },
     render: ({ children, ...textButtonProps }) => (
         <>
             {/* Storybook controls affect only this button */}
@@ -224,7 +315,7 @@ export const TextButton: TextButtonStory = {
                     {children}
                     <FontAwesomeIcon icon={faListUl} />
                 </TextButtonComponent>
-                <TextButtonComponent disabled>Disabled</TextButtonComponent>
+                <TextButtonComponent fontColor='primary'>Primary Text</TextButtonComponent>
                 <TextButtonComponent disabled>
                     <FontAwesomeIcon icon={faListUl} />
                     Disabled
@@ -238,6 +329,8 @@ export const IconButton: IconButtonStory = {
     args: {
         variant: 'default',
         disabled: false,
+        size: 16,
+        'aria-label': 'Show information',
     },
     argTypes: {
         variant: {
@@ -262,7 +355,7 @@ export const IconButton: IconButtonStory = {
         },
         size: {
             description:
-                'Sets the icon width and height in pixels. Defaults to 16. The button remains square and grows when necessary to contain larger icons.',
+                'Sets the icon width and height in pixels. Defaults to 16. The square button resizes with the icon.',
             control: {
                 type: 'number',
                 min: 8,
@@ -285,8 +378,22 @@ export const IconButton: IconButtonStory = {
         },
         docs: {
             description: {
-                // story: 'Icon size can be adjusted via `className`. The default is `h-8 w-8` (32×32).<br />However, adjusting the size of the icon will also adjust the overall dimensions.',
-                story: `** Accessible label **
+                story: `### Sizing
+
+The \`size\` prop sets the icon's width and height in pixels. The button automatically resizes around the icon while preserving its square shape and consistent padding.
+
+\`\`\`tsx
+<IconButton aria-label='Open filters' size={16}>
+    <FilterIcon />
+</IconButton>
+\`\`\`
+
+The default icon size is \`16px\`. By default, the button adds \`8px\` of padding on every side, so its total width and height are the icon size plus \`16px\`. For example, \`size={16}\` produces a \`32px × 32px\` button.
+
+Use the \`size\` prop to resize the icon and button together. Use \`className\` only when you need to override spacing or other presentation.
+
+### Accessible label
+
 - Because an icon usually does not provide an accessible name, every \`IconButton\` requires an \`aria-label\`. The label should describe the action performed by the button.
 
 \`\`\`tsx
@@ -306,27 +413,27 @@ Tooltip for IconButton`,
         <>
             {/* Storybook controls affect only this button */}
             <div className='flex justify-center mb-10'>
-                <IconButtonComponent {...buttonProps} aria-label='Filter' size={24}>
-                    <AppIcon.FilterOutline />
+                <IconButtonComponent {...buttonProps}>
+                    <FontAwesomeIcon icon={faInfo} />
                 </IconButtonComponent>
             </div>
             <hr className='mb-10' />
             {/* These buttons remain static */}
             <div className='flex items-center gap-4'>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Star Icon' variant='primary'>
-                        <FontAwesomeIcon icon={faInfo} />
+                    <IconButtonComponent aria-label='Trash Icon' size={18}>
+                        <FontAwesomeIcon icon={faTrash} />
                     </IconButtonComponent>
                     Primary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Gear Icon' variant='secondary'>
-                        <FontAwesomeIcon icon={faTrash} />
+                    <IconButtonComponent aria-label='Filter' size={24} variant='secondary'>
+                        <AppIcon.FilterOutline />
                     </IconButtonComponent>
                     Secondary
                 </div>
                 <div className='flex flex-col items-center gap-4'>
-                    <IconButtonComponent aria-label='Gear Icon' variant='primary' disabled size={24}>
+                    <IconButtonComponent aria-label='Filter Icon' variant='primary' disabled size={24}>
                         <AppIcon.FilterOutline />
                     </IconButtonComponent>
                     Disabled

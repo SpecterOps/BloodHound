@@ -132,57 +132,95 @@ func seededRole(t *testing.T, ctx context.Context, pool *pgxpool.Pool) services.
 }
 
 func TestStore_GetPermission_Integration(t *testing.T) {
-	t.Run("returns the permission for a seeded id", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
 
-		expected := seededPermission(t, ctx, pool)
+	type expected struct {
+		assertResponse func(t *testing.T, mock mock, permission services.Permission, err error)
+	}
 
-		retrieved, err := store.GetPermission(ctx, int(expected.ID))
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Authority, retrieved.Authority)
-		assert.Equal(t, expected.Name, retrieved.Name)
-	})
+	type testData struct {
+		name              string
+		buildPermissionID func(t *testing.T, mock mock) int
+		expected          expected
+	}
 
-	t.Run("returns ErrNoPermissionFound when the permission does not exist", func(t *testing.T) {
-		var (
-			ctx      = context.Background()
-			store, _ = setupStoreAndPool(t)
-		)
+	tt := []testData{
+		{name: "Success: seeded permission is returned", buildPermissionID: func(t *testing.T, mock mock) int {
+			return int(seededPermission(t, context.Background(), mock.pool).ID)
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, retrieved services.Permission, err error) {
+			expectedPermission := seededPermission(t, context.Background(), mock.pool)
+			require.NoError(t, err)
+			assert.Equal(t, expectedPermission.ID, retrieved.ID)
+			assert.Equal(t, expectedPermission.Authority, retrieved.Authority)
+			assert.Equal(t, expectedPermission.Name, retrieved.Name)
+		}}},
+		{name: "Error: permission does not exist", buildPermissionID: func(_ *testing.T, _ mock) int { return 99999999 }, expected: expected{assertResponse: func(t *testing.T, _ mock, _ services.Permission, err error) {
+			assert.ErrorIs(t, err, services.ErrNoPermissionFound)
+		}}},
+	}
 
-		_, err := store.GetPermission(ctx, 99999999)
-		assert.ErrorIs(t, err, services.ErrNoPermissionFound)
-	})
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+				mock        = mock{store: store, pool: pool}
+			)
+
+			permission, err := mock.store.GetPermission(ctx, testCase.buildPermissionID(t, mock))
+			testCase.expected.assertResponse(t, mock, permission, err)
+		})
+	}
 }
 
 func TestStore_GetRole_Integration(t *testing.T) {
-	t.Run("returns the role with its permissions for a seeded id", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
 
-		expected := seededRole(t, ctx, pool)
+	type expected struct {
+		assertResponse func(t *testing.T, mock mock, role services.Role, err error)
+	}
 
-		retrieved, err := store.GetRole(ctx, expected.ID)
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Name, retrieved.Name)
-		assert.NotEmpty(t, retrieved.Permissions, "expected the seeded role to have at least one permission")
-	})
+	type testData struct {
+		name        string
+		buildRoleID func(t *testing.T, mock mock) int32
+		expected    expected
+	}
 
-	t.Run("returns ErrNoRoleFound when the role does not exist", func(t *testing.T) {
-		var (
-			ctx      = context.Background()
-			store, _ = setupStoreAndPool(t)
-		)
+	tt := []testData{
+		{name: "Success: seeded role with permissions is returned", buildRoleID: func(t *testing.T, mock mock) int32 {
+			return seededRole(t, context.Background(), mock.pool).ID
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, retrieved services.Role, err error) {
+			expectedRole := seededRole(t, context.Background(), mock.pool)
+			require.NoError(t, err)
+			assert.Equal(t, expectedRole.ID, retrieved.ID)
+			assert.Equal(t, expectedRole.Name, retrieved.Name)
+			assert.NotEmpty(t, retrieved.Permissions, "expected the seeded role to have at least one permission")
+		}}},
+		{name: "Error: role does not exist", buildRoleID: func(_ *testing.T, _ mock) int32 { return 99999999 }, expected: expected{assertResponse: func(t *testing.T, _ mock, _ services.Role, err error) {
+			assert.ErrorIs(t, err, services.ErrNoRoleFound)
+		}}},
+	}
 
-		_, err := store.GetRole(ctx, 99999999)
-		assert.ErrorIs(t, err, services.ErrNoRoleFound)
-	})
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+				mock        = mock{store: store, pool: pool}
+			)
+
+			role, err := mock.store.GetRole(ctx, testCase.buildRoleID(t, mock))
+			testCase.expected.assertResponse(t, mock, role, err)
+		})
+	}
 }
 
 // seededRoleCount reads the number of roles seeded by the migrations directly
@@ -197,120 +235,234 @@ func seededRoleCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int 
 	return count
 }
 
+func seededPermissionCount(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int {
+	t.Helper()
+
+	var count int
+	err := pool.QueryRow(ctx, "SELECT count(*) FROM permissions").Scan(&count)
+	require.NoError(t, err)
+
+	return count
+}
+
 func TestStore_ListRoles_Integration(t *testing.T) {
-	t.Run("returns every seeded role with its permissions", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
 
-		expectedCount := seededRoleCount(t, ctx, pool)
-		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+	type expected struct {
+		assertResponse func(t *testing.T, mock mock, roles []services.Role, err error)
+	}
 
-		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Len(t, roles, expectedCount)
+	type testData struct {
+		name       string
+		buildQuery func(t *testing.T, mock mock) (params.Filters, params.SortItems)
+		expected   expected
+	}
 
-		var withPermissions int
-		for _, r := range roles {
-			if len(r.Permissions) > 0 {
-				withPermissions++
+	const epoch = "2000-01-01T00:00:00Z"
+
+	tt := []testData{
+		{name: "Success: every seeded role with permissions is returned", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, roles []services.Role, err error) {
+			expectedCount := seededRoleCount(t, context.Background(), mock.pool)
+			require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+			require.NoError(t, err)
+			assert.Len(t, roles, expectedCount)
+			for _, role := range roles {
+				if len(role.Permissions) > 0 {
+					return
+				}
 			}
-		}
-		assert.NotZero(t, withPermissions, "expected at least one role to preload its permissions")
-	})
+			t.Fatal("expected at least one role to preload its permissions")
+		}}},
+		{name: "Success: roles are sorted by name", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}}
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			require.Len(t, roles, seededRoleCount(t, context.Background(), mock.pool))
+			for i := 1; i < len(roles); i++ {
+				assert.LessOrEqual(t, roles[i-1].Name, roles[i].Name, "roles should be sorted by name ascending")
+			}
+		}}},
+		{name: "Success: roles are filtered by name", buildQuery: func(t *testing.T, mock mock) (params.Filters, params.SortItems) {
+			target := seededRole(t, context.Background(), mock.pool)
+			return params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: target.Name, SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, roles []services.Role, err error) {
+			target := seededRole(t, context.Background(), mock.pool)
+			require.NoError(t, err)
+			require.Len(t, roles, 1)
+			assert.Equal(t, target.Name, roles[0].Name)
+		}}},
+		{name: "Success: no roles match", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, _ mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			assert.Empty(t, roles)
+		}}},
+		{name: "Success: roles created after the epoch are returned", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			assert.Len(t, roles, seededRoleCount(t, context.Background(), mock.pool))
+		}}},
+		{name: "Success: no roles were created before the epoch", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, _ mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			assert.Empty(t, roles)
+		}}},
+		{name: "Success: roles updated after the epoch are returned", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, mock mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			assert.Len(t, roles, seededRoleCount(t, context.Background(), mock.pool))
+		}}},
+		{name: "Success: no roles were updated before the epoch", buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+			return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+		}, expected: expected{assertResponse: func(t *testing.T, _ mock, roles []services.Role, err error) {
+			require.NoError(t, err)
+			assert.Empty(t, roles)
+		}}},
+	}
 
-	t.Run("returns roles sorted by name ascending", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
 
-		expectedCount := seededRoleCount(t, ctx, pool)
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+				mock        = mock{store: store, pool: pool}
+			)
 
-		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}})
-		require.NoError(t, err)
-		require.Len(t, roles, expectedCount)
+			filters, sortItems := testCase.buildQuery(t, mock)
+			roles, err := mock.store.ListRoles(ctx, filters, sortItems)
+			testCase.expected.assertResponse(t, mock, roles, err)
+		})
+	}
+}
 
-		for i := 1; i < len(roles); i++ {
-			assert.LessOrEqual(t, roles[i-1].Name, roles[i].Name, "roles should be sorted by name ascending")
-		}
-	})
+func TestStore_ListPermissions_Integration(t *testing.T) {
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
 
-	t.Run("returns roles filtered by name", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type expected struct {
+		assertResponse func(t *testing.T, mock mock, permissions []services.Permission)
+	}
 
-		target := seededRole(t, ctx, pool)
+	type testData struct {
+		name       string
+		buildQuery func(t *testing.T, mock mock) (params.Filters, params.SortItems)
+		expected   expected
+	}
 
-		roles, err := store.ListRoles(ctx, params.Filters{
-			"name": {{Field: "name", Operator: params.Equals, Value: target.Name, SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		require.Len(t, roles, 1)
-		assert.Equal(t, target.Name, roles[0].Name)
-	})
+	const epoch = "2000-01-01T00:00:00Z"
 
-	t.Run("returns an empty slice when no role matches the filter", func(t *testing.T) {
-		var (
-			ctx      = context.Background()
-			store, _ = setupStoreAndPool(t)
-		)
+	tt := []testData{
+		{
+			name: "Success: all seeded permissions are returned",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, mock mock, permissions []services.Permission) {
+				expectedCount := seededPermissionCount(t, context.Background(), mock.pool)
+				require.NotZero(t, expectedCount, "expected migrations to seed at least one permission")
+				assert.Len(t, permissions, expectedCount)
+			}},
+		},
+		{
+			name: "Success: permissions are sorted by name",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{}, params.SortItems{{Field: "name", Direction: params.Ascending}}
+			},
+			expected: expected{assertResponse: func(t *testing.T, mock mock, permissions []services.Permission) {
+				expectedCount := seededPermissionCount(t, context.Background(), mock.pool)
+				require.Len(t, permissions, expectedCount)
+				for i := 1; i < len(permissions); i++ {
+					assert.LessOrEqual(t, permissions[i-1].Name, permissions[i].Name, "permissions should be sorted by name ascending")
+				}
+			}},
+		},
+		{
+			name: "Success: permissions are filtered by authority",
+			buildQuery: func(t *testing.T, mock mock) (params.Filters, params.SortItems) {
+				target := seededPermission(t, context.Background(), mock.pool)
+				return params.Filters{"authority": {{Field: "authority", Operator: params.Equals, Value: target.Authority, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, mock mock, permissions []services.Permission) {
+				target := seededPermission(t, context.Background(), mock.pool)
+				require.NotEmpty(t, permissions)
+				for _, permission := range permissions {
+					assert.Equal(t, target.Authority, permission.Authority)
+				}
+			}},
+		},
+		{
+			name: "Success: no permissions match",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, _ mock, permissions []services.Permission) {
+				assert.Empty(t, permissions)
+			}},
+		},
+		{
+			name: "Success: created_at supports date comparisons after the epoch",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, mock mock, permissions []services.Permission) {
+				assert.Len(t, permissions, seededPermissionCount(t, context.Background(), mock.pool))
+			}},
+		},
+		{
+			name: "Success: created_at supports date comparisons before the epoch",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, _ mock, permissions []services.Permission) {
+				assert.Empty(t, permissions)
+			}},
+		},
+		{
+			name: "Success: updated_at supports date comparisons after the epoch",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, mock mock, permissions []services.Permission) {
+				assert.Len(t, permissions, seededPermissionCount(t, context.Background(), mock.pool))
+			}},
+		},
+		{
+			name: "Success: updated_at supports date comparisons before the epoch",
+			buildQuery: func(_ *testing.T, _ mock) (params.Filters, params.SortItems) {
+				return params.Filters{"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}}}, params.SortItems{}
+			},
+			expected: expected{assertResponse: func(t *testing.T, _ mock, permissions []services.Permission) {
+				assert.Empty(t, permissions)
+			}},
+		},
+	}
 
-		roles, err := store.ListRoles(ctx, params.Filters{
-			"name": {{Field: "name", Operator: params.Equals, Value: "does-not-exist", SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Empty(t, roles)
-	})
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
 
-	t.Run("returns roles filtered by created_at date comparison", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-			epoch       = "2000-01-01T00:00:00Z"
-		)
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+				mock        = mock{store: store, pool: pool}
+			)
 
-		expectedCount := seededRoleCount(t, ctx, pool)
-		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
-
-		afterEpoch, err := store.ListRoles(ctx, params.Filters{
-			"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Len(t, afterEpoch, expectedCount, "every seeded role was created after the epoch")
-
-		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
-			"created_at": {{Field: "created_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Empty(t, beforeEpoch, "no seeded role was created before the epoch")
-	})
-
-	t.Run("returns roles filtered by updated_at date comparison", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-			epoch       = "2000-01-01T00:00:00Z"
-		)
-
-		expectedCount := seededRoleCount(t, ctx, pool)
-		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
-
-		afterEpoch, err := store.ListRoles(ctx, params.Filters{
-			"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: epoch, SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Len(t, afterEpoch, expectedCount, "every seeded role was updated after the epoch")
-
-		beforeEpoch, err := store.ListRoles(ctx, params.Filters{
-			"updated_at": {{Field: "updated_at", Operator: params.LessThan, Value: epoch, SetOperator: params.FilterAnd}},
-		}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Empty(t, beforeEpoch, "no seeded role was updated before the epoch")
-	})
+			filters, sortItems := testCase.buildQuery(t, mock)
+			permissions, err := mock.store.ListPermissions(ctx, filters, sortItems)
+			require.NoError(t, err)
+			testCase.expected.assertResponse(t, mock, permissions)
+		})
+	}
 }
 
 // addDeprecatedDeletedAtColumn simulates the shape of an upgraded/GORM-era database by
@@ -332,52 +484,79 @@ func addDeprecatedDeletedAtColumn(t *testing.T, ctx context.Context, pool *pgxpo
 // SELECT *. This test fails against the old SELECT * queries and passes against the
 // explicit-column queries.
 func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
-	t.Run("GetRole succeeds when roles has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
 
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
+	type expected struct {
+		assertResponse func(t *testing.T, ctx context.Context, mock mock)
+	}
 
-		expected := seededRole(t, ctx, pool)
+	type testData struct {
+		name     string
+		table    string
+		expected expected
+	}
 
-		retrieved, err := store.GetRole(ctx, expected.ID)
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Name, retrieved.Name)
-	})
+	tt := []testData{
+		{
+			name:  "Success: GetRole handles a stray deleted_at column",
+			table: "roles",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock) {
+				expectedRole := seededRole(t, ctx, mock.pool)
+				retrieved, err := mock.store.GetRole(ctx, expectedRole.ID)
+				require.NoError(t, err)
+				assert.Equal(t, expectedRole.ID, retrieved.ID)
+				assert.Equal(t, expectedRole.Name, retrieved.Name)
+			}},
+		},
+		{
+			name:  "Success: ListRoles handles a stray deleted_at column",
+			table: "roles",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock) {
+				expectedCount := seededRoleCount(t, ctx, mock.pool)
+				require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
+				roles, err := mock.store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+				assert.Len(t, roles, expectedCount)
+			}},
+		},
+		{
+			name:  "Success: GetPermission handles a stray deleted_at column",
+			table: "permissions",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock) {
+				expectedPermission := seededPermission(t, ctx, mock.pool)
+				retrieved, err := mock.store.GetPermission(ctx, int(expectedPermission.ID))
+				require.NoError(t, err)
+				assert.Equal(t, expectedPermission.ID, retrieved.ID)
+				assert.Equal(t, expectedPermission.Authority, retrieved.Authority)
+				assert.Equal(t, expectedPermission.Name, retrieved.Name)
+			}},
+		},
+		{
+			name:  "Success: ListPermissions handles a stray deleted_at column",
+			table: "permissions",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock) {
+				expectedCount := seededPermissionCount(t, ctx, mock.pool)
+				permissions, err := mock.store.ListPermissions(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+				assert.Len(t, permissions, expectedCount)
+			}},
+		},
+	}
 
-	t.Run("ListRoles succeeds when roles has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
 
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "roles")
+			var (
+				ctx         = context.Background()
+				store, pool = setupStoreAndPool(t)
+				mock        = mock{store: store, pool: pool}
+			)
 
-		expectedCount := seededRoleCount(t, ctx, pool)
-		require.NotZero(t, expectedCount, "expected migrations to seed at least one role")
-
-		roles, err := store.ListRoles(ctx, params.Filters{}, params.SortItems{})
-		require.NoError(t, err)
-		assert.Len(t, roles, expectedCount)
-	})
-
-	t.Run("GetPermission succeeds when permissions has a stray deleted_at column", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			store, pool = setupStoreAndPool(t)
-		)
-
-		addDeprecatedDeletedAtColumn(t, ctx, pool, "permissions")
-
-		expected := seededPermission(t, ctx, pool)
-
-		retrieved, err := store.GetPermission(ctx, int(expected.ID))
-		require.NoError(t, err)
-		assert.Equal(t, expected.ID, retrieved.ID)
-		assert.Equal(t, expected.Authority, retrieved.Authority)
-		assert.Equal(t, expected.Name, retrieved.Name)
-	})
+			addDeprecatedDeletedAtColumn(t, ctx, mock.pool, testCase.table)
+			testCase.expected.assertResponse(t, ctx, mock)
+		})
+	}
 }

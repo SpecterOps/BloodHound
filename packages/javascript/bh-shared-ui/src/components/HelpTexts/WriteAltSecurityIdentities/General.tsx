@@ -22,12 +22,12 @@ import { groupSpecialFormat, typeFormat } from '../utils';
 const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, targetType }) => {
     return (
         <>
-            <Typography variant='body2'>
+            <Typography variant='body2' className='my-4'>
                 {groupSpecialFormat(sourceType, sourceName)} the ability to write to the AltSecurityIdentities attribute
                 of the {typeFormat(targetType)} {targetName}.
             </Typography>
 
-            <Typography variant='body2'>
+            <Typography variant='body2' className='my-4'>
                 The altSecurityIdentities attribute allows you to specify <i>explicit certificate mappings</i> for a
                 principal. An explicit certificate mapping directly links a specific certificate to the principal, as an
                 alternative to the normal certificate-to-account mapping rules and allowing authentication as that

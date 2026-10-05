@@ -41,19 +41,15 @@ const tableProps: DataTableProps['TableProps'] = {
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm',
+    className: 'sticky top-0 z-10 shadow-sm text-base',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {
-    className: 'px-2 text-center',
+    className: 'px-2 py-4 text-center',
 };
 
 const tableCellProps: DataTableProps['TableCellProps'] = {
     className: 'truncate group relative p-0 pl-2',
-};
-
-const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.bhGraphId,
 };
 
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
@@ -89,13 +85,20 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            selectedColumns,
-            exploreTableData,
-        });
+    const {
+        columnOptionsForDropdown,
+        sortedFilteredRows,
+        tableColumns,
+        resultsCount,
+        columnOrder,
+        setColumnOrder,
+        tableOptions,
+    } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        selectedColumns,
+        exploreTableData,
+    });
 
     const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 

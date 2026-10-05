@@ -27,7 +27,7 @@ BEGIN
 
 	RETURN kind_id;
 END $$ LANGUAGE plpgsql;
-	
+
 CREATE OR REPLACE FUNCTION genscript_upsert_source_kind(kind_name TEXT) RETURNS SMALLINT AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;
@@ -45,7 +45,7 @@ BEGIN
 
 	RETURN source_kind_id;
 END $$ LANGUAGE plpgsql;
-	
+
 CREATE OR REPLACE FUNCTION genscript_upsert_schema_node_kind(v_extension_id INT, v_kind_name VARCHAR(256), v_display_name TEXT, v_description TEXT, v_is_display_kind BOOLEAN, v_icon TEXT, v_icon_color TEXT) RETURNS void AS $$
 DECLARE
 	retrieved_kind_id SMALLINT;

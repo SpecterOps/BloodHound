@@ -24,6 +24,9 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
 
+permissions:
+  contents: read
+
 jobs:
   run-slow-go-tests:
     name: Run Slow Go Tests
@@ -34,7 +37,9 @@ jobs:
     needs: run-slow-go-tests
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
-      container_image_repository_name: docker.io/specterops/bloodhound
+      container_image_repository_name: |
+        docker.io/specterops/bloodhound
+        590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
       build_target: bloodhound
       build_context: .
       image_sbom: true
@@ -45,8 +50,21 @@ jobs:
       image_cache_to: type=gha,mode=max
       image_flavor: latest=${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) == false }}
       image_tags: |
+        # Edge builds from main
+        ## edge-<git_sha>
         type=edge,branch=main
+        type=sha,format=short,prefix=edge-,enable=${{ github.ref_name == 'main' }}
+
+        # Release candidates
+        ## candidate-<git_sha>
+        type=sha,format=short,prefix=candidate-,enable=${{ contains(github.ref_name, '-rc') }}
+        type=raw,value=candidate,enable=${{ contains(github.ref_name, '-rc') }}
         type=semver,pattern={{version}}
+
+        # Production releases
+        ## production-<git_sha>
+        type=sha,format=short,prefix=production-,enable=${{ github.ref_type == 'tag' && !contains(github.ref_name, '-rc') }}
+        type=raw,value=production,enable=${{ github.ref_type == 'tag' && !contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}}.{{minor}},enable=${{ ! contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |
@@ -58,6 +76,8 @@ jobs:
       ghcr_account: ${{ github.actor }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+      ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
 
   docker-content-trust-sign-image:
     needs: bloodhound-container-image
