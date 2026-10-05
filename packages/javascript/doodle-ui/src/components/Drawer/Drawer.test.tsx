@@ -67,16 +67,17 @@ describe('Drawer', () => {
     });
 
     it.each([
-        ['left', 'data-[swipe-direction=left]:left-0'],
-        ['up', 'data-[swipe-direction=up]:top-0'],
-        ['down', 'data-[swipe-direction=down]:bottom-0'],
-    ] as const)('opens from the %s', async (swipeDirection, positionClass) => {
+        ['left', 'x'],
+        ['right', 'x'],
+        ['up', 'y'],
+        ['down', 'y'],
+    ] as const)('opens from the %s', async (swipeDirection, swipeAxis) => {
         renderDrawer({ swipeDirection });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
         const dialog = screen.getByRole('dialog', { name: 'Collection plan' });
         expect(dialog).toHaveAttribute('data-swipe-direction', swipeDirection);
-        expect(dialog).toHaveClass(positionClass);
+        expect(dialog).toHaveAttribute('data-swipe-axis', swipeAxis);
     });
 
     it('opens from its trigger and closes when the backdrop is clicked', async () => {
