@@ -40,7 +40,10 @@ const meta = {
         docs: {
             description: {
                 component:
-                    'A drawer that opens from the right by default. Put long content in DrawerBody to keep the header and footer visible. Side drawers are 75% wide on small screens and 24rem wide above the sm breakpoint; add a class such as w-[860px] to DrawerContent to change the width.',
+                    'A drawer that opens from the right by default. ' +
+                    'Put long content in DrawerBody to keep the header and footer visible. ' +
+                    'Side drawers are 75% wide on small screens and 24rem wide above the sm breakpoint; ' +
+                    'add a class such as w-[860px] to DrawerContent to change the width.',
             },
         },
     },
@@ -60,7 +63,10 @@ const meta = {
             control: 'select',
             options: [true, false, 'trap-focus'],
             description:
-                "Controls interaction outside the drawer. true traps focus, locks page scrolling, and disables outside pointer interaction; false allows interaction with the rest of the page; 'trap-focus' traps focus without locking scrolling or blocking outside pointer interaction.",
+                'Controls interaction outside the drawer. ' +
+                '`true` traps focus, locks page scrolling, and disables outside pointer interaction; ' +
+                '`false` allows interaction with the rest of the page; ' +
+                "`'trap-focus'` traps focus without locking scrolling or blocking outside pointer interaction.",
             table: {
                 category: 'Drawer',
                 type: { summary: "boolean | 'trap-focus'" },
@@ -79,10 +85,13 @@ const meta = {
         snapPoints: {
             control: 'object',
             description:
-                'Snap positions for a top or bottom drawer. Numbers from 0 to 1 are fractions of the viewport height; larger numbers are pixels. Strings may use px or rem units.',
+                'Snap positions for a **top** or **bottom** drawer. ' +
+                'Numbers from 0 to 1 are fractions of the viewport height; larger numbers are pixels. ' +
+                "Strings may use px or rem units. Example: `[0.2, '24rem', 650, 1]`",
             table: {
                 category: 'Drawer',
                 type: { summary: '(number | string)[]' },
+                defaultValue: { summary: '[]' },
             },
         },
         defaultOpen: {
@@ -132,7 +141,9 @@ export const Default: Story = {
     parameters: {
         docs: {
             description: {
-                story: 'A right-side drawer with a simple form at the default compact width. The header and footer remain visible while the body scrolls if its content grows.',
+                story:
+                    'A right-side drawer with a simple form at the default compact width. ' +
+                    'The header and footer remain visible while the body scrolls if its content grows.',
             },
         },
     },
@@ -175,7 +186,9 @@ export const CustomWidth: Story = {
     parameters: {
         docs: {
             description: {
-                story: 'Apply width classes to DrawerContent to make a side drawer wider. The max-width keeps this example within the viewport on smaller screens.',
+                story:
+                    'Apply width classes to DrawerContent to make a side drawer wider. ' +
+                    'The max-width keeps this example within the viewport on smaller screens.',
             },
         },
     },
@@ -186,7 +199,9 @@ export const ScrollingList: Story = {
     parameters: {
         docs: {
             description: {
-                story: 'The default narrow side drawer with enough items to make DrawerBody scroll. The header and Close footer stay visible while the list moves between them.',
+                story:
+                    'The default narrow side drawer with enough items to make DrawerBody scroll. ' +
+                    'The header and Close footer stay visible while the list moves between them.',
             },
         },
     },
@@ -299,7 +314,7 @@ export const Bottom: Story = {
 };
 
 export const SnapPoints: Story = {
-    args: { swipeDirection: 'down', snapPoints: [0.4, 1], showSwipeHandle: true },
+    args: { swipeDirection: 'down', snapPoints: [0.2, '24rem', 650, 1], showSwipeHandle: true },
     parameters: {
         docs: {
             description: {
