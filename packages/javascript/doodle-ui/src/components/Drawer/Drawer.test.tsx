@@ -16,7 +16,7 @@
 import '@testing-library/jest-dom';
 import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { userEvent, type UserEvent } from '@testing-library/user-event';
 import { expect } from 'vitest';
 import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './Drawer';
 
@@ -40,8 +40,13 @@ const renderDrawer = ({
     );
 
 describe('Drawer', () => {
+    let user: UserEvent;
+
+    beforeEach(() => {
+        user = userEvent.setup();
+    });
+
     it('defaults to a compact right-side drawer', async () => {
-        const user = userEvent.setup();
         renderDrawer();
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -52,7 +57,6 @@ describe('Drawer', () => {
     });
 
     it('allows the side drawer width to be overridden', async () => {
-        const user = userEvent.setup();
         renderDrawer({ className: 'w-[860px]' });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -67,7 +71,6 @@ describe('Drawer', () => {
         ['up', 'data-[swipe-direction=up]:top-0'],
         ['down', 'data-[swipe-direction=down]:bottom-0'],
     ] as const)('opens from the %s', async (swipeDirection, positionClass) => {
-        const user = userEvent.setup();
         renderDrawer({ swipeDirection });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -77,7 +80,6 @@ describe('Drawer', () => {
     });
 
     it('opens from its trigger and closes when the backdrop is clicked', async () => {
-        const user = userEvent.setup();
         renderDrawer();
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -93,7 +95,6 @@ describe('Drawer', () => {
     });
 
     it('renders a swipe handle when requested', async () => {
-        const user = userEvent.setup();
         renderDrawer({ showSwipeHandle: true });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -101,7 +102,6 @@ describe('Drawer', () => {
     });
 
     it('omits the overlay for a non-modal drawer', async () => {
-        const user = userEvent.setup();
         renderDrawer({ modal: false });
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
@@ -109,13 +109,16 @@ describe('Drawer', () => {
         expect(document.querySelector('[data-slot="drawer-overlay"]')).not.toBeInTheDocument();
     });
 
-    it('closes with its close button and the Escape key', async () => {
-        const user = userEvent.setup();
+    it('closes with its close button', async () => {
         renderDrawer();
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
         await user.click(screen.getByRole('button', { name: 'Close drawer' }));
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('closes with the Escape key', async () => {
+        renderDrawer();
 
         await user.click(screen.getByRole('button', { name: 'Open drawer' }));
         await user.keyboard('{Escape}');
