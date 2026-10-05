@@ -16,7 +16,7 @@
 import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { cn } from '../utils';
+import { cn, cnWithState } from '../utils';
 
 const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
@@ -104,12 +104,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
             {...props}
             ref={ref}
             disabled={disabled}
-            className={(state) =>
-                cn(
-                    ButtonVariants({ variant, size, fontColor }),
-                    typeof className === 'function' ? className(state) : className
-                )
-            }>
+            className={cnWithState(ButtonVariants({ variant, size, fontColor }), className)}>
             {children}
         </BaseUIButton>
     );
@@ -161,13 +156,11 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 {...props}
                 ref={ref}
                 disabled={disabled}
-                className={(state) =>
-                    cn(
-                        TextButtonBaseClasses,
-                        fontColor === 'primary' ? 'text-primary' : 'text-main',
-                        typeof className === 'function' ? className(state) : className
-                    )
-                }
+                className={cnWithState(
+                    TextButtonBaseClasses,
+                    fontColor === 'primary' ? 'text-primary' : 'text-main',
+                    className
+                )}
             />
         );
     }
@@ -228,9 +221,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
             {...props}
             ref={ref}
             disabled={disabled}
-            className={(state) =>
-                cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
-            }
+            className={cnWithState(IconButtonVariants({ variant }), className)}
             style={(state) =>
                 ({
                     ...(typeof props.style === 'function' ? props.style(state) : props.style),

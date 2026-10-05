@@ -24,7 +24,6 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Calls `cn` but abstracts the logic of checking whether className is a state function or a string
  * @param inputs
- * TODO: Update spots around the app that currently check `typeof className === 'function' ? className(state) : className`
  */
 export function cnWithState<State>(
     ...inputs: (ClassValue | ((state: State) => ClassValue))[]
