@@ -23,6 +23,11 @@ import { vi } from 'vitest';
 import { SavedQueriesContext } from '../../providers';
 import CommonSearches from './CommonSearches';
 
+const extensions = [
+    { id: 42, name: 'asset_explorer', display_name: 'Asset Explorer' },
+    { id: 43, name: 'Other Extension', display_name: '' },
+];
+
 const server = setupServer(
     rest.get('/api/v2/saved-queries', (req, res, ctx) => {
         return res(
@@ -73,10 +78,7 @@ const server = setupServer(
         res(
             ctx.json({
                 data: {
-                    extensions: [
-                        { id: 42, name: 'Asset Explorer' },
-                        { id: 43, name: 'Other Extension' },
-                    ],
+                    extensions,
                 },
             })
         )
@@ -107,7 +109,11 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-const queryClient = new QueryClient();
+let queryClient: QueryClient;
+
+beforeEach(() => {
+    queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+});
 
 describe('CommonSearches', () => {
     it('renders headers', async () => {
@@ -147,6 +153,9 @@ describe('CommonSearches', () => {
     });
 
     it('renders a filter search and platform dropdown menu', async () => {
+        server.use(
+            rest.get('/api/v2/extensions', (_req, res, ctx) => res(ctx.delay(200), ctx.json({ data: { extensions } })))
+        );
         const user = userEvent.setup();
 
         const screen = render(
@@ -170,10 +179,10 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(6);
+        expect(await within(testListBox).findByRole('option', { name: 'Asset Explorer' })).toBeInTheDocument();
+        expect(within(testListBox).getByRole('option', { name: 'Other Extension' })).toBeInTheDocument();
 
-        await user.click(ulElement.children[0]);
+        await user.click(within(testListBox).getByRole('option', { name: 'All' }));
 
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
     });
@@ -199,11 +208,8 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(6);
-
         //select Azure
-        await user.click(ulElement.children[2]);
+        await user.click(within(testListBox).getByRole('option', { name: 'Azure' }));
 
         //Azure query present
         expect(screen.getByText(/All members of high privileged roles/i)).toBeInTheDocument();
@@ -231,11 +237,9 @@ describe('CommonSearches', () => {
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
         const testListBox = await screen.findByRole('listbox');
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(6);
 
         //select AD
-        await user.click(ulElement.children[1]);
+        await user.click(within(testListBox).getByRole('option', { name: 'Active Directory' }));
 
         //AD query present
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
@@ -245,33 +249,47 @@ describe('CommonSearches', () => {
         expect(adText).toBeNull();
     });
 
-    it('groups extension queries by category and filters them as an extension source', async () => {
-        const user = userEvent.setup();
+    it.each(['', undefined])(
+        'groups extension queries using display names and falls back when display_name is %s',
+        async (displayName) => {
+            server.use(
+                rest.get('/api/v2/extensions', (_req, res, ctx) =>
+                    res(
+                        ctx.json({
+                            data: {
+                                extensions: [extensions[0], { ...extensions[1], display_name: displayName }],
+                            },
+                        })
+                    )
+                )
+            );
+            const user = userEvent.setup();
 
-        const screen = render(
-            <QueryClientProvider client={queryClient}>
-                <CommonSearches
-                    onSetCypherQuery={vi.fn()}
-                    onPerformCypherSearch={vi.fn()}
-                    onToggleCommonQueries={vi.fn()}
-                    showCommonQueries={true}
-                />
-            </QueryClientProvider>
-        );
+            const screen = render(
+                <QueryClientProvider client={queryClient}>
+                    <CommonSearches
+                        onSetCypherQuery={vi.fn()}
+                        onPerformCypherSearch={vi.fn()}
+                        onToggleCommonQueries={vi.fn()}
+                        showCommonQueries={true}
+                    />
+                </QueryClientProvider>
+            );
 
-        expect(await screen.findByText('Find Custom Assets')).toBeInTheDocument();
-        expect(await screen.findByText('Asset Explorer')).toBeInTheDocument();
-        expect(screen.getAllByText('Asset Management')).toHaveLength(2);
-        expect(screen.getAllByText('Uncategorized')).toHaveLength(2);
-        expect(screen.getByText('Other Extension')).toBeInTheDocument();
+            expect(await screen.findByText('Asset Explorer')).toBeInTheDocument();
+            expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+            expect(screen.getAllByText('Asset Management')).toHaveLength(2);
+            expect(screen.getAllByText('Uncategorized')).toHaveLength(2);
+            expect(screen.getByText('Other Extension')).toBeInTheDocument();
 
-        await user.click(screen.getByLabelText('Source'));
-        await user.click(await screen.findByRole('option', { name: 'Extension' }));
+            await user.click(screen.getByLabelText('Source'));
+            await user.click(await screen.findByRole('option', { name: 'Extension' }));
 
-        expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
-        expect(screen.queryByText(/all domain admins/i)).not.toBeInTheDocument();
-        expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
-    });
+            expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+            expect(screen.queryByText(/all domain admins/i)).not.toBeInTheDocument();
+            expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
+        }
+    );
 
     it('filters extension platforms, limits categories to that platform, and clears incompatible selections', async () => {
         const user = userEvent.setup();
