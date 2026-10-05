@@ -63,10 +63,10 @@ const meta = {
             control: 'select',
             options: [true, false, 'trap-focus'],
             description:
-                'Controls interaction outside the drawer. ' +
-                '`true` traps focus, locks page scrolling, and disables outside pointer interaction; ' +
-                '`false` allows interaction with the rest of the page; ' +
-                "`'trap-focus'` traps focus without locking scrolling or blocking outside pointer interaction.",
+                'Controls interaction outside the drawer.\n\n' +
+                '- `true` traps focus, locks page scrolling, and disables outside pointer interaction\n' +
+                '- `false` allows interaction with the rest of the page\n' +
+                "- `'trap-focus'` traps focus without locking scrolling or blocking outside pointer interaction.",
             table: {
                 category: 'Drawer',
                 type: { summary: "boolean | 'trap-focus'" },
@@ -85,9 +85,11 @@ const meta = {
         snapPoints: {
             control: 'object',
             description:
-                'Snap positions for a **top** or **bottom** drawer. ' +
+                'Snap positions for a **top** or **bottom** drawer.\n\n' +
+                'When used, `showSwipeHandle` should be used as well.\n\n' +
                 'Numbers from 0 to 1 are fractions of the viewport height; larger numbers are pixels. ' +
-                "Strings may use px or rem units. Example: `[0.2, '24rem', 650, 1]`",
+                'Strings may use px or rem units.\n\n' +
+                'Example: `[0.2, "24rem", 650, 1]`',
             table: {
                 category: 'Drawer',
                 type: { summary: '(number | string)[]' },
