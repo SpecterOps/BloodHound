@@ -29,11 +29,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
-	"github.com/specterops/chow/pkg/payload"
 )
 
 var ErrInvalidJSON = errors.New("file is not valid json")
@@ -48,6 +48,7 @@ type FileValidator func(src io.Reader, dst io.Writer) error
 func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, ingestSchema payload.Schema, jobID int64) (IngestTaskParams, payload.ValidationReport, error) {
 	var (
 		uploadDiagnostic ingestUploadDiagnostic
+		validationReport = make(chan payload.ValidationReport, 1)
 		fileData         = request.Body
 		tempFileName     string
 		fileType         model.FileType
@@ -60,8 +61,8 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		fileType = model.FileTypeJson
 		validationFn = func(src io.Reader, dst io.Writer) error {
-			var validationErr error
-			report, validationErr = WriteAndValidateJSON(src, dst, ingestSchema)
+			validatedReport, validationErr := WriteAndValidateJSON(src, dst, ingestSchema)
+			validationReport <- validatedReport
 			return validationErr
 		}
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), AllowedZipFileUploadTypes()...):
@@ -73,6 +74,10 @@ func SaveIngestFile(ctx context.Context, fileService storage.FileService, reques
 
 	uploadDiagnostic = startIngestUploadDiagnostic(ctx, jobID, fileType)
 	tempFileName, err = WriteAndValidateFile(ctx, fileService, fileData, ingestFileTempPrefix(jobID), validationFn)
+	select {
+	case report = <-validationReport:
+	default:
+	}
 	uploadDiagnostic.finish(tempFileName, err)
 	if err != nil {
 		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)

@@ -26,11 +26,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
-	"github.com/specterops/chow/pkg/payload"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -198,6 +200,179 @@ func TestSaveIngestFileReturnsValidationReport(t *testing.T) {
 	require.ErrorIs(t, err, payload.ErrInvalidFileConfiguration)
 	require.Empty(t, ingestTaskParams)
 	require.NotEmpty(t, report.CriticalErrors)
+}
+
+func TestSaveIngestFile_CancellationReport(t *testing.T) {
+	t.Run("returns while source is blocked", func(t *testing.T) {
+		fixture := newSaveIngestCancellationFixture(t, false)
+
+		waitForUploadTestSignal(t, fixture.readStarted, "validation to reach the controlled read")
+		fixture.cancel()
+		result := waitForSaveIngestResult(t, fixture.result)
+
+		require.ErrorIs(t, result.err, context.Canceled)
+		assert.Empty(t, result.report.CriticalErrors)
+		assert.Empty(t, result.report.ValidationErrors)
+		select {
+		case <-fixture.readCompleted:
+			t.Fatal("validation source completed before the test released it")
+		default:
+		}
+
+		fixture.releaseSource()
+	})
+
+	t.Run("late report publication is race-free", func(t *testing.T) {
+		fixture := newSaveIngestCancellationFixture(t, true)
+
+		waitForUploadTestSignal(t, fixture.readStarted, "validation to reach the controlled read")
+		fixture.cancel()
+		result := waitForSaveIngestResult(t, fixture.result)
+
+		require.ErrorIs(t, result.err, context.Canceled)
+		assert.Empty(t, result.report.CriticalErrors)
+		assert.Empty(t, result.report.ValidationErrors)
+		waitForUploadTestSignal(t, fixture.releaseScheduler, "independent source release")
+	})
+}
+
+type saveIngestCancellationResult struct {
+	report payload.ValidationReport
+	err    error
+}
+
+type saveIngestCancellationFixture struct {
+	cancel           context.CancelFunc
+	readStarted      <-chan struct{}
+	readCompleted    <-chan struct{}
+	storageReadDone  <-chan struct{}
+	releaseSource    func()
+	result           <-chan saveIngestCancellationResult
+	saveDone         <-chan struct{}
+	releaseScheduler <-chan struct{}
+}
+
+func newSaveIngestCancellationFixture(t *testing.T, releaseAfterCancel bool) saveIngestCancellationFixture {
+	var (
+		ctx, cancel     = context.WithCancel(context.Background())
+		readStarted     = make(chan struct{})
+		releaseRead     = make(chan struct{})
+		readCompleted   = make(chan struct{})
+		storageReadDone = make(chan struct{})
+		releaseOnce     sync.Once
+		mockFileService = storagemocks.NewMockFileService(gomock.NewController(t))
+		request         = httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctx)
+		body            = &controlledCancellationBody{readStarted: readStarted, releaseRead: releaseRead, readCompleted: readCompleted, input: `{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`}
+	)
+	releaseSource := func() { releaseOnce.Do(func() { close(releaseRead) }) }
+	request.Body = body
+	request.Header.Set("Content-Type", "application/json")
+
+	schema, err := payload.LoadSchema()
+	require.NoError(t, err)
+
+	mockFileService.EXPECT().
+		WriteTempFile(gomock.Any(), ingestFileTempPrefix(1), gomock.Any(), storage.WriteOptions{}).
+		DoAndReturn(func(writeContext context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+			go func() {
+				_, _ = io.Copy(io.Discard, reader)
+				close(storageReadDone)
+			}()
+			<-writeContext.Done()
+			return "tmp-file", writeContext.Err()
+		})
+	mockFileService.EXPECT().DeleteFile(gomock.Any(), "tmp-file").Return(nil)
+
+	result := make(chan saveIngestCancellationResult, 1)
+	saveDone := make(chan struct{})
+	go func() {
+		defer close(saveDone)
+		_, report, saveErr := SaveIngestFile(ctx, mockFileService, request, schema, 1)
+		result <- saveIngestCancellationResult{report: report, err: saveErr}
+	}()
+
+	var releaseScheduler <-chan struct{}
+	if releaseAfterCancel {
+		schedulerDone := make(chan struct{})
+		releaseScheduler = schedulerDone
+		go func() {
+			defer close(schedulerDone)
+			<-ctx.Done()
+			time.Sleep(100 * time.Millisecond)
+			releaseSource()
+		}()
+	}
+
+	t.Cleanup(func() {
+		cancel()
+		releaseSource()
+		for _, completed := range []<-chan struct{}{readCompleted, storageReadDone, saveDone, releaseScheduler} {
+			if completed == nil {
+				continue
+			}
+			select {
+			case <-completed:
+			case <-time.After(5 * time.Second):
+				t.Errorf("canceled validation goroutine did not finish")
+			}
+		}
+	})
+
+	return saveIngestCancellationFixture{
+		cancel:           cancel,
+		readStarted:      readStarted,
+		readCompleted:    readCompleted,
+		storageReadDone:  storageReadDone,
+		releaseSource:    releaseSource,
+		result:           result,
+		saveDone:         saveDone,
+		releaseScheduler: releaseScheduler,
+	}
+}
+
+func waitForUploadTestSignal(t *testing.T, signal <-chan struct{}, description string) {
+	t.Helper()
+	select {
+	case <-signal:
+	case <-time.After(5 * time.Second):
+		t.Fatalf("timed out waiting for %s", description)
+	}
+}
+
+func waitForSaveIngestResult(t *testing.T, result <-chan saveIngestCancellationResult) saveIngestCancellationResult {
+	t.Helper()
+	select {
+	case saveResult := <-result:
+		return saveResult
+	case <-time.After(5 * time.Second):
+		t.Fatal("SaveIngestFile did not return promptly after cancellation")
+		return saveIngestCancellationResult{}
+	}
+}
+
+type controlledCancellationBody struct {
+	readStarted   chan struct{}
+	releaseRead   chan struct{}
+	readCompleted chan struct{}
+	readInput     bool
+	input         string
+	once          sync.Once
+	completedOnce sync.Once
+}
+
+func (s *controlledCancellationBody) Read(buffer []byte) (int, error) {
+	if !s.readInput {
+		s.readInput = true
+		return copy(buffer, s.input), nil
+	}
+	s.once.Do(func() { close(s.readStarted) })
+	<-s.releaseRead
+	s.completedOnce.Do(func() { close(s.readCompleted) })
+	return 0, io.EOF
+}
+
+func (s *controlledCancellationBody) Close() error {
+	return nil
 }
 
 func TestUpload_WriteAndValidateFile(t *testing.T) {

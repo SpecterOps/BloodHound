@@ -34,8 +34,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/server/alerts"
-	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 

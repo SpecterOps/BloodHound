@@ -23,7 +23,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/chow/pkg/payload"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/dawgs/graph"
 )
 

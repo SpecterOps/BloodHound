@@ -47,12 +47,12 @@ import (
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/metricsregistration"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/modules"
-	"github.com/specterops/chow/pkg/payload"
 	"github.com/specterops/dawgs/graph"
 )
 
