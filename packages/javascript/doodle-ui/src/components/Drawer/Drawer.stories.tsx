@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
@@ -158,10 +160,8 @@ export const Default: Story = {
                         <DrawerTitle>Create Item</DrawerTitle>
                         <DrawerDescription className='mt-3'>Enter a name for the new item.</DrawerDescription>
                     </div>
-                    <DrawerClose
-                        aria-label='Close drawer'
-                        className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
-                        <X aria-hidden='true' size={20} />
+                    <DrawerClose aria-label='Close drawer'>
+                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
                     </DrawerClose>
                 </DrawerHeader>
                 <DrawerBody className='space-y-4'>

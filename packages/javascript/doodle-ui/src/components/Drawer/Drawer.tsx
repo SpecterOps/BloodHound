@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 import { createContext, useContext, useMemo, type ComponentProps } from 'react';
+import { IconButton } from '../Button';
 import { TypographyVariants } from '../Typography';
 import { cn, cnWithState } from '../utils';
 
@@ -74,7 +75,13 @@ function DrawerPortal({ ...props }: DrawerPrimitive.Portal.Props) {
 }
 
 function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
-    return <DrawerPrimitive.Close data-slot='drawer-close' {...props} />;
+    return (
+        <DrawerPrimitive.Close
+            data-slot='drawer-close'
+            render={<IconButton size={20} aria-label={props['aria-label'] ?? 'Close drawer'} />}
+            {...props}
+        />
+    );
 }
 
 function DrawerOverlay({ className, ...props }: DrawerPrimitive.Backdrop.Props) {
