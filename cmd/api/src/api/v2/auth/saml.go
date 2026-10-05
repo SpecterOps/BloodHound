@@ -498,7 +498,6 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 				"[SAML] Failed to parse ACS response for provider",
 				slog.String("issuer_uri", ssoProvider.SAMLProvider.IssuerURI),
 				attr.Error(typedErr.PrivateErr),
-				slog.String("response", typedErr.Response),
 			)
 		default:
 			slog.WarnContext(
