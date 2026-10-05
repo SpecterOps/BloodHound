@@ -150,10 +150,10 @@ const GlyphSelectDialog: React.FC<{
                                 </div>
                                 {selectedIcon && (
                                     <Card className='flex size-16 items-center justify-center relative dark:bg-neutral-4'>
-                                        <CardContent className='flex size-full items-center justify-center first:pt-0 p-0'>
+                                        <div className='flex size-full items-center justify-center'>
                                             <IconButton
                                                 aria-label='Clear selection'
-                                                className='absolute inset-0 !size-full !p-0 focus-visible:rounded-lg'
+                                                className='absolute inset-0 size-full p-0 focus-visible:rounded-lg'
                                                 onClick={handleClear}
                                                 size={64}>
                                                 <span className='relative size-full'>
@@ -164,7 +164,7 @@ const GlyphSelectDialog: React.FC<{
                                                 </span>
                                             </IconButton>
                                             <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                        </CardContent>
+                                        </div>
                                     </Card>
                                 )}
                             </div>
