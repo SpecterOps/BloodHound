@@ -1,18 +1,70 @@
 # Graphify
 
-Graphify is a tool used to streamline the process of working with graph data.
+Graphify is a fixtures testing tool that generates the expected graph files used
+by BloodHound ingest and analysis integration tests. These are commonly referred
+to as "golden files."
 
-This tool ingests user-specified JSON files into PostgreSQL, then performs graph analysis on the ingested data. It outputs two graph-ready files: one representing the raw ingested graph, and another containing the analyzed graph.
+Graphify runs the data in a fixture's `raw/` directory through ingest and
+analysis to produce golden files that integration tests compare against:
 
-The following environment variables are required:
+- `ingest/ingested.json` contains the expected graph after ingest.
+- `analysis/analyzed.json` contains the expected graph after analysis.
 
-`SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
+Regenerate the golden files when the raw fixture data changes or when an ingest,
+analysis, or post-processing change in the codebase affects the expected outcome.
 
-The following flags are required:
+## Fixture layout
 
--   `-path`: Specifies the directory where files should be consumed from and written to
-    -   This path should include a `raw` directory containing raw sharphound files, and will write out a directory each for `ingested` and `analyzed` files.
+The value passed to `-path` must be the root of a fixture set with this layout:
 
-## Usage
+```text
+<fixture>/
+├── raw/                   # Input JSON collection files
+├── ingest/
+│   └── ingested.json     # Generated ingest expectation
+└── analysis/
+    └── analyzed.json     # Generated analysis expectation
+```
 
-Example: `just bh-graphify cmd/api/src/services/graphify/fixtures/Version6JSON`
+Graphify creates the `ingest/` and `analysis/` directories if they do not exist
+and overwrites the generated files when they do exist. Only `.json` files under
+`raw/` are processed.
+
+## Prerequisites
+
+Graphify requires a PostgreSQL database and reads its connection string from
+`SB_PG_CONNECTION`. The `just` recipes provide the connection string for the
+repository's testing database by default.
+
+> [!WARNING]
+> Graphify wipes the configured database as part of its generation lifecycle.
+> Use the local testing database when running it.
+
+Start the testing database from the BloodHound repository root:
+
+```sh
+just bh-testing
+```
+
+## Run Graphify
+
+From the `bhce` repository root, pass the fixture-set root (not its `raw/`
+directory) to the `bh-graphify` recipe:
+
+```sh
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6JSON
+```
+
+The equivalent direct invocation is:
+
+```sh
+go run github.com/specterops/bloodhound/packages/go/graphify \
+  -path=cmd/api/src/services/graphify/fixtures/Version6JSON
+```
+
+After generation, review the changes to `ingested.json` and `analyzed.json` to
+ensure they reflect the intended ingest or analysis behavior, then run the
+affected slow integration tests.
+
+For the origin and intended ownership of individual fixture datasets, see the
+[fixture provenance documentation](../../../cmd/api/src/services/graphify/fixtures/README.md).
