@@ -161,7 +161,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
 	hostedChainedDomains := cache.GetECAHostedChainedDomains()
 
-	operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	return operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
 		type schemaSplit struct {
 			versionOneTemplates []*graph.Node
@@ -220,8 +220,6 @@ func PostEnrollOnBehalfOf(cache *ADCSCache, operation post.StatTrackedOperation[
 
 		return nil
 	})
-
-	return nil
 }
 
 func enterpriseCAChainsShareDomain(first, second *EnterpriseCAChainedDomains) bool {
