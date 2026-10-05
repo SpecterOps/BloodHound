@@ -1,0 +1,52 @@
+import{j as o}from"./jsx-runtime-BTJTZTIL.js";import{F as S,l as pe,e as de}from"./index.es-C0EmWI2V.js";import{r as i,a as Se,R as m}from"./index-2AqrBsEA.js";import{u as Pe,c as we}from"./index-CNm92B1W.js";import"./index-BufuEEe8.js";import{c as _e}from"./index-TwK_z8r1.js";import{I as Re,c as me,R as Be}from"./index-C1lii0gv.js";import{a as Ae,b as Ee}from"./Toggle-DnXnoEdn.js";import{c as Te}from"./utils-BIldDEfN.js";import"./index-ChsGqxH_.js";import"./_commonjsHelpers-CqkleIqs.js";import"./index-BRq5TIsn.js";import"./index-Bb4qSo10.js";var Ne=["a","button","div","form","h2","h3","img","input","label","li","nav","ol","p","select","span","svg","ul"],_=Ne.reduce((e,r)=>{const t=_e(`Primitive.${r}`),s=i.forwardRef((l,n)=>{const{asChild:c,...a}=l,d=c?t:r;return typeof window<"u"&&(window[Symbol.for("radix-ui")]=!0),o.jsx(d,{...a,ref:n})});return s.displayName=`Primitive.${r}`,{...e,[r]:s}},{}),ze=globalThis!=null&&globalThis.document?i.useLayoutEffect:()=>{},De=Se[" useInsertionEffect ".trim().toString()]||ze;function fe({prop:e,defaultProp:r,onChange:t=()=>{},caller:s}){const[l,n,c]=Fe({defaultProp:r,onChange:t}),a=e!==void 0,d=a?e:l;{const u=i.useRef(e!==void 0);i.useEffect(()=>{const p=u.current;p!==a&&console.warn(`${s} is changing from ${p?"controlled":"uncontrolled"} to ${a?"controlled":"uncontrolled"}. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component.`),u.current=a},[a,s])}const v=i.useCallback(u=>{var p;if(a){const G=Me(u)?u(e):u;G!==e&&((p=c.current)==null||p.call(c,G))}else n(u)},[a,e,n,c]);return[d,v]}function Fe({defaultProp:e,onChange:r}){const[t,s]=i.useState(e),l=i.useRef(t),n=i.useRef(r);return De(()=>{n.current=r},[r]),i.useEffect(()=>{var c;l.current!==t&&((c=n.current)==null||c.call(n,t),l.current=t)},[t,l]),[t,s,n]}function Me(e){return typeof e=="function"}var f="ToggleGroup",[ve]=we(f,[me]),Ge=me(),w=m.forwardRef((e,r)=>{const{type:t,...s}=e;if(t==="single"){const l=s;return o.jsx(Ve,{...l,ref:r})}if(t==="multiple"){const l=s;return o.jsx($e,{...l,ref:r})}throw new Error(`Missing prop \`type\` expected on \`${f}\``)});w.displayName=f;var[he,Ie]=ve(f),Ve=m.forwardRef((e,r)=>{const{value:t,defaultValue:s,onValueChange:l=()=>{},...n}=e,[c,a]=fe({prop:t,defaultProp:s??"",onChange:l,caller:f});return o.jsx(he,{scope:e.__scopeToggleGroup,type:"single",value:m.useMemo(()=>c?[c]:[],[c]),onItemActivate:a,onItemDeactivate:m.useCallback(()=>a(""),[a]),children:o.jsx(xe,{...n,ref:r})})}),$e=m.forwardRef((e,r)=>{const{value:t,defaultValue:s,onValueChange:l=()=>{},...n}=e,[c,a]=fe({prop:t,defaultProp:s??[],onChange:l,caller:f}),d=m.useCallback(u=>a((p=[])=>[...p,u]),[a]),v=m.useCallback(u=>a((p=[])=>p.filter(G=>G!==u)),[a]);return o.jsx(he,{scope:e.__scopeToggleGroup,type:"multiple",value:c,onItemActivate:d,onItemDeactivate:v,children:o.jsx(xe,{...n,ref:r})})});w.displayName=f;var[Le,ke]=ve(f),xe=m.forwardRef((e,r)=>{const{__scopeToggleGroup:t,disabled:s=!1,rovingFocus:l=!0,orientation:n,dir:c,loop:a=!0,...d}=e,v=Ge(t),u=Pe(c),p={role:"group",dir:u,...d};return o.jsx(Le,{scope:t,rovingFocus:l,disabled:s,children:l?o.jsx(Be,{asChild:!0,...v,orientation:n,dir:u,loop:a,children:o.jsx(_.div,{...p,ref:r})}):o.jsx(_.div,{...p,ref:r})})}),P="ToggleGroupItem",be=m.forwardRef((e,r)=>{const t=Ie(P,e.__scopeToggleGroup),s=ke(P,e.__scopeToggleGroup),l=Ge(e.__scopeToggleGroup),n=t.value.includes(e.value),c=s.disabled||e.disabled,a={...e,pressed:n,disabled:c},d=m.useRef(null);return s.rovingFocus?o.jsx(Re,{asChild:!0,...l,focusable:!c,active:n,ref:d,children:o.jsx(R,{...a,ref:r})}):o.jsx(R,{...a,ref:r})});be.displayName=P;var R=m.forwardRef((e,r)=>{const{__scopeToggleGroup:t,value:s,...l}=e,n=Ie(P,t),c={role:"radio","aria-checked":e.pressed,"aria-pressed":void 0},a=n.type==="single"?c:void 0;return o.jsx(Ae,{...a,...l,ref:r,onPressedChange:d=>{d?n.onItemActivate(s):n.onItemDeactivate(s)}})}),je=w,ye=be;const Ce=i.createContext({size:"sm"}),T=i.forwardRef(({className:e,size:r,children:t,...s},l)=>o.jsx(je,{ref:l,className:Te("flex items-center justify-center gap-2 p-1 rounded-lg bg-toggle-group-fill shadow-outer-1",e),...s,children:o.jsx(Ce.Provider,{value:{size:r},children:t})}));T.displayName=je.displayName;const g=i.forwardRef(({className:e,children:r,size:t,...s},l)=>{const n=i.useContext(Ce);return o.jsx(ye,{ref:l,className:Te(Ee({size:n.size||t}),e),...s,children:r})});g.displayName=ye.displayName;T.__docgenInfo={description:"",methods:[]};g.__docgenInfo={description:"",methods:[]};const to={title:"Components/ToggleGroup",component:T,parameters:{layout:"centered"},tags:["autodocs"],argTypes:{size:{options:["sm","lg"],control:"select",description:"Size applied to all items in the group.",table:{category:"props"}},disabled:{control:"boolean",description:"Disables all items in the group.",table:{category:"props"}}},args:{type:"single",size:"sm",disabled:!1}},h={render:e=>o.jsxs(T,{...e,children:[o.jsx(g,{value:"graph",children:"Graph"}),o.jsx(g,{value:"table",children:"Table"})]})},I={render:e=>o.jsxs(T,{...e,size:"lg",children:[o.jsx(g,{value:"a",children:"Toggle Button"}),o.jsx(g,{value:"b",children:"Toggle Button"})]})},x={render:e=>o.jsxs(T,{...e,children:[o.jsxs(g,{value:"info",children:[o.jsx(S,{icon:pe}),"Toggle Button"]}),o.jsxs(g,{value:"star",children:[o.jsx(S,{icon:de}),"Toggle Button"]})]})},b={render:e=>o.jsxs(T,{...e,children:[o.jsxs(g,{value:"info",children:["Toggle Button",o.jsx(S,{icon:pe})]}),o.jsxs(g,{value:"star",children:["Toggle Button",o.jsx(S,{icon:de})]})]})},j={render:e=>o.jsxs(T,{...e,disabled:!0,children:[o.jsx(g,{value:"graph",children:"Graph"}),o.jsx(g,{value:"table",children:"Table"})]})},y={render:({size:e,disabled:r})=>o.jsxs(T,{type:"multiple",size:e,disabled:r,children:[o.jsx(g,{value:"a",children:"Toggle A"}),o.jsx(g,{value:"b",children:"Toggle B"})]})},C={render:e=>o.jsxs(T,{...e,children:[o.jsx(g,{value:"a",children:"Toggle A"}),o.jsx(g,{value:"b",children:"Toggle B"}),o.jsx(g,{value:"c",children:"Toggle C"})]})};var B,A,E,N,z;h.parameters={...h.parameters,docs:{...(B=h.parameters)==null?void 0:B.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args}>
+            <ToggleGroupItem value='graph'>Graph</ToggleGroupItem>
+            <ToggleGroupItem value='table'>Table</ToggleGroupItem>
+        </ToggleGroup>
+}`,...(E=(A=h.parameters)==null?void 0:A.docs)==null?void 0:E.source},description:{story:"Default/Small toggle group, use the controls panel above to change size and disabled.",...(z=(N=h.parameters)==null?void 0:N.docs)==null?void 0:z.description}}};var D,F,M,V,$;I.parameters={...I.parameters,docs:{...(D=I.parameters)==null?void 0:D.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args} size='lg'>
+            <ToggleGroupItem value='a'>Toggle Button</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle Button</ToggleGroupItem>
+        </ToggleGroup>
+}`,...(M=(F=I.parameters)==null?void 0:F.docs)==null?void 0:M.source},description:{story:"Large size toggle group.",...($=(V=I.parameters)==null?void 0:V.docs)==null?void 0:$.description}}};var L,k,O,W,U;x.parameters={...x.parameters,docs:{...(L=x.parameters)==null?void 0:L.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args}>
+            <ToggleGroupItem value='info'>
+                <FontAwesomeIcon icon={faCircleInfo} />
+                Toggle Button
+            </ToggleGroupItem>
+            <ToggleGroupItem value='star'>
+                <FontAwesomeIcon icon={faStar} />
+                Toggle Button
+            </ToggleGroupItem>
+        </ToggleGroup>
+}`,...(O=(k=x.parameters)==null?void 0:k.docs)==null?void 0:O.source},description:{story:"Toggle group items with icons on the left.",...(U=(W=x.parameters)==null?void 0:W.docs)==null?void 0:U.description}}};var q,H,J,K,Q;b.parameters={...b.parameters,docs:{...(q=b.parameters)==null?void 0:q.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args}>
+            <ToggleGroupItem value='info'>
+                Toggle Button
+                <FontAwesomeIcon icon={faCircleInfo} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value='star'>
+                Toggle Button
+                <FontAwesomeIcon icon={faStar} />
+            </ToggleGroupItem>
+        </ToggleGroup>
+}`,...(J=(H=b.parameters)==null?void 0:H.docs)==null?void 0:J.source},description:{story:"Toggle group items with icons on the right.",...(Q=(K=b.parameters)==null?void 0:K.docs)==null?void 0:Q.description}}};var X,Y,Z,ee,oe;j.parameters={...j.parameters,docs:{...(X=j.parameters)==null?void 0:X.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args} disabled>
+            <ToggleGroupItem value='graph'>Graph</ToggleGroupItem>
+            <ToggleGroupItem value='table'>Table</ToggleGroupItem>
+        </ToggleGroup>
+}`,...(Z=(Y=j.parameters)==null?void 0:Y.docs)==null?void 0:Z.source},description:{story:"All items in the group are disabled.",...(oe=(ee=j.parameters)==null?void 0:ee.docs)==null?void 0:oe.description}}};var re,te,se,le,ne;y.parameters={...y.parameters,docs:{...(re=y.parameters)==null?void 0:re.docs,source:{originalSource:`{
+  render: ({
+    size,
+    disabled
+  }) => <ToggleGroup type='multiple' size={size} disabled={disabled}>
+            <ToggleGroupItem value='a'>Toggle A</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle B</ToggleGroupItem>
+        </ToggleGroup>
+}`,...(se=(te=y.parameters)==null?void 0:te.docs)==null?void 0:se.source},description:{story:"Multiple selection toggle group.",...(ne=(le=y.parameters)==null?void 0:le.docs)==null?void 0:ne.description}}};var ae,ce,ge,ue,ie;C.parameters={...C.parameters,docs:{...(ae=C.parameters)==null?void 0:ae.docs,source:{originalSource:`{
+  render: args => <ToggleGroup {...args}>
+            <ToggleGroupItem value='a'>Toggle A</ToggleGroupItem>
+            <ToggleGroupItem value='b'>Toggle B</ToggleGroupItem>
+            <ToggleGroupItem value='c'>Toggle C</ToggleGroupItem>
+        </ToggleGroup>
+}`,...(ge=(ce=C.parameters)==null?void 0:ce.docs)==null?void 0:ge.source},description:{story:"Three toggle button group.",...(ie=(ue=C.parameters)==null?void 0:ue.docs)==null?void 0:ie.description}}};const so=["Default","Large","WithIconsLeft","WithIconsRight","Disabled","Multiple","Three"];export{h as Default,j as Disabled,I as Large,y as Multiple,C as Three,x as WithIconsLeft,b as WithIconsRight,so as __namedExportsOrder,to as default};

@@ -108,7 +108,8 @@
         "jsdom": "^24.1.0",
         "luxon": "^3.7.1",
         "nanoid": "^3.3.18",
-        "postcss": "8.5.20",
+        "pinst": "^3.0.0",
+        "postcss": "8.5.23",
         "prettier": "3.3.1",
         "prettier-plugin-organize-imports": "^4.2.0",
         "storybook": "^8.3.6",
@@ -117,7 +118,7 @@
         "typescript": "^5.9.3",
         "vite": "^6.4.3",
         "vite-plugin-dts": "^4.4.0",
-        "vitest": "npm:^4.1.0"
+        "vitest": "npm:^4.1.11"
     },
     "peerDependencies": {
         "react": "^18.2.0",
