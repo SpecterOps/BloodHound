@@ -16,7 +16,6 @@
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
-import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { Button } from '../Button';
 import {
@@ -213,10 +212,8 @@ export const ScrollingList: Story = {
             <DrawerContent className={className}>
                 <DrawerHeader>
                     <DrawerTitle>Scrollable Content</DrawerTitle>
-                    <DrawerClose
-                        aria-label='Close drawer'
-                        className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
-                        <X aria-hidden='true' size={20} />
+                    <DrawerClose aria-label='Close drawer'>
+                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
                     </DrawerClose>
                 </DrawerHeader>
                 <DrawerBody>
@@ -252,10 +249,8 @@ const DirectionalDrawer = ({
         <DrawerContent className={className}>
             <DrawerHeader>
                 <DrawerTitle>{swipeDirection} drawer</DrawerTitle>
-                <DrawerClose
-                    aria-label='Close drawer'
-                    className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
-                    <X aria-hidden='true' size={20} />
+                <DrawerClose aria-label='Close drawer'>
+                    <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
                 </DrawerClose>
             </DrawerHeader>
             <DrawerBody>
@@ -333,10 +328,8 @@ export const SnapPoints: Story = {
                         <DrawerTitle>Snap points</DrawerTitle>
                         <DrawerDescription>Drag the drawer to expand it.</DrawerDescription>
                     </div>
-                    <DrawerClose
-                        aria-label='Close drawer'
-                        className='rounded-full p-2 focus:outline-none focus-visible:focus-ring'>
-                        <X aria-hidden='true' size={20} />
+                    <DrawerClose aria-label='Close drawer'>
+                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
                     </DrawerClose>
                 </DrawerHeader>
                 <DrawerBody>
