@@ -1893,6 +1893,30 @@ func setupESC10CompositionHarness(graphTestContext *integration.GraphTestContext
 }
 
 func TestADCSESC10a(t *testing.T) {
+	t.Run("composition includes the Enterprise CA when its host is enabled", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		var testHarness esc10CompositionHarness
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				testHarness = setupESC10CompositionHarness(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				composition, err := adAnalysis.GetADCSESC10EdgeComposition(t.Context(), db, graph.NewRelationship(
+					0,
+					testHarness.attacker.ID,
+					testHarness.domain.ID,
+					graph.NewProperties(),
+					ad.ADCSESC10a,
+				))
+				require.NoError(t, err)
+				require.True(t, composition.AllNodes().Contains(testHarness.enterpriseCA))
+				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
+			},
+		)
+	})
+
 	t.Run("composition excludes shared paths when the exact CA host is disabled", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		var testHarness esc10CompositionHarness
