@@ -24,8 +24,8 @@ import { SavedQueriesContext } from '../../providers';
 import CommonSearches from './CommonSearches';
 
 const extensions = [
-    { id: 42, name: 'asset_explorer', display_name: 'Asset Explorer' },
-    { id: 43, name: 'Other Extension', display_name: '' },
+    { id: 42, name: 'Asset Explorer' },
+    { id: 43, name: 'Other Extension' },
 ];
 
 const server = setupServer(
@@ -249,47 +249,33 @@ describe('CommonSearches', () => {
         expect(adText).toBeNull();
     });
 
-    it.each(['', undefined])(
-        'groups extension queries using display names and falls back when display_name is %s',
-        async (displayName) => {
-            server.use(
-                rest.get('/api/v2/extensions', (_req, res, ctx) =>
-                    res(
-                        ctx.json({
-                            data: {
-                                extensions: [extensions[0], { ...extensions[1], display_name: displayName }],
-                            },
-                        })
-                    )
-                )
-            );
-            const user = userEvent.setup();
+    it('groups extension queries using display names from the extensions API', async () => {
+        const user = userEvent.setup();
 
-            const screen = render(
-                <QueryClientProvider client={queryClient}>
-                    <CommonSearches
-                        onSetCypherQuery={vi.fn()}
-                        onPerformCypherSearch={vi.fn()}
-                        onToggleCommonQueries={vi.fn()}
-                        showCommonQueries={true}
-                    />
-                </QueryClientProvider>
-            );
+        const screen = render(
+            <QueryClientProvider client={queryClient}>
+                <CommonSearches
+                    onSetCypherQuery={vi.fn()}
+                    onPerformCypherSearch={vi.fn()}
+                    onToggleCommonQueries={vi.fn()}
+                    showCommonQueries={true}
+                />
+            </QueryClientProvider>
+        );
 
-            expect(await screen.findByText('Asset Explorer')).toBeInTheDocument();
-            expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
-            expect(screen.getAllByText('Asset Management')).toHaveLength(2);
-            expect(screen.getAllByText('Uncategorized')).toHaveLength(2);
-            expect(screen.getByText('Other Extension')).toBeInTheDocument();
+        expect(await screen.findByText('Asset Explorer')).toBeInTheDocument();
+        expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+        expect(screen.getAllByText('Asset Management')).toHaveLength(2);
+        expect(screen.getAllByText('Uncategorized')).toHaveLength(2);
+        expect(screen.getByText('Other Extension')).toBeInTheDocument();
 
-            await user.click(screen.getByLabelText('Source'));
-            await user.click(await screen.findByRole('option', { name: 'Extension' }));
+        await user.click(screen.getByLabelText('Source'));
+        await user.click(await screen.findByRole('option', { name: 'Extension' }));
 
-            expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
-            expect(screen.queryByText(/all domain admins/i)).not.toBeInTheDocument();
-            expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
-        }
-    );
+        expect(screen.getByText('Find Custom Assets')).toBeInTheDocument();
+        expect(screen.queryByText(/all domain admins/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId('saved-query-action-menu-trigger')).not.toBeInTheDocument();
+    });
 
     it('filters extension platforms, limits categories to that platform, and clears incompatible selections', async () => {
         const user = userEvent.setup();

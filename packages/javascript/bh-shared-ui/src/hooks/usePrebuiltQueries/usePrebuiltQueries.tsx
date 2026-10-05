@@ -41,9 +41,7 @@ export const usePrebuiltQueries = () => {
             category: query.category,
             schema_extension_id: query.extension_id,
         }));
-        const extensionsById = new Map(
-            extensions?.map((extension) => [Number(extension.id), extension.display_name || extension.name])
-        );
+        const extensionsById = new Map(extensions?.map((extension) => [Number(extension.id), extension.name]));
         const sections = new Map<string, QueryListSection>();
 
         for (const query of queries) {
