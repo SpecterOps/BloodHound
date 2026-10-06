@@ -20,7 +20,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
 import { useTheme } from '@storybook/theming';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Button, IconButton as IconButtonComponent, TextButton as TextButtonComponent } from './Button';
+import { IconButton as IconButtonComponent } from '../IconButton';
+import { Button, TextButton as TextButtonComponent } from './Button';
 
 const ButtonDocsPage = () => {
     const theme = useTheme();
