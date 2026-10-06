@@ -27,9 +27,9 @@ import {
     DialogDescription,
     DialogPortal,
     DialogTitle,
+    IconButton,
     Input,
     TextButton,
-    Tooltip,
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
@@ -155,19 +155,24 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    <Tooltip tooltip='Clear Selection'>
-                                        <TextButton
-                                            aria-label='Clear Selection'
-                                            onClick={handleClear}
-                                            className='size-16 shrink-0 !p-0 focus-visible:rounded-sm'>
-                                            <Card className='flex items-center justify-center size-16 relative dark:bg-neutral-4'>
-                                                <FontAwesomeIcon icon={faClose} className='absolute top-1 right-1' />
-                                                <CardContent className='first:pt-0 p-0'>
-                                                    <FontAwesomeIcon icon={selectedIcon} size='2xl' />
-                                                </CardContent>
-                                            </Card>
-                                        </TextButton>
-                                    </Tooltip>
+                                    <Card className='flex size-16 items-center justify-center relative dark:bg-neutral-4'>
+                                        <div className='flex size-full items-center justify-center'>
+                                            <IconButton
+                                                aria-label='Clear selection'
+                                                triggerClassName='absolute inset-0 size-full'
+                                                className='size-full p-0 focus-visible:rounded-lg'
+                                                onClick={handleClear}
+                                                size={64}>
+                                                <span className='relative size-full'>
+                                                    <FontAwesomeIcon
+                                                        icon={faClose}
+                                                        className='absolute right-1 top-1 !size-4'
+                                                    />
+                                                </span>
+                                            </IconButton>
+                                            <FontAwesomeIcon icon={selectedIcon} size='2xl' />
+                                        </div>
+                                    </Card>
                                 )}
                             </div>
 

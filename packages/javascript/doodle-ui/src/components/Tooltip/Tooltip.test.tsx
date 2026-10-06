@@ -23,7 +23,10 @@ describe('Tooltip', () => {
         const { container } = render(<Tooltip tooltip='Helpful context' />);
 
         expect(screen.queryByRole('button')).toBeNull();
-        expect(screen.getByRole('img', { name: 'Helpful context' }).getAttribute('tabindex')).toBe('0');
+        const trigger = screen.getByRole('img', { name: 'Helpful context' });
+
+        expect(trigger.getAttribute('tabindex')).toBe('0');
+        expect(trigger.classList.contains('rounded-full')).toBe(true);
         expect(container.querySelector('svg')).not.toBeNull();
         expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
         expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 24 24');

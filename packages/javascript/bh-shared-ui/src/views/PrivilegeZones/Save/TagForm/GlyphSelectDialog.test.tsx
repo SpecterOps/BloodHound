@@ -48,6 +48,14 @@ describe('Glyph Select Dialog', () => {
         expect(screen.getAllByText('lightbulb')).toHaveLength(2);
     });
 
+    it('clears the selected icon when clicking the card', async () => {
+        render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
+
+        await user.click(screen.getByRole('button', { name: 'Clear selection' }));
+
+        expect(screen.getByText('None Selected')).toBeInTheDocument();
+    });
+
     it('focuses the search input without opening the clear-selection tooltip when reopened', async () => {
         const { rerender } = render(
             <GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />
@@ -69,16 +77,11 @@ describe('Glyph Select Dialog', () => {
     it('displays a tooltip for clearing the selected icon', async () => {
         render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
 
-        const clearSelectionButton = screen.getByRole('button', { name: 'Clear Selection' });
-
-        expect(clearSelectionButton).toHaveClass('size-16', 'shrink-0', '!p-0');
-        expect(clearSelectionButton).not.toHaveClass('bg-primary');
-        expect(clearSelectionButton.style.getPropertyValue('--icon-button-icon-size')).toBe('');
+        const clearSelectionButton = screen.getByRole('button', { name: 'Clear selection' });
 
         await user.hover(clearSelectionButton);
 
-        const tooltip = await screen.findByRole('tooltip');
-        expect(tooltip).toHaveTextContent('Clear Selection');
+        expect(await screen.findByRole('tooltip', { name: 'Clear selection' })).toBeVisible();
     });
 
     it('calls the passed in cancel handler when clicking the Cancel button', async () => {

@@ -54,13 +54,14 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                             className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
                         />
                     )}
-                    <span className='absolute right-2 top-2 h-6 opacity-50 peer-hover:opacity-100'>
-                        <PopoverTrigger asChild>
-                            <IconButton className='p-0 h-6' aria-label='Choose Date'>
-                                <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
-                            </IconButton>
-                        </PopoverTrigger>
-                    </span>
+                    <PopoverTrigger asChild>
+                        <IconButton
+                            triggerClassName='absolute right-2 top-1.5'
+                            className='p-0 h-6 opacity-50 hover:opacity-100 peer-hover:opacity-100'
+                            aria-label='Choose Date'>
+                            <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
+                        </IconButton>
+                    </PopoverTrigger>
                 </div>
                 <PopoverContent
                     align='end'

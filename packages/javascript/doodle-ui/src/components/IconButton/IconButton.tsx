@@ -51,6 +51,8 @@ export const IconButtonVariants = cva(
 export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className' | 'render'> {
     variant?: 'default' | 'primary' | 'secondary';
     className?: BaseUIButton.Props['className'];
+    /** Classes for positioning the tooltip trigger in its parent layout. */
+    triggerClassName?: string;
     'aria-label': string;
     children: React.ReactElement;
     hideTooltip?: boolean;
@@ -68,6 +70,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         'aria-label': ariaLabel,
         children,
         className,
+        triggerClassName,
         hideTooltip = false,
         disabled = false,
         size = 16,
@@ -80,7 +83,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         'aria-hidden': true,
         ...(children.type === Icon ? { hideTooltip: true } : {}),
     } as React.HTMLAttributes<HTMLElement> & { hideTooltip?: boolean });
-    const renderButton = (render?: BaseUIButton.Props['render']) => (
+    const renderButton = (render?: BaseUIButton.Props['render'], triggerClasses?: string) => (
         <BaseUIButton
             {...props}
             render={render}
@@ -88,7 +91,11 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
             aria-label={ariaLabel}
             disabled={disabled}
             className={(state) =>
-                cn(IconButtonVariants({ variant }), typeof className === 'function' ? className(state) : className)
+                cn(
+                    IconButtonVariants({ variant }),
+                    typeof className === 'function' ? className(state) : className,
+                    triggerClasses
+                )
             }
             style={(state) =>
                 ({
@@ -102,14 +109,14 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
         </BaseUIButton>
     );
 
-    if (hideTooltip) return renderButton();
+    if (hideTooltip) return renderButton(undefined, triggerClassName);
 
     return (
         <Tooltip
             tooltip={tooltip}
             contentProps={{ side: 'bottom', align: 'start' }}
-            renderTrigger={disabled ? undefined : renderButton}>
-            {disabled ? <span className='inline-flex'>{renderButton()}</span> : undefined}
+            renderTrigger={disabled ? undefined : (trigger) => renderButton(trigger, triggerClassName)}>
+            {disabled ? <span className={cn('inline-flex', triggerClassName)}>{renderButton()}</span> : undefined}
         </Tooltip>
     );
 });

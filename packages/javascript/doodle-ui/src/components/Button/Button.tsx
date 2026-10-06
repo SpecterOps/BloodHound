@@ -114,7 +114,6 @@ export const TextButtonVariants = cva(TextButtonBaseClasses, {
     },
 });
 
-// TODO - add type='button' in BED-6062
 type TextButtonBaseProps = Omit<BaseUIButton.Props, 'children' | 'render'> & {
     fontColor?: 'primary' | 'default' | null;
 };
@@ -132,12 +131,13 @@ type TextButtonContent =
 export type TextButtonProps = TextButtonBaseProps & TextButtonContent;
 
 export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, TextButtonProps>(
-    function TextButton({ className, disabled = false, fontColor, ...props }, ref) {
+    function TextButton({ className, disabled = false, fontColor, type = 'button', ...props }, ref) {
         return (
             <BaseUIButton
                 {...props}
                 ref={ref}
                 disabled={disabled}
+                type={type}
                 className={(state) =>
                     cn(
                         TextButtonBaseClasses,
