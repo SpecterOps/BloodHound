@@ -24,8 +24,16 @@ on:
         description: >
           The full reference to the Docker image that needs to be signed,
           including registry, repository name, and tag/digest (e.g.
-          'organization/image:tag'). This image must already exist in DockerHub
-          and be accessible with the provided credentials.
+          'organization/image:tag'). This image must already exist in the
+          target registry and be accessible with the provided credentials.
+      registry:
+        type: string
+        required: false
+        default: 'docker.io'
+        description: >
+          The registry hosting the image. Defaults to 'docker.io'. Set to
+          your private registry host when testing outside of DockerHub.
+          DockerHub login is skipped automatically when this is not 'docker.io'.
     secrets:
       dockerhub_account:
         required: true
@@ -35,6 +43,22 @@ on:
         required: true
       gh_access_token:
         required: true
+  workflow_dispatch:
+    inputs:
+      dockerhub_image_reference:
+        type: string
+        required: true
+        description: >
+          The full reference to the image to sign, including registry,
+          repository name, and tag/digest (e.g. 'myregistry.io/image:tag').
+      registry:
+        type: string
+        required: false
+        default: 'docker.io'
+        description: >
+          The registry hosting the image. Defaults to 'docker.io'. Set to
+          your private registry host when testing outside of DockerHub.
+          DockerHub login is skipped automatically when this is not 'docker.io'.
 
 permissions:
   contents: read
@@ -60,6 +84,7 @@ jobs:
         uses: sigstore/cosign-installer@v4.1.1
 
       - name: Login to DockerHub Registry
+        if: inputs.registry == 'docker.io'
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -73,8 +98,8 @@ jobs:
       - name: Obtain Image Digest
         id: digest
         shell: bash
-        run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
+        run: |
+          DIGEST_REF=$(docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE})
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Sign Image with Cosign Keyless
@@ -100,6 +125,7 @@ jobs:
         uses: sigstore/cosign-installer@v4.1.1
 
       - name: Login to DockerHub Registry
+        if: inputs.registry == 'docker.io'
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -113,8 +139,8 @@ jobs:
       - name: Obtain Image Digest
         id: digest
         shell: bash
-        run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
+        run: |
+          DIGEST_REF=$(docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE})
           echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
 
       - name: Verify Fulcio Keyless Signature
