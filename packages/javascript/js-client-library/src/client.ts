@@ -830,7 +830,7 @@ class BHEAPIClient {
             ...options,
             params: {
                 ...options?.params,
-                profile_id: `eq:${profileId}`,
+                job_profile_id: `eq:${profileId}`,
                 sort_by: options?.params?.sort_by ?? '-recorded_at',
                 skip,
                 limit,
