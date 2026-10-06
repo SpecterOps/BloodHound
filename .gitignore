@@ -81,9 +81,6 @@ cmd/api/src/api/static/assets/*
 .AppleDouble
 .LSOverride
 
-# Icon must end with two \r
-Icon
-
 # Thumbnails
 ._*
 
