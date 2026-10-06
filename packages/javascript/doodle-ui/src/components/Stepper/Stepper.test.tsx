@@ -1,0 +1,321 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+import '@testing-library/jest-dom';
+import matchers from '@testing-library/jest-dom/matchers';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useEffect, useState } from 'react';
+import { BasicStepper, Stepper, StepperContent, StepperIndicator, StepperItem, useStepper, type Step } from './index';
+
+expect.extend(matchers);
+
+function NextStep() {
+    const { activeStep, setActiveStep } = useStepper();
+    return <button onClick={() => setActiveStep(activeStep + 1)}>Continue</button>;
+}
+
+const steps: Step[] = [
+    { title: 'Profile', content: <NextStep /> },
+    { title: 'Secret', content: 'Secret content' },
+    { title: 'Schedule', content: 'Schedule content' },
+];
+
+const getTab = (oneBasedIndex: number, triggerTitle?: string) =>
+    screen.getByRole('tab', { name: `${oneBasedIndex} ${triggerTitle ?? steps[oneBasedIndex - 1].title}` });
+
+describe('BasicStepper', () => {
+    it('supports navigation from step content in uncontrolled mode', async () => {
+        const onValueChange = vi.fn();
+        render(<BasicStepper steps={steps} onValueChange={onValueChange} />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+        expect(getTab(2)).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+        expect(onValueChange).toHaveBeenCalledExactlyOnceWith(2);
+    });
+
+    // Multiple steps and checks because we specifically want to test that the state is shared between all controls/triggers.
+    it('shares controlled state with outside controls, inside controls, and step triggers', async () => {
+        function ControlledStepper() {
+            const [value, setValue] = useState(1);
+            return (
+                <>
+                    <button onClick={() => setValue(3)}>Go to schedule</button>
+                    <BasicStepper steps={steps} value={value} onValueChange={setValue} />
+                </>
+            );
+        }
+        render(<ControlledStepper />);
+
+        expect(getTab(1)).toHaveAttribute('aria-selected', 'true');
+        await userEvent.click(screen.getByRole('button', { name: 'Go to schedule' }));
+        expect(screen.getByText('Schedule content')).toBeInTheDocument();
+        expect(getTab(3)).toHaveAttribute('aria-selected', 'true');
+        expect(getTab(1)).toHaveAttribute('aria-selected', 'false');
+
+        await userEvent.click(getTab(1));
+        expect(screen.queryByText('Schedule content')).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+    });
+
+    it('waits for the parent to accept a controlled navigation request', async () => {
+        const onValueChange = vi.fn();
+        const { rerender } = render(<BasicStepper steps={steps} value={1} onValueChange={onValueChange} />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+        expect(onValueChange).toHaveBeenCalledExactlyOnceWith(2);
+        // Since we're not actually updating the value prop (just triggering onValueChange), the content shouldn't change yet.
+        expect(getTab(1)).toHaveAttribute('aria-selected', 'true');
+        expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+
+        // Simulate what would be a state change in a parent component, passing `value={2}` to the BasicStepper.
+        rerender(<BasicStepper steps={steps} value={2} onValueChange={onValueChange} />);
+        // Content should now change, and onValueChange should not be called again.
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses defaultValue only for initial selection', async () => {
+        const { rerender } = render(<BasicStepper steps={steps} defaultValue={2} />);
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+        expect(getTab(2)).toHaveAttribute('aria-selected', 'true');
+
+        await userEvent.click(getTab(3));
+        rerender(<BasicStepper steps={steps} defaultValue={1} />);
+
+        expect(screen.getByText('Schedule content')).toBeInTheDocument();
+        expect(getTab(2)).toHaveAttribute('aria-selected', 'false');
+    });
+
+    it.each([undefined, 1])('rejects disabled navigation requests with value=%s until enabled', async (value) => {
+        const onValueChange = vi.fn();
+        const disabledSteps = steps.map((step) => ({ ...step, isDisabled: step.title === 'Secret' }));
+        const { rerender } = render(<BasicStepper steps={disabledSteps} value={value} onValueChange={onValueChange} />);
+        const disabledTrigger = getTab(2);
+
+        expect(disabledTrigger).toBeDisabled();
+        expect(disabledTrigger).toHaveAttribute('aria-disabled', 'true');
+        expect(disabledTrigger).toHaveAttribute('tabindex', '-1');
+        await userEvent.click(disabledTrigger);
+        fireEvent.keyDown(disabledTrigger, { key: 'Enter' });
+        fireEvent.keyDown(disabledTrigger, { key: ' ' });
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(getTab(1)).toHaveAttribute('aria-selected', 'true');
+        expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+        expect(onValueChange).not.toHaveBeenCalled();
+
+        // replace `disabledSteps` with `steps` to enable the second step on rerender
+        rerender(<BasicStepper steps={steps} value={value} onValueChange={onValueChange} />);
+        expect(getTab(2)).toBeEnabled();
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(onValueChange).toHaveBeenCalledExactlyOnceWith(2);
+    });
+
+    it('allows parent controls to enable and select a step together', async () => {
+        function EnableAndContinue() {
+            const [value, setValue] = useState(1);
+            const [isEnabled, setIsEnabled] = useState(false);
+            return (
+                <>
+                    <BasicStepper
+                        steps={steps.map((step) => ({ ...step, isDisabled: step.title === 'Secret' && !isEnabled }))}
+                        value={value}
+                        onValueChange={setValue}
+                    />
+                    <button
+                        onClick={() => {
+                            setIsEnabled(true);
+                            setValue(2);
+                        }}>
+                        Complete profile
+                    </button>
+                </>
+            );
+        }
+        render(<EnableAndContinue />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+        expect(getTab(2)).toBeDisabled();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Complete profile' }));
+
+        expect(getTab(2)).toBeEnabled();
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+    });
+
+    it('skips disabled triggers during keyboard navigation and wraps focus', async () => {
+        const user = userEvent.setup();
+        render(<BasicStepper steps={steps.map((step) => ({ ...step, isDisabled: step.title === 'Secret' }))} />);
+        const first = getTab(1);
+        const last = getTab(3);
+        first.focus();
+
+        await user.keyboard('{ArrowRight}');
+        expect(last).toHaveFocus();
+        await user.keyboard('{Enter}');
+        expect(screen.getByText('Schedule content')).toBeInTheDocument();
+    });
+
+    it('wraps focus during keyboard navigation', async () => {
+        const user = userEvent.setup();
+        render(<BasicStepper steps={steps.slice(0, 2)} />);
+        const first = getTab(1);
+        const second = getTab(2);
+        first.focus();
+
+        await user.keyboard('{ArrowRight}');
+        expect(second).toHaveFocus();
+        await user.keyboard('{ArrowRight}');
+        expect(first).toHaveFocus();
+        await user.keyboard('{ArrowLeft}');
+        expect(second).toHaveFocus();
+        await user.keyboard('{Enter}');
+        expect(screen.getByText('Secret content')).toBeInTheDocument();
+    });
+
+    it('goes to the first and last steps with Home and End keys', async () => {
+        const user = userEvent.setup();
+        const fourSteps = [...steps, { title: 'Review', content: 'Review content' }];
+        render(<BasicStepper steps={fourSteps} defaultValue={2} />);
+        const second = getTab(2);
+        expect(second).toHaveAttribute('aria-selected', 'true');
+        second.focus();
+        await user.keyboard('{Home}');
+        expect(getTab(1)).toHaveFocus();
+        await user.keyboard('{End}');
+        expect(getTab(4, 'Review')).toHaveFocus();
+    });
+
+    it('uses enabled endpoints for Home and End and responds to disabled prop changes', async () => {
+        const user = userEvent.setup();
+        const fourSteps = [...steps, { title: 'Review', content: 'Review content' }];
+        render(
+            <BasicStepper
+                steps={fourSteps.map((step, index) => ({ ...step, isDisabled: index === 0 || index === 3 }))}
+                defaultValue={2}
+            />
+        );
+        const second = getTab(2);
+        const third = getTab(3);
+        second.focus();
+
+        await user.keyboard('{End}');
+        expect(third).toHaveFocus(); // Not fourth because it's disabled
+        await user.keyboard('{Home}');
+        expect(second).toHaveFocus(); // Not first because it's disabled
+        await user.keyboard('{ArrowDown}');
+        expect(third).toHaveFocus(); // Next value
+        await user.keyboard('{ArrowUp}');
+        expect(second).toHaveFocus(); // Previous value
+    });
+
+    it('removes unmounted triggers from keyboard navigation', async () => {
+        const user = userEvent.setup();
+        const { rerender } = render(<BasicStepper steps={steps} />);
+        const [profileTrigger, , scheduleTrigger] = steps;
+        rerender(<BasicStepper steps={[profileTrigger, scheduleTrigger]} />);
+        getTab(1).focus();
+
+        await user.keyboard('{ArrowRight}');
+        // Tab 2 should now be 'Schedule' because 'Secret' was removed from the DOM.
+        expect(getTab(2, 'Schedule')).toHaveFocus();
+    });
+});
+
+describe('Stepper navigation', () => {
+    it('rejects disabled requests from mount effects without depending on a trigger', () => {
+        function NavigateOnMount() {
+            const { setActiveStep } = useStepper();
+            useEffect(() => setActiveStep(2), [setActiveStep]);
+            return null;
+        }
+        const onValueChange = vi.fn();
+        render(
+            <Stepper onValueChange={onValueChange}>
+                <NavigateOnMount />
+                <StepperItem step={1}>
+                    <StepperContent value={1}>Profile content</StepperContent>
+                </StepperItem>
+                <StepperItem step={2} isDisabled>
+                    <StepperContent value={2}>Secret content</StepperContent>
+                </StepperItem>
+            </Stepper>
+        );
+
+        expect(screen.getByText('Profile content')).toBeInTheDocument();
+        expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+        expect(onValueChange).not.toHaveBeenCalled();
+    });
+});
+
+describe('StepperIndicator', () => {
+    it('prefers the loading indicator over the active indicator', () => {
+        render(
+            <Stepper indicators={{ loading: 'Loading', active: 'Active' }}>
+                <StepperItem step={1} isLoading>
+                    <StepperIndicator>1</StepperIndicator>
+                </StepperItem>
+            </Stepper>
+        );
+
+        expect(screen.getByText('Loading')).toBeInTheDocument();
+        expect(screen.queryByText('Active')).not.toBeInTheDocument();
+        expect(screen.queryByText('1')).not.toBeInTheDocument();
+    });
+
+    it('falls back to the state indicator and then children when loading has no indicator', () => {
+        render(
+            <Stepper indicators={{ active: 'Active' }}>
+                <StepperItem step={1} isLoading>
+                    <StepperIndicator>1</StepperIndicator>
+                </StepperItem>
+                <StepperItem step={2}>
+                    <StepperIndicator>2</StepperIndicator>
+                </StepperItem>
+                <StepperItem step={3} isLoading>
+                    <StepperIndicator>3</StepperIndicator>
+                </StepperItem>
+            </Stepper>
+        );
+
+        expect(screen.getByText('Active')).toBeInTheDocument();
+        expect(screen.getByText('2')).toBeInTheDocument();
+        expect(screen.getByText('3')).toBeInTheDocument();
+    });
+
+    it('updates indicators when only the indicators prop changes', () => {
+        const children = (
+            <StepperItem step={1}>
+                <StepperIndicator>1</StepperIndicator>
+            </StepperItem>
+        );
+        const { rerender } = render(<Stepper indicators={{ active: 'Original' }}>{children}</Stepper>);
+
+        rerender(<Stepper indicators={{ active: 'Updated' }}>{children}</Stepper>);
+
+        expect(screen.getByText('Updated')).toBeInTheDocument();
+        expect(screen.queryByText('Original')).not.toBeInTheDocument();
+    });
+});
