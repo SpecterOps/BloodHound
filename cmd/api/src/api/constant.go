@@ -67,7 +67,6 @@ const (
 	URIPathVariableExtensionID                       = "extension_id"
 	URIPathVariableFeatureID                         = "feature_id"
 	URIPathVariableJobID                             = "job_id"
-	URIPathVariableJobProfileID                      = "job_profile_id"
 	URIPathVariableObjectID                          = "object_id"
 	URIPathVariablePartNumber                        = "part_number"
 	URIPathVariablePermissionID                      = "permission_id"
