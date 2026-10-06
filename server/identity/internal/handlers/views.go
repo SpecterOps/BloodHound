@@ -374,3 +374,69 @@ func (s PermissionListView) IsSortable(field string) bool {
 		return false
 	}
 }
+
+// UserMinimalView is the JSON shape returned for a user without sensitive data.
+// NULL columns marshal as empty strings, matching the legacy wire contract.
+type UserMinimalView struct {
+	ID           uuid.UUID `json:"id"`
+	EmailAddress string    `json:"email_address"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+}
+
+// BuildUserMinimalView projects a services.UserMinimal into the response view.
+func BuildUserMinimalView(user services.UserMinimal) UserMinimalView {
+	return UserMinimalView{
+		ID:           user.ID,
+		EmailAddress: user.EmailAddress.String,
+		FirstName:    user.FirstName.String,
+		LastName:     user.LastName.String,
+	}
+}
+
+// JSONView marshals the view for responses.WriteBasic.
+func (s UserMinimalView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// UserMinimalListView is the JSON shape returned for a minimal user collection.
+type UserMinimalListView struct {
+	Users []UserMinimalView `json:"users"`
+}
+
+// BuildUserMinimalListView projects domain minimal users into the response view.
+func BuildUserMinimalListView(users []services.UserMinimal) UserMinimalListView {
+	var views = make([]UserMinimalView, 0, len(users))
+	for _, user := range users {
+		views = append(views, BuildUserMinimalView(user))
+	}
+
+	return UserMinimalListView{Users: views}
+}
+
+// JSONView marshals the list view for responses.WriteBasic.
+func (s UserMinimalListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// ValidFilters describes the query filters supported by the minimal user list.
+func (s UserMinimalListView) ValidFilters() map[string]params.FilterableField {
+	var stringOperators = []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}
+
+	return map[string]params.FilterableField{
+		"first_name":    {Operators: stringOperators, IsStringData: true},
+		"last_name":     {Operators: stringOperators, IsStringData: true},
+		"email_address": {Operators: stringOperators, IsStringData: true},
+		"id":            {Operators: []params.FilterOperator{params.Equals, params.NotEquals}},
+	}
+}
+
+// IsSortable reports the minimal user fields accepted by sort_by.
+func (s UserMinimalListView) IsSortable(field string) bool {
+	switch field {
+	case "first_name", "last_name", "email_address", "id":
+		return true
+	default:
+		return false
+	}
+}

@@ -45,6 +45,8 @@ var (
 	validRoleColumns       = []string{"id", "name", "description", "created_at", "updated_at"}
 )
 
+var validUserMinimalColumns = []string{"id", "email_address", "first_name", "last_name"}
+
 var validUserColumns = []string{
 	"id",
 	"sso_provider_id",
@@ -240,8 +242,10 @@ const nullFilterValue = "null"
 // buildFilterComparison translates a single validated filter into a SQL WHERE
 // expression on the supplied builder. Equality filters whose value is the null
 // sentinel become IS NULL / IS NOT NULL, matching the legacy contract; every
-// other operator binds the value as a parameter. The boolean is false when the
-// operator is unsupported, letting callers surface a field-specific error.
+// other operator binds the value as a parameter. Approximate equality becomes a
+// case-insensitive substring match (ILIKE '%value%'); like the legacy builder, a
+// null sentinel compares against NULL and matches nothing. The boolean is false
+// when the operator is unsupported, letting callers surface a field-specific error.
 func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter params.Filter) (string, bool) {
 	switch filter.Operator {
 	case params.Equals:
@@ -262,6 +266,11 @@ func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter p
 		return sb.LessThan(column, filter.Value), true
 	case params.LessThanOrEquals:
 		return sb.LessEqualThan(column, filter.Value), true
+	case params.ApproximatelyEquals:
+		if filter.Value == nullFilterValue {
+			return sb.ILike(column, nil), true
+		}
+		return sb.ILike(column, "%"+filter.Value+"%"), true
 	default:
 		return "", false
 	}
@@ -556,6 +565,15 @@ type userRow struct {
 	UpdatedAt       time.Time      `db:"updated_at"`
 }
 
+// userMinimalRow is the flat projection of the users table selected by
+// ListActiveUsersMinimal.
+type userMinimalRow struct {
+	ID           uuid.UUID      `db:"id"`
+	EmailAddress sql.NullString `db:"email_address"`
+	FirstName    sql.NullString `db:"first_name"`
+	LastName     sql.NullString `db:"last_name"`
+}
+
 // userRole carries the owning user id alongside a role so that a single batched
 // query joining users_roles can be grouped back to individual users in memory.
 type userRole struct {
@@ -623,6 +641,15 @@ func toUser(row userRow, roles []services.Role, environmentAccessControl []servi
 		AuthSecret:                       authSecret,
 		CreatedAt:                        row.CreatedAt,
 		UpdatedAt:                        row.UpdatedAt,
+	}
+}
+
+func toUserMinimal(row userMinimalRow) services.UserMinimal {
+	return services.UserMinimal{
+		ID:           row.ID,
+		EmailAddress: row.EmailAddress,
+		FirstName:    row.FirstName,
+		LastName:     row.LastName,
 	}
 }
 
@@ -889,6 +916,54 @@ func (s *Store) ListUsers(ctx context.Context, queryFilters params.Filters, sort
 	result = make([]services.User, 0, len(listedUsers))
 	for _, listedUser := range listedUsers {
 		result = append(result, toUser(listedUser, rolesByUser[listedUser.ID], etacByUser[listedUser.ID], secretByUser[listedUser.ID]))
+	}
+
+	return result, nil
+}
+
+// ListActiveUsersMinimal retrieves the id, email address and name of every
+// enabled, non-support user matching the supplied filters, ordered by the
+// supplied sort items. It mirrors the legacy ListActiveUsersMinimal behavior,
+// which returns every matching user without pagination.
+func (s *Store) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error) {
+	var (
+		userSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		userRows    pgx.Rows
+		listedUsers []userMinimalRow
+		result      []services.UserMinimal
+		orderBy     []string
+		err         error
+	)
+
+	userSB.Select(validUserMinimalColumns...).From(tableUsers)
+	userSB.Where(userSB.Equal("support_account", false), userSB.Equal("is_disabled", false))
+
+	if err = applyUserFilters(userSB, queryFilters); err != nil {
+		return nil, err
+	}
+
+	orderBy, err = buildUserOrderBy(sortItems)
+	if err != nil {
+		return nil, err
+	}
+	if len(orderBy) > 0 {
+		userSB.OrderBy(orderBy...)
+	}
+
+	userQuery, userArgs := userSB.Build()
+
+	userRows, err = s.db.Query(ctx, userQuery, userArgs...)
+	if err != nil {
+		return nil, err
+	}
+	listedUsers, err = pgx.CollectRows(userRows, pgx.RowToStructByName[userMinimalRow])
+	if err != nil {
+		return nil, fmt.Errorf("collecting active users: %s", err)
+	}
+
+	result = make([]services.UserMinimal, 0, len(listedUsers))
+	for _, listedUser := range listedUsers {
+		result = append(result, toUserMinimal(listedUser))
 	}
 
 	return result, nil

@@ -22,6 +22,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -95,11 +96,20 @@ type User struct {
 	DeletedAt                        sql.NullTime
 }
 
+// UserMinimal is the minimal, non-sensitive representation of an active BloodHound user.
+type UserMinimal struct {
+	ID           uuid.UUID
+	EmailAddress sql.NullString
+	FirstName    sql.NullString
+	LastName     sql.NullString
+}
+
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
 	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error)
+	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]UserMinimal, error)
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error)
 }
 
@@ -125,6 +135,21 @@ func (s *Service) ListRoles(ctx context.Context, queryFilters params.Filters, so
 
 func (s *Service) ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error) {
 	return s.db.ListUsers(ctx, queryFilters, sortItems)
+}
+
+// ListActiveUsersMinimal returns active, non-support users. When no sort is requested,
+// results are sorted by email_address ascending.
+func (s *Service) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]UserMinimal, error) {
+	var (
+		tieBreakerField = "email_address"
+		orderedSort     = slices.Clone(sortItems)
+	)
+
+	if !slices.ContainsFunc(orderedSort, func(sortItem params.SortItem) bool { return sortItem.Field == tieBreakerField }) {
+		orderedSort = append(orderedSort, params.SortItem{Field: tieBreakerField, Direction: params.Ascending})
+	}
+
+	return s.db.ListActiveUsersMinimal(ctx, queryFilters, orderedSort)
 }
 
 func (s *Service) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error) {
