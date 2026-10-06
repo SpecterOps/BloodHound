@@ -16,7 +16,7 @@
 import { Button as BaseUIButton } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { cn } from '../utils';
+import { cn, cnWithState } from '../utils';
 import { buttonBaseClasses, primaryClasses, secondaryClasses } from './Button.styles';
 
 export const ButtonVariants = cva(buttonBaseClasses, {
@@ -81,12 +81,7 @@ export const Button = React.forwardRef<React.ComponentRef<typeof BaseUIButton>, 
             ref={ref}
             disabled={disabled}
             type={type}
-            className={(state) =>
-                cn(
-                    ButtonVariants({ variant, size, fontColor }),
-                    typeof className === 'function' ? className(state) : className
-                )
-            }>
+            className={cnWithState(ButtonVariants({ variant, size, fontColor }), className)}>
             {children}
         </BaseUIButton>
     );
@@ -138,13 +133,11 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 ref={ref}
                 disabled={disabled}
                 type={type}
-                className={(state) =>
-                    cn(
-                        TextButtonBaseClasses,
-                        fontColor === 'primary' ? 'text-primary' : 'text-main',
-                        typeof className === 'function' ? className(state) : className
-                    )
-                }
+                className={cnWithState(
+                    TextButtonBaseClasses,
+                    fontColor === 'primary' ? 'text-primary' : 'text-main',
+                    className
+                )}
             />
         );
     }

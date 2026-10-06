@@ -20,7 +20,7 @@ import * as React from 'react';
 import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/Button.styles';
 import { Icon } from '../Icon';
 import { Tooltip } from '../Tooltip';
-import { cn } from '../utils';
+import { cn, cnWithState } from '../utils';
 
 const defaultIconButtonClasses = [
     'hover:text-primary dark:hover:text-primary',
@@ -90,13 +90,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
             ref={ref}
             aria-label={ariaLabel}
             disabled={disabled}
-            className={(state) =>
-                cn(
-                    IconButtonVariants({ variant }),
-                    typeof className === 'function' ? className(state) : className,
-                    triggerClasses
-                )
-            }
+            className={cnWithState(IconButtonVariants({ variant }), className, triggerClasses)}
             style={(state) =>
                 ({
                     ...(typeof props.style === 'function' ? props.style(state) : props.style),
