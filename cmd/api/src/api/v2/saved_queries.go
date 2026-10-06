@@ -39,7 +39,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -371,7 +370,7 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		switch {
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 			extractQueriesFromFileFunc = extractImportQueriesFromJsonFile
-		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), upload.AllowedZipFileUploadTypes()...):
 			extractQueriesFromFileFunc = extractImportQueriesFromZipFile
 		default:
 			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
