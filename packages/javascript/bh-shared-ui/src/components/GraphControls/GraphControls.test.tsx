@@ -157,6 +157,8 @@ describe('GraphControls', () => {
 
             await user.unhover(reset);
             act(() => layout.focus());
+
+            expect(layout).toHaveFocus();
             expect(await screen.findByRole('tooltip', { name: 'Layout' })).toBeVisible();
         });
 
@@ -551,10 +553,9 @@ describe('GraphControls', () => {
         it('disables the search button when isCurrentSearchOpen is true', async () => {
             const { user } = setup();
 
-            const searchResultsMenu = screen.getByTestId('explore_graph-controls_search-current-results');
-            await user.click(searchResultsMenu);
+            await user.click(screen.getByTestId('explore_graph-controls_search-current-results'));
 
-            expect(searchResultsMenu).toBeDisabled();
+            expect(screen.getByTestId('explore_graph-controls_search-current-results')).toBeDisabled();
         });
 
         it('shows the search panel when isCurrentSearchOpen is true', async () => {
@@ -610,7 +611,9 @@ describe('GraphControls', () => {
             await user.keyboard('{Escape}');
 
             expect(screen.queryByTestId('explore_graph-controls_search-current-nodes-panel')).not.toBeInTheDocument();
-            await waitFor(() => expect(searchResultsMenu).toHaveFocus());
+            await waitFor(() =>
+                expect(screen.getByTestId('explore_graph-controls_search-current-results')).toHaveFocus()
+            );
         });
     });
 });

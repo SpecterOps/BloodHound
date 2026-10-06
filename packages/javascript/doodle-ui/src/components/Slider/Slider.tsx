@@ -16,7 +16,7 @@
 import { Slider as SliderPrimitive, type SliderRootProps as BaseSliderRootProps } from '@base-ui/react/slider';
 import { cva } from 'class-variance-authority';
 import * as React from 'react';
-import { cn } from '../utils';
+import { cnWithState } from '../utils';
 
 const sliderRootStyles =
     'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
@@ -113,9 +113,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         return (
             <SliderPrimitive.Root
                 ref={ref}
-                className={(state) =>
-                    cn(sliderRootStyles, typeof className === 'function' ? className(state) : className)
-                }
+                className={cnWithState(sliderRootStyles, className)}
                 min={min}
                 value={value}
                 defaultValue={defaultValue}
