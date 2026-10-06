@@ -16,6 +16,7 @@
 
 import { faGem, faSkull } from '@fortawesome/free-solid-svg-icons';
 import {
+    EdgeTraversability,
     GLYPH_SCALE,
     GetIconInfo,
     IconDictionary,
@@ -66,6 +67,7 @@ type GraphOptions = {
     tagGlyphs: TagGlyphs;
     pzFeatureFlagEnabled: boolean | undefined;
     themedOptions?: ThemedOptions;
+    edgeTraversability?: EdgeTraversability;
 };
 
 export const initGraph = (items: GraphData, options: GraphOptions) => {
@@ -204,7 +206,7 @@ const initGraphEdges = (
     edges: GraphEdges,
     options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
-    const { themedOptions } = options;
+    const { themedOptions, edgeTraversability } = options;
 
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const lookupSet = new Set<string>();
@@ -239,7 +241,7 @@ const initGraphEdges = (
                 type: 'arrow',
                 label: edge.label,
                 kind: edge.kind,
-                dashed: false,
+                dashed: edgeTraversability ? !edgeTraversability.get(edge.kind) : false,
                 groupPosition: 0,
                 groupSize: 1,
                 exploreGraphId: key,
