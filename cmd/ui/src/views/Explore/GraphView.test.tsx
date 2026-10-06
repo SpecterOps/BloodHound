@@ -195,10 +195,10 @@ describe('GraphView', () => {
         const metadataReady = new Promise<void>((resolve) => {
             releaseMetadata = resolve;
         });
-        const edges = ['AdminTo', 'Enroll', 'CustomFact', 'Unknown'].map((kind, index) => ({
+        const edges = ['AdminTo', 'Enroll', 'CustomAttack', 'Unknown'].map((kind, index) => ({
             id: index + 1,
             source: '1',
-            target: kind === 'CustomFact' ? '1' : '2',
+            target: kind === 'CustomAttack' ? '1' : '2',
             label: kind,
             kind,
             lastSeen: '',
@@ -228,7 +228,7 @@ describe('GraphView', () => {
                         data: [
                             { name: 'AdminTo', is_traversable: true },
                             { name: 'Enroll', is_traversable: false },
-                            { name: 'CustomFact', is_traversable: false },
+                            { name: 'CustomAttack', is_traversable: true },
                         ],
                     })
                 );
@@ -237,13 +237,16 @@ describe('GraphView', () => {
         render(<GraphView />, { route: '/explore?searchType=cypher&cypherSearch=encodedquery' });
         await waitFor(() => expect(captureGraph.mock.lastCall?.[0]?.size).toBe(4));
         const graph = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph;
-        expect(graph.getEdgeAttribute('rel_2', 'dashed')).toBe(true);
-        expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(false);
-        releaseMetadata();
-        await waitFor(() => expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(true));
+        // Dashed styles are set when the graph is built; custom kinds are unknown until metadata arrives.
         expect(graph.getEdgeAttribute('rel_1', 'dashed')).toBe(false);
+        expect(graph.getEdgeAttribute('rel_2', 'dashed')).toBe(true);
         expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(true);
-        expect(graph.getEdgeAttribute('rel_4', 'dashed')).toBe(false);
+        expect(graph.getEdgeAttribute('rel_4', 'dashed')).toBe(true);
+        releaseMetadata();
+        await waitFor(() => expect(graph.getEdgeAttribute('rel_3', 'dashed')).toBe(false));
+        expect(graph.getEdgeAttribute('rel_1', 'dashed')).toBe(false);
+        expect(graph.getEdgeAttribute('rel_2', 'dashed')).toBe(true);
+        expect(graph.getEdgeAttribute('rel_4', 'dashed')).toBe(true);
         expect(captureGraph.mock.lastCall?.[0]).toBe(graph);
     });
     it('renders a hidden h1 with the text Explore for screen readers', async () => {

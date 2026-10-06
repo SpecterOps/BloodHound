@@ -167,8 +167,8 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
             x2 = targetData.x,
             y2 = targetData.y,
             color = floatColor(data.color);
-        const distance = Math.hypot(x2 - x1, y2 - y1);
         const dashed = data.dashed ? 1 : 0;
+        const distance = dashed ? Math.hypot(x2 - x1, y2 - y1) : 0;
         const radius = getNodeRadius(targetData.highlighted, inverseSqrtZoomRatio, targetData.size);
 
         // Computing normals
@@ -197,7 +197,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = n2;
         array[i++] = color;
         array[i++] = 0;
-        array[i++] = 0;
+        array[i++] = distance;
         array[i++] = dashed;
 
         // First point flipped
@@ -207,7 +207,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = -n2;
         array[i++] = color;
         array[i++] = 0;
-        array[i++] = 0;
+        array[i++] = distance;
         array[i++] = dashed;
 
         // Second point
@@ -217,7 +217,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = n2;
         array[i++] = color;
         array[i++] = radius;
-        array[i++] = distance;
+        array[i++] = 0;
         array[i++] = dashed;
 
         // Second point flipped
@@ -227,7 +227,7 @@ export default class EdgeClampedProgram extends AbstractEdgeProgram {
         array[i++] = -n2;
         array[i++] = color;
         array[i++] = -radius;
-        array[i++] = distance;
+        array[i++] = 0;
         array[i] = dashed;
     }
 

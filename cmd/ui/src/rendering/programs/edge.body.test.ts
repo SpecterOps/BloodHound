@@ -39,7 +39,7 @@ describe.each([
     ['curved', CurvedEdgeProgram],
     ['self', SelfEdgeProgram],
 ] as const)('%s edge body', (_shape, Program) => {
-    it.each([false, true])('preserves geometry and continuous arc length with dashed=%s', (dashed) => {
+    it.each([false, true])('preserves geometry and arc length anchored at the arrowhead with dashed=%s', (dashed) => {
         const gl = document.createElement('canvas').getContext('webgl')!;
         const program = new Program(gl);
         if (program instanceof CurvedEdgeProgram) program.correctionRatio = 0.0001;
@@ -69,17 +69,22 @@ describe.each([
         );
 
         expect(program.array.slice(0, stride).every((value) => value === 123)).toBe(true);
-        let previousDistance = 0;
+        let sourceDistance: number | undefined;
+        let previousDistance = Infinity;
         let visibleVertices = 0;
         for (let index = stride; index < program.array.length; index += program.attributes) {
             if (program.array[index + 2] === 0 && program.array[index + 3] === 0) continue;
-            expect(program.array[index + 6]).toBeGreaterThanOrEqual(previousDistance);
+            expect(program.array[index + 6]).toBeLessThanOrEqual(previousDistance);
             previousDistance = program.array[index + 6];
+            sourceDistance ??= previousDistance;
             expect(program.array[index + 7]).toBe(dashed ? 1 : 0);
             visibleVertices++;
         }
         expect(visibleVertices).toBeGreaterThanOrEqual(4);
-        expect(previousDistance).toBeGreaterThan(0);
+        // Solid edges skip arc length measurement entirely.
+        if (dashed) expect(sourceDistance).toBeGreaterThan(0);
+        else expect(sourceDistance).toBe(0);
+        expect(previousDistance).toBeCloseTo(0, 5);
         program.process(
             source,
             target,

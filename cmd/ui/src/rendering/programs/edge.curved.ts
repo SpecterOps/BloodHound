@@ -217,23 +217,53 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         // starting point, ending point, previously calculated control point. Only fill our buffers up to the
         // previously calculated clamp value.
 
+        const dashed = data.dashed ? 1 : 0;
         const points = [];
+        // Arc length from the source to each point. Only measured for dashed edges.
+        const pointDistances: number[] = [];
         let fullDistance = 0;
-        let previousPoint = start;
 
-        for (let t = 0; t < 1; t += RESOLUTION) {
-            const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
-            fullDistance += bezier.getLineLength(previousPoint, pointOnCurve);
-            previousPoint = pointOnCurve;
-            if (t <= clamp) points.push(pointOnCurve);
+        if (dashed) {
+            let previousPoint = start;
+            for (let t = 0; t < 1; t += RESOLUTION) {
+                const pointOnCurve = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t);
+                fullDistance += bezier.getLineLength(previousPoint, pointOnCurve);
+                previousPoint = pointOnCurve;
+                if (t <= clamp) {
+                    points.push(pointOnCurve);
+                    pointDistances.push(fullDistance);
+                }
+            }
+            fullDistance += bezier.getLineLength(previousPoint, end);
+        } else {
+            for (let t = 0; t <= clamp; t += RESOLUTION) {
+                points.push(bezier.getCoordinatesAlongQuadraticBezier(start, end, control, t));
+            }
         }
-        fullDistance += bezier.getLineLength(previousPoint, end);
 
         // Prevent rendering this edge if it is short enough that there is only one point before our clamp value
         if (points.length < 2) {
             for (let i = offset * STRIDE, l = i + STRIDE; i < l; i++) this.array[i] = 0;
             return;
         }
+
+        // Find one final point at the exact clamp position if we have the space. makes up any gap between the edge's
+        // last full segment and the arrowhead.
+        const lastPoint = points[points.length - 1];
+        let finalPoint: { x: number; y: number } | undefined;
+        if ((points.length + 1) * 2 * ATTRIBUTES <= STRIDE) {
+            const clampPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
+            if (clampPoint.x !== lastPoint.x || clampPoint.y !== lastPoint.y) finalPoint = clampPoint;
+        }
+
+        // Arrowhead clamping changes with zoom. Fit the same dash pattern to the visible curve each time, anchored at
+        // the arrowhead so the pattern stays put near the arrow as nodes move.
+        let visibleDistance = 0;
+        if (dashed) {
+            visibleDistance = pointDistances[points.length - 1];
+            if (finalPoint) visibleDistance += bezier.getLineLength(lastPoint, finalPoint);
+        }
+        const dashScale = visibleDistance > 0 ? fullDistance / visibleDistance : 0;
 
         // 4. Loop through each line segment, calculate normals so we can render each segment as two triangles, then
         // add data to this.array
@@ -242,11 +272,8 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
         const array = this.array;
         const color = floatColor(data.color);
 
-        let distance = 0;
-        const dashed = data.dashed ? 1 : 0;
-
         for (let j = 0; j < points.length; j++) {
-            if (j > 0) distance += bezier.getLineLength(points[j - 1], points[j]);
+            const dashDistance = dashed ? (visibleDistance - pointDistances[j]) * dashScale : 0;
             // Handle special cases, since we do not need to calculate a miter join for the endcaps
             const isFirstPoint = j === 0;
             const isLastPoint = j === points.length - 1;
@@ -276,7 +303,7 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = vOffset.x;
             array[i++] = color;
             array[i++] = 0;
-            array[i++] = distance;
+            array[i++] = dashDistance;
             array[i++] = dashed;
 
             // First point flipped
@@ -286,54 +313,40 @@ export default class CurvedEdgeProgram extends AbstractEdgeProgram {
             array[i++] = -vOffset.x;
             array[i++] = color;
             array[i++] = 0;
-            array[i++] = distance;
+            array[i++] = dashDistance;
             array[i++] = dashed;
         }
 
-        // Add one final point at the exact clamp position if we have the space. makes up any gap between the edge's
-        // last full segment and the arrowhead.
-        const bufferEnd = STRIDE * (offset + 1);
-        if (i + 2 * ATTRIBUTES <= bufferEnd) {
-            const finalPoint = bezier.getCoordinatesAlongQuadraticBezier(start, end, control, clamp);
-            const previousPoint = points[points.length - 1];
+        // The final point sits at the arrowhead, where the dash pattern starts.
+        if (finalPoint) {
+            const finalNormal = bezier.getNormals(lastPoint, finalPoint);
+            const vOffset = {
+                x: finalNormal.x * thickness,
+                y: -finalNormal.y * thickness,
+            };
+            // First point
+            array[i++] = finalPoint.x;
+            array[i++] = finalPoint.y;
+            array[i++] = vOffset.y;
+            array[i++] = vOffset.x;
+            array[i++] = color;
+            array[i++] = 0;
+            array[i++] = 0;
+            array[i++] = dashed;
 
-            if (finalPoint.x !== previousPoint.x || finalPoint.y !== previousPoint.y) {
-                distance += bezier.getLineLength(previousPoint, finalPoint);
-                const finalNormal = bezier.getNormals(previousPoint, finalPoint);
-                const vOffset = {
-                    x: finalNormal.x * thickness,
-                    y: -finalNormal.y * thickness,
-                };
-                // First point
-                array[i++] = finalPoint.x;
-                array[i++] = finalPoint.y;
-                array[i++] = vOffset.y;
-                array[i++] = vOffset.x;
-                array[i++] = color;
-                array[i++] = 0;
-                array[i++] = distance;
-                array[i++] = dashed;
-
-                // First point flipped
-                array[i++] = finalPoint.x;
-                array[i++] = finalPoint.y;
-                array[i++] = -vOffset.y;
-                array[i++] = -vOffset.x;
-                array[i++] = color;
-                array[i++] = 0;
-                array[i++] = distance;
-                array[i++] = dashed;
-            }
-        }
-
-        // Arrowhead clamping changes with zoom. Fit the same dash pattern to the visible curve each time.
-        if (distance > 0) {
-            for (let index = STRIDE * offset + 6; index < i; index += ATTRIBUTES) {
-                array[index] *= fullDistance / distance;
-            }
+            // First point flipped
+            array[i++] = finalPoint.x;
+            array[i++] = finalPoint.y;
+            array[i++] = -vOffset.y;
+            array[i++] = -vOffset.x;
+            array[i++] = color;
+            array[i++] = 0;
+            array[i++] = 0;
+            array[i++] = dashed;
         }
 
         // zero out any remaining buffer slots
+        const bufferEnd = STRIDE * (offset + 1);
         while (i < bufferEnd) {
             array[i++] = 0;
         }
