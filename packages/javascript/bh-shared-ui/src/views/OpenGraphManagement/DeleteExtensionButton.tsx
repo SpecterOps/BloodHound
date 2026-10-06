@@ -27,7 +27,7 @@ import {
 } from 'doodle-ui';
 import { type Extension } from 'js-client-library';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { AppIcon, ConditionalTooltip } from '../../components';
+import { AppIcon } from '../../components';
 import { cn } from '../../utils/theme';
 
 export const ConfirmDeleteExtensionDialog: FC<{
@@ -96,27 +96,26 @@ export const DeleteExtensionButton: FC<{
     hasDeletePermission: boolean;
 }> = ({ extension, onDeleteClick, hasDeletePermission }) => {
     const { name: extensionName, is_builtin: isUndeletable } = extension;
+    const isDisabled = isUndeletable || !hasDeletePermission;
+    const tooltip = isUndeletable
+        ? 'Built-in extensions cannot be deleted.'
+        : !hasDeletePermission
+          ? 'You do not have permission to delete this extension.'
+          : undefined;
 
     return (
         <div className='flex content-center justify-center'>
-            <ConditionalTooltip
-                condition={isUndeletable || !hasDeletePermission}
-                tooltip={
-                    isUndeletable
-                        ? 'Built-in extensions cannot be deleted.'
-                        : 'You do not have permission to delete this extension.'
-                }>
-                <IconButton
-                    aria-label={`Delete ${extensionName}`}
-                    className={cn({
-                        'cursor-pointer': !isUndeletable && hasDeletePermission,
-                        'opacity-50 cursor-not-allowed': isUndeletable || !hasDeletePermission,
-                    })}
-                    onClick={() => onDeleteClick(extension)}
-                    disabled={isUndeletable || !hasDeletePermission}>
-                    <AppIcon.Trash size={18} />
-                </IconButton>
-            </ConditionalTooltip>
+            <IconButton
+                aria-label={`Delete ${extensionName}`}
+                tooltip={tooltip}
+                className={cn({
+                    'cursor-pointer': !isDisabled,
+                    'opacity-50 cursor-not-allowed': isDisabled,
+                })}
+                onClick={() => onDeleteClick(extension)}
+                disabled={isDisabled}>
+                <AppIcon.Trash size={18} />
+            </IconButton>
         </div>
     );
 };
