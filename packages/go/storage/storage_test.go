@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"strings"
 	"testing"
 	"time"
@@ -51,6 +52,25 @@ type readErrorSource struct {
 	err error
 }
 
+type testPendingFile struct {
+	commitName string
+	commitErr  error
+	aborted    bool
+}
+
+func (s *testPendingFile) Write(data []byte) (int, error) {
+	return len(data), nil
+}
+
+func (s *testPendingFile) Commit() (string, error) {
+	return s.commitName, s.commitErr
+}
+
+func (s *testPendingFile) Abort() error {
+	s.aborted = true
+	return nil
+}
+
 func (s readErrorSource) Read([]byte) (int, error) {
 	return 0, s.err
 }
@@ -66,6 +86,132 @@ func TestNewFileService(t *testing.T) {
 
 	// Assert
 	require.Same(t, mockStorage, fileService.Storage)
+}
+
+func TestStorageFileServiceBeginFile(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	options := storage.WriteOptions{
+		ContentType: "application/json",
+		SizeHint:    10,
+	}
+	pendingFile := &testPendingFile{commitName: "named/file"}
+	mockStorage := mocks.NewMockStorage(gomock.NewController(t))
+	mockStorage.EXPECT().BeginWrite(ctx, "named/file", options).Return(pendingFile, nil)
+
+	// Act
+	actual, err := storage.NewFileService(mockStorage).BeginFile(ctx, "named/file", options)
+
+	// Assert
+	require.NoError(t, err)
+	require.Same(t, pendingFile, actual)
+}
+
+func TestStorageFileServiceBeginTempFileCommitsUniqueNames(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	options := storage.WriteOptions{
+		ContentType: "application/zip",
+		Metadata:    map[string]string{"source": "upload"},
+		SizeHint:    99,
+	}
+	mockStorage := mocks.NewMockStorage(gomock.NewController(t))
+	var names []string
+	mockStorage.EXPECT().BeginWrite(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(actualContext context.Context, name string, actualOptions storage.WriteOptions) (storage.PendingFile, error) {
+		require.Equal(t, ctx, actualContext)
+		require.True(t, strings.HasPrefix(name, "ingest/tmp-"))
+		names = append(names, name)
+		require.Equal(t, options.ContentType, actualOptions.ContentType)
+		require.Equal(t, options.Metadata, actualOptions.Metadata)
+		require.Equal(t, options.SizeHint, actualOptions.SizeHint)
+		require.True(t, actualOptions.FailIfExists)
+		return &testPendingFile{commitName: name}, nil
+	}).Times(2)
+
+	pendingFile, err := storage.NewFileService(mockStorage).BeginTempFile(ctx, "ingest/", options)
+	require.NoError(t, err)
+
+	// Act
+	committedName, err := pendingFile.Commit()
+
+	// Assert
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(committedName, "ingest/tmp-"))
+
+	repeatedName, err := pendingFile.Commit()
+	require.NoError(t, err)
+	require.Equal(t, committedName, repeatedName)
+	_, err = pendingFile.Write([]byte("data"))
+	require.ErrorIs(t, err, io.ErrClosedPipe)
+
+	secondFile, err := storage.NewFileService(mockStorage).BeginTempFile(ctx, "ingest/", options)
+	require.NoError(t, err)
+	secondName, err := secondFile.Commit()
+	require.NoError(t, err)
+	require.Equal(t, names[0], committedName)
+	require.Equal(t, names[1], secondName)
+	require.NotEqual(t, committedName, secondName)
+}
+
+func TestStorageFileServiceBeginTempFileCanAbort(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	pendingFile := &testPendingFile{}
+	mockStorage := mocks.NewMockStorage(gomock.NewController(t))
+	mockStorage.EXPECT().BeginWrite(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, name string, options storage.WriteOptions) (storage.PendingFile, error) {
+		require.True(t, strings.HasPrefix(name, "ingest/tmp-"))
+		require.True(t, options.FailIfExists)
+		return pendingFile, nil
+	})
+
+	// Act
+	actual, err := storage.NewFileService(mockStorage).BeginTempFile(ctx, "ingest/", storage.WriteOptions{})
+	require.NoError(t, err)
+	_, err = actual.Write([]byte("data"))
+	require.NoError(t, err)
+	err = actual.Abort()
+
+	// Assert
+	require.NoError(t, err)
+	require.True(t, pendingFile.aborted)
+}
+
+func TestStorageFileServiceBeginTempFileCleansOwnedNameAfterUncertainCommit(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx, cancel := context.WithCancel(context.Background())
+	commitErr := errors.New("completion response lost")
+	mockStorage := mocks.NewMockStorage(gomock.NewController(t))
+	var tempName string
+	mockStorage.EXPECT().BeginWrite(ctx, gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, name string, _ storage.WriteOptions) (storage.PendingFile, error) {
+		tempName = name
+		return &testPendingFile{commitName: name, commitErr: commitErr}, nil
+	})
+	mockStorage.EXPECT().Delete(gomock.Any(), gomock.Any()).DoAndReturn(func(cleanupContext context.Context, name string) error {
+		require.Equal(t, tempName, name)
+		require.NoError(t, cleanupContext.Err())
+		_, hasDeadline := cleanupContext.Deadline()
+		require.True(t, hasDeadline)
+		return nil
+	})
+
+	pendingFile, err := storage.NewFileService(mockStorage).BeginTempFile(ctx, "owned/", storage.WriteOptions{})
+	require.NoError(t, err)
+	cancel()
+
+	// Act
+	_, err = pendingFile.Commit()
+
+	// Assert
+	require.ErrorIs(t, err, commitErr)
+	require.NotErrorIs(t, err, fs.ErrExist)
 }
 
 func TestStorageFileService_GetFile(t *testing.T) {

@@ -43,20 +43,44 @@ type testHTTPResponse struct {
 }
 
 type testHTTPClient struct {
-	requests  []*http.Request
-	responses []testHTTPResponse
+	requests      []*http.Request
+	requestBodies [][]byte
+	contextErrors []error
+	responses     []testHTTPResponse
+	requestErrors map[int]error
+	onRequest     func(*http.Request)
 }
 
 func (s *testHTTPClient) Do(request *http.Request) (*http.Response, error) {
+	var (
+		response    testHTTPResponse
+		requestBody []byte
+		err         error
+		headers     = http.Header{}
+	)
+
 	if len(s.responses) == 0 {
 		return nil, fmt.Errorf("unexpected request: %s %s", request.Method, request.URL.String())
 	}
 
-	response := s.responses[0]
+	response = s.responses[0]
 	s.responses = s.responses[1:]
+	if request.Body != nil {
+		requestBody, err = io.ReadAll(request.Body)
+		if err != nil {
+			return nil, err
+		}
+	}
 	s.requests = append(s.requests, request)
+	s.requestBodies = append(s.requestBodies, requestBody)
+	s.contextErrors = append(s.contextErrors, request.Context().Err())
+	if s.onRequest != nil {
+		s.onRequest(request)
+	}
+	if requestErr := s.requestErrors[len(s.requests)-1]; requestErr != nil {
+		return nil, requestErr
+	}
 
-	headers := http.Header{}
 	for key, value := range response.headers {
 		headers.Set(key, value)
 	}
@@ -71,6 +95,10 @@ func (s *testHTTPClient) Do(request *http.Request) (*http.Response, error) {
 }
 
 func newTestStore(httpClient *testHTTPClient) *Store {
+	return newTestStoreWithRetryer(httpClient, aws.NopRetryer{})
+}
+
+func newTestStoreWithRetryer(httpClient *testHTTPClient, retryer aws.Retryer) *Store {
 	cfg := aws.Config{
 		Region: "us-east-1",
 		Credentials: credentials.NewStaticCredentialsProvider(
@@ -80,7 +108,7 @@ func newTestStore(httpClient *testHTTPClient) *Store {
 		),
 		HTTPClient: httpClient,
 		Retryer: func() aws.Retryer {
-			return aws.NopRetryer{}
+			return retryer
 		},
 	}
 

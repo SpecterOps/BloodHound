@@ -103,82 +103,18 @@ func syncDir(root *os.Root, dir string) error {
 	return dirFile.Sync()
 }
 
-// writeAtomic streams src into a temp file under dir(name), then publishes it at name.
-// If failIfExists is true, publish uses link+unlink and returns an error satisfying
-// errors.Is(err, fs.ErrExist) on collision. Otherwise, publish uses rename and silently
-// replaces any existing file at name. The temp file is removed on every failure path.
-// However, failed or crash-lost temp cleanup may leak .tmp-* which can be picked up by
-// a sweeper.
+// writeAtomic copies src to a pending file before publishing it atomically.
 func (s *LocalStore) writeAtomic(ctx context.Context, name string, src io.Reader, failIfExists bool) error {
-	var (
-		dir     = path.Dir(name)
-		tmpName string
-		tmp     *os.File
-		id      string
-		closed  bool
-		err     error
-	)
-
-	if err = ctx.Err(); err != nil {
+	pendingFile, err := s.BeginWrite(ctx, name, WriteOptions{FailIfExists: failIfExists})
+	if err != nil {
 		return err
 	}
-
-	if dir != "." {
-		if err = s.root.MkdirAll(dir, 0o750); err != nil {
-			return err
-		}
+	if _, err := io.Copy(pendingFile, &ctxReader{ctx: ctx, reader: src}); err != nil {
+		return errors.Join(err, pendingFile.Abort())
 	}
-
-	if id, err = randomID(); err != nil {
-		return err
-	}
-	tmpName = path.Join(dir, ".tmp-"+id)
-
-	if tmp, err = s.root.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o640); err != nil {
-		return err
-	}
-
-	// Remove the temp file on any failure path. On the success path we rename it
-	// before this runs, so Remove returns ErrNotExist and we ignore it.
-	defer func() {
-		if err != nil {
-			if !closed {
-				_ = tmp.Close()
-			}
-			_ = s.root.Remove(tmpName)
-		}
-	}()
-
-	if _, err = io.Copy(tmp, &ctxReader{ctx: ctx, reader: src}); err != nil {
-		return err
-	}
-	if err = tmp.Sync(); err != nil { // flush data blocks
-		return err
-	}
-	if err = tmp.Close(); err != nil {
-		return err
-	}
-	closed = true
-
-	if failIfExists {
-		// Link fails with fs.ErrExist if name already exists. Atomic and race-free
-		// against concurrent writers on the same filesystem.
-		if err = s.root.Link(tmpName, name); err != nil {
-			return err
-		}
-		if err = syncDir(s.root, dir); err != nil {
-			return err
-		}
-
-		// Publish is durable, a failed Remove leaks a .tmp-... that a sweeper can reclaim
-		_ = s.root.Remove(tmpName)
-		return nil
-	}
-	if err = s.root.Rename(tmpName, name); err != nil {
-		return err
-	}
-	if err = syncDir(s.root, dir); err != nil {
-		return err
+	_, err = pendingFile.Commit()
+	if err != nil {
+		return errors.Join(err, pendingFile.Abort())
 	}
 	return nil
 }
