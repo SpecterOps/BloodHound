@@ -825,15 +825,15 @@ class BHEAPIClient {
             },
         });
 
-    getCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
+    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
         this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
                 ...options?.params,
                 profile_id: `eq:${profileId}`,
-                sort_by: '-recorded_at',
-                skip: 0,
-                limit: 25,
+                sort_by: options?.params?.sort_by ?? '-recorded_at',
+                skip,
+                limit,
             },
         });
 
