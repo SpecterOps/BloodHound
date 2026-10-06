@@ -141,12 +141,12 @@ func (s *Service) ListUsers(ctx context.Context, queryFilters params.Filters, so
 // results are sorted by email_address ascending.
 func (s *Service) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]UserMinimal, error) {
 	var (
-		tieBreakerField = "email_address"
-		orderedSort     = slices.Clone(sortItems)
+		defaultSortField = "email_address"
+		orderedSort      = slices.Clone(sortItems)
 	)
 
-	if !slices.ContainsFunc(orderedSort, func(sortItem params.SortItem) bool { return sortItem.Field == tieBreakerField }) {
-		orderedSort = append(orderedSort, params.SortItem{Field: tieBreakerField, Direction: params.Ascending})
+	if !slices.ContainsFunc(orderedSort, func(sortItem params.SortItem) bool { return sortItem.Field == defaultSortField }) {
+		orderedSort = append(orderedSort, params.SortItem{Field: defaultSortField, Direction: params.Ascending})
 	}
 
 	return s.db.ListActiveUsersMinimal(ctx, queryFilters, orderedSort)
