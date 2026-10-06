@@ -95,6 +95,7 @@ interface MultiSelectProps {
     options: MultiSelectOption[];
     value: string[];
     onValueChange: (values: string[]) => void;
+    onSearchValueChange?: (value: string) => void;
     placeholder?: string;
     disabled?: boolean;
     error?: boolean;
@@ -193,6 +194,7 @@ const MultiSelect = ({
     options,
     value,
     onValueChange,
+    onSearchValueChange,
     placeholder,
     disabled,
     error,
@@ -209,11 +211,16 @@ const MultiSelect = ({
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
 
+    const handleSearchChange = (value: string) => {
+        setSearchValue(value);
+        onSearchValueChange?.(value);
+    };
+
     const handleOpenChange = (shouldOpen: boolean) => {
         setOpen(shouldOpen);
 
         if (!shouldOpen) {
-            setSearchValue('');
+            handleSearchChange('');
         }
     };
 
@@ -342,7 +349,7 @@ const MultiSelect = ({
                         <Input
                             aria-label={searchPlaceholder}
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             placeholder={searchPlaceholder}
                             className='h-6 border-none bg-transparent px-2 text-text-main leading-4 placeholder:text-input-placeholder-text focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
