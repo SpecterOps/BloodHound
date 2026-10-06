@@ -27,8 +27,15 @@ import { useFeatureFlag } from './useFeatureFlags';
 
 export type EdgeTraversability = ReadonlyMap<string, boolean>;
 
+/** Only explicitly traversable edge kinds return true; unknown kinds default to false. */
+class EdgeTraversabilityMap extends Map<string, boolean> {
+    override get(kind: string): boolean {
+        return super.get(kind) === true;
+    }
+}
+
 const builtinPathfindingEdges = new Set<string>([...ActiveDirectoryPathfindingEdges(), ...AzurePathfindingEdges()]);
-const builtinTraversability: EdgeTraversability = new Map(
+const builtinTraversability: EdgeTraversability = new EdgeTraversabilityMap(
     [...Object.values(ActiveDirectoryRelationshipKind), ...Object.values(AzureRelationshipKind)].map((kind) => [
         kind,
         builtinPathfindingEdges.has(kind),
@@ -36,9 +43,9 @@ const builtinTraversability: EdgeTraversability = new Map(
 );
 
 const selectTraversability = (edgeTypes: EdgeType[]): EdgeTraversability =>
-    new Map([
+    new EdgeTraversabilityMap([
         ...builtinTraversability,
-        ...edgeTypes.map((edgeType): [string, boolean] => [edgeType.name, edgeType.is_traversable]),
+        ...edgeTypes.map((edgeType): [string, boolean] => [edgeType.name, edgeType.is_traversable === true]),
     ]);
 
 // Use the unfiltered schema, including built-in and non-traversable edge kinds.

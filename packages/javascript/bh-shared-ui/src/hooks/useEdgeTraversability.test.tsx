@@ -40,6 +40,7 @@ describe('useEdgeTraversability', () => {
                             { name: 'Enroll', is_traversable: false, is_builtin: true },
                             { name: 'CustomFact', is_traversable: false, is_builtin: false },
                             { name: 'CustomAttack', is_traversable: true, is_builtin: false },
+                            { name: 'CustomUnknown', is_builtin: false },
                         ],
                     })
                 )
@@ -49,13 +50,16 @@ describe('useEdgeTraversability', () => {
         const { result } = renderHook(() => useEdgeTraversability());
         expect(result.current.data.get('AdminTo')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
-        expect(result.current.data.get('CustomFact')).toBeUndefined();
+        expect(result.current.data.get('CustomFact')).toBe(false);
+        expect(result.current.data.get('CustomAttack')).toBe(false);
+        expect(result.current.data.get('Unknown')).toBe(false);
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(result.current.data.get('AdminTo')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
         expect(result.current.data.get('CustomFact')).toBe(false);
         expect(result.current.data.get('CustomAttack')).toBe(true);
-        expect(result.current.data?.get('Unknown')).toBeUndefined();
+        expect(result.current.data.get('CustomUnknown')).toBe(false);
+        expect(result.current.data.get('Unknown')).toBe(false);
     });
     it('renders built-in kinds when OpenGraph is disabled without requesting its endpoint', async () => {
         const requestMetadata = vi.fn();
@@ -74,6 +78,8 @@ describe('useEdgeTraversability', () => {
         }));
         expect(result.current.traversabilityQuery.data.get('Enroll')).toBe(false);
         await waitFor(() => expect(result.current.featureQuery.isSuccess).toBe(true));
+        expect(result.current.traversabilityQuery.data.get('AdminTo')).toBe(true);
+        expect(result.current.traversabilityQuery.data.get('Unknown')).toBe(false);
         expect(requestMetadata).not.toHaveBeenCalled();
     });
     it('keeps built-in traversability when schema metadata is unavailable', async () => {
@@ -84,6 +90,6 @@ describe('useEdgeTraversability', () => {
         await waitFor(() => expect(result.current.isError).toBe(true));
         expect(result.current.data.get('AdminTo')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
-        expect(result.current.data.get('Unknown')).toBeUndefined();
+        expect(result.current.data.get('Unknown')).toBe(false);
     });
 });
