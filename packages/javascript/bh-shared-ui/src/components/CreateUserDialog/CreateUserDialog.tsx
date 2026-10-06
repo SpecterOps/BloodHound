@@ -26,7 +26,7 @@ import {
     VisuallyHidden,
 } from 'doodle-ui';
 import { CreateUserRequest } from 'js-client-library';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
 import CreateUserForm from '../CreateUserForm';
@@ -37,6 +37,8 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     showEnvironmentAccessControls: boolean;
 }> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
+    const dialogTitleRef = useRef<HTMLHeadingElement>(null);
+
     const handleOnSave = (user: CreateUserRequest) => {
         onSave(user)
             .then(() => setIsOpen(false))
@@ -57,9 +59,17 @@ const CreateUserDialog: React.FC<{
             </DialogTrigger>
             <DialogPortal>
                 <DialogOverlay>
-                    <DialogContent maxWidth='lg' className='!bg-transparent shadow-none max-h-screen overflow-y-auto'>
+                    <DialogContent
+                        maxWidth='lg'
+                        className='!bg-transparent shadow-none max-h-screen overflow-y-auto'
+                        onOpenAutoFocus={(event) => {
+                            event.preventDefault();
+                            dialogTitleRef.current?.focus();
+                        }}>
                         <VisuallyHidden asChild>
-                            <DialogTitle>Create User</DialogTitle>
+                            <DialogTitle ref={dialogTitleRef} tabIndex={-1} data-testid='create-user-dialog_title'>
+                                Create User
+                            </DialogTitle>
                         </VisuallyHidden>
                         <VisuallyHidden asChild>
                             <DialogDescription>Create User</DialogDescription>

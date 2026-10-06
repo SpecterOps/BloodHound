@@ -185,7 +185,7 @@ const CommonSearches = ({
                     onClick={onToggleCommonQueries}
                     className='flex justify-start items-center w-full rounded-sm'
                     data-testid='common-queries-toggle'>
-                    <FontAwesomeIcon className='px-1 mr-2' icon={showCommonQueries ? faChevronDown : faChevronUp} />
+                    <FontAwesomeIcon className='px-1 mr-2' icon={showCommonQueries ? faChevronUp : faChevronDown} />
                     <span className='font-semibold text-lg py-0.5'>Saved Queries</span>
                 </TextButton>
             </div>
