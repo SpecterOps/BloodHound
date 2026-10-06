@@ -13,8 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import type { ComponentProps } from 'react';
 import { Button } from '../Button';
@@ -22,6 +20,7 @@ import {
     Drawer,
     DrawerBody,
     DrawerClose,
+    DrawerCloseIcon,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
@@ -159,9 +158,7 @@ export const Default: Story = {
                         <DrawerTitle>Create Item</DrawerTitle>
                         <DrawerDescription className='mt-3'>Enter a name for the new item.</DrawerDescription>
                     </div>
-                    <DrawerClose aria-label='Close drawer'>
-                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
-                    </DrawerClose>
+                    <DrawerCloseIcon aria-label='Close drawer' />
                 </DrawerHeader>
                 <DrawerBody className='space-y-4'>
                     <div>
@@ -212,9 +209,7 @@ export const ScrollingList: Story = {
             <DrawerContent className={className}>
                 <DrawerHeader>
                     <DrawerTitle>Scrollable Content</DrawerTitle>
-                    <DrawerClose aria-label='Close drawer'>
-                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
-                    </DrawerClose>
+                    <DrawerCloseIcon aria-label='Close drawer' />
                 </DrawerHeader>
                 <DrawerBody>
                     <DrawerDescription className='mb-6'>
@@ -249,9 +244,7 @@ const DirectionalDrawer = ({
         <DrawerContent className={className}>
             <DrawerHeader>
                 <DrawerTitle>{swipeDirection} drawer</DrawerTitle>
-                <DrawerClose aria-label='Close drawer'>
-                    <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
-                </DrawerClose>
+                <DrawerCloseIcon aria-label='Close drawer' />
             </DrawerHeader>
             <DrawerBody>
                 <DrawerDescription>Content can come from any edge of the screen.</DrawerDescription>
@@ -328,9 +321,7 @@ export const SnapPoints: Story = {
                         <DrawerTitle>Snap points</DrawerTitle>
                         <DrawerDescription>Drag the drawer to expand it.</DrawerDescription>
                     </div>
-                    <DrawerClose aria-label='Close drawer'>
-                        <FontAwesomeIcon aria-hidden='true' icon={faTimes} />
-                    </DrawerClose>
+                    <DrawerCloseIcon aria-label='Close drawer' />
                 </DrawerHeader>
                 <DrawerBody>
                     <ul className='divide-y'>

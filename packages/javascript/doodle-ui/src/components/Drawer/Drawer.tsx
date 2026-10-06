@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
+import { faTimes, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createContext, useContext, useMemo, type ComponentProps } from 'react';
-import { IconButton } from '../Button';
+import { IconButton } from '../IconButton';
 import { TypographyVariants } from '../Typography';
 import { cn, cnWithState } from '../utils';
 
@@ -75,10 +77,22 @@ function DrawerPortal({ ...props }: DrawerPrimitive.Portal.Props) {
 }
 
 function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
+    return <DrawerPrimitive.Close data-slot='drawer-close' {...props} />;
+}
+
+type DrawerCloseIconProps = Omit<
+    DrawerPrimitive.Close.Props & { iconDefinition?: IconDefinition },
+    'children' | 'render'
+>;
+function DrawerCloseIcon({ iconDefinition = faTimes, ...props }: DrawerCloseIconProps) {
     return (
         <DrawerPrimitive.Close
             data-slot='drawer-close'
-            render={<IconButton size={20} aria-label={props['aria-label'] ?? 'Close drawer'} />}
+            render={
+                <IconButton size={20} aria-label={props['aria-label'] ?? 'Close drawer'}>
+                    <FontAwesomeIcon aria-hidden='true' icon={iconDefinition} />
+                </IconButton>
+            }
             {...props}
         />
     );
@@ -226,6 +240,7 @@ export {
     Drawer,
     DrawerBody,
     DrawerClose,
+    DrawerCloseIcon,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
