@@ -61,8 +61,9 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	var (
 		queries []model.ScopedSavedQuery
 		// cant chain scope + cursor after declaration so must declare twice
-		countCursor = s.db.WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
-		cursor      = s.Scope(Paginate(skip, limit)).WithContext(ctx).Select("DISTINCT sq.*, CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope", userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
+		scopeSelectStr = "CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope"
+		countCursor    = s.db.WithContext(ctx).Select("DISTINCT sq.*, "+scopeSelectStr, userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
+		cursor         = s.Scope(Paginate(skip, limit)).WithContext(ctx).Select("DISTINCT sq.*, "+scopeSelectStr, userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
 		// Note this is just doing string replacement and is fragile
 		// Since "id" is being replaced any attributes with "id" in the name must
 		// be individually handled
