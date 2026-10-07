@@ -27,6 +27,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -66,6 +67,90 @@ func TestAllowedZipFileUploadTypes(t *testing.T) {
 
 	actual[0] = "mutated"
 	require.Equal(t, expected, upload.AllowedZipFileUploadTypes())
+}
+
+func TestValidateZipFile(t *testing.T) {
+	t.Parallel()
+
+	var readErr = errors.New("read failed")
+
+	tests := []struct {
+		name          string
+		reader        io.Reader
+		expectedError error
+	}{
+		{
+			name:   "valid header",
+			reader: strings.NewReader("\x50\x4b\x03\x04payload"),
+		},
+		{
+			name:   "header arrives one byte at a time",
+			reader: iotest.OneByteReader(strings.NewReader("\x50\x4b\x03\x04payload")),
+		},
+		{
+			name:   "complete header arrives with EOF",
+			reader: iotest.DataErrReader(strings.NewReader("\x50\x4b\x03\x04")),
+		},
+		{
+			name:          "empty input",
+			reader:        strings.NewReader(""),
+			expectedError: upload.ErrInvalidZipFile,
+		},
+		{
+			name:          "truncated header",
+			reader:        strings.NewReader("\x50\x4b\x03"),
+			expectedError: upload.ErrInvalidZipFile,
+		},
+		{
+			name:          "unexpected EOF during header read",
+			reader:        &errorReader{err: io.ErrUnexpectedEOF},
+			expectedError: upload.ErrInvalidZipFile,
+		},
+		{
+			name:          "incorrect magic bytes",
+			reader:        strings.NewReader("invalid"),
+			expectedError: upload.ErrInvalidZipFile,
+		},
+		{
+			name:          "header read failure",
+			reader:        &errorReader{err: readErr},
+			expectedError: readErr,
+		},
+		{
+			name:          "read failure after partial header",
+			reader:        io.MultiReader(strings.NewReader("\x50\x4b"), &errorReader{err: readErr}),
+			expectedError: readErr,
+		},
+		{
+			name:          "body read failure",
+			reader:        io.MultiReader(strings.NewReader("\x50\x4b\x03\x04"), &errorReader{err: readErr}),
+			expectedError: readErr,
+		},
+		{
+			name:          "unexpected EOF during body read",
+			reader:        io.MultiReader(strings.NewReader("\x50\x4b\x03\x04"), &errorReader{err: io.ErrUnexpectedEOF}),
+			expectedError: io.ErrUnexpectedEOF,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Act
+			err := upload.ValidateZipFile(testCase.reader)
+
+			// Assert
+			if testCase.expectedError != nil {
+				require.Same(t, testCase.expectedError, err)
+			} else {
+				require.NoError(t, err)
+				remaining, readErr := io.ReadAll(testCase.reader)
+				require.NoError(t, readErr)
+				require.Empty(t, remaining)
+			}
+		})
+	}
 }
 
 func TestWriteAndValidateZip(t *testing.T) {

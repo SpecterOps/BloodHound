@@ -47,20 +47,21 @@ func ReadZippedFile(zf *zip.File) ([]byte, error) {
 }
 
 func ValidateZipFile(reader io.Reader) error {
-	bytes := make([]byte, 4)
-	if readBytes, err := reader.Read(bytes); err != nil {
-		return err
-	} else if readBytes < 4 {
-		return ErrInvalidZipFile
-	} else {
-		for i := 0; i < 4; i++ {
-			if bytes[i] != ZipMagicBytes[i] {
-				return ErrInvalidZipFile
-			}
+	var magicBytes [4]byte
+
+	if _, err := io.ReadFull(reader, magicBytes[:]); err != nil {
+		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+			return ErrInvalidZipFile
 		}
-
-		_, err := io.Copy(io.Discard, reader)
-
 		return err
 	}
+
+	for index, magicByte := range magicBytes {
+		if magicByte != ZipMagicBytes[index] {
+			return ErrInvalidZipFile
+		}
+	}
+
+	_, err := io.Copy(io.Discard, reader)
+	return err
 }
