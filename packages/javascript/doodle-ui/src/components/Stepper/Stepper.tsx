@@ -233,7 +233,7 @@ function StepperItem({
     useLayoutEffect(() => registerStep(step, isDisabled), [registerStep, step, isDisabled]);
 
     const state: StepState =
-        isCompleted || step < activeStep ? 'completed' : activeStep === step ? 'active' : 'inactive';
+        activeStep === step ? 'active' : isCompleted || step < activeStep ? 'completed' : 'inactive';
     const isItemLoading = isLoading && step === activeStep;
 
     return (

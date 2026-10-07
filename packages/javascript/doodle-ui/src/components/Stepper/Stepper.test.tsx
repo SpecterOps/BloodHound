@@ -51,6 +51,21 @@ const getTab = (oneBasedIndex: number, triggerTitle?: string) =>
     screen.getByRole('tab', { name: `${oneBasedIndex} ${triggerTitle ?? steps[oneBasedIndex - 1].title}` });
 
 describe('BasicStepper', () => {
+    it('shows the selected step as active even when it is completed', async () => {
+        render(<BasicStepper defaultValue={2} steps={steps.map((step) => ({ ...step, isCompleted: true }))} />);
+        expect(getTab(1)).toHaveAttribute('data-state', 'completed');
+        expect(getTab(2)).toHaveAttribute('data-state', 'active');
+        expect(getTab(3)).toHaveAttribute('data-state', 'completed');
+        await userEvent.click(getTab(3));
+        expect(getTab(1)).toHaveAttribute('data-state', 'completed');
+        expect(getTab(2)).toHaveAttribute('data-state', 'completed');
+        expect(getTab(3)).toHaveAttribute('data-state', 'active');
+        await userEvent.click(getTab(1));
+        expect(getTab(1)).toHaveAttribute('data-state', 'active');
+        expect(getTab(2)).toHaveAttribute('data-state', 'completed');
+        expect(getTab(3)).toHaveAttribute('data-state', 'completed');
+    });
+
     it('keeps inactive form content mounted and hidden when forceMount is enabled', async () => {
         render(
             <BasicStepper
