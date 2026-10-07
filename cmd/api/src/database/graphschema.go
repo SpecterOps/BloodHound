@@ -1366,9 +1366,9 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
-// of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
-// during ingest are also upserted.
+// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the source
+// of truth for user-ingested and schema-backed display node kinds. Schema-backed display kinds are mirrored there on
+// extension upsert, and schemaless kinds encountered during ingest are also upserted.
 //
 // Source kinds (from the source_kinds registry, e.g. Base, AZBase, or an OpenGraph source kind like GithubBase) are also
 // included in the map and flagged with IsSourceKind. This allows PrimaryDisplayKind to generically treat any source kind as
@@ -1396,7 +1396,8 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 		}
 	}
 
-	// Include Zone so its node type resolves to Zone instead of Unknown.
+	// Zone is a synthetic node kind created during analysis, not a user-ingested display kind. Include it without
+	// requiring a custom_node_kinds row so its node type resolves to Zone instead of Unknown.
 	if _, exists := primaryDisplayKinds[graphschema.Zone]; !exists {
 		primaryDisplayKinds[graphschema.Zone] = graphschema.DisplayKind{}
 	}
