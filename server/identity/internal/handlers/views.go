@@ -376,7 +376,6 @@ func (s PermissionListView) IsSortable(field string) bool {
 }
 
 // UserMinimalView is the JSON shape returned for a user without sensitive data.
-// NULL columns marshal as empty strings, matching the legacy wire contract.
 type UserMinimalView struct {
 	ID           uuid.UUID `json:"id"`
 	EmailAddress string    `json:"email_address"`
@@ -384,7 +383,6 @@ type UserMinimalView struct {
 	LastName     string    `json:"last_name"`
 }
 
-// BuildUserMinimalView projects a services.UserMinimal into the response view.
 func BuildUserMinimalView(user services.UserMinimal) UserMinimalView {
 	return UserMinimalView{
 		ID:           user.ID,
@@ -394,17 +392,13 @@ func BuildUserMinimalView(user services.UserMinimal) UserMinimalView {
 	}
 }
 
-// JSONView marshals the view for responses.WriteBasic.
 func (s UserMinimalView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
-
-// UserMinimalListView is the JSON shape returned for a minimal user collection.
 type UserMinimalListView struct {
 	Users []UserMinimalView `json:"users"`
 }
 
-// BuildUserMinimalListView projects domain minimal users into the response view.
 func BuildUserMinimalListView(users []services.UserMinimal) UserMinimalListView {
 	var views = make([]UserMinimalView, 0, len(users))
 	for _, user := range users {
@@ -414,12 +408,10 @@ func BuildUserMinimalListView(users []services.UserMinimal) UserMinimalListView 
 	return UserMinimalListView{Users: views}
 }
 
-// JSONView marshals the list view for responses.WriteBasic.
 func (s UserMinimalListView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// ValidFilters describes the query filters supported by the minimal user list.
 func (s UserMinimalListView) ValidFilters() map[string]params.FilterableField {
 	var stringOperators = []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}
 
@@ -431,7 +423,6 @@ func (s UserMinimalListView) ValidFilters() map[string]params.FilterableField {
 	}
 }
 
-// IsSortable reports the minimal user fields accepted by sort_by.
 func (s UserMinimalListView) IsSortable(field string) bool {
 	switch field {
 	case "first_name", "last_name", "email_address", "id":

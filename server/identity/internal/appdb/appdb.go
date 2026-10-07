@@ -234,18 +234,12 @@ var roleColumns = map[string]string{
 }
 
 // nullFilterValue is the sentinel filter value the API translates into a SQL
-// NULL comparison. It mirrors the legacy filter builder, which renders eq:null /
-// neq:null as IS NULL / IS NOT NULL rather than binding the literal string
-// "null" through =/<>.
+// NULL comparison.
 const nullFilterValue = "null"
 
-// buildFilterComparison translates a single validated filter into a SQL WHERE
-// expression on the supplied builder. Equality filters whose value is the null
-// sentinel become IS NULL / IS NOT NULL, matching the legacy contract; every
-// other operator binds the value as a parameter. Approximate equality becomes a
-// case-insensitive substring match (ILIKE '%value%'); like the legacy builder, a
-// null sentinel compares against NULL and matches nothing. The boolean is false
-// when the operator is unsupported, letting callers surface a field-specific error.
+// buildFilterComparison translates a filter into a SQL WHERE expression. A null
+// value maps eq/neq to IS NULL / IS NOT NULL, and ~eq becomes a case-insensitive
+// substring match. It returns false if the operator is unsupported.
 func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter params.Filter) (string, bool) {
 	switch filter.Operator {
 	case params.Equals:
@@ -921,10 +915,6 @@ func (s *Store) ListUsers(ctx context.Context, queryFilters params.Filters, sort
 	return result, nil
 }
 
-// ListActiveUsersMinimal retrieves the id, email address and name of every
-// enabled, non-support user matching the supplied filters, ordered by the
-// supplied sort items. It mirrors the legacy ListActiveUsersMinimal behavior,
-// which returns every matching user without pagination.
 func (s *Store) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error) {
 	var (
 		userSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
