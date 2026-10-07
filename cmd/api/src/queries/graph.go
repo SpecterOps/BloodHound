@@ -437,7 +437,10 @@ func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds 
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
 		}
 
-		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)...))); err != nil {
+		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)...)).Limit(10).OrderBy(
+			query.Order(query.NodeProperty(common.Name.String()), query.Ascending()),
+			query.Order(query.NodeProperty(common.ObjectID.String()), query.Ascending()),
+		)); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, fuzzyMatchNodes...)
