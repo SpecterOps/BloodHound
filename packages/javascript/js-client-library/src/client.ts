@@ -96,6 +96,7 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobHistoryResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
     GetCollectorJobSecretResponse,
@@ -108,7 +109,6 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
-    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -813,7 +813,7 @@ class BHEAPIClient {
 
     /* collector job profiles */
     getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
-        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+        this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
                 ...options?.params,
