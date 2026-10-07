@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
@@ -136,7 +137,6 @@ func (s RoleListView) ValidFilters() map[string]params.FilterableField {
 		"id":         {Operators: numericOperators},
 		"created_at": {Operators: numericOperators},
 		"updated_at": {Operators: numericOperators},
-		"deleted_at": {Operators: numericOperators},
 	}
 }
 
@@ -144,7 +144,181 @@ func (s RoleListView) ValidFilters() map[string]params.FilterableField {
 // middleware may order on.
 func (s RoleListView) IsSortable(field string) bool {
 	switch field {
-	case "name", "description", "id", "created_at", "updated_at", "deleted_at":
+	case "name", "description", "id", "created_at", "updated_at":
+		return true
+	default:
+		return false
+	}
+}
+
+type AuthSecretView struct {
+	DigestMethod  string       `json:"digest_method"`
+	ExpiresAt     time.Time    `json:"expires_at"`
+	TOTPActivated bool         `json:"totp_activated"`
+	ID            int32        `json:"id"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+	DeletedAt     sql.NullTime `json:"deleted_at"`
+}
+
+func BuildAuthSecretView(authSecret services.AuthSecret) AuthSecretView {
+	return AuthSecretView{
+		DigestMethod:  authSecret.DigestMethod,
+		ExpiresAt:     authSecret.ExpiresAt,
+		TOTPActivated: authSecret.TOTPActivated,
+		ID:            authSecret.ID,
+		CreatedAt:     authSecret.CreatedAt,
+		UpdatedAt:     authSecret.UpdatedAt,
+		DeletedAt:     authSecret.DeletedAt,
+	}
+}
+
+type EnvironmentAccessControlView struct {
+	UserID        string       `json:"user_id"`
+	EnvironmentID string       `json:"environment_id"`
+	ID            int64        `json:"id"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
+	DeletedAt     sql.NullTime `json:"deleted_at"`
+}
+
+func BuildEnvironmentAccessControlView(control services.EnvironmentAccessControl) EnvironmentAccessControlView {
+	return EnvironmentAccessControlView{
+		UserID:        control.UserID,
+		EnvironmentID: control.EnvironmentID,
+		ID:            control.ID,
+		CreatedAt:     control.CreatedAt,
+		UpdatedAt:     control.UpdatedAt,
+		DeletedAt:     control.DeletedAt,
+	}
+}
+
+type UserView struct {
+	SSOProviderID                    *int32                         `json:"sso_provider_id"`
+	AuthSecret                       *AuthSecretView                `json:"AuthSecret"`
+	Roles                            []RoleView                     `json:"roles"`
+	FirstName                        *string                        `json:"first_name"`
+	LastName                         *string                        `json:"last_name"`
+	EmailAddress                     *string                        `json:"email_address"`
+	PrincipalName                    string                         `json:"principal_name"`
+	LastLogin                        time.Time                      `json:"last_login"`
+	IsDisabled                       bool                           `json:"is_disabled"`
+	AllEnvironments                  bool                           `json:"all_environments"`
+	EnvironmentTargetedAccessControl []EnvironmentAccessControlView `json:"environment_targeted_access_control"`
+	EULAAccepted                     bool                           `json:"eula_accepted"`
+	ID                               uuid.UUID                      `json:"id"`
+	CreatedAt                        time.Time                      `json:"created_at"`
+	UpdatedAt                        time.Time                      `json:"updated_at"`
+	DeletedAt                        sql.NullTime                   `json:"deleted_at"`
+}
+
+func BuildUserView(user services.User) UserView {
+	var (
+		roles      = make([]RoleView, 0, len(user.Roles))
+		controls   = make([]EnvironmentAccessControlView, 0, len(user.EnvironmentTargetedAccessControl))
+		authSecret *AuthSecretView
+	)
+
+	for _, role := range user.Roles {
+		roles = append(roles, BuildRoleView(role))
+	}
+
+	for _, control := range user.EnvironmentTargetedAccessControl {
+		controls = append(controls, BuildEnvironmentAccessControlView(control))
+	}
+
+	if user.AuthSecret != nil {
+		var view = BuildAuthSecretView(*user.AuthSecret)
+		authSecret = &view
+	}
+
+	return UserView{
+		SSOProviderID:                    nullInt32ToPtr(user.SSOProviderID),
+		AuthSecret:                       authSecret,
+		Roles:                            roles,
+		FirstName:                        nullStringToPtr(user.FirstName),
+		LastName:                         nullStringToPtr(user.LastName),
+		EmailAddress:                     nullStringToPtr(user.EmailAddress),
+		PrincipalName:                    user.PrincipalName,
+		LastLogin:                        user.LastLogin,
+		IsDisabled:                       user.IsDisabled,
+		AllEnvironments:                  user.AllEnvironments,
+		EnvironmentTargetedAccessControl: controls,
+		EULAAccepted:                     user.EULAAccepted,
+		ID:                               user.ID,
+		CreatedAt:                        user.CreatedAt,
+		UpdatedAt:                        user.UpdatedAt,
+		DeletedAt:                        user.DeletedAt,
+	}
+}
+
+func (s UserView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// nullStringToPtr converts a sql.NullString into a *string so it marshals to a
+// bare string or null, matching the legacy null.String wire contract.
+func nullStringToPtr(value sql.NullString) *string {
+	if !value.Valid {
+		return nil
+	}
+	return &value.String
+}
+
+// nullInt32ToPtr converts a sql.NullInt32 into a *int32 so it marshals to a bare
+// number or null, matching the legacy null.Int32 wire contract.
+func nullInt32ToPtr(value sql.NullInt32) *int32 {
+	if !value.Valid {
+		return nil
+	}
+	return &value.Int32
+}
+
+type UserListView struct {
+	Users []UserView `json:"users"`
+}
+
+func BuildUserListView(users []services.User) UserListView {
+	var views = make([]UserView, 0, len(users))
+	for _, user := range users {
+		views = append(views, BuildUserView(user))
+	}
+
+	return UserListView{Users: views}
+}
+
+func (s UserListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s UserListView) ValidFilters() map[string]params.FilterableField {
+	var (
+		equalityOperators = []params.FilterOperator{params.Equals, params.NotEquals}
+		numericOperators  = []params.FilterOperator{
+			params.Equals,
+			params.NotEquals,
+			params.GreaterThan,
+			params.GreaterThanOrEquals,
+			params.LessThan,
+			params.LessThanOrEquals,
+		}
+	)
+
+	return map[string]params.FilterableField{
+		"first_name":     {Operators: equalityOperators, IsStringData: true},
+		"last_name":      {Operators: equalityOperators, IsStringData: true},
+		"email_address":  {Operators: equalityOperators, IsStringData: true},
+		"principal_name": {Operators: equalityOperators, IsStringData: true},
+		"id":             {Operators: equalityOperators},
+		"last_login":     {Operators: numericOperators},
+		"created_at":     {Operators: numericOperators},
+		"updated_at":     {Operators: numericOperators},
+	}
+}
+
+func (s UserListView) IsSortable(field string) bool {
+	switch field {
+	case "first_name", "last_name", "email_address", "principal_name", "last_login", "created_at", "updated_at":
 		return true
 	default:
 		return false
