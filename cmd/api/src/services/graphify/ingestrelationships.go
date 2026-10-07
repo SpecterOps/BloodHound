@@ -132,10 +132,11 @@ func (s *relationshipIngester) maybeSubmitRelationshipUpdate(update graph.Relati
 		err = s.ingestContext.Batch.UpdateRelationshipBy(update)
 		if err != nil {
 			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
+			return err
 		} else {
 			s.stageMeasurements.relationshipBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
+			return nil
 		}
-		return err
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation

@@ -154,10 +154,11 @@ func (s *nodeIngester) maybeSubmitNodeUpdate(update graph.NodeUpdate) error {
 		err = s.ingestContext.Batch.UpdateNodeBy(update)
 		if err != nil {
 			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
+			return err
 		} else {
 			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
+			return nil
 		}
-		return err
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
