@@ -52,12 +52,18 @@ interface Step {
 
 interface BasicStepperProps extends Omit<StepperProps, 'children'> {
     steps: Step[];
+    /** Keep inactive content mounted, for example to retain form registration and validation. */
+    forceMount?: boolean;
+    /** Shared content above the step panels, such as a form summary. */
+    panelHeader?: ReactNode;
 }
 
 /** A preset layout for simple, ordered flows. Use Stepper composition for custom layouts. */
 const BasicStepper = ({
     steps,
     className,
+    forceMount,
+    panelHeader,
     indicators = { loading: <LoaderCircle className='size-4 animate-spin' aria-label='Loading' /> },
     ...props
 }: BasicStepperProps) => {
@@ -89,8 +95,13 @@ const BasicStepper = ({
             </StepperNav>
 
             <StepperPanel>
+                {panelHeader}
                 {steps.map((step, index) => (
-                    <StepperContent key={index} value={index + 1} className='flex items-center justify-center'>
+                    <StepperContent
+                        key={index}
+                        value={index + 1}
+                        forceMount={forceMount}
+                        className='flex items-center justify-center'>
                         {step.content}
                     </StepperContent>
                 ))}

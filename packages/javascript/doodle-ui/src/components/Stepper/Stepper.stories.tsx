@@ -31,11 +31,20 @@ const meta = {
                     'Use the composable Stepper primitives for custom layouts, per-step indicators, and richer workflows. ' +
                     'Disabled steps reject clicks and useStepper navigation requests without calling onValueChange. ' +
                     'Parent controls must enable the destination before setting value; update both together after validation succeeds. ' +
-                    'Values are 1-based. Inactive panels stay hidden while their children unmount.',
+                    'Values are 1-based. Inactive panels stay hidden while their children unmount, unless forceMount is enabled.',
             },
         },
     },
     argTypes: {
+        forceMount: {
+            description: 'Keep inactive step content mounted and hidden to retain form registration and validation.',
+            control: 'boolean',
+            table: { defaultValue: { summary: 'false' } },
+        },
+        panelHeader: {
+            description: 'Shared content above the step panels that remains mounted during navigation.',
+            control: false,
+        },
         steps: {
             description:
                 'Step titles, optional descriptions, content, loading state, and disabled state. Enable disabled steps before navigating to them.',

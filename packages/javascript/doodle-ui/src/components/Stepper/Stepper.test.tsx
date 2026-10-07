@@ -51,6 +51,40 @@ const getTab = (oneBasedIndex: number, triggerTitle?: string) =>
     screen.getByRole('tab', { name: `${oneBasedIndex} ${triggerTitle ?? steps[oneBasedIndex - 1].title}` });
 
 describe('BasicStepper', () => {
+    it('keeps inactive form content mounted and hidden when forceMount is enabled', async () => {
+        render(
+            <BasicStepper
+                forceMount
+                steps={[
+                    { title: 'Profile', content: <input aria-label='Profile name' defaultValue='' /> },
+                    { title: 'Secret', content: <input aria-label='Secret value' defaultValue='' /> },
+                ]}
+            />
+        );
+        const name = screen.getByLabelText('Profile name');
+        const secret = screen.getByLabelText('Secret value');
+        await userEvent.type(name, 'Production');
+        expect(secret).not.toBeVisible();
+        await userEvent.click(getTab(2));
+        expect(name).not.toBeVisible();
+        expect(secret).toBeVisible();
+        expect(screen.getByLabelText('Secret value')).toBeVisible();
+        await userEvent.click(getTab(1));
+        expect(name).toBeVisible();
+        expect(secret).not.toBeVisible();
+    });
+
+    it('keeps a shared panel header visible across steps', async () => {
+        render(<BasicStepper steps={steps} panelHeader={<div data-testid='PANEL_HEADER' />} />);
+        const panelHeader = screen.getByTestId('PANEL_HEADER');
+        expect(panelHeader).toBeVisible();
+        await userEvent.click(getTab(2));
+        expect(panelHeader).toBeVisible();
+        await userEvent.click(getTab(3));
+        expect(panelHeader).toBeVisible();
+        expect(screen.getAllByTestId(/^PANEL_HEADER$/)).toHaveLength(1);
+    });
+
     it('supports navigation from step content in uncontrolled mode', async () => {
         const onValueChange = vi.fn();
         render(<BasicStepper steps={steps} onValueChange={onValueChange} />);
