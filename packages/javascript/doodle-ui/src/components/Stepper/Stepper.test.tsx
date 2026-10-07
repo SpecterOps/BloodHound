@@ -399,6 +399,41 @@ describe('BasicStepper', () => {
 });
 
 describe('Stepper navigation', () => {
+    it.each([undefined, 1])('rejects unregistered and removed destinations with value=%s', async (value) => {
+        function NavigationControls({ destination }: { destination: number }) {
+            const { activeStep, setActiveStep } = useStepper();
+            return (
+                <>
+                    <p role='status'>Step {activeStep}</p>
+                    <button onClick={() => setActiveStep(destination)}>Continue</button>
+                </>
+            );
+        }
+        const onValueChange = vi.fn();
+        const { rerender } = render(
+            <Stepper value={value} onValueChange={onValueChange}>
+                <NavigationControls destination={2} />
+                <StepperItem step={1} />
+                <StepperItem step={3} />
+            </Stepper>
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(screen.getByRole('status')).toHaveTextContent('Step 1');
+        expect(onValueChange).not.toHaveBeenCalled();
+
+        rerender(
+            <Stepper value={value} onValueChange={onValueChange}>
+                <NavigationControls destination={3} />
+                <StepperItem step={1} />
+            </Stepper>
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+        expect(screen.getByRole('status')).toHaveTextContent('Step 1');
+        expect(onValueChange).not.toHaveBeenCalled();
+    });
+
     it('rejects disabled requests from mount effects without depending on a trigger', () => {
         function NavigateOnMount() {
             const { setActiveStep } = useStepper();

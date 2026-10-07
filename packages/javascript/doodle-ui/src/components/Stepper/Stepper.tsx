@@ -153,7 +153,7 @@ const Stepper = ({
 
     const handleSetActiveStep = useCallback(
         (step: number) => {
-            if (disabledSteps.current.get(step)) return;
+            if (!disabledSteps.current.has(step) || disabledSteps.current.get(step)) return;
             if (value === undefined) setActiveStep(step);
             onValueChange?.(step);
         },
