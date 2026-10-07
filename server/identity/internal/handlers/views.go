@@ -395,6 +395,7 @@ func BuildUserMinimalView(user services.UserMinimal) UserMinimalView {
 func (s UserMinimalView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
+
 type UserMinimalListView struct {
 	Users []UserMinimalView `json:"users"`
 }
