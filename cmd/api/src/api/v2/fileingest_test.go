@@ -489,32 +489,6 @@ func newLocalTempFileService(t *testing.T) storage.FileService {
 	return storage.NewFileService(ls)
 }
 
-type fileIngestPendingFile struct {
-	name      string
-	writeErr  error
-	commitErr error
-	committed bool
-}
-
-func (s *fileIngestPendingFile) Write(data []byte) (int, error) {
-	if s.writeErr != nil {
-		return 0, s.writeErr
-	}
-	return len(data), nil
-}
-
-func (s *fileIngestPendingFile) Commit() (string, error) {
-	if s.commitErr != nil {
-		return "", s.commitErr
-	}
-	s.committed = true
-	return s.name, nil
-}
-
-func (s *fileIngestPendingFile) Abort() error {
-	return nil
-}
-
 func TestResources_ProcessIngestTask(t *testing.T) {
 	type mock struct {
 		mockDatabase            *dbmocks.MockDatabase
@@ -692,19 +666,18 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{writeErr: errors.Join(storage.ErrWriteFailed, errors.New("disk write failed"))}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).Return("", errors.New("disk write failed"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: storage write failed\ndisk write failed"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: disk write failed"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Error: destination commit failure is Internal Server Error",
+			name: "Error: destination storage failure after reading is Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL:    &url.URL{Path: "/api/v2/file-upload/1"},
@@ -715,14 +688,18 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{commitErr: errors.New("commit failed")}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						require.NoError(t, err)
+						return "", errors.New("storage failed")
+					})
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: commit failed"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: storage failed"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -743,13 +720,15 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				tmpFileName := "tmpFileName"
-				pendingFile := &fileIngestPendingFile{name: tmpFileName}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						return tmpFileName, err
+					})
 				mock.mockFileService.EXPECT().DeleteFile(gomock.Any(), tmpFileName).Return(nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).DoAndReturn(func(context.Context, model.IngestTask) (model.IngestTask, error) {
-					require.True(t, pendingFile.committed)
 					return model.IngestTask{}, errors.New("error")
 				})
 			},
@@ -775,10 +754,13 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{name: "/tmp/test"}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						return "/tmp/test", err
+					})
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -804,10 +786,13 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{name: "/tmp/test"}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						return "/tmp/test", err
+					})
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
 					return x.OriginalFileName == "UnknownFileName.json"
 				})).Return(model.IngestTask{}, nil)
@@ -835,10 +820,13 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{name: "/tmp/test"}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						return "/tmp/test", err
+					})
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
 					return x.OriginalFileName == "Testing.json"
 				})).Return(model.IngestTask{}, nil)
@@ -884,10 +872,13 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				pendingFile := &fileIngestPendingFile{name: "/tmp/test"}
 				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{Status: model.JobStatusRunning}, nil)
 				mock.mockFileServiceResolver.EXPECT().Resolve(storage.FileServiceIngest).Return(mock.mockFileService, nil)
-				mock.mockFileService.EXPECT().BeginTempFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(pendingFile, nil)
+				mock.mockFileService.EXPECT().WriteTempFile(gomock.Any(), gomock.Any(), gomock.Any(), storage.WriteOptions{}).
+					DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+						_, err := io.Copy(io.Discard, reader)
+						return "/tmp/test", err
+					})
 				mock.mockDatabase.EXPECT().CreateIngestTask(gomock.Any(), gomock.Cond(func(x model.IngestTask) bool {
 					return x.OriginalFileName == "Testing.zip"
 				})).Return(model.IngestTask{}, nil)

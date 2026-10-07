@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package upload
+package upload_test
 
 import (
 	"bytes"
@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/storage"
 	storagemocks "github.com/specterops/bloodhound/packages/go/storage/mocks"
@@ -46,11 +47,11 @@ func TestAllowedFileUploadTypes(t *testing.T) {
 		"application/zip-compressed",
 	}
 
-	actual := AllowedFileUploadTypes()
+	actual := upload.AllowedFileUploadTypes()
 	require.Equal(t, expected, actual)
 
 	actual[0] = "mutated"
-	require.Equal(t, expected, AllowedFileUploadTypes())
+	require.Equal(t, expected, upload.AllowedFileUploadTypes())
 }
 
 func TestAllowedZipFileUploadTypes(t *testing.T) {
@@ -60,11 +61,11 @@ func TestAllowedZipFileUploadTypes(t *testing.T) {
 		"application/zip-compressed",
 	}
 
-	actual := AllowedZipFileUploadTypes()
+	actual := upload.AllowedZipFileUploadTypes()
 	require.Equal(t, expected, actual)
 
 	actual[0] = "mutated"
-	require.Equal(t, expected, AllowedZipFileUploadTypes())
+	require.Equal(t, expected, upload.AllowedZipFileUploadTypes())
 }
 
 func TestWriteAndValidateZip(t *testing.T) {
@@ -75,7 +76,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(func() { _ = file.Close() })
 
-		err = WriteAndValidateZip(file, &writer)
+		err = upload.WriteAndValidateZip(file, &writer)
 		require.NoError(t, err)
 		require.NotEmpty(t, writer.Bytes())
 	})
@@ -84,8 +85,8 @@ func TestWriteAndValidateZip(t *testing.T) {
 		var writer bytes.Buffer
 		badZip := strings.NewReader("123123")
 
-		err := WriteAndValidateZip(badZip, &writer)
-		assert.ErrorIs(t, err, ErrInvalidZipFile)
+		err := upload.WriteAndValidateZip(badZip, &writer)
+		assert.ErrorIs(t, err, upload.ErrInvalidZipFile)
 	})
 }
 
@@ -133,7 +134,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 			var destination bytes.Buffer
 			src := bytes.NewReader(testCase.input)
 
-			report, err := WriteAndValidateJSON(src, &destination, schema)
+			report, err := upload.WriteAndValidateJSON(src, &destination, schema)
 			if testCase.expectedError != nil {
 				require.ErrorIs(t, err, testCase.expectedError)
 				require.NotEmpty(t, report.CriticalErrors)
@@ -147,196 +148,197 @@ func TestWriteAndValidateJSON(t *testing.T) {
 
 func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	var destination bytes.Buffer
-	src := &ErrorReader{err: errors.New("read error")}
+	src := &errorReader{err: errors.New("read error")}
 
 	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
 
-	_, err = WriteAndValidateJSON(src, &destination, schema)
+	_, err = upload.WriteAndValidateJSON(src, &destination, schema)
 
 	require.Error(t, err)
-	assert.ErrorIs(t, err, ErrInvalidJSON)
+	assert.ErrorIs(t, err, upload.ErrInvalidJSON)
 }
 
-type memoryPendingFile struct {
-	data        bytes.Buffer
-	writeErr    error
-	commitName  string
-	commitErr   error
-	commitCalls int
-	abortCalls  int
-}
+func TestSaveIngestFile(t *testing.T) {
+	t.Parallel()
 
-func (s *memoryPendingFile) Write(data []byte) (int, error) {
-	if s.writeErr != nil {
-		return 0, s.writeErr
+	var (
+		jsonPayload        = []byte(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`)
+		zipPayload, zipErr = os.ReadFile("../../test/fixtures/fixtures/goodzip.zip")
+	)
+	require.NoError(t, zipErr)
+
+	tests := []struct {
+		name          string
+		contentType   string
+		input         []byte
+		fileType      model.FileType
+		expectedData  []byte
+		expectedError error
+	}{
+		{
+			name:         "persists normalized JSON",
+			contentType:  "application/json",
+			input:        append([]byte{0xEF, 0xBB, 0xBF}, jsonPayload...),
+			fileType:     model.FileTypeJson,
+			expectedData: jsonPayload,
+		},
+		{
+			name:         "persists the complete ZIP",
+			contentType:  "application/zip",
+			input:        zipPayload,
+			fileType:     model.FileTypeZip,
+			expectedData: zipPayload,
+		},
+		{
+			name:          "rejects missing payload metadata",
+			contentType:   "application/json",
+			input:         []byte(`{"data":[{"domain":"example.com"}]}`),
+			expectedError: payload.ErrInvalidFileConfiguration,
+		},
+		{
+			name:          "rejects malformed JSON",
+			contentType:   "application/json",
+			input:         []byte(`{"meta":`),
+			expectedError: upload.ErrInvalidJSON,
+		},
+		{
+			name:          "rejects invalid ZIP bytes",
+			contentType:   "application/zip",
+			input:         []byte("invalid archive"),
+			expectedError: upload.ErrInvalidZipFile,
+		},
 	}
-	return s.data.Write(data)
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				ctx           = context.Background()
+				rootDirectory = t.TempDir()
+				request       = httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(testCase.input))
+			)
+			localStore, err := storage.NewLocalStore(rootDirectory)
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, localStore.Close()) })
+			fileService := storage.NewFileService(localStore)
+			request.Header.Set("Content-Type", testCase.contentType)
+			schema, err := payload.LoadSchema()
+			require.NoError(t, err)
+
+			// Act
+			params, report, err := upload.SaveIngestFile(ctx, fileService, request, schema, 1)
+
+			// Assert
+			if testCase.expectedError != nil {
+				require.ErrorIs(t, err, testCase.expectedError)
+				require.Empty(t, params)
+				files, readErr := os.ReadDir(rootDirectory)
+				require.NoError(t, readErr)
+				require.Empty(t, files)
+				if testCase.contentType == "application/json" {
+					require.NotEmpty(t, report.CriticalErrors)
+				}
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, testCase.fileType, params.FileType)
+				require.NotEmpty(t, params.Filename)
+				storedData, readErr := fileService.ReadFile(ctx, params.Filename)
+				require.NoError(t, readErr)
+				require.Equal(t, testCase.expectedData, storedData)
+				require.Empty(t, report.CriticalErrors)
+				require.Empty(t, report.ValidationErrors)
+			}
+		})
+	}
 }
 
-func (s *memoryPendingFile) Commit() (string, error) {
-	s.commitCalls++
-	return s.commitName, s.commitErr
+func TestSaveIngestFileStorageFailure(t *testing.T) {
+	t.Parallel()
+
+	for _, consumeBody := range []bool{false, true} {
+		name := "storage fails before reading"
+		if consumeBody {
+			name = "storage fails after reading"
+		}
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			var (
+				writeErr        = errors.New("storage write failed")
+				mockFileService = storagemocks.NewMockFileService(gomock.NewController(t))
+				request         = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`))
+			)
+			request.Header.Set("Content-Type", "application/json")
+			schema, err := payload.LoadSchema()
+			require.NoError(t, err)
+			mockFileService.EXPECT().WriteTempFile(gomock.Any(), "file_upload_job1_", gomock.Any(), storage.WriteOptions{}).
+				DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+					if consumeBody {
+						_, readErr := io.Copy(io.Discard, reader)
+						require.NoError(t, readErr)
+					}
+					return "", writeErr
+				})
+
+			// Act
+			params, report, err := upload.SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
+
+			// Assert
+			require.ErrorIs(t, err, writeErr)
+			require.NotErrorIs(t, err, upload.ErrInvalidJSON)
+			require.Empty(t, params)
+			require.Empty(t, report.CriticalErrors)
+			require.Empty(t, report.ValidationErrors)
+		})
+	}
 }
 
-func (s *memoryPendingFile) Abort() error {
-	s.abortCalls++
-	return nil
-}
-
-func TestSaveIngestFilePersistsNormalizedJSON(t *testing.T) {
+func TestSaveIngestFileCancellationDeletesStoredFile(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	ctx := context.Background()
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	jsonPayload := []byte(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`)
-	input := append([]byte{0xEF, 0xBB, 0xBF}, jsonPayload...)
-	request := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(input))
+	var (
+		ctx, cancel     = context.WithCancel(context.Background())
+		rootDirectory   = t.TempDir()
+		mockFileService = storagemocks.NewMockFileService(gomock.NewController(t))
+		request         = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`))
+	)
+	defer cancel()
+	localStore, err := storage.NewLocalStore(rootDirectory)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, localStore.Close()) })
+	fileService := storage.NewFileService(localStore)
 	request.Header.Set("Content-Type", "application/json")
 	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{commitName: "tmp-json"}
-	mockFileService.EXPECT().BeginTempFile(ctx, ingestFileTempPrefix(1), storage.WriteOptions{SizeHint: int64(len(input))}).Return(pendingFile, nil)
+	mockFileService.EXPECT().WriteTempFile(ctx, "file_upload_job1_", gomock.Any(), storage.WriteOptions{}).
+		DoAndReturn(func(writeContext context.Context, prefix string, reader io.Reader, options storage.WriteOptions) (string, error) {
+			fileName, writeErr := fileService.WriteTempFile(writeContext, prefix, reader, options)
+			require.NoError(t, writeErr)
+			cancel()
+			return fileName, nil
+		})
+	mockFileService.EXPECT().DeleteFile(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(cleanupContext context.Context, fileName string) error {
+			require.NoError(t, cleanupContext.Err())
+			return fileService.DeleteFile(cleanupContext, fileName)
+		})
 
 	// Act
-	params, report, err := SaveIngestFile(ctx, mockFileService, request, schema, 1)
+	params, report, err := upload.SaveIngestFile(ctx, mockFileService, request, schema, 1)
 
 	// Assert
-	require.NoError(t, err)
-	require.Equal(t, "tmp-json", params.Filename)
-	require.Equal(t, model.FileTypeJson, params.FileType)
-	require.Equal(t, jsonPayload, pendingFile.data.Bytes())
-	require.Empty(t, report.CriticalErrors)
-	require.Equal(t, 1, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
-}
-
-func TestSaveIngestFilePersistsCompleteZIP(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	ctx := context.Background()
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	request := httptest.NewRequest(http.MethodPost, "/", nil)
-	request.Header.Set("Content-Type", "application/zip")
-	zipBytes, err := os.ReadFile("../../test/fixtures/fixtures/goodzip.zip")
-	require.NoError(t, err)
-	request.Body = io.NopCloser(bytes.NewReader(zipBytes))
-	request.ContentLength = int64(len(zipBytes))
-	schema, err := payload.LoadSchema()
-	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{commitName: "tmp-zip"}
-	mockFileService.EXPECT().BeginTempFile(ctx, ingestFileTempPrefix(1), storage.WriteOptions{SizeHint: int64(len(zipBytes))}).Return(pendingFile, nil)
-
-	// Act
-	params, report, err := SaveIngestFile(ctx, mockFileService, request, schema, 1)
-
-	// Assert
-	require.NoError(t, err)
-	require.Equal(t, "tmp-zip", params.Filename)
-	require.Equal(t, model.FileTypeZip, params.FileType)
-	require.Equal(t, zipBytes, pendingFile.data.Bytes())
-	require.Empty(t, report.CriticalErrors)
-	require.Equal(t, 1, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
-}
-
-func TestSaveIngestFileValidationFailureDoesNotCommit(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"data":[{"domain":"example.com"}]}`))
-	request.Header.Set("Content-Type", "application/json")
-	schema, err := payload.LoadSchema()
-	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{commitName: "tmp-invalid"}
-	mockFileService.EXPECT().BeginTempFile(gomock.Any(), ingestFileTempPrefix(1), gomock.Any()).Return(pendingFile, nil)
-
-	// Act
-	params, report, err := SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
-
-	// Assert
-	require.ErrorIs(t, err, ErrInvalidJSON)
-	require.ErrorIs(t, err, payload.ErrInvalidFileConfiguration)
-	require.Empty(t, params)
-	require.NotEmpty(t, report.CriticalErrors)
-	require.Equal(t, 0, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
-}
-
-func TestSaveIngestFileWriteFailureIsStorageError(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	writeCause := errors.New("disk write failed")
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`))
-	request.Header.Set("Content-Type", "application/json")
-	schema, err := payload.LoadSchema()
-	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{writeErr: errors.Join(storage.ErrWriteFailed, writeCause)}
-	mockFileService.EXPECT().BeginTempFile(gomock.Any(), ingestFileTempPrefix(1), gomock.Any()).Return(pendingFile, nil)
-
-	// Act
-	params, report, err := SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
-
-	// Assert
-	require.ErrorIs(t, err, storage.ErrWriteFailed)
-	require.ErrorIs(t, err, writeCause)
-	require.NotErrorIs(t, err, ErrInvalidJSON)
+	require.ErrorIs(t, err, context.Canceled)
 	require.Empty(t, params)
 	require.Empty(t, report.CriticalErrors)
 	require.Empty(t, report.ValidationErrors)
-	require.Equal(t, 0, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
-}
-
-func TestSaveIngestFileBeginFailure(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	beginErr := errors.New("begin failed")
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`))
-	request.Header.Set("Content-Type", "application/json")
-	schema, err := payload.LoadSchema()
+	files, err := os.ReadDir(rootDirectory)
 	require.NoError(t, err)
-	mockFileService.EXPECT().BeginTempFile(gomock.Any(), ingestFileTempPrefix(1), gomock.Any()).Return(nil, beginErr)
-
-	// Act
-	params, report, err := SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
-
-	// Assert
-	require.ErrorIs(t, err, beginErr)
-	require.Empty(t, params)
-	require.Empty(t, report.CriticalErrors)
-}
-
-func TestSaveIngestFileCommitFailureAbortsPendingFile(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	commitErr := errors.New("commit failed")
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`))
-	request.Header.Set("Content-Type", "application/json")
-	schema, err := payload.LoadSchema()
-	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{commitErr: commitErr}
-	mockFileService.EXPECT().BeginTempFile(gomock.Any(), ingestFileTempPrefix(1), gomock.Any()).Return(pendingFile, nil)
-
-	// Act
-	params, report, err := SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
-
-	// Assert
-	require.ErrorIs(t, err, commitErr)
-	require.NotErrorIs(t, err, ErrInvalidJSON)
-	require.Empty(t, params)
-	require.Empty(t, report.CriticalErrors)
-	require.Equal(t, 1, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
+	require.Empty(t, files)
 }
 
 type cancellationUploadBody struct {
@@ -368,7 +370,11 @@ func TestSaveIngestFileCancellationUnblocksBody(t *testing.T) {
 	// Arrange
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mockFileService := storagemocks.NewMockFileService(gomock.NewController(t))
+	rootDirectory := t.TempDir()
+	localStore, err := storage.NewLocalStore(rootDirectory)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, localStore.Close()) })
+	fileService := storage.NewFileService(localStore)
 	body := &cancellationUploadBody{
 		input:    bytes.NewReader([]byte(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`)),
 		blocked:  make(chan struct{}),
@@ -380,11 +386,9 @@ func TestSaveIngestFileCancellationUnblocksBody(t *testing.T) {
 	request.Header.Set("Content-Type", "application/json")
 	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{}
-	mockFileService.EXPECT().BeginTempFile(ctx, ingestFileTempPrefix(1), gomock.Any()).Return(pendingFile, nil)
 	result := make(chan saveIngestResult, 1)
 	go func() {
-		params, report, saveErr := SaveIngestFile(ctx, mockFileService, request, schema, 1)
+		params, report, saveErr := upload.SaveIngestFile(ctx, fileService, request, schema, 1)
 		result <- saveIngestResult{
 			params: params,
 			report: report,
@@ -409,15 +413,66 @@ func TestSaveIngestFileCancellationUnblocksBody(t *testing.T) {
 		require.Empty(t, saveResult.params)
 		require.Empty(t, saveResult.report.CriticalErrors)
 		require.Empty(t, saveResult.report.ValidationErrors)
-		require.Equal(t, 0, pendingFile.commitCalls)
-		require.Equal(t, 1, pendingFile.abortCalls)
+		files, readErr := os.ReadDir(rootDirectory)
+		require.NoError(t, readErr)
+		require.Empty(t, files)
 	case <-time.After(2 * time.Second):
 		t.Fatal("SaveIngestFile remained blocked after request cancellation")
 	}
 }
 
+func TestSaveIngestFileStorageFailureUnblocksBody(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	var (
+		input           = []byte(`{"meta":{"type":"domains","version":4,"count":1},"data":[{"domain":"example.com"}]}`)
+		writeErr        = errors.New("storage failed")
+		mockFileService = storagemocks.NewMockFileService(gomock.NewController(t))
+		body            = &cancellationUploadBody{
+			input:    bytes.NewReader(input),
+			blocked:  make(chan struct{}),
+			released: make(chan struct{}),
+		}
+		request = httptest.NewRequest(http.MethodPost, "/", nil)
+	)
+	t.Cleanup(func() { _ = body.Close() })
+	request.Body = body
+	request.Header.Set("Content-Type", "application/json")
+	schema, err := payload.LoadSchema()
+	require.NoError(t, err)
+	mockFileService.EXPECT().WriteTempFile(gomock.Any(), "file_upload_job1_", gomock.Any(), storage.WriteOptions{}).
+		DoAndReturn(func(_ context.Context, _ string, reader io.Reader, _ storage.WriteOptions) (string, error) {
+			_, readErr := io.ReadFull(reader, make([]byte, len(input)))
+			require.NoError(t, readErr)
+			select {
+			case <-body.blocked:
+			case <-time.After(2 * time.Second):
+				t.Fatal("request body did not block")
+			}
+			return "", writeErr
+		})
+	result := make(chan saveIngestResult, 1)
+	go func() {
+		params, report, saveErr := upload.SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
+		result <- saveIngestResult{params: params, report: report, err: saveErr}
+	}()
+
+	// Assert
+	select {
+	case saveResult := <-result:
+		require.ErrorIs(t, saveResult.err, writeErr)
+		require.NotErrorIs(t, saveResult.err, upload.ErrInvalidJSON)
+		require.Empty(t, saveResult.params)
+		require.Empty(t, saveResult.report.CriticalErrors)
+		require.Empty(t, saveResult.report.ValidationErrors)
+	case <-time.After(2 * time.Second):
+		t.Fatal("SaveIngestFile remained blocked after storage failed")
+	}
+}
+
 type saveIngestResult struct {
-	params IngestTaskParams
+	params upload.IngestTaskParams
 	report payload.ValidationReport
 	err    error
 }
@@ -434,19 +489,15 @@ func TestSaveIngestFileCancellationWithNilBody(t *testing.T) {
 	request.Header.Set("Content-Type", "application/json")
 	schema, err := payload.LoadSchema()
 	require.NoError(t, err)
-	pendingFile := &memoryPendingFile{}
-	mockFileService.EXPECT().BeginTempFile(ctx, ingestFileTempPrefix(1), gomock.Any()).Return(pendingFile, nil)
 
 	// Act
-	params, report, err := SaveIngestFile(ctx, mockFileService, request, schema, 1)
+	params, report, err := upload.SaveIngestFile(ctx, mockFileService, request, schema, 1)
 
 	// Assert
 	require.ErrorIs(t, err, context.Canceled)
 	require.Empty(t, params)
 	require.Empty(t, report.CriticalErrors)
 	require.Empty(t, report.ValidationErrors)
-	require.Equal(t, 0, pendingFile.commitCalls)
-	require.Equal(t, 1, pendingFile.abortCalls)
 }
 
 func TestSaveIngestFileRejectsUnsupportedContentTypeWithoutWriting(t *testing.T) {
@@ -460,7 +511,7 @@ func TestSaveIngestFileRejectsUnsupportedContentTypeWithoutWriting(t *testing.T)
 	require.NoError(t, err)
 
 	// Act
-	params, report, err := SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
+	params, report, err := upload.SaveIngestFile(context.Background(), mockFileService, request, schema, 1)
 
 	// Assert
 	require.EqualError(t, err, "invalid content type for ingest file")
@@ -469,11 +520,10 @@ func TestSaveIngestFileRejectsUnsupportedContentTypeWithoutWriting(t *testing.T)
 	require.Empty(t, report.ValidationErrors)
 }
 
-// ErrorReader is a mock reader that always returns an error.
-type ErrorReader struct {
+type errorReader struct {
 	err error
 }
 
-func (s *ErrorReader) Read([]byte) (int, error) {
+func (s *errorReader) Read([]byte) (int, error) {
 	return 0, s.err
 }
