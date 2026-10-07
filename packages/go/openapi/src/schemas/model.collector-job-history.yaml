@@ -75,6 +75,7 @@ properties:
     type: string
     enum:
       - succeeded
+      - partially-succeeded
       - failed
       - cancelled
   outcome_metadata:
