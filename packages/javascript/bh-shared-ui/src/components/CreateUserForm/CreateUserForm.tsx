@@ -74,7 +74,7 @@ const CreateUserForm: React.FC<{
 
     if (getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <Card className='p-6 shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+            <Card className='p-6 w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>Unable to load data required to create this user.</div>
 
                 <DialogActions>
@@ -167,7 +167,7 @@ const CreateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 shadow max-w-[600px] w-full'>
+                    <Card className='p-6 max-w-[600px] w-full'>
                         <DialogTitle>{'Create User'}</DialogTitle>
 
                         <div className='flex flex-col mt-4 w-full' data-testid='create-user-dialog_content'>

@@ -149,7 +149,7 @@ const GlyphSelectDialog: React.FC<{
                                     <p>{selectedIcon || 'None Selected'}</p>
                                 </div>
                                 {selectedIcon && (
-                                    <Card className='flex size-16 items-center justify-center relative dark:bg-neutral-4'>
+                                    <Card className='flex size-16 items-center justify-center relative'>
                                         <div className='flex size-full items-center justify-center'>
                                             <IconButton
                                                 aria-label='Clear selection'
