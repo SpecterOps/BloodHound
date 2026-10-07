@@ -16,6 +16,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { type ComponentProps, useState } from 'react';
 import { Button } from '../Button';
+import { Typography } from '../Typography';
 import { BasicStepper, useStepper } from './index';
 
 const meta = {
@@ -102,6 +103,53 @@ export const WithDescriptions: Story = {
             { title: 'Secret', description: 'Access credentials', content: 'Secret content' },
             { title: 'Schedule', content: 'Schedule content' },
         ],
+    },
+};
+
+function PanelHeaderStepper(args: ComponentProps<typeof BasicStepper>) {
+    return (
+        <BasicStepper
+            {...args}
+            panelHeader={
+                <div className='mb-6 space-y-2'>
+                    <Typography variant='h2'>Create a collection plan</Typography>
+                    <Typography variant='body2'>
+                        Configure the profile, credentials, and schedule for your collection.
+                    </Typography>
+                </div>
+            }
+        />
+    );
+}
+
+export const WithPanelHeader: Story = {
+    args: Default.args,
+    render: (args) => <PanelHeaderStepper {...args} />,
+    parameters: {
+        docs: {
+            description: {
+                story: 'Use panelHeader for a shared title, description, or summary above the step content. Select another step to see the header stay in place while the content changes.',
+            },
+            source: {
+                code: `import { BasicStepper, Typography } from 'doodle-ui';
+
+<BasicStepper
+    steps={[
+        { title: 'Profile', content: 'Profile content' },
+        { title: 'Secret', content: 'Secret content' },
+        { title: 'Schedule', content: 'Schedule content' },
+    ]}
+    panelHeader={
+        <div className='mb-6 space-y-2'>
+            <Typography variant='h2'>Create a collection plan</Typography>
+            <Typography variant='body2'>
+                Configure the profile, credentials, and schedule for your collection.
+            </Typography>
+        </div>
+    }
+/>`,
+            },
+        },
     },
 };
 
