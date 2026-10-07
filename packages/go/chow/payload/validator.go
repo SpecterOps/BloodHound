@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -490,7 +491,15 @@ func (s *Validator) parseLoop() error {
 				return nil
 			case "graph":
 				s.opengraphData.GraphFound = true
+				if err := s.skipValue(); err != nil {
+					s.reportCriticalError("failed to skip graph value", err)
+					return err
+				}
 			default:
+				if err := s.skipValue(); err != nil {
+					s.reportCriticalError(fmt.Sprintf("failed to skip unrecognized top level tag: %s", tag), err)
+					return err
+				}
 			}
 		}
 	}
@@ -713,6 +722,10 @@ func extractJsonSchemaErrors(ve *jsonschema.ValidationError) ([]ValidationErrorD
 			Error:    err,
 		})
 	}
+
+	slices.SortFunc(errorDetails, func(left, right ValidationErrorDetail) int {
+		return strings.Compare(left.Location, right.Location)
+	})
 
 	return errorDetails, nil
 }

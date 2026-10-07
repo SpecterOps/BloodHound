@@ -946,6 +946,34 @@ func Test_ParseMetadata(t *testing.T) {
 			},
 		},
 		{
+			name:    "opengraph metadata after graph string value",
+			payload: `{"graph":"metadata","metadata":{"source_kind":"hellobase"}}`,
+			expectedParsedData: payload.ParsedData{
+				PayloadType: ingest.DataTypeOpenGraph,
+				OpengraphData: payload.ParsedOpenGraphData{
+					MetadataFound: true,
+					Metadata:      ingest.OpengraphMetadata{SourceKind: "hellobase"},
+				},
+			},
+			errValidationFunc: func(t *testing.T, err error) {
+				assert.NoError(t, err)
+			},
+		},
+		{
+			name:    "opengraph metadata after unrecognized string value",
+			payload: `{"unknown":"metadata","metadata":{"source_kind":"hellobase"}}`,
+			expectedParsedData: payload.ParsedData{
+				PayloadType: ingest.DataTypeOpenGraph,
+				OpengraphData: payload.ParsedOpenGraphData{
+					MetadataFound: true,
+					Metadata:      ingest.OpengraphMetadata{SourceKind: "hellobase"},
+				},
+			},
+			errValidationFunc: func(t *testing.T, err error) {
+				assert.NoError(t, err)
+			},
+		},
+		{
 			name:               "no recognizable metadata",
 			payload:            `{}`,
 			expectedParsedData: payload.ParsedData{},
