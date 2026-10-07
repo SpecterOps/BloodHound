@@ -54,6 +54,7 @@ export const abortEntitySectionRequest = () => {
 
 export const MetaNodeKind = 'Meta' as const;
 export const MetaDetailNodeKind = 'MetaDetail' as const;
+export const ZoneNodeKind = 'Zone' as const;
 export type EntityKinds = ActiveDirectoryNodeKind | AzureNodeKind;
 
 export const entityInformationEndpoints: Record<EntityKinds, (id: string, options?: RequestOptions) => Promise<any>> = {

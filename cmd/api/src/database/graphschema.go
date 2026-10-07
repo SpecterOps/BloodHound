@@ -1396,6 +1396,11 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 		}
 	}
 
+	// Include Zone so its node type resolves to Zone instead of Unknown.
+	if _, exists := primaryDisplayKinds[graphschema.Zone]; !exists {
+		primaryDisplayKinds[graphschema.Zone] = graphschema.DisplayKind{}
+	}
+
 	return primaryDisplayKinds, nil
 }
 
