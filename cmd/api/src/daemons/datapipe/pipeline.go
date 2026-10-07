@@ -354,11 +354,6 @@ func (s *BHCEPipeline) Optimize(ctx context.Context) error {
 	if err != nil {
 		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
 	} else {
-		// only optimize when an analysis has completed since the last optimization run
-		if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
-			return nil
-		}
-
 		// never optimize more often than the configured minimum interval
 		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
 		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {

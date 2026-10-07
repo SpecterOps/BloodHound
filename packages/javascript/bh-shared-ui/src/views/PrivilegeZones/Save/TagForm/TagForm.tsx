@@ -49,7 +49,6 @@ import {
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { AppIcon } from '../../../../components';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useTagLimits } from '../../../../hooks';
 import {
@@ -443,11 +442,8 @@ export const TagForm: FC = () => {
                                                                 'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             side: 'right',
                                                             align: 'end',
-                                                        }}>
-                                                        <span>
-                                                            <AppIcon.Info />
-                                                        </span>
-                                                    </Tooltip>
+                                                        }}
+                                                    />
                                                 </FormLabel>
                                                 <div className='mb-4'>
                                                     <FormControl>
@@ -534,11 +530,8 @@ export const TagForm: FC = () => {
                                                                     'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                                 side: 'right',
                                                                 align: 'end',
-                                                            }}>
-                                                            <span>
-                                                                <AppIcon.Info />
-                                                            </span>
-                                                        </Tooltip>
+                                                            }}
+                                                        />
                                                     </FormLabel>
                                                     <div>
                                                         <FormControl>
@@ -574,11 +567,8 @@ export const TagForm: FC = () => {
                                                                     'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                                 side: 'right',
                                                                 align: 'end',
-                                                            }}>
-                                                            <span>
-                                                                <AppIcon.Info />
-                                                            </span>
-                                                        </Tooltip>
+                                                            }}
+                                                        />
                                                     </FormLabel>
                                                     <FormControl>
                                                         <Input

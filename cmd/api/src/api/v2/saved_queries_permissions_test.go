@@ -17,7 +17,6 @@
 package v2_test
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,15 +47,6 @@ import (
 var (
 	ErrMockDatabaseError = errors.New("mockDatabaseError")
 )
-
-// helper to build scopes more succinctly
-func newSavedQueryScope(owned, public, shared bool) database.SavedQueryScopeMap {
-	return database.SavedQueryScopeMap{
-		model.SavedQueryScopeOwned:  owned,
-		model.SavedQueryScopePublic: public,
-		model.SavedQueryScopeShared: shared,
-	}
-}
 
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
 	adminUser := model.User{
@@ -123,513 +113,493 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 	}
 
 	tests := []struct {
-		name                    string
-		comment                 string
-		user                    model.User
-		savedQueryBelongsToUser bool
-		payload                 v2.SavedQueryPermissionRequest
-		scope                   database.SavedQueryScopeMap
-		expectedErr             error
+		name        string
+		comment     string
+		user        model.User
+		payload     v2.SavedQueryPermissionRequest
+		scope       database.SavedQueryScopes
+		expectedErr error
 	}{
 		// Non-admin owned queries
 		{
-			name:                    "Non-admin owned, query doesn't belong to user error",
-			comment:                 "Non-privileged user cannot update non-owned, non-public, non-shared query",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: false,
+			name:    "Non-admin owned, query doesn't belong to user error",
+			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Non-admin owned, query shared to self error",
-			comment:                 "Non-privileged user cannot share their own private query to themselves",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, readonly error",
+			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
+			user:    nonAdminUser1,
+			payload: v2.SavedQueryPermissionRequest{
+				UserIDs: []uuid.UUID{nonAdminUser2.ID},
+				Public:  false,
+			},
+			scope:       database.SavedQueryScopes{ReadOnly: true},
+			expectedErr: v2.ErrNotModifiable,
+		},
+		{
+			name:    "Non-admin owned, query shared to self error",
+			comment: "Non-privileged user cannot share their own private query to themselves",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
-			name:                    "Non-admin owned, shared query shared to user(s)",
-			comment:                 "Non-privileged user can share their own already-shared private query to others",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, shared query shared to user(s)",
+			comment: "Non-privileged user can share their own already-shared private query to others",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, shared query set to public",
-			comment:                 "Non-privileged user can make own shared query public",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, shared query set to public",
+			comment: "Non-privileged user can make own shared query public",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, shared query set to private",
-			comment:                 "Non-privileged user can make own shared query private",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, shared query set to private",
+			comment: "Non-privileged user can make own shared query private",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, private query shared to user(s)",
-			comment:                 "Non-privileged user can share their own private query",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, private query shared to user(s)",
+			comment: "Non-privileged user can share their own private query",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, private query set to public",
-			comment:                 "Non-privileged user can make own private query public",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, private query set to public",
+			comment: "Non-privileged user can make own private query public",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, private query set to private",
-			comment:                 "Non-privileged user can keep own private query private (no-op)",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, private query set to private",
+			comment: "Non-privileged user can keep own private query private (no-op)",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Non-admin owned, public query shared to user(s) error",
-			comment:                 "Non-privileged user cannot share their own public query to specific users",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, public query shared to user(s) error",
+			comment: "Non-privileged user cannot share their own public query to specific users",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Non-admin owned, public query set to private error",
-			comment:                 "Non-privileged user cannot make own public query private",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, public query set to private error",
+			comment: "Non-privileged user cannot make own public query private",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Non-admin owned, public query set to public error",
-			comment:                 "Non-privileged user cannot 're-set' own public query (forbidden state change rules)",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: true,
+			name:    "Non-admin owned, public query set to public error",
+			comment: "Non-privileged user cannot 're-set' own public query (forbidden state change rules)",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Non-admin not-owned, public query cannot be made private",
-			comment:                 "Non-privileged user cannot make someone else's public query private",
-			user:                    nonAdminUser1,
-			savedQueryBelongsToUser: false,
+			name:    "Non-admin not-owned, public query cannot be made private",
+			comment: "Non-privileged user cannot make someone else's public query private",
+			user:    nonAdminUser1,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, true, true),
+			scope:       database.SavedQueryScopes{Public: true, Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 
 		// Admin (non-admin owned) queries
 		{
-			name:                    "Admin (non-admin owned), public query shared to user(s) incorrectly error",
-			comment:                 "Admin cannot share a public query to specific users when they don't own it",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), public query shared to user(s) incorrectly error",
+			comment: "Admin cannot share a public query to specific users when they don't own it",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, true, false),
+			scope:       database.SavedQueryScopes{Public: true},
 			expectedErr: v2.ErrInvalidPublicShare,
 		},
 		{
-			name:                    "Admin (non-admin owned), private query set to public error",
-			comment:                 "Admin cannot make someone else's private query public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), private query set to public error",
+			comment: "Admin cannot make someone else's private query public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), private query shared to user(s) error",
-			comment:                 "Admin cannot share someone else's private query to users",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), private query shared to user(s) error",
+			comment: "Admin cannot share someone else's private query to users",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), private query set to private error",
-			comment:                 "Admin cannot modify someone else's private query permissions at all",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), private query set to private error",
+			comment: "Admin cannot modify someone else's private query permissions at all",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, false),
+			scope:       database.SavedQueryScopes{},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), shared query set to public error",
-			comment:                 "Admin cannot make someone else's shared query public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), shared query set to public error",
+			comment: "Admin cannot make someone else's shared query public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), shared query shared to user(s) error",
-			comment:                 "Admin cannot change shares of someone else's shared query",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), shared query shared to user(s) error",
+			comment: "Admin cannot change shares of someone else's shared query",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), shared query set to private error",
-			comment:                 "Admin cannot make someone else's shared query private",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), shared query set to private error",
+			comment: "Admin cannot make someone else's shared query private",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(false, false, true),
+			scope:       database.SavedQueryScopes{Shared: true},
 			expectedErr: v2.ErrForbidden,
 		},
 		{
-			name:                    "Admin (non-admin owned), public query set to public",
-			comment:                 "Admin can leave someone else's public query public (noop)",
-			user:                    adminUser,
-			savedQueryBelongsToUser: false,
+			name:    "Admin (non-admin owned), public query set to public",
+			comment: "Admin can leave someone else's public query public (noop)",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(false, true, false),
+			scope:       database.SavedQueryScopes{Public: true},
 			expectedErr: nil,
 		},
 
 		// Admin owned queries
 		{
-			name:                    "Admin-owned, query shared to self error",
-			comment:                 "Admin cannot share their own query to themselves",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, readonly error",
+			comment: "Non-privileged user cannot update non-owned, non-public, non-shared query",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{adminUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{ReadOnly: true},
+			expectedErr: v2.ErrNotModifiable,
+		},
+		{
+			name:    "Admin-owned, query shared to self error",
+			comment: "Admin cannot share their own query to themselves",
+			user:    adminUser,
+			payload: v2.SavedQueryPermissionRequest{
+				UserIDs: []uuid.UUID{adminUser.ID},
+				Public:  false,
+			},
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
-			name:                    "Admin-owned, shared query shared to user(s)",
-			comment:                 "Admin can share their own shared query to others",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, shared query shared to user(s)",
+			comment: "Admin can share their own shared query to others",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, shared query set to public",
-			comment:                 "Admin can make their own shared query public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, shared query set to public",
+			comment: "Admin can make their own shared query public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, shared query set to private",
-			comment:                 "Admin can make their own shared query private",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, shared query set to private",
+			comment: "Admin can make their own shared query private",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, true),
+			scope:       database.SavedQueryScopes{Owned: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, private query shared to user(s)",
-			comment:                 "Admin can share their own private query to others",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, private query shared to user(s)",
+			comment: "Admin can share their own private query to others",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, private query set to public",
-			comment:                 "Admin can make their own private query public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, private query set to public",
+			comment: "Admin can make their own private query public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, private query set to private",
-			comment:                 "Admin can leave private query private (noop)",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, private query set to private",
+			comment: "Admin can leave private query private (noop)",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, public query set to public",
-			comment:                 "Admin can leave own public query public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, public query set to public",
+			comment: "Admin can leave own public query public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  true,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, public query set to private",
-			comment:                 "Admin can make own public query private",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, public query set to private",
+			comment: "Admin can make own public query private",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "Admin-owned, public query shared to user(s) incorrectly error",
-			comment:                 "Admin cannot share own public query to specific users while it is public",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, public query shared to user(s) incorrectly error",
+			comment: "Admin cannot share own public query to specific users while it is public",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: v2.ErrInvalidPublicShare,
 		},
 		{
-			name:                    "Admin-owned, public & shared query set to private (no shares)",
-			comment:                 "Admin can make own public+shared query private with no shares",
-			user:                    adminUser,
-			savedQueryBelongsToUser: true,
+			name:    "Admin-owned, public & shared query set to private (no shares)",
+			comment: "Admin can make own public+shared query private with no shares",
+			user:    adminUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 
 		// User role owned
 		{
-			name:                    "User owned, query shared to self error",
-			comment:                 "RoleUser cannot share own query to themselves",
-			user:                    userRoleUser,
-			savedQueryBelongsToUser: true,
+			name:    "User owned, query shared to self error",
+			comment: "RoleUser cannot share own query to themselves",
+			user:    userRoleUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{userRoleUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
-			name:                    "User-owned, public query set to private (no shares)",
-			comment:                 "RoleUser can make own public query private with no shares",
-			user:                    userRoleUser,
-			savedQueryBelongsToUser: true,
+			name:    "User-owned, public query set to private (no shares)",
+			comment: "RoleUser can make own public query private with no shares",
+			user:    userRoleUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "User-owned, non-public query set to private (no shares)",
-			comment:                 "RoleUser can leave own non-public query private",
-			user:                    userRoleUser,
-			savedQueryBelongsToUser: true,
+			name:    "User-owned, non-public query set to private (no shares)",
+			comment: "RoleUser can leave own non-public query private",
+			user:    userRoleUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "User-owned, public & shared query set to private (no shares)",
-			comment:                 "RoleUser can make own public+shared query private with no shares",
-			user:                    userRoleUser,
-			savedQueryBelongsToUser: true,
+			name:    "User-owned, public & shared query set to private (no shares)",
+			comment: "RoleUser can make own public+shared query private with no shares",
+			user:    userRoleUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "User-owned, public & shared query shared to other users is allowed",
-			comment:                 "RoleUser with privileged role can still pass CanUpdate check when public & shared",
-			user:                    userRoleUser,
-			savedQueryBelongsToUser: true,
+			name:    "User-owned, public & shared query shared to other users is allowed",
+			comment: "RoleUser with privileged role can still pass CanUpdate check when public & shared",
+			user:    userRoleUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // upper-layer HTTP handler will reject this combination
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 
 		// PowerUser owned
 		{
-			name:                    "PowerUser-owned, query shared to self error",
-			comment:                 "PowerUser cannot share own query to themselves",
-			user:                    powerUser,
-			savedQueryBelongsToUser: true,
+			name:    "PowerUser-owned, query shared to self error",
+			comment: "PowerUser cannot share own query to themselves",
+			user:    powerUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{powerUser.ID},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
 		},
 		{
-			name:                    "PowerUser-owned, public query set to private (no shares)",
-			comment:                 "PowerUser can make own public query private with no shares",
-			user:                    powerUser,
-			savedQueryBelongsToUser: true,
+			name:    "PowerUser-owned, public query set to private (no shares)",
+			comment: "PowerUser can make own public query private with no shares",
+			user:    powerUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, false),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "PowerUser-owned, non-public query set to private (no shares)",
-			comment:                 "PowerUser can leave own non-public query private",
-			user:                    powerUser,
-			savedQueryBelongsToUser: true,
+			name:    "PowerUser-owned, non-public query set to private (no shares)",
+			comment: "PowerUser can leave own non-public query private",
+			user:    powerUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, false, false),
+			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "PowerUser-owned, public & shared query set to private (no shares)",
-			comment:                 "PowerUser can make own public+shared query private with no shares",
-			user:                    powerUser,
-			savedQueryBelongsToUser: true,
+			name:    "PowerUser-owned, public & shared query set to private (no shares)",
+			comment: "PowerUser can make own public+shared query private with no shares",
+			user:    powerUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{},
 				Public:  false,
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 		{
-			name:                    "PowerUser-owned, public & shared query shared to other users is allowed",
-			comment:                 "PowerUser with privileged role passes CanUpdate when public & shared",
-			user:                    powerUser,
-			savedQueryBelongsToUser: true,
+			name:    "PowerUser-owned, public & shared query shared to other users is allowed",
+			comment: "PowerUser with privileged role passes CanUpdate when public & shared",
+			user:    powerUser,
 			payload: v2.SavedQueryPermissionRequest{
 				UserIDs: []uuid.UUID{nonAdminUser1.ID, nonAdminUser2.ID},
 				Public:  true, // HTTP handler still blocks this, but CanUpdate returns nil
 			},
-			scope:       newSavedQueryScope(true, true, true),
+			scope:       database.SavedQueryScopes{Owned: true, Public: true, Shared: true},
 			expectedErr: nil,
 		},
 	}
@@ -641,7 +611,7 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 				t.Log(tc.comment)
 			}
 
-			err := v2.CanUpdateSavedQueriesPermission(tc.user, tc.savedQueryBelongsToUser, tc.payload, tc.scope)
+			err := v2.CanUpdateSavedQueriesPermission(tc.user, tc.payload, tc.scope)
 			require.Equal(t, tc.expectedErr, err)
 		})
 	}
@@ -736,7 +706,7 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 		// DB error paths before helper
 		// -------------------------------
 		{
-			name:         "Query does not exist (SavedQueryBelongsToUser -> ErrNotFound)",
+			name:         "Query does not exist (GetScopeForSavedQuery -> ErrNotFound)",
 			savedQueryID: savedQueryID,
 			buildRequest: func(t *testing.T, url string) *http.Request {
 				payload := v2.SavedQueryPermissionRequest{
@@ -751,33 +721,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, database.ErrNotFound)
+					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(database.SavedQueryScopes{}, database.ErrNotFound)
 			},
 			expectedStatus:     http.StatusNotFound,
-			expectedBodySubstr: "Query does not exist",
-		},
-		{
-			name:         "Database error from SavedQueryBelongsToUser",
-			savedQueryID: savedQueryID,
-			buildRequest: func(t *testing.T, url string) *http.Request {
-				payload := v2.SavedQueryPermissionRequest{
-					UserIDs: []uuid.UUID{userID},
-					Public:  false,
-				}
-
-				req, err := http.NewRequestWithContext(createContextWithOwnerId(userID), http.MethodPut, url, must.MarshalJSONReader(payload))
-				require.NoError(t, err)
-				req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-				return req
-			},
-			setupMocks: func() {
-				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, context.DeadlineExceeded)
-			},
-			expectedStatus:     http.StatusInternalServerError,
-			expectedBodySubstr: "request timed out",
+			expectedBodySubstr: "resource not found",
 		},
 		{
 			name:         "Database error from GetScopeForSavedQuery",
@@ -795,14 +743,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, ErrMockDatabaseError)
 			},
 			expectedStatus:     http.StatusInternalServerError,
@@ -829,14 +774,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			setupMocks: func() {
 				// owned, not public, not shared -> helper returns ErrInvalidSelfShare
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 			},
 			expectedStatus:     http.StatusBadRequest,
@@ -859,14 +801,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			setupMocks: func() {
 				// owned + public -> non-privileged user gets ErrForbidden
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: true,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: true,
+						Shared: false,
 					}, nil)
 			},
 			expectedStatus:     http.StatusForbidden,
@@ -910,14 +849,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 
 				mockDB.EXPECT().
@@ -966,14 +902,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 
 				mockDB.EXPECT().
@@ -1016,14 +949,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 
 				mockDB.EXPECT().CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).Return(model.SavedQueriesPermissions{
@@ -1070,14 +1000,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().CreateSavedQueryPermissionsToUsers(gomock.Any(), gomock.Any(), userID2, userID3).Return([]model.SavedQueriesPermissions{
 					{
@@ -1129,14 +1056,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().
 					CreateSavedQueryPermissionToPublic(gomock.Any(), int64(1)).
@@ -1174,14 +1098,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: true,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: true,
 					}, nil)
 				mockDB.EXPECT().
 					DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1205,14 +1126,11 @@ func TestResources_ShareSavedQueriesPermissions_NonAdmin(t *testing.T) {
 			},
 			setupMocks: func() {
 				mockDB.EXPECT().
-					SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(true, nil)
-				mockDB.EXPECT().
 					GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(database.SavedQueryScopeMap{
-						model.SavedQueryScopeOwned:  true,
-						model.SavedQueryScopePublic: false,
-						model.SavedQueryScopeShared: false,
+					Return(database.SavedQueryScopes{
+						Owned:  true,
+						Public: false,
+						Shared: false,
 					}, nil)
 				mockDB.EXPECT().
 					DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1276,11 +1194,10 @@ func TestResources_ShareSavedQueriesPermissions_SavingPermissionsErrors(t *testi
 		Public:  false,
 	}
 
-	mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
-	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopeMap{
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeShared: false,
+	mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopes{
+		Owned:  true,
+		Public: false,
+		Shared: false,
 	}, nil)
 	mockDB.EXPECT().CreateSavedQueryPermissionsToUsers(gomock.Any(), gomock.Any(), userId2, userId3).Return(nil, fmt.Errorf("Error!"))
 
@@ -1351,14 +1268,11 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(false, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  false,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  false,
+								Public: true,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1392,19 +1306,54 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(true, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						// CanUpdateSavedQueriesPermission returns nil; handler sees already-public
 						// and just writes 204 with no additional DB calls.
 					},
 					expectedStatus: http.StatusNoContent,
+				},
+			},
+		},
+		{
+			name:         "can't updated read only query (400)",
+			savedQueryID: savedQueryID,
+			steps: []step{
+				{
+					name: "public -> private",
+					buildRequest: func(t *testing.T, url string) *http.Request {
+						payload := v2.SavedQueryPermissionRequest{
+							UserIDs: []uuid.UUID{},
+							Public:  false,
+						}
+
+						req, err := http.NewRequestWithContext(
+							createContextWithAdminOwnerId(adminUserID),
+							http.MethodPut,
+							url,
+							must.MarshalJSONReader(payload),
+						)
+						require.NoError(t, err)
+						req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+						return req
+					},
+					setupMocks: func() {
+						mockDB.EXPECT().
+							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
+							Return(database.SavedQueryScopes{
+								ReadOnly: true,
+								Owned:    true,
+								Public:   true,
+								Shared:   false,
+							}, nil)
+						// CanUpdateSavedQueriesPermission will return ErrNotModifiable
+					},
+					expectedStatus:     http.StatusBadRequest,
+					expectedBodySubstr: "This shared query is not modifiable",
 				},
 			},
 		},
@@ -1432,14 +1381,11 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(true, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						// CanUpdateSavedQueriesPermission will return ErrInvalidPublicShare
 					},
@@ -1473,14 +1419,11 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(true, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: true,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: true,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							DeleteSavedQueryPermissionsForUsers(gomock.Any(), gomock.Any()).
@@ -1508,14 +1451,11 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(true, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: false,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: false,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							CreateSavedQueryPermissionsToUsers(
@@ -1579,14 +1519,11 @@ func TestResources_ShareSavedQueriesPermissions_Admin(t *testing.T) {
 					},
 					setupMocks: func() {
 						mockDB.EXPECT().
-							SavedQueryBelongsToUser(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(true, nil)
-						mockDB.EXPECT().
 							GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).
-							Return(database.SavedQueryScopeMap{
-								model.SavedQueryScopeOwned:  true,
-								model.SavedQueryScopePublic: false,
-								model.SavedQueryScopeShared: false,
+							Return(database.SavedQueryScopes{
+								Owned:  true,
+								Public: false,
+								Shared: false,
 							}, nil)
 						mockDB.EXPECT().
 							CreateSavedQueryPermissionsToUsers(
@@ -1684,7 +1621,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		)
 		defer mockCtrl.Finish()
 
-		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Owned: true,
+		}, nil)
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
 			UserIds: []uuid.UUID{userId2, userId3},
@@ -1717,6 +1656,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId2, userId3},
 		}
 
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Owned: false,
+		}, nil)
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1744,7 +1686,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId},
 		}
 
-		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Shared: true,
+		}, nil)
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), []uuid.UUID{userId}).Return(fmt.Errorf("an error"))
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1772,7 +1716,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId},
 		}
 
-		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(true, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Shared: true,
+		}, nil)
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), []uuid.UUID{userId}).Return(nil)
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1800,8 +1746,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId},
 		}
 
-		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(false, nil)
-
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Shared: false,
+		}, nil)
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
@@ -1827,7 +1774,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId},
 		}
 
-		mockDB.EXPECT().IsSavedQuerySharedToUser(gomock.Any(), int64(1), userId).Return(false, fmt.Errorf("an error"))
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{}, fmt.Errorf("an error"))
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
@@ -1850,7 +1797,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		)
 		defer mockCtrl.Finish()
 
-		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, nil)
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Owned: false,
+		}, nil)
 
 		var userIds []uuid.UUID
 		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(userIds))
@@ -1878,6 +1827,9 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 			UserIds: []uuid.UUID{userId2, userId3},
 		}
 
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Owned: true,
+		}, nil)
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(fmt.Errorf("an error"))
 
 		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
@@ -1901,7 +1853,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		)
 		defer mockCtrl.Finish()
 
-		mockDB.EXPECT().SavedQueryBelongsToUser(gomock.Any(), userId, int64(1)).Return(false, fmt.Errorf("an error"))
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{}, fmt.Errorf("an error"))
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
 			UserIds: []uuid.UUID{userId2, userId3},
@@ -1936,18 +1888,6 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 
 	// Setup
 	var (
-		testSavedQuery1 = model.SavedQuery{
-			UserID:      user1Id.String(),
-			Name:        "Test Query 1",
-			Query:       "Match (n:Base) return n",
-			Description: "test query",
-			BigSerial: model.BigSerial{
-				ID: 1,
-				Basic: model.Basic{
-					CreatedAt: time.Now(),
-				},
-			},
-		}
 		testSavedQuery1Permissions = model.SavedQueriesPermissions{
 			SharedToUserID: uuid.NullUUID{
 				UUID:  user2Id,
@@ -2039,7 +1979,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, fmt.Errorf("error returning saved query"))
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(database.SavedQueryScopes{}, fmt.Errorf("error returning saved query"))
 				},
 			},
 			args: args{
@@ -2060,58 +2000,16 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{}, nil)
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Shared: false,
+						}, nil)
 				},
 			},
 			args: args{
 				buildRequest: func() *http.Request {
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(user1Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					require.NoError(t, err)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
-					return req
-				},
-			},
-			expect: expected{
-				responseCode:   http.StatusNotFound,
-				responseBody:   `{"errors":[{"context":"","message":"no query permissions exist for saved query"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "fail - error asserting if user owns query",
-			fields: fields{
-				setupMocks: func(t *testing.T, mock *mock) {
-					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(model.SavedQuery{}, fmt.Errorf("error returning saved query"))
-				},
-			},
-			args: args{
-				buildRequest: func() *http.Request {
-					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
-					require.NoError(t, err)
-					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
-					return req
-				},
-			},
-			expect: expected{
-				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-			},
-		},
-		{
-			name: "fail - user cannot access saved query permissions",
-			fields: fields{
-				setupMocks: func(t *testing.T, mock *mock) {
-					t.Helper()
-					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
-				},
-			},
-			args: args{
-				buildRequest: func() *http.Request {
-					req, err := http.NewRequestWithContext(createContextWithOwnerId(user3Id), http.MethodGet, "/api/v2/saved-queries/1/permissions", nil)
 					require.NoError(t, err)
 					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "1"})
 					return req
@@ -2128,8 +2026,12 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Owned:  true,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
-					mock.mockDatabase.EXPECT().GetSavedQuery(gomock.Any(), int64(1)).Return(testSavedQuery1, nil)
 				},
 			},
 			args: args{
@@ -2143,7 +2045,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"],"readonly":false}}`, user2Id),
 			},
 		},
 		{
@@ -2151,6 +2053,11 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: false,
+							Owned:  false,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(1)).Return([]model.SavedQueriesPermissions{testSavedQuery1Permissions}, nil)
 				},
 			},
@@ -2165,7 +2072,7 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"]}}`, user2Id),
+				responseBody:   fmt.Sprintf(`{"data":{"query_id":1,"public":false,"shared_to_user_ids":["%s"],"readonly":false}}`, user2Id),
 			},
 		},
 		{
@@ -2173,6 +2080,10 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mock) {
 					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public: true,
+						}, nil)
 					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
 				},
 			},
@@ -2187,7 +2098,34 @@ func TestResources_GetPermissionsForSavedQuery(t *testing.T) {
 			expect: expected{
 				responseCode:   http.StatusOK,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[]}}`,
+				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[],"readonly":false}}`,
+			},
+		},
+		{
+			name: "success - public readonly query",
+			fields: fields{
+				setupMocks: func(t *testing.T, mock *mock) {
+					t.Helper()
+					mock.mockDatabase.EXPECT().GetScopeForSavedQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+						database.SavedQueryScopes{
+							Public:   true,
+							ReadOnly: true,
+						}, nil)
+					mock.mockDatabase.EXPECT().GetSavedQueryPermissions(gomock.Any(), int64(2)).Return([]model.SavedQueriesPermissions{testSavedQuery2Permissions}, nil)
+				},
+			},
+			args: args{
+				buildRequest: func() *http.Request {
+					req, err := http.NewRequestWithContext(createContextWithOwnerId(user2Id), http.MethodGet, "/api/v2/saved-queries/2/permissions", nil)
+					require.NoError(t, err)
+					req = mux.SetURLVars(req, map[string]string{api.URIPathVariableSavedQueryID: "2"})
+					return req
+				},
+			},
+			expect: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"data":{"query_id":2,"public":true,"shared_to_user_ids":[],"readonly":true}}`,
 			},
 		},
 	}
