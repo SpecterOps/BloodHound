@@ -812,19 +812,6 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-
-    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
-            ...options,
-            params: {
-                ...options?.params,
-                job_profile_id: `eq:${profileId}`,
-                sort_by: '-recorded_at',
-                skip: 0,
-                limit: 1,
-            },
-        });
-
     getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
         this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
