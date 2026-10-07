@@ -1103,7 +1103,7 @@ export enum CollectorJobOutcome {
     Succeeded = 'succeeded',
     Failed = 'failed',
     Cancelled = 'cancelled',
-    Partial_Success = 'partial_success',
+    PartialSuccess = 'partial_success',
 }
 
 export interface CollectorJobHistory {
