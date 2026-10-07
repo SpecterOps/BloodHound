@@ -144,8 +144,7 @@ func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, 
 		slog.ErrorContext(
 			ctx,
 			"Validation failed",
-			slog.String("temp_file_name",
-				tempFileName),
+			slog.String("temp_file_name", tempFileName),
 			attr.Error(validationErr),
 		)
 		cleanupTempFile(ctx, fileService, tempFileName)
