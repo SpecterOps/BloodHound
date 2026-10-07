@@ -14,3 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export * from './Stepper.tsx';
+export { useStepItem, useStepper } from './StepperContext';

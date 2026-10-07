@@ -16,7 +16,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { type ComponentProps, useState } from 'react';
 import { Button } from '../Button';
-import { BasicStepper, useStepper } from './Stepper';
+import { BasicStepper, useStepper } from './index';
 
 const meta = {
     title: 'Components/Stepper',
@@ -31,7 +31,7 @@ const meta = {
                     'Use the composable Stepper primitives for custom layouts, per-step indicators, and richer workflows. ' +
                     'Disabled steps reject clicks and useStepper navigation requests without calling onValueChange. ' +
                     'Parent controls must enable the destination before setting value; update both together after validation succeeds. ' +
-                    'Values are 1-based, and inactive content unmounts.',
+                    'Values are 1-based. Inactive panels stay hidden while their children unmount.',
             },
         },
     },
@@ -195,6 +195,23 @@ export const DisabledStep: Story = {
         docs: {
             description: {
                 story: 'Secret is unavailable to clicks, keyboard activation, and useStepper navigation requests. Arrow keys skip it. Enable it before navigating to it.',
+            },
+        },
+    },
+};
+
+export const DisabledInitialStep: Story = {
+    args: {
+        steps: [
+            { title: 'Profile', content: 'Profile content', isDisabled: true },
+            { title: 'Secret', content: 'Secret content' },
+            { title: 'Schedule', content: 'Schedule content' },
+        ],
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: 'If the selected step is disabled, Tab reaches the first enabled trigger. Selection stays unchanged until an enabled step is activated.',
             },
         },
     },
