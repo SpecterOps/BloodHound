@@ -33,16 +33,16 @@ export const NoteCell = ({ row }: { row: { original: HistoryItem } }) => {
     const handleClick = () => (noteIsActive ? clearSelected() : setSelected(row.original));
 
     return (
-        <Tooltip tooltip={noteToolTipContent}>
-            <div className='w-full flex justify-center'>
-                {!note ? (
+        <div className='w-full flex justify-center'>
+            {!note ? (
+                <Tooltip tooltip={noteToolTipContent}>
                     <p>-</p>
-                ) : (
-                    <IconButton aria-label={noteToolTipContent} onClick={handleClick}>
-                        <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
-                    </IconButton>
-                )}
-            </div>
-        </Tooltip>
+                </Tooltip>
+            ) : (
+                <IconButton aria-label={noteToolTipContent} onClick={handleClick}>
+                    <AppIcon.LinedPaper size={24} className='-mb-[3px]' />
+                </IconButton>
+            )}
+        </div>
     );
 };
