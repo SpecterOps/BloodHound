@@ -116,7 +116,7 @@ function PanelHeaderStepper(args: ComponentProps<typeof BasicStepper>) {
         <BasicStepper
             {...args}
             panelHeader={
-                <div className='mb-6 space-y-2'>
+                <div className='mb-6 flex flex-col gap-2'>
                     <Typography variant='h2'>Create a collection plan</Typography>
                     <Typography variant='body2'>
                         Configure the profile, credentials, and schedule for your collection.
@@ -145,7 +145,7 @@ export const WithPanelHeader: Story = {
         { title: 'Schedule', content: 'Schedule content' },
     ]}
     panelHeader={
-        <div className='mb-6 space-y-2'>
+        <div className='mb-6 flex flex-col gap-2'>
             <Typography variant='h2'>Create a collection plan</Typography>
             <Typography variant='body2'>
                 Configure the profile, credentials, and schedule for your collection.
@@ -173,7 +173,7 @@ export const LongerFlow: Story = {
 function ControlledStepper({ defaultValue = 1, onValueChange, ...args }: ComponentProps<typeof BasicStepper>) {
     const [value, setValue] = useState(defaultValue);
     return (
-        <div className='space-y-6'>
+        <div className='flex flex-col gap-6'>
             <BasicStepper
                 {...args}
                 value={value}
@@ -214,7 +214,7 @@ export const Controlled: Story = {
 function StepContent({ title, isLast }: { title: string; isLast: boolean }) {
     const { activeStep, setActiveStep } = useStepper();
     return (
-        <div className='space-y-4 text-center'>
+        <div className='flex flex-col gap-4 text-center items-center'>
             <p>{title} content</p>
             {!isLast && <Button onClick={() => setActiveStep(activeStep + 1)}>Continue</Button>}
         </div>
@@ -284,7 +284,7 @@ function DisabledNavigationStepper({ steps, onValueChange, ...props }: Component
     const [isSecretEnabled, setIsSecretEnabled] = useState(false);
 
     return (
-        <div className='space-y-6'>
+        <div className='flex flex-col gap-6 items-start'>
             <BasicStepper
                 {...props}
                 value={value}
