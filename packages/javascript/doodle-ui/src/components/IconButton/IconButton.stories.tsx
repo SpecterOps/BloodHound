@@ -18,7 +18,7 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Meta, StoryObj } from '@storybook/react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Icon } from '../Icon';
+import { AccessibleIcon } from '../AccessibleIcon';
 import { IconButton } from './IconButton';
 
 const meta = {
@@ -47,7 +47,7 @@ const meta = {
         },
         children: {
             control: false,
-            description: 'A single AppIcon, Font Awesome icon, or Icon element.',
+            description: 'A single AppIcon, Font Awesome icon, or AccessibleIcon element.',
             table: {
                 category: 'Content',
             },
@@ -136,7 +136,7 @@ Prefer \`"Show filter options"\` over \`"Filter icon"\`. IconButton marks its ch
 
 ### Supported icons
 
-IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`Icon\` element. Passing an icon directly is the simplest option. If an \`Icon\` is nested, IconButton suppresses its label and tooltip to prevent duplicate announcements and tooltips.
+IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`AccessibleIcon\` element. Passing an icon directly is the simplest option. If an \`AccessibleIcon\` is nested, IconButton suppresses its label and tooltip to prevent duplicate announcements and tooltips.
 
 \`\`\`tsx
 <IconButton aria-label='More options'>
@@ -144,9 +144,9 @@ IconButton accepts one \`AppIcon\`, Font Awesome icon, or \`Icon\` element. Pass
 </IconButton>
 
 <IconButton aria-label='Show information'>
-    <Icon label='Information'>
+    <AccessibleIcon label='Information'>
         <AppIcon.Info />
-    </Icon>
+    </AccessibleIcon>
 </IconButton>
 \`\`\`
 
@@ -206,9 +206,9 @@ const renderVariantStory =
             <div className='flex items-center justify-center gap-8'>
                 <div className='flex flex-col items-center gap-4'>
                     <IconButton aria-label='More options' size={18} variant={variant}>
-                        <Icon label='More options'>
+                        <AccessibleIcon label='More options'>
                             <FontAwesomeIcon icon={faEllipsisVertical} />
-                        </Icon>
+                        </AccessibleIcon>
                     </IconButton>
                     Enabled
                 </div>
