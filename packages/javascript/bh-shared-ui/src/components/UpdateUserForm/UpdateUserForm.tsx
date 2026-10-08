@@ -17,7 +17,6 @@
 import { Alert, CircularProgress } from '@mui/material';
 import {
     Button,
-    Card,
     DialogActions,
     DialogClose,
     DialogTitle,
@@ -81,7 +80,7 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <Card className='p-6 rounded w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+            <div className='w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>Unable to load data required to edit this user.</div>
 
                 <DialogActions>
@@ -96,7 +95,7 @@ const UpdateUserForm: React.FC<{
                         </Button>
                     </DialogClose>
                 </DialogActions>
-            </Card>
+            </div>
         );
     }
     return (
@@ -191,7 +190,7 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 flex flex-col rounded max-w-[600px] w-full'>
+                    <div className='max-w-[600px] w-full'>
                         <DialogTitle>{'Edit User'}</DialogTitle>
 
                         <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
@@ -508,7 +507,7 @@ const UpdateUserFormInner: React.FC<{
                                 Save
                             </Button>
                         </DialogActions>
-                    </Card>
+                    </div>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && (
                         <EnvironmentSelectPanel form={form} initialData={initialData} />
                     )}

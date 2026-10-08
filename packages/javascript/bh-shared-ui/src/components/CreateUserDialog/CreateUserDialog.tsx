@@ -37,7 +37,7 @@ const CreateUserDialog: React.FC<{
     onSave: (user: CreateUserRequest) => Promise<any>;
     showEnvironmentAccessControls: boolean;
 }> = ({ error, isLoading, onSave, showEnvironmentAccessControls }) => {
-    const dialogTitleRef = useRef<HTMLHeadingElement>(null);
+    const dialogContentRef = useRef<HTMLDivElement>(null);
 
     const handleOnSave = (user: CreateUserRequest) => {
         onSave(user)
@@ -60,16 +60,14 @@ const CreateUserDialog: React.FC<{
             <DialogPortal>
                 <DialogOverlay>
                     <DialogContent
-                        maxWidth='lg'
-                        className='!bg-transparent shadow-none max-h-screen overflow-y-auto'
+                        ref={dialogContentRef}
+                        className='shadow-none max-h-screen'
                         onOpenAutoFocus={(event) => {
                             event.preventDefault();
-                            dialogTitleRef.current?.focus();
+                            dialogContentRef.current?.focus();
                         }}>
                         <VisuallyHidden asChild>
-                            <DialogTitle ref={dialogTitleRef} tabIndex={-1} data-testid='create-user-dialog_title'>
-                                Create User
-                            </DialogTitle>
+                            <DialogTitle>Create User</DialogTitle>
                         </VisuallyHidden>
                         <VisuallyHidden asChild>
                             <DialogDescription>Create User</DialogDescription>
