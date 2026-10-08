@@ -93,7 +93,6 @@ const meta = {
             table: {
                 category: 'Drawer',
                 type: { summary: '(number | string)[]' },
-                defaultValue: { summary: '[]' },
             },
         },
         defaultOpen: {
@@ -148,6 +147,9 @@ export const Default: Story = {
                     'The header and footer remain visible while the body scrolls if its content grows.',
             },
         },
+    },
+    args: {
+        snapPoints: [],
     },
     render: ({ className, ...drawerProps }) => (
         <Drawer {...drawerProps}>
