@@ -592,7 +592,7 @@ export const TagForm: FC = () => {
                                                                     'flex items-center justify-center size-12',
                                                                     !glyph && 'invisible',
                                                                 ])}>
-                                                                <CardContent className='dark:bg-neutral-4 rounded-sm'>
+                                                                <CardContent className='rounded-sm'>
                                                                     {glyph && (
                                                                         <FontAwesomeIcon
                                                                             icon={glyph as IconName}
