@@ -32,7 +32,8 @@ const meta = {
                     'Use the composable Stepper primitives for custom layouts, per-step indicators, and richer workflows. ' +
                     'Disabled steps reject clicks and useStepper navigation requests without calling onValueChange. ' +
                     'Parent controls must enable the destination before setting value; update both together after validation succeeds. ' +
-                    'Values are 1-based. Inactive panels stay hidden while their children unmount, unless forceMount is enabled.',
+                    'Values are 1-based. Inactive panels stay hidden while their children unmount, unless forceMount is enabled. ' +
+                    'Content uses normal document layout. In a container with a constrained height, use className="flex-1" to keep navigation visible while the panel scrolls.',
             },
         },
     },
@@ -45,6 +46,10 @@ const meta = {
         panelHeader: {
             description: 'Shared content above the step panels that remains mounted during navigation.',
             control: false,
+        },
+        navClassName: {
+            description: 'Additional classes on the navigation, such as clearance for a drawer close button.',
+            control: 'text',
         },
         steps: {
             description:

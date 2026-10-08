@@ -56,6 +56,8 @@ interface BasicStepperProps extends Omit<StepperProps, 'children'> {
     forceMount?: boolean;
     /** Shared content above the step panels, such as a form summary. */
     panelHeader?: ReactNode;
+    /** Additional navigation styling, for example clearance for a drawer's close button. */
+    navClassName?: string;
 }
 
 /** A preset layout for simple, ordered flows. Use Stepper composition for custom layouts. */
@@ -64,12 +66,13 @@ const BasicStepper = ({
     className,
     forceMount,
     panelHeader,
+    navClassName,
     indicators = { loading: <LoaderCircle className='size-4 animate-spin' aria-label='Loading' /> },
     ...props
 }: BasicStepperProps) => {
     return (
-        <Stepper {...props} indicators={indicators} className={cn('space-y-8', className)}>
-            <StepperNav>
+        <Stepper {...props} indicators={indicators} className={cn('flex min-h-0 flex-col gap-8', className)}>
+            <StepperNav className={cn('shrink-0', navClassName)}>
                 {steps.map((step, index) => (
                     <StepperItem
                         key={step.title}
@@ -94,14 +97,10 @@ const BasicStepper = ({
                 ))}
             </StepperNav>
 
-            <StepperPanel>
+            <StepperPanel className='min-h-0 flex-1 overflow-y-auto overscroll-contain'>
                 {panelHeader}
                 {steps.map((step, index) => (
-                    <StepperContent
-                        key={index}
-                        value={index + 1}
-                        forceMount={forceMount}
-                        className='flex items-center justify-center'>
+                    <StepperContent key={index} value={index + 1} forceMount={forceMount}>
                         {step.content}
                     </StepperContent>
                 ))}
