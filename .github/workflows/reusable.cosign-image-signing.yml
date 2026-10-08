@@ -13,112 +13,90 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-name: Image Signing
+name: Sign and Verify a Published Container Image
 
 on:
   workflow_call:
     inputs:
-      dockerhub_image_reference:
-        type: string
+      image_repository:
+        description: Fully qualified image repository, without a tag or digest.
         required: true
-        description: >
-          The full reference to the Docker image that needs to be signed,
-          including registry, repository name, and tag/digest (e.g.
-          'organization/image:tag'). This image must already exist in DockerHub
-          and be accessible with the provided credentials.
+        type: string
+      image_digest:
+        description: Digest emitted by the image build (sha256:...).
+        required: true
+        type: string
+      registry_kind:
+        description: dockerhub or ecr.
+        required: true
+        type: string
+      aws_region:
+        description: AWS region for ECR images.
+        required: false
+        default: us-east-1
+        type: string
+      certificate_identity:
+        description: Exact Fulcio identity of this reusable workflow at the called ref.
+        required: true
+        type: string
     secrets:
       dockerhub_account:
-        required: true
+        required: false
       dockerhub_token:
-        required: true
-      docker_repository:
-        required: true
-      gh_access_token:
-        required: true
-
-permissions:
-  contents: read
+        required: false
+      ecr_aws_access_key_id:
+        required: false
+      ecr_aws_secret_access_key:
+        required: false
 
 jobs:
-  sign-image:
-    name: Sign Image
+  sign-and-verify:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: cli
-          - target: enterprise
     permissions:
+      contents: read
       id-token: write
     env:
-      COSIGN_YES: "true"
-      DOCKER_IMAGE: ${{ inputs.dockerhub_image_reference }}
+      IMAGE_REFERENCE: ${{ format('{0}@{1}', inputs.image_repository, inputs.image_digest) }}
 
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # ratchet:sigstore/cosign-installer@v4.1.2
+        with:
+          cosign-release: v3.1.3
 
-      - name: Login to DockerHub Registry
-        uses: docker/login-action@v3
+      - name: Login to DockerHub
+        if: inputs.registry_kind == 'dockerhub'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
         with:
           registry: docker.io
           username: ${{ secrets.dockerhub_account }}
           password: ${{ secrets.dockerhub_token }}
 
-      - name: Pull Image
-        shell: bash
-        run: docker pull ${DOCKER_IMAGE}
-
-      - name: Obtain Image Digest
-        id: digest
-        shell: bash
-        run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
-          echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
-
-      - name: Sign Image with Cosign Keyless
-        run: |
-          cosign sign --yes "${{ steps.digest.outputs.digest_ref }}"
-
-  verify-docker-image-trust:
-    name: Verify Published Image Signature (${{ matrix.target }})
-    runs-on: ubuntu-latest
-    needs:
-      - sign-image
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: cli
-          - target: enterprise
-    env:
-      DOCKER_IMAGE: ${{ inputs.dockerhub_image_reference }}
-
-    steps:
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v4.1.1
-
-      - name: Login to DockerHub Registry
-        uses: docker/login-action@v3
+      - name: Configure AWS Credentials
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # ratchet:aws-actions/configure-aws-credentials@v4
         with:
-          registry: docker.io
-          username: ${{ secrets.dockerhub_account }}
-          password: ${{ secrets.dockerhub_token }}
+          aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.ecr_aws_secret_access_key }}
+          aws-region: ${{ inputs.aws_region }}
 
-      - name: Pull Image
-        shell: bash
-        run: docker pull ${DOCKER_IMAGE}
+      - name: Login to Amazon ECR
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
 
-      - name: Obtain Image Digest
-        id: digest
-        shell: bash
-        run: | 
-          DIGEST_REF="docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_IMAGE}"
-          echo "digest_ref=$DIGEST_REF" >> "$GITHUB_OUTPUT"
+      - name: Sign Image Digest
+        run: cosign sign --yes "$IMAGE_REFERENCE"
 
-      - name: Verify Fulcio Keyless Signature
-        run: |
-          cosign verify "${{ steps.digest.outputs.digest_ref }}" \
-            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/.*"
+      - name: Verify Image Signature
+        env:
+          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          CALLER_REF: ${{ github.ref }}
+          CALLER_SHA: ${{ github.sha }}
+        run: >-
+          cosign verify "$IMAGE_REFERENCE"
+          --certificate-identity "$CERTIFICATE_IDENITY"
+          --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+          --certificate-github-workflow-repository "$CALLER_REPOSITORY"
+          --certificate-github-workflow-ref "$CALLER_REF"
+          --certificate-github-workflow-sha "$CALLER_SHA"
