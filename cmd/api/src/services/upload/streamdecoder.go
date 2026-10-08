@@ -17,7 +17,6 @@
 package upload
 
 import (
-	"archive/zip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,10 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
-	"github.com/specterops/bloodhound/packages/go/bomenc"
 )
-
-var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
 // ParseAndValidatePayload scans a JSON stream to detect and validate the metadata tag
 // required for ingesting graph data. It ensures that either top-level "meta" and "data" tags
@@ -366,41 +362,6 @@ func formatAggregateErrors(errs []validationError) string {
 		sb.WriteString(e.Message)
 	}
 	return sb.String()
-}
-
-// ReadZippedFile - Util Function to help read zipped files
-func ReadZippedFile(zf *zip.File) ([]byte, error) {
-	f, err := zf.Open()
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-
-	if normFile, err := bomenc.NormalizeToUTF8(f); err != nil {
-		return nil, fmt.Errorf("failed to normalize json file: %w", err)
-	} else {
-		return io.ReadAll(normFile)
-	}
-}
-
-func ValidateZipFile(reader io.Reader) error {
-	bytes := make([]byte, 4)
-	if readBytes, err := reader.Read(bytes); err != nil {
-		return err
-	} else if readBytes < 4 {
-		return ingest.ErrInvalidZipFile
-	} else {
-		for i := 0; i < 4; i++ {
-			if bytes[i] != ZipMagicBytes[i] {
-				return ingest.ErrInvalidZipFile
-			}
-		}
-
-		_, err := io.Copy(io.Discard, reader)
-
-		return err
-	}
 }
 
 type validator struct {
