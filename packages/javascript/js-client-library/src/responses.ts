@@ -387,7 +387,7 @@ export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJ
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
-export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+export type GetCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
 
 export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
 
