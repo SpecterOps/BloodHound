@@ -190,9 +190,9 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <div className='max-w-[600px] w-full'>
+                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
+                        {' '}
                         <DialogTitle>{'Edit User'}</DialogTitle>
-
                         <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>

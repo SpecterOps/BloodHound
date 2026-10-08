@@ -166,9 +166,9 @@ const CreateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <div className='w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
+                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
+                        {' '}
                         <DialogTitle>{'Create User'}</DialogTitle>
-
                         <div className='flex flex-col mt-4 w-full' data-testid='create-user-dialog_content'>
                             <div className='mb-4'>
                                 <FormField
