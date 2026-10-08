@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { mergeProps, useRender } from '@base-ui/react';
-import { LoaderCircle } from 'lucide-react';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     type ComponentProps,
     type HTMLAttributes,
@@ -67,7 +68,9 @@ const BasicStepper = ({
     forceMount,
     panelHeader,
     navClassName,
-    indicators = { loading: <LoaderCircle className='size-4 animate-spin' aria-label='Loading' /> },
+    indicators = {
+        loading: <FontAwesomeIcon icon={faSpinner} className='size-4 animate-spin' aria-label='Loading' />,
+    },
     ...props
 }: BasicStepperProps) => {
     return (
