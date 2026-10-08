@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -132,10 +132,9 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
-        await user.click(ulElement.children[0]);
+        await user.click(within(testListBox).getByRole('option', { name: 'All' }));
 
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
     });
@@ -161,11 +160,10 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
         //select Azure
-        await user.click(ulElement.children[2]);
+        await user.click(within(testListBox).getByRole('option', { name: 'Azure' }));
 
         //Azure query present
         expect(screen.getByText(/All members of high privileged roles/i)).toBeInTheDocument();
@@ -193,11 +191,10 @@ describe('CommonSearches', () => {
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
         const testListBox = await screen.findByRole('listbox');
-        const ulElement = testListBox;
-        expect(ulElement.children).toHaveLength(4);
+        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
 
         //select AD
-        await user.click(ulElement.children[1]);
+        await user.click(within(testListBox).getByRole('option', { name: 'Active Directory' }));
 
         //AD query present
         expect(screen.getByText(/all domain admins/i)).toBeInTheDocument();
