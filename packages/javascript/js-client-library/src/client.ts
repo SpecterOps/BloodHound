@@ -537,6 +537,12 @@ class BHEAPIClient {
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
 
+    downloadUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<Blob>('/api/v2/attack-paths/findings', {
+            ...options,
+            headers: { ...options?.headers, Accept: 'text/csv' },
+            responseType: 'blob',
+        });
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
