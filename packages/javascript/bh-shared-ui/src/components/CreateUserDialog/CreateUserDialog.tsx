@@ -60,8 +60,9 @@ const CreateUserDialog: React.FC<{
             <DialogPortal>
                 <DialogOverlay>
                     <DialogContent
+                        maxWidth={showEnvironmentAccessControls ? 'lg' : 'sm'}
                         ref={dialogContentRef}
-                        className='shadow-none max-h-screen'
+                        className='!bg-transparent shadow-none max-h-screen'
                         onOpenAutoFocus={(event) => {
                             event.preventDefault();
                             dialogContentRef.current?.focus();
