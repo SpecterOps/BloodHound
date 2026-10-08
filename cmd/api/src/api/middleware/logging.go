@@ -81,6 +81,20 @@ func (s *responseRecorder) Header() http.Header {
 	return s.delegate.Header()
 }
 
+// Unwrap allows http.ResponseController to reach optional interfaces implemented
+// by the underlying writer, such as http.Flusher and http.Hijacker.
+func (s *responseRecorder) Unwrap() http.ResponseWriter {
+	return s.delegate
+}
+
+func (s *responseRecorder) StatusCode() int {
+	if s.statusCode == 0 {
+		return http.StatusOK
+	}
+
+	return s.statusCode
+}
+
 func (s *responseRecorder) Write(buffer []byte) (int, error) {
 	if s.statusCode == 0 {
 		s.statusCode = http.StatusOK
@@ -93,7 +107,10 @@ func (s *responseRecorder) Write(buffer []byte) (int, error) {
 }
 
 func (s *responseRecorder) WriteHeader(statusCode int) {
-	s.statusCode = statusCode
+	if s.statusCode == 0 {
+		s.statusCode = statusCode
+	}
+
 	s.delegate.WriteHeader(statusCode)
 }
 
@@ -203,7 +220,7 @@ func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(htt
 				slog.String("user_agent", request.UserAgent()),
 				slog.Int64("request_bytes", loggedRequestBody.bytesRead),
 				slog.Int64("response_bytes", loggedResponse.bytesWritten),
-				slog.Int("status", loggedResponse.statusCode),
+				slog.Int("status", loggedResponse.StatusCode()),
 				slog.Duration("elapsed", time.Since(requestContext.StartTime.UTC())),
 			)
 

@@ -32,6 +32,8 @@ import (
 func TestDatabase_ListAuditLogs(t *testing.T) {
 	var (
 		dbInst = integration.SetupDB(t)
+		after  = time.Now().Add(-time.Minute)
+		before = time.Now().Add(time.Minute)
 
 		auditLogIdFilter = model.QueryParameterFilter{
 			Name:         "id",
@@ -57,14 +59,16 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 		}
 	}
 
-	if _, count, err := dbInst.ListAuditLogs(testCtx, time.Now(), time.Now(), 0, 10, "", model.SQLFilter{}); err != nil {
+	if auditLogs, count, err := dbInst.ListAuditLogs(testCtx, before, after, 0, 10, "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Failed to list all audit logs: %v", err)
 	} else if count != 7 {
 		t.Fatalf("Expected 7 audit logs to be returned")
+	} else if auditLogs[0].Source != model.AuditLogSourceLegacy {
+		t.Fatalf("Expected legacy audit logs to be tagged with source %q, got %q", model.AuditLogSourceLegacy, auditLogs[0].Source)
 	} else if filter, err := auditLogIdFilterMap.BuildSQLFilter(); err != nil {
 		t.Fatalf("Failed to generate SQL Filter: %v", err)
 		// Limit is set to 1 to verify that count is total filtered count, not response size
-	} else if _, count, err = dbInst.ListAuditLogs(testCtx, time.Now(), time.Now(), 0, 1, "", filter); err != nil {
+	} else if _, count, err = dbInst.ListAuditLogs(testCtx, before, after, 0, 1, "", filter); err != nil {
 		t.Fatalf("Failed to list filtered events: %v", err)
 	} else if count != 3 {
 		t.Fatalf("Expected 3 audit logs to be returned")

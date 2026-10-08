@@ -21648,6 +21648,13 @@
           "failure"
         ]
       },
+      "enum.audit-log-source": {
+        "type": "string",
+        "enum": [
+          "legacy",
+          "middleware"
+        ]
+      },
       "model.audit-log": {
         "allOf": [
           {
@@ -21703,6 +21710,14 @@
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.audit-log-status"
+                  }
+                ]
+              },
+              "source": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/enum.audit-log-source"
                   }
                 ]
               }

@@ -43,6 +43,14 @@ func scalarInt64(t *testing.T, db *gorm.DB, query string, args ...any) int64 {
 	return value
 }
 
+func scalarString(t *testing.T, db *gorm.DB, query string, args ...any) string {
+	t.Helper()
+
+	var value string
+	require.NoError(t, db.Raw(query, args...).Scan(&value).Error)
+	return value
+}
+
 // isRangePartitioned reports whether the named table is a range-partitioned
 // parent table.
 func isRangePartitioned(t *testing.T, db *gorm.DB, tableName string) bool {
@@ -85,9 +93,9 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 
 	// Seed legacy rows across the batch boundary (batch_size in the migration is
 	// 50000) so the backfill loop iterates more than once, plus rows that route to
-	// a monthly partition and rows that route to the default partition (a
-	// created_at outside the 2024-01..2026-08 partition range, and a NULL that the
-	// migration coalesces to 2020-01-01).
+	// a monthly partition, a row in the current month, and rows that route to the
+	// default partition (a pre-2024 created_at and a NULL that the migration
+	// coalesces to 2020-01-01).
 	const seededRows = 120000
 	require.NoError(t, db.Exec(`
 		INSERT INTO audit_logs (created_at, action, actor_id, actor_name, status)
@@ -112,8 +120,16 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 		VALUES (NULL, 'null_action', 'success')
 	`).Error)
 
+	// A current-month row must receive a monthly partition during the migration.
+	// If it lands in the default partition, runtime maintenance cannot create the
+	// current partition without first evacuating this row.
+	require.NoError(t, db.Exec(`
+		INSERT INTO audit_logs (created_at, action, status)
+		VALUES (CURRENT_TIMESTAMP, 'current_action', 'success')
+	`).Error)
+
 	var (
-		totalSeeded = int64(seededRows + 2)
+		totalSeeded = int64(seededRows + 3)
 		sourceCount = scalarInt64(t, db, `SELECT count(*) FROM audit_logs`)
 		sourceMaxID = scalarInt64(t, db, `SELECT MAX(id) FROM audit_logs`)
 	)
@@ -140,6 +156,17 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	assert.Equal(t, int64(2),
 		scalarInt64(t, db, `SELECT count(*) FROM audit_logs_default`),
 		"out-of-range and NULL created_at rows should live in the default partition")
+
+	var currentRowPartition string
+	require.NoError(t, db.Raw(`
+		SELECT tableoid::regclass::text
+		FROM audit_logs
+		WHERE action = 'current_action'
+	`).Scan(&currentRowPartition).Error)
+	assert.Equal(t,
+		scalarString(t, db, `SELECT 'audit_logs_' || to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY_MM')`),
+		currentRowPartition,
+		"the migration should create the current partition before backfilling recent rows")
 
 	// The id sequence advanced past the largest copied id so new inserts do not
 	// collide with backfilled rows.

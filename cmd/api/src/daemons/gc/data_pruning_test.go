@@ -18,10 +18,12 @@ package gc
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -35,6 +37,17 @@ type fakeAuditMaintainer struct {
 	preCreateCalls  int
 	dropCalls       int
 	retentionMonths int
+}
+
+type fakeHAMutex struct {
+	lockResult ha.LockResult
+	err        error
+	calls      int
+}
+
+func (s *fakeHAMutex) TryLock() (ha.LockResult, error) {
+	s.calls++
+	return s.lockResult, s.err
 }
 
 func (s *fakeAuditMaintainer) CreateNextPartition(_ context.Context, _ time.Time) error {
@@ -56,7 +69,7 @@ func TestGC_NewDataPruningDaemon(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil)
+	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil, nil)
 	require.NotNil(t, daemon)
 }
 
@@ -64,7 +77,7 @@ func TestGC_Name(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil)
+	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil, nil)
 	require.NotNil(t, daemon)
 
 	result := daemon.Name()
@@ -85,7 +98,7 @@ func TestGC_Start(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 	})
 
-	daemon := NewDataPruningDaemon(mockDB, nil)
+	daemon := NewDataPruningDaemon(mockDB, nil, nil)
 	require.NotNil(t, daemon)
 
 	go func() {
@@ -102,23 +115,61 @@ func TestGC_SweepAuditPartitions(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil)
+		daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil, nil)
 		require.NotPanics(t, func() {
 			daemon.sweepAuditPartitions(context.Background())
 		})
 	})
 
-	t.Run("drives partition maintenance with configured maintainer", func(t *testing.T) {
+	t.Run("leader drives partition maintenance", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		maintainer := &fakeAuditMaintainer{}
-		daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), maintainer)
+		var (
+			maintainer = &fakeAuditMaintainer{}
+			haMutex    = &fakeHAMutex{lockResult: ha.LockResult{Context: context.Background(), IsPrimary: true}}
+			daemon     = NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), maintainer, haMutex)
+		)
 
 		daemon.sweepAuditPartitions(context.Background())
 
+		require.Equal(t, 1, haMutex.calls)
 		require.Equal(t, 1, maintainer.preCreateCalls)
 		require.Equal(t, 1, maintainer.dropCalls)
 		require.Equal(t, defaultAuditRetentionMonths, maintainer.retentionMonths)
+	})
+
+	t.Run("non-leader skips partition maintenance", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var (
+			maintainer = &fakeAuditMaintainer{}
+			haMutex    = &fakeHAMutex{lockResult: ha.LockResult{IsPrimary: false}}
+			daemon     = NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), maintainer, haMutex)
+		)
+
+		daemon.sweepAuditPartitions(context.Background())
+
+		require.Equal(t, 1, haMutex.calls)
+		require.Zero(t, maintainer.preCreateCalls)
+		require.Zero(t, maintainer.dropCalls)
+	})
+
+	t.Run("lock error skips partition maintenance", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var (
+			maintainer = &fakeAuditMaintainer{}
+			haMutex    = &fakeHAMutex{err: errors.New("lock failed")}
+			daemon     = NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), maintainer, haMutex)
+		)
+
+		daemon.sweepAuditPartitions(context.Background())
+
+		require.Equal(t, 1, haMutex.calls)
+		require.Zero(t, maintainer.preCreateCalls)
+		require.Zero(t, maintainer.dropCalls)
 	})
 }

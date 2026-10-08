@@ -55,3 +55,7 @@ allOf:
         readOnly: true
         allOf:
           - $ref: './enum.audit-log-status.yaml'
+      source:
+        readOnly: true
+        allOf:
+          - $ref: './enum.audit-log-source.yaml'

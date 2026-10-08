@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/server/audit"
@@ -41,17 +42,19 @@ type Daemon struct {
 	stopOnce        sync.Once
 	db              database.Database
 	auditMaintainer audit.Maintainer
+	haMutex         ha.HAMutex
 }
 
 // NewDataPruningDaemon creates a new data pruning daemon. auditMaintainer manages
 // the audit_logs range partitions and may be nil, in which case partition
 // maintenance is skipped.
-func NewDataPruningDaemon(db database.Database, auditMaintainer audit.Maintainer) *Daemon {
+func NewDataPruningDaemon(db database.Database, auditMaintainer audit.Maintainer, haMutex ha.HAMutex) *Daemon {
 	return &Daemon{
 		stopC:           make(chan struct{}),
 		doneC:           make(chan struct{}),
 		db:              db,
 		auditMaintainer: auditMaintainer,
+		haMutex:         haMutex,
 	}
 }
 
@@ -104,12 +107,20 @@ func (s *Daemon) sweepAuditPartitions(ctx context.Context) {
 		return
 	}
 
-	now := time.Now().UTC()
-	if err := s.auditMaintainer.CreateNextPartition(ctx, now); err != nil {
-		slog.ErrorContext(ctx, "Failed to pre-create next audit partition", attr.Error(err))
+	lockResult, err := s.haMutex.TryLock()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to validate HA leader before audit partition maintenance", attr.Error(err))
+		return
+	} else if !lockResult.IsPrimary {
+		return
 	}
-	if err := s.auditMaintainer.DropExpiredPartitions(ctx, now, defaultAuditRetentionMonths); err != nil {
-		slog.ErrorContext(ctx, "Failed to drop expired audit partitions", attr.Error(err))
+
+	now := time.Now().UTC()
+	if err := s.auditMaintainer.CreateNextPartition(lockResult.Context, now); err != nil {
+		slog.ErrorContext(lockResult.Context, "Failed to pre-create next audit partition", attr.Error(err))
+	}
+	if err := s.auditMaintainer.DropExpiredPartitions(lockResult.Context, now, defaultAuditRetentionMonths); err != nil {
+		slog.ErrorContext(lockResult.Context, "Failed to drop expired audit partitions", attr.Error(err))
 	}
 }
 

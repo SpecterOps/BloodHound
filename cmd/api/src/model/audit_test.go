@@ -17,10 +17,12 @@
 package model
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockAuditable struct {
@@ -129,4 +131,54 @@ func TestMatches_FailureErrMsg(t *testing.T) {
 	}
 
 	assert.False(t, errMsgEntry1.Matches(errMsgEntry2), "Expected errMsgsEntry1 not to match errMsgEntry2")
+}
+
+func TestAuditLogs_SourceMetadata(t *testing.T) {
+	var auditLogs AuditLogs
+
+	require.True(t, auditLogs.IsSortable("source"))
+	require.True(t, auditLogs.IsString("source"))
+	require.Equal(t, []FilterOperator{Equals, NotEquals}, auditLogs.ValidFilters()["source"])
+}
+
+func TestAuditable_AuditDataOmitsSecretMaterial(t *testing.T) {
+	const secretMaterial = "must-not-be-audited"
+
+	tt := []struct {
+		name      string
+		auditable Auditable
+	}{
+		{
+			name:      "auth token omits key",
+			auditable: AuthToken{Key: secretMaterial},
+		},
+		{
+			name: "auth secret omits digest and TOTP secret",
+			auditable: AuthSecret{
+				Digest:     secretMaterial,
+				TOTPSecret: secretMaterial,
+			},
+		},
+		{
+			name:      "SAML provider omits metadata",
+			auditable: SAMLProvider{MetadataXML: []byte(secretMaterial)},
+		},
+		{
+			name: "user omits nested auth secret",
+			auditable: &User{AuthSecret: &AuthSecret{
+				Digest:     secretMaterial,
+				TOTPSecret: secretMaterial,
+			}},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			auditData, err := json.Marshal(testCase.auditable.AuditData())
+			require.NoError(t, err)
+			require.NotContains(t, string(auditData), secretMaterial)
+		})
+	}
 }

@@ -162,3 +162,19 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 		})
 	}
 }
+
+func TestLoggingMiddleware_ImplicitStatus(t *testing.T) {
+	var logBuffer bytes.Buffer
+
+	previousLogger := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(previousLogger) })
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logBuffer, &slog.HandlerOptions{})))
+
+	handler := middleware.LoggingMiddleware(auth.NewIdentityResolver(), false)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	request := httptest.NewRequest(http.MethodGet, "/api/v2/test", nil)
+	request = bhctx.SetRequestContext(request, &bhctx.Context{StartTime: time.Now(), RequestID: "123456"})
+
+	handler.ServeHTTP(httptest.NewRecorder(), request)
+
+	assert.Contains(t, logBuffer.String(), `"status":200`)
+}

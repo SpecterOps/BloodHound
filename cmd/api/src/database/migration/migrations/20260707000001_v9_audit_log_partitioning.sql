@@ -118,16 +118,23 @@ END $$;
 -- +goose StatementBegin
 DO $$
 DECLARE
-    start_date    DATE := '2024-01-01';
-    end_date      DATE := '2026-09-01';
-    current_month DATE;
+    start_date          DATE := '2024-01-01';
+    partition_end_date DATE := GREATEST(
+        DATE '2026-09-01',
+        (date_trunc('month', CURRENT_TIMESTAMP) + interval '2 months')::date
+    );
+    current_month       DATE;
 BEGIN
     IF to_regclass('audit_logs_partitioned') IS NULL THEN
         RETURN;
     END IF;
 
     current_month := start_date;
-    WHILE current_month < end_date LOOP
+    -- The fixed date preserves the originally planned historical range. The
+    -- dynamic bound additionally creates the current and next month before the
+    -- backfill, preventing recent legacy rows from landing in the default
+    -- partition and blocking later partition creation.
+    WHILE current_month < partition_end_date LOOP
         EXECUTE format(
             'CREATE TABLE IF NOT EXISTS audit_logs_%s PARTITION OF audit_logs_partitioned
              FOR VALUES FROM (%L) TO (%L)',
@@ -264,11 +271,10 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
 -- WARNING: this Down is a DESTRUCTIVE dev/test teardown, NOT a production
 -- rollback. It drops the partitioned audit_logs AND the audit_logs_old recovery
 -- copy that Up retains, then recreates an empty legacy table -- all audit data is
--- lost. Production rollback during the soak is the manual rename-back of
--- audit_logs_old (see BHADR-32), not this Down. Down must drop audit_logs_old so
--- a subsequent Up can re-run (Up's Phase 4 RENAME ... TO audit_logs_old fails if
--- it already exists); an automated Down cannot be both re-runnable and
--- data-preserving.
+-- lost. A production rollback requires a separately reviewed procedure that
+-- preserves post-swap writes and restores schema and sequence ownership. Down
+-- drops audit_logs_old so a subsequent Up can re-run (Up's Phase 4 RENAME ... TO
+-- audit_logs_old fails if it already exists).
 --
 -- The Up block re-attaches audit_logs_id_seq to the partitioned audit_logs.id,
 -- so dropping the table with CASCADE also drops the owned sequence. Also drop the

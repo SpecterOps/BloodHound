@@ -1,5 +1,13 @@
 # Audit Middleware Reference Implementation
 
+> **Superseded implementation guidance.** This document is retained as RFC-era
+> design history and is not an implementation specification. The authoritative
+> decisions are [BHADR-17](../../../../../docs/adrs/BHADR-17_Audit_Log_Middleware.md)
+> and [BHADR-32](../../../../../docs/adrs/BHADR-32_Audit_Log_Migration_and_Partitioning.md),
+> together with the production code and its tests. In particular, this document's
+> examples of fail-open intent writes, asynchronous outcomes, and
+> `audit.Contribute()` do not describe the accepted implementation.
+
 **Related RFC:** [bh-rfc-7.md](../../../../rfc/bh-rfc-7.md)
 **Status:** Reference Implementation
 **Last Updated:** 2026-06-16

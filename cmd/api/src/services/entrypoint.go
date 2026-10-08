@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -216,7 +217,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
-			gc.NewDataPruningDaemon(connections.RDMS, moduleServices.AuditMaintainer),
+			gc.NewDataPruningDaemon(connections.RDMS, moduleServices.AuditMaintainer, ha.NewDummyHA()),
 			cl,
 			datapipeDaemon,
 		}, nil

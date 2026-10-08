@@ -38,30 +38,12 @@ type AuditService interface {
 	Intent(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
 	Success(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
 	Failure(ctx context.Context, commitID uuid.UUID, entry audit.Entry) error
-	RecordRejected(ctx context.Context, entry audit.Entry) error
 }
 
-// auditStateKey is the unexported context key under which the pre-auth outer
-// stage stores the shared auditState so the inner stage can flag that it took
-// ownership of auditing the request.
-type auditStateKey struct{}
-
-// auditState is shared between the pre-auth outer stage and the post-auth inner
-// stage. The inner stage sets written once it commits to auditing a request so
-// the outer stage does not also write a rejection row for the same request.
-type auditState struct {
-	written bool
-}
-
-// withAuditState returns a context carrying the supplied auditState.
-func withAuditState(ctx context.Context, state *auditState) context.Context {
-	return context.WithValue(ctx, auditStateKey{}, state)
-}
-
-// auditStateFrom returns the auditState carried by ctx, if any.
-func auditStateFrom(ctx context.Context) (*auditState, bool) {
-	state, ok := ctx.Value(auditStateKey{}).(*auditState)
-	return state, ok
+type endpointAuditMiddleware struct {
+	auditService AuditService
+	muxRouter    *mux.Router
+	isExcluded   func(routeTemplate string) bool
 }
 
 // AuditMiddleware records the intent/success/failure lifecycle of every API
@@ -74,75 +56,16 @@ func AuditMiddleware(auditService AuditService, muxRouter *mux.Router, isExclude
 		isExcluded = func(string) bool { return false }
 	}
 
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			auditHandler(auditService, muxRouter, isExcluded, next, response, request)
-		})
-	}
-}
-
-// PreAuthAuditMiddleware is the thin outer stage that records requests rejected
-// before the post-auth AuditMiddleware runs (most importantly failed
-// authentication). It injects a shared auditState, and after the chain returns
-// writes a single best-effort failure row only when the inner stage never took
-// ownership (state.written is false) and the response was a 401 or 400. It must
-// be registered so it nests outside AuthMiddleware. Route templates for which
-// isExcluded returns true are skipped; a nil isExcluded audits every matched
-// route.
-func PreAuthAuditMiddleware(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool) mux.MiddlewareFunc {
-	if isExcluded == nil {
-		isExcluded = func(string) bool { return false }
+	handlerMiddleware := endpointAuditMiddleware{
+		auditService: auditService,
+		muxRouter:    muxRouter,
+		isExcluded:   isExcluded,
 	}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			preAuthAuditHandler(auditService, muxRouter, isExcluded, next, response, request)
+			handlerMiddleware.serveHTTP(next, response, request)
 		})
-	}
-}
-
-func preAuthAuditHandler(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx           = request.Context()
-		routeTemplate = routeTemplateFor(muxRouter, request)
-	)
-
-	// Skip routes we cannot name and routes opted out at registration (e.g. /health).
-	if routeTemplate == unmatchedRouteLabel || isExcluded(routeTemplate) {
-		next.ServeHTTP(response, request)
-		return
-	}
-
-	var (
-		state    = &auditState{}
-		recorder = &responseRecorder{delegate: response}
-	)
-	request = request.WithContext(withAuditState(ctx, state))
-
-	next.ServeHTTP(recorder, request)
-
-	// The inner stage audited this request; nothing more to do here.
-	if state.written {
-		return
-	}
-
-	// Only pre-auth rejections are recorded here: a 401 (failed authentication)
-	// or a 400 (a malformed request rejected before auth). Other statuses either
-	// belong to the inner stage (which already set state.written above) or are not
-	// the authentication-failure coverage this stage exists to provide.
-	if recorder.statusCode != http.StatusBadRequest && recorder.statusCode != http.StatusUnauthorized {
-		return
-	}
-
-	// Best-effort and detached from request cancellation so a client disconnect
-	// does not drop the rejection record. Failure to write is logged, never
-	// surfaced, so it cannot turn a rejection into a 500 or become a DoS lever.
-	outcomeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
-	defer cancel()
-
-	entry := buildAuditEntry(request, routeTemplate)
-	if err := auditService.RecordRejected(outcomeCtx, entry); err != nil {
-		slog.ErrorContext(outcomeCtx, "Failed to write audit rejection row", attr.Error(err))
 	}
 }
 
@@ -151,74 +74,70 @@ func preAuthAuditHandler(auditService AuditService, muxRouter *mux.Router, isExc
 const auditIntentWriteTimeout = 5 * time.Second
 
 // auditOutcomeWriteTimeout bounds the best-effort success/failure write.
-const auditOutcomeWriteTimeout = 30 * time.Second
+const auditOutcomeWriteTimeout = 2 * time.Second
 
-func auditHandler(auditService AuditService, muxRouter *mux.Router, isExcluded func(routeTemplate string) bool, next http.Handler, response http.ResponseWriter, request *http.Request) {
+func (s endpointAuditMiddleware) serveHTTP(next http.Handler, response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx           = request.Context()
-		routeTemplate = routeTemplateFor(muxRouter, request)
+		routeTemplate = routeTemplateFor(s.muxRouter, request)
 	)
 
-	// Skip routes we cannot name and routes opted out at registration (e.g. /health).
-	if routeTemplate == unmatchedRouteLabel || isExcluded(routeTemplate) {
+	if routeTemplate == unmatchedRouteLabel || s.isExcluded(routeTemplate) {
 		next.ServeHTTP(response, request)
 		return
 	}
 
-	// Take ownership of auditing this request so the pre-auth outer stage does not
-	// also write a rejection row. Set before the intent write so even a failed
-	// intent (500) suppresses a duplicate outer write.
-	if state, ok := auditStateFrom(ctx); ok {
-		state.written = true
-	}
-
-	// Derived from the request context so a client disconnect cancels the write,
-	// with a timeout that bounds it even when the request context has no deadline.
-	intentCtx, cancelIntent := context.WithTimeout(ctx, auditIntentWriteTimeout)
-	defer cancelIntent()
-
 	var (
 		recorder      = &responseRecorder{delegate: response}
 		entry         = buildAuditEntry(request, routeTemplate)
-		commitID, err = auditService.Intent(intentCtx, entry)
+		commitID, err = s.writeIntent(ctx, entry)
 	)
-	// Fail closed: without a durable intent row the handler is never invoked.
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to write audit intent row", attr.Error(err))
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "audit log intent could not be recorded", request), response)
 		return
 	}
 
-	// Trap a handler panic so the intent row still gets a matching failure row,
-	// then re-panic so the outer PanicHandler logs and aborts the request.
 	defer func() {
-		if recovery := recover(); recovery != nil {
-			// The handler goroutine is unwinding, so detach from request cancellation.
-			panicCtx, cancelPanic := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
-			defer cancelPanic()
-
-			if failureErr := auditService.Failure(panicCtx, commitID, entry); failureErr != nil {
-				slog.ErrorContext(panicCtx, "Failed to write audit failure row after handler panic", attr.Error(failureErr))
-			}
-
-			panic(recovery)
+		if panicValue := recover(); panicValue != nil {
+			s.recordFailure(ctx, commitID, entry, "Failed to write audit failure row after handler panic")
+			panic(panicValue)
 		}
 	}()
 
 	next.ServeHTTP(recorder, request)
+	s.recordOutcome(ctx, recorder.StatusCode(), commitID, entry)
+}
 
-	// Best-effort but must survive a client disconnect, so detach from request
-	// cancellation.
-	outcomeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
+func (s endpointAuditMiddleware) writeIntent(ctx context.Context, entry audit.Entry) (uuid.UUID, error) {
+	intentCtx, cancel := context.WithTimeout(ctx, auditIntentWriteTimeout)
 	defer cancel()
+	return s.auditService.Intent(intentCtx, entry)
+}
 
-	if recorder.statusCode >= http.StatusBadRequest {
-		if failureErr := auditService.Failure(outcomeCtx, commitID, entry); failureErr != nil {
-			slog.ErrorContext(outcomeCtx, "Failed to write audit failure row", attr.Error(failureErr))
-		}
-	} else if successErr := auditService.Success(outcomeCtx, commitID, entry); successErr != nil {
-		slog.ErrorContext(outcomeCtx, "Failed to write audit success row", attr.Error(successErr))
+func (s endpointAuditMiddleware) recordOutcome(ctx context.Context, statusCode int, commitID uuid.UUID, entry audit.Entry) {
+	if statusCode >= http.StatusBadRequest {
+		s.recordFailure(ctx, commitID, entry, "Failed to write audit failure row")
+		return
 	}
+
+	outcomeCtx, cancel := newAuditOutcomeContext(ctx)
+	defer cancel()
+	if err := s.auditService.Success(outcomeCtx, commitID, entry); err != nil {
+		slog.ErrorContext(outcomeCtx, "Failed to write audit success row", attr.Error(err))
+	}
+}
+
+func (s endpointAuditMiddleware) recordFailure(ctx context.Context, commitID uuid.UUID, entry audit.Entry, logMessage string) {
+	outcomeCtx, cancel := newAuditOutcomeContext(ctx)
+	defer cancel()
+	if err := s.auditService.Failure(outcomeCtx, commitID, entry); err != nil {
+		slog.ErrorContext(outcomeCtx, logMessage, attr.Error(err))
+	}
+}
+
+func newAuditOutcomeContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), auditOutcomeWriteTimeout)
 }
 
 // buildAuditEntry assembles the audit Entry from the request context, resolving
