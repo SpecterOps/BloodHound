@@ -4638,6 +4638,8 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		{
 			name: "Success: includes built-in Zone display kind",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				// Zone is seeded via migration so we seed it explicitly here for testing purposes.
+				require.NoError(t, testSuite.BHDatabase.EnsureStubbedCustomNodeKindForIngest(testSuite.Context, graphschema.Zone.String()))
 				var displayKinds, err = testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err)
 				require.Contains(t, displayKinds, graphschema.Zone)
