@@ -90,7 +90,7 @@ func isCertTemplateValidForEsc1(ctx context.Context, ct *graph.Node) bool {
 }
 
 func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -116,38 +116,11 @@ func ADCSESC1Path1Pattern(domainID graph.ID) traversal.PatternContinuation {
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func ADCSESC1Path2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
-		query.Kind(query.Relationship(), ad.MemberOf),
-		query.Kind(query.End(), ad.Group),
-	)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.Enroll),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.Equals(query.EndID(), domainID),
-		))
+	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
 }
 
 func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
@@ -178,12 +151,13 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
-		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		path2EnterpriseCAs = cardinality.NewBitmap64()
-		lock               = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		candidateSegments       = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		path2EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		lock                    = &sync.Mutex{}
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -260,12 +234,23 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 
 	// Intersect the CAs and take only those seen in both paths
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
 
-	// Render paths from the segments
+	// Render paths only for CAs with an exact qualifying host.
 	path1EnterpriseCAs.Each(func(value uint64) bool {
+		hostPaths, hasQualifyingHost := hostPathsByEnterpriseCA[graph.ID(value)]
+		if !hasQualifyingHost {
+			return true
+		}
+
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}
+		paths.AddPathSet(hostPaths)
 
 		return true
 	})
@@ -274,45 +259,66 @@ func GetADCSESC1EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 }
 
 func getGoldenCertEdgeComposition(tx graph.Transaction, edge *graph.Relationship) (graph.PathSet, error) {
-	finalPaths := graph.NewPathSet()
+	var (
+		finalPaths             = graph.NewPathSet()
+		candidateEnterpriseCAs = cardinality.NewBitmap64()
+		domains                []*graph.Node
+	)
+
 	//Grab the start node (computer) as well as the target domain node
 	if startNode, targetDomainNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 		return finalPaths, err
+	} else if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
+		query.Equals(query.StartID(), startNode.ID),
+		query.Kind(query.End(), ad.EnterpriseCA),
+		query.Kind(query.Relationship(), ad.HostsCAService),
+	))); graph.IsErrNotFound(err) {
+		return finalPaths, nil
+	} else if err != nil {
+		return finalPaths, err
 	} else {
-		//Find hosted enterprise CA
-		if ecaPaths, err := ops.FetchPathSet(tx.Relationships().Filter(query.And(
-			query.Equals(query.StartID(), startNode.ID),
-			query.KindIn(query.End(), ad.EnterpriseCA),
-			query.KindIn(query.Relationship(), ad.HostsCAService),
-		))); err != nil {
-			slog.Error(
-				"Error getting hostscaservice edge to enterprise ca for computer",
-				slog.Uint64("start_node_id", uint64(startNode.ID)),
-				attr.Error(err),
-			)
+		for _, ecaPath := range ecaPaths {
+			candidateEnterpriseCAs.Add(ecaPath.Terminal().ID.Uint64())
+		}
+
+		if fetchedDomains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain))); err != nil && !graph.IsErrNotFound(err) {
+			return finalPaths, err
 		} else {
-			for _, ecaPath := range ecaPaths {
-				eca := ecaPath.Terminal()
-				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, eca, targetDomainNode); err != nil {
+			domains = fetchedDomains
+		}
+
+		qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, candidateEnterpriseCAs, indexDomainsBySID(domains))
+		if err != nil {
+			return finalPaths, err
+		}
+
+		for _, enterpriseCAHostPaths := range qualifyingHostPaths {
+			for _, qualifyingHostPath := range enterpriseCAHostPaths {
+				if qualifyingHostPath.Root().ID != startNode.ID {
+					continue
+				}
+				enterpriseCA := qualifyingHostPath.Terminal()
+
+				if chainToRootCAPaths, err := FetchEnterpriseCAsCertChainPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
 					slog.Error(
 						"Error getting enterprise ca path to domain",
-						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("enterprise_ca", uint64(enterpriseCA.ID)),
 						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
 						attr.Error(err),
 					)
 				} else if chainToRootCAPaths.Len() == 0 {
 					continue
-				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, eca, targetDomainNode); err != nil {
+				} else if trustedForAuthPaths, err := FetchEnterpriseCAsTrustedForAuthPathToDomain(tx, enterpriseCA, targetDomainNode); err != nil {
 					slog.Error(
 						"Error getting enterprise ca path to domain via trusted for auth",
-						slog.Uint64("enterprise_ca", uint64(eca.ID)),
+						slog.Uint64("enterprise_ca", uint64(enterpriseCA.ID)),
 						slog.Uint64("target_domain_id", uint64(targetDomainNode.ID)),
 						attr.Error(err),
 					)
 				} else if trustedForAuthPaths.Len() == 0 {
 					continue
 				} else {
-					finalPaths.AddPath(ecaPath)
+					finalPaths.AddPath(qualifyingHostPath)
 					finalPaths.AddPathSet(chainToRootCAPaths)
 					finalPaths.AddPathSet(trustedForAuthPaths)
 				}
