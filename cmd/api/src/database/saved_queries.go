@@ -61,7 +61,7 @@ func (s *BloodhoundDB) ListSavedQueries(ctx context.Context, scope string, userI
 	var (
 		queries []model.ScopedSavedQuery
 		// cant chain scope + cursor after declaration so must declare twice
-		scopeSelectStr = "CASE WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope"
+		scopeSelectStr = "CASE WHEN sq.schema_extension_id IS NOT NULL THEN 'extension' WHEN (sqp.public = TRUE AND sq.user_id <> ?) THEN 'public' WHEN sqp.shared_to_user_id = ? THEN 'shared' ELSE 'owned' END AS scope"
 		countCursor    = s.db.WithContext(ctx).Select("DISTINCT sq.*, "+scopeSelectStr, userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
 		cursor         = s.Scope(Paginate(skip, limit)).WithContext(ctx).Select("DISTINCT sq.*, "+scopeSelectStr, userID, userID).Table("saved_queries sq").Joins("LEFT JOIN public.saved_queries_permissions sqp ON sq.id = sqp.query_id")
 		// Note this is just doing string replacement and is fragile
