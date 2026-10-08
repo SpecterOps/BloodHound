@@ -117,7 +117,7 @@ function DrawerSwipeHandle({ className, ...props }: ComponentProps<'div'>) {
             data-slot='drawer-swipe-handle'
             aria-hidden='true'
             className={cn(
-                'cn-drawer-swipe-handle relative z-10 mx-auto my-2 h-1.5 w-12 shrink-0 cursor-grab rounded-full bg-neutral-4 transition-opacity duration-200 group-data-[swipe-axis=x]/drawer-popup:mx-2 group-data-[swipe-axis=x]/drawer-popup:my-auto group-data-[swipe-axis=x]/drawer-popup:h-12 group-data-[swipe-axis=x]/drawer-popup:w-1.5 group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swipe-direction=left]/drawer-popup:order-last group-data-[swipe-direction=up]/drawer-popup:order-last active:cursor-grabbing',
+                'cn-drawer-swipe-handle relative z-10 mx-auto my-2 h-1.5 w-12 shrink-0 cursor-grab rounded-full bg-neutral-4 transition-opacity duration-200 group-data-[swipe-axis=x]/drawer-popup:mx-2 group-data-[swipe-axis=x]/drawer-popup:my-auto group-data-[swipe-axis=x]/drawer-popup:h-12 group-data-[swipe-axis=x]/drawer-popup:w-1.5 group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swipe-direction=left]/drawer-popup:order-last group-data-[swipe-direction=up]/drawer-popup:order-last active:cursor-grabbing motion-reduce:transition-none',
                 className
             )}
             {...props}
@@ -174,7 +174,7 @@ function DrawerContent({ className, children, ...props }: DrawerPrimitive.Popup.
                     <DrawerPrimitive.Content
                         data-slot='drawer-content'
                         className={cn(
-                            'cn-drawer-content-base flex min-h-0 flex-1 flex-col gap-4 px-3 py-4 overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 [transition-timing-function:cubic-bezier(0.45,1.005,0,1.005)] select-text group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swiping]/drawer-popup:select-none'
+                            'cn-drawer-content-base flex min-h-0 flex-1 flex-col gap-4 px-3 py-4 overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 [transition-timing-function:cubic-bezier(0.45,1.005,0,1.005)] motion-reduce:transition-none select-text group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swiping]/drawer-popup:select-none'
                         )}>
                         {children}
                     </DrawerPrimitive.Content>
