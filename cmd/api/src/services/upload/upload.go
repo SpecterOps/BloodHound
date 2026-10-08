@@ -149,7 +149,12 @@ func cleanupTempFile(ctx context.Context, fileService storage.FileService, fileN
 	defer cancel()
 
 	if err := fileService.DeleteFile(cleanupContext, fileName); err != nil {
-		slog.ErrorContext(cleanupContext, "Failed to delete ingest file", slog.String("temp_file_name", fileName), attr.Error(err))
+		slog.ErrorContext(
+			cleanupContext,
+			"Failed to delete ingest file",
+			slog.String("temp_file_name", fileName),
+			attr.Error(err),
+		)
 	}
 }
 
