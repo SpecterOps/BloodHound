@@ -69,7 +69,7 @@ interface ContentProps extends React.ComponentPropsWithoutRef<typeof TooltipPrim
 const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Content>, ContentProps>(
     ({ className, sideOffset = 4, contentWidth = 'default', ...props }, ref) => {
         const widthOptions: Record<typeof contentWidth, string> = {
-            default: '',
+            default: 'max-w-[300px]',
             match_trigger: 'w-[var(--radix-tooltip-trigger-width)]',
             lg: 'max-w-[300px]',
             md: 'max-w-[200px]',
@@ -81,12 +81,12 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 sideOffset={sideOffset}
                 className={cn(
                     'TooltipContent',
-                    'text-main rounded-md border dark:border-0 bg-neutral-light-2 dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-md',
+                    'text-main break-words rounded-md border dark:border-0 bg-neutral-light-2 dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-md',
                     'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
                     'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
                     'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-                    className,
-                    widthOptions[contentWidth]
+                    widthOptions[contentWidth],
+                    className
                 )}
                 {...props}
             />
