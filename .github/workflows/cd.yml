@@ -79,17 +79,29 @@ jobs:
       ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
       ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
 
-  bloodhound-image-signing:
+  cosign-image-signing:
     needs: bloodhound-container-image
-    name: Sign Docker Image using Cosign
-    uses: ./.github/workflows/reusable.image-signing.yml
+    name: Sign and Verify ${{ matrix.registry_kind }} image
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - registry_kind: dockerhub
+            image_repository: docker.io/specterops/bloodhound
+          - registry_kind: ecr
+            image_repository: 590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
     permissions:
       contents: read
       id-token: write
+    uses: ./.github/workflows/reusable.cosign-image-signing.yml
     with:
-      dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
+      registry_kind: ${{ matrix.registry_kind }}
+      image_repository: ${{ matrix.image_repository }}
+      image_digest: ${{ needs.bloodhound-container-image.outputs.image_digest }}
+      aws_region: us-east-1
+      certificate_identity: https://github.com/SpecterOps/BloodHound/.github/workflows/reusable.cosign-sign-image.yml@${{ github.ref }}
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      docker_repository: ${{ secrets.DOCKER_REPOSITORY }}
-      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+      ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
