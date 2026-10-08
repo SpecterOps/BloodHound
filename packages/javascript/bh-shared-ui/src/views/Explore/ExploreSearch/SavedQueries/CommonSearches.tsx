@@ -57,9 +57,15 @@ const CommonSearches = ({
 
     //master list of pre-made queries
     const queryList: QueryListSection[] = usePrebuiltQueries();
-    const allCategories = queryList.map((item) => item.subheader);
-    const uniqueCategoriesSet = new Set(allCategories);
-    const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
+    const platforms = [...new Set(queryList.map((item) => item.category).filter((value): value is string => !!value))];
+    const categories = [
+        ...new Set(
+            queryList
+                .filter((item) => !platform || item.category?.toLowerCase() === platform.toLowerCase())
+                .map((item) => item.subheader)
+                .filter(Boolean)
+        ),
+    ].sort();
 
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
@@ -94,7 +100,7 @@ const CommonSearches = ({
             filteredData = filteredData
                 .map((obj) => ({
                     ...obj,
-                    queries: obj.queries.filter((item: QueryLineItem) => !item.id),
+                    queries: obj.queries.filter((item: QueryLineItem) => !item.id && item.schema_extension_id == null),
                 }))
                 .filter((x) => x.queries.length);
         } else if (source === 'personal') {
@@ -104,7 +110,9 @@ const CommonSearches = ({
                 filteredData = filteredData
                     .map((obj) => ({
                         ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.user_id === selfId),
+                        queries: obj.queries.filter(
+                            (item: QueryLineItem) => item.schema_extension_id == null && item.user_id === selfId
+                        ),
                     }))
                     .filter((x) => x.queries.length);
             }
@@ -115,10 +123,20 @@ const CommonSearches = ({
                 filteredData = filteredData
                     .map((obj) => ({
                         ...obj,
-                        queries: obj.queries.filter((item: QueryLineItem) => item.id && item.user_id !== selfId),
+                        queries: obj.queries.filter(
+                            (item: QueryLineItem) =>
+                                item.schema_extension_id == null && item.id && item.user_id !== selfId
+                        ),
                     }))
                     .filter((x) => x.queries.length);
             }
+        } else if (source === 'extension') {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item: QueryLineItem) => item.schema_extension_id != null),
+                }))
+                .filter((x) => x.queries.length);
         }
         return filteredData;
     }, [queryList, searchTerm, platform, categoryFilter, source, selfId, isFiltered]);
@@ -137,6 +155,12 @@ const CommonSearches = ({
     };
 
     const handleDeleteQuery = (id: number) => {
+        if (
+            queryList.some((section) =>
+                section.queries.some((query) => query.id === id && query.schema_extension_id != null)
+            )
+        )
+            return;
         setQueryId(id);
         setOpen(true);
     };
@@ -196,6 +220,7 @@ const CommonSearches = ({
                     exportHandler={handleExport}
                     deleteHandler={handleDeleteQuery}
                     categories={categories}
+                    platforms={platforms}
                     searchTerm={searchTerm}
                     platform={platform}
                     categoryFilter={categoryFilter}

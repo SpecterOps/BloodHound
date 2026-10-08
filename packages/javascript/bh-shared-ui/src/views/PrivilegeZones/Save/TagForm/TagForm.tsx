@@ -429,10 +429,8 @@ export const TagForm: FC = () => {
                                         name='analysis_enabled'
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel
-                                                    className='flex gap-2 items-center'
-                                                    htmlFor='analysis_enabled'>
-                                                    Enable Analysis
+                                                <div className='flex gap-2 items-center'>
+                                                    <FormLabel htmlFor='analysis_enabled'>Enable Analysis</FormLabel>
                                                     <Tooltip
                                                         tooltip={
                                                             'Enables Analysis to produce Attack Path Findings for the Zone.'
@@ -444,7 +442,7 @@ export const TagForm: FC = () => {
                                                             align: 'end',
                                                         }}
                                                     />
-                                                </FormLabel>
+                                                </div>
                                                 <div className='mb-4'>
                                                     <FormControl>
                                                         <Switch
@@ -517,10 +515,10 @@ export const TagForm: FC = () => {
                                             name='require_certify'
                                             render={({ field }) => (
                                                 <FormItem className='gap-2'>
-                                                    <FormLabel
-                                                        className='flex gap-2 items-center'
-                                                        htmlFor='enable-certification'>
-                                                        Enable Certification
+                                                    <div className='flex gap-2 items-center'>
+                                                        <FormLabel htmlFor='enable-certification'>
+                                                            Enable Certification
+                                                        </FormLabel>
                                                         <Tooltip
                                                             tooltip={
                                                                 'Require manual review and approval of object membership in the Zone.'
@@ -532,7 +530,7 @@ export const TagForm: FC = () => {
                                                                 align: 'end',
                                                             }}
                                                         />
-                                                    </FormLabel>
+                                                    </div>
                                                     <div>
                                                         <FormControl>
                                                             <Switch
@@ -556,8 +554,8 @@ export const TagForm: FC = () => {
                                             name='glyph'
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className='flex gap-2 items-center'>
-                                                        Apply Custom Glyph
+                                                    <div className='flex gap-2 items-center'>
+                                                        <FormLabel>Apply Custom Glyph</FormLabel>
                                                         <Tooltip
                                                             tooltip={
                                                                 'Custom glyphs visually mark nodes in the graph for quick context.'
@@ -569,7 +567,7 @@ export const TagForm: FC = () => {
                                                                 align: 'end',
                                                             }}
                                                         />
-                                                    </FormLabel>
+                                                    </div>
                                                     <FormControl>
                                                         <Input
                                                             data-testid='privilege-zones_save_tag-form_glyph-input'
