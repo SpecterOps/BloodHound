@@ -1396,12 +1396,6 @@ func (s *BloodhoundDB) GetPrimaryDisplayKinds(ctx context.Context) (graphschema.
 		}
 	}
 
-	// Zone is a synthetic node kind created during analysis, not a user-ingested display kind. Include it without
-	// requiring a custom_node_kinds row so its node type resolves to Zone instead of Unknown.
-	if _, exists := primaryDisplayKinds[graphschema.Zone]; !exists {
-		primaryDisplayKinds[graphschema.Zone] = graphschema.DisplayKind{}
-	}
-
 	return primaryDisplayKinds, nil
 }
 
