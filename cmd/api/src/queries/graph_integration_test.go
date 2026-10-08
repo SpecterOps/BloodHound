@@ -192,6 +192,9 @@ func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
 			{name: "GRACE@TEST.LOCAL", objectID: "S-1-5-21-1000-1005"},
 			{name: "ERIN@TEST.LOCAL", objectID: "S-1-5-21-1000-1002"},
 			{name: "HEIDI@TEST.LOCAL", objectID: "S-1-5-21-1000-1001"},
+			{name: "JEFF@TEST.LOCAL", objectID: "S-1-5-21-1000-1021"},
+			{name: "JAKE@TEST.LOCAL", objectID: "S-1-5-21-1000-10028"},
+			{name: "ARNOLD@TEST.LOCAL", objectID: "S-1-5-21-1000-1022"},
 		}
 	)
 	defer teardownIntegrationTestSuite(t, &testSuite)
@@ -224,6 +227,7 @@ func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
 			limit         = 10
 			expectedNames = []string{
 				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
 				"CAROL@TEST.LOCAL",
 				"DAVE@TEST.LOCAL",
 				"ERIN@TEST.LOCAL",
@@ -232,7 +236,6 @@ func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
 				"HEIDI@TEST.LOCAL",
 				"HENRY@TEST.LOCAL",
 				"IVAN@TEST.LOCAL",
-				"JUDY@TEST.LOCAL",
 			}
 		)
 
@@ -242,15 +245,41 @@ func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
 		require.Equal(t, expectedNames, collectNames(t, results))
 	})
 
-	t.Run("limit is enforced across exact and fuzzy matches", func(t *testing.T) {
+	t.Run("limit is enforced across exact and fuzzy matches less than the default of 10", func(t *testing.T) {
 		var (
 			limit         = 5
 			expectedNames = []string{
 				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("limit is enforced across exact and fuzzy matches greater than the default of 10", func(t *testing.T) {
+		var (
+			limit         = 13
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
 				"CAROL@TEST.LOCAL",
 				"DAVE@TEST.LOCAL",
 				"ERIN@TEST.LOCAL",
 				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+				"HEIDI@TEST.LOCAL",
+				"HENRY@TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+				"JAKE@TEST.LOCAL",
+				"JEFF@TEST.LOCAL",
+				"JUDY@TEST.LOCAL",
 			}
 		)
 
@@ -1181,7 +1210,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -1205,7 +1234,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionDescending}}, // sort by node ID descending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                       // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -1228,7 +1257,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				5)
 			require.Nil(t, err)
@@ -1244,7 +1273,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 
 			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				0,
 				0)
 			require.Nil(t, err)
@@ -1253,7 +1282,7 @@ func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
 			savedNode := results[10]
 			results, err = graphQuery.GetFilteredAndSortedNodesPaginated(
 				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
-				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				query.KindIn(query.Node(), ad.User),                                                      // give me all the nodes of kind ad.User
 				10,
 				0)
 			require.Nil(t, err)

@@ -421,14 +421,14 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 		objectIDTerm = nameOrObjectIdQuery
 	}
 
-	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, nameTerm, objectIDTerm, useRawObjectID); err != nil {
+	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, nameTerm, objectIDTerm, useRawObjectID, limit); err != nil {
 		return []*graph.Node{}, err
 	} else {
 		return sortAndSliceResults(nodes, limit, skip), nil
 	}
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool) (NodeSearchResults, error) {
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool, limit int) (NodeSearchResults, error) {
 	results := NodeSearchResults{}
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)...))); err != nil {
@@ -437,7 +437,7 @@ func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds 
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
 		}
 
-		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)...)).Limit(10).OrderBy(
+		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)...)).Limit(limit).OrderBy(
 			query.Order(query.NodeProperty(common.Name.String()), query.Ascending()),
 			query.Order(query.NodeProperty(common.ObjectID.String()), query.Ascending()),
 		)); err != nil {
