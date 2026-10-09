@@ -166,6 +166,130 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 	}
 }
 
+func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
+	type testNode struct {
+		name     string
+		objectID string
+	}
+
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		domainNode = testNode{
+			name:     "TEST.LOCAL",
+			objectID: "S-1-5-21-1000-1032",
+		}
+		nodes = []testNode{
+			{name: "ZOE@TEST.LOCAL", objectID: "S-1-5-21-1000-1008"},
+			{name: "DAVE@TEST.LOCAL", objectID: "S-1-5-21-1000-1009"},
+			{name: "KALVIN@TEST.LOCAL", objectID: "S-1-5-21-1000-1011"},
+			{name: "JUDY@TEST.LOCAL", objectID: "S-1-5-21-1000-1006"},
+			{name: "FRANK@TEST.LOCAL", objectID: "S-1-5-21-1000-1012"},
+			{name: "CAROL@TEST.LOCAL", objectID: "S-1-5-21-1000-1004"},
+			{name: "IVAN@TEST.LOCAL", objectID: "S-1-5-21-1000-1010"},
+			{name: "HENRY@TEST.LOCAL", objectID: "S-1-5-21-1000-1007"},
+			{name: "MALLORY@TEST.LOCAL", objectID: "S-1-5-21-1000-1003"},
+			{name: "GRACE@TEST.LOCAL", objectID: "S-1-5-21-1000-1005"},
+			{name: "ERIN@TEST.LOCAL", objectID: "S-1-5-21-1000-1002"},
+			{name: "HEIDI@TEST.LOCAL", objectID: "S-1-5-21-1000-1001"},
+			{name: "JEFF@TEST.LOCAL", objectID: "S-1-5-21-1000-1021"},
+			{name: "JAKE@TEST.LOCAL", objectID: "S-1-5-21-1000-10028"},
+			{name: "ARNOLD@TEST.LOCAL", objectID: "S-1-5-21-1000-1022"},
+		}
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+
+		// Write all nodes to db
+		for _, node := range nodes {
+			if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     node.name,
+				common.ObjectID: node.objectID,
+			}), ad.Entity, ad.User); err != nil {
+				return err
+			}
+		}
+
+		// Write exact node match into db as domain
+		if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     domainNode.name,
+			common.ObjectID: domainNode.objectID,
+		}), ad.Entity, ad.Domain); err != nil {
+			return err
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	t.Run("exact match is returned first, followed by fuzzy matches sorted by name", func(t *testing.T) {
+		var (
+			limit         = 10
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+				"HEIDI@TEST.LOCAL",
+				"HENRY@TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("limit is enforced across exact and fuzzy matches less than the default of 10", func(t *testing.T) {
+		var (
+			limit         = 5
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("limit is enforced across exact and fuzzy matches greater than the default of 10", func(t *testing.T) {
+		var (
+			limit         = 13
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+				"HEIDI@TEST.LOCAL",
+				"HENRY@TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+				"JAKE@TEST.LOCAL",
+				"JEFF@TEST.LOCAL",
+				"JUDY@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+}
+
 func TestSearchByNameOrObjectId(t *testing.T) {
 	type testData struct {
 		name                      string
