@@ -120,16 +120,21 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
-		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
-		itemProps[ad.RestrictOutboundNTLM.String()] = nil
-		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
+		// Initialize stable Windows defaults and clear values whose effective defaults vary by OS version.
+		itemProps[ad.RestrictOutboundNTLM.String()] = false
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = false
 		itemProps[ad.RequireSecuritySignature.String()] = nil
 		itemProps[ad.EnableSecuritySignature.String()] = nil
 		itemProps[ad.NTLMMinClientSec.String()] = nil
 		itemProps[ad.NTLMMinServerSec.String()] = nil
 		itemProps[ad.LMCompatibilityLevel.String()] = nil
 		itemProps[ad.UseMachineID.String()] = nil
-		itemProps[ad.ClientAllowedNTLMServers.String()] = nil
+		itemProps[ad.ClientAllowedNTLMServers.String()] = []string{}
+
+		// The default server-side SMB signing negotiation setting depends on the computer's role, not its OS.
+		if isDomainController, hasDomainControllerProperty := itemProps[ad.IsDC.String()].(bool); hasDomainControllerProperty {
+			itemProps[ad.EnableSecuritySignature.String()] = isDomainController
+		}
 
 		/*
 			RestrictSendingNtlmTraffic is sent to us as an uint if sent at all
@@ -1327,6 +1332,11 @@ func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
 	// RoleSeparationEnabled
 	if enterpriseCA.CARegistryData.RoleSeparationEnabled.Collected {
 		propMap[ad.RoleSeparationEnabled.String()] = enterpriseCA.CARegistryData.RoleSeparationEnabled.Value
+	}
+
+	// RPCEncryptionEnforced
+	if enterpriseCA.CARegistryData.RPCEncryptionEnforced.Collected {
+		propMap[ad.RPCEncryptionEnforced.String()] = enterpriseCA.CARegistryData.RPCEncryptionEnforced.Value
 	}
 
 	return IngestibleNode{
