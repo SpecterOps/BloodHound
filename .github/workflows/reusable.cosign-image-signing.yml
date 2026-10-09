@@ -1,0 +1,102 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+name: Sign and Verify a Published Container Image
+
+on:
+  workflow_call:
+    inputs:
+      image_repository:
+        description: Fully qualified image repository, without a tag or digest.
+        required: true
+        type: string
+      image_digest:
+        description: Digest emitted by the image build (sha256:...).
+        required: true
+        type: string
+      registry_kind:
+        description: dockerhub or ecr.
+        required: true
+        type: string
+      aws_region:
+        description: AWS region for ECR images.
+        required: false
+        default: us-east-1
+        type: string
+      certificate_identity:
+        description: Exact Fulcio identity of this reusable workflow at the called ref.
+        required: true
+        type: string
+    secrets:
+      dockerhub_account:
+        required: false
+      dockerhub_token:
+        required: false
+      ecr_aws_access_key_id:
+        required: false
+      ecr_aws_secret_access_key:
+        required: false
+
+jobs:
+  sign-and-verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_REFERENCE: ${{ format('{0}@{1}', inputs.image_repository, inputs.image_digest) }}
+
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # ratchet:sigstore/cosign-installer@v4.1.2
+        with:
+          cosign-release: v3.1.3
+
+      - name: Login to DockerHub
+        if: inputs.registry_kind == 'dockerhub'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - name: Configure AWS Credentials
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # ratchet:aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.ecr_aws_secret_access_key }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
+
+      - name: Sign Image Digest
+        run: cosign sign --yes "$IMAGE_REFERENCE"
+
+      - name: Verify Image Signature
+        env:
+          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          CALLER_REF: ${{ github.ref }}
+          CALLER_SHA: ${{ github.sha }}
+        run: >-
+          cosign verify "$IMAGE_REFERENCE"
+          --certificate-identity "$CERTIFICATE_IDENITY"
+          --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+          --certificate-github-workflow-repository "$CALLER_REPOSITORY"
+          --certificate-github-workflow-ref "$CALLER_REF"
+          --certificate-github-workflow-sha "$CALLER_SHA"
