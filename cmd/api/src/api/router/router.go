@@ -88,12 +88,6 @@ func (s *postroutingMiddlewareStack) AppendRecovery(middleware ...mux.Middleware
 	s.mutex.Unlock()
 }
 
-func (s *postroutingMiddlewareStack) AppendBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
-	s.mutex.Lock()
-	s.beforeAuthentication = append(s.beforeAuthentication, middleware...)
-	s.mutex.Unlock()
-}
-
 func (s *postroutingMiddlewareStack) AppendAuthentication(middleware ...mux.MiddlewareFunc) {
 	s.mutex.Lock()
 	s.authenticationMiddleware = append(s.authenticationMiddleware, middleware...)
@@ -233,12 +227,6 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 // post-routing stages, including rate limiting and authentication.
 func (s Router) UsePanicRecovery(middleware ...mux.MiddlewareFunc) {
 	s.postroutingMiddleware.AppendRecovery(middleware...)
-}
-
-// UsePostroutingBeforeAuthentication appends post-routing middleware after
-// panic recovery and before authentication.
-func (s Router) UsePostroutingBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
-	s.postroutingMiddleware.AppendBeforeAuthentication(middleware...)
 }
 
 // UseAuthenticationMiddleware registers post-routing authentication middleware.

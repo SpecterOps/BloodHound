@@ -223,7 +223,7 @@ func TestMatchedRouteRateLimitMiddleware(t *testing.T) {
 	}
 }
 
-func TestMatchedRouteRateLimitMiddlewareRunsBetweenPanicRecoveryAndAuthentication(t *testing.T) {
+func TestMatchedRouteRateLimitMiddlewareRunsBeforeAuthentication(t *testing.T) {
 	mockController := gomock.NewController(t)
 	mockDatabase := mocks.NewMockDatabase(mockController)
 	mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), gomock.Any()).Return(appcfg.Parameter{}, nil).AnyTimes()
@@ -247,16 +247,6 @@ func TestMatchedRouteRateLimitMiddlewareRunsBetweenPanicRecoveryAndAuthenticatio
 		if response.Code != expectedStatus {
 			t.Fatalf("request %d returned %d; want %d", requestNumber+1, response.Code, expectedStatus)
 		}
-	}
-
-	routerInst.UsePostroutingBeforeAuthentication(func(http.Handler) http.Handler {
-		return http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("limiter downstream panic") })
-	})
-	routerInst.HandleFunc("/panics", func(http.ResponseWriter, *http.Request) {})
-	response := httptest.NewRecorder()
-	routerInst.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/panics", nil))
-	if response.Code != http.StatusOK {
-		t.Fatalf("recovered panic returned %d; want the default response status %d", response.Code, http.StatusOK)
 	}
 }
 
