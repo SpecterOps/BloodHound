@@ -16,7 +16,6 @@
 export {
     Button,
     ButtonVariants,
-    IconButton,
     TextButton,
     TextButtonBaseClasses,
     TextButtonVariants,

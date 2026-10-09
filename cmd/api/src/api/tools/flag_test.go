@@ -226,6 +226,54 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
+			name: "Success: enabling zone nodes requests analysis and returns enabled response",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				featureFlag := appcfg.FeatureFlag{
+					Key:     appcfg.FeatureZoneNode,
+					Enabled: false,
+				}
+
+				mock.database.EXPECT().GetFlag(gomock.Any(), int32(1)).Return(featureFlag, nil)
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.True(t, updatedFeatureFlag.Enabled, "expected persisted Zone node feature flag to be enabled")
+						return nil
+					},
+				)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.ZoneNodeFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
+			},
+			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
+				t.Helper()
+				assertToggleFlagResponseEnabled(t, response, http.StatusOK, true)
+			},
+		},
+		{
+			name: "Success: disabling zone nodes requests analysis and returns disabled response",
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+
+				featureFlag := appcfg.FeatureFlag{
+					Key:     appcfg.FeatureZoneNode,
+					Enabled: true,
+				}
+
+				mock.database.EXPECT().GetFlag(gomock.Any(), int32(1)).Return(featureFlag, nil)
+				mock.database.EXPECT().SetFlag(gomock.Any(), gomock.AssignableToTypeOf(appcfg.FeatureFlag{})).DoAndReturn(
+					func(_ any, updatedFeatureFlag appcfg.FeatureFlag) error {
+						require.False(t, updatedFeatureFlag.Enabled, "expected persisted Zone node feature flag to be disabled")
+						return nil
+					},
+				)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.ZoneNodeFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
+			},
+			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
+				t.Helper()
+				assertToggleFlagResponseEnabled(t, response, http.StatusOK, false)
+			},
+		},
+		{
 			name: "Success: enabling non-prioritization flag does not request analysis and returns enabled response",
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()

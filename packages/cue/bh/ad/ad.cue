@@ -2058,7 +2058,6 @@ PostProcessedRelationships: [
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC13,
-	ADCSESC16,
 	EnrollOnBehalfOf,
 	SyncedToADUser,
 	ExtendedByPolicy,
@@ -2073,7 +2072,8 @@ PostProcessedRelationships: [
 
 DCAPostProcessedRelationships: [
 	Owns,
-	WriteOwner
+	WriteOwner,
+	ADCSESC16,
 ]
 
 // All post-processed edges

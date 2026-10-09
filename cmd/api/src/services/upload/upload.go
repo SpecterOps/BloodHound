@@ -26,9 +26,10 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/metrics"
@@ -37,133 +38,155 @@ import (
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, validator IngestValidator, jobID int64) (IngestTaskParams, error) {
-	fileData := request.Body
+type ingestValidationResult struct {
+	report payload.ValidationReport
+	err    error
+}
 
+func SaveIngestFile(ctx context.Context, fileService storage.FileService, request *http.Request, ingestSchema payload.Schema, jobID int64) (IngestTaskParams, payload.ValidationReport, error) {
 	var (
-		uploadDiagnostic ingestUploadDiagnostic
-		tempFileName     string
-		fileType         model.FileType
-		validationFn     FileValidator
-		err              error
+		uploadDiagnostic  ingestUploadDiagnostic
+		storageDiagnostic ingestStorageWriteDiagnostic
+		fileType          model.FileType
+		fileData          = request.Body
+		fileName          string
+		report            payload.ValidationReport
+		err               error
 	)
 
 	switch {
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		fileType = model.FileTypeJson
-		validationFn = validator.WriteAndValidateJSON
-	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), AllowedZipFileUploadTypes()...):
 		fileType = model.FileTypeZip
-		validationFn = WriteAndValidateZip
 	default:
-		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
+		return IngestTaskParams{}, payload.ValidationReport{}, fmt.Errorf("invalid content type for ingest file")
+	}
+
+	if err = ctx.Err(); err != nil {
+		return IngestTaskParams{}, payload.ValidationReport{}, err
+	}
+
+	if fileData == nil {
+		fileData = http.NoBody
 	}
 
 	uploadDiagnostic = startIngestUploadDiagnostic(ctx, jobID, fileType)
-	tempFileName, err = WriteAndValidateFile(ctx, fileService, fileData, fmt.Sprintf("file_upload_job%d_", jobID), validationFn)
-	uploadDiagnostic.finish(tempFileName, err)
+	defer func() {
+		uploadDiagnostic.finish(fileName, err)
+		if err != nil {
+			slog.ErrorContext(ctx, "Failed to save ingest file", attr.Error(err))
+			metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
+		} else {
+			slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", fileName))
+		}
+	}()
+
+	pipeReader, pipeWriter := io.Pipe()
+	defer pipeReader.Close()
+
+	stopCancellation := context.AfterFunc(ctx, func() {
+		_ = pipeReader.CloseWithError(ctx.Err())
+		_ = pipeWriter.CloseWithError(ctx.Err())
+		_ = fileData.Close()
+	})
+	defer stopCancellation()
+
+	validationResults := make(chan ingestValidationResult, 1)
+	go func() {
+		var result ingestValidationResult
+
+		switch fileType {
+		case model.FileTypeJson:
+			result.report, result.err = WriteAndValidateJSON(fileData, pipeWriter, ingestSchema)
+		case model.FileTypeZip:
+			result.err = WriteAndValidateZip(fileData, pipeWriter)
+		}
+
+		_ = pipeWriter.CloseWithError(result.err)
+		validationResults <- result
+	}()
+
+	storageDiagnostic = startIngestStorageWriteDiagnostic(ctx, ingestFileTempPrefix(jobID))
+	fileName, writeErr := fileService.WriteTempFile(ctx, ingestFileTempPrefix(jobID), pipeReader, storage.WriteOptions{})
+	storageDiagnostic.finish(fileName, writeErr)
+	_ = pipeReader.CloseWithError(writeErr)
+	if writeErr != nil {
+		_ = fileData.Close()
+	}
+
+	validationResult := <-validationResults
+	report = validationResult.report
+	switch {
+	case ctx.Err() != nil:
+		err = ctx.Err()
+		report = payload.ValidationReport{}
+	case writeErr != nil && !errors.Is(writeErr, validationResult.err):
+		// A backend failure can interrupt validation through the pipe.
+		err = writeErr
+		report = payload.ValidationReport{}
+	default:
+		err = validationResult.err
+	}
+
 	if err != nil {
-		// Record validation failure metric
-		metrics.RecordIngestTask(metrics.IngestCollectorManual, fileFormatFromFileType(fileType), metrics.IngestTaskStatusFailed)
-		return IngestTaskParams{}, err
+		cleanupTempFile(ctx, fileService, fileName)
+		return IngestTaskParams{}, report, err
 	}
 
 	return IngestTaskParams{
-		Filename: tempFileName,
+		Filename: fileName,
 		FileType: fileType,
-	}, nil
+	}, report, nil
 }
 
-func cleanupTempFile(ctx context.Context, fileService storage.FileService, tempFileName string) {
-	if tempFileName == "" {
+func cleanupTempFile(ctx context.Context, fileService storage.FileService, fileName string) {
+	if fileName == "" {
 		return
 	}
 
-	cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	cleanupContext, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 	defer cancel()
 
-	if err := fileService.DeleteFile(cleanupCtx, tempFileName); err != nil {
+	if err := fileService.DeleteFile(cleanupContext, fileName); err != nil {
 		slog.ErrorContext(
-			cleanupCtx,
-			"Failed to delete temp file",
-			slog.String("temp_file_name", tempFileName),
+			cleanupContext,
+			"Failed to delete ingest file",
+			slog.String("temp_file_name", fileName),
 			attr.Error(err),
 		)
 	}
 }
 
-func WriteAndValidateFile(ctx context.Context, fileService storage.FileService, fileData io.Reader, prefix string, validationFunc FileValidator) (string, error) {
-	var storageWriteDiagnostic ingestStorageWriteDiagnostic
+func WriteAndValidateZip(fileData io.Reader, destination io.Writer) error {
+	teeReader := io.TeeReader(fileData, destination)
+	return ValidateZipFile(teeReader)
+}
 
-	if validationFunc == nil {
-		return "", fmt.Errorf("validation function is required")
+func WriteAndValidateJSON(fileData io.Reader, destination io.Writer, ingestSchema payload.Schema) (payload.ValidationReport, error) {
+	var (
+		report           payload.ValidationReport
+		normalizedReader io.Reader
+		teeReader        io.Reader
+		ingestValidator  payload.Validator
+		err              error
+	)
+
+	normalizedReader, err = bomenc.NormalizeToUTF8(fileData)
+	if err != nil {
+		return report, fmt.Errorf("%w: %w", ErrInvalidJSON, err)
 	}
 
-	// Create a pipe: pr (read end) and pw (write end).
-	// Data written to pw can be read from pr.
-	pr, pw := io.Pipe()
-
-	// validationErrCh carries the result of the validation goroutine.
-	// Using a buffered channel (size 1) ensures the goroutine never blocks on send,
-	// and gives the main goroutine a synchronization point to wait for the result.
-	validationErrCh := make(chan error, 1)
-
-	// Start validation in a separate goroutine.
-	// validationFunc reads from the request body and writes the validated output to pw.
-	// WriteTempFile reads from pr and persists that validated output.
-	go func() {
-		_, err := validationFunc(fileData, pw)
-		_ = pw.CloseWithError(err)
-		validationErrCh <- err
-	}()
-
-	// Write to storage while validation happens concurrently.
-	storageWriteDiagnostic = startIngestStorageWriteDiagnostic(ctx, prefix)
-	tempFileName, writeErr := fileService.WriteTempFile(ctx, prefix, pr, storage.WriteOptions{})
-	storageWriteDiagnostic.finish(tempFileName, writeErr)
-	if writeErr != nil {
-		_ = pr.CloseWithError(writeErr)
+	teeReader = io.TeeReader(normalizedReader, destination)
+	ingestValidator = payload.NewValidator(teeReader, ingestSchema)
+	_, report, err = ingestValidator.ParseAndValidate()
+	if err != nil {
+		return report, fmt.Errorf("%w: %w", ErrInvalidJSON, err)
 	}
 
-	var validationErr error
-	select {
-	case validationErr = <-validationErrCh:
-		// Context cancelation wins over validation errors when both are ready
-		if err := ctx.Err(); err != nil {
-			cleanupTempFile(ctx, fileService, tempFileName)
-			return "", err
-		}
-	case <-ctx.Done():
-		_ = pr.CloseWithError(ctx.Err())
-		cleanupTempFile(ctx, fileService, tempFileName)
-		return "", ctx.Err()
-	}
+	return report, nil
+}
 
-	// Check if validation failed, which should win over write errors.
-	if validationErr != nil {
-		slog.ErrorContext(
-			ctx,
-			"Validation failed",
-			slog.String("temp_file_name",
-				tempFileName),
-			attr.Error(validationErr),
-		)
-		cleanupTempFile(ctx, fileService, tempFileName)
-		return "", validationErr
-	}
-
-	// Check if writing failed; the temp file should be cleaned up.
-	if writeErr != nil {
-		slog.ErrorContext(
-			ctx,
-			"Write failed",
-			slog.String("temp_file_name", tempFileName),
-			attr.Error(writeErr),
-		)
-		cleanupTempFile(ctx, fileService, tempFileName)
-		return "", writeErr
-	}
-
-	slog.InfoContext(ctx, "File written and validated", slog.String("temp_file_name", tempFileName))
-	return tempFileName, nil
+func ingestFileTempPrefix(jobID int64) string {
+	return fmt.Sprintf("file_upload_job%d_", jobID)
 }

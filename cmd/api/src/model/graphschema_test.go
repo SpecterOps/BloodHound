@@ -1437,6 +1437,36 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 			},
 		},
 		{
+			name: "success_-_privilege_zone_rule_defaults",
+			args: args{
+				payload: GraphExtensionPayload{
+					GraphSchemaExtension: GraphSchemaExtensionPayload{Namespace: "TEST"},
+					PZRules: &PZRulesPayload{{
+						RuleKey: "rule_1",
+						Name:    "Rule 1",
+						Seeds: []SelectorSeedPayload{{
+							Type:  SelectorTypeCypher,
+							Value: "MATCH (n) RETURN n",
+						}},
+					}},
+				},
+			},
+			want: GraphExtensionInput{
+				ExtensionInput:         ExtensionInput{Namespace: "TEST"},
+				NodeKindsInput:         make(NodesInput, 0),
+				RelationshipKindsInput: make(RelationshipsInput, 0),
+				EnvironmentsInput:      make(EnvironmentsInput, 0),
+				SavedQueriesInput:      make(SavedQueriesInput, 0),
+				PZRulesInput: PZRulesInput{{
+					ExtensionRuleId: "rule_1",
+					Name:            "Rule 1",
+					Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
+					Enabled:         true,
+					AllowDisable:    true,
+				}},
+			},
+		},
+		{
 			name:    "error_-_invalid_node_info_markdown",
 			wantErr: true,
 			args: args{
@@ -1464,6 +1494,71 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equalf(t, tt.want, got, "ToGraphExtensionInput(%v)", tt.args.payload)
 			}
+		})
+	}
+}
+
+func TestPZRulesInputValidate(t *testing.T) {
+	t.Parallel()
+
+	validRule := PZRuleInput{
+		ExtensionRuleId: "TEST_rule",
+		Name:            "Rule",
+		Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
+	}
+
+	tests := []struct {
+		name    string
+		rules   PZRulesInput
+		wantErr string
+	}{
+		{
+			name:  "success_-_one_cypher_seed",
+			rules: PZRulesInput{validRule},
+		},
+		{
+			name: "error_-_multiple_seeds",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds: []SelectorSeedInput{
+					{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"},
+					{Type: SelectorTypeCypher, Value: "MATCH (n:Two) RETURN n"},
+				},
+			}},
+			wantErr: "requires exactly one seed",
+		},
+		{
+			name: "error_-_object_id_seed",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds:           []SelectorSeedInput{{Type: SelectorTypeObjectId, Value: "0123456"}},
+			}},
+			wantErr: "must be of cypher type",
+		},
+		{
+			name: "error_-_invalid_cypher_seed",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n RETURN n"}},
+			}},
+			wantErr: "contains invalid Cypher seed",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := testCase.rules.Validate("TEST")
+			if testCase.wantErr != "" {
+				assert.ErrorContains(t, err, testCase.wantErr)
+				return
+			}
+
+			assert.NoError(t, err)
 		})
 	}
 }

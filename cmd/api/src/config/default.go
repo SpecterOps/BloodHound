@@ -111,6 +111,10 @@ func NewDefaultConfiguration() (Configuration, error) {
 				DialAddress: "teleport:3080",
 				WebAddress:  "localhost:3080",
 			},
+			SecretStore: SecretStoreConfiguration{
+				Provider: "aws",
+				Prefix:   "bhe/local",
+			},
 		}, nil
 	}
 }

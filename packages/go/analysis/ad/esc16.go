@@ -30,14 +30,25 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 // szOID_NTDS_CA_SECURITY_EXT is the OID for the NTDS CA Security Extension
 // that when disabled in Enterprise CA settings allows ESC16 exploitation.
 const szOID_NTDS_CA_SECURITY_EXT = "1.3.6.1.4.1.311.25.2"
 
-func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+func newADCSESC16Sink(ctx context.Context, database graph.Database) (*post.FilteredRelationshipSink, error) {
+	var edgeKinds = graph.Kinds{ad.ADCSESC16}
+
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, database, edgeKinds); err != nil {
+		return nil, err
+	} else if relationshipTracker, err := post.FetchTracker(ctx, database, edgeKinds); err != nil {
+		return nil, err
+	} else {
+		return post.NewFilteredRelationshipSink(ctx, "PostADCSESC16", database, relationshipTracker), nil
+	}
+}
+
+func PostADCSESC16(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	if isUserSpecifiesSanEnabledCollected, err := certChains.EnterpriseCA.Properties.Get(ad.IsUserSpecifiesSanEnabledCollected.String()).Bool(); err != nil {
 		return err
 	} else if !isUserSpecifiesSanEnabledCollected {
@@ -84,11 +95,13 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, outC chan<- post.E
 				} else {
 					filteredEnrollers.Each(func(value uint64) bool {
 						for _, domain := range certChains.Domains.Slice() {
-							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+							if !sink.Submit(ctx, post.EnsureRelationshipJob{
 								FromID: graph.ID(value),
 								ToID:   graph.ID(domain),
 								Kind:   ad.ADCSESC16,
-							})
+							}) {
+								return false
+							}
 						}
 						return true
 					})
@@ -146,12 +159,13 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		lock               = &sync.Mutex{}
-		paths              = graph.PathSet{}
-		path1Segments      = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		finalEnterpriseCAs = cardinality.NewBitmap64()
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		lock                    = &sync.Mutex{}
+		paths                   = graph.PathSet{}
+		path1Segments           = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		finalEnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -202,6 +216,21 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		}
 	}
 
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
+		for enterpriseCAID := range qualifyingHostPaths {
+			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
+		}
+
+		path1EnterpriseCAs.And(qualifyingEnterpriseCAs)
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+	if path1EnterpriseCAs.Cardinality() == 0 {
+		return paths, nil
+	}
+
 	// P2
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
@@ -212,22 +241,27 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 						return nextSegment.Node.Kinds.ContainsOneOf(ad.CertTemplate)
 					})
 
-					if !startNode.Kinds.ContainsOneOf(ad.User) || certTemplateValidForUserVictim(certTemplate) {
-						lock.Lock()
-						paths.AddPath(terminal.Path())
-						lock.Unlock()
-
-						// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
-						terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-							if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-								lock.Lock()
-								finalEnterpriseCAs.Add(end.ID.Uint64())
-								lock.Unlock()
-								return false
-							}
-							return true
-						})
+					if startNode.Kinds.ContainsOneOf(ad.User) && !certTemplateValidForUserVictim(certTemplate) {
+						if managedServiceAccount, err := isManagedServiceAccount(startNode); err != nil {
+							return err
+						} else if !managedServiceAccount {
+							return nil
+						}
 					}
+					lock.Lock()
+					paths.AddPath(terminal.Path())
+					lock.Unlock()
+
+					// add the ECA where the template is published (first ECA in the path in case of multi-tier hierarchy) to final list of ECAs
+					terminal.Path().Walk(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+						if end.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+							lock.Lock()
+							finalEnterpriseCAs.Add(end.ID.Uint64())
+							lock.Unlock()
+							return false
+						}
+						return true
+					})
 					return nil
 				})}); err != nil {
 			return nil, err
@@ -239,6 +273,7 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 			for _, segment := range path1Segments[graph.ID(value)] {
 				paths.AddPath(segment.Path())
 			}
+			paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(value)])
 			return true
 		})
 	}
@@ -247,7 +282,7 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 }
 
 func ADCSESC16Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -257,21 +292,15 @@ func ADCSESC16Path1Pattern(domainId graph.ID) traversal.PatternContinuation {
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
+				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabledCollected.String()), true),
 				query.Equals(query.EndProperty(ad.IsUserSpecifiesSanEnabled.String()), true),
+				query.Equals(query.EndProperty(ad.DisabledExtensionsCollected.String()), true),
 				query.InInverted(query.EndProperty(ad.DisabledExtensions.String()), szOID_NTDS_CA_SECURITY_EXT),
-			)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.Equals(query.EndID(), domainId),
-		))
+			)), domainId)
 }
 
 func ADCSESC16Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[uint64], edgeKind graph.Kind) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0, query.And(
 			query.Kind(query.Relationship(), ad.MemberOf),
 			query.Kind(query.End(), ad.Group),
@@ -293,17 +322,5 @@ func ADCSESC16Path2Pattern(domainId graph.ID, enterpriseCAs cardinality.Duplex[u
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainId),
-		))
+		)), domainId)
 }

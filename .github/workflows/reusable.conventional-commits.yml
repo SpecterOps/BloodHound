@@ -1,4 +1,4 @@
-# Copyright 2025 Specter Ops, Inc.
+# Copyright 2026 Specter Ops, Inc.
 #
 # Licensed under the Apache License, Version 2.0
 # you may not use this file except in compliance with the License.
@@ -28,12 +28,17 @@ jobs:
         id: lint_pr_title
         with:
           types: |
+            build
+            chore
+            ci
+            docs
             feat
             fix
-            docs
+            perf
             refactor
+            revert
+            style
             test
-            chore
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

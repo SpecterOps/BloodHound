@@ -14,5 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as GraphControls } from './GraphControls';
-export type { GraphExportAction } from './GraphControls';
+export {
+    default as GraphControls,
+    defaultGraphSpacing,
+    graphDirections,
+    maximumGraphSpacing,
+    minimumGraphSpacing,
+} from './GraphControls';
+export type { GraphDirection, GraphExportAction, GraphLayoutControlOptions } from './GraphControls';

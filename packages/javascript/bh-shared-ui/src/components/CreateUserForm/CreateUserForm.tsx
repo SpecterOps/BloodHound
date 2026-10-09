@@ -17,7 +17,6 @@
 import { Alert, CircularProgress } from '@mui/material';
 import {
     Button,
-    Card,
     CheckboxWithLabel,
     DialogActions,
     DialogClose,
@@ -74,7 +73,7 @@ const CreateUserForm: React.FC<{
 
     if (getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <Card className='p-6 shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+            <div className='w-[600px] m-auto h-[800px] flex flex-col justify-center'>
                 <div>Unable to load data required to create this user.</div>
 
                 <DialogActions>
@@ -89,7 +88,7 @@ const CreateUserForm: React.FC<{
                         </Button>
                     </DialogClose>
                 </DialogActions>
-            </Card>
+            </div>
         );
     }
     return <CreateUserFormInner {...props} roles={getRolesQuery.data} SSOProviders={getSSOProvidersQuery.data} />;
@@ -167,7 +166,7 @@ const CreateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 shadow max-w-[600px] w-full'>
+                    <div className='w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
                         <DialogTitle>{'Create User'}</DialogTitle>
 
                         <div className='flex flex-col mt-4 w-full' data-testid='create-user-dialog_content'>
@@ -186,12 +185,11 @@ const CreateUserFormInner: React.FC<{
                                                 </FormLabel>
 
                                                 <Tooltip
-                                                    defaultOpen={false}
                                                     tooltip='Only Read-Only and Users roles contain the environment target access control.'
-                                                    triggerProps={{ type: 'button' }}
+                                                    // refactor this in BED-7769
+                                                    triggerProps={{ className: 'mb-0.5 size-4 shrink-0 rounded-full' }}
                                                     contentProps={{
-                                                        className:
-                                                            'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
+                                                        className: 'max-w-80',
                                                     }}
                                                 />
                                             </div>
@@ -548,7 +546,7 @@ const CreateUserFormInner: React.FC<{
                                 Save
                             </Button>
                         </DialogActions>
-                    </Card>
+                    </div>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && <EnvironmentSelectPanel form={form} />}
                 </div>
             </form>
