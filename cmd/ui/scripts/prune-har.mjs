@@ -25,8 +25,7 @@ import { fileURLToPath } from 'node:url';
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function main() {
-    const args = process.argv.slice(2);
+function parseArguments(args) {
     let deleteOrphans = false;
     let requestedRoot;
     for (let index = 0; index < args.length; index++) {
@@ -40,6 +39,10 @@ async function main() {
         }
     }
 
+    return { deleteOrphans, requestedRoot };
+}
+
+async function readSuiteReport() {
     const listingDirectory = await mkdtemp(path.join(tmpdir(), 'bh-har-list-'));
     const listingFile = path.join(listingDirectory, 'tests.json');
     let report;
@@ -69,16 +72,24 @@ async function main() {
     if (!report.config?.rootDir || report.errors?.length || !report.suites?.length) {
         throw new Error('Playwright did not return a complete suite; no HAR files were touched.');
     }
-    const activeIds = new Set();
-    function collect(suite) {
-        for (const spec of suite.specs ?? []) activeIds.add(spec.id);
-        for (const child of suite.suites ?? []) collect(child);
-    }
-    for (const suite of report.suites) collect(suite);
+    return report;
+}
 
+function collectActiveTestIds(suites, activeIds = new Set()) {
+    for (const suite of suites) {
+        for (const spec of suite.specs ?? []) activeIds.add(spec.id);
+        collectActiveTestIds(suite.suites ?? [], activeIds);
+    }
+    return activeIds;
+}
+
+async function main() {
+    const { deleteOrphans, requestedRoot } = parseArguments(process.argv.slice(2));
+    const report = await readSuiteReport();
+    const activeIds = collectActiveTestIds(report.suites);
     const configRoot = path.resolve(report.config.rootDir);
     const root = path.resolve(configRoot, requestedRoot ?? 'test-artifacts/har');
-    if (!root.startsWith(`${uiDirectory}${path.sep}`) || root === uiDirectory) {
+    if (!isInsideDirectory(root, uiDirectory)) {
         throw new Error(`HAR root must be a directory inside ${uiDirectory}: ${root}`);
     }
     const orphans = await findOrphanedHarDirectories(root, configRoot, activeIds);
@@ -87,7 +98,7 @@ async function main() {
         return;
     }
     const resolvedRoot = await realpath(root);
-    if (!resolvedRoot.startsWith(`${uiDirectory}${path.sep}`) || resolvedRoot === uiDirectory) {
+    if (!isInsideDirectory(resolvedRoot, uiDirectory)) {
         throw new Error(`Resolved HAR root leaves the UI workspace: ${resolvedRoot}`);
     }
 
@@ -99,6 +110,12 @@ async function main() {
         `${orphans.length} orphaned HAR director${orphans.length === 1 ? 'y' : 'ies'} ${deleteOrphans ? 'removed' : 'found'}.`
     );
     if (!deleteOrphans && orphans.length) console.log('Run yarn har:prune --delete to remove these directories.');
+}
+
+// Paths passed here have already been resolved. Requiring the separator excludes both
+// the parent itself and sibling names sharing its prefix.
+function isInsideDirectory(directory, parent) {
+    return directory.startsWith(`${parent}${path.sep}`);
 }
 
 export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
@@ -122,7 +139,9 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
         } catch {
             continue; // Unmarked or malformed directories are never deleted automatically.
         }
-        if (marker.rootDir !== configRoot || typeof marker.testId !== 'string' || activeIds.has(marker.testId)) {
+        const belongsToSuite = marker.rootDir === configRoot;
+        const hasTestIdentity = typeof marker.testId === 'string';
+        if (!belongsToSuite || !hasTestIdentity || activeIds.has(marker.testId)) {
             continue;
         }
         try {
@@ -130,10 +149,7 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
         } catch {
             continue;
         }
-        if (
-            !(await lstat(directory)).isDirectory() ||
-            !(await realpath(directory)).startsWith(`${resolvedRoot}${path.sep}`)
-        ) {
+        if (!(await lstat(directory)).isDirectory() || !isInsideDirectory(await realpath(directory), resolvedRoot)) {
             continue;
         }
         orphans.push(directory);

@@ -15,10 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { findOrphanedHarDirectories } from './prune-har.mjs';
 
 test('prune candidates exclude active and unmarked recordings', async () => {
@@ -47,3 +49,44 @@ test('prune candidates exclude active and unmarked recordings', async () => {
         await rm(root, { recursive: true, force: true });
     }
 });
+
+test('prune returns null for a missing root and ignores incomplete or unsafe candidates', async () => {
+    const workspace = await mkdtemp(path.join(tmpdir(), 'bh-har-prune-test-'));
+    const root = path.join(workspace, 'fixtures');
+    const configRoot = '/example/tests';
+    try {
+        assert.equal(await findOrphanedHarDirectories(root, configRoot, new Set()), null);
+        await mkdir(root);
+        for (const name of ['invalid-json', 'missing-id', 'missing-recording']) {
+            const directory = path.join(root, name);
+            await mkdir(directory);
+            const marker = name === 'missing-id' ? { rootDir: configRoot } : { rootDir: configRoot, testId: name };
+            await writeFile(
+                path.join(directory, '.har-fixture.json'),
+                name === 'invalid-json' ? '{' : JSON.stringify(marker)
+            );
+            if (name !== 'missing-recording') await writeFile(path.join(directory, 'recording.har'), '{}');
+        }
+        const outside = path.join(workspace, 'outside');
+        await mkdir(outside);
+        await writeFile(
+            path.join(outside, '.har-fixture.json'),
+            JSON.stringify({ rootDir: configRoot, testId: 'old' })
+        );
+        await writeFile(path.join(outside, 'recording.har'), '{}');
+        await symlink(outside, path.join(root, 'linked-directory'));
+        await writeFile(path.join(root, 'ordinary-file'), '{}');
+        assert.deepEqual(await findOrphanedHarDirectories(root, configRoot, new Set()), []);
+    } finally {
+        await rm(workspace, { recursive: true, force: true });
+    }
+});
+
+for (const args of [['--unknown'], ['--root'], ['--root', '--delete']]) {
+    test(`invalid prune arguments fail before listing tests: ${args.join(' ')}`, () => {
+        const script = fileURLToPath(new URL('./prune-har.mjs', import.meta.url));
+        const result = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, args[0] === '--unknown' ? /Usage: yarn har:prune/ : /--root requires a directory/);
+    });
+}

@@ -172,57 +172,62 @@ export const test = base.extend<AxeFixtures, TestOptions>({
             return;
         }
 
-        // Playwright closes its context before this dependency tears down. Record and update
-        // both write to the execution-specific output directory, then publish atomically.
-        const temporary = testInfo.outputPath('har', 'recording.har');
+        // Capture to this attempt's output directory before replacing the shared fixture.
+        const temporaryRecordingPath = testInfo.outputPath('har', 'recording.har');
         await mkdir(harArtifacts.directory, { recursive: true });
-        await mkdir(path.dirname(temporary), { recursive: true });
+        await mkdir(path.dirname(temporaryRecordingPath), { recursive: true });
         if (harMode === 'update') {
             await readHar(harArtifacts.recording);
-            await copyFile(harArtifacts.recording, temporary);
+            await copyFile(harArtifacts.recording, temporaryRecordingPath);
         }
-        await use(
-            harMode === 'record'
-                ? { ...contextOptions, recordHar: { path: temporary, content: 'embed', mode: 'full' } }
-                : contextOptions
-        );
-        if (harMode === 'record' || testInfo.status === 'passed') {
-            // A setup failure can initialize this option without creating a context.
-            try {
-                await access(temporary);
-            } catch {
-                if (harSession.contextStarted) {
-                    throw new Error(`HAR recording was not written after context close: ${temporary}`);
-                }
-                return;
-            }
-            await publishHar(temporary, harArtifacts);
-            await writeJsonArtifact(path.join(harArtifacts.directory, '.har-fixture.json'), {
-                testId: testInfo.testId,
-                project: testInfo.project.name,
-                rootDir: testInfo.config.rootDir,
+
+        if (harMode === 'record') {
+            await use({
+                ...contextOptions,
+                recordHar: { path: temporaryRecordingPath, content: 'embed', mode: 'full' },
             });
+        } else {
+            // Updates are captured by routeFromHAR in the context fixture.
+            await use(contextOptions);
         }
+
+        // Record mode preserves captures even after failures. A failed update must keep the old fixture.
+        if (harMode === 'update' && testInfo.status !== 'passed') return;
+
+        try {
+            await access(temporaryRecordingPath);
+        } catch {
+            // Setup may have failed before Playwright created a browser context.
+            if (!harSession.contextStarted) return;
+            throw new Error(`HAR recording was not written after context close: ${temporaryRecordingPath}`);
+        }
+        await publishHar(temporaryRecordingPath, harArtifacts);
+        await writeJsonArtifact(path.join(harArtifacts.directory, '.har-fixture.json'), {
+            testId: testInfo.testId,
+            project: testInfo.project.name,
+            rootDir: testInfo.config.rootDir,
+        });
     },
     // Injects window variable that may be checked by app at runtime
     // Allows BH to determine if it is run by Playwright to disable CSS transition animation
     context: async ({ context, harMode, harNotFound, harArtifacts, harSession }, use, testInfo) => {
         const failedRequests: string[] = [];
-        if (harMode === 'mock' || harMode === 'update') {
+        if (harMode === 'mock') {
             await readHar(harArtifacts.recording);
-            if (harMode === 'mock' && harNotFound === 'abort') {
+            if (harNotFound === 'abort') {
                 context.on('requestfailed', (request) => {
-                    failedRequests.push(
-                        `${request.method()} ${request.url()}: ${request.failure()?.errorText ?? 'failed'}`
-                    );
+                    const failureReason = request.failure()?.errorText ?? 'failed';
+                    failedRequests.push(`${request.method()} ${request.url()}: ${failureReason}`);
                 });
             }
-            await context.routeFromHAR(
-                harMode === 'update' ? testInfo.outputPath('har', 'recording.har') : harArtifacts.recording,
-                harMode === 'update'
-                    ? { update: true, updateContent: 'embed', updateMode: 'full' }
-                    : { notFound: harNotFound }
-            );
+            await context.routeFromHAR(harArtifacts.recording, { notFound: harNotFound });
+        } else if (harMode === 'update') {
+            await readHar(harArtifacts.recording);
+            await context.routeFromHAR(testInfo.outputPath('har', 'recording.har'), {
+                update: true,
+                updateContent: 'embed',
+                updateMode: 'full',
+            });
         }
         await context.addInitScript(() => {
             Object.defineProperty(window, '__APP_TEST_RUNTIME__', {
