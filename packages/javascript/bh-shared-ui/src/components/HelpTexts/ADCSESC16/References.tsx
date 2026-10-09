@@ -14,54 +14,36 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Link } from '@mui/material';
+import { Link } from 'doodle-ui';
 import { FC } from 'react';
 
 const References: FC = () => {
     return (
-        <Box className='overflow-x-auto'>
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc16-security-extension-disabled-on-ca-globally'>
+        <div className='overflow-x-auto'>
+            <Link href='https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc16-security-extension-disabled-on-ca-globally'>
                 ESC16: Security Extension Disabled on CA (Globally)
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-3-33efb00856ac'>
+            <Link href='https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-3-33efb00856ac'>
                 ADCS Attack Paths in BloodHound — Part 3
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
+            <Link href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
                 Certified Pre-Owned
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7'>
+            <Link href='https://research.ifcr.dk/certipy-4-0-esc9-esc10-bloodhound-gui-new-authentication-and-request-methods-and-more-7237d88061f7'>
                 Certipy 4.0
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
+            <Link href='https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/ad-certificates/domain-escalation#editf_attributesubjectaltname2-esc6'>
                 Domain Escalation Edit Attributes
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/preview-of-san-uri-for-certificate-strong-mapping-for-kb5014754/ba-p/3789785'>
+            <Link href='https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/preview-of-san-uri-for-certificate-strong-mapping-for-kb5014754/ba-p/3789785'>
                 Preview of SAN URI for Certificate Strong Mapping for KB5014754
             </Link>
-        </Box>
+        </div>
     );
 };
 

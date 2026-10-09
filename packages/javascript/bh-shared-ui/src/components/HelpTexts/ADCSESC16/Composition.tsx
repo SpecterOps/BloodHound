@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import { Alert, Skeleton, Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '..';
 import { EdgeInfoItems, useEdgeInfoItems } from '../../../hooks/useExploreGraph/useEdgeInfoItems';
@@ -34,17 +34,17 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
                 The relationship represents the effective outcome of the configuration and relationships between several
                 different objects. All objects involved in the creation of this relationship are listed here:
             </Typography>
-            <Box py={1}>
+            <div className='py-2'>
                 {isLoading ? (
-                    <Skeleton variant='rounded' />
+                    <Skeleton className='h-6 w-full' />
                 ) : isError ? (
-                    <Alert severity='error'>Couldn't load edge composition</Alert>
+                    <Alert variant='error'>Couldn't load edge composition</Alert>
                 ) : nodesArray.length === 0 ? (
-                    <Alert severity='error'>No nodes in composition graph</Alert>
+                    <Alert variant='error'>No nodes in composition graph</Alert>
                 ) : (
                     <VirtualizedNodeList nodes={nodesArray} />
                 )}
-            </Box>
+            </div>
         </>
     );
 };

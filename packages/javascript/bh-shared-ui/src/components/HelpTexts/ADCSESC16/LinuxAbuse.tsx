@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import CodeController from '../CodeController/CodeController';
 
@@ -48,9 +48,8 @@ const LinuxAbuse: FC = () => {
             </Typography>
             <Typography component={'pre'}>{'certipy auth -pfx administrator.pfx -dc-ip 172.16.126.128'}</Typography>
             <Typography variant='body2'>
-                If the authentication fails then it may be because the DC enforces strong certificate mapping. This
-                requirement can be met by including a URL parameter in the SAN with the target's SID, however not
-                supported by Certipy. See the Windows abuse section for example.
+                If the DC enforces strong certificate mapping, include the target principal's SID using the -sid
+                parameter shown above. Use Certipy 5 or later for SAN URL SID mapping support.
             </Typography>
         </>
     );
