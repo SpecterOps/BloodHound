@@ -58,6 +58,34 @@ type IngestFileData struct {
 	UserDataErrs []string
 }
 
+// GraphifyIngestResult classifies the overall ingest outcome from batch and file errors.
+func GraphifyIngestResult(batchError error, fileData []IngestFileData) metrics.IngestResult {
+	var (
+		failedFileCount   int
+		hasUserDataErrors bool
+	)
+
+	if batchError != nil {
+		return metrics.IngestResultFailure
+	}
+
+	for _, data := range fileData {
+		if len(data.Errors) > 0 {
+			failedFileCount++
+		}
+		if len(data.UserDataErrs) > 0 {
+			hasUserDataErrors = true
+		}
+	}
+
+	if len(fileData) > 0 && failedFileCount == len(fileData) {
+		return metrics.IngestResultFailure
+	} else if failedFileCount > 0 || hasUserDataErrors {
+		return metrics.IngestResultPartial
+	}
+	return metrics.IngestResultSuccess
+}
+
 func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) (payload.ValidationReport, error) {
 	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
@@ -187,7 +215,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 			ic.Stats.SourceObjectsAttempted.Load(),
 			ic.Stats.NodesAttempted.Load(),
 			ic.Stats.RelationshipsAttempted.Load(),
-			batchError,
+			GraphifyIngestResult(batchError, fileData),
 		)
 
 		return fileData, batchError

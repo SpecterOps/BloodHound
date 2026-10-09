@@ -133,7 +133,7 @@ var (
 			Namespace: model.Namespace,
 			Subsystem: ingestSubsystem,
 			Name:      "graphify_duration_seconds",
-			Help:      "Duration of one graphify batch operation, including zero-item batches, partitioned by batch result",
+			Help:      "Duration of one graphify batch operation, including zero-item batches, partitioned by overall ingest result including partial per-file outcomes",
 			Buckets:   ingestGraphifyDurationBuckets,
 		},
 		[]string{"result"},
@@ -144,7 +144,7 @@ var (
 			Namespace: model.Namespace,
 			Subsystem: ingestSubsystem,
 			Name:      "graphify_items_total",
-			Help:      "Total source objects, nodes, and relationships attempted during graphify, partitioned by entity type and batch result",
+			Help:      "Total source objects, nodes, and relationships attempted during graphify, partitioned by entity type and overall ingest result including partial per-file outcomes",
 		},
 		[]string{"entity_type", "result"},
 	)
@@ -286,19 +286,18 @@ func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int,
 }
 
 // RecordIngestGraphify records a returning graphify batch, including zero-item
-// batches. Attempted totals use the batch result rather than individual item
-// outcomes. Invalid measurements are ignored.
-func RecordIngestGraphify(duration time.Duration, sourceObjectsAttempted, nodesAttempted, relationshipsAttempted int64, batchError error) {
-	var (
-		result = IngestResultSuccess
-	)
-
+// batches. Duration and all attempted totals use the supplied overall ingest
+// result, including partial per-file outcomes. Invalid measurements and results
+// are ignored.
+func RecordIngestGraphify(duration time.Duration, sourceObjectsAttempted, nodesAttempted, relationshipsAttempted int64, result IngestResult) {
 	if duration < 0 || sourceObjectsAttempted < 0 || nodesAttempted < 0 || relationshipsAttempted < 0 {
 		return
 	}
 
-	if batchError != nil {
-		result = IngestResultFailure
+	switch result {
+	case IngestResultSuccess, IngestResultPartial, IngestResultFailure:
+	default:
+		return
 	}
 
 	ingestGraphifyDuration.WithLabelValues(string(result)).Observe(duration.Seconds())
