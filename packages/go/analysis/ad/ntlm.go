@@ -139,10 +139,11 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	)()
 
 	var (
-		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
-		ntlmCache NTLMCache
-		ntlmSink  *post.FilteredRelationshipSink
-		err       error
+		operation    = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
+		ntlmCache    NTLMCache
+		ntlmSink     *post.FilteredRelationshipSink
+		err          error
+		operationErr error
 	)
 
 	// NTLM must be enabled through the feature flag
@@ -153,9 +154,9 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		if ntlmSink, err := newNTLMSink(ctx, db); err != nil {
 			return &operation.Stats, err
 		} else {
-			ntlmSink.Done()
+			err = ntlmSink.Done()
 			operation.Stats.Merge(ntlmSink.Stats())
-			return &operation.Stats, nil
+			return &operation.Stats, err
 		}
 	}
 
@@ -192,8 +193,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 							"Post processing failed for CoerceAndRelayNTLMToSMB",
 							attr.Error(err),
 						)
-						// Additional analysis may occur if one of our analysis errors
-						continue
+						return err
 					}
 
 					// Any computers that are restricted/protected are not valid targets for the next relays
@@ -209,7 +209,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 							"Post processing failed for CoerceAndRelayNTLMToLDAP",
 							attr.Error(err),
 						)
-						continue
+						return err
 					}
 				}
 			}
@@ -217,20 +217,20 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			return cursor.Error()
 		})
 	}); err != nil {
-		operation.Done()
-		ntlmSink.Done()
-		return nil, err
+		return nil, errors.Join(err, operation.Done(), ntlmSink.Abort())
 	}
 
 	if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, ntlmSink, adcsCache, ntlmCache); err != nil {
-		operation.Done()
-		ntlmSink.Done()
-		return nil, err
+		return nil, errors.Join(err, operation.Done(), ntlmSink.Abort())
 	}
 
 	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
-	operationErr := operation.Done()
-	ntlmSink.Done()
+	operationErr = operation.Done()
+	if operationErr != nil {
+		operationErr = errors.Join(operationErr, ntlmSink.Abort())
+	} else {
+		operationErr = ntlmSink.Done()
+	}
 	operation.Stats.Merge(ntlmSink.Stats())
 
 	return &operation.Stats, operationErr
@@ -482,6 +482,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
 							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+								var relationshipSubmissionErr error
 								victims.Each(func(target uint64) bool {
 									for _, relationshipKind := range relationshipKinds {
 										if !sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -489,12 +490,13 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 											ToID:   graph.ID(target),
 											Kind:   relationshipKind,
 										}) {
+											relationshipSubmissionErr = errors.Join(ctx.Err(), errors.New("NTLM sink stopped accepting relationships"))
 											return false
 										}
 									}
 									return true
 								})
-								return nil
+								return relationshipSubmissionErr
 							}); err != nil {
 								submitErr = err
 								return false
