@@ -132,8 +132,9 @@ afterAll(() => {
 
 describe('FileIngestFilterDialog', () => {
     it('renders a filter button', async () => {
-        const { filterButton } = await renderFilterDialog(false);
-        expect(filterButton).toBeInTheDocument();
+        await renderFilterDialog(false);
+
+        expect(screen.getByTestId('file_ingest_log-open_filter_dialog')).toBeInTheDocument();
     });
 
     it('opens and closes the filter', async () => {

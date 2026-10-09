@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './AccessibleIcon';
 export * from './Accordion';
 export * from './Alert';
 export * from './Badge';
@@ -29,7 +30,6 @@ export * from './DatePicker';
 export * from './Dialog';
 export * from './Drawer';
 export * from './Form';
-export * from './Icon';
 export * from './IconButton';
 export * from './Input';
 export * from './Label';
