@@ -23,6 +23,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -120,7 +121,7 @@ func processSingleFile(ctx context.Context, fileService storage.FileService, tem
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService storage.FileService, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%d_", ic.JobId)); err != nil {
+	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%s_", ic.JobId)); err != nil {
 		return fileData, err
 	} else {
 		errs := errorlist.NewBuilder()
@@ -176,7 +177,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 	}
 }
 
-func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64, useRawObjectIDs bool) *IngestContext {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId string, useRawObjectIDs bool) *IngestContext {
 	opts := []IngestOption{
 		WithIngestTime(ingestTime),
 		WithEndpointResolver(s.endpointResolver),
@@ -188,7 +189,7 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 		opts = append(opts, WithChangeManager(s.changeManager))
 	}
 
-	if jobId > 0 {
+	if jobId != "" {
 		opts = append(opts, WithJobId(jobId))
 	}
 
@@ -247,7 +248,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		// Record task latency metric: time from when task was created until picked up for processing
 		metrics.RecordIngestTaskQueueLatency(task.CreatedAt, metrics.IngestSourceFile)
 
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero(), flagUseRawObjectIDsEnabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, strconv.FormatInt(task.JobId.ValueOrZero(), 10), flagUseRawObjectIDsEnabled)
 		fileData, err := s.ProcessIngestFile(ingestCtx, ingestFileService, task)
 
 		switch {
