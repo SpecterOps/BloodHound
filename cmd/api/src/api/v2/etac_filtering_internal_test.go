@@ -310,7 +310,6 @@ func TestFilterNodeSetByETAC(t *testing.T) {
 					if slices.Contains(testCase.ExpectedNodeIDs, node.ID) {
 						expected[node.ID] = node
 					}
-					//assert.Len(t, nodeSet, 3, "filterNodeSetByETAC must not modify the input node set")
 				}
 			}
 

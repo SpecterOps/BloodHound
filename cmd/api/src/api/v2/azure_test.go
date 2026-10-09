@@ -157,11 +157,11 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
+				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("database error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"error fetching related entity type inbound-control: invalid skip parameter"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"error fetching related entity type inbound-control: database error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -213,20 +213,24 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/azure/roles",
-						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
+						Path:     "/api/v2/azure/service-principals",
+						RawQuery: "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&skip=3&limit=3&type=list",
 					},
 					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
+
+				var ctrl = gomock.NewController(t)
+
 				mocks.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mocks.mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
+				setupAZMixedTenantOutboundControlTraversal(t, ctrl, mocks.mockGraphDB)
+
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"invalid skip: 0"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"invalid skip: 3"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -1508,9 +1512,9 @@ const (
 	etacForeignName     = "USER TENANT B"
 )
 
-// TestResources_GetAZEntity_ETACFiltersRelatedEntities verifies that GetAZEntity filters related entities from inaccessible tenants
+// TestResources_GetAZEntity_ETACFiltersRelatedEntities verifies that GetAZEntity filters related nodes from inaccessible/foreign tenants
 // even when the anchor node belongs to an allowed tenant.
-// This and the following ETAC test functions use related_entity_type=outbound-control to cover the ETAC logic shared by all related entity types.
+// Note: This and the following ETAC test functions use related_entity_type=outbound-control to cover the ETAC logic shared by all related entity types.
 func TestResources_GetAZEntity_ETACFiltersRelatedEntities(t *testing.T) {
 	t.Parallel()
 
@@ -1581,8 +1585,8 @@ func TestResources_GetAZEntity_ETACFiltersRelatedEntities(t *testing.T) {
 	}
 }
 
-// TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants verifies that GetAZRelatedEntities filters related entities
-// from inaccessible tenants.
+// TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants verifies that GetAZRelatedEntities filters related nodes
+// from foreign tenants.
 func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) {
 	t.Parallel()
 
@@ -1601,6 +1605,13 @@ func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) 
 		{
 			name:           "type=list must not expose foreign tenant nodes",
 			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=list&skip=0&limit=100",
+			isListResponse: true,
+		},
+		// the foreign node has a higher internal ID. This test checks whether pagination is happening after ETAC filtering;
+		// if pagination happened before, the returned list would be empty
+		{
+			name:           "type=list filters before pagination",
+			rawQuery:       "object_id=" + etacAnchorObjectID + "&related_entity_type=outbound-control&type=list&skip=0&limit=1",
 			isListResponse: true,
 		},
 	}
@@ -1627,13 +1638,10 @@ func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) 
 				DogTags: etacEnabledDogTags(),
 			}
 
-			// we need to extract the user's allowlist
 			user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(requestWithCtx).AuthCtx)
 			require.True(t, isUser)
-			allowList := v2.ExtractEnvironmentIDsFromUser(&user)
 
-			resources.GetAZRelatedEntities(requestWithCtx.Context(), response, requestWithCtx, etacAnchorObjectID, azure_schema.ServicePrincipal, allowList)
-
+			resources.GetAZRelatedEntities(requestWithCtx.Context(), response, requestWithCtx, etacAnchorObjectID, azure_schema.ServicePrincipal, user)
 			status, _, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, http.StatusOK, status)
@@ -1652,7 +1660,7 @@ func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) 
 }
 
 // TestResources_GetAZEntity_ETACPermissions verifies that users with a restricted environment allowlist are subject to filtering.
-// Responses are unfiltered when the feature flag is off or the user has AllEnvironments.
+// Responses are unfiltered when the feature flag is off or the user has AllEnvironments set to true.
 func TestResources_GetAZEntity_ETACPermissions(t *testing.T) {
 	t.Parallel()
 
@@ -1771,8 +1779,8 @@ func etacRestrictedUser() model.User {
 	}
 }
 
-// setupAZMixedTenantOutboundControlTraversal mocks an outbound-control traversal in which the anchor Service Principal
-// controls one node in the user's allowed tenant and one node in a foreign tenant.
+// setupAZMixedTenantOutboundControlTraversal mocks an outbound-control traversal in which the anchor Service Principal node
+// has outbound control over one node in the user's allowed tenant and one node in a foreign tenant.
 func setupAZMixedTenantOutboundControlTraversal(t *testing.T, ctrl *gomock.Controller, mockGraphDB *graphmocks.MockDatabase) {
 	t.Helper()
 
@@ -1787,13 +1795,13 @@ func setupAZMixedTenantOutboundControlTraversal(t *testing.T, ctrl *gomock.Contr
 			azure_schema.TenantID: etacAllowedTenantID,
 		}), azure_schema.Entity, azure_schema.ServicePrincipal)
 
-		foreignNode = graph.NewNode(graph.ID(2), graph.AsProperties(graph.PropertyMap{
+		foreignNode = graph.NewNode(graph.ID(3), graph.AsProperties(graph.PropertyMap{
 			common.ObjectID:       etacForeignObjectID,
 			common.Name:           etacForeignName,
 			azure_schema.TenantID: etacForeignTenantID,
 		}), azure_schema.Entity, azure_schema.User)
 
-		allowedNode = graph.NewNode(graph.ID(3), graph.AsProperties(graph.PropertyMap{
+		allowedNode = graph.NewNode(graph.ID(2), graph.AsProperties(graph.PropertyMap{
 			common.ObjectID:       etacAllowedObjectID,
 			common.Name:           etacAllowedName,
 			azure_schema.TenantID: etacAllowedTenantID,
