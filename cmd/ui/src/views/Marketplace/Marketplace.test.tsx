@@ -32,6 +32,14 @@ describe('Marketplace', () => {
         expect(extensionsRegion).toHaveTextContent('· 26 items');
         expect(enterpriseIntegrationsRegion).toHaveTextContent('· 11 items');
         expect(communityIntegrationsRegion).toHaveTextContent('· 3 items');
+        expect(
+            [...document.querySelectorAll('section[aria-label]')].map((section) => section.getAttribute('aria-label'))
+        ).toEqual([
+            'Community Extensions',
+            'Enterprise Integrations',
+            'Community Integrations',
+            'OpenGraph Enterprise Extensions',
+        ]);
         expect(screen.getAllByRole('article')).toHaveLength(45);
         expect(screen.getAllByText('Enterprise Extension')).toHaveLength(5);
         expect(screen.getAllByText('Community Extension')).toHaveLength(26);

@@ -186,65 +186,8 @@ const Marketplace = () => {
             </div>
 
             <div>
-                {showEnterpriseExtensions && (
-                    <section aria-label='OpenGraph Enterprise Extensions'>
-                        <Typography className='mb-2' component='h2' variant='h2'>
-                            OpenGraph Enterprise Extensions{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
-                                · {formatItemCount(filteredEnterpriseExtensions.length)}
-                            </span>
-                        </Typography>
-                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
-                            SpecterOps-authored extensions for additional identity and infrastructure platforms.
-                            Automated analysis, findings, trends, and reporting for these extensions require BloodHound
-                            Enterprise.
-                        </Typography>
-                        <div
-                            aria-label='BloodHound Enterprise extension capabilities'
-                            className='mb-5 flex flex-col gap-4 rounded-md bg-status-info-fill p-4 text-status-info-text lg:flex-row lg:items-center lg:justify-between'
-                            role='note'>
-                            <div className='flex items-start gap-3'>
-                                <AppIcon.Info
-                                    aria-hidden='true'
-                                    className='mt-0.5 shrink-0 text-status-info-main'
-                                    size={24}
-                                />
-                                <div>
-                                    <Typography component='h3' variant='h3'>
-                                        Unlock automated analysis with BloodHound Enterprise
-                                    </Typography>
-                                    <Typography className='mt-1' variant='body2'>
-                                        Enterprise Extensions are listed here for discovery. In BloodHound Community
-                                        Edition, these extensions do not include the continuous collection, automated
-                                        analysis, findings, prioritization, trends, and reporting available with
-                                        BloodHound Enterprise.
-                                    </Typography>
-                                </div>
-                            </div>
-                            <Link
-                                className={`${ButtonVariants({ variant: 'secondary' })} shrink-0 self-start rounded-md font-bold lg:self-auto`}
-                                href='https://specterops.io/get-a-demo/'
-                                variant='unstyled'>
-                                Learn More About BloodHound Enterprise
-                            </Link>
-                        </div>
-                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
-                            {filteredEnterpriseExtensions.map((extension) => (
-                                <ProductCard
-                                    key={extension.name}
-                                    {...extension}
-                                    categoryLabel='Enterprise Extension'
-                                    linkLabel='Learn More'
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
                 {showCommunityExtensions && (
-                    <section
-                        aria-label='Community Extensions'
-                        className={showEnterpriseExtensions ? sectionDividerClasses : undefined}>
+                    <section aria-label='Community Extensions'>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Community Extensions{' '}
                             <span className='ml-1 text-base font-normal text-muted-foreground'>
@@ -277,9 +220,7 @@ const Marketplace = () => {
                 {showEnterpriseIntegrations && (
                     <section
                         aria-label='Enterprise Integrations'
-                        className={
-                            showEnterpriseExtensions || showCommunityExtensions ? sectionDividerClasses : undefined
-                        }>
+                        className={showCommunityExtensions ? sectionDividerClasses : undefined}>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Enterprise Integrations{' '}
                             <span className='ml-1 text-base font-normal text-muted-foreground'>
@@ -335,9 +276,7 @@ const Marketplace = () => {
                     <section
                         aria-label='Community Integrations'
                         className={
-                            showEnterpriseExtensions || showCommunityExtensions || showEnterpriseIntegrations
-                                ? sectionDividerClasses
-                                : undefined
+                            showCommunityExtensions || showEnterpriseIntegrations ? sectionDividerClasses : undefined
                         }>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Community Integrations{' '}
@@ -355,6 +294,67 @@ const Marketplace = () => {
                                     key={integration.name}
                                     {...integration}
                                     categoryLabel='Community Integration'
+                                    linkLabel='Learn More'
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {showEnterpriseExtensions && (
+                    <section
+                        aria-label='OpenGraph Enterprise Extensions'
+                        className={
+                            showCommunityExtensions || showEnterpriseIntegrations || showCommunityIntegrations
+                                ? sectionDividerClasses
+                                : undefined
+                        }>
+                        <Typography className='mb-2' component='h2' variant='h2'>
+                            OpenGraph Enterprise Extensions{' '}
+                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                                · {formatItemCount(filteredEnterpriseExtensions.length)}
+                            </span>
+                        </Typography>
+                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
+                            SpecterOps-authored extensions for additional identity and infrastructure platforms.
+                            Automated analysis, findings, trends, and reporting for these extensions require BloodHound
+                            Enterprise.
+                        </Typography>
+                        <div
+                            aria-label='BloodHound Enterprise extension capabilities'
+                            className='mb-5 flex flex-col gap-4 rounded-md bg-status-info-fill p-4 text-status-info-text lg:flex-row lg:items-center lg:justify-between'
+                            role='note'>
+                            <div className='flex items-start gap-3'>
+                                <AppIcon.Info
+                                    aria-hidden='true'
+                                    className='mt-0.5 shrink-0 text-status-info-main'
+                                    size={24}
+                                />
+                                <div>
+                                    <Typography component='h3' variant='h3'>
+                                        Unlock automated analysis with BloodHound Enterprise
+                                    </Typography>
+                                    <Typography className='mt-1' variant='body2'>
+                                        Enterprise Extensions are listed here for discovery. In BloodHound Community
+                                        Edition, these extensions do not include the continuous collection, automated
+                                        analysis, findings, prioritization, trends, and reporting available with
+                                        BloodHound Enterprise.
+                                    </Typography>
+                                </div>
+                            </div>
+                            <Link
+                                className={`${ButtonVariants({ variant: 'secondary' })} shrink-0 self-start rounded-md font-bold lg:self-auto`}
+                                href='https://specterops.io/get-a-demo/'
+                                variant='unstyled'>
+                                Learn More About BloodHound Enterprise
+                            </Link>
+                        </div>
+                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
+                            {filteredEnterpriseExtensions.map((extension) => (
+                                <ProductCard
+                                    key={extension.name}
+                                    {...extension}
+                                    categoryLabel='Enterprise Extension'
                                     linkLabel='Learn More'
                                 />
                             ))}
