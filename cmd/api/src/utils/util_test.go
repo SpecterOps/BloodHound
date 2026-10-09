@@ -146,6 +146,30 @@ func TestIsValidClientVersion(t *testing.T) {
 	require.Equal(t, "rc1", openHoundRCVersion.Prerelease)
 	require.Empty(t, openHoundRCVersion.BuildMetadata)
 
+	for _, testCase := range []struct {
+		name                   string
+		userAgent              string
+		useRawObjectIDsEnabled bool
+		unsupported            bool
+	}{
+		{name: "unsupported collector version with flag disabled", userAgent: "openhound/v0.2.13"},
+		{name: "unsupported collector version with flag enabled", userAgent: "openhound/v0.2.13", useRawObjectIDsEnabled: true, unsupported: true},
+		{name: "prerelease of minimum version with flag enabled", userAgent: "openhound/v0.3.0-rc1", useRawObjectIDsEnabled: true, unsupported: true},
+		{name: "minimum version with flag enabled", userAgent: "openhound/v0.3.0", useRawObjectIDsEnabled: true},
+		{name: "allowed collector patch version with flag enabled", userAgent: "openhound/v0.3.1", useRawObjectIDsEnabled: true},
+		{name: "allowed collector major version with flag enabled", userAgent: "openhound/v1.0.0", useRawObjectIDsEnabled: true},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			version, err := utils.IsValidClientVersion(testCase.userAgent, testCase.useRawObjectIDsEnabled)
+			require.Equal(t, utils.ClientTypeOpenHound, version.ClientType)
+			if testCase.unsupported {
+				require.ErrorIs(t, err, utils.ErrRecommendOpenHoundVersion)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+
 	_, err = utils.IsValidClientVersion("openhound/0.0.0+docker", false)
 	require.ErrorIs(t, err, utils.ErrInvalidCollectorVersion)
 
