@@ -8533,6 +8533,7 @@
                                 "type": "object",
                                 "properties": {
                                   "scope": {
+                                    "description": "`public` for public queries, `owned` for queries created by this user, `shared` for queries shared to this user by another user, `extension` for opengraph extension queries\n",
                                     "type": "string"
                                   }
                                 }
