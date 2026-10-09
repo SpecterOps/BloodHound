@@ -20,7 +20,7 @@ import { expect, test as base } from '@playwright/test';
 import type { AxeResults, NodeResult, Result } from 'axe-core';
 import { access, copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { harArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har';
+import { makeHarArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har';
 import type { HarArtifactPaths, HarMode, HarNotFound } from './har';
 import { installGraphHasDataStub } from './stubs/graphs/cypher';
 import type { TestOptions } from './themes';
@@ -159,7 +159,7 @@ export const test = base.extend<AxeFixtures, TestOptions>({
     harRootDir: ['test-artifacts/har', { option: true }],
     harNotFound: ['abort', { option: true }],
     harArtifacts: async ({ harRootDir }, use, testInfo) => {
-        const paths = harArtifactPaths(testInfo, harRootDir);
+        const paths = makeHarArtifactPaths(testInfo, harRootDir);
         await use(paths);
     },
     harSession: async ({ harMode: _harMode }, use) => {

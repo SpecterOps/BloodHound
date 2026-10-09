@@ -19,7 +19,7 @@ import { access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '../src/axe';
 import {
-    harArtifactPaths,
+    makeHarArtifactPaths,
     readHar,
     readJsonArtifact,
     type HarRequestSummary,
@@ -100,12 +100,13 @@ test.describe('HAR helpers without network fixtures', () => {
         harArtifacts: _harArtifacts,
     }, testInfo) => {
         void _harArtifacts;
-        const first = harArtifactPaths(testInfo, '../playwright/har-test-fixtures');
+        const first = makeHarArtifactPaths(testInfo, '../playwright/har-test-fixtures');
         expect(
-            harArtifactPaths({ ...testInfo, retry: testInfo.retry + 1 }, '../playwright/har-test-fixtures').recording
+            makeHarArtifactPaths({ ...testInfo, retry: testInfo.retry + 1 }, '../playwright/har-test-fixtures')
+                .recording
         ).toBe(first.recording);
         expect(
-            harArtifactPaths(
+            makeHarArtifactPaths(
                 { ...testInfo, testId: `${testInfo.testId}-parameter-b` },
                 '../playwright/har-test-fixtures'
             ).recording

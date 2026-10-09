@@ -43,7 +43,7 @@ type HarEntry = {
     response: { status: number; content?: { mimeType?: string; size?: number } };
 };
 
-export function harArtifactPaths(testInfo: TestInfo, rootDirectory: string): HarArtifactPaths {
+export function makeHarArtifactPaths(testInfo: TestInfo, rootDirectory: string): HarArtifactPaths {
     const relativeFile = path.relative(testInfo.config.rootDir, testInfo.file);
     const identity = JSON.stringify([
         relativeFile,
@@ -54,7 +54,7 @@ export function harArtifactPaths(testInfo: TestInfo, rootDirectory: string): Har
     ]);
     // Keep both the identity and label format stable: existing recordings depend on them.
     const identityHash = createHash('sha256').update(identity).digest('hex').slice(0, 12);
-    const label = artifactDirectoryLabel(relativeFile, testInfo.titlePath, testInfo.project.name);
+    const label = makeArtifactDirectoryLabel(relativeFile, testInfo.titlePath, testInfo.project.name);
     const artifactRoot = path.resolve(testInfo.config.rootDir, rootDirectory);
     const directory = path.join(artifactRoot, `${label}-${identityHash}`);
     return {
@@ -65,7 +65,7 @@ export function harArtifactPaths(testInfo: TestInfo, rootDirectory: string): Har
     };
 }
 
-function artifactDirectoryLabel(relativeFile: string, titlePath: string[], projectName: string): string {
+function makeArtifactDirectoryLabel(relativeFile: string, titlePath: string[], projectName: string): string {
     const fileName = path.basename(relativeFile, path.extname(relativeFile));
     const suiteAndTestTitles = titlePath.slice(1);
     const label = [fileName, ...suiteAndTestTitles, projectName]

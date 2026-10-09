@@ -17,7 +17,14 @@
 import { expect, test } from '@playwright/test';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { harArtifactPaths, publishHar, readHar, readJsonArtifact, summarizeHar, writeJsonArtifact } from '../src/har';
+import {
+    makeHarArtifactPaths,
+    publishHar,
+    readHar,
+    readJsonArtifact,
+    summarizeHar,
+    writeJsonArtifact,
+} from '../src/har';
 
 const capturedEntries = [
     {
@@ -34,7 +41,7 @@ const capturedEntries = [
     },
 ];
 
-function recording(entries: unknown = capturedEntries) {
+function makeRecording(entries: unknown = capturedEntries) {
     return { log: { version: '1.2', entries } };
 }
 
@@ -60,15 +67,17 @@ test('canonical paths preserve their existing identity and ignore execution deta
         project: { ...testInfo.project, name: 'chromium' },
         repeatEachIndex: 0,
     };
-    const paths = harArtifactPaths(identity, 'fixtures');
+    const paths = makeHarArtifactPaths(identity, 'fixtures');
     expect(paths).toEqual({
         directory: '/suite/fixtures/login-spec-Account-settings-sign-in--chromium-5552b0302c45',
         recording: '/suite/fixtures/login-spec-Account-settings-sign-in--chromium-5552b0302c45/recording.har',
         requests: '/suite/fixtures/login-spec-Account-settings-sign-in--chromium-5552b0302c45/requests.json',
         responses: '/suite/fixtures/login-spec-Account-settings-sign-in--chromium-5552b0302c45/responses.json',
     });
-    expect(harArtifactPaths({ ...identity, retry: 2, workerIndex: 7, parallelIndex: 3 }, 'fixtures')).toEqual(paths);
-    expect(harArtifactPaths(identity, '/external/fixtures').directory).toBe(
+    expect(makeHarArtifactPaths({ ...identity, retry: 2, workerIndex: 7, parallelIndex: 3 }, 'fixtures')).toEqual(
+        paths
+    );
+    expect(makeHarArtifactPaths(identity, '/external/fixtures').directory).toBe(
         path.join('/external/fixtures', path.basename(paths.directory))
     );
     for (const variation of [
@@ -78,14 +87,14 @@ test('canonical paths preserve their existing identity and ignore execution deta
         { project: { ...identity.project, name: 'firefox' } },
         { repeatEachIndex: 1 },
     ]) {
-        expect(harArtifactPaths({ ...identity, ...variation }, 'fixtures').directory).not.toBe(paths.directory);
+        expect(makeHarArtifactPaths({ ...identity, ...variation }, 'fixtures').directory).not.toBe(paths.directory);
     }
 });
 
 test('summaries preserve order, zero sizes, and defaults for absent content', async () => {
     const testInfo = test.info();
-    const paths = harArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
-    await writeJsonArtifact(paths.recording, recording());
+    const paths = makeHarArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
+    await writeJsonArtifact(paths.recording, makeRecording());
     await summarizeHar(paths.recording, paths);
     expect(await readJsonArtifact(paths.requests)).toEqual(expectedRequests);
     expect(await readJsonArtifact(paths.responses)).toEqual(expectedResponses);
@@ -93,8 +102,8 @@ test('summaries preserve order, zero sizes, and defaults for absent content', as
 
 test('valid empty HARs produce empty summaries', async () => {
     const testInfo = test.info();
-    const paths = harArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
-    await writeJsonArtifact(paths.recording, recording([]));
+    const paths = makeHarArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
+    await writeJsonArtifact(paths.recording, makeRecording([]));
     expect(await readHar(paths.recording)).toEqual([]);
     await summarizeHar(paths.recording, paths);
     expect(await readJsonArtifact(paths.requests)).toEqual([]);
@@ -104,12 +113,12 @@ test('valid empty HARs produce empty summaries', async () => {
 for (const [description, value] of [
     ['null document', null],
     ['missing version', { log: { entries: [] } }],
-    ['non-array entries', recording({})],
-    ['null entry', recording([null])],
-    ['missing request', recording([{ response: { status: 200 } }])],
-    ['non-string method', recording([{ request: { method: 1, url: '/' }, response: { status: 200 } }])],
-    ['non-string URL', recording([{ request: { method: 'GET', url: 1 }, response: { status: 200 } }])],
-    ['non-numeric status', recording([{ request: { method: 'GET', url: '/' }, response: { status: '200' } }])],
+    ['non-array entries', makeRecording({})],
+    ['null entry', makeRecording([null])],
+    ['missing request', makeRecording([{ response: { status: 200 } }])],
+    ['non-string method', makeRecording([{ request: { method: 1, url: '/' }, response: { status: 200 } }])],
+    ['non-string URL', makeRecording([{ request: { method: 'GET', url: 1 }, response: { status: 200 } }])],
+    ['non-numeric status', makeRecording([{ request: { method: 'GET', url: '/' }, response: { status: '200' } }])],
 ] as const) {
     test(`rejects ${description} with the HAR path`, async () => {
         const testInfo = test.info();
@@ -131,24 +140,24 @@ test('invalid JSON reports the file and preserves the parsing error', async () =
 
 test('publishing invalid capture preserves all canonical artifacts', async () => {
     const testInfo = test.info();
-    const paths = harArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
+    const paths = makeHarArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
     const temporary = testInfo.outputPath('invalid.har');
-    await writeJsonArtifact(paths.recording, recording());
+    await writeJsonArtifact(paths.recording, makeRecording());
     await summarizeHar(paths.recording, paths);
     const files = [paths.recording, paths.requests, paths.responses];
     const originalContents = await Promise.all(files.map((file) => readFile(file, 'utf8')));
-    await writeJsonArtifact(temporary, recording([null]));
+    await writeJsonArtifact(temporary, makeRecording([null]));
     await expect(publishHar(temporary, paths)).rejects.toThrow('Malformed HAR');
     expect(await Promise.all(files.map((file) => readFile(file, 'utf8')))).toEqual(originalContents);
 });
 
 test('publishing replaces the recording and its summaries', async () => {
     const testInfo = test.info();
-    const paths = harArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
+    const paths = makeHarArtifactPaths(testInfo, testInfo.outputPath('fixtures'));
     const temporary = testInfo.outputPath('capture.har');
-    await writeJsonArtifact(paths.recording, recording([]));
+    await writeJsonArtifact(paths.recording, makeRecording([]));
     await summarizeHar(paths.recording, paths);
-    await writeJsonArtifact(temporary, recording());
+    await writeJsonArtifact(temporary, makeRecording());
     await publishHar(temporary, paths);
     expect(await readHar(paths.recording)).toEqual(capturedEntries);
     expect(await readJsonArtifact(paths.requests)).toEqual(expectedRequests);

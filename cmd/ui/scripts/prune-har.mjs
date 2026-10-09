@@ -83,7 +83,7 @@ function collectActiveTestIds(suites, activeIds = new Set()) {
     return activeIds;
 }
 
-async function main() {
+async function pruneHarArtifacts() {
     const { deleteOrphans, requestedRoot } = parseArguments(process.argv.slice(2));
     const report = await readSuiteReport();
     const activeIds = collectActiveTestIds(report.suites);
@@ -158,7 +158,7 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    main().catch((error) => {
+    pruneHarArtifacts().catch((error) => {
         console.error(error);
         process.exitCode = 1;
     });
