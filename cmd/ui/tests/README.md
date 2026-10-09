@@ -8,6 +8,25 @@ Because these suites drive a real browser against a running app, the live state 
 
 ## Quick Start
 
+To draft browser actions interactively, start the UI (`yarn dev` from `bhce/`) and run `yarn codegen` from `bhce/` or `cmd/ui/`. The launcher loads `cmd/ui/.env`, opens `A11Y_TEST_URL/ui/login`, and blocks service workers like the a11y suite. Pass Playwright codegen options or another URL after the script name:
+
+```sh
+yarn codegen
+yarn codegen --load-storage playwright/.auth/user-light.json
+yarn codegen http://127.0.0.1:3000/ui/explore --browser firefox
+```
+
+Paths passed to codegen are relative to `cmd/ui/`. Generate storage state first with `yarn test:a11y` if using `--load-storage`. Codegen generates test code; it does not run the shared Playwright fixtures or automatically manage their HAR files. The target app must already be running.
+
+HAR updates replace files for tests with unchanged identities. Renamed or removed tests leave old artifact directories; preview and remove those from `bhce/` or `cmd/ui/` with:
+
+```sh
+yarn har:prune           # list orphaned fixture directories, no deletion
+yarn har:prune --delete  # remove only the listed, tool-marked directories
+```
+
+The command lists the complete a11y suite, so it is safe to use after running only one spec. It leaves manually created or unmarked directories untouched. Use `--root <directory>` if `harRootDir` differs from its default `test-artifacts/har` under the test root.
+
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
 1. **Install dependencies** — from the root, install workspace packages and the Playwright browsers the suite drives:

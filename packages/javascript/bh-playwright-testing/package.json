@@ -4,7 +4,7 @@
     "type": "module",
     "private": true,
     "scripts": {
-        "test": "echo \"No tests for bh-playwright-testing\"",
+        "test": "HAR_TEST_MODE=record playwright test -c playwright.har.config.ts && HAR_TEST_MODE=update playwright test -c playwright.har.config.ts && HAR_TEST_MODE=mock playwright test -c playwright.har.config.ts",
         "check-types": "tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(ts|md|json)\"",

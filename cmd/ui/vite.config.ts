@@ -111,6 +111,8 @@ export default defineConfig(({ mode }) => {
                 ...configDefaults.exclude,
                 // Playwright accessibility regression suite — run manually via `yarn test:a11y`.
                 'tests/**',
+                // Node test runner — run via `yarn test:har-prune`.
+                'scripts/prune-har.test.mjs',
             ],
             setupFiles: ['./src/setupTests.tsx'],
             testTimeout: 60000, // 1 minute,
