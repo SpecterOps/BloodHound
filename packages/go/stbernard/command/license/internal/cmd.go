@@ -43,20 +43,43 @@ type Args struct {
 	ChangesOnlyMode bool
 }
 
+var (
+	// ignoreDir lists directory names that are pruned from the walk (e.g. build output and vendored deps).
+	ignoreDir = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256", "storybook-static"}
+	// ignorePaths lists relative paths that should not be scanned, matched by prefix.
+	ignorePaths = []string{
+		filepath.Join("tools", "docker-compose", "configs", "pgadmin", "pgpass"),
+		"justfile",
+		filepath.Join("cmd", "api", "src", "api", "static", "assets"),
+		filepath.Join("cmd", "api", "src", "cmd", "testidp", "samlidp"),
+		filepath.Join("cmd", "ui", "playwright"),
+	}
+	// disallowedExtensions lists file extensions (or bare filenames) that should not be scanned.
+	disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
+)
+
+// isIgnoredDir reports whether a directory with the given name should be pruned from the walk.
+func isIgnoredDir(name string) bool {
+	return slices.Contains(ignoreDir, name)
+}
+
+// matchesIgnorePath reports whether the given relative path matches one of the ignored paths by prefix.
+func matchesIgnorePath(relPath string) bool {
+	return slices.ContainsFunc(ignorePaths, func(igPath string) bool {
+		return strings.HasPrefix(relPath, igPath) || relPath == igPath
+	})
+}
+
+// isDisallowedExtension reports whether files with the given extension (or bare filename) should be skipped.
+func isDisallowedExtension(ext string) bool {
+	return slices.Contains(disallowedExtensions, ext)
+}
+
 func Run(env environment.Environment, args Args) error {
 	var (
-		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256"}
-		ignorePaths = []string{
-			filepath.Join("tools", "docker-compose", "configs", "pgadmin", "pgpass"),
-			"justfile",
-			filepath.Join("cmd", "api", "src", "api", "static", "assets"),
-			filepath.Join("cmd", "api", "src", "cmd", "testidp", "samlidp"),
-			filepath.Join("cmd", "ui", "playwright"),
-		}
-		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".gitattributes", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256", ".actrc", ".all-contributorsrc", ".editorconfig", ".conf", ".dockerignore", ".prettierrc", ".lintstagedrc", ".webp", ".bak", ".java", ".interp", ".tokens", "justfile", "pgpass", "LICENSE"}
-		now                  = time.Now()
-		baseBranchName       = args.BaseBranchName
-		branchChangeset      = map[string]bool{}
+		now             = time.Now()
+		baseBranchName  = args.BaseBranchName
+		branchChangeset = map[string]bool{}
 
 		// Concurrency primitives
 		errs       []error
@@ -144,13 +167,10 @@ func Run(env environment.Environment, args Args) error {
 		}
 
 		// Check if the current path contains one of our ignored paths
-		ignorePath := slices.ContainsFunc(ignorePaths, func(igPath string) bool {
-			// Use HasPrefix for more precise matching
-			return strings.HasPrefix(relPath, igPath) || relPath == igPath
-		})
+		ignorePath := matchesIgnorePath(relPath)
 
 		// Always prune ignored directories so filepath.Walk does not descend into them.
-		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
+		if info.IsDir() && isIgnoredDir(info.Name()) {
 			return filepath.SkipDir
 		}
 
@@ -177,7 +197,7 @@ func Run(env environment.Environment, args Args) error {
 		}
 
 		// Ensure we're not scanning a file in the list of disallowed extensions
-		if slices.Contains(disallowedExtensions, ext) {
+		if isDisallowedExtension(ext) {
 			slog.Debug("Skipped file: disallowed extension", slog.String("path", relPath))
 			return nil
 		}

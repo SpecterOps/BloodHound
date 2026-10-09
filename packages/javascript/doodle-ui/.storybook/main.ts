@@ -45,5 +45,14 @@ const config: StorybookConfig = {
     docs: {
         autodocs: 'tag',
     },
+    // When building for deployment under a subpath (e.g. GitHub Pages at
+    // /BloodHound/storybook/), set the Vite base so assets and the preview iframe
+    // resolve correctly. Dev mode (configType !== 'PRODUCTION') is left untouched.
+    async viteFinal(viteConfig, { configType }) {
+        if (configType === 'PRODUCTION') {
+            viteConfig.base = process.env.STORYBOOK_BASE_PATH ?? '/BloodHound/storybook/';
+        }
+        return viteConfig;
+    },
 };
 export default config;

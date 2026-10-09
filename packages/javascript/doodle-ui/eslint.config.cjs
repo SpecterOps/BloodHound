@@ -68,4 +68,4 @@ module.exports = defineConfig([{
             allowConstantExport: true,
         }],
     },
-}, globalIgnores(["**/dist", "**/coverage", "**/eslint.config.cjs"])]);
+}, globalIgnores(["**/dist", "**/coverage", "**/storybook-static", "**/eslint.config.cjs"])]);
