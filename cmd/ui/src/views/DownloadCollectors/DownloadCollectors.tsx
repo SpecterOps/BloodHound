@@ -112,7 +112,7 @@ const DownloadCollectors = () => {
                 <Box>
                     <Typography variant='h2'>SharpHound</Typography>
                     {sharpHoundCollectorsQuery.isLoading ? (
-                        <Paper>
+                        <div className='rounded bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
                             <Box p={2}>
                                 <Typography variant='h6' component='div'>
                                     <Skeleton variant='text' />
@@ -121,7 +121,7 @@ const DownloadCollectors = () => {
                                     <Skeleton variant='text' />
                                 </Typography>
                             </Box>
-                        </Paper>
+                        </div>
                     ) : sharpHoundCollectorsQuery.isError ||
                       sharpHoundCollectorsQuery.data?.data.versions.length === 0 ? (
                         <Typography variant='body1'>
