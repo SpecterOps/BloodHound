@@ -18,8 +18,10 @@ import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
     AzureKindProperties,
+    AzureNodeKind,
     CommonKindProperties,
 } from '../graphSchema';
+import { ZoneNodeKind } from './content';
 import {
     AD_NEVER_VALUE,
     AD_UNKNOWN_VALUE,
@@ -31,14 +33,43 @@ import {
     formatADSpecificTime,
     formatBoolean,
     formatDateString,
+    formatGraphNodeSublabel,
     formatList,
     formatNumber,
     formatObjectInfoFields,
     formatPrimitive,
     getEntityName,
+    getNodeSource,
     NoEntitySelectedHeader,
     validateProperty,
 } from './entityInfoDisplay';
+
+describe('formatGraphNodeSublabel', () => {
+    it.each([
+        { source: 'OpenGraph', nodeType: ZoneNodeKind, expected: 'Zone' },
+        { source: 'Azure', nodeType: 'AZUser', expected: 'Azure | AZUser' },
+        { source: 'Active Directory', nodeType: 'User', expected: 'Active Directory | User' },
+        { source: 'OpenGraph', nodeType: 'CustomNode', expected: 'OpenGraph | CustomNode' },
+        { source: 'OpenGraph', nodeType: 'Unknown', expected: 'OpenGraph | Unknown' },
+        { source: undefined, nodeType: ZoneNodeKind, expected: 'Zone' },
+    ])('formats $source and $nodeType as $expected', ({ source, nodeType, expected }) => {
+        expect(formatGraphNodeSublabel(source, nodeType)).toBe(expected);
+    });
+});
+
+describe('getNodeSource', () => {
+    it.each([
+        { kinds: [ZoneNodeKind], expected: 'OpenGraph' },
+        { kinds: [ZoneNodeKind, AzureNodeKind.Entity], expected: 'Azure' },
+        { kinds: [ActiveDirectoryNodeKind.Entity, ZoneNodeKind], expected: 'Active Directory' },
+        { kinds: [AzureNodeKind.Entity, AzureNodeKind.User], expected: 'Azure' },
+        { kinds: [ActiveDirectoryNodeKind.Entity, ActiveDirectoryNodeKind.User], expected: 'Active Directory' },
+        { kinds: ['CustomNode'], expected: 'OpenGraph' },
+        { kinds: [], expected: 'OpenGraph' },
+    ])('classifies $kinds as $expected', ({ kinds, expected }) => {
+        expect(getNodeSource(kinds)).toBe(expected);
+    });
+});
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
