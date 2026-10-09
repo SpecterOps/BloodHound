@@ -44,6 +44,25 @@ describe('useSortParams', () => {
         expect(result.current.sortOrder).toEqual(SortOrderAscending);
     });
 
+    it('keeps sort callbacks stable across renders when sorting has changed', () => {
+        const { result, rerender } = renderHook(() => useSortParams<TestColumns>());
+        const initialHandleSortChange = result.current.handleSortChange;
+        const initialClearSort = result.current.clearSort;
+
+        rerender();
+
+        expect(result.current.handleSortChange).toBe(initialHandleSortChange);
+        expect(result.current.clearSort).toBe(initialClearSort);
+
+        act(() => result.current.handleSortChange(COLUMN_1));
+        const sortedHandleSortChange = result.current.handleSortChange;
+
+        rerender();
+
+        expect(result.current.handleSortChange).toBe(sortedHandleSortChange);
+        expect(result.current.handleSortChange).not.toBe(initialHandleSortChange);
+    });
+
     it('returns undefined for sort params when no initial state is provided', () => {
         const { result } = renderHook(() => useSortParams<TestColumns>());
 
