@@ -25,6 +25,7 @@ export * from './useCustomNodeKinds';
 export * from './useDataQualityStats';
 export { default as useDebouncedValue } from './useDebouncedValue';
 export * from './useEdgeTraversability';
+export * from './useEdgeTypes';
 export * from './useEnvironmentIdList';
 export * from './useEnvironmentParams';
 export * from './useExecuteOnFileDrag';

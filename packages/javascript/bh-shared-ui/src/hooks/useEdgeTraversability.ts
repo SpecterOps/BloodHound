@@ -15,15 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { EdgeType } from 'js-client-library';
-import { useQuery } from 'react-query';
 import {
     ActiveDirectoryPathfindingEdges,
     ActiveDirectoryRelationshipKind,
     AzurePathfindingEdges,
     AzureRelationshipKind,
 } from '../graphSchema';
-import { apiClient } from '../utils/api';
-import { useFeatureFlag } from './useFeatureFlags';
+import { useEdgeTypesQuery } from './useEdgeTypes';
 
 export type EdgeTraversability = ReadonlyMap<string, boolean>;
 
@@ -50,14 +48,7 @@ const selectTraversability = (edgeTypes: EdgeType[]): EdgeTraversability =>
 
 // Use the unfiltered schema, including built-in and non-traversable edge kinds.
 export const useEdgeTraversability = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
-    const query = useQuery({
-        queryKey: ['getEdgeTypes'],
-        queryFn: ({ signal }) => apiClient.getEdgeTypes({ signal }).then((response) => response.data.data),
-        select: selectTraversability,
-        enabled: !!openGraphFeatureFlag?.enabled,
-        retry: false,
-    });
+    const query = useEdgeTypesQuery(selectTraversability);
     // Built-in rendering also works when the schema endpoint is disabled or unavailable.
     return { ...query, data: query.data ?? builtinTraversability };
 };
