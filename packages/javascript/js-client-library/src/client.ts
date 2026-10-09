@@ -842,6 +842,7 @@ class BHEAPIClient {
 
     getCollectorJobSchedules = (skip = 0, limit = 100, options?: GetCollectorJobSchedulesOptions) =>
         this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collector-job-schedules', {
+            paramsSerializer: { indexes: null },
             ...options,
             params: { ...options?.params, skip, limit },
         });
