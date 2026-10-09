@@ -75,8 +75,9 @@ const (
 	AuditLogActionUpdateSSOIdentityProvider AuditLogAction = "UpdateSSOIdentityProvider"
 	AuditLogActionDeleteSSOIdentityProvider AuditLogAction = "DeleteSSOIdentityProvider"
 
-	AuditLogActionAcceptRisk   AuditLogAction = "AcceptRisk"
-	AuditLogActionUnacceptRisk AuditLogAction = "UnacceptRisk"
+	AuditLogActionAcceptRisk          AuditLogAction = "AcceptRisk"
+	AuditLogActionUnacceptRisk        AuditLogAction = "UnacceptRisk"
+	AuditLogActionUpdateFindingStatus AuditLogAction = "UpdateFindingStatus"
 
 	AuditLogActionExportRelationshipRisks AuditLogAction = "ExportRelationshipRisks"
 	AuditLogActionExportListRisks         AuditLogAction = "ExportListRisks"
