@@ -18,7 +18,9 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -40,9 +42,78 @@ func With(limiterFactory func() mux.MiddlewareFunc, routes ...*Route) {
 
 // Router is a wrapper for the mux.Router type. It adds service-specific functionality to HTTP handler routes created.
 type Router struct {
-	globalMiddleware []mux.MiddlewareFunc
-	mux              *mux.Router
-	authorizer       auth.Authorizer
+	globalMiddleware         []mux.MiddlewareFunc
+	routeMiddlewareFactories []func() mux.MiddlewareFunc
+	postroutingMiddleware    *postroutingMiddlewareStack
+	mux                      *mux.Router
+	authorizer               auth.Authorizer
+}
+
+type postroutingMiddlewareStack struct {
+	mutex                    sync.RWMutex
+	recoveryMiddleware       []mux.MiddlewareFunc
+	beforeAuthentication     []mux.MiddlewareFunc
+	authenticationMiddleware []mux.MiddlewareFunc
+	afterAuthentication      []mux.MiddlewareFunc
+	rateLimitInstalled       bool
+}
+
+func (s *postroutingMiddlewareStack) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		s.mutex.RLock()
+		middleware := make([]mux.MiddlewareFunc, 0, len(s.recoveryMiddleware)+len(s.beforeAuthentication)+len(s.authenticationMiddleware)+len(s.afterAuthentication))
+		middleware = append(middleware, s.recoveryMiddleware...)
+		middleware = append(middleware, s.beforeAuthentication...)
+		middleware = append(middleware, s.authenticationMiddleware...)
+		middleware = append(middleware, s.afterAuthentication...)
+		s.mutex.RUnlock()
+
+		handler := next
+		for index := len(middleware) - 1; index >= 0; index-- {
+			handler = middleware[index](handler)
+		}
+		handler.ServeHTTP(response, request)
+	})
+}
+
+func (s *postroutingMiddlewareStack) AppendAfterAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.afterAuthentication = append(s.afterAuthentication, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) AppendRecovery(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.recoveryMiddleware = append(s.recoveryMiddleware, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) AppendAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.authenticationMiddleware = append(s.authenticationMiddleware, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) EnsureMatchedRouteRateLimit(factory func() mux.MiddlewareFunc) error {
+	if factory == nil {
+		return fmt.Errorf("rate limit middleware factory is nil")
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.rateLimitInstalled {
+		return nil
+	}
+
+	rateLimitMiddleware := factory()
+	if rateLimitMiddleware == nil {
+		return fmt.Errorf("rate limit middleware factory returned nil")
+	}
+	s.beforeAuthentication = append(s.beforeAuthentication, rateLimitMiddleware)
+
+	s.rateLimitInstalled = true
+	return nil
 }
 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
@@ -140,15 +211,38 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 	muxRouter := mux.NewRouter()
 	muxRouter.Use(middleware.EnsureRequestBodyClosed())
 	muxRouter.Use(middleware.SecureHandlerMiddleware(cfg, contentSecurityPolicy))
+	postroutingMiddleware := &postroutingMiddlewareStack{}
+	muxRouter.Use(postroutingMiddleware.Middleware)
 
-	return Router{mux: muxRouter, authorizer: authorizer}
+	return Router{mux: muxRouter, authorizer: authorizer, postroutingMiddleware: postroutingMiddleware}
 }
 
-// UsePostrouting appends all of the given mux.MiddlewareFunc instances to this router's post-route middleware execution
-// chain. Post-route means that this middleware will only be executed if a registered route is found to match the client
-// request.
+// UsePostrouting appends middleware after authentication in the matched-route
+// chain. It only runs when a registered route matches the request.
 func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
-	s.mux.Use(middleware...)
+	s.postroutingMiddleware.AppendAfterAuthentication(middleware...)
+}
+
+// UsePanicRecovery registers post-routing middleware that wraps all subsequent
+// post-routing stages, including rate limiting and authentication.
+func (s Router) UsePanicRecovery(middleware ...mux.MiddlewareFunc) {
+	s.postroutingMiddleware.AppendRecovery(middleware...)
+}
+
+// UseAuthenticationMiddleware registers post-routing authentication middleware.
+func (s Router) UseAuthenticationMiddleware(middleware ...mux.MiddlewareFunc) {
+	s.postroutingMiddleware.AppendAuthentication(middleware...)
+}
+
+// EnsureMatchedRouteRateLimit installs a single matched-route rate limiter
+// before authentication. Repeated calls are safe so shared registries can
+// enforce the same invariant without stacking duplicate limiters.
+func (s Router) EnsureMatchedRouteRateLimit(factory func() mux.MiddlewareFunc) error {
+	if s.postroutingMiddleware == nil {
+		return fmt.Errorf("router is not initialized")
+	}
+
+	return s.postroutingMiddleware.EnsureMatchedRouteRateLimit(factory)
 }
 
 // UsePrerouting appends all of the given mux.MiddlewareFunc instances to this router's pre-route middleware execution
@@ -156,6 +250,27 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 // matches to a valid route.
 func (s *Router) UsePrerouting(middleware ...mux.MiddlewareFunc) {
 	s.globalMiddleware = append(s.globalMiddleware, middleware...)
+}
+
+// WithRouteMiddleware registers a middleware factory that is invoked once per
+// route created by register, so each route receives its own middleware
+// instance (e.g. an independent rate-limit bucket) rather than a shared one.
+func (s *Router) WithRouteMiddleware(middlewareFactory func() mux.MiddlewareFunc, register func() error) error {
+	previousFactories := s.routeMiddlewareFactories
+	s.routeMiddlewareFactories = append(append([]func() mux.MiddlewareFunc{}, previousFactories...), middlewareFactory)
+	defer func() {
+		s.routeMiddlewareFactories = previousFactories
+	}()
+
+	return register()
+}
+
+func (s Router) buildRouteMiddleware() []mux.MiddlewareFunc {
+	instances := make([]mux.MiddlewareFunc, 0, len(s.routeMiddlewareFactories))
+	for _, factory := range s.routeMiddlewareFactories {
+		instances = append(instances, factory())
+	}
+	return instances
 }
 
 // MuxRouter returns the underlying *mux.Router. It is intended for pre-route middleware that needs to resolve the
@@ -177,6 +292,7 @@ func (s Router) Handler() http.Handler {
 
 func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 	middlewareWrapper := middleware.NewWrapper(handler)
+	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
 		handler: middlewareWrapper,
@@ -186,6 +302,7 @@ func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 
 func (s Router) HandleFunc(template string, handlerFunc func(http.ResponseWriter, *http.Request)) *Route {
 	middlewareWrapper := middleware.NewWrapper(http.HandlerFunc(handlerFunc))
+	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
 		handler:    middlewareWrapper,
