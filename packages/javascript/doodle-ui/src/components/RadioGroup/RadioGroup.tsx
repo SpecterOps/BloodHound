@@ -36,7 +36,7 @@ const RadioGroup = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.
     ({ className, children, row, ...props }, ref) => (
         <RadioGroupPrimitive.Root
             ref={ref}
-            className={cn('group rounded-md focus-within:focus-ring', row ? 'flex' : '', className)}
+            className={cn('rounded-md focus-within:focus-ring', row ? 'flex' : '', className)}
             {...props}>
             {children}
         </RadioGroupPrimitive.Root>
