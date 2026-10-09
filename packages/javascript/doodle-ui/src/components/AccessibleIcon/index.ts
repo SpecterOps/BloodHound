@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './Icon';
+export * from './AccessibleIcon';

@@ -186,18 +186,18 @@ describe('CreateUserDialog', () => {
         expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     });
 
-    it('focuses the dialog title without opening the role tooltip each time it opens', async () => {
+    it('focuses the dialog without opening the role tooltip each time it opens', async () => {
         const { screen, openDialog, user } = await createDialogInitSetup();
 
         await openDialog();
 
-        expect(await screen.findByTestId('create-user-dialog_title')).toHaveFocus();
+        expect(await screen.findByRole('dialog')).toHaveFocus();
         expect(screen.queryByRole('tooltip')).toBeNull();
 
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
         await openDialog();
 
-        expect(await screen.findByTestId('create-user-dialog_title')).toHaveFocus();
+        expect(await screen.findByRole('dialog')).toHaveFocus();
         expect(screen.queryByRole('tooltip')).toBeNull();
     });
 

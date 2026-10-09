@@ -50,6 +50,7 @@ const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 type={asChild ? type : type ?? 'button'}
                 {...rest}>
                 {children ?? (
+                    // TODO BED-7769 - refactor icon usage
                     // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                     <span role='img' tabIndex={0} className='inline-flex items-center justify-center rounded-full'>
                         <AppIcon.Info size={16} aria-hidden='true' />
