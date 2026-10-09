@@ -146,7 +146,11 @@ type Argon2Digest struct {
 }
 
 func (s Argon2Digest) Validate(content string) bool {
-	contentDigest := argon2.IDKey([]byte(content), s.Salt, s.NumIterations, s.MemoryKibibytes, s.NumThreads, Argon2DigestByteLength)
+	if len(s.Digest) == 0 {
+		return false
+	}
+
+	contentDigest := argon2.IDKey([]byte(content), s.Salt, s.NumIterations, s.MemoryKibibytes, s.NumThreads, uint32(len(s.Digest)))
 
 	for idx := 0; idx < len(contentDigest); idx++ {
 		if s.Digest[idx] != contentDigest[idx] {
