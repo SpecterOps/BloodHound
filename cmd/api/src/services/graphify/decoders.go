@@ -61,6 +61,7 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			batch.Stats.SourceObjectsAttempted.Add(int64(count + 1))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
@@ -69,6 +70,7 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 		}
 
 		if count == IngestCountThreshold {
+			batch.Stats.SourceObjectsAttempted.Add(int64(count))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 			if err := IngestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
@@ -80,6 +82,7 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 	}
 
 	if count > 0 {
+		batch.Stats.SourceObjectsAttempted.Add(int64(count))
 		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestBasicData(batch, convertedData); err != nil {
 			errs.Add(err)
@@ -111,6 +114,7 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			batch.Stats.SourceObjectsAttempted.Add(int64(count + 1))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, failedItemCount+1)
 			return err
 		} else {
@@ -122,6 +126,7 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 		}
 
 		if count == IngestCountThreshold {
+			batch.Stats.SourceObjectsAttempted.Add(int64(count))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, failedItemCount)
 			if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 				errs.Add(err)
@@ -134,6 +139,7 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 	}
 
 	if count > 0 {
+		batch.Stats.SourceObjectsAttempted.Add(int64(count))
 		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, failedItemCount)
 		if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 			errs.Add(err)
@@ -163,12 +169,14 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			batch.Stats.SourceObjectsAttempted.Add(int64(count + 1))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			count++
 			convertGroupData(group, &convertedData, batch.IngestTime)
 			if count == IngestCountThreshold {
+				batch.Stats.SourceObjectsAttempted.Add(int64(count))
 				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -182,6 +190,7 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 	}
 
 	if count > 0 {
+		batch.Stats.SourceObjectsAttempted.Add(int64(count))
 		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestGroupData(batch, convertedData); err != nil {
 			errs.Add(err)
@@ -210,12 +219,14 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			batch.Stats.SourceObjectsAttempted.Add(int64(count + 1))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
+				batch.Stats.SourceObjectsAttempted.Add(int64(count))
 				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
 					errs.Add(err)
@@ -228,6 +239,7 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 	}
 
 	if count > 0 {
+		batch.Stats.SourceObjectsAttempted.Add(int64(count))
 		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestSessions(batch, convertedData.SessionProps); err != nil {
 			errs.Add(err)
@@ -256,6 +268,7 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			batch.Stats.SourceObjectsAttempted.Add(int64(count + 1))
 			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
@@ -263,6 +276,7 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 			convert(data.Data, &convertedData, batch.IngestTime)
 			count++
 			if count == IngestCountThreshold {
+				batch.Stats.SourceObjectsAttempted.Add(int64(count))
 				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestAzureData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -275,6 +289,7 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 	}
 
 	if count > 0 {
+		batch.Stats.SourceObjectsAttempted.Add(int64(count))
 		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestAzureData(batch, convertedData); err != nil {
 			errs.Add(err)

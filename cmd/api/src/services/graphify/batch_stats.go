@@ -44,6 +44,11 @@ func PublishIngestThroughput(nodesProcessed, relsProcessed, nodesWritten, relsWr
 
 // IngestStats tracks the number of nodes and relationships processed during ingestion
 type IngestStats struct {
+	// Input attempts include failures before an update can be submitted.
+	SourceObjectsAttempted atomic.Int64
+	NodesAttempted         atomic.Int64
+	RelationshipsAttempted atomic.Int64
+
 	// Total entities processed (including deduplicated ones).
 	// Consider this the number of elements present in the raw ingest payload.
 	NodesProcessed         atomic.Int64
@@ -55,6 +60,9 @@ type IngestStats struct {
 }
 
 func (s *IngestStats) Reset() {
+	s.SourceObjectsAttempted.Store(0)
+	s.NodesAttempted.Store(0)
+	s.RelationshipsAttempted.Store(0)
 	s.NodesProcessed.Store(0)
 	s.RelationshipsProcessed.Store(0)
 	s.NodesWritten.Store(0)
