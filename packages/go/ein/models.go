@@ -106,6 +106,13 @@ type IngestibleEndpoint struct {
 	Matchers []MatchExpression   // Multi-property match expressions
 	MatchBy  IngestMatchStrategy // Strategy used to resolve the node
 	Kind     graph.Kind          // Optional kind filter to help disambiguate nodes
+
+	// Resolved is set when the endpoint was resolved against the database via a
+	// property or legacy name match. It distinguishes endpoints that reference a
+	// pre-existing node from endpoints given directly by object ID, so the write
+	// step can target the resolved node's own identity space instead of the
+	// current ingest source's kind.
+	Resolved bool
 }
 
 type IngestibleRel struct {
