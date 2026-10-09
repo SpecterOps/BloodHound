@@ -92,6 +92,14 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			setupMocks: func(mock) {},
 			expected:   expected{routeRegistered: true},
 		},
+		{
+			name: "Success: GET /api/v2/bloodhound-users-minimal is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{routeRegistered: true},
+		},
 	}
 
 	for _, testCase := range tests {
@@ -174,6 +182,14 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 			name: "Error: unauthenticated GET /api/v2/bloodhound-users - 401",
 			buildRequest: func() *http.Request {
 				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{responseCode: http.StatusUnauthorized},
+		},
+		{
+			name: "Error: unauthenticated GET /api/v2/bloodhound-users-minimal - 401",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
 			},
 			setupMocks: func(mock) {},
 			expected:   expected{responseCode: http.StatusUnauthorized},

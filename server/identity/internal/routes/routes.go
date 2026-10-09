@@ -32,18 +32,21 @@ func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit f
 		permissions         = auth.Permissions()
 		roleList            = handlers.RoleListView{}
 		permissionList      = handlers.PermissionListView{}
+		userMinimalList     = handlers.UserMinimalListView{}
 		roleListRoute       = routerInst.GET("/api/v2/roles", handler.ListRoles)
 		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
 		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
 		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
 		userListRoute       = RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
+		userMinimalRoute    = routerInst.GET("/api/v2/bloodhound-users-minimal", handler.ListActiveUsersMinimal)
 	)
 
-	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute, userListRoute)
+	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute, userListRoute, userMinimalRoute)
 	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
 	roleRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
+	userMinimalRoute.RequirePermissions(permissions.AuthReadUsersMinimal).WithSort(userMinimalList).WithFilters(userMinimalList)
 }
 
 // RegisterUserListRoute registers the list-users route at the given path and returns it. It is

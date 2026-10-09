@@ -374,3 +374,61 @@ func (s PermissionListView) IsSortable(field string) bool {
 		return false
 	}
 }
+
+// UserMinimalView is the JSON shape returned for a user without sensitive data.
+type UserMinimalView struct {
+	ID           uuid.UUID `json:"id"`
+	EmailAddress string    `json:"email_address"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+}
+
+func BuildUserMinimalView(user services.UserMinimal) UserMinimalView {
+	return UserMinimalView{
+		ID:           user.ID,
+		EmailAddress: user.EmailAddress.String,
+		FirstName:    user.FirstName.String,
+		LastName:     user.LastName.String,
+	}
+}
+
+func (s UserMinimalView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+type UserMinimalListView struct {
+	Users []UserMinimalView `json:"users"`
+}
+
+func BuildUserMinimalListView(users []services.UserMinimal) UserMinimalListView {
+	var views = make([]UserMinimalView, 0, len(users))
+	for _, user := range users {
+		views = append(views, BuildUserMinimalView(user))
+	}
+
+	return UserMinimalListView{Users: views}
+}
+
+func (s UserMinimalListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s UserMinimalListView) ValidFilters() map[string]params.FilterableField {
+	var stringOperators = []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}
+
+	return map[string]params.FilterableField{
+		"first_name":    {Operators: stringOperators, IsStringData: true},
+		"last_name":     {Operators: stringOperators, IsStringData: true},
+		"email_address": {Operators: stringOperators, IsStringData: true},
+		"id":            {Operators: []params.FilterOperator{params.Equals, params.NotEquals}},
+	}
+}
+
+func (s UserMinimalListView) IsSortable(field string) bool {
+	switch field {
+	case "first_name", "last_name", "email_address", "id":
+		return true
+	default:
+		return false
+	}
+}

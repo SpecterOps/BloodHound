@@ -735,3 +735,125 @@ func TestStore_ListUsers_Integration(t *testing.T) {
 		}
 	})
 }
+
+// seedDisabledUser inserts an enabled-looking user row with is_disabled set and
+// returns its id.
+func seedDisabledUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, now(), true, true, false, false, now(), now())`,
+		id.String(), principalName, principalName+"-first", principalName+"-last", principalName+"@example.com",
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
+// seedUserWithNullDetails inserts a user row whose first_name, last_name and
+// email_address are left NULL and returns its id.
+func seedUserWithNullDetails(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES ($1, $2, now(), false, true, false, false, now(), now())`,
+		id.String(), principalName,
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
+func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
+	type expected struct {
+		userIDs []uuid.UUID
+	}
+
+	type testData struct {
+		name      string
+		filters   params.Filters
+		sortItems params.SortItems
+		expected  expected
+	}
+
+	var (
+		ctx           = context.Background()
+		store, pool   = setupStoreAndPool(t)
+		aliceID       = seedUser(t, ctx, pool, "alice", false)
+		bobID         = seedUser(t, ctx, pool, "bob", false)
+		nullDetailsID = seedUserWithNullDetails(t, ctx, pool, "null-details")
+	)
+
+	seedDisabledUser(t, ctx, pool, "carol")
+	seedUser(t, ctx, pool, "support", true)
+
+	tt := []testData{
+		{
+			name:      "Success: disabled users and support accounts are excluded",
+			sortItems: params.SortItems{{Field: "email_address", Direction: params.Ascending}},
+			expected:  expected{userIDs: []uuid.UUID{aliceID, bobID, nullDetailsID}},
+		},
+		{
+			name:      "Success: users are sorted by first_name descending",
+			sortItems: params.SortItems{{Field: "first_name", Direction: params.Descending}},
+			expected:  expected{userIDs: []uuid.UUID{nullDetailsID, bobID, aliceID}},
+		},
+		{
+			name: "Success: approximate equality matches case-insensitively",
+			filters: params.Filters{
+				"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "LIC", SetOperator: params.FilterAnd}},
+			},
+			expected: expected{userIDs: []uuid.UUID{aliceID}},
+		},
+		{
+			name: "Success: approximate equality with null matches nothing",
+			filters: params.Filters{
+				"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "null", SetOperator: params.FilterAnd}},
+			},
+			expected: expected{userIDs: []uuid.UUID{}},
+		},
+		{
+			name: "Success: inequality excludes NULL email addresses",
+			filters: params.Filters{
+				"email_address": {{Field: "email_address", Operator: params.NotEquals, Value: "alice@example.com", SetOperator: params.FilterAnd}},
+			},
+			expected: expected{userIDs: []uuid.UUID{bobID}},
+		},
+		{
+			name: "Success: filtering on a disabled user returns no users",
+			filters: params.Filters{
+				"email_address": {{Field: "email_address", Operator: params.Equals, Value: "carol@example.com", SetOperator: params.FilterAnd}},
+			},
+			expected: expected{userIDs: []uuid.UUID{}},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			users, err := store.ListActiveUsersMinimal(ctx, testCase.filters, testCase.sortItems)
+			require.NoError(t, err)
+
+			actualIDs := make([]uuid.UUID, 0, len(users))
+			for _, user := range users {
+				actualIDs = append(actualIDs, user.ID)
+			}
+			assert.Equal(t, testCase.expected.userIDs, actualIDs)
+		})
+	}
+
+	t.Run("Success: NULL columns are returned as invalid NullStrings", func(t *testing.T) {
+		users, err := store.ListActiveUsersMinimal(ctx, params.Filters{
+			"id": {{Field: "id", Operator: params.Equals, Value: nullDetailsID.String(), SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		assert.Equal(t, []services.UserMinimal{{ID: nullDetailsID}}, users)
+	})
+}
