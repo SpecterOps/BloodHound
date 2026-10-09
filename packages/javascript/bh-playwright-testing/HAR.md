@@ -125,5 +125,5 @@ yarn har:prune --root test-artifacts/custom-har
 yarn test
 yarn check-types
 yarn lint
-node --test ../../../cmd/ui/scripts/prune-har.check.mjs
+node --test ../../../cmd/ui/scripts/prune-har.test.mjs
 ```

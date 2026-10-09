@@ -13,7 +13,7 @@
         "test:a11y": "rm -rf playwright && playwright test -c playwright.a11y.config.ts",
         "codegen": "node scripts/playwright-codegen.mjs",
         "har:prune": "node scripts/prune-har.mjs",
-        "test:har-prune": "node --test scripts/prune-har.check.mjs",
+        "test:har-prune": "node --test scripts/prune-har.test.mjs",
         "report:a11y": "allure serve playwright/a11y/allure-results",
         "report:a11y:build": "allure generate playwright/a11y/allure-results --output playwright/a11y/allure-report --clean && allure open playwright/a11y/allure-report",
         "check-types": "yarn workspaces foreach -ptRv --include '{bh-shared-ui,js-client-library,doodle-ui}' run build && tsc --noEmit --pretty",

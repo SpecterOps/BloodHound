@@ -53,6 +53,10 @@ test.describe('HAR lifecycle', () => {
         firstRecording = harArtifacts.recording;
         await page.goto(url);
         await expect(page.locator('body')).toHaveText(mode === 'record' ? 'original' : 'refreshed');
+        expect(await page.evaluate(() => Reflect.get(window, '__APP_TEST_RUNTIME__'))).toEqual({
+            type: 'accessibility',
+            runner: 'playwright',
+        });
     });
 
     test('finalizes recording after an assertion failure', async ({ page, harArtifacts }) => {
