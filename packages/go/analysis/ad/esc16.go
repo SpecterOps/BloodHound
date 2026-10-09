@@ -121,18 +121,20 @@ func isCertTemplateValidForESC16(ct *graph.Node) (bool, error) {
 		return false, err
 	} else if reqManagerApproval {
 		return false, nil
-	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
-		return false, err
-	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
-		return false, err
-	} else if schemaVersion > 1 && authorizedSignatures > 0 {
-		return false, nil
 	} else if authenticationEnabled, err := ct.Properties.Get(ad.AuthenticationEnabled.String()).Bool(); err != nil {
 		return false, err
 	} else if !authenticationEnabled {
 		return false, nil
-	} else {
+	} else if schemaVersion, err := ct.Properties.Get(ad.SchemaVersion.String()).Float64(); err != nil {
+		return false, err
+	} else if schemaVersion == 1 {
 		return true, nil
+	} else if schemaVersion <= 1 {
+		return false, nil
+	} else if authorizedSignatures, err := ct.Properties.Get(ad.AuthorizedSignatures.String()).Float64(); err != nil {
+		return false, err
+	} else {
+		return authorizedSignatures == 0, nil
 	}
 }
 
@@ -145,7 +147,7 @@ func GetADCSESC16EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		MATCH p2 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d)
 		WHERE ct.authenticationenabled = true
 			AND ct.requiresmanagerapproval = false
-			AND (ct.schemaversion = 1 OR ct.authorizedsignatures = 0)
+			AND (ct.schemaversion = 1 OR (ct.schemaversion > 1 AND ct.authorizedsignatures = 0))
 			AND (
 				n:Group
 				OR n:Computer

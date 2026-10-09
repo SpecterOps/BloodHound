@@ -98,6 +98,59 @@ func fetchESC16IntegrationEdges(t *testing.T, database graph.Database) []*graph.
 	return relationships
 }
 
+func TestADCSESC16TemplateQualificationMatchesComposition(t *testing.T) {
+	var (
+		testCases = []struct {
+			name                 string
+			schemaVersion        float64
+			authorizedSignatures any
+			expectedEdgeCount    int
+		}{
+			{name: "schema one without signatures", schemaVersion: 1, expectedEdgeCount: 1},
+			{name: "schema two with negative signatures", schemaVersion: 2, authorizedSignatures: float64(-1)},
+			{name: "schema two with zero signatures", schemaVersion: 2, authorizedSignatures: float64(0), expectedEdgeCount: 1},
+		}
+	)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				testContext = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+				harness     esc16IntegrationHarness
+			)
+			testContext.DatabaseTestWithSetup(func(_ *integration.HarnessDetails) error {
+				harness = setupESC16IntegrationHarness(testContext, ad.Group)
+				harness.certTemplate.Properties.Set(ad.SchemaVersion.String(), testCase.schemaVersion)
+				if testCase.authorizedSignatures == nil {
+					harness.certTemplate.Properties.Delete(ad.AuthorizedSignatures.String())
+				} else {
+					harness.certTemplate.Properties.Set(ad.AuthorizedSignatures.String(), testCase.authorizedSignatures)
+				}
+				testContext.UpdateNode(harness.certTemplate)
+				return nil
+			}, func(_ integration.HarnessDetails, database graph.Database) {
+				var (
+					edge = graph.NewRelationship(0, harness.attacker.ID, harness.domain.ID, graph.NewProperties(), ad.ADCSESC16)
+				)
+				_, err := adAnalysis.Post(t.Context(), database, false, false)
+				require.NoError(t, err)
+				generatedEdges := fetchESC16IntegrationEdges(t, database)
+				composition, err := adAnalysis.GetADCSESC16EdgeComposition(t.Context(), database, edge)
+				require.NoError(t, err)
+				require.Len(t, generatedEdges, testCase.expectedEdgeCount)
+				if testCase.expectedEdgeCount == 0 {
+					require.Empty(t, composition)
+				} else {
+					require.Equal(t, harness.attacker.ID, generatedEdges[0].StartID)
+					require.Equal(t, harness.domain.ID, generatedEdges[0].EndID)
+					require.NotEmpty(t, composition)
+					require.True(t, composition.AllNodes().Contains(harness.certTemplate))
+				}
+			})
+		})
+	}
+}
+
 func TestADCSESC16DeltaLifecycle(t *testing.T) {
 	var (
 		testCases = []struct {
