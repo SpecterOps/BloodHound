@@ -19,6 +19,7 @@ package router
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -42,8 +43,44 @@ func With(limiterFactory func() mux.MiddlewareFunc, routes ...*Route) {
 type Router struct {
 	globalMiddleware         []mux.MiddlewareFunc
 	routeMiddlewareFactories []func() mux.MiddlewareFunc
+	postroutingMiddleware    *postroutingMiddlewareStack
 	mux                      *mux.Router
 	authorizer               auth.Authorizer
+}
+
+type postroutingMiddlewareStack struct {
+	mutex      sync.RWMutex
+	middleware []mux.MiddlewareFunc
+}
+
+func (s *postroutingMiddlewareStack) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		s.mutex.RLock()
+		middleware := append([]mux.MiddlewareFunc(nil), s.middleware...)
+		s.mutex.RUnlock()
+
+		handler := next
+		for index := len(middleware) - 1; index >= 0; index-- {
+			handler = middleware[index](handler)
+		}
+		handler.ServeHTTP(response, request)
+	})
+}
+
+func (s *postroutingMiddlewareStack) Append(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.middleware = append(s.middleware, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) InsertBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	insertIndex := len(s.middleware)
+	if insertIndex > 1 {
+		insertIndex -= 2
+	}
+	s.middleware = append(s.middleware[:insertIndex], append(middleware, s.middleware[insertIndex:]...)...)
+	s.mutex.Unlock()
 }
 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
@@ -141,15 +178,23 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 	muxRouter := mux.NewRouter()
 	muxRouter.Use(middleware.EnsureRequestBodyClosed())
 	muxRouter.Use(middleware.SecureHandlerMiddleware(cfg, contentSecurityPolicy))
+	postroutingMiddleware := &postroutingMiddlewareStack{}
+	muxRouter.Use(postroutingMiddleware.Middleware)
 
-	return Router{mux: muxRouter, authorizer: authorizer}
+	return Router{mux: muxRouter, authorizer: authorizer, postroutingMiddleware: postroutingMiddleware}
 }
 
 // UsePostrouting appends all of the given mux.MiddlewareFunc instances to this router's post-route middleware execution
 // chain. Post-route means that this middleware will only be executed if a registered route is found to match the client
 // request.
 func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
-	s.mux.Use(middleware...)
+	s.postroutingMiddleware.Append(middleware...)
+}
+
+// UsePostroutingBeforeAuthentication inserts middleware immediately before
+// authentication, after panic recovery and any earlier post-route middleware.
+func (s Router) UsePostroutingBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.postroutingMiddleware.InsertBeforeAuthentication(middleware...)
 }
 
 // UsePrerouting appends all of the given mux.MiddlewareFunc instances to this router's pre-route middleware execution

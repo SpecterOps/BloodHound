@@ -27,7 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -89,6 +91,9 @@ func TestGetDatapipeStatus(t *testing.T) {
 				Pool:    db.Pool(),
 				Graph:   &graph.DatabaseSwitch{},
 				DogTags: testDogTags(),
+				RateLimitMiddleware: func() mux.MiddlewareFunc {
+					return middleware.DefaultRateLimitMiddleware(db)
+				},
 			})
 		})
 		db     = harness.DB
@@ -263,6 +268,9 @@ func TestGetAppConfigs(t *testing.T) {
 				Pool:    db.Pool(),
 				Graph:   &graph.DatabaseSwitch{},
 				DogTags: testDogTags(),
+				RateLimitMiddleware: func() mux.MiddlewareFunc {
+					return middleware.DefaultRateLimitMiddleware(db)
+				},
 			})
 		})
 		db     = harness.DB

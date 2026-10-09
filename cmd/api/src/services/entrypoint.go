@@ -187,19 +187,17 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
-		if err := routerInst.WithRouteMiddleware(func() mux.MiddlewareFunc {
-			return middleware.DefaultRateLimitMiddleware(connections.RDMS)
-		}, func() error {
-			modules.Register(modules.Deps{
-				Router:  &routerInst,
-				Pool:    connections.RDMS.Pool(),
-				Graph:   connections.Graph,
-				DogTags: dogtagsService,
-			})
-			return nil
-		}); err != nil {
-			return nil, fmt.Errorf("failed to register BHCE modules: %w", err)
-		}
+		modules.Register(modules.Deps{
+			Router:  &routerInst,
+			Pool:    connections.RDMS.Pool(),
+			Graph:   connections.Graph,
+			DogTags: dogtagsService,
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return middleware.MatchedRouteRateLimitMiddleware(connections.RDMS, []string{api.UserInterfacePath}, map[string]int64{
+					"/api/v2/login": 1,
+				})
+			},
+		})
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

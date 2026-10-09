@@ -143,20 +143,15 @@ func RateLimitMiddleware(db database.Database, limit int64) mux.MiddlewareFunc {
 // MatchedRouteRateLimitMiddleware applies an independent IP rate limit to each
 // matched route. It is intended for the router's post-routing middleware chain
 // so the limit runs before authentication and route middleware.
-func MatchedRouteRateLimitMiddleware(db database.Database, excludedPaths ...string) mux.MiddlewareFunc {
+func MatchedRouteRateLimitMiddleware(db database.Database, excludedPathPrefixes []string, limitsByPath map[string]int64) mux.MiddlewareFunc {
 	var (
-		handlerByRoute  = make(map[*mux.Route]http.Handler)
-		mutex           sync.RWMutex
-		excludedPathSet = make(map[string]struct{}, len(excludedPaths))
+		handlerByRoute = make(map[*mux.Route]http.Handler)
+		mutex          sync.RWMutex
 	)
-
-	for _, excludedPath := range excludedPaths {
-		excludedPathSet[excludedPath] = struct{}{}
-	}
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if _, excluded := excludedPathSet[request.URL.Path]; excluded {
+			if isRateLimitExcludedPath(request.URL.Path, excludedPathPrefixes) {
 				next.ServeHTTP(response, request)
 				return
 			}
@@ -174,7 +169,7 @@ func MatchedRouteRateLimitMiddleware(db database.Database, excludedPaths ...stri
 				mutex.Lock()
 				routeHandler, found = handlerByRoute[matchedRoute]
 				if !found {
-					routeHandler = RateLimitMiddleware(db, rateLimitForRoute(matchedRoute))(next)
+					routeHandler = RateLimitMiddleware(db, rateLimitForRoute(matchedRoute, limitsByPath))(next)
 					handlerByRoute[matchedRoute] = routeHandler
 				}
 				mutex.Unlock()
@@ -185,16 +180,25 @@ func MatchedRouteRateLimitMiddleware(db database.Database, excludedPaths ...stri
 	}
 }
 
-func rateLimitForRoute(route *mux.Route) int64 {
+func isRateLimitExcludedPath(requestPath string, excludedPathPrefixes []string) bool {
+	for _, excludedPathPrefix := range excludedPathPrefixes {
+		if requestPath == excludedPathPrefix || strings.HasPrefix(requestPath, strings.TrimRight(excludedPathPrefix, "/")+"/") {
+			return true
+		}
+	}
+
+	return false
+}
+
+func rateLimitForRoute(route *mux.Route, limitsByPath map[string]int64) int64 {
 	routePath, err := route.GetPathTemplate()
 	if err != nil {
 		return DefaultRateLimit
 	}
 
-	switch routePath {
-	case "/api/v2/login", "/api/v2/login/support":
-		return 1
-	default:
-		return DefaultRateLimit
+	if limit, found := limitsByPath[routePath]; found {
+		return limit
 	}
+
+	return DefaultRateLimit
 }

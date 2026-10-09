@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -39,7 +38,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database, rateLimitExemptPaths ...string) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database) {
 	// Set up the middleware stack
 	// Initialize bypassLimits here so we only run the DB query once and not per request
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
@@ -53,7 +52,6 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	}
 
 	routerInst.UsePostrouting(
-		middleware.MatchedRouteRateLimitMiddleware(db, rateLimitExemptPaths...),
 		middleware.PanicHandler,
 		middleware.AuthMiddleware(authenticator),
 		middleware.CompressionMiddleware,
@@ -76,21 +74,14 @@ func RegisterFossRoutes(
 	openGraphSchemaService v2.OpenGraphSchemaService,
 	alertPublisher alerts.Publisher,
 ) {
-	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(rdms)
-	},
-		// Health Endpoint
-		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
-			response.WriteHeader(http.StatusOK)
-		}),
+	routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+	routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
+		http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
+	})
 
-		// Redirect root resource to the UI
-		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
-		}),
-	)
-
-	// Static UI assets are matched routes and receive the global pre-auth rate limit.
+	// Static UI assets are exempt from the matched-route API rate limit.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)

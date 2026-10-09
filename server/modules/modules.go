@@ -20,6 +20,7 @@
 package modules
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
@@ -43,6 +44,8 @@ type Deps struct {
 	Graph          graph.Database
 	DogTags        dogtags.Service
 	AlertPublisher alerts.Publisher
+	// RateLimitMiddleware is installed once for matched routes before authentication.
+	RateLimitMiddleware func() mux.MiddlewareFunc
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -60,6 +63,14 @@ func Register(deps Deps) {
 	}
 	if deps.DogTags == nil {
 		panic("modules: Register requires a non-nil DogTags")
+	}
+	if deps.RateLimitMiddleware == nil {
+		panic("modules: Register requires a non-nil RateLimitMiddleware")
+	}
+	if rateLimitMiddleware := deps.RateLimitMiddleware(); rateLimitMiddleware == nil {
+		panic("modules: RateLimitMiddleware returned nil")
+	} else {
+		deps.Router.UsePostroutingBeforeAuthentication(rateLimitMiddleware)
 	}
 
 	if deps.AlertPublisher == nil {

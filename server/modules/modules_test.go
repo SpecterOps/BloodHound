@@ -102,24 +102,57 @@ func TestRegister_PanicsOnNilDogTags(t *testing.T) {
 	})
 }
 
+func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
+	t.Parallel()
+
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.PanicsWithValue(t, "modules: Register requires a non-nil RateLimitMiddleware", func() {
+		modules.Register(modules.Deps{
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
+		})
+	})
+}
+
 // TestRegister_WiresFeatureRoutes verifies that the composition root correctly
 // attaches the feature module routes to the shared router. Matching a
 // representative route from each module proves that Register successfully
 // delegated to the feature modules.
 func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		deps       = modules.Deps{
+		cfg                   = config.Configuration{}
+		authorizer            = auth.NewAuthorizer(nil)
+		routerInst            = router.NewRouter(cfg, authorizer, "")
+		rateLimitFactoryCalls int
+		rateLimitRequestCalls int
+		deps                  = modules.Deps{
 			Router:  &routerInst,
 			Pool:    new(pgxpool.Pool),
 			Graph:   &graph.DatabaseSwitch{},
 			DogTags: dogTagsService(false),
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				rateLimitFactoryCalls++
+				return func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+						rateLimitRequestCalls++
+						next.ServeHTTP(response, request)
+					})
+				}
+			},
 		}
 	)
 
 	modules.Register(deps)
+	assert.Equal(t, 1, rateLimitFactoryCalls, "the registry should create and install the matched-route limiter once")
+	routerInst.Handler().ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil))
+	assert.Equal(t, 1, rateLimitRequestCalls, "registered feature routes should pass through the registry-owned limiter")
 
 	for _, tc := range []struct {
 		name   string
