@@ -321,6 +321,8 @@ export type SavedQuery = {
     description: string;
     query: string;
     user_id: string;
+    category?: string;
+    extension_id?: number | null;
 };
 
 export type SavedQueryPermissionsResponse = {
