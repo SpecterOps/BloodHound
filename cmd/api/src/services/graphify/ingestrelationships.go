@@ -20,6 +20,7 @@ import (
 	"iter"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
@@ -28,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	ingestmetrics "github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )
@@ -40,9 +42,15 @@ import (
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		errs                                 = errorlist.NewBuilder()
-		resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships, ingestCtx.UseRawObjectIDs)
+		errs                  = errorlist.NewBuilder()
+		resolvedRelationships []ein.IngestibleRelationship
+		resolveErrors         error
+		stageStartedAt        time.Time
 	)
+
+	stageStartedAt = time.Now()
+	resolvedRelationships, resolveErrors = endpoint.ResolveAll(ingestCtx.Ctx, ingestCtx.EndpointResolver, relationships, ingestCtx.UseRawObjectIDs)
+	ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageRelationshipResolution, time.Since(stageStartedAt), len(relationships), len(relationships)-len(resolvedRelationships))
 
 	if resolveErrors != nil {
 		errs.Add(resolveErrors)
