@@ -30,7 +30,7 @@ const appendIconSvgUrls = (icons: IconDictionary): void => {
         if (value.url) return;
 
         icons[type].url = getModifiedSvgUrlFromIcon(value.icon, {
-            styles: { color: DEFAULT_ICON_COLOR, scale: NODE_SCALE, 'background-color': value.color },
+            styles: { color: DEFAULT_ICON_COLOR, scale: NODE_SCALE },
         });
     });
 };
