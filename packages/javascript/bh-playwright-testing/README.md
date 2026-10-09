@@ -76,6 +76,36 @@ test('MFA dialog', async ({ page }) => {
 
 ## Usage
 
+### HAR recordings and mocks
+
+The shared `test` fixture supports `harMode: 'record' | 'update' | 'mock' | 'off'` (default `off`). Set it at file or describe scope, or in a typed Playwright config. Existing `page` test bodies need no changes:
+
+```ts
+import { test } from 'bh-playwright-testing';
+
+test.use({ harMode: 'record' }); // switch to 'update' or 'mock' for the same test
+test('login', async ({ page }) => {
+    await page.goto('/login');
+});
+```
+
+```ts
+import { defineConfig } from '@playwright/test';
+import type { A11yTestOptions } from 'bh-playwright-testing';
+
+export default defineConfig<A11yTestOptions>({
+    use: { harMode: 'mock', harRootDir: './test-artifacts/har', harNotFound: 'abort' },
+});
+```
+
+`harRootDir` defaults to `test-artifacts/har` relative to the Playwright config's test root. Each HAR-enabled test has a canonical directory named from its spec filename, suite, title, and project, followed by a stable hash of its full identity. Different files, parameterized titles, projects, and `repeatEach` instances get separate directories. The path is stable across runs and retries; `harArtifacts` exposes its `directory`, `recording`, `requests`, and `responses` paths to tests. A directory contains `recording.har`, `requests.json`, and `responses.json`. The JSON files summarize actual HAR entries (method, URL, status, MIME type, and size). The helper functions `readHar`, `readJsonArtifact`, `writeJsonArtifact`, and `harArtifactPaths` are exported for tooling.
+
+Run once in `record` mode against a live service, then switch to `mock` for replay. Use `update` against the live service to refresh a fixture. Record and update first write to Playwright's per-execution output path; a valid completed HAR replaces the canonical file after the browser context closes. Update keeps the previous recording if the test fails. Recordings are also finalized after a test failure when Playwright can close the context. Native HAR capture and update require the default Playwright context lifecycle; manually created contexts are outside this fixture. Service workers can bypass HAR routing, so use `serviceWorkers: 'block'` when the app registers them.
+
+Mock mode aborts unmatched requests by default and reports failed requests. Set `harNotFound: 'fallback'` to allow unmatched requests to reach the live network. HAR files can contain credentials, cookies, and response bodies: inspect and redact them before committing. Keep temporary Playwright output out of version control.
+
+Updating a test replaces its HAR and summaries in the same directory. Renaming or moving a test, changing its project, or changing a parameterized title creates a new canonical directory; the old one remains. In BHCE UI, `yarn har:prune` compares marked HAR directories with the complete a11y test list and previews orphaned directories. `yarn har:prune --delete` removes only the previewed, marked directories. Run the preview after test reorganizations; unmarked hand-maintained fixtures are left alone.
+
 Add the package as a workspace `devDependency`:
 
 ```json

@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Convenience re-export of the most-used API (axe fixture, expect, reporting helpers).
-// Auth helpers, route stubs, and theme types/constants are available via subpath imports:
-//   - bh-playwright-testing/themes
-//   - bh-playwright-testing/auth
-//   - bh-playwright-testing/stubs
-export * from './axe';
-export { harArtifactPaths, readHar, readJsonArtifact, writeJsonArtifact, summarizeHar } from './har';
-export type { HarMode, HarNotFound, HarArtifactPaths, HarRequestSummary, HarResponseSummary } from './har';
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+    testDir: './tests',
+    outputDir: './playwright/har-results',
+    workers: 1,
+    retries: 1,
+    use: { browserName: 'chromium', headless: true },
+});

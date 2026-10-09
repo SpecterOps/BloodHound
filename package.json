@@ -16,6 +16,8 @@
         "audit": "yarn npm audit --recursive --all --severity high --environment production",
         "test": "yarn workspaces foreach -Apt run test run",
         "test:a11y": "yarn workspace bloodhound-ui test:a11y",
+        "codegen": "yarn workspace bloodhound-ui codegen",
+        "har:prune": "yarn workspace bloodhound-ui har:prune",
         "report:a11y": "allure serve cmd/ui/playwright/a11y/allure-results",
         "report:a11y:build": "allure generate cmd/ui/playwright/a11y/allure-results --output cmd/ui/playwright/a11y/allure-report --clean && allure open cmd/ui/playwright/a11y/allure-report",
         "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",

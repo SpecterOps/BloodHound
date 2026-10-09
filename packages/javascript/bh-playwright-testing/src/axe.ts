@@ -18,6 +18,10 @@ import AxeBuilder from '@axe-core/playwright';
 import type { ElementHandle, Locator, Page, TestInfo } from '@playwright/test';
 import { expect, test as base } from '@playwright/test';
 import type { AxeResults, NodeResult, Result } from 'axe-core';
+import { access, copyFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { harArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har';
+import type { HarArtifactPaths, HarMode, HarNotFound } from './har';
 import { installGraphHasDataStub } from './stubs/graphs/cypher';
 import type { TestOptions } from './themes';
 
@@ -73,6 +77,15 @@ type GoAndWaitForOptions = {
 };
 
 type AxeFixtures = {
+    /** HAR mode for the test context. Defaults to off. */
+    harMode: HarMode;
+    /** Canonical fixture root, relative to the Playwright config root or absolute. */
+    harRootDir: string;
+    /** Behavior for requests missing from a replayed HAR. Defaults to abort. */
+    harNotFound: HarNotFound;
+    /** Canonical paths for this test, stable across retries and runs. */
+    harArtifacts: HarArtifactPaths;
+    harSession: { contextStarted: boolean };
     makeAxeBuilder: () => AxeBuilder;
 
     /**
@@ -142,9 +155,75 @@ type AxeFixtures = {
 // Consumers that don't care about themes can ignore the option; it defaults to 'light'
 // and has no runtime side effects.
 export const test = base.extend<AxeFixtures, TestOptions>({
+    harMode: ['off', { option: true }],
+    harRootDir: ['test-artifacts/har', { option: true }],
+    harNotFound: ['abort', { option: true }],
+    harArtifacts: async ({ harRootDir }, use, testInfo) => {
+        const paths = harArtifactPaths(testInfo, harRootDir);
+        await use(paths);
+    },
+    harSession: async ({ harMode: _harMode }, use) => {
+        void _harMode;
+        await use({ contextStarted: false });
+    },
+    contextOptions: async ({ contextOptions, harMode, harArtifacts, harSession }, use, testInfo) => {
+        if (harMode === 'off' || harMode === 'mock') {
+            await use(contextOptions);
+            return;
+        }
+
+        // Playwright closes its context before this dependency tears down. Record and update
+        // both write to the execution-specific output directory, then publish atomically.
+        const temporary = testInfo.outputPath('har', 'recording.har');
+        await mkdir(harArtifacts.directory, { recursive: true });
+        await mkdir(path.dirname(temporary), { recursive: true });
+        if (harMode === 'update') {
+            await readHar(harArtifacts.recording);
+            await copyFile(harArtifacts.recording, temporary);
+        }
+        await use(
+            harMode === 'record'
+                ? { ...contextOptions, recordHar: { path: temporary, content: 'embed', mode: 'full' } }
+                : contextOptions
+        );
+        if (harMode === 'record' || testInfo.status === 'passed') {
+            // A setup failure can initialize this option without creating a context.
+            try {
+                await access(temporary);
+            } catch {
+                if (harSession.contextStarted) {
+                    throw new Error(`HAR recording was not written after context close: ${temporary}`);
+                }
+                return;
+            }
+            await publishHar(temporary, harArtifacts);
+            await writeJsonArtifact(path.join(harArtifacts.directory, '.har-fixture.json'), {
+                testId: testInfo.testId,
+                project: testInfo.project.name,
+                rootDir: testInfo.config.rootDir,
+            });
+        }
+    },
     // Injects window variable that may be checked by app at runtime
     // Allows BH to determine if it is run by Playwright to disable CSS transition animation
-    context: async ({ context }, use) => {
+    context: async ({ context, harMode, harNotFound, harArtifacts, harSession }, use, testInfo) => {
+        const failedRequests: string[] = [];
+        if (harMode === 'mock' || harMode === 'update') {
+            await readHar(harArtifacts.recording);
+            if (harMode === 'mock' && harNotFound === 'abort') {
+                context.on('requestfailed', (request) => {
+                    failedRequests.push(
+                        `${request.method()} ${request.url()}: ${request.failure()?.errorText ?? 'failed'}`
+                    );
+                });
+            }
+            await context.routeFromHAR(
+                harMode === 'update' ? testInfo.outputPath('har', 'recording.har') : harArtifacts.recording,
+                harMode === 'update'
+                    ? { update: true, updateContent: 'embed', updateMode: 'full' }
+                    : { notFound: harNotFound }
+            );
+        }
         await context.addInitScript(() => {
             Object.defineProperty(window, '__APP_TEST_RUNTIME__', {
                 value: {
@@ -156,7 +235,16 @@ export const test = base.extend<AxeFixtures, TestOptions>({
             });
         });
 
+        harSession.contextStarted = true;
         await use(context);
+        if (harMode === 'record' || harMode === 'update') {
+            // Native HAR output is written by close(). Playwright's base context fixture
+            // also closes the context, but its teardown can follow contextOptions teardown.
+            await context.close();
+        }
+        if (failedRequests.length) {
+            throw new Error(`HAR mock blocked unexpected or failed requests:\n${failedRequests.join('\n')}`);
+        }
     },
     theme: ['light', { option: true, scope: 'worker' }],
     a11yDefaults: [{}, { option: true }],
@@ -241,7 +329,16 @@ export { expect };
 // Combined Playwright options shape for a11y consumers. Pass to `defineConfig<A11yTestOptions>` so a
 // config's `use` block can set the theme matrix option plus the a11y fixture options below.
 export type A11yTestOptions = TestOptions &
-    Pick<AxeFixtures, 'a11yDefaults' | 'a11yDefaultInclude' | 'navToggleName' | 'installGraphDataStub'>;
+    Pick<
+        AxeFixtures,
+        | 'a11yDefaults'
+        | 'a11yDefaultInclude'
+        | 'navToggleName'
+        | 'installGraphDataStub'
+        | 'harMode'
+        | 'harRootDir'
+        | 'harNotFound'
+    >;
 
 // Optional inputs that opt into per-node screenshot attachments. When `page` is provided,
 // each violation's affected nodes are screenshot via Playwright and attached alongside the
