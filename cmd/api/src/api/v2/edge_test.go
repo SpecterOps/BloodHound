@@ -823,7 +823,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			expected: httpValues{
 				code:   http.StatusOK,
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2"}},
-				body:   `{"data":{"nodes":{"3":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[],"literals":[]}}`,
+				body:   `{"data":{"nodes":{"3":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[],"literals":[]}}`,
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
@@ -908,7 +908,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			expected: httpValues{
 				code:   http.StatusOK,
 				header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2"}},
-				body:   `{"data":{"nodes":{"3":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-1000"}}},"edges":[],"literals":[]}}`,
+				body:   `{"data":{"nodes":{"3":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-1000"}}},"edges":[],"literals":[]}}`,
 			},
 			testSetup: func(t *testing.T, ctx context.Context, mocks mock) {
 				t.Helper()
@@ -1648,7 +1648,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{"1":{"label":"** Hidden User Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true},"2":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[{"id":"","source":"1","target":"2","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
+				responseBody:   `{"data":{"nodes":{"1":{"label":"** Hidden User Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true},"2":{"label":"** Hidden Computer Object **","kind":"HIDDEN","kinds":[],"objectId":"HIDDEN","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"0001-01-01T00:00:00Z","hidden":true}},"edges":[{"id":"","source":"1","target":"2","label":"** Hidden Edge **","kind":"HIDDEN","lastSeen":"0001-01-01T00:00:00Z"}],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
@@ -1756,7 +1756,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{"1":{"label":"USER1","kind":"User","kinds":["User"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"USER1","objectid":"S-1-5-21-NOTALLOWED-1000"}},"2":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-2000","isTierZero":false,"isOwnedObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-2000"}}},"edges":[{"id":"1","source":"1","target":"2","label":"WriteDacl","kind":"WriteDacl","lastSeen":"2025-01-01T00:00:00Z","properties":{"inheritancehash":"inheritance-hash","isacl":true,"isinherited":true,"lastseen":"2025-01-01T00:00:00Z"}}],"literals":[]}}`,
+				responseBody:   `{"data":{"nodes":{"1":{"label":"USER1","kind":"User","kinds":["User"],"objectId":"S-1-5-21-NOTALLOWED-1000","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"USER1","objectid":"S-1-5-21-NOTALLOWED-1000"}},"2":{"label":"COMPUTER1","kind":"Computer","kinds":["Computer"],"objectId":"S-1-5-21-NOTALLOWED-2000","isTierZero":false,"isOwnedObject":false,"isDecoyObject":false,"lastSeen":"2025-01-01T00:00:00Z","properties":{"domainsid":"S-1-5-21-NOTALLOWED","inheritancehashes":["inheritance-hash"],"lastseen":"2025-01-01T00:00:00Z","name":"COMPUTER1","objectid":"S-1-5-21-NOTALLOWED-2000"}}},"edges":[{"id":"1","source":"1","target":"2","label":"WriteDacl","kind":"WriteDacl","lastSeen":"2025-01-01T00:00:00Z","properties":{"inheritancehash":"inheritance-hash","isacl":true,"isinherited":true,"lastseen":"2025-01-01T00:00:00Z"}}],"literals":[]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

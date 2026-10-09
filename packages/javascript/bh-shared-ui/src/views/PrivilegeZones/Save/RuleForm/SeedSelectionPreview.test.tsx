@@ -14,11 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagMember, SelectorSeedRequest } from 'js-client-library';
+import {
+    AssetGroupTagMember,
+    AssetGroupTagTypeDecoy,
+    SeedExpansionMethodNone,
+    SelectorSeedRequest,
+} from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { Route, Routes } from 'react-router-dom';
 import { zoneHandlers } from '../../../../mocks';
-import { render, screen, within } from '../../../../test-utils';
+import { act, render, screen, waitFor, within } from '../../../../test-utils';
 import { SeedSelectionPreview } from './SeedSelectionPreview';
 
 const EXPLORE_URL =
@@ -73,6 +79,7 @@ const DirectObjectsResults = [
 ];
 
 let previewResults: AssetGroupTagMember[] | undefined;
+let previewRequestBodies: any[] = [];
 
 const setPreviewResultsTestData = (previewResultsList: AssetGroupTagMember[]) => {
     previewResults = previewResultsList;
@@ -80,7 +87,8 @@ const setPreviewResultsTestData = (previewResultsList: AssetGroupTagMember[]) =>
 
 const handlers = [
     ...zoneHandlers,
-    rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+    rest.post(`/api/v2/asset-group-tags/preview-selectors`, async (req, res, ctx) => {
+        previewRequestBodies.push(await req.json());
         return res(ctx.json({ data: { members: previewResults } }));
     }),
 ];
@@ -91,6 +99,7 @@ beforeAll(() => server.listen());
 afterEach(() => {
     server.resetHandlers();
     previewResults = undefined;
+    previewRequestBodies = [];
 });
 afterAll(() => server.close());
 
@@ -146,6 +155,65 @@ describe('Seed Selection Results', () => {
         expect(directObjectsList[0]).toBeInTheDocument();
         expect(expandedObjectListTitle).toBeInTheDocument();
         expect(expandedObjectList[0]).toBeInTheDocument();
+    });
+
+    it('previews Decoy rules without expanding seed objects', async () => {
+        const decoyTagId = 5;
+        const decoyRulePath = `/privilege-zones/labels/${decoyTagId}/rules/save`;
+        let releaseTagsResponse: () => void = () => undefined;
+        let markTagsRequestStarted: () => void = () => undefined;
+        const tagsResponseGate = new Promise<void>((resolve) => {
+            releaseTagsResponse = resolve;
+        });
+        const tagsRequestStarted = new Promise<void>((resolve) => {
+            markTagsRequestStarted = resolve;
+        });
+
+        server.use(
+            rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+                markTagsRequestStarted();
+                await tagsResponseGate;
+                return res(
+                    ctx.json({
+                        data: {
+                            tags: [
+                                {
+                                    id: decoyTagId,
+                                    type: AssetGroupTagTypeDecoy,
+                                    name: 'Decoy',
+                                },
+                            ],
+                        },
+                    })
+                );
+            })
+        );
+
+        render(
+            <Routes>
+                <Route
+                    path='/privilege-zones/labels/:labelId/rules/save'
+                    element={<SeedSelectionPreview seeds={TestSeeds} ruleType={2} />}
+                />
+            </Routes>,
+            { route: decoyRulePath }
+        );
+
+        await tagsRequestStarted;
+        expect(previewRequestBodies).toEqual([]);
+
+        await act(async () => {
+            releaseTagsResponse();
+        });
+
+        await waitFor(() => {
+            expect(previewRequestBodies).toEqual([
+                {
+                    seeds: TestSeeds,
+                    expansion: SeedExpansionMethodNone,
+                },
+            ]);
+        });
     });
 
     it('shows the direct object list and expanded object list empty, when only direct objects in results', async () => {
