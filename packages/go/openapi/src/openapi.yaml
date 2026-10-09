@@ -848,6 +848,8 @@ paths:
     $ref: './paths/attack-paths.domains.id.sparkline.yaml'
   /api/v2/attack-paths/{attack_path_id}/acceptance:
     $ref: './paths/attack-paths.attack-paths.id.acceptance.yaml'
+  /api/v2/attack-paths/findings/{finding_id}/status:
+    $ref: './paths/attack-paths.attack-paths-findings.id.status.yaml'
 
   # risk posture
   /api/v2/posture-stats:
