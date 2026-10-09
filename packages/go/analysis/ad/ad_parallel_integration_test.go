@@ -19,11 +19,9 @@
 package ad_test
 
 import (
-	"context"
 	"testing"
 
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
-	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -254,18 +252,18 @@ func TestPostADCSESC13_ManagedServiceAccountDNSRequirements(t *testing.T) {
 		NewRelationship(t, &suite, principal, dnsCertTemplate, ad.Enroll)
 	}
 
-	operation := post.NewPostRelationshipOperation(suite.Context, suite.GraphDB, "ADCS Post Process Test - ESC13 managed service account DNS requirements")
+	sink := newTestESCSink(t, suite.GraphDB, ad.ADCSESC13)
 
 	localGroupData, cache, err := FetchADCSPrereqs(suite.GraphDB)
 	require.NoError(t, err)
 
 	for _, certChains := range cache.GetECAHostedChainedDomains() {
-		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			return adAnalysis.PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache)
-		})
+		require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+			return adAnalysis.PostADCSESC13(suite.Context, tx, sink, localGroupData, certChains, cache)
+		}))
 	}
 
-	require.NoError(t, operation.Done())
+	sink.Done()
 
 	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
 		edges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
