@@ -138,20 +138,14 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		attr.Scope("process"),
 	)()
 
-	var (
-		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
-	)
-
 	// NTLM must be enabled through the feature flag
 	if !ntlmEnabled {
-		operation.Done()
-
 		// Delta-tracked edges are no longer cleared up front, so prune any NTLM edges left over from when the flag was enabled
 		if ntlmSink, err := newNTLMSink(ctx, db); err != nil {
-			return &operation.Stats, err
+			return &post.AtomicPostProcessingStats{}, err
 		} else {
 			ntlmSink.Done()
-			return &operation.Stats, nil
+			return ntlmSink.Stats(), nil
 		}
 	}
 
@@ -159,16 +153,20 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
 	ntlmCache, err := NewNTLMCache(ctx, db, localGroupData)
 	if err != nil {
-		operation.Done()
 		return nil, err
 	}
 
 	// The sink is created only after the prerequisites succeed so a failure above does not prune existing edges
 	ntlmSink, err := newNTLMSink(ctx, db)
 	if err != nil {
-		operation.Done()
 		return nil, err
 	}
+
+	readerPool := ops.StartNewOperation[any](ops.OperationContext{
+		Parent:     ctx,
+		DB:         db,
+		NumReaders: post.MaximumDatabaseParallelWorkers,
+	})
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
@@ -180,7 +178,7 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
 				} else {
-					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+					if err := readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 						return PostCoerceAndRelayNTLMToSMB(ctx, tx, ntlmSink, ntlmCache, innerComputer, authenticatedUserGroupID)
 					}); err != nil {
 						slog.WarnContext(
@@ -197,8 +195,8 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 						continue
 					}
 
-					if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ntlmCache.LdapCache)
+					if err = readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+						return PostCoerceAndRelayNTLMToLDAP(ctx, ntlmSink, innerComputer, authenticatedUserGroupID, ntlmCache.LdapCache)
 					}); err != nil {
 						slog.WarnContext(
 							ctx,
@@ -213,29 +211,30 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			return cursor.Error()
 		})
 	}); err != nil {
-		operation.Done()
+		readerPool.Done()
 		ntlmSink.Done()
 		return nil, err
 	}
 
-	if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, ntlmSink, adcsCache, ntlmCache); err != nil {
-		operation.Done()
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, readerPool, ntlmSink, adcsCache, ntlmCache); err != nil {
+		readerPool.Done()
 		ntlmSink.Done()
 		return nil, err
 	}
 
 	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
-	operationErr := operation.Done()
+	readerErr := readerPool.Done()
 	ntlmSink.Done()
-	operation.Stats.Merge(ntlmSink.Stats())
 
-	return &operation.Stats, operationErr
+	return ntlmSink.Stats(), readerErr
 }
 
 // ntlmPostProcessedEdges lists the NTLM edge kinds which are post-processed using the delta-change-apply method
 var ntlmPostProcessedEdges = graph.Kinds{
-	ad.CoerceAndRelayNTLMToSMB,
 	ad.CoerceAndRelayNTLMToADCS,
+	ad.CoerceAndRelayNTLMToSMB,
+	ad.CoerceAndRelayNTLMToLDAP,
+	ad.CoerceAndRelayNTLMToLDAPS,
 }
 
 // newNTLMSink migrates any legacy NTLM edges, fetches the delta tracker and returns a sink for the migrated NTLM edge kinds
@@ -406,7 +405,7 @@ func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardi
 	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
 }
 
-func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], sink *post.FilteredRelationshipSink, adcsCache *ADCSCache, ntlmCache NTLMCache) error {
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, readerPool *ops.Operation[any], sink *post.FilteredRelationshipSink, adcsCache *ADCSCache, ntlmCache NTLMCache) error {
 	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
 		ecaID := graph.ID(eca)
 
@@ -438,7 +437,7 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 					var submitErr error
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
-							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+							if err := readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 								victims.Each(func(target uint64) bool {
 									return sink.Submit(ctx, post.EnsureRelationshipJob{
 										FromID: authUsersGroup,
@@ -781,7 +780,7 @@ func GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx context.Context, db graph.
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
-func PostCoerceAndRelayNTLMToLDAP(outC chan<- post.EnsureRelationshipJob, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
+func PostCoerceAndRelayNTLMToLDAP(ctx context.Context, sink *post.FilteredRelationshipSink, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
 	// webclientrunning must be set to true for the computer's properties in order for this attack path to be viable
 	// If the property is not found, we will assume false
 	if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
@@ -802,31 +801,31 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- post.EnsureRelationshipJob, comput
 				// for both LDAP and LDAPS scenarios, assuming the passed in signingCache has any vulnerable paths
 				// We also ignore instances where the computer is relaying to itself
 				if len(signingCache.relayableToDCLDAP) == 1 && signingCache.relayableToDCLDAP[0] != computer.ID {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAP,
-					}
+					})
 				} else if len(signingCache.relayableToDCLDAP) > 1 {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAP,
-					}
+					})
 				}
 
 				if len(signingCache.relayableToDCLDAPS) == 1 && signingCache.relayableToDCLDAPS[0] != computer.ID {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
-					}
+					})
 				} else if len(signingCache.relayableToDCLDAPS) > 1 {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
-					}
+					})
 				}
 			}
 		}
