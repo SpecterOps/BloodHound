@@ -99,7 +99,7 @@ jobs:
       image_repository: ${{ matrix.image_repository }}
       image_digest: ${{ needs.bloodhound-container-image.outputs.image_digest }}
       aws_region: us-east-1
-      certificate_identity: https://github.com/SpecterOps/BloodHound/.github/workflows/reusable.cosign-sign-image.yml@${{ github.ref }}
+      certificate_identity: https://github.com/SpecterOps/BloodHound/.github/workflows/reusable.cosign-image-signing.yml@${{ github.ref }}
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
