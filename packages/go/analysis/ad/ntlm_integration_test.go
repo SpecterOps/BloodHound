@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -44,7 +45,9 @@ import (
 )
 
 func setupCoerceAndNTLMToADCS(ctx context.Context, db graph.Database, opMessage string) error {
-	operation := post.NewPostRelationshipOperation(ctx, db, opMessage)
+	var (
+		operation = post.NewPostRelationshipOperation(ctx, db, opMessage)
+	)
 
 	if localGroupData, cache, err := FetchADCSPrereqs(db); err != nil {
 		operation.Done()
@@ -52,10 +55,18 @@ func setupCoerceAndNTLMToADCS(ctx context.Context, db graph.Database, opMessage 
 	} else if ntlmCache, err := adAnalysis.NewNTLMCache(ctx, db, localGroupData); err != nil {
 		operation.Done()
 		return err
-	} else if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, cache, ntlmCache); err != nil {
+	} else if tracker, err := post.FetchTracker(ctx, db, graph.Kinds{ad.CoerceAndRelayNTLMToADCS, ad.CoerceAndRelayNTLMToADCSRPC}); err != nil {
 		operation.Done()
 		return err
 	} else {
+		sink := post.NewFilteredRelationshipSink(ctx, opMessage, db, tracker)
+		defer sink.Done()
+
+		if err := adAnalysis.PostCoerceAndRelayNTLMToADCS(ctx, operation, sink, cache, ntlmCache); err != nil {
+			operation.Done()
+			return err
+		}
+
 		return operation.Done()
 	}
 }
@@ -111,10 +122,11 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 			} else {
 				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(t.Context(), db, edge)
 				require.Nil(t, err)
+				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 7, len(nodes))
+				require.Equal(t, 8, len(nodes))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Computer))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.CertTemplate1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.EnterpriseCA1))
@@ -131,6 +143,19 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 
 func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 	var (
+		relationshipKinds = graph.Kinds{ad.CoerceAndRelayNTLMToADCS, ad.CoerceAndRelayNTLMToADCSRPC}
+	)
+	for _, relationshipKind := range relationshipKinds {
+		t.Run(relationshipKind.String(), func(t *testing.T) {
+			testCoerceAndRelayNTLMToADCSTrust(t, relationshipKind)
+		})
+	}
+}
+
+func testCoerceAndRelayNTLMToADCSTrust(t *testing.T, relationshipKind graph.Kind) {
+	t.Helper()
+
+	var (
 		ctx        = t.Context()
 		graphDB    = newNTLMIntegrationGraph(t, ctx)
 		testEdges  []arrows.Edge
@@ -139,6 +164,18 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 
 	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/CoerceAndRelayNTLMToADCSTrust.json")
 	require.NoError(t, err)
+	// Give the fixture's vulnerable HTTP CA the equivalent RPC vulnerability so both transports share the trust expectations.
+	for nodeIndex := range fixture.Nodes {
+		for _, label := range fixture.Nodes[nodeIndex].Labels {
+			if label == ad.EnterpriseCA.String() {
+				fixture.Nodes[nodeIndex].Properties[ad.RPCEncryptionCollected.String()] = "BOOL:True"
+				fixture.Nodes[nodeIndex].Properties[ad.RPCEncryptionEnforced.String()] = "BOOL:True"
+				if fixture.Nodes[nodeIndex].Properties[ad.HasVulnerableEndpoint.String()] == "BOOL:True" {
+					fixture.Nodes[nodeIndex].Properties[ad.RPCEncryptionEnforced.String()] = "BOOL:False"
+				}
+			}
+		}
+	}
 
 	// Split edges into test edges and the other edges
 	for _, edge := range fixture.Relationships {
@@ -158,7 +195,7 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 
 	err = graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.CoerceAndRelayNTLMToADCS)
+			return query.Kind(query.Relationship(), relationshipKind)
 		})); err != nil {
 			t.Fatalf("error fetching CoerceAndRelayNTLMToADCS edges in integration test; %v", err)
 		} else {
@@ -178,14 +215,23 @@ func TestCoerceAndRelayNTLMToADCSTrust(t *testing.T) {
 				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
 			})); err != nil || len(toGraphNodeId) != 1 {
 				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
-			} else if edge, err := analysis.FetchEdgeByStartAndEnd(ctx, graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.CoerceAndRelayNTLMToADCS); err != nil {
+			} else if edge, err := analysis.FetchEdgeByStartAndEnd(ctx, graphDB, fromGraphNodeId[0], toGraphNodeId[0], relationshipKind); err != nil {
 				t.Fatalf("error fetching CoerceAndRelayNTLMToADCS edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
 			} else {
 				require.NotNil(t, edge)
 
-				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, graphDB, edge)
+				var (
+					composition graph.PathSet
+					err         error
+				)
+				if relationshipKind == ad.CoerceAndRelayNTLMToADCSRPC {
+					composition, err = adAnalysis.GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx, graphDB, edge)
+				} else {
+					composition, err = adAnalysis.GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, graphDB, edge)
+				}
 				require.NoError(t, err)
 				require.Greater(t, composition.AllNodes().Len(), 0)
+				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				compositionEdgeCount := 0
 				for _, path := range composition.Paths() {
@@ -777,10 +823,12 @@ func TestNTLMRelayToADCSRPCComposition(t *testing.T) {
 
 				composition, err := adAnalysis.GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(t.Context(), db, edge)
 				require.NoError(t, err)
+				requireCompositionContainsEdge(t, composition, ad.HostsCAService)
 
 				nodes := composition.AllNodes()
-				require.Len(t, nodes, 7)
+				require.Len(t, nodes, 8)
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.CAHost))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.CertTemplate1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCSRPC.RootCA))
@@ -791,4 +839,110 @@ func TestNTLMRelayToADCSRPCComposition(t *testing.T) {
 			return nil
 		})
 	})
+}
+
+func TestNTLMRelayADCSDeltaLifecycle(t *testing.T) {
+	var (
+		ctx         = t.Context()
+		testContext = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Setup(testContext)
+		// The full pipeline regenerates CA trust edges from collected certificate metadata.
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.Properties.Set(ad.CertThumbprint.String(), "enterprise-ca")
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.Properties.Set(ad.CertChain.String(), []string{"enterprise-ca", "root-ca"})
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.RootCA.Properties.Set(ad.CertThumbprint.String(), "root-ca")
+		testContext.UpdateNode(harness.NTLMCoerceAndRelayNTLMToADCSRPC.RootCA)
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.NTAuthStore.Properties.Set(ad.CertThumbprints.String(), []string{"enterprise-ca"})
+		testContext.UpdateNode(harness.NTLMCoerceAndRelayNTLMToADCSRPC.NTAuthStore)
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), []string{"https://test.com"})
+		testContext.UpdateNode(harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1)
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer.Properties.Set(ad.WebClientRunning.String(), true)
+		testContext.UpdateNode(harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer)
+		// Use the same well-known ID as the full pipeline's domain linker to avoid a duplicate Authenticated Users group.
+		harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), wellknown.DefineSID("Domain", wellknown.AuthenticatedUsersSIDSuffix))
+		testContext.UpdateNode(harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		// Exercise the complete pipeline so its initial transit-edge cleanup must also preserve DCA edges.
+		_, err := adAnalysis.Post(ctx, db, false, true)
+		require.NoError(t, err)
+		originalEdges := fetchNTLMADCSDeltaEdges(t, db)
+		require.Len(t, originalEdges, 2)
+		for _, relationship := range originalEdges {
+			require.Equal(t, harness.NTLMCoerceAndRelayNTLMToADCSRPC.AuthenticatedUsersGroup.ID, relationship.StartID)
+			require.Equal(t, harness.NTLMCoerceAndRelayNTLMToADCSRPC.Computer.ID, relationship.EndID)
+			firstSeen, err := relationship.Properties.Get(common.FirstSeen.String()).Time()
+			require.NoError(t, err)
+			require.False(t, firstSeen.IsZero())
+			require.NotContains(t, relationship.Properties.Map, common.LastSeen.String())
+		}
+
+		_, err = adAnalysis.Post(ctx, db, false, true)
+		require.NoError(t, err)
+		repeatedEdges := fetchNTLMADCSDeltaEdges(t, db)
+		require.Len(t, repeatedEdges, 2)
+		for relationshipKind, originalEdge := range originalEdges {
+			require.Equal(t, originalEdge.ID, repeatedEdges[relationshipKind].ID)
+			require.Equal(t, originalEdge.Properties.Map, repeatedEdges[relationshipKind].Properties.Map)
+		}
+
+		// Enforcing RPC encryption removes the stale RPC edge while preserving the HTTP edge's identity.
+		require.NoError(t, db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			enterpriseCA, err := tx.Nodes().Filter(query.Equals(query.NodeID(), harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.ID)).First()
+			if err != nil {
+				return err
+			}
+			enterpriseCA.Properties.Set(ad.RPCEncryptionEnforced.String(), true)
+			return tx.UpdateNode(enterpriseCA)
+		}))
+		_, err = adAnalysis.Post(ctx, db, false, true)
+		require.NoError(t, err)
+		hardenedEdges := fetchNTLMADCSDeltaEdges(t, db)
+		require.Len(t, hardenedEdges, 1)
+		require.Contains(t, hardenedEdges, ad.CoerceAndRelayNTLMToADCS)
+		require.Equal(t, originalEdges[ad.CoerceAndRelayNTLMToADCS].ID, hardenedEdges[ad.CoerceAndRelayNTLMToADCS].ID)
+		require.Equal(t, originalEdges[ad.CoerceAndRelayNTLMToADCS].Properties.Map, hardenedEdges[ad.CoerceAndRelayNTLMToADCS].Properties.Map)
+
+		// Restore the RPC vulnerability before disabling NTLM to prove that both tracked kinds are pruned.
+		require.NoError(t, db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			enterpriseCA, err := tx.Nodes().Filter(query.Equals(query.NodeID(), harness.NTLMCoerceAndRelayNTLMToADCSRPC.EnterpriseCA1.ID)).First()
+			if err != nil {
+				return err
+			}
+			enterpriseCA.Properties.Set(ad.RPCEncryptionEnforced.String(), false)
+			return tx.UpdateNode(enterpriseCA)
+		}))
+		_, err = adAnalysis.Post(ctx, db, false, true)
+		require.NoError(t, err)
+		require.Len(t, fetchNTLMADCSDeltaEdges(t, db), 2)
+
+		_, err = adAnalysis.Post(ctx, db, false, false)
+		require.NoError(t, err)
+		require.Empty(t, fetchNTLMADCSDeltaEdges(t, db))
+	})
+}
+
+func fetchNTLMADCSDeltaEdges(t *testing.T, db graph.Database) map[graph.Kind]*graph.Relationship {
+	t.Helper()
+
+	var (
+		relationshipsByKind = make(map[graph.Kind]*graph.Relationship)
+	)
+
+	require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+		relationships, err := ops.FetchRelationships(tx.Relationships().Filter(query.KindIn(query.Relationship(), ad.CoerceAndRelayNTLMToADCS, ad.CoerceAndRelayNTLMToADCSRPC)))
+		if err != nil {
+			return err
+		}
+		for _, relationship := range relationships {
+			require.NotContains(t, relationshipsByKind, relationship.Kind, "duplicate ADCS relay edge")
+			relationshipsByKind[relationship.Kind] = relationship
+		}
+		return nil
+	}))
+
+	return relationshipsByKind
 }

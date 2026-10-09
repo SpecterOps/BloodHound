@@ -2068,8 +2068,6 @@ PostProcessedRelationships: [
 	EnrollOnBehalfOf,
 	SyncedToADUser,
 	ExtendedByPolicy,
-	CoerceAndRelayNTLMToADCS,
-	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
@@ -2080,7 +2078,9 @@ PostProcessedRelationships: [
 
 DCAPostProcessedRelationships: [
 	Owns,
-	WriteOwner
+	WriteOwner,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 ]
 
 // All post-processed edges

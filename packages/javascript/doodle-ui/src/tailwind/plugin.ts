@@ -75,6 +75,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
+            '--text-muted': 'var(--text-light)',
             '--text-contrast': common.white,
             '--text-disabled': light.text.disabled,
             // '--text-primary': light.primary.main,

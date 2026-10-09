@@ -140,20 +140,41 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 
 	var (
 		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
+		ntlmCache NTLMCache
+		ntlmSink  *post.FilteredRelationshipSink
+		err       error
 	)
 
 	// NTLM must be enabled through the feature flag
 	if !ntlmEnabled {
 		operation.Done()
-		return &operation.Stats, nil
+
+		// Delta-tracked edges are no longer cleared up front, so prune any NTLM edges left over from when the flag was enabled
+		if ntlmSink, err := newNTLMSink(ctx, db); err != nil {
+			return &operation.Stats, err
+		} else {
+			ntlmSink.Done()
+			operation.Stats.Merge(ntlmSink.Stats())
+			return &operation.Stats, nil
+		}
 	}
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
-	if ntlmCache, err := NewNTLMCache(ctx, db, localGroupData); err != nil {
+	ntlmCache, err = NewNTLMCache(ctx, db, localGroupData)
+	if err != nil {
 		operation.Done()
 		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	}
+
+	// The sink is created only after the prerequisites succeed so a failure above does not prune existing edges
+	ntlmSink, err = newNTLMSink(ctx, db)
+	if err != nil {
+		operation.Done()
+		return nil, err
+	}
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for computer := range cursor.Chan() {
 				innerComputer := computer
@@ -197,15 +218,44 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		})
 	}); err != nil {
 		operation.Done()
+		ntlmSink.Done()
 		return nil, err
-	} else {
-		if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, adcsCache, ntlmCache); err != nil {
-			operation.Done()
-			return nil, err
-		}
-
-		return &operation.Stats, operation.Done()
 	}
+
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, ntlmSink, adcsCache, ntlmCache); err != nil {
+		operation.Done()
+		ntlmSink.Done()
+		return nil, err
+	}
+
+	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+	operationErr := operation.Done()
+	ntlmSink.Done()
+	operation.Stats.Merge(ntlmSink.Stats())
+
+	return &operation.Stats, operationErr
+}
+
+// ntlmPostProcessedEdges lists the NTLM edge kinds which are post-processed using the delta-change-apply method
+var ntlmPostProcessedEdges = graph.Kinds{
+	ad.CoerceAndRelayNTLMToADCS,
+	ad.CoerceAndRelayNTLMToADCSRPC,
+}
+
+// newNTLMSink migrates any legacy NTLM edges, fetches the delta tracker and returns a sink for the migrated NTLM edge kinds
+func newNTLMSink(ctx context.Context, db graph.Database) (*post.FilteredRelationshipSink, error) {
+	// Remove legacy post-processed edges carrying `lastseen` before delta tracking.
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, ntlmPostProcessedEdges); err != nil {
+		return nil, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	ntlmTracker, err := post.FetchTracker(ctx, db, ntlmPostProcessedEdges)
+	if err != nil {
+		return nil, err
+	}
+
+	return post.NewFilteredRelationshipSink(ctx, "PostNTLM", db, ntlmTracker), nil
 }
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
@@ -224,12 +274,13 @@ func getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		startNodes = graph.NodeSet{}
 		path1      = coerceAndRelayNTLMtoADCSPath1Pattern
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
-		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		path2EnterpriseCAs = cardinality.NewBitmap64()
-		lock               = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		candidateSegments       = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		path2EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		lock                    = &sync.Mutex{}
 	)
 
 	if rpcRelay {
@@ -328,11 +379,23 @@ func getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 	// Intersect the CAs and take only those seen in both paths
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
-	// Render paths from the segments
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
+	// Render paths only for CAs with an exact qualifying host.
 	path1EnterpriseCAs.Each(func(value uint64) bool {
+		hostPaths, hasQualifyingHost := hostPathsByEnterpriseCA[graph.ID(value)]
+		if !hasQualifyingHost {
+			return true
+		}
+
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}
+		paths.AddPathSet(hostPaths)
 
 		return true
 	})
@@ -341,7 +404,7 @@ func getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 }
 
 func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -353,23 +416,11 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 			query.Equals(query.EndProperty(ad.HasVulnerableEndpoint.String()), true),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func coerceAndRelayNTLMtoADCSRPCPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -381,41 +432,14 @@ func coerceAndRelayNTLMtoADCSRPCPath1Pattern(domainID graph.ID) traversal.Patter
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 			query.Equals(query.EndProperty(ad.RPCEncryptionEnforced.String()), false),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
 func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
-		query.Kind(query.Relationship(), ad.MemberOf),
-		query.Kind(query.End(), ad.Group),
-	)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.Enroll),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.Equals(query.EndID(), domainID),
-		))
+	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
 }
 
-func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], sink *post.FilteredRelationshipSink, adcsCache *ADCSCache, ntlmCache NTLMCache) error {
 	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
 		var (
 			ecaID             = graph.ID(eca)
@@ -457,13 +481,15 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 					var submitErr error
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
-							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
 								victims.Each(func(target uint64) bool {
 									for _, relationshipKind := range relationshipKinds {
-										outC <- post.EnsureRelationshipJob{
+										if !sink.Submit(ctx, post.EnsureRelationshipJob{
 											FromID: authUsersGroup,
 											ToID:   graph.ID(target),
 											Kind:   relationshipKind,
+										}) {
+											return false
 										}
 									}
 									return true

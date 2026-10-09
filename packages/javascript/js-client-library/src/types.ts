@@ -1103,6 +1103,7 @@ export enum CollectorJobOutcome {
     Succeeded = 'succeeded',
     Failed = 'failed',
     Cancelled = 'cancelled',
+    PartialSuccess = 'partial_success',
 }
 
 export interface CollectorJobHistory {
@@ -1123,3 +1124,18 @@ export interface CollectorJobHistory {
     outcome_metadata: Record<string, unknown> | null;
     failure_reason: string | null;
 }
+
+export type JobHistorySortBy =
+    | 'recorded_at'
+    | '-recorded_at'
+    | 'last_claimed_at'
+    | '-last_claimed_at'
+    | 'job_created_at'
+    | '-job_created_at';
+
+export type JobHistoryOptions = {
+    skip?: number;
+    limit?: number;
+    sort_by?: JobHistorySortBy;
+    outcome?: string;
+};

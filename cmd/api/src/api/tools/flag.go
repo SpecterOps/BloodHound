@@ -58,8 +58,9 @@ func shouldRequestAnalysisOnEnable(previouslyEnabled bool, currentlyEnabled bool
 
 func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx          = request.Context()
-		rawFeatureID = chi.URLParam(request, URIPathVariableFeatureID)
+		analysisRequestSource string
+		ctx                   = request.Context()
+		rawFeatureID          = chi.URLParam(request, URIPathVariableFeatureID)
 	)
 
 	featureID, err := strconv.ParseInt(rawFeatureID, 10, 32)
@@ -82,9 +83,14 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 &&
-		shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
-		if err := s.db.RequestAnalysis(ctx, appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
+	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 && shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
+		analysisRequestSource = appcfg.PrioritizationFlagRequestSource
+	} else if featureFlag.Key == appcfg.FeatureZoneNode {
+		analysisRequestSource = appcfg.ZoneNodeFlagRequestSource
+	}
+
+	if analysisRequestSource != "" {
+		if err := s.db.RequestAnalysis(ctx, analysisRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			featureFlag.Enabled = previouslyEnabled
 
 			if rollbackErr := s.db.SetFlag(ctx, featureFlag); rollbackErr != nil {

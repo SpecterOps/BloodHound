@@ -119,10 +119,10 @@ func (mr *MockOpenGraphSchemaRepositoryMockRecorder) GetSchemaFindings(ctx, filt
 }
 
 // UpsertOpenGraphExtension mocks base method.
-func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (bool, error) {
+func (m *MockOpenGraphSchemaRepository) UpsertOpenGraphExtension(ctx context.Context, graphExtensionInput model.GraphExtensionInput) (model.GraphExtensionUpsertResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertOpenGraphExtension", ctx, graphExtensionInput)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(model.GraphExtensionUpsertResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

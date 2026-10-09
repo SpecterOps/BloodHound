@@ -16,7 +16,7 @@
 
 import { Label } from 'doodle-ui';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useState, type FC } from 'react';
+import { useCallback, useEffect, useId, useState, type FC } from 'react';
 import { FinishedJobsFilter, LuxonFormat } from '../utils';
 import { ManagedDatePicker } from './ManagedDatePicker';
 
@@ -32,6 +32,8 @@ type DateRangeInputsProps = {
 export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onValidation, start }) => {
     const [isEndValid, setIsEndValid] = useState(true);
     const [isStartValid, setIsStartValid] = useState(true);
+    const startInputId = useId();
+    const endInputId = useId();
 
     const isCorrectOrder =
         !start || !end || (isStartValid && isEndValid && DateTime.fromISO(start) <= DateTime.fromISO(end));
@@ -84,9 +86,17 @@ export const DateRangeInputs: FC<DateRangeInputsProps> = ({ end, onChange, onVal
         <div className='flex flex-col gap-2 w-56 ml-1'>
             <Label>Date Range</Label>
 
-            <ManagedDatePicker hint='Start Date' onDateChange={onStartChange} value={start} />
+            <ManagedDatePicker
+                hint='Start Date'
+                id={startInputId}
+                name='start_time'
+                onDateChange={onStartChange}
+                value={start}
+            />
             <ManagedDatePicker
                 hint='End Date'
+                id={endInputId}
+                name='end_time'
                 onDateChange={onEndChange}
                 value={end}
                 validationError={

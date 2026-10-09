@@ -23,7 +23,6 @@ import {
     Form,
     IconButton,
     TextButton,
-    Tooltip,
     VisuallyHidden,
 } from 'doodle-ui';
 import { DateTime } from 'luxon';
@@ -74,36 +73,31 @@ const FilterDialog: FC<{
     return (
         <Dialog
             open={open}
-            onOpenChange={(open) => {
-                setOpen(open);
+            onOpenChange={(nextOpen) => {
+                setOpen(nextOpen);
             }}>
             <DialogTrigger asChild>
                 <IconButton
+                    aria-label='Filters'
+                    triggerClassName='ml-4'
                     data-testid='privilege-zones_history_filter-button'
-                    className='ml-4'
-                    size={24}
-                    aria-label='Filter'
-                    onClick={() => {
-                        setOpen((prev) => !prev);
-                    }}>
-                    <Tooltip tooltip='Filters'>
-                        <AppIcon.FilterOutline />
-                    </Tooltip>
+                    size={24}>
+                    <AppIcon.FilterOutline />
                 </IconButton>
             </DialogTrigger>
 
             <DialogContent>
                 <Form {...form}>
                     <form className='flex flex-col gap-4 m-1'>
-                        <DialogTitle className='flex justify-between items-center'>
-                            <span className='text-xl'>Filter</span>
+                        <span className='flex justify-between items-center'>
+                            <DialogTitle>Filter</DialogTitle>
                             <TextButton
                                 fontColor='primary'
                                 onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
                                 className='font-bold'>
                                 Clear All
                             </TextButton>
-                        </DialogTitle>
+                        </span>
                         <VisuallyHidden asChild>
                             <DialogDescription>Filter Privilege Zone History</DialogDescription>
                         </VisuallyHidden>

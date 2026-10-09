@@ -16,7 +16,7 @@
 
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Button } from 'doodle-ui';
+import { IconButton } from 'doodle-ui';
 import { useState } from 'react';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 import { EdgeCheckboxType } from './edgeCategories';
@@ -35,7 +35,9 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
 
     return (
         <>
-            <Button
+            <IconButton
+                variant='primary'
+                size={14}
                 className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
                 aria-label='Show pathfinding filter options'
                 onClick={() => {
@@ -44,7 +46,7 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
                     initialize();
                 }}>
                 <FontAwesomeIcon icon={faFilter} />
-            </Button>
+            </IconButton>
             <EdgeFilteringDialog
                 isOpen={isOpenDialog}
                 selectedFilters={selectedFilters}

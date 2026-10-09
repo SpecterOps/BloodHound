@@ -54,6 +54,7 @@ const (
 	FeatureUseRawObjectID               = "use_raw_object_id"
 	FeatureOpenGraphDataQuality         = "opengraph_data_quality"
 	FeatureFindingsPrioritizationV0     = "findings_prioritization_v0"
+	FeatureZoneNode                     = "zone_node"
 )
 
 // FeatureFlag defines the most basic details of what a feature flag must contain to be actionable. Feature flags should be
