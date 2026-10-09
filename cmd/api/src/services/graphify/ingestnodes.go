@@ -37,7 +37,7 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 	)
 
 	for _, next := range nodes {
-		if err := ingestNode(ingestCtx, baseKind, next); err != nil {
+		if err := IngestNode(ingestCtx, baseKind, next); err != nil {
 			slog.Error("Error ingesting node",
 				slog.String("objectid", next.ObjectID),
 				attr.Error(err),
@@ -48,7 +48,7 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 	return errs.Combined()
 }
 
-func ingestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
+func IngestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
 		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
 		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime, ic.UseRawObjectIDs)
