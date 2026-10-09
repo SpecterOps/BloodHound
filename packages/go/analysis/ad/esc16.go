@@ -18,6 +18,8 @@ package ad
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 	"slices"
 	"sync"
@@ -68,7 +70,10 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, sink *post.Filtere
 	} else if publishedCertTemplates := cache.GetPublishedTemplateCache(certChains.EnterpriseCA.ID); len(publishedCertTemplates) == 0 {
 		return nil
 	} else {
-		enterpriseCAEnrollers := cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
+		var (
+			enterpriseCAEnrollers = cache.GetEnterpriseCAEnrollers(certChains.EnterpriseCA.ID)
+			submissionErr         error
+		)
 
 		for _, publishedCertTemplate := range publishedCertTemplates {
 
@@ -86,12 +91,7 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, sink *post.Filtere
 				enrollers := CalculateCrossProductNodeSets(localGroupData, cache.GetCertTemplateEnrollers(publishedCertTemplate.ID), enterpriseCAEnrollers)
 
 				if filteredEnrollers, err := filterUserDNSResults(tx, enrollers, publishedCertTemplate); err != nil {
-					slog.WarnContext(
-						ctx,
-						"Error filtering users for ADCSESC16",
-						attr.Error(err),
-					)
-					continue
+					return fmt.Errorf("filtering users for ADCSESC16 template %d: %w", publishedCertTemplate.ID, err)
 				} else {
 					filteredEnrollers.Each(func(value uint64) bool {
 						for _, domain := range certChains.Domains.Slice() {
@@ -100,11 +100,15 @@ func PostADCSESC16(ctx context.Context, tx graph.Transaction, sink *post.Filtere
 								ToID:   graph.ID(domain),
 								Kind:   ad.ADCSESC16,
 							}) {
+								submissionErr = errors.Join(ctx.Err(), errors.New("ADCSESC16 sink stopped accepting relationships"))
 								return false
 							}
 						}
 						return true
 					})
+					if submissionErr != nil {
+						return submissionErr
+					}
 				}
 			}
 		}
