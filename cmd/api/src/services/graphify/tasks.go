@@ -123,9 +123,17 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%d_", ic.JobId)); err != nil {
 		return fileData, err
 	} else {
-		errs := errorlist.NewBuilder()
+		var (
+			errs              = errorlist.NewBuilder()
+			graphifyStartedAt time.Time
+			graphifyDuration  time.Duration
+			batchError        error
+		)
 
-		return fileData, s.graphdb.BatchOperation(ic.Ctx, func(batch graph.Batch) error {
+		ic.Stats.Reset()
+
+		graphifyStartedAt = time.Now()
+		batchError = s.graphdb.BatchOperation(ic.Ctx, func(batch graph.Batch) error {
 			// bind batch to ingest context now that its in scope.
 			ic.BindBatchUpdater(batch)
 			for i, data := range fileData {
@@ -173,6 +181,16 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 			}
 			return errs.Build()
 		})
+		graphifyDuration = time.Since(graphifyStartedAt)
+		metrics.RecordIngestGraphify(
+			graphifyDuration,
+			ic.Stats.SourceObjectsAttempted.Load(),
+			ic.Stats.NodesAttempted.Load(),
+			ic.Stats.RelationshipsAttempted.Load(),
+			batchError,
+		)
+
+		return fileData, batchError
 	}
 }
 

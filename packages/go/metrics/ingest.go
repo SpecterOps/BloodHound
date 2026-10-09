@@ -80,6 +80,14 @@ const (
 	IngestResultFailure IngestResult = "failure"
 )
 
+type ingestGraphifyEntityType string
+
+const (
+	ingestGraphifyEntitySourceObjects ingestGraphifyEntityType = "source_objects"
+	ingestGraphifyEntityNodes         ingestGraphifyEntityType = "nodes"
+	ingestGraphifyEntityRelationships ingestGraphifyEntityType = "relationships"
+)
+
 // IngestFileFormat represents the format of the uploaded file.
 type IngestFileFormat string
 
@@ -106,6 +114,41 @@ const (
 )
 
 var (
+	ingestGraphifyDurationBuckets = []float64{
+		1,
+		30,
+		60,
+		120,
+		300,
+		600,
+		1200,
+		1800,
+		3600,
+		7200,
+		14400,
+	}
+
+	ingestGraphifyDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "graphify_duration_seconds",
+			Help:      "Duration of one graphify batch operation, including zero-item batches, partitioned by batch result",
+			Buckets:   ingestGraphifyDurationBuckets,
+		},
+		[]string{"result"},
+	)
+
+	ingestGraphifyItems = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "graphify_items_total",
+			Help:      "Total source objects, nodes, and relationships attempted during graphify, partitioned by entity type and batch result",
+		},
+		[]string{"entity_type", "result"},
+	)
+
 	ingestStageDurationBuckets = []float64{
 		0.01,
 		0.1,
@@ -242,6 +285,28 @@ func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int,
 	}
 }
 
+// RecordIngestGraphify records a returning graphify batch, including zero-item
+// batches. Attempted totals use the batch result rather than individual item
+// outcomes. Invalid measurements are ignored.
+func RecordIngestGraphify(duration time.Duration, sourceObjectsAttempted, nodesAttempted, relationshipsAttempted int64, batchError error) {
+	var (
+		result = IngestResultSuccess
+	)
+
+	if duration < 0 || sourceObjectsAttempted < 0 || nodesAttempted < 0 || relationshipsAttempted < 0 {
+		return
+	}
+
+	if batchError != nil {
+		result = IngestResultFailure
+	}
+
+	ingestGraphifyDuration.WithLabelValues(string(result)).Observe(duration.Seconds())
+	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntitySourceObjects), string(result)).Add(float64(sourceObjectsAttempted))
+	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntityNodes), string(result)).Add(float64(nodesAttempted))
+	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntityRelationships), string(result)).Add(float64(relationshipsAttempted))
+}
+
 // RegisterIngestMetrics registers all ingest-subsystem Prometheus metrics with the provided registerer.
 func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 	if err := registerer.Register(ingestTasks); err != nil {
@@ -252,6 +317,10 @@ func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 		return fmt.Errorf("failed to register ingest stage duration histogram: %w", err)
 	} else if err := registerer.Register(ingestStageItems); err != nil {
 		return fmt.Errorf("failed to register ingest stage item counter: %w", err)
+	} else if err := registerer.Register(ingestGraphifyDuration); err != nil {
+		return fmt.Errorf("failed to register ingest graphify duration histogram: %w", err)
+	} else if err := registerer.Register(ingestGraphifyItems); err != nil {
+		return fmt.Errorf("failed to register ingest graphify item counter: %w", err)
 	} else {
 		return nil
 	}
