@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faChevronDown, faChevronUp, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { cva, VariantProps } from 'class-variance-authority';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import * as React from 'react';
 import { cn } from '../utils';
 
@@ -59,12 +60,22 @@ export const SelectTriggerVariants = cva(
 
 const SelectTrigger = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Trigger>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & VariantProps<typeof SelectTriggerVariants>
->(({ className, variant, children, ...props }, ref) => (
-    <SelectPrimitive.Trigger ref={ref} className={cn(SelectTriggerVariants({ variant, className }))} {...props}>
+    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
+        VariantProps<typeof SelectTriggerVariants> & { isLoading?: boolean }
+>(({ className, variant, children, isLoading = false, disabled, ...props }, ref) => (
+    <SelectPrimitive.Trigger
+        ref={ref}
+        className={cn(SelectTriggerVariants({ variant, className }))}
+        disabled={disabled || isLoading}
+        aria-busy={isLoading}
+        {...props}>
         {children}
         <SelectPrimitive.Icon asChild>
-            <ChevronDown className='h-4 w-4' />
+            {isLoading ? (
+                <FontAwesomeIcon icon={faSpinner} className='h-3 w-3 animate-spin motion-reduce:animate-none' />
+            ) : (
+                <FontAwesomeIcon icon={faChevronDown} className='h-3 w-3' />
+            )}
         </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
 ));
@@ -78,7 +89,7 @@ const SelectScrollUpButton = React.forwardRef<
         ref={ref}
         className={cn('flex cursor-default items-center justify-center py-1', className)}
         {...props}>
-        <ChevronUp className='h-4 w-4' />
+        <FontAwesomeIcon icon={faChevronUp} className='h-3 w-3' />
     </SelectPrimitive.ScrollUpButton>
 ));
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
@@ -91,7 +102,7 @@ const SelectScrollDownButton = React.forwardRef<
         ref={ref}
         className={cn('flex cursor-default items-center justify-center py-1', className)}
         {...props}>
-        <ChevronDown className='h-4 w-4' />
+        <FontAwesomeIcon icon={faChevronDown} className='h-3 w-3' />
     </SelectPrimitive.ScrollDownButton>
 ));
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;

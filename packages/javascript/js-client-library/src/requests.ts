@@ -25,6 +25,7 @@ import {
     CertificationManual,
     CertificationRevoked,
     CollectorJobSecret,
+    CollectorJobSecretType,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -386,15 +387,6 @@ export interface AlertRetryRequest {
     event_id: string;
 }
 
-export interface CreateCollectorJobProfileRequest {
-    name: string;
-    job_type_id: number;
-    params: Record<string, unknown>;
-    scope_client_id?: string;
-    secret_id?: string;
-    schedule_ids?: number[];
-}
-
 export interface UpdateCollectorJobProfileRequest {
     name?: string;
     params?: Record<string, unknown>;
@@ -419,3 +411,34 @@ export interface CreateCollectorJobScheduleRequest {
 }
 
 export type UpdateCollectorJobScheduleRequest = Partial<CreateCollectorJobScheduleRequest>;
+
+export interface CreateCollectorJobProfileRequest {
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
+export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        type?: CollectorJobSecretType | `${'eq' | 'neq'}:${CollectorJobSecretType}`;
+        display_key_id?: string;
+        created_at?: string;
+    };
+}
+
+export type CollectorJobSchedulesSortBy = `${'' | '-'}${'name' | 'next_run_at' | 'created_at'}`;
+
+export interface GetCollectorJobSchedulesOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        sort_by?: CollectorJobSchedulesSortBy | CollectorJobSchedulesSortBy[];
+        name?: string;
+        priority?: number | `${'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'}:${number}`;
+        disabled?: boolean | `${'eq' | 'neq'}:${boolean}`;
+        next_run_at?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
+}
