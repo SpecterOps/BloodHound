@@ -32,12 +32,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// noopRateLimit is a pass-through middleware factory for use in tests where
-// rate-limiting behaviour is not under test.
-func noopRateLimit() mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler { return next }
-}
-
 func dogTagsService(etacEnabled bool) dogtags.Service {
 	return dogtags.NewTestService(dogtags.TestOverrides{
 		Bools: map[dogtags.BoolDogTag]bool{
@@ -49,11 +43,10 @@ func dogTagsService(etacEnabled bool) dogtags.Service {
 func TestRegister_PanicsOnNilRouter(t *testing.T) {
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:              nil,
-			Pool:                new(pgxpool.Pool),
-			Graph:               &graph.DatabaseSwitch{},
-			RateLimitMiddleware: noopRateLimit,
-			DogTags:             dogTagsService(false),
+			Router:  nil,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
 		})
 	})
 }
@@ -67,11 +60,10 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:              &routerInst,
-			Pool:                nil,
-			Graph:               &graph.DatabaseSwitch{},
-			RateLimitMiddleware: noopRateLimit,
-			DogTags:             dogTagsService(false),
+			Router:  &routerInst,
+			Pool:    nil,
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
 		})
 	})
 }
@@ -85,29 +77,10 @@ func TestRegister_PanicsOnNilGraph(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:              &routerInst,
-			Pool:                new(pgxpool.Pool),
-			Graph:               nil,
-			RateLimitMiddleware: noopRateLimit,
-			DogTags:             dogTagsService(false),
-		})
-	})
-}
-
-func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
-	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-	)
-
-	assert.Panics(t, func() {
-		modules.Register(modules.Deps{
-			Router:              &routerInst,
-			Pool:                new(pgxpool.Pool),
-			Graph:               &graph.DatabaseSwitch{},
-			RateLimitMiddleware: nil,
-			DogTags:             dogTagsService(false),
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   nil,
+			DogTags: dogTagsService(false),
 		})
 	})
 }
@@ -121,11 +94,51 @@ func TestRegister_PanicsOnNilDogTags(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:              &routerInst,
-			Pool:                new(pgxpool.Pool),
-			Graph:               &graph.DatabaseSwitch{},
-			RateLimitMiddleware: noopRateLimit,
-			DogTags:             nil,
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: nil,
+		})
+	})
+}
+
+func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
+	t.Parallel()
+
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.PanicsWithValue(t, "modules: Register requires a non-nil RateLimitMiddleware", func() {
+		modules.Register(modules.Deps{
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
+		})
+	})
+}
+
+func TestRegister_PanicsWhenRateLimitMiddlewareFactoryReturnsNil(t *testing.T) {
+	t.Parallel()
+
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.PanicsWithValue(t, "modules: failed to install RateLimitMiddleware: rate limit middleware factory returned nil", func() {
+		modules.Register(modules.Deps{
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return nil
+			},
 		})
 	})
 }
@@ -136,19 +149,32 @@ func TestRegister_PanicsOnNilDogTags(t *testing.T) {
 // delegated to the feature modules.
 func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		deps       = modules.Deps{
-			Router:              &routerInst,
-			Pool:                new(pgxpool.Pool),
-			Graph:               &graph.DatabaseSwitch{},
-			RateLimitMiddleware: noopRateLimit,
-			DogTags:             dogTagsService(false),
+		cfg                   = config.Configuration{}
+		authorizer            = auth.NewAuthorizer(nil)
+		routerInst            = router.NewRouter(cfg, authorizer, "")
+		rateLimitFactoryCalls int
+		rateLimitRequestCalls int
+		deps                  = modules.Deps{
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				rateLimitFactoryCalls++
+				return func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+						rateLimitRequestCalls++
+						next.ServeHTTP(response, request)
+					})
+				}
+			},
 		}
 	)
 
 	modules.Register(deps)
+	assert.Equal(t, 1, rateLimitFactoryCalls, "the registry should create and install the matched-route limiter once")
+	routerInst.Handler().ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil))
+	assert.Equal(t, 1, rateLimitRequestCalls, "registered feature routes should pass through the registry-owned limiter")
 
 	for _, tc := range []struct {
 		name   string
