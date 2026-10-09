@@ -65,16 +65,8 @@ const (
 type IngestStage string
 
 const (
-	IngestStageDecodeConvert           IngestStage = "decode_convert"
-	IngestStageNodePrepare             IngestStage = "node_prepare"
-	IngestStageNodeDeduplicate         IngestStage = "node_deduplicate"
-	IngestStageNodeBatchUpdate         IngestStage = "node_batch_update"
-	IngestStageRelationshipResolution  IngestStage = "relationship_resolution"
-	IngestStageRelationshipPrepare     IngestStage = "relationship_prepare"
-	IngestStageDNRelationshipPrepare   IngestStage = "dn_relationship_prepare"
-	IngestStageSessionPrepare          IngestStage = "session_prepare"
-	IngestStageRelationshipDeduplicate IngestStage = "relationship_deduplicate"
-	IngestStageRelationshipBatchUpdate IngestStage = "relationship_batch_update"
+	IngestStageDecodeConvert          IngestStage = "decode_convert"
+	IngestStageRelationshipResolution IngestStage = "relationship_resolution"
 )
 
 // IngestResult identifies the bounded result of an ingest stage.
@@ -133,25 +125,27 @@ var (
 		300,
 	}
 
-	// ingestStageDuration measures accumulated active stage time per non-empty graphify chunk.
+	// ingestStageDuration measures duration per non-empty stage observation: a
+	// function, block, or decoder chunk.
 	ingestStageDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: model.Namespace,
 			Subsystem: ingestSubsystem,
 			Name:      "stage_duration_seconds",
-			Help:      "Accumulated active time spent in an ingest stage for one non-empty graphify chunk",
+			Help:      "Duration of one non-empty ingest stage observation (function, block, or decoder chunk)",
 			Buckets:   ingestStageDurationBuckets,
 		},
 		[]string{"stage", "result"},
 	)
 
-	// ingestStageItems tracks individual processed items by outcome, emitted with aggregated additions per graphify chunk.
+	// ingestStageItems tracks individual items or attempted targets, depending on
+	// the stage, by outcome through aggregated additions per stage observation.
 	ingestStageItems = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: model.Namespace,
 			Subsystem: ingestSubsystem,
 			Name:      "stage_items_total",
-			Help:      "Total number of individual items processed by an ingest stage, partitioned by outcome",
+			Help:      "Total number of individual items or attempted targets processed by an ingest stage, including failures, partitioned by outcome",
 		},
 		[]string{"stage", "outcome"},
 	)
@@ -213,11 +207,12 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 	ingestTaskQueueLatency.WithLabelValues(string(source)).Observe(time.Since(taskCreatedAt).Seconds())
 }
 
-// RecordIngestStage records accumulated active duration and individual processed
-// item outcomes for one non-empty ingest stage and graphify chunk. Publishers must
-// supply bounded typed stage constants. The histogram records a derived chunk result,
-// while the counter records individual outcomes through aggregated additions.
-// Invalid measurements are ignored.
+// RecordIngestStage records the duration and aggregated outcomes for one
+// non-empty stage observation: a function, block, or decoder chunk. Item counts
+// represent individual items or attempted targets, depending on the stage, and
+// include failures. Publishers must supply bounded typed stage constants.
+// The histogram records a derived observation result, while the counter records
+// individual outcomes through aggregated additions. Invalid measurements are ignored.
 func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int, failedItemCount int) {
 	if duration < 0 || itemCount <= 0 || failedItemCount < 0 || failedItemCount > itemCount {
 		return

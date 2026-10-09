@@ -423,12 +423,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Len(t, updates, 1)
@@ -613,12 +612,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -659,12 +657,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -704,12 +701,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -748,12 +744,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Len(t, updates, 1)
@@ -849,12 +844,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, []ein.IngestibleRelationship{ingestibleRel}, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)
@@ -922,12 +916,11 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
-					ingester := relationshipIngester{ingestContext: ingestContext}
 					updatedIngestibleRels, err := endpoint.ResolveAll(testContext.Context(), ingestContext.EndpointResolver, rels, ingestContext.UseRawObjectIDs)
 					require.NoError(t, err)
 
 					updates := slices.Collect(
-						ingester.ingestibleRelationshipsToUpdates(updatedIngestibleRels, graph.EmptyKind),
+						ingestibleRelationshipsToUpdates(ingestContext, updatedIngestibleRels, graph.EmptyKind),
 					)
 
 					require.Nil(t, err)

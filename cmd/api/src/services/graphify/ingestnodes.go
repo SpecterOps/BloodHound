@@ -31,20 +31,13 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
-type nodeIngester struct {
-	ingestContext     *IngestContext
-	stageMeasurements graphifyChunkStageMeasurements
-}
-
 func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
-		errs     = util.NewErrorCollector()
-		ingester = nodeIngester{ingestContext: ingestCtx}
+		errs = util.NewErrorCollector()
 	)
-	defer ingester.stageMeasurements.publish()
 
 	for _, next := range nodes {
-		if err := ingester.ingestNode(baseKind, next); err != nil {
+		if err := ingestNode(ingestCtx, baseKind, next); err != nil {
 			slog.Error("Error ingesting node",
 				slog.String("objectid", next.ObjectID),
 				attr.Error(err),
@@ -55,11 +48,10 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 	return errs.Combined()
 }
 
-func (s *nodeIngester) ingestNode(baseKind graph.Kind, nextNode ein.IngestibleNode) error {
+func ingestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
 	var (
-		prepareStartedAt     = time.Now()
 		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
-		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, s.ingestContext.IngestTime, s.ingestContext.UseRawObjectIDs)
+		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime, ic.UseRawObjectIDs)
 		nodeUpdate           = graph.NodeUpdate{
 			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
 			IdentityKind: baseKind,
@@ -70,12 +62,10 @@ func (s *nodeIngester) ingestNode(baseKind graph.Kind, nextNode ein.IngestibleNo
 	)
 
 	if err := validateNodeKinds(nodeUpdate.Node.ID.String(), nodeKinds); err != nil {
-		s.stageMeasurements.nodePrepare.add(time.Since(prepareStartedAt), 1, 1)
 		return err
 	}
-	s.stageMeasurements.nodePrepare.add(time.Since(prepareStartedAt), 1, 0)
 
-	return s.maybeSubmitNodeUpdate(nodeUpdate)
+	return maybeSubmitNodeUpdate(ic, nodeUpdate)
 }
 
 // validateNodeKinds enforces basic invariants on a node's kinds.
@@ -105,32 +95,19 @@ func validateNodeKinds(objectID string, kinds graph.Kinds) error {
 	}
 }
 
-// maybeSubmitNodeUpdate decides whether to upsert a node directly or route it
+// maybeSubmitNodeUpdate decides whether to upsert a node directly, or route it
 // through the changelog for deduplication and caching.
-func (s *nodeIngester) maybeSubmitNodeUpdate(update graph.NodeUpdate) error {
-	var (
-		stageStartedAt time.Time
-	)
-
+func maybeSubmitNodeUpdate(ingestCtx *IngestContext, update graph.NodeUpdate) error {
 	// Track that we processed this node (regardless of whether it's written)
-	s.ingestContext.Stats.NodesProcessed.Add(1)
+	ingestCtx.Stats.NodesProcessed.Add(1)
 
-	if !s.ingestContext.HasChangelog() {
+	if !ingestCtx.HasChangelog() {
 		// No changelog: always update via dawgs batch
-		stageStartedAt = time.Now()
-		err := s.ingestContext.Batch.UpdateNodeBy(update)
-		if err != nil {
-			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
-		} else {
-			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
-		}
-		return err
+		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
-	stageStartedAt = time.Now()
 	objectid, err := update.Node.Properties.Get(common.ObjectID.String()).String()
 	if err != nil {
-		s.stageMeasurements.nodeDeduplicate.add(time.Since(stageStartedAt), 1, 1)
 		return fmt.Errorf("reading objectid failed: %w", err)
 	}
 
@@ -141,29 +118,19 @@ func (s *nodeIngester) maybeSubmitNodeUpdate(update graph.NodeUpdate) error {
 		update.Node.Properties,
 	)
 
-	shouldSubmit, err := s.ingestContext.Manager.ResolveChange(change)
+	shouldSubmit, err := ingestCtx.Manager.ResolveChange(change)
 	if err != nil {
-		s.stageMeasurements.nodeDeduplicate.add(time.Since(stageStartedAt), 1, 1)
 		return fmt.Errorf("resolve node change: %w", err)
 	}
-	s.stageMeasurements.nodeDeduplicate.add(time.Since(stageStartedAt), 1, 0)
 
 	if shouldSubmit {
 		// New/modified: update via dawgs batch (will increment NodesWritten)
-		stageStartedAt = time.Now()
-		err = s.ingestContext.Batch.UpdateNodeBy(update)
-		if err != nil {
-			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 1)
-			return err
-		} else {
-			s.stageMeasurements.nodeBatchUpdate.add(time.Since(stageStartedAt), 1, 0)
-			return nil
-		}
+		return ingestCtx.Batch.UpdateNodeBy(update)
 	}
 
 	// Unchanged: enqueue change-- this is needed to maintain reconciliation
-	if ok := s.ingestContext.Manager.Submit(s.ingestContext.Ctx, change); !ok {
-		slog.WarnContext(s.ingestContext.Ctx, "Changelog submit dropped", slog.String("objectid", objectid))
+	if ok := ingestCtx.Manager.Submit(ingestCtx.Ctx, change); !ok {
+		slog.WarnContext(ingestCtx.Ctx, "Changelog submit dropped", slog.String("objectid", objectid))
 	}
 
 	return nil

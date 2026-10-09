@@ -61,14 +61,13 @@ func TestMergeNodeKinds(t *testing.T) {
 	require.Equal(t, merged[1].String(), "Different")
 }
 
-func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
+func TestMaybeSubmitRelationshipUpdate(t *testing.T) {
 	t.Run("there is no changelog, submit to batch and track stats", func(t *testing.T) {
 		var (
 			ctx              = context.Background()
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
 			ingestCtx        = NewIngestContext(ctx)
-			ingester         = relationshipIngester{ingestContext: ingestCtx}
 
 			startNode = graph.PrepareNode(graph.NewProperties().Set("objectid", "start123"), graph.StringKind("kindA"))
 			endNode   = graph.PrepareNode(graph.NewProperties().Set("objectid", "end456"), graph.StringKind("kindB"))
@@ -91,7 +90,7 @@ func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
 		// mock expects
 		mockBatchUpdater.EXPECT().UpdateRelationshipBy(relUpdate).Return(nil).Times(1)
 
-		err := ingester.maybeSubmitRelationshipUpdate(relUpdate)
+		err := maybeSubmitRelationshipUpdate(ingestCtx, relUpdate)
 		require.NoError(t, err)
 
 		// Verify stats were incremented
@@ -107,7 +106,6 @@ func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
 			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
-			ingester          = relationshipIngester{ingestContext: ingestCtx}
 
 			sourceObjectID = "source123"
 			targetObjectID = "target456"
@@ -134,7 +132,7 @@ func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
 		mockChangeManager.EXPECT().ResolveChange(change).Return(true, nil).Times(1)
 		mockBatchUpdater.EXPECT().UpdateRelationshipBy(relUpdate).Return(nil).Times(1)
 
-		err := ingester.maybeSubmitRelationshipUpdate(relUpdate)
+		err := maybeSubmitRelationshipUpdate(ingestCtx, relUpdate)
 		require.NoError(t, err)
 
 		// Verify stats were incremented
@@ -150,7 +148,6 @@ func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
 			mockBatchUpdater  = mocks.NewMockBatchUpdater(ctrl)
 			mockChangeManager = mocks.NewMockChangeManager(ctrl)
 			ingestCtx         = NewIngestContext(ctx, WithChangeManager(mockChangeManager))
-			ingester          = relationshipIngester{ingestContext: ingestCtx}
 
 			sourceObjectID = "source123"
 			targetObjectID = "target456"
@@ -178,7 +175,7 @@ func TestRelationshipIngesterMaybeSubmitRelationshipUpdate(t *testing.T) {
 		mockBatchUpdater.EXPECT().UpdateRelationshipBy(gomock.Any()).Times(0)
 		mockChangeManager.EXPECT().Submit(ctx, change).Times(1)
 
-		err := ingester.maybeSubmitRelationshipUpdate(relUpdate)
+		err := maybeSubmitRelationshipUpdate(ingestCtx, relUpdate)
 		require.NoError(t, err)
 
 		// Verify stats: processed incremented, written NOT incremented (deduplicated)
@@ -194,7 +191,6 @@ func TestIngestDNRelationship(t *testing.T) {
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
 			ingestCtx        = NewIngestContext(context.Background(), WithUseRawObjectIDs(false))
-			ingester         = relationshipIngester{ingestContext: ingestCtx}
 
 			rel = ein.NewIngestibleRelationship(
 				ein.IngestibleEndpoint{Value: "cn=foo,dc=bar,dc=com", Kind: graph.StringKind("Computer")},
@@ -211,7 +207,7 @@ func TestIngestDNRelationship(t *testing.T) {
 			return nil
 		})
 
-		err := ingester.ingestDNRelationship(rel)
+		err := ingestDNRelationship(ingestCtx, rel)
 		require.NoError(t, err)
 
 		startEndpoint, ok := captured.Start.Properties.Map[ad.DistinguishedName.String()].(ein.IngestibleEndpoint)
@@ -228,7 +224,6 @@ func TestIngestDNRelationship(t *testing.T) {
 			ctrl             = gomock.NewController(t)
 			mockBatchUpdater = mocks.NewMockBatchUpdater(ctrl)
 			ingestCtx        = NewIngestContext(context.Background(), WithUseRawObjectIDs(true))
-			ingester         = relationshipIngester{ingestContext: ingestCtx}
 
 			rel = ein.NewIngestibleRelationship(
 				ein.IngestibleEndpoint{Value: "cn=Foo,dc=Bar,dc=Com", Kind: graph.StringKind("Computer")},
@@ -245,7 +240,7 @@ func TestIngestDNRelationship(t *testing.T) {
 			return nil
 		})
 
-		err := ingester.ingestDNRelationship(rel)
+		err := ingestDNRelationship(ingestCtx, rel)
 		require.NoError(t, err)
 
 		startEndpoint, ok := captured.Start.Properties.Map[ad.DistinguishedName.String()].(ein.IngestibleEndpoint)
@@ -262,7 +257,6 @@ func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
 	t.Run("flag off: start/end objectids are uppercased", func(t *testing.T) {
 		var (
 			ingestCtx = NewIngestContext(context.Background(), WithUseRawObjectIDs(false))
-			ingester  = relationshipIngester{ingestContext: ingestCtx}
 			rels      = []ein.IngestibleRelationship{
 				ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "source-id"},
@@ -271,7 +265,7 @@ func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
 				),
 			}
 
-			updates = slices.Collect(ingester.ingestibleRelationshipsToUpdates(rels, graph.EmptyKind))
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.EmptyKind))
 		)
 
 		require.Len(t, updates, 1)
@@ -286,7 +280,6 @@ func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
 	t.Run("flag on: start/end objectids preserve original case", func(t *testing.T) {
 		var (
 			ingestCtx = NewIngestContext(context.Background(), WithUseRawObjectIDs(true))
-			ingester  = relationshipIngester{ingestContext: ingestCtx}
 			rels      = []ein.IngestibleRelationship{
 				ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: "Source-Id"},
@@ -295,7 +288,7 @@ func TestIngestibleRelationshipsToUpdates_ObjectIDCasing(t *testing.T) {
 				),
 			}
 
-			updates = slices.Collect(ingester.ingestibleRelationshipsToUpdates(rels, graph.EmptyKind))
+			updates = slices.Collect(ingestibleRelationshipsToUpdates(ingestCtx, rels, graph.EmptyKind))
 		)
 
 		require.Len(t, updates, 1)
