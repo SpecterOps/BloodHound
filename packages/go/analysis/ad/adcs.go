@@ -72,16 +72,37 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			attr.Scope("routine"),
 		)()
 
+		var (
+			esc16Sink     *post.FilteredRelationshipSink
+			operationErr  error
+			submissionErr error
+		)
+
+		esc16Sink, err = newADCSESC16Sink(ctx, db)
+		if err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed initializing ADCSESC16 sink: %w", err)
+		}
+
 		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
 		operation.Stats.Merge(step1Stats)
 		operation.Stats.Merge(step2Stats)
 
 		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation)
+			if submissionErr = processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation, esc16Sink); submissionErr != nil {
+				break
+			}
 		}
 
-		return &operation.Stats, cache, operation.Done()
+		operationErr = errors.Join(submissionErr, operation.Done())
+		if operationErr != nil {
+			operationErr = errors.Join(operationErr, esc16Sink.Abort())
+		} else {
+			operationErr = esc16Sink.Done()
+		}
+		operation.Stats.Merge(esc16Sink.Stats())
+
+		return &operation.Stats, cache, operationErr
 	}
 }
 
@@ -136,7 +157,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 	}
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], esc16Sink *post.FilteredRelationshipSink) error {
 
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
 		defer measure.ContextMeasureWithThreshold(
@@ -431,6 +452,34 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 				"Failed post processing for ADCSESC13",
 				attr.Error(err),
 			)
+		}
+		return nil
+	})
+
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC16",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC16(ctx, tx, esc16Sink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC16 missing property",
+				attr.Error(err),
+			)
+		} else if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC16",
+				attr.Error(err),
+			)
+			return err
 		}
 		return nil
 	})

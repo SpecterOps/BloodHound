@@ -150,6 +150,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
+    ADCSESC16 = 'ADCSESC16',
     SyncedToADUser = 'SyncedToADUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
@@ -313,6 +314,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
+        case ActiveDirectoryRelationshipKind.ADCSESC16:
+            return 'ADCSESC16';
         case ActiveDirectoryRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
@@ -366,6 +369,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
+    'ADCSESC16',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
@@ -519,6 +523,8 @@ export enum ActiveDirectoryKindProperties {
     ObjectClass = 'objectclass',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
+    DisabledExtensions = 'disabledextensions',
+    DisabledExtensionsCollected = 'disabledextensionscollected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -812,6 +818,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:
             return 'GPO Status';
+        case ActiveDirectoryKindProperties.DisabledExtensions:
+            return 'Disabled Extensions';
+        case ActiveDirectoryKindProperties.DisabledExtensionsCollected:
+            return 'Disabled Extensions Collected';
         default:
             return undefined;
     }
@@ -860,6 +870,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.ADCSESC16,
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
@@ -929,6 +940,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.ADCSESC16,
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,

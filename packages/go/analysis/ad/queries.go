@@ -2173,7 +2173,7 @@ func CreateADCSEscalationsPathDelegate(tx graph.Transaction, node *graph.Node) (
 		Root:      node,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b)
+			return query.KindIn(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC16)
 		},
 	})
 }
@@ -2183,7 +2183,7 @@ func CreateADCSEscalationsListDelegate(tx graph.Transaction, node *graph.Node, s
 		Root:      node,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
-			return query.Kind(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b)
+			return query.KindIn(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC16)
 		},
 		Skip:  skip,
 		Limit: limit,
