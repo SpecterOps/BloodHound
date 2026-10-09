@@ -14,21 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
-import { useQuery } from 'react-query';
-import { useFeatureFlag } from '../../../../hooks/useFeatureFlags';
-import { apiClient } from '../../../../utils';
+import { useEdgeTypesQuery } from '../../../../hooks/useEdgeTypes';
 import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
 import { filterUnneededTypes, mapEdgeTypesToCategory } from './utils';
 
 // this hook combines our hardcoded edge categories with an OpenGraph category pulled from the API
 export const useEdgeCategories = () => {
-    const { data: openGraphFeatureFlag } = useFeatureFlag('opengraph_extension_management');
-
-    const edgeTypesQuery = useQuery({
-        queryKey: ['getEdgeTypes'],
-        queryFn: ({ signal }) => apiClient.getEdgeTypes({ signal }).then((res) => res.data.data),
-        enabled: !!openGraphFeatureFlag?.enabled,
-    });
+    const edgeTypesQuery = useEdgeTypesQuery();
 
     // append traversable opengraph edges (if the query is enabled and they exist) to our built-in categories from edgeCategories.ts
     const edgeCategories = useMemo(() => {

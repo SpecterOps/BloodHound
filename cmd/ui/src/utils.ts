@@ -157,6 +157,8 @@ export enum EdgeDirection {
 }
 
 export type EdgeParams = {
+    kind: string;
+    dashed: boolean;
     size: number;
     color?: string;
     type: string;
