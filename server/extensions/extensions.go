@@ -19,7 +19,6 @@
 package extensions
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/extensions/internal/appdb"
@@ -30,14 +29,14 @@ import (
 
 // Register builds the extensions store -> service -> handler chain and attaches the
 // extensions routes to the provided router. It is called from the modules registry and
-// receives only the infrastructure it directly needs: the router, the pgx pool (for
-// schema reads) and the rate limit middleware factory applied to the registered routes.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, rateLimit func() mux.MiddlewareFunc) {
+// receives only the infrastructure it directly needs: the router and the pgx pool for
+// schema reads.
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(service)
 	)
 
-	routes.Register(routerInst, handlerSet, rateLimit)
+	routes.Register(routerInst, handlerSet)
 }

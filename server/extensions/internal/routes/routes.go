@@ -18,25 +18,19 @@ package routes
 import (
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/server/extensions/internal/handlers"
 )
 
 // Register attaches the extensions endpoints to the given router instance.
-//
-// Rate limiting is applied first (outermost middleware layer) so that all
-// requests — including unauthenticated ones — count against the per-IP limit
-// and can be rejected with 429 before the permissions check runs.
-func Register(routerInst *router.Router, handlerSet *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
+func Register(routerInst *router.Router, handlerSet *handlers.Handlers) {
 	var (
 		permissions           = auth.Permissions()
 		nodeKindRoute         = routerInst.GET(fmt.Sprintf("/api/v2/node-kinds/{%s}", handlers.URIPathVariableNodeKindID), handlerSet.GetNodeKindByID)
 		relationshipKindRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationship-kinds/{%s}", handlers.URIPathVariableRelationshipKindID), handlerSet.GetRelationshipKindByID)
 	)
 
-	router.With(rateLimit, nodeKindRoute, relationshipKindRoute)
 	nodeKindRoute.RequirePermissions(permissions.GraphDBRead)
 	relationshipKindRoute.RequirePermissions(permissions.GraphDBRead)
 }
