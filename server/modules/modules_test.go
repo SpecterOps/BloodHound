@@ -121,6 +121,28 @@ func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
 	})
 }
 
+func TestRegister_PanicsWhenRateLimitMiddlewareFactoryReturnsNil(t *testing.T) {
+	t.Parallel()
+
+	var (
+		cfg        = config.Configuration{}
+		authorizer = auth.NewAuthorizer(nil)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	assert.PanicsWithValue(t, "modules: failed to install RateLimitMiddleware: rate limit middleware factory returned nil", func() {
+		modules.Register(modules.Deps{
+			Router:  &routerInst,
+			Pool:    new(pgxpool.Pool),
+			Graph:   &graph.DatabaseSwitch{},
+			DogTags: dogTagsService(false),
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return nil
+			},
+		})
+	})
+}
+
 // TestRegister_WiresFeatureRoutes verifies that the composition root correctly
 // attaches the feature module routes to the shared router. Matching a
 // representative route from each module proves that Register successfully

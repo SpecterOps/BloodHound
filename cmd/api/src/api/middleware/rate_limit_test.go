@@ -168,7 +168,13 @@ func TestMatchedRouteRateLimitMiddleware(t *testing.T) {
 				handlerCalls int
 				routerInst   = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
 			)
-			routerInst.UsePostrouting(middleware.PanicHandler, middleware.MatchedRouteRateLimitMiddleware(mockDatabase, testCase.excludedPathPrefixes, testCase.limitsByPath), func(next http.Handler) http.Handler {
+			routerInst.UsePanicRecovery(middleware.PanicHandler)
+			if err := routerInst.EnsureMatchedRouteRateLimit(func() mux.MiddlewareFunc {
+				return middleware.MatchedRouteRateLimitMiddleware(mockDatabase, testCase.excludedPathPrefixes, testCase.limitsByPath)
+			}); err != nil {
+				t.Fatal(err)
+			}
+			routerInst.UseAuthenticationMiddleware(func(next http.Handler) http.Handler {
 				return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 					authCalls++
 					next.ServeHTTP(response, request)
@@ -224,7 +230,11 @@ func TestMatchedRouteRateLimitMiddlewareRunsBetweenPanicRecoveryAndAuthenticatio
 
 	var routerInst = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
 	registration.RegisterFossGlobalMiddleware(&routerInst, config.Configuration{}, nil, nil, mockDatabase)
-	routerInst.UsePostroutingBeforeAuthentication(middleware.MatchedRouteRateLimitMiddleware(mockDatabase, nil, map[string]int64{"/limited": 1}))
+	if err := routerInst.EnsureMatchedRouteRateLimit(func() mux.MiddlewareFunc {
+		return middleware.MatchedRouteRateLimitMiddleware(mockDatabase, nil, map[string]int64{"/limited": 1})
+	}); err != nil {
+		t.Fatal(err)
+	}
 	routerInst.HandleFunc("/limited", func(response http.ResponseWriter, _ *http.Request) {
 		response.WriteHeader(http.StatusNoContent)
 	})

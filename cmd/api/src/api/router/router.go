@@ -18,6 +18,7 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -49,14 +50,22 @@ type Router struct {
 }
 
 type postroutingMiddlewareStack struct {
-	mutex      sync.RWMutex
-	middleware []mux.MiddlewareFunc
+	mutex                    sync.RWMutex
+	recoveryMiddleware       []mux.MiddlewareFunc
+	beforeAuthentication     []mux.MiddlewareFunc
+	authenticationMiddleware []mux.MiddlewareFunc
+	afterAuthentication      []mux.MiddlewareFunc
+	rateLimitInstalled       bool
 }
 
 func (s *postroutingMiddlewareStack) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		s.mutex.RLock()
-		middleware := append([]mux.MiddlewareFunc(nil), s.middleware...)
+		middleware := make([]mux.MiddlewareFunc, 0, len(s.recoveryMiddleware)+len(s.beforeAuthentication)+len(s.authenticationMiddleware)+len(s.afterAuthentication))
+		middleware = append(middleware, s.recoveryMiddleware...)
+		middleware = append(middleware, s.beforeAuthentication...)
+		middleware = append(middleware, s.authenticationMiddleware...)
+		middleware = append(middleware, s.afterAuthentication...)
 		s.mutex.RUnlock()
 
 		handler := next
@@ -67,20 +76,50 @@ func (s *postroutingMiddlewareStack) Middleware(next http.Handler) http.Handler 
 	})
 }
 
-func (s *postroutingMiddlewareStack) Append(middleware ...mux.MiddlewareFunc) {
+func (s *postroutingMiddlewareStack) AppendAfterAuthentication(middleware ...mux.MiddlewareFunc) {
 	s.mutex.Lock()
-	s.middleware = append(s.middleware, middleware...)
+	s.afterAuthentication = append(s.afterAuthentication, middleware...)
 	s.mutex.Unlock()
 }
 
-func (s *postroutingMiddlewareStack) InsertBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
+func (s *postroutingMiddlewareStack) AppendRecovery(middleware ...mux.MiddlewareFunc) {
 	s.mutex.Lock()
-	insertIndex := len(s.middleware)
-	if insertIndex > 1 {
-		insertIndex -= 2
-	}
-	s.middleware = append(s.middleware[:insertIndex], append(middleware, s.middleware[insertIndex:]...)...)
+	s.recoveryMiddleware = append(s.recoveryMiddleware, middleware...)
 	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) AppendBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.beforeAuthentication = append(s.beforeAuthentication, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) AppendAuthentication(middleware ...mux.MiddlewareFunc) {
+	s.mutex.Lock()
+	s.authenticationMiddleware = append(s.authenticationMiddleware, middleware...)
+	s.mutex.Unlock()
+}
+
+func (s *postroutingMiddlewareStack) EnsureMatchedRouteRateLimit(factory func() mux.MiddlewareFunc) error {
+	if factory == nil {
+		return fmt.Errorf("rate limit middleware factory is nil")
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.rateLimitInstalled {
+		return nil
+	}
+
+	rateLimitMiddleware := factory()
+	if rateLimitMiddleware == nil {
+		return fmt.Errorf("rate limit middleware factory returned nil")
+	}
+	s.beforeAuthentication = append(s.beforeAuthentication, rateLimitMiddleware)
+
+	s.rateLimitInstalled = true
+	return nil
 }
 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
@@ -184,17 +223,38 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 	return Router{mux: muxRouter, authorizer: authorizer, postroutingMiddleware: postroutingMiddleware}
 }
 
-// UsePostrouting appends all of the given mux.MiddlewareFunc instances to this router's post-route middleware execution
-// chain. Post-route means that this middleware will only be executed if a registered route is found to match the client
-// request.
+// UsePostrouting appends middleware after authentication in the matched-route
+// chain. It only runs when a registered route matches the request.
 func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
-	s.postroutingMiddleware.Append(middleware...)
+	s.postroutingMiddleware.AppendAfterAuthentication(middleware...)
 }
 
-// UsePostroutingBeforeAuthentication inserts middleware immediately before
-// authentication, after panic recovery and any earlier post-route middleware.
+// UsePanicRecovery registers post-routing middleware that wraps all subsequent
+// post-routing stages, including rate limiting and authentication.
+func (s Router) UsePanicRecovery(middleware ...mux.MiddlewareFunc) {
+	s.postroutingMiddleware.AppendRecovery(middleware...)
+}
+
+// UsePostroutingBeforeAuthentication appends post-routing middleware after
+// panic recovery and before authentication.
 func (s Router) UsePostroutingBeforeAuthentication(middleware ...mux.MiddlewareFunc) {
-	s.postroutingMiddleware.InsertBeforeAuthentication(middleware...)
+	s.postroutingMiddleware.AppendBeforeAuthentication(middleware...)
+}
+
+// UseAuthenticationMiddleware registers post-routing authentication middleware.
+func (s Router) UseAuthenticationMiddleware(middleware ...mux.MiddlewareFunc) {
+	s.postroutingMiddleware.AppendAuthentication(middleware...)
+}
+
+// EnsureMatchedRouteRateLimit installs a single matched-route rate limiter
+// before authentication. Repeated calls are safe so shared registries can
+// enforce the same invariant without stacking duplicate limiters.
+func (s Router) EnsureMatchedRouteRateLimit(factory func() mux.MiddlewareFunc) error {
+	if s.postroutingMiddleware == nil {
+		return fmt.Errorf("router is not initialized")
+	}
+
+	return s.postroutingMiddleware.EnsureMatchedRouteRateLimit(factory)
 }
 
 // UsePrerouting appends all of the given mux.MiddlewareFunc instances to this router's pre-route middleware execution

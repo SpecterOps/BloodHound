@@ -51,11 +51,9 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver, bypassLimitsParam))
 	}
 
-	routerInst.UsePostrouting(
-		middleware.PanicHandler,
-		middleware.AuthMiddleware(authenticator),
-		middleware.CompressionMiddleware,
-	)
+	routerInst.UsePanicRecovery(middleware.PanicHandler)
+	routerInst.UseAuthenticationMiddleware(middleware.AuthMiddleware(authenticator))
+	routerInst.UsePostrouting(middleware.CompressionMiddleware)
 }
 
 func RegisterFossRoutes(

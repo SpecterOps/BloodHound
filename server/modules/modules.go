@@ -67,10 +67,8 @@ func Register(deps Deps) {
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
-	if rateLimitMiddleware := deps.RateLimitMiddleware(); rateLimitMiddleware == nil {
-		panic("modules: RateLimitMiddleware returned nil")
-	} else {
-		deps.Router.UsePostroutingBeforeAuthentication(rateLimitMiddleware)
+	if err := deps.Router.EnsureMatchedRouteRateLimit(deps.RateLimitMiddleware); err != nil {
+		panic("modules: failed to install RateLimitMiddleware: " + err.Error())
 	}
 
 	if deps.AlertPublisher == nil {
