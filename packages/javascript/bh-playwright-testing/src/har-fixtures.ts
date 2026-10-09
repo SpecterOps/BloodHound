@@ -17,8 +17,8 @@
 import { test as base } from '@playwright/test';
 import { access, copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { makeHarArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har';
-import type { HarArtifactPaths, HarMode, HarNotFound } from './har';
+import { makeHarArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har-artifacts-utils';
+import type { HarArtifactPaths, HarMode, HarNotFound } from './har-artifacts-utils';
 
 type HarFixtures = {
     /** HAR mode for the test context. Defaults to off. */

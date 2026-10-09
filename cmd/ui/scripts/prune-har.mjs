@@ -158,8 +158,14 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    pruneHarArtifacts().catch((error) => {
-        console.error(error);
-        process.exitCode = 1;
-    });
+    pruneHarArtifacts()
+        .then(() => {
+            console.log(
+                'Pruned stale Playwright artifacts (auto-generated json and har files for mocking network calls).'
+            );
+        })
+        .catch((error) => {
+            console.error(error);
+            process.exitCode = 1;
+        });
 }

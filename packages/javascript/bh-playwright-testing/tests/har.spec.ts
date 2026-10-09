@@ -24,7 +24,7 @@ import {
     readJsonArtifact,
     type HarRequestSummary,
     type HarResponseSummary,
-} from '../src/har';
+} from '../src/har-artifacts-utils';
 
 const mode = process.env.HAR_TEST_MODE as 'record' | 'update' | 'mock' | undefined;
 const url = 'http://127.0.0.1:18887/value';

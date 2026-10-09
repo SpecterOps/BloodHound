@@ -24,7 +24,7 @@ import {
     readJsonArtifact,
     summarizeHar,
     writeJsonArtifact,
-} from '../src/har';
+} from '../src/har-artifacts-utils';
 
 const capturedEntries = [
     {
