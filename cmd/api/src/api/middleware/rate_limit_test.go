@@ -81,6 +81,49 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 	}
 }
 
+func TestMatchedRouteRateLimitMiddlewareRunsBeforeAuthAndExemptsConfiguredPath(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	mockDB := mocks.NewMockDatabase(mockCtl)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.TrustedProxiesConfig).Return(appcfg.Parameter{}, nil).AnyTimes()
+
+	var authCalls int
+	router := mux.NewRouter()
+	router.Use(middleware.MatchedRouteRateLimitMiddleware(mockDB, "/hunter/mcp"))
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			authCalls++
+			response.WriteHeader(http.StatusUnauthorized)
+		})
+	})
+	router.HandleFunc("/clients", func(http.ResponseWriter, *http.Request) {})
+	router.HandleFunc("/other", func(http.ResponseWriter, *http.Request) {})
+	router.HandleFunc("/hunter/mcp", func(http.ResponseWriter, *http.Request) {})
+
+	for requestNumber := 0; requestNumber <= int(middleware.DefaultRateLimit); requestNumber++ {
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/clients", nil))
+		if requestNumber == int(middleware.DefaultRateLimit) && response.Code != http.StatusTooManyRequests {
+			t.Fatalf("request after the route limit returned %d, want %d", response.Code, http.StatusTooManyRequests)
+		}
+	}
+	if authCalls != int(middleware.DefaultRateLimit) {
+		t.Fatalf("auth ran %d times after exceeding the route limit; want %d", authCalls, middleware.DefaultRateLimit)
+	}
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/other", nil))
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("second route did not receive an independent rate-limit bucket: got %d, want %d", response.Code, http.StatusUnauthorized)
+	}
+
+	for requestNumber := 0; requestNumber <= int(middleware.DefaultRateLimit); requestNumber++ {
+		response = httptest.NewRecorder()
+		router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/hunter/mcp", nil))
+	}
+	if authCalls != int(middleware.DefaultRateLimit)*2+2 {
+		t.Fatalf("exempt path was rate limited: auth ran %d times", authCalls)
+	}
+}
+
 type CountingHandler struct {
 	Count int
 }

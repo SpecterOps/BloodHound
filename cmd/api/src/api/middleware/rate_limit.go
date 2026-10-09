@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -137,4 +138,63 @@ func RateLimitMiddleware(db database.Database, limit int64) mux.MiddlewareFunc {
 	instance := limiter.New(store, rate)
 
 	return rateLimitMiddleware(db, instance)
+}
+
+// MatchedRouteRateLimitMiddleware applies an independent IP rate limit to each
+// matched route. It is intended for the router's post-routing middleware chain
+// so the limit runs before authentication and route middleware.
+func MatchedRouteRateLimitMiddleware(db database.Database, excludedPaths ...string) mux.MiddlewareFunc {
+	var (
+		handlerByRoute  = make(map[*mux.Route]http.Handler)
+		mutex           sync.RWMutex
+		excludedPathSet = make(map[string]struct{}, len(excludedPaths))
+	)
+
+	for _, excludedPath := range excludedPaths {
+		excludedPathSet[excludedPath] = struct{}{}
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+			if _, excluded := excludedPathSet[request.URL.Path]; excluded {
+				next.ServeHTTP(response, request)
+				return
+			}
+
+			matchedRoute := mux.CurrentRoute(request)
+			if matchedRoute == nil {
+				next.ServeHTTP(response, request)
+				return
+			}
+
+			mutex.RLock()
+			routeHandler, found := handlerByRoute[matchedRoute]
+			mutex.RUnlock()
+			if !found {
+				mutex.Lock()
+				routeHandler, found = handlerByRoute[matchedRoute]
+				if !found {
+					routeHandler = RateLimitMiddleware(db, rateLimitForRoute(matchedRoute))(next)
+					handlerByRoute[matchedRoute] = routeHandler
+				}
+				mutex.Unlock()
+			}
+
+			routeHandler.ServeHTTP(response, request)
+		})
+	}
+}
+
+func rateLimitForRoute(route *mux.Route) int64 {
+	routePath, err := route.GetPathTemplate()
+	if err != nil {
+		return DefaultRateLimit
+	}
+
+	switch routePath {
+	case "/api/v2/login", "/api/v2/login/support":
+		return 1
+	default:
+		return DefaultRateLimit
+	}
 }

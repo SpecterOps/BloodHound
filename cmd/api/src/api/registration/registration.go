@@ -39,7 +39,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database) {
+func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator, db database.Database, rateLimitExemptPaths ...string) {
 	// Set up the middleware stack
 	// Initialize bypassLimits here so we only run the DB query once and not per request
 	bypassLimitsParam := appcfg.GetTimeoutLimitParameter(context.Background(), db)
@@ -53,6 +53,7 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 	}
 
 	routerInst.UsePostrouting(
+		middleware.MatchedRouteRateLimitMiddleware(db, rateLimitExemptPaths...),
 		middleware.PanicHandler,
 		middleware.AuthMiddleware(authenticator),
 		middleware.CompressionMiddleware,
@@ -89,8 +90,7 @@ func RegisterFossRoutes(
 		}),
 	)
 
-	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
-	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
+	// Static UI assets are matched routes and receive the global pre-auth rate limit.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)
