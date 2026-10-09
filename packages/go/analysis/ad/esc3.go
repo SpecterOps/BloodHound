@@ -31,10 +31,9 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
-	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+func PostADCSESC3(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	var (
 		resultsByDomain = map[graph.ID]cardinality.Duplex[uint64]{}
 		eca2ID          = certChains.EnterpriseCA.ID
@@ -146,7 +145,7 @@ func PostADCSESC3(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 
 	for domainID, results := range resultsByDomain {
 		results.Each(func(source uint64) bool {
-			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+			sink.Submit(ctx, post.EnsureRelationshipJob{
 				FromID: graph.ID(source),
 				ToID:   domainID,
 				Kind:   ad.ADCSESC3,
