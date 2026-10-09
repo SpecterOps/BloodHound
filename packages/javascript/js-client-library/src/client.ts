@@ -36,6 +36,8 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GetCollectorJobSchedulesOptions,
+    GetCollectorJobSecretsOptions,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
@@ -99,7 +101,9 @@ import {
     GetCollectorJobHistoryResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
+    GetCollectorJobSchedulesResponse,
     GetCollectorJobSecretResponse,
+    GetCollectorJobSecretsResponse,
     GetCollectorJobTypesResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -836,6 +840,12 @@ class BHEAPIClient {
             params: { ...options?.params, skip, limit },
         });
 
+    getCollectorJobSchedules = (skip = 0, limit = 100, options?: GetCollectorJobSchedulesOptions) =>
+        this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collector-job-schedules', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
     getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
 
@@ -879,6 +889,12 @@ class BHEAPIClient {
             payload,
             options
         );
+
+    getCollectorJobSecrets = (skip = 0, limit = 100, options?: GetCollectorJobSecretsOptions) =>
+        this.baseClient.get<GetCollectorJobSecretsResponse>('/api/v2/collector-job-secrets', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
 
     getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);

@@ -25,6 +25,7 @@ import {
     CertificationManual,
     CertificationRevoked,
     CollectorJobSecret,
+    CollectorJobSecretType,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -32,6 +33,28 @@ import {
 import { ConfigurationPayload } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
+
+export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        type?: CollectorJobSecretType | `${'eq' | 'neq'}:${CollectorJobSecretType}`;
+        display_key_id?: string;
+        created_at?: string;
+    };
+}
+
+export type CollectorJobSchedulesSortBy = `${'' | '-'}${'name' | 'next_run_at' | 'created_at'}`;
+
+export interface GetCollectorJobSchedulesOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        sort_by?: CollectorJobSchedulesSortBy;
+        name?: string;
+        priority?: number | `${'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'}:${number}`;
+        disabled?: boolean | `${'eq' | 'neq'}:${boolean}`;
+        next_run_at?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
+}
 
 export interface LoginRequest {
     login_method: string;
