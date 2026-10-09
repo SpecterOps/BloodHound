@@ -1,194 +1,290 @@
 # BloodHound Playwright Testing Utils
 
-Shared Playwright testing utilities for BloodHound UI workspaces.
+-   Shared fixtures for accessibility, authentication, themes, API stubs, and HAR recordings.
+-   Each UI workspace owns its Playwright config, credentials, routes, selectors, and reporters.
 
-## Purpose
+## Install
 
-`bh-playwright-testing` centralizes the Playwright building blocks that are common across BloodHound UI suites and consumers (e.g. both BHE and BHCE's `cmd/ui`). It exists so each consumer can consistently compose test suites without reimplementing common features:
+-   Add this workspace dependency to the consuming UI's `package.json`.
 
--   axe-core accessibility, fixture, and reporting helpers
--   one-time auth bootstrap
--   `page.route` API stubs
--   theme matrix helpers
-
-The package intentionally does **not** own:
-
--   Playwright configs (browsers, projects, reporters, web server).
--   The pages, routes, or DOM subtrees that get scanned or asserted against.
--   App-specific environment variables (e.g. `*_TEST_URL`, credentials).
--   Suite-specific orchestration (which selectors to wait on, which routes to scope).
-
-Consumers compose those concerns on top of the modules below.
-
-## Modules
-
-The package is consumed via subpath imports so each consumer pulls only what it uses.
-
-| Subpath                        | Purpose                                                                                                                                                  |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bh-playwright-testing`        | Package root entry (re-export of `./axe`): the shared `test`/`expect`, the axe fixture, the `checkA11y` / `goAndWaitFor` helpers, and reporting helpers. |
-| `bh-playwright-testing/axe`    | Same exports as the root entry. Use this path when you want to be explicit.                                                                              |
-| `bh-playwright-testing/themes` | Theme types and constants (`Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`) for the per-theme storage-state convention.                          |
-| `bh-playwright-testing/auth`   | `loginAndSnapshotThemes` — logs in once and snapshots `storageState` for both light and dark themes.                                                     |
-| `bh-playwright-testing/stubs`  | A barrel of `page.route` stubs so tests can control API responses without mutating real state.                                                           |
-
-### Accessibility (`axe`)
-
-The shared `test` extends Playwright's `test` with an axe-core fixture and a couple of helpers that collapse the boilerplate most specs repeat:
-
--   `makeAxeBuilder()` returns a fresh `AxeBuilder` bound to the current `page` and constrained to `WCAG_TAGS` (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`). Chain `.include(...)` / `.exclude(...)` / `.disableRules(...)` as needed and `await builder.analyze()`.
--   `expectNoAccessibilityViolations(testInfo, results, opts?)` attaches the axe report and asserts there are no violations. Pass `{ page }` to also attach a screenshot of each affected element.
--   `checkA11y(options?)` runs a full-page scan by default, can optionally be scoped, and asserts no violations in one call (builder + `expectNoAccessibilityViolations`).
--   `goAndWaitFor(path, target, options?)` navigates to `path`, collapses the global nav, then waits for `target` (a `Locator` or `(page) => Locator`) to become visible.
--   `hideBySelector(page, selector)` / `restoreHidden(handle)` temporarily hide background content (e.g. behind a dialog) that would otherwise produce noisy `incomplete` results.
-
-`checkA11y` and `goAndWaitFor` read a few consumer-primed Playwright options so app-specific assumptions live in each consumer's config `use` block rather than in the package:
-
-| Option                 | Default               | Purpose                                                                                                 |
-| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
-| `a11yDefaultInclude`   | `null` (full page)    | Default scan scope for `checkA11y` (e.g. `'#content-wrapper'`).                                         |
-| `a11yDefaults`         | `{}`                  | Describe-scoped default `A11yScanOptions`; set once via `test.use({ a11yDefaults: { ... } })`.          |
-| `navToggleName`        | `'Toggle Navigation'` | Accessible name of the button `goAndWaitFor` clicks to collapse the nav.                                |
-| `installGraphDataStub` | `false`               | When `true`, the `page` fixture installs the cypher "has data" stub so the "No Data" dialog stays shut. |
-
-Prime them in the config `use` block (typed via `A11yTestOptions`, which combines `TestOptions` with these four options).
-
-### Themes (`themes`)
-
-Theme TypeScript types and constants, plus `authStorageStateFor(theme)` — the canonical per-theme `storageState` path shared by `loginAndSnapshotThemes` and Playwright project configs.
-
-### Auth (`auth`)
-
-`loginAndSnapshotThemes(...)` logs in once and writes an authenticated `storageState` snapshot for both light and dark themes, avoiding the parallel-login race two setups as the same user would hit.
-
-### Stubs (`stubs`)
-
-A single barrel of `page.route` stubs, grouped by the API surface they cover — asset group tags, BloodHound users (MFA enrollment, password reset), feature flags, graph data (cypher), and API tokens. Each stub installs a route handler that falls through (`route.fallback()`) for requests it doesn't own, so stubs compose and test-local overrides win under Playwright's LIFO routing.
-
-```ts
-import { installMFAEnrollmentStub } from 'bh-playwright-testing/stubs';
-
-test('MFA dialog', async ({ page }) => {
-    await installMFAEnrollmentStub(page);
-    // Click the MFA toggle and walk the dialog steps.
-});
+```json
+{
+    "devDependencies": {
+        "bh-playwright-testing": "workspace:*"
+    }
+}
 ```
 
-## Usage
+-   Run from the consuming UI directory.
 
-### HAR recordings and mocks
+```sh
+yarn install
+yarn playwright install chromium
+```
 
-The shared `test` fixture supports `harMode: 'record' | 'update' | 'mock' | 'off'` (default `off`). Set it at file or describe scope, or in a typed Playwright config. Existing `page` test bodies need no changes:
+## Imports
+
+-   `bh-playwright-testing`: shared `test`, `expect`, accessibility helpers, and HAR utilities.
+-   `bh-playwright-testing/axe`: accessibility fixtures and helpers.
+-   `bh-playwright-testing/auth`: `loginAndSnapshotThemes`.
+-   `bh-playwright-testing/themes`: `THEMES`, `Theme`, `TestOptions`, and `authStorageStateFor`.
+-   `bh-playwright-testing/stubs`: API route stubs.
+
+## Accessibility
+
+-   Import the shared `test` to access `checkA11y` and `goAndWaitFor`.
+-   `goAndWaitFor` navigates, collapses navigation, and waits for a locator.
+-   `checkA11y` scans the configured scope and asserts no violations.
 
 ```ts
 import { test } from 'bh-playwright-testing';
 
-test.use({ harMode: 'record' }); // switch to 'update' or 'mock' for the same test
-test('login', async ({ page }) => {
-    await page.goto('/login');
+test('login form is accessible', async ({ page, goAndWaitFor, checkA11y }) => {
+    await goAndWaitFor('/ui/login', page.getByRole('textbox', { name: 'Email Address' }));
+    await checkA11y({ include: null });
 });
 ```
 
-```ts
-import { defineConfig } from '@playwright/test';
-import type { A11yTestOptions } from 'bh-playwright-testing';
-
-export default defineConfig<A11yTestOptions>({
-    use: { harMode: 'mock', harRootDir: './test-artifacts/har', harNotFound: 'abort' },
-});
-```
-
-`harRootDir` defaults to `test-artifacts/har` relative to the Playwright config's test root. Each HAR-enabled test has a canonical directory named from its spec filename, suite, title, and project, followed by a stable hash of its full identity. Different files, parameterized titles, projects, and `repeatEach` instances get separate directories. The path is stable across runs and retries; `harArtifacts` exposes its `directory`, `recording`, `requests`, and `responses` paths to tests. A directory contains `recording.har`, `requests.json`, and `responses.json`. The JSON files summarize actual HAR entries (method, URL, status, MIME type, and size). The helper functions `readHar`, `readJsonArtifact`, `writeJsonArtifact`, and `makeHarArtifactPaths` are exported for tooling.
-
-Run once in `record` mode against a live service, then switch to `mock` for replay. Use `update` against the live service to refresh a fixture. Record and update first write to Playwright's per-execution output path; a valid completed HAR replaces the canonical file after the browser context closes. Update keeps the previous recording if the test fails. Recordings are also finalized after a test failure when Playwright can close the context. Native HAR capture and update require the default Playwright context lifecycle; manually created contexts are outside this fixture. Service workers can bypass HAR routing, so use `serviceWorkers: 'block'` when the app registers them.
-
-Mock mode aborts unmatched requests by default and reports failed requests. Set `harNotFound: 'fallback'` to allow unmatched requests to reach the live network. HAR files can contain credentials, cookies, and response bodies: inspect and redact them before committing. Keep temporary Playwright output out of version control.
-
-Updating a test replaces its HAR and summaries in the same directory. Renaming or moving a test, changing its project, or changing a parameterized title creates a new canonical directory; the old one remains. In BHCE UI, `yarn har:prune` compares marked HAR directories with the complete a11y test list and previews orphaned directories. `yarn har:prune --delete` removes only the previewed, marked directories. Run the preview after test reorganizations; unmarked hand-maintained fixtures are left alone.
-
-Add the package as a workspace `devDependency`:
-
-```json
-"bh-playwright-testing": "workspace:*"
-```
-
-A typical accessibility spec:
+-   `include: null` scans the full page; a selector limits the scan.
+-   Set shared scan options at file or `describe` scope.
 
 ```ts
-import { expect, expectNoAccessibilityViolations, test } from 'bh-playwright-testing';
+test.use({ a11yDefaults: { include: '#content-wrapper', failOnIncomplete: true } });
+```
 
-test('login form has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
+-   `makeAxeBuilder()` supports custom scans using WCAG 2.0 and 2.1 A/AA tags.
+-   `expectNoAccessibilityViolations` attaches reports; `{ page }` also attaches screenshots of affected elements.
+
+```ts
+import { expectNoAccessibilityViolations, test } from 'bh-playwright-testing';
+
+test('scan content', async ({ page, makeAxeBuilder }, testInfo) => {
     await page.goto('/ui/login');
-    await expect(page.getByRole('textbox', { name: 'Email Address' })).toBeVisible();
-
-    const results = await makeAxeBuilder().analyze();
-    // Pass `{ page }` so each violation's affected nodes are screenshotted and attached
-    // to the test result. Omit it for text-only attachments.
+    const results = await makeAxeBuilder().include('main').analyze();
     await expectNoAccessibilityViolations(testInfo, results, { page });
 });
 ```
 
-A `global.setup.ts` that bootstraps auth for both themes:
+-   `hideBySelector(page, selector)` temporarily hides content; `restoreHidden(handle)` restores it.
+
+## Authentication and themes
+
+-   Log in once; save authenticated light and dark snapshots.
+-   Store setup in `tests/global.setup.ts`; run commands from the UI directory.
+-   Supply credentials through the consuming workspace's environment.
 
 ```ts
-import path from 'path';
+import path from 'node:path';
 import { test as setup } from 'bh-playwright-testing';
 import { loginAndSnapshotThemes } from 'bh-playwright-testing/auth';
 import { installGraphHasDataStub } from 'bh-playwright-testing/stubs';
-import { authStorageStateFor, type Theme } from 'bh-playwright-testing/themes';
+import { authStorageStateFor } from 'bh-playwright-testing/themes';
 
-setup('Generate and cache auth state', async ({ page }) => {
+setup('save authentication', async ({ page }) => {
     await installGraphHasDataStub(page);
     await loginAndSnapshotThemes({
         page,
-        username: process.env.TEST_USERNAME!,
-        password: process.env.TEST_PASSWORD!,
-        storageStatePathFor: (theme: Theme) => path.resolve(__dirname, '..', authStorageStateFor(theme)),
+        username: process.env.A11Y_TEST_USERNAME!,
+        password: process.env.A11Y_TEST_PASSWORD!,
+        storageStatePathFor: (theme) => path.resolve(authStorageStateFor(theme)),
     });
 });
 ```
 
-A Playwright config that consumes the theme matrix and primes the a11y helper options:
+## Configure the suite
+
+-   Use `A11yTestOptions` for typed accessibility, theme, and HAR settings.
+-   `a11yDefaultInclude` defaults to full-page scanning; `a11yDefaults` defaults to `{}`.
+-   `navToggleName` defaults to `Toggle Navigation`; `installGraphDataStub` defaults to `false`.
+-   Save this example as `playwright.a11y.config.ts`; keep specs under `tests/a11y/`.
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
 import type { A11yTestOptions } from 'bh-playwright-testing';
 import { authStorageStateFor, THEMES } from 'bh-playwright-testing/themes';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export default defineConfig<A11yTestOptions>({
+    testDir: './tests',
     use: {
-        // App-specific priming of the shared a11y helper options.
+        baseURL: process.env.A11Y_TEST_URL,
+        serviceWorkers: 'block',
         installGraphDataStub: true,
         a11yDefaultInclude: '#content-wrapper',
         navToggleName: 'Toggle Navigation',
     },
     projects: [
         { name: 'setup', testMatch: /global\.setup\.ts$/ },
-        ...THEMES.flatMap((theme) => [
-            {
-                name: `chromium-${theme}`,
-                use: { ...devices['Desktop Chrome'], storageState: authStorageStateFor(theme), theme },
-                dependencies: ['setup'],
-            },
-        ]),
+        ...THEMES.map((theme) => ({
+            name: `chromium-${theme}`,
+            testMatch: '**/*.a11y.spec.ts',
+            use: { ...devices['Desktop Chrome'], storageState: authStorageStateFor(theme), theme },
+            dependencies: ['setup'],
+        })),
     ],
 });
 ```
 
-Use `TestOptions` (from `bh-playwright-testing/themes`) instead of `A11yTestOptions` if a suite only needs the `theme` option and not the `checkA11y` / `goAndWaitFor` helpers.
+-   Start the UI and API, then run the suite from the UI directory.
 
-### Extending The Fixture
+```sh
+yarn playwright test -c playwright.a11y.config.ts
+```
 
-Most suites need nothing beyond priming the options above — the `page` stub, `checkA11y`, and `goAndWaitFor` all ship in the shared `test`. For a bespoke fixture the options don't cover, wrap `test` with `test.extend` in the consuming suite:
+-   Use `TestOptions` from `bh-playwright-testing/themes` when only typing the theme option.
+
+## API stubs
+
+-   Install stubs before navigation or actions that trigger their requests.
+-   Unhandled requests fall through; later route handlers take precedence.
+
+```ts
+import { test } from 'bh-playwright-testing';
+import { installMFAEnrollmentStub } from 'bh-playwright-testing/stubs';
+
+test.beforeEach(async ({ page }) => {
+    await installMFAEnrollmentStub(page);
+});
+```
+
+## HAR recording and replay
+
+-   Import `test` from `bh-playwright-testing`; the base Playwright fixture does not recognize `harMode`.
+-   `off`: default; disables HAR capture and replay.
+-   `record`: captures live traffic.
+-   `update`: refreshes an existing recording using live traffic.
+-   `mock`: replays recorded responses; unmatched requests fail by default.
+
+### Record
+
+-   Save as `tests/a11y/har-example.a11y.spec.ts`; adapt actions and assertions to your scenario.
+-   Run against the live UI and API.
+
+```ts
+import { expect, test } from 'bh-playwright-testing';
+
+test.use({ harMode: 'record' });
+
+test('graph page', async ({ page }) => {
+    await page.goto('/ui/graphview');
+    await expect(page.getByRole('main')).toBeVisible();
+});
+```
+
+```sh
+yarn playwright test -c playwright.a11y.config.ts --project=setup
+yarn playwright test -c playwright.a11y.config.ts \
+  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
+```
+
+### Replay
+
+-   Change only the mode; keep the filename, titles, and project unchanged.
+-   Reuse saved authentication with `--no-deps`.
+
+```ts
+test.use({ harMode: 'mock' });
+```
+
+```sh
+A11Y_TEST_SERVE=false yarn playwright test -c playwright.a11y.config.ts \
+  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
+```
+
+### Update
+
+-   Run the same command against live services, then restore `mock` and verify replay.
+-   Failed updates preserve the previous recording.
+
+```ts
+test.use({ harMode: 'update' });
+```
+
+```sh
+yarn playwright test -c playwright.a11y.config.ts \
+  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
+```
+
+### Options and artifacts
+
+-   Set HAR options at file scope, inside `describe`, or in typed config `use`.
+-   `harRootDir` defaults to `test-artifacts/har`, relative to the configured test root.
+-   `harNotFound: 'fallback'` allows unmatched requests to reach live services.
+
+```ts
+test.use({
+    harMode: 'mock',
+    harRootDir: './test-artifacts/har',
+    harNotFound: 'abort',
+});
+```
+
+-   Each test directory contains these files.
+
+```text
+test-artifacts/har/<test-label>-<identity-hash>/
+  recording.har
+  requests.json
+  responses.json
+  .har-fixture.json
+```
+
+-   JSON summaries contain captured methods, URLs, statuses, MIME types, and sizes.
+-   `harArtifacts` exposes `directory`, `recording`, `requests`, and `responses` paths.
+-   Files, titles, projects, and repeated tests determine directory identity; retries reuse the same directory.
+-   Record separately for every project that will replay the test.
+-   HARs finalize after context closure, including failed tests when closure succeeds.
+-   Use the fixture's default context; manually created contexts are unmanaged.
+-   Block service workers; avoid route stubs for endpoints you want HARs to serve.
+-   Inspect recordings for credentials, cookies, and sensitive response data before committing.
+-   Keep temporary Playwright output outside version control.
+
+```ts
+import {
+    makeHarArtifactPaths,
+    readHar,
+    readJsonArtifact,
+    writeJsonArtifact,
+    summarizeHar,
+} from 'bh-playwright-testing';
+```
+
+### Remove obsolete recordings
+
+-   Renaming tests leaves old directories; updates only replace recordings for unchanged identities.
+-   From either UI workspace, preview orphaned fixtures before deleting.
+-   Pruning checks the complete suite and preserves unmarked directories.
+
+```sh
+yarn har:prune
+yarn har:prune --delete
+yarn har:prune --root test-artifacts/custom-har
+```
+
+## Extend the fixture
+
+-   Add suite-specific fixtures with `test.extend`.
 
 ```ts
 import { test as base } from 'bh-playwright-testing';
 
-export const test = base.extend({
-    // ...suite-specific fixtures...
+export const test = base.extend<{ featurePath: string }>({
+    featurePath: '/ui/graphview',
 });
 ```
 
-## Source-Only Distribution
+## Package development
 
-The package ships TypeScript source via the `exports` map — there is no compiled `dist`. Consumers run it directly through their own Vite/Playwright TS pipelines. This avoids a build step that would only ever be consumed inside the monorepo and keeps the modules editable in place. `tsc --noEmit` (`yarn check-types`) is the only type-check.
+-   The package exports TypeScript source directly; consumers need no package build.
+-   Run from `bhce/packages/javascript/bh-playwright-testing` in BHE, or `packages/javascript/bh-playwright-testing` in BHCE.
+
+```sh
+yarn check-types
+yarn lint
+yarn test
+node --test ../../../cmd/ui/scripts/prune-har.check.mjs
+```
+
+-   `yarn test` runs record, update, and mock tests against local endpoints.
