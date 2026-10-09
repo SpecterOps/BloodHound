@@ -17,14 +17,14 @@ import * as React from 'react';
 import { Tooltip } from '../Tooltip';
 import { cn } from '../utils';
 
-interface IconBaseProps {
+interface AccessibleIconBaseProps {
     'aria-hidden'?: boolean;
     children: React.ReactElement;
     className?: string;
     hideTooltip?: boolean;
 }
 
-type IconLabelProps =
+type AccessibleIconLabelProps =
     | {
           'aria-label'?: string;
           label: string;
@@ -34,9 +34,9 @@ type IconLabelProps =
           label?: never;
       };
 
-export type IconProps = IconBaseProps & IconLabelProps;
+export type AccessibleIconProps = AccessibleIconBaseProps & AccessibleIconLabelProps;
 
-export const Icon: React.FC<IconProps> = ({
+export const AccessibleIcon: React.FC<AccessibleIconProps> = ({
     'aria-hidden': ariaHidden = false,
     'aria-label': ariaLabel,
     children,
@@ -60,4 +60,4 @@ export const Icon: React.FC<IconProps> = ({
     );
 };
 
-Icon.displayName = 'Icon';
+AccessibleIcon.displayName = 'AccessibleIcon';

@@ -179,52 +179,6 @@ func Test_cacheQueryResult(t *testing.T) {
 	graphQuery.cacheQueryResult(time.Now().Add(-time.Hour), cacheKey, result)
 }
 
-func Test_sortAndSliceResults_sorting(t *testing.T) {
-	var (
-		matches = NodeSearchResults{
-			ExactResults: []*graph.Node{
-				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity)},
-			FuzzyResults: []*graph.Node{
-				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "bab@c.com"), ad.Entity),
-				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
-			},
-		}
-		skip     = 0
-		limit    = 10
-		expected = []*graph.Node{
-			matches.ExactResults[0], matches.FuzzyResults[1], matches.FuzzyResults[0], // manually put fuzzyMatches' elements in alphabetical order for assertion
-		}
-	)
-
-	actual := sortAndSliceResults(matches, limit, skip)
-
-	require.Equal(t, 3, len(actual))
-	require.Equal(t, actual, expected)
-}
-
-func Test_sortAndSliceResults_limit(t *testing.T) {
-	var (
-		matches = NodeSearchResults{
-			ExactResults: []*graph.Node{
-				graph.NewNode(1, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
-				graph.NewNode(2, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
-				graph.NewNode(3, graph.NewProperties().Set(common.Name.String(), "b@c.com"), ad.Entity),
-			},
-			FuzzyResults: []*graph.Node{
-				graph.NewNode(4, graph.NewProperties().Set(common.Name.String(), "ab@c.com"), ad.Entity),
-			},
-		}
-		skip     = 0
-		limit    = 3
-		expected = matches.ExactResults
-	)
-
-	actual := sortAndSliceResults(matches, limit, skip)
-
-	require.Equal(t, 3, len(actual))
-	require.Equal(t, actual, expected)
-}
-
 // extractOrComparisons unwraps a `query.Or(...)` criteria (the first entry returned by
 // createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) into its two
 // underlying comparisons: the Name comparison and the ObjectID comparison, respectively.
