@@ -94,7 +94,11 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
     return (
         <Dialog onOpenChange={undoChanges}>
             <DialogTrigger asChild>
-                <IconButton aria-label='Open file ingest filters' size={24} variant='secondary'>
+                <IconButton
+                    aria-label='Open file ingest filters'
+                    size={24}
+                    variant='secondary'
+                    data-testid='file_ingest_log-open_filter_dialog'>
                     <AppIcon.FilterOutline />
                 </IconButton>
             </DialogTrigger>

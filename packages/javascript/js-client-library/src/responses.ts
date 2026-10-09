@@ -321,6 +321,8 @@ export type SavedQuery = {
     description: string;
     query: string;
     user_id: string;
+    category?: string;
+    extension_id?: number | null;
 };
 
 export type SavedQueryPermissionsResponse = {
@@ -387,7 +389,7 @@ export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJ
 
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
-export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+export type GetCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
 
 export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
 
