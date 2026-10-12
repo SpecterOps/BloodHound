@@ -95,7 +95,19 @@ func TestArgon2Digest_Validate_NonStandardDigestLength(t *testing.T) {
 		t.Fatalf("Unexpected error while generating salt: %v", err)
 	}
 
-	for _, digestLength := range []uint32{8, 32} {
+	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
+	for _, testCase := range []struct {
+		digestLength   uint32
+		shouldValidate bool
+	}{
+		{digestLength: 1, shouldValidate: false},
+		{digestLength: 2, shouldValidate: false},
+		{digestLength: 3, shouldValidate: false},
+		{digestLength: 4, shouldValidate: true},
+		{digestLength: 8, shouldValidate: true},
+		{digestLength: 16, shouldValidate: true},
+		{digestLength: 32, shouldValidate: true},
+	} {
 		digest := Argon2Digest{
 			DigestVariant:   Argon2idVariant,
 			Version:         argon2.Version,
@@ -103,13 +115,17 @@ func TestArgon2Digest_Validate_NonStandardDigestLength(t *testing.T) {
 			NumIterations:   1,
 			NumThreads:      1,
 			Salt:            salt,
-			Digest:          argon2.IDKey([]byte(content), salt, 1, 1024, 1, digestLength),
+			Digest:          argon2.IDKey([]byte(content), salt, 1, 1024, 1, testCase.digestLength),
 		}
 
-		if valid := digest.Validate(content); !valid {
-			t.Fatalf("Expected digest of length %d to validate content %q", digestLength, content)
-		} else if valid := digest.Validate("This should fail."); valid {
-			t.Fatalf("Expected digest of length %d to reject incorrect content", digestLength)
+		if valid := digest.Validate(content); valid != testCase.shouldValidate {
+			t.Fatalf("Expected digest of length %d to validate content %q as %v but got %v", testCase.digestLength, content, testCase.shouldValidate, valid)
+		}
+
+		if testCase.shouldValidate {
+			if valid := digest.Validate("This should fail."); valid {
+				t.Fatalf("Expected digest of length %d to reject incorrect content", testCase.digestLength)
+			}
 		}
 	}
 }

@@ -146,7 +146,8 @@ type Argon2Digest struct {
 }
 
 func (s Argon2Digest) Validate(content string) bool {
-	if len(s.Digest) == 0 {
+	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
+	if len(s.Digest) < 4 {
 		return false
 	}
 
