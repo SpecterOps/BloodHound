@@ -27,7 +27,7 @@ on:
         required: true
         type: string
       registry_kind:
-        description: dockerhub or ecr.
+        description: dockerhub, ecr, or other (skips login).
         required: true
         type: string
       aws_region:
@@ -48,6 +48,31 @@ on:
         required: false
       ecr_aws_secret_access_key:
         required: false
+  workflow_dispatch:
+    inputs:
+      image_repository:
+        description: Fully qualified image repository, without a tag or digest (e.g. 'ttl.sh/bhce-test-abc123').
+        required: true
+        type: string
+      image_digest:
+        description: Image digest from the push output (e.g. 'sha256:abc123...').
+        required: true
+        type: string
+      registry_kind:
+        description: Registry type. Use 'other' for ttl.sh — both login steps are skipped automatically.
+        required: true
+        type: choice
+        default: other
+        options:
+          - other
+          - dockerhub
+          - ecr
+      certificate_identity:
+        description: >
+          Expected Fulcio certificate identity for the verify step. Leave
+          blank to auto-construct from this repository and ref.
+        required: false
+        type: string
 
 jobs:
   sign-and-verify:
@@ -89,13 +114,13 @@ jobs:
 
       - name: Verify Image Signature
         env:
-          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity }}
+          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity || format('https://github.com/{0}/.github/workflows/reusable.cosign-image-signing.yml@{1}', github.repository, github.ref) }}
           CALLER_REPOSITORY: ${{ github.repository }}
           CALLER_REF: ${{ github.ref }}
           CALLER_SHA: ${{ github.sha }}
         run: >-
           cosign verify "$IMAGE_REFERENCE"
-          --certificate-identity "$CERTIFICATE_IDENITY"
+          --certificate-identity "$CERTIFICATE_IDENTITY"
           --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
           --certificate-github-workflow-repository "$CALLER_REPOSITORY"
           --certificate-github-workflow-ref "$CALLER_REF"
