@@ -1028,6 +1028,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+RPCEncryptionEnforced: types.#StringEnum & {
+	symbol:         "RPCEncryptionEnforced"
+	schema:         "ad"
+	name:           "RPC Encryption Enforced"
+	representation: "rpcencryptionenforced"
+}
+
+RPCEncryptionCollected: types.#StringEnum & {
+	symbol:         "RPCEncryptionCollected"
+	schema:         "ad"
+	name:           "RPC Encryption Collected"
+	representation: "rpcencryptioncollected"
+}
+
 ServicePrincipalNames: types.#StringEnum & {
 	symbol:         "ServicePrincipalNames"
 	schema:         "ad"
@@ -1209,6 +1223,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	RPCEncryptionEnforced,
+	RPCEncryptionCollected,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
 	ServerReference,
@@ -1716,6 +1732,11 @@ CoerceAndRelayNTLMToADCS: types.#Kind & {
 	schema: "active_directory"
 }
 
+CoerceAndRelayNTLMToADCSRPC: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCSRPC"
+	schema: "active_directory"
+}
+
 WriteOwnerLimitedRights: types.#Kind & {
 	symbol: "WriteOwnerLimitedRights"
 	schema: "active_directory"
@@ -1867,6 +1888,7 @@ RelationshipKinds: [
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	WriteOwnerRaw,
 	OwnsLimitedRights,
@@ -1975,6 +1997,7 @@ SharedRelationshipKinds: [
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
 	ClaimSpecialIdentity,
@@ -2019,8 +2042,52 @@ EdgeCompositionRelationships: [
 	ADCSESC13,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,
 	CanApplyGPO,
 ]
+
+PostProcessedRelationships: [
+	DCSync,
+	ProtectAdminGroups,
+	SyncLAPSPassword,
+	CanRDP,
+	AdminTo,
+	CanPSRemote,
+	ExecuteDCOM,
+	TrustedForNTAuth,
+	IssuedSignedBy,
+	EnterpriseCAFor,
+	GoldenCert,
+	ADCSESC1,
+	ADCSESC3,
+	ADCSESC4,
+	ADCSESC6a,
+	ADCSESC6b,
+	ADCSESC10a,
+	ADCSESC10b,
+	ADCSESC9a,
+	ADCSESC9b,
+	ADCSESC13,
+	EnrollOnBehalfOf,
+	SyncedToADUser,
+	ExtendedByPolicy,
+	CoerceAndRelayNTLMToSMB,
+	CoerceAndRelayNTLMToLDAP,
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
+	HasTrustKeys,
+]
+
+DCAPostProcessedRelationships: [
+	Owns,
+	WriteOwner,
+	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
+]
+
+// All post-processed edges
+AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])
