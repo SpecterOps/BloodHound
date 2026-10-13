@@ -99,33 +99,33 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 interface TooltipProps extends React.PropsWithChildren {
-    tooltip: React.ReactNode;
-    renderTrigger?: (trigger: React.ReactElement<TriggerProps>) => React.ReactElement;
-    open?: RootProps['open'];
-    defaultOpen?: RootProps['defaultOpen'];
-    onOpenChange?: RootProps['onOpenChange'];
-    delayDuration?: RootProps['delayDuration'];
-    rootProps?: Omit<RootProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'delayDuration'>;
-    triggerProps?: TriggerProps;
-    contentWidth?: ContentProps['contentWidth'];
-    tooltipPosition?: TooltipPosition;
     contentProps?: Omit<ContentProps, 'contentWidth'>;
+    contentWidth?: ContentProps['contentWidth'];
+    defaultOpen?: RootProps['defaultOpen'];
+    delayDuration?: RootProps['delayDuration'];
+    onOpenChange?: RootProps['onOpenChange'];
+    open?: RootProps['open'];
+    renderTrigger?: (trigger: React.ReactElement<TriggerProps>) => React.ReactElement;
+    rootProps?: Omit<RootProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'delayDuration'>;
+    tooltip: React.ReactNode;
+    tooltipPosition?: TooltipPosition;
+    triggerProps?: TriggerProps;
 }
 
 const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, TooltipProps>((props, ref) => {
     const {
-        tooltip,
         children,
-        renderTrigger,
-        open,
-        defaultOpen,
-        onOpenChange,
-        delayDuration = 300,
-        rootProps = {},
-        triggerProps = {},
-        contentWidth,
-        tooltipPosition,
         contentProps = {},
+        contentWidth,
+        defaultOpen,
+        delayDuration = 300,
+        onOpenChange,
+        open,
+        renderTrigger,
+        rootProps = {},
+        tooltip,
+        tooltipPosition,
+        triggerProps = {},
     } = props;
     const trigger = renderTrigger ? (
         <TooltipTrigger ref={ref} {...triggerProps} asChild={false} />

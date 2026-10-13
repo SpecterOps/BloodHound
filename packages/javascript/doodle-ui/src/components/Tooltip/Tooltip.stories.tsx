@@ -28,11 +28,11 @@ const meta = {
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
-        open: { type: 'boolean', control: 'boolean' },
-        defaultOpen: { type: 'boolean', control: 'boolean' },
-        onOpenChange: { type: 'function' },
-        delayDuration: { type: 'number', control: 'number' },
         contentWidth: { type: 'string', control: 'select', options: ['default', 'match_trigger', 'lg', 'md', 'sm'] },
+        defaultOpen: { type: 'boolean', control: 'boolean' },
+        delayDuration: { type: 'number', control: 'number' },
+        onOpenChange: { type: 'function' },
+        open: { type: 'boolean', control: 'boolean' },
         tooltipPosition: { type: 'string', control: 'select', options: ['top', 'bottom', 'left', 'right'] },
     },
     args: {},
