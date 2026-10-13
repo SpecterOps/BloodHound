@@ -18,6 +18,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -225,15 +226,15 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		sink := post.NewFilteredRelationshipSink(ctx, "Azure App Role Assignments Post Processing", db, appRoleAssignmentTracker)
-		defer sink.Done()
+		defer sink.Abort()
 
 		for _, tenant := range tenants {
 			if err := postAppRoleAssignmentsForTenant(ctx, db, sink, tenant); err != nil {
-				return &post.AtomicPostProcessingStats{}, err
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			}
 		}
 
-		return sink.Stats(), nil
+		return sink.Stats(), sink.Done()
 	}
 }
 
@@ -523,15 +524,15 @@ func CreateAZAddOwnerEdge(ctx context.Context, db graph.Database) (*post.AtomicP
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		sink := post.NewFilteredRelationshipSink(ctx, "Azure Add Owner Post Processing", db, addOwnerTracker)
-		defer sink.Done()
+		defer sink.Abort()
 
 		for _, tenant := range tenantNodes {
 			if err := postAzureAddOwner(ctx, db, sink, tenant); err != nil {
-				return &post.AtomicPostProcessingStats{}, err
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			}
 		}
 
-		return sink.Stats(), nil
+		return sink.Stats(), sink.Done()
 	}
 }
 
@@ -837,14 +838,14 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		sink := post.NewFilteredRelationshipSink(ctx, "Azure User Role Assignments Post Processing", db, userRoleAssignmentTracker)
-		defer sink.Done()
+		defer sink.Abort()
 
 		for _, tenant := range tenantNodes {
 			if roleAssignments, err := FetchTenantRoleAssignments(ctx, db, tenant); err != nil {
-				return &post.AtomicPostProcessingStats{}, err
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			} else {
 				if err := postAzureResetPassword(ctx, db, sink, tenant, roleAssignments); err != nil {
-					return &post.AtomicPostProcessingStats{}, err
+					return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 				} else {
 					postAzureGlobalAdmins(ctx, sink, roleAssignments, tenant)
 					postAzurePrivilegedRoleAdmins(ctx, sink, roleAssignments, tenant)
@@ -852,12 +853,13 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 
 					if err := postAzureAddMembers(ctx, sink, roleAssignments); err != nil {
 						slog.Error("Azure AddMember Post-Processing Failure", attr.Error(err))
+						return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 					}
 				}
 			}
 		}
 
-		return sink.Stats(), nil
+		return sink.Stats(), sink.Done()
 	}
 }
 
