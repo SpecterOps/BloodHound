@@ -104,7 +104,7 @@ const PaginationSelect = (props: PaginationSelectProps) => {
                 <SelectContent>
                     {selectItems.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                            {option.display}
+                            <span className='pr-2'>{option.display}</span>
                         </SelectItem>
                     ))}
                 </SelectContent>
