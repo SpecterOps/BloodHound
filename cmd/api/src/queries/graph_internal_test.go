@@ -247,6 +247,53 @@ func requireNotEqualsExclusion(t *testing.T, criteria graph.Criteria, propertyNa
 	requireCaseSensitiveComparison(t, comparison, propertyName, cypher.OperatorEquals, term)
 }
 
+// requireObjectIDInExclusion asserts that criteria is a `query.Not(query.In(n.objectid, <terms>))` clause.
+func requireObjectIDInExclusion(t *testing.T, criteria graph.Criteria, terms []string) {
+	t.Helper()
+
+	negation, ok := criteria.(*cypher.Negation)
+	require.True(t, ok, "expected *cypher.Negation, got %T", criteria)
+
+	parenthetical, ok := negation.Expression.(*cypher.Parenthetical)
+	require.True(t, ok, "expected *cypher.Parenthetical, got %T", negation.Expression)
+
+	requireObjectIDInComparison(t, parenthetical.Expression, terms)
+}
+
+// requireObjectIDInComparison asserts that criteria is a `query.In(n.objectid, <terms>)` comparison.
+func requireObjectIDInComparison(t *testing.T, criteria graph.Criteria, terms []string) {
+	t.Helper()
+
+	comparison, ok := criteria.(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", criteria)
+
+	propertyLookup, ok := comparison.Left.(*cypher.PropertyLookup)
+	require.True(t, ok, "expected *cypher.PropertyLookup, got %T", comparison.Left)
+	require.Equal(t, common.ObjectID.String(), propertyLookup.Symbol)
+
+	require.Len(t, comparison.Partials, 1)
+	require.Equal(t, cypher.OperatorIn, comparison.Partials[0].Operator)
+
+	parameter, ok := comparison.Partials[0].Right.(*cypher.Parameter)
+	require.True(t, ok, "expected *cypher.Parameter, got %T", comparison.Partials[0].Right)
+	require.Equal(t, terms, parameter.Value)
+}
+
+func TestCreateObjectIDSearchCriteria(t *testing.T) {
+	t.Run("case variants off: matches the term exactly", func(t *testing.T) {
+		requireCaseSensitiveComparison(t, createObjectIDSearchCriteria("AbC", false).(*cypher.Comparison), common.ObjectID.String(), cypher.OperatorEquals, "AbC")
+	})
+
+	t.Run("case variants on: matches as-typed, uppercase and lowercase variants", func(t *testing.T) {
+		requireObjectIDInComparison(t, createObjectIDSearchCriteria("AbC", true), []string{"AbC", "ABC", "abc"})
+	})
+
+	t.Run("case variants on: duplicate variants are removed", func(t *testing.T) {
+		requireObjectIDInComparison(t, createObjectIDSearchCriteria("abc", true), []string{"abc", "ABC"})
+		requireObjectIDInComparison(t, createObjectIDSearchCriteria("S-1-5-21", true), []string{"S-1-5-21", "s-1-5-21"})
+	})
+}
+
 func TestCreateFuzzyNodeSearchGraphCriteria_Search(t *testing.T) {
 	const (
 		nameTerm     = "abc"
@@ -269,9 +316,9 @@ func TestCreateFuzzyNodeSearchGraphCriteria_Search(t *testing.T) {
 
 		requireCaseInsensitiveComparison(t, extractNameComparison(t, filters[0]), common.Name.String(), cypher.OperatorContains, nameTerm)
 
-		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
+		// Exact-match exclusion clauses mirror the exact-match criteria.
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
-		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
+		requireObjectIDInExclusion(t, filters[2], []string{objectIDTerm, strings.ToUpper(objectIDTerm)})
 	})
 
 	t.Run("includeGroupFilter and kinds are appended regardless of the flag", func(t *testing.T) {

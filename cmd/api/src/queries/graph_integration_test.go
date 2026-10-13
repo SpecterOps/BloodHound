@@ -515,16 +515,16 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 		require.Equal(t, "CASEUSER1", objectID)
 	})
 
-	t.Run("flag on: exact-cased term only matches that node, since objectid is not fuzzy matched", func(t *testing.T) {
+	t.Run("flag on: mixed-case term matches the as-typed and uppercase objectid variants", func(t *testing.T) {
 		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseUser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Equal(t, []string{"CaseUser1"}, collectObjectIDs(t, results))
+		require.ElementsMatch(t, []string{"CaseUser1", "CASEUSER1"}, collectObjectIDs(t, results))
 	})
 
-	t.Run("flag on: mismatched-case term matches neither node, since objectid is not fuzzy matched", func(t *testing.T) {
+	t.Run("flag on: lowercase term matches the uppercase objectid variant but not a mixed-case objectid", func(t *testing.T) {
 		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Empty(t, results)
+		require.Equal(t, []string{"CASEUSER1"}, collectObjectIDs(t, results))
 	})
 
 	t.Run("partial objectid term matches no nodes", func(t *testing.T) {
