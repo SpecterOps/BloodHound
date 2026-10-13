@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
 	"github.com/specterops/dawgs/util/channels"
 )
 
@@ -182,25 +183,115 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 }
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
-		slog.ErrorContext(
-			ctx,
-			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
-			attr.Error(err),
-		)
+	var (
+		enterpriseCAIDs = cardinality.NewBitmap64()
+		domains         []*graph.Node
+	)
+
+	if fetchedDomains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain))); err != nil && !graph.IsErrNotFound(err) {
+		return fmt.Errorf("failed fetching domains for GoldenCert host validation: %w", err)
 	} else {
-		for _, computer := range hostCAServiceComputers {
-			for _, domain := range certChains.Domains.Slice() {
-				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-					FromID: computer.ID,
-					ToID:   graph.ID(domain),
-					Kind:   ad.GoldenCert,
-				})
+		domains = fetchedDomains
+	}
+
+	enterpriseCAIDs.Add(certChains.EnterpriseCA.ID.Uint64())
+	qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAIDs, indexDomainsBySID(domains))
+	if err != nil {
+		return fmt.Errorf("failed fetching qualifying hosts for GoldenCert: %w", err)
+	}
+
+	for _, hostPath := range qualifyingHostPaths[certChains.EnterpriseCA.ID] {
+		for _, domain := range certChains.Domains.Slice() {
+			if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+				FromID: hostPath.Root().ID,
+				ToID:   graph.ID(domain),
+				Kind:   ad.GoldenCert,
+			}) {
+				return fmt.Errorf("context timed out while creating GoldenCert edge")
 			}
 		}
 	}
+
 	return nil
+}
+
+// fetchQualifyingEnterpriseCAHostPaths returns only HostsCAService paths whose
+// computer satisfies the same enabled and forest-scoping rules used by ADCS
+// edge creation. Results are keyed by the exact Enterprise CA they host so a
+// qualifying host for one CA cannot validate a different CA candidate.
+func fetchQualifyingEnterpriseCAHostPaths(ctx context.Context, db graph.Database, enterpriseCAs cardinality.Duplex[uint64]) (map[graph.ID]graph.PathSet, error) {
+	var hostPathsByEnterpriseCA = make(map[graph.ID]graph.PathSet)
+
+	if enterpriseCAs.Cardinality() == 0 {
+		return hostPathsByEnterpriseCA, nil
+	}
+
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		domains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain)))
+		if err != nil && !graph.IsErrNotFound(err) {
+			return err
+		}
+
+		hostPathsByEnterpriseCA, err = fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAs, indexDomainsBySID(domains))
+		return err
+	})
+
+	return hostPathsByEnterpriseCA, err
+}
+
+func enterpriseCAChainPattern(pattern traversal.PatternContinuation, rootCAForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.RootCAFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, rootCAForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		OutboundWithDepth(1, 1, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		OutboundWithDepth(1, 1, query.And(criteria...))
+}
+
+func enterpriseCAChainToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCAChainPattern(pattern, query.Equals(query.EndID(), domainID))
+}
+
+func enterpriseCATrustedForNTAuthPattern(pattern traversal.PatternContinuation, ntAuthStoreForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.NTAuthStoreFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, ntAuthStoreForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(1, 1, query.And(
+			query.Kind(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		OutboundWithDepth(1, 1, query.And(criteria...))
+}
+
+func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
+}
+
+func adcsCAEnrollmentPathPattern(enterpriseCAs []graph.ID, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.Kind(query.Relationship(), ad.Enroll),
+			query.Kind(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), enterpriseCAs...),
+		)), domainID)
 }
 
 func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
@@ -386,28 +477,30 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	if certTemplateValidForUserVictim(certTemplate) {
+		return bitmap, nil
+	}
+
 	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
 	// and possess DNS names, so they should not be filtered out of attack paths that
 	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.GMSA.String())),
-				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
-			)),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.MSA.String())),
-				query.Equals(query.NodeProperty(ad.MSA.String()), true),
-			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
 		if !graph.IsErrNotFound(err) {
 			return nil, err
 		}
-	} else if len(userNodes) > 0 && !certTemplateValidForUserVictim(certTemplate) {
-		bitmap.Xor(graph.NodeSetToDuplex(userNodes))
+	} else {
+		for _, userNode := range userNodes {
+			if managedServiceAccount, err := isManagedServiceAccount(userNode); err != nil {
+				return nil, err
+			} else if !managedServiceAccount {
+				bitmap.Remove(userNode.ID.Uint64())
+			}
+		}
 	}
 
 	return bitmap, nil

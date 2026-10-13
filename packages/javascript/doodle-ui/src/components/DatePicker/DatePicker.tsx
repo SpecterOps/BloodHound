@@ -56,8 +56,8 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     )}
                     <PopoverTrigger asChild>
                         <IconButton
-                            triggerClassName='absolute right-2 top-1.5'
-                            className='p-0 h-6 opacity-50 hover:opacity-100 peer-hover:opacity-100'
+                            triggerClassName='absolute right-2 top-1/2 -translate-y-1/2'
+                            className='h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100'
                             aria-label='Choose Date'>
                             <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
                         </IconButton>

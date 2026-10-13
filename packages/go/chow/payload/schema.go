@@ -1,10 +1,10 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-package upload
+package payload
 
 import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io/fs"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -27,19 +27,14 @@ import (
 //go:embed jsonschema
 var schemaFiles embed.FS
 
-// IngestSchema holds compiled JSON schemas used to validate
-// generic-ingested graph data. It includes separate schemas for nodes
-// and edges, which are reused across multiple ingestion requests
-// to avoid recompiling on every request.
-type IngestSchema struct {
+type Schema struct {
 	NodeSchema *jsonschema.Schema
 	EdgeSchema *jsonschema.Schema
 	MetaSchema *jsonschema.Schema
 }
 
-// LoadIngestSchema constructs the JSON schema for OpenGraph ingest payloads
-func LoadIngestSchema() (IngestSchema, error) {
-	var schema IngestSchema
+func LoadSchema() (Schema, error) {
+	var schema Schema
 	if nodeSchema, err := loadSchema("node.json"); err != nil {
 		return schema, err
 	} else if edgeSchema, err := loadSchema("edge.json"); err != nil {
@@ -55,6 +50,10 @@ func LoadIngestSchema() (IngestSchema, error) {
 }
 
 func loadSchema(filename string) (*jsonschema.Schema, error) {
+	return loadSchemaFromFS(schemaFiles, filename)
+}
+
+func loadSchemaFromFS(schemaFS fs.FS, filename string) (*jsonschema.Schema, error) {
 	var (
 		schemaDir = "jsonschema"
 		compiler  = jsonschema.NewCompiler()
@@ -62,9 +61,9 @@ func loadSchema(filename string) (*jsonschema.Schema, error) {
 
 	// Read the raw JSON schema file from embed.FS
 	path := fmt.Sprintf("%s/%s", schemaDir, filename)
-	if data, err := schemaFiles.ReadFile(path); err != nil {
+	if data, err := fs.ReadFile(schemaFS, path); err != nil {
 		return nil, fmt.Errorf("failed to read schema %q: %w", path, err)
-	} else if document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data)); err != nil { // Parse the JSON into a generic in-memory representation
+	} else if document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data)); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal schema %q: %w", path, err)
 	} else if err := compiler.AddResource(filename, document); err != nil {
 		return nil, fmt.Errorf("failed to add resource for schema %q: %w", filename, err)

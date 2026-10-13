@@ -17,7 +17,7 @@
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Menu, MenuItem } from '@mui/material';
-import { Button, Typography } from 'doodle-ui';
+import { Button } from 'doodle-ui';
 import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
@@ -47,7 +47,7 @@ const MenuWithDropdown: React.FC<{
                 ref={buttonRef}
                 onClick={openMenu}
                 disabled={disabled}>
-                <Typography>{menuTitle}</Typography>
+                <span>{menuTitle}</span>
                 <FontAwesomeIcon icon={faCaretDown} />
             </Button>
             <Menu id='create-menu' anchorEl={buttonRef.current} keepMounted open={isOpen} onClose={closeMenu}>

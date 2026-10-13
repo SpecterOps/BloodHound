@@ -105,7 +105,10 @@
     "kind": {
       "type": "string",
       "description": "Edge kind name must contain only alphanumeric characters and underscores.",
-      "pattern": "^[A-Za-z0-9_]+$"
+      "pattern": "^[A-Za-z0-9_]+$",
+      "not": {
+        "pattern": "^[Tt][Aa][Gg](?:_|$)"
+      }
     },
     "properties": {
       "$ref": "#/$defs/property_map"

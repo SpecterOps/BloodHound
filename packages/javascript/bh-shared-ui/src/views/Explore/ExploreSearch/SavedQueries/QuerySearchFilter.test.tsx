@@ -53,6 +53,7 @@ describe('QuerySearchFilter', () => {
         'NTLM Relay Attacks',
         'Shortest Paths',
     ];
+    const testPlatforms = ['Active Directory', 'Azure', 'Saved Queries', 'Asset Explorer'];
 
     it('renders the QuerySearchFilter component', async () => {
         render(
@@ -61,6 +62,7 @@ describe('QuerySearchFilter', () => {
                 exportHandler={testHandleExport}
                 deleteHandler={testHandleDeleteQuery}
                 categories={testCategories}
+                platforms={testPlatforms}
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
@@ -80,24 +82,26 @@ describe('QuerySearchFilter', () => {
                 exportHandler={testHandleExport}
                 deleteHandler={testHandleDeleteQuery}
                 categories={testCategories}
+                platforms={testPlatforms}
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
                 source={''}></QuerySearchFilter>
         );
 
-        const testPlatforms = screen.getByLabelText('Platforms');
+        const platformsSelect = screen.getByLabelText('Platforms');
 
-        expect(testPlatforms).toBeInTheDocument();
+        expect(platformsSelect).toBeInTheDocument();
 
         expect(screen.queryByText('All')).not.toBeInTheDocument();
 
-        await user.click(testPlatforms);
+        await user.click(platformsSelect);
 
         const testPlatformAll = screen.getByText('All');
         const testPlatformAD = screen.getByText('Active Directory');
         const testPlatformAzure = screen.getByText('Azure');
         const testPlatformSavedQueries = screen.getByText('Saved Queries');
+        expect(screen.getByText('Asset Explorer')).toBeInTheDocument();
 
         expect(testPlatformAll).toBeInTheDocument();
         expect(testPlatformAD).toBeInTheDocument();
@@ -108,6 +112,31 @@ describe('QuerySearchFilter', () => {
         expect(testHandleFilter).toBeCalledTimes(1);
     });
 
+    it('includes extension queries in the source filter', async () => {
+        const user = userEvent.setup();
+
+        render(
+            <QuerySearchFilter
+                queryFilterHandler={testHandleFilter}
+                exportHandler={testHandleExport}
+                deleteHandler={testHandleDeleteQuery}
+                categories={testCategories}
+                platforms={testPlatforms}
+                searchTerm=''
+                platform=''
+                categoryFilter={[]}
+                source=''
+            />
+        );
+
+        await user.click(screen.getByLabelText('Source'));
+        const extensionOption = screen.getByRole('option', { name: 'Extension' });
+
+        expect(extensionOption).toBeInTheDocument();
+        await user.click(extensionOption);
+        expect(testHandleFilter).toHaveBeenCalledWith('', '', [], 'extension');
+    });
+
     it('renders with the Export and Delete buttons disabled', async () => {
         render(
             <QuerySearchFilter
@@ -115,6 +144,7 @@ describe('QuerySearchFilter', () => {
                 exportHandler={testHandleExport}
                 deleteHandler={testHandleDeleteQuery}
                 categories={testCategories}
+                platforms={testPlatforms}
                 searchTerm={''}
                 platform={''}
                 categoryFilter={[]}
@@ -131,5 +161,26 @@ describe('QuerySearchFilter', () => {
         const testDelete = screen.getByRole('button', { name: /delete/i });
         expect(testDelete).toBeInTheDocument();
         expect(testDelete).toBeDisabled();
+    });
+
+    it('hides delete for an extension-managed query even when marked editable', () => {
+        mockContext.mockReturnValue({ selectedQuery: { id: 3, canEdit: true, schema_extension_id: 42 } });
+
+        render(
+            <QuerySearchFilter
+                queryFilterHandler={testHandleFilter}
+                exportHandler={testHandleExport}
+                deleteHandler={testHandleDeleteQuery}
+                categories={testCategories}
+                platforms={testPlatforms}
+                searchTerm=''
+                platform=''
+                categoryFilter={[]}
+                source=''
+            />
+        );
+
+        expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+        mockContext.mockReturnValue({ selectedQuery: undefined });
     });
 });

@@ -36,6 +36,8 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GetCollectorJobSchedulesOptions,
+    GetCollectorJobSecretsOptions,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
@@ -96,9 +98,12 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobHistoryResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
+    GetCollectorJobSchedulesResponse,
     GetCollectorJobSecretResponse,
+    GetCollectorJobSecretsResponse,
     GetCollectorJobTypesResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
@@ -108,7 +113,6 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
-    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -812,16 +816,15 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-
-    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
                 ...options?.params,
                 job_profile_id: `eq:${profileId}`,
-                sort_by: '-recorded_at',
-                skip: 0,
-                limit: 1,
+                sort_by: options?.params?.sort_by ?? '-recorded_at',
+                skip,
+                limit,
             },
         });
 
@@ -833,6 +836,13 @@ class BHEAPIClient {
 
     getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedules = (skip = 0, limit = 100, options?: GetCollectorJobSchedulesOptions) =>
+        this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collector-job-schedules', {
+            paramsSerializer: { indexes: null },
             ...options,
             params: { ...options?.params, skip, limit },
         });
@@ -880,6 +890,12 @@ class BHEAPIClient {
             payload,
             options
         );
+
+    getCollectorJobSecrets = (skip = 0, limit = 100, options?: GetCollectorJobSecretsOptions) =>
+        this.baseClient.get<GetCollectorJobSecretsResponse>('/api/v2/collector-job-secrets', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
 
     getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);

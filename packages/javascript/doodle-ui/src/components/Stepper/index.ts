@@ -13,5 +13,5 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-export * from './Icon';
+export * from './Stepper.tsx';
+export { useStepItem, useStepper } from './StepperContext';
