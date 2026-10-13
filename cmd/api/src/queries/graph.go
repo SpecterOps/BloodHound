@@ -143,7 +143,7 @@ type Graph interface {
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
-	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error)
+	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool, etacAllowedList []string) ([]*graph.Node, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType string) (graph.NodeSet, error)
 	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
 	GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error)
@@ -378,12 +378,36 @@ func createNodeStartsWithSearchGraphCriteria(kinds graph.Kinds, nameTerm string,
 	return filters
 }
 
+// createETACSearchGraphCriteria matches nodes whose environment ID appears in etacAllowedList. The environment ID is the
+// tenant ID for Azure nodes, the domain SID for AD nodes and the environment ID property for all other nodes.
+func createETACSearchGraphCriteria(etacAllowedList []string) graph.Criteria {
+	return query.Or(
+		query.And(
+			query.Kind(query.Node(), azure.Entity),
+			query.In(query.NodeProperty(azure.TenantID.String()), etacAllowedList),
+		),
+		query.And(
+			query.Not(query.Kind(query.Node(), azure.Entity)),
+			query.Kind(query.Node(), ad.Entity),
+			query.In(query.NodeProperty(ad.DomainSID.String()), etacAllowedList),
+		),
+		query.And(
+			query.Not(query.Kind(query.Node(), azure.Entity)),
+			query.Not(query.Kind(query.Node(), ad.Entity)),
+			query.In(query.NodeProperty(graphschema.EnvironmentIDKey), etacAllowedList),
+		),
+	)
+}
+
 type NodeSearchResults struct {
 	ExactResults []*graph.Node
 	FuzzyResults []*graph.Node
 }
 
-func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool) ([]*graph.Node, error) {
+// SearchNodesByNameOrObjectId returns up to limit nodes: exact matches followed by fuzzy matches. A non-positive limit
+// returns all exact and fuzzy matches. When etacAllowedList is non-nil, only nodes in the listed environments are
+// returned; an empty etacAllowedList returns no nodes.
+func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool, etacAllowedList []string) ([]*graph.Node, error) {
 	var (
 		nameTerm     = strings.ToUpper(nameOrObjectIdQuery)
 		objectIDTerm = nameTerm
@@ -394,7 +418,11 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 		objectIDTerm = nameOrObjectIdQuery
 	}
 
-	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, nameTerm, objectIDTerm, useRawObjectID, skip, limit); err != nil {
+	if etacAllowedList != nil && len(etacAllowedList) == 0 {
+		return []*graph.Node{}, nil
+	}
+
+	if nodes, err := s.searchExactAndFuzzyMatchedNodes(ctx, nodeKinds, nameTerm, objectIDTerm, useRawObjectID, skip, limit, etacAllowedList); err != nil {
 		return []*graph.Node{}, err
 	} else {
 		searchResults := make([]*graph.Node, 0, len(nodes.ExactResults)+len(nodes.FuzzyResults))
@@ -405,24 +433,50 @@ func (s *GraphQuery) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds 
 	}
 }
 
-func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool, skip int, limit int) (NodeSearchResults, error) {
-	results := NodeSearchResults{}
+func (s *GraphQuery) searchExactAndFuzzyMatchedNodes(ctx context.Context, kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool, skip int, limit int, etacAllowedList []string) (NodeSearchResults, error) {
+	var (
+		results       = NodeSearchResults{}
+		exactCriteria = createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)
+		fuzzyCriteria = createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)
+	)
+
+	if etacAllowedList != nil {
+		exactCriteria = append(exactCriteria, createETACSearchGraphCriteria(etacAllowedList))
+		fuzzyCriteria = append(fuzzyCriteria, createETACSearchGraphCriteria(etacAllowedList))
+	}
+
 	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if exactMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true)...))); err != nil {
+		exactMatchQuery := tx.Nodes().Filter(query.And(exactCriteria...)).OrderBy(
+			query.Order(query.NodeProperty(common.Name.String()), query.Ascending()),
+			query.Order(query.NodeProperty(common.ObjectID.String()), query.Ascending()),
+		)
+
+		if limit > 0 {
+			exactMatchQuery = exactMatchQuery.Limit(limit)
+		}
+
+		if exactMatchNodes, err := ops.FetchNodes(exactMatchQuery); err != nil {
 			return err
 		} else {
 			results.ExactResults = append(results.ExactResults, exactMatchNodes...)
 		}
-		// If we found an exact match, adjust the limit for the fuzzy search to return the expected limit
-		remainingSearchLimit := limit - len(results.ExactResults)
-		if remainingSearchLimit <= 0 {
-			return nil
-		}
 
-		if fuzzyMatchNodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(createFuzzyNodeSearchGraphCriteria(kinds, nameTerm, objectIDTerm, true, useRawObjectID)...)).Offset(skip).Limit(remainingSearchLimit).OrderBy(
+		fuzzyMatchQuery := tx.Nodes().Filter(query.And(fuzzyCriteria...)).Offset(skip).OrderBy(
 			query.Order(query.NodeProperty(common.Name.String()), query.Ascending()),
 			query.Order(query.NodeProperty(common.ObjectID.String()), query.Ascending()),
-		)); err != nil {
+		)
+
+		if limit > 0 {
+			// If we found an exact match, adjust the limit for the fuzzy search to return the expected limit
+			remainingSearchLimit := limit - len(results.ExactResults)
+			if remainingSearchLimit <= 0 {
+				return nil
+			}
+
+			fuzzyMatchQuery = fuzzyMatchQuery.Limit(remainingSearchLimit)
+		}
+
+		if fuzzyMatchNodes, err := ops.FetchNodes(fuzzyMatchQuery); err != nil {
 			return err
 		} else {
 			results.FuzzyResults = append(results.FuzzyResults, fuzzyMatchNodes...)
