@@ -51,6 +51,7 @@ export * from './Lock';
 export * from './Logout';
 export * from './MagnifyingGlass';
 export * from './Progress';
+export * from './ShadowedShield';
 export * from './Shield';
 export * from './SortAsc';
 export * from './SortDesc';
