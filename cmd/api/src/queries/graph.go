@@ -321,22 +321,18 @@ func createNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDT
 	return filters
 }
 
+// createFuzzyNodeSearchGraphCriteria matches nodes whose name contains nameTerm. Object IDs are only matched exactly by
+// createNodeSearchGraphCriteria so that object ID lookups can use the BTree index.
 func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDTerm string, includeGroupFilter bool, useRawObjectID bool) []graph.Criteria {
-	var nameAndObjectIDCriteria graph.Criteria
+	var nameCriteria graph.Criteria
 	if useRawObjectID {
-		nameAndObjectIDCriteria = query.Or(
-			query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), nameTerm),
-			query.CaseInsensitiveStringContains(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
-		)
+		nameCriteria = query.CaseInsensitiveStringContains(query.NodeProperty(common.Name.String()), nameTerm)
 	} else {
-		nameAndObjectIDCriteria = query.Or(
-			query.StringContains(query.NodeProperty(common.Name.String()), nameTerm),
-			query.StringContains(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
-		)
+		nameCriteria = query.StringContains(query.NodeProperty(common.Name.String()), nameTerm)
 	}
 
 	filters := []graph.Criteria{
-		nameAndObjectIDCriteria,
+		nameCriteria,
 		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameTerm)),
 		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), objectIDTerm)),
 	}
@@ -351,22 +347,18 @@ func createFuzzyNodeSearchGraphCriteria(kinds graph.Kinds, nameTerm string, obje
 	return filters
 }
 
+// createNodeStartsWithSearchGraphCriteria matches nodes whose name starts with nameTerm. Object IDs are only matched
+// exactly by createNodeSearchGraphCriteria so that object ID lookups can use the BTree index.
 func createNodeStartsWithSearchGraphCriteria(kinds graph.Kinds, nameTerm string, objectIDTerm string, useRawObjectID bool) []graph.Criteria {
-	var nameAndObjectIDCriteria graph.Criteria
+	var nameCriteria graph.Criteria
 	if useRawObjectID {
-		nameAndObjectIDCriteria = query.Or(
-			query.CaseInsensitiveStringStartsWith(query.NodeProperty(common.Name.String()), nameTerm),
-			query.CaseInsensitiveStringStartsWith(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
-		)
+		nameCriteria = query.CaseInsensitiveStringStartsWith(query.NodeProperty(common.Name.String()), nameTerm)
 	} else {
-		nameAndObjectIDCriteria = query.Or(
-			query.StringStartsWith(query.NodeProperty(common.Name.String()), nameTerm),
-			query.StringStartsWith(query.NodeProperty(common.ObjectID.String()), objectIDTerm),
-		)
+		nameCriteria = query.StringStartsWith(query.NodeProperty(common.Name.String()), nameTerm)
 	}
 
 	filters := []graph.Criteria{
-		nameAndObjectIDCriteria,
+		nameCriteria,
 		query.Not(query.Equals(query.NodeProperty(common.Name.String()), nameTerm)),
 		query.Not(query.Equals(query.NodeProperty(common.ObjectID.String()), objectIDTerm)),
 	}

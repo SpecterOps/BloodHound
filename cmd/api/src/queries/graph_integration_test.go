@@ -515,18 +515,22 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 		require.Equal(t, "CASEUSER1", objectID)
 	})
 
-	t.Run("flag on: exact-cased term matches that node exactly, and the other-cased node surfaces via case-insensitive fuzzy search", func(t *testing.T) {
+	t.Run("flag on: exact-cased term only matches that node, since objectid is not fuzzy matched", func(t *testing.T) {
 		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseUser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
-		require.ElementsMatch(t, []string{"CaseUser1", "CASEUSER1"}, collectObjectIDs(t, results))
+		require.Equal(t, []string{"CaseUser1"}, collectObjectIDs(t, results))
 	})
 
-	t.Run("flag on: mismatched-case term matches neither node exactly, but both surface via case-insensitive fuzzy search", func(t *testing.T) {
+	t.Run("flag on: mismatched-case term matches neither node, since objectid is not fuzzy matched", func(t *testing.T) {
 		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
-		require.ElementsMatch(t, []string{"CaseUser1", "CASEUSER1"}, collectObjectIDs(t, results))
+		require.Empty(t, results)
+	})
+
+	t.Run("partial objectid term matches no nodes", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CASEUSER", 0, 10, false, nil)
+		require.NoError(t, err)
+		require.Empty(t, results)
 	})
 }
 
@@ -733,7 +737,7 @@ func TestSearchByNameOrObjectID_UseRawObjectID_NameCasing(t *testing.T) {
 
 // seedStartsWithCaseSensitiveObjectIDNodes creates two nodes whose ObjectID values differ only by
 // case, with Name values that deliberately do not share the search prefix used in the starts-with
-// case-insensitivity tests, so that matches can be unambiguously attributed to the ObjectID field.
+// tests, so that any match would have to come from the ObjectID field.
 func seedStartsWithCaseSensitiveObjectIDNodes(t *testing.T, testSuite IntegrationTestSuite) {
 	t.Helper()
 
@@ -766,18 +770,16 @@ func TestSearchByNameOrObjectID_UseRawObjectID_StartsWith(t *testing.T) {
 
 	seedStartsWithCaseSensitiveObjectIDNodes(t, testSuite)
 
-	t.Run("flag off: starts-with search term is uppercased and only matches the uppercase-stored objectid", func(t *testing.T) {
+	t.Run("flag off: starts-with search term does not match objectid prefixes", func(t *testing.T) {
 		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, false, "casestart", queries.SearchTypeFuzzy)
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		require.Equal(t, []string{"CASESTARTUSER1"}, collectObjectIDs(t, results.Slice()))
+		require.Empty(t, results)
 	})
 
-	t.Run("flag on: starts-with search term is case-insensitive and matches both differently-cased objectids", func(t *testing.T) {
+	t.Run("flag on: starts-with search term does not match objectid prefixes", func(t *testing.T) {
 		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, true, "casestart", queries.SearchTypeFuzzy)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
-		require.ElementsMatch(t, []string{"CaseStartUser1", "CASESTARTUSER1"}, collectObjectIDs(t, results.Slice()))
+		require.Empty(t, results)
 	})
 }
 

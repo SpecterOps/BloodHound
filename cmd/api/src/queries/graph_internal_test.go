@@ -179,26 +179,16 @@ func Test_cacheQueryResult(t *testing.T) {
 	graphQuery.cacheQueryResult(time.Now().Add(-time.Hour), cacheKey, result)
 }
 
-// extractOrComparisons unwraps a `query.Or(...)` criteria (the first entry returned by
-// createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) into its two
-// underlying comparisons: the Name comparison and the ObjectID comparison, respectively.
-func extractOrComparisons(t *testing.T, criteria graph.Criteria) (*cypher.Comparison, *cypher.Comparison) {
+// extractNameComparison asserts that criteria (the first entry returned by
+// createFuzzyNodeSearchGraphCriteria/createNodeStartsWithSearchGraphCriteria) is a single Name
+// comparison with no ObjectID comparison.
+func extractNameComparison(t *testing.T, criteria graph.Criteria) *cypher.Comparison {
 	t.Helper()
 
-	parenthetical, ok := criteria.(*cypher.Parenthetical)
-	require.True(t, ok, "expected *cypher.Parenthetical, got %T", criteria)
+	nameComparison, ok := criteria.(*cypher.Comparison)
+	require.True(t, ok, "expected *cypher.Comparison, got %T", criteria)
 
-	disjunction, ok := parenthetical.Expression.(*cypher.Disjunction)
-	require.True(t, ok, "expected *cypher.Disjunction, got %T", parenthetical.Expression)
-	require.Len(t, disjunction.Expressions, 2)
-
-	nameComparison, ok := disjunction.Expressions[0].(*cypher.Comparison)
-	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[0])
-
-	objectIDComparison, ok := disjunction.Expressions[1].(*cypher.Comparison)
-	require.True(t, ok, "expected *cypher.Comparison, got %T", disjunction.Expressions[1])
-
-	return nameComparison, objectIDComparison
+	return nameComparison
 }
 
 // requireCaseSensitiveComparison asserts that comparison is a plain (case-sensitive) comparison
@@ -263,25 +253,21 @@ func TestCreateFuzzyNodeSearchGraphCriteria_Search(t *testing.T) {
 		objectIDTerm = "xyz"
 	)
 
-	t.Run("flag off: contains criteria stays case-sensitive", func(t *testing.T) {
+	t.Run("flag off: contains criteria stays case-sensitive and only matches name", func(t *testing.T) {
 		filters := createFuzzyNodeSearchGraphCriteria(nil, nameTerm, objectIDTerm, false, false)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireCaseSensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorContains, nameTerm)
-		requireCaseSensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
+		requireCaseSensitiveComparison(t, extractNameComparison(t, filters[0]), common.Name.String(), cypher.OperatorContains, nameTerm)
 
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
 		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
 	})
 
-	t.Run("flag on: contains criteria becomes case-insensitive", func(t *testing.T) {
+	t.Run("flag on: contains criteria becomes case-insensitive and only matches name", func(t *testing.T) {
 		filters := createFuzzyNodeSearchGraphCriteria(nil, nameTerm, objectIDTerm, false, true)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorContains, nameTerm)
-		requireCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorContains, objectIDTerm)
+		requireCaseInsensitiveComparison(t, extractNameComparison(t, filters[0]), common.Name.String(), cypher.OperatorContains, nameTerm)
 
 		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
@@ -309,25 +295,21 @@ func TestCreateNodeStartsWithSearchGraphCriteria_Search(t *testing.T) {
 		objectIDTerm = "xyz"
 	)
 
-	t.Run("flag off: starts-with criteria stays case-sensitive", func(t *testing.T) {
+	t.Run("flag off: starts-with criteria stays case-sensitive and only matches name", func(t *testing.T) {
 		filters := createNodeStartsWithSearchGraphCriteria(nil, nameTerm, objectIDTerm, false)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireCaseSensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
-		requireCaseSensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
+		requireCaseSensitiveComparison(t, extractNameComparison(t, filters[0]), common.Name.String(), cypher.OperatorStartsWith, nameTerm)
 
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
 		requireNotEqualsExclusion(t, filters[2], common.ObjectID.String(), objectIDTerm)
 	})
 
-	t.Run("flag on: starts-with criteria becomes case-insensitive", func(t *testing.T) {
+	t.Run("flag on: starts-with criteria becomes case-insensitive and only matches name", func(t *testing.T) {
 		filters := createNodeStartsWithSearchGraphCriteria(nil, nameTerm, objectIDTerm, true)
 		require.Len(t, filters, 3)
 
-		nameComparison, objectIDComparison := extractOrComparisons(t, filters[0])
-		requireCaseInsensitiveComparison(t, nameComparison, common.Name.String(), cypher.OperatorStartsWith, nameTerm)
-		requireCaseInsensitiveComparison(t, objectIDComparison, common.ObjectID.String(), cypher.OperatorStartsWith, objectIDTerm)
+		requireCaseInsensitiveComparison(t, extractNameComparison(t, filters[0]), common.Name.String(), cypher.OperatorStartsWith, nameTerm)
 
 		// Exact-match exclusion clauses remain case-sensitive even when the flag is on.
 		requireNotEqualsExclusion(t, filters[1], common.Name.String(), nameTerm)
