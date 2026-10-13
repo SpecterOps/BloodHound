@@ -109,7 +109,7 @@ interface TooltipProps extends React.PropsWithChildren {
     contentProps?: Omit<ContentProps, 'contentWidth'>;
 }
 
-const Tooltip: React.FC<TooltipProps> = (props) => {
+const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, TooltipProps>((props, ref) => {
     const {
         tooltip,
         children,
@@ -123,16 +123,10 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
         contentWidth,
         contentProps = {},
     } = props;
-    const defaultTriggerLabel =
-        !children && !renderTrigger ? (typeof tooltip === 'string' ? tooltip : 'Show more information') : undefined;
     const trigger = renderTrigger ? (
-        <TooltipTrigger {...triggerProps} asChild={false} />
+        <TooltipTrigger ref={ref} {...triggerProps} asChild={false} />
     ) : (
-        <TooltipTrigger
-            children={children}
-            aria-label={triggerProps['aria-label'] ?? defaultTriggerLabel}
-            {...triggerProps}
-        />
+        <TooltipTrigger ref={ref} children={children} {...triggerProps} />
     );
 
     return (
@@ -152,6 +146,8 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
             </TooltipRoot>
         </TooltipProvider>
     );
-};
+});
+
+Tooltip.displayName = 'Tooltip';
 
 export { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger };
