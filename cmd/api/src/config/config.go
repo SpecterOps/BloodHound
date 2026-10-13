@@ -240,6 +240,12 @@ type StorageConfiguration struct {
 	ExperimentStorage ExperimentStorage                   `json:"experiments"`
 }
 
+type SecretStoreConfiguration struct {
+	Provider string `json:"provider"`
+	Prefix   string `json:"prefix"`
+	Region   string `json:"region"`
+}
+
 type Configuration struct {
 	Version                         int                       `json:"version"`
 	BindAddress                     string                    `json:"bind_addr"`
@@ -277,6 +283,7 @@ type Configuration struct {
 	EmbeddedExtensionsBasePath      string                    `json:"embedded_extensions_base_path"`
 	Teleport                        TeleportConfiguration     `json:"teleport"`
 	Storage                         StorageConfiguration      `json:"storage"`
+	SecretStore                     SecretStoreConfiguration  `json:"secret_store"`
 }
 
 func (s Configuration) ScratchDirectory() string {

@@ -19,7 +19,6 @@ package routes
 import (
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -27,7 +26,7 @@ import (
 )
 
 // Register attaches the identity endpoints to the given router instance.
-func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
+func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
 		permissions         = auth.Permissions()
 		roleList            = handlers.RoleListView{}
@@ -38,9 +37,20 @@ func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit f
 		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
 	)
 
-	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute)
+	RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
 	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
 	roleRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
+}
+
+// RegisterUserListRoute registers the list-users route at the given path and returns it. It is
+// exported so the enterprise /api/v2/bhe-users backwards-compat alias can reuse the same route.
+func RegisterUserListRoute(routerInst *router.Router, handler *handlers.Handlers, path string) *router.Route {
+	var (
+		permissions = auth.Permissions()
+		userList    = handlers.UserListView{}
+	)
+
+	return routerInst.GET(path, handler.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers).WithSort(userList).WithFilters(userList)
 }

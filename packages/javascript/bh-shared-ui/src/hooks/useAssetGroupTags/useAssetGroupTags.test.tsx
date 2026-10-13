@@ -87,6 +87,26 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('the useAssetGroupTags utilities', () => {
+    it('returns the label names associated with a node and excludes non-label tags', () => {
+        const tags = [
+            { name: 'Tier Zero', type: AssetGroupTagTypeZone },
+            { name: 'Owned', type: AssetGroupTagTypeOwned },
+            { name: 'Crown Jewels', type: AssetGroupTagTypeLabel },
+            { name: 'Incident Response', type: AssetGroupTagTypeLabel },
+            { name: 'Not Associated', type: AssetGroupTagTypeLabel },
+        ] as AssetGroupTag[];
+
+        expect(
+            agtHook.getLabelNamesFromKinds(tags, [
+                'User',
+                'Tag_Tier_Zero',
+                'Tag_Owned',
+                'Tag_Crown_Jewels',
+                'Tag_Incident_Response',
+            ])
+        ).toEqual(['Crown Jewels', 'Incident Response']);
+    });
+
     it('enables returning a list of tags', async () => {
         const { result } = renderHook(() => agtHook.useTagsQuery());
 

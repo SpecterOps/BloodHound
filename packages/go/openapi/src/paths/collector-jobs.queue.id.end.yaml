@@ -21,7 +21,7 @@ parameters:
 post:
   operationId: EndCollectorJob
   summary: End a collector job
-  description: Succeeded and failed outcomes create immutable history; requeue
+  description: Succeeded, partially-succeeded, and failed outcomes create immutable history; requeue
     returns the job to ready with backoff and consumes an attempt.
   tags:
     - Collector Jobs
@@ -40,6 +40,7 @@ post:
               type: string
               enum:
                 - succeeded
+                - partially-succeeded
                 - failed
                 - requeue
             failure_message:

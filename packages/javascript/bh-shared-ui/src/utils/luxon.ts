@@ -13,10 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-// Adapted from the example provided here
-// https://github.com/mui/material-ui-pickers/issues/1626#issuecomment-612031743
-// Using this class instead of LuxonUtils with DateTimePicker will cause the DateTimePicker to use Sunday as the first
-// day of the week instead of Monday
 
 import LuxonUtils from '@date-io/luxon';
 import { DateTime } from 'luxon';

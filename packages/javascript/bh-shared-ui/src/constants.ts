@@ -386,38 +386,49 @@ export const darkPalette = createPalette({
     critical: 'rgb(76, 29, 143)',
 });
 
+// Font stacks mirror the doodle-ui Tailwind preset: Figtree for body text and Nunito Sans for headings.
+const bodyFontFamily = 'Figtree, "Segoe UI", Helvetica, Arial, sans-serif';
+const headingFontFamily = '"Nunito Sans", "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif';
+
 export const typography: Partial<Theme['typography']> = {
+    fontFamily: bodyFontFamily,
     h1: {
-        fontWeight: 400,
+        fontFamily: headingFontFamily,
+        fontWeight: 600,
         fontSize: '1.8rem',
         lineHeight: 2,
         letterSpacing: 0,
     },
     h2: {
-        fontWeight: 500,
+        fontFamily: headingFontFamily,
+        fontWeight: 600,
         fontSize: '1.5rem',
         lineHeight: 1.5,
         letterSpacing: 0,
     },
     h3: {
-        fontWeight: 500,
+        fontFamily: headingFontFamily,
+        fontWeight: 600,
         fontSize: '1.2rem',
         lineHeight: 1.25,
         letterSpacing: 0,
     },
     h4: {
-        fontWeight: 500,
+        fontFamily: headingFontFamily,
+        fontWeight: 600,
         fontSize: '1.25rem',
         lineHeight: 1.5,
         letterSpacing: 0,
     },
     h5: {
+        fontFamily: headingFontFamily,
         fontWeight: 700,
         fontSize: '1.125rem',
         lineHeight: 1.5,
         letterSpacing: 0.25,
     },
     h6: {
+        fontFamily: headingFontFamily,
         fontWeight: 700,
         fontSize: '1.0rem',
         lineHeight: 1.5,

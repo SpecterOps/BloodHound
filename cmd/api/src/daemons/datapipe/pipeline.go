@@ -31,11 +31,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/job"
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/metrics"
@@ -51,14 +51,14 @@ type BHCEPipeline struct {
 	cache               cache.Cache
 	cfg                 config.Configuration
 	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        upload.IngestSchema
+	ingestSchema        payload.Schema
 	fileServiceResolver storageService.FileServiceResolver
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 	changelog           *changelog.Changelog
 }
 
-func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema upload.IngestSchema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
+func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Database, graphDB graph.Database, cache cache.Cache, ingestSchema payload.Schema, fileServiceResolver storageService.FileServiceResolver, cl *changelog.Changelog) *BHCEPipeline {
 	return &BHCEPipeline{
 		db:                  db,
 		graphdb:             graphDB,
@@ -354,11 +354,6 @@ func (s *BHCEPipeline) Optimize(ctx context.Context) error {
 	if err != nil {
 		slog.ErrorContext(ctx, "Error looking up datapipe status for optimization cooldown, proceeding anyway", attr.Error(err))
 	} else {
-		// only optimize when an analysis has completed since the last optimization run
-		if !status.LastCompleteAnalysisAt.After(status.LastCompleteOptimizeAt) {
-			return nil
-		}
-
 		// never optimize more often than the configured minimum interval
 		minInterval := time.Duration(optimizationParam.MinIntervalSeconds) * time.Second
 		if !status.LastCompleteOptimizeAt.IsZero() && time.Since(status.LastCompleteOptimizeAt) < minInterval {

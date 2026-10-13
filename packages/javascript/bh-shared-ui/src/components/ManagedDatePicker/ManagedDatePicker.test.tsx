@@ -25,17 +25,27 @@ const originalTZ = process.env.TZ;
 
 type RenderDatePickerOptions = {
     hint?: string;
+    id?: string;
+    name?: string;
     value?: string;
 };
 
 const renderDatePicker = (props: RenderDatePickerOptions = {}) => {
-    const { hint, value } = props;
+    const { hint, id, name, value } = props;
     const user = userEvent.setup();
 
     const onDateChangeMock = vi.fn();
 
     render(
-        <ManagedDatePicker fromDate={JAN_1} hint={hint} onDateChange={onDateChangeMock} toDate={JAN_31} value={value} />
+        <ManagedDatePicker
+            fromDate={JAN_1}
+            hint={hint}
+            id={id}
+            name={name}
+            onDateChange={onDateChangeMock}
+            toDate={JAN_31}
+            value={value}
+        />
     );
 
     return {
@@ -160,6 +170,13 @@ describe('ManagedDatePicker - value', () => {
 });
 
 describe('ManagedDatePicker - input', () => {
+    it('forwards id and name to the input', () => {
+        renderDatePicker({ id: 'start-date', name: 'start_time' });
+
+        expect(screen.getByRole('textbox')).toHaveAttribute('id', 'start-date');
+        expect(screen.getByRole('textbox')).toHaveAttribute('name', 'start_time');
+    });
+
     it('clears value if input is empty', async () => {
         const { clickAway, onDateChangeMock, typeInput } = renderDatePicker();
 

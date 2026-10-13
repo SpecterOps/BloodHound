@@ -29,6 +29,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -46,10 +47,6 @@ import (
 // the GET /api/v2/datapipe/status handler. All six documented fields are included.
 type datapipeStatusResponseEnvelope struct {
 	Data model.DatapipeStatusWrapper `json:"data"`
-}
-
-func noopRateLimit() mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler { return next }
 }
 
 func testDogTags() dogtags.Service {
@@ -90,11 +87,13 @@ func TestGetDatapipeStatus(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:              routerInst,
-				Pool:                db.Pool(),
-				Graph:               &graph.DatabaseSwitch{},
-				RateLimitMiddleware: noopRateLimit,
-				DogTags:             testDogTags(),
+				Router:  routerInst,
+				Pool:    db.Pool(),
+				Graph:   &graph.DatabaseSwitch{},
+				DogTags: testDogTags(),
+				RateLimitMiddleware: func() mux.MiddlewareFunc {
+					return middleware.DefaultRateLimitMiddleware(db)
+				},
 			})
 		})
 		db     = harness.DB
@@ -265,11 +264,13 @@ func TestGetAppConfigs(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:              routerInst,
-				Pool:                db.Pool(),
-				Graph:               &graph.DatabaseSwitch{},
-				RateLimitMiddleware: noopRateLimit,
-				DogTags:             testDogTags(),
+				Router:  routerInst,
+				Pool:    db.Pool(),
+				Graph:   &graph.DatabaseSwitch{},
+				DogTags: testDogTags(),
+				RateLimitMiddleware: func() mux.MiddlewareFunc {
+					return middleware.DefaultRateLimitMiddleware(db)
+				},
 			})
 		})
 		db     = harness.DB
