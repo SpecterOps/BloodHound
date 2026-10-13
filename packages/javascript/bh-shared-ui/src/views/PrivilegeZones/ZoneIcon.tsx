@@ -63,7 +63,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
     const tierZeroIcon = (
         <AppIcon.TierZero {...iconProps} size={16} className={iconClasses} data-testid='tier_zero_icon' />
     );
-    const hygieneIcon = <AppIcon.Shield {...iconProps} className={cn('ml-0', iconClasses)} />;
+    const hygieneIcon = <AppIcon.ShadowedShield {...iconProps} className={cn('ml-0', iconClasses)} />;
     const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: glyph as IconName });
 
     if (zone) {

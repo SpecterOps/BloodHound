@@ -89,15 +89,15 @@ const FilterDialog: FC<{
             <DialogContent>
                 <Form {...form}>
                     <form className='flex flex-col gap-4 m-1'>
-                        <DialogTitle className='flex justify-between items-center'>
-                            <span className='text-xl'>Filter</span>
+                        <span className='flex justify-between items-center'>
+                            <DialogTitle>Filter</DialogTitle>
                             <TextButton
                                 fontColor='primary'
                                 onClick={() => form.reset(DEFAULT_FILTER_VALUE)}
                                 className='font-bold'>
                                 Clear All
                             </TextButton>
-                        </DialogTitle>
+                        </span>
                         <VisuallyHidden asChild>
                             <DialogDescription>Filter Privilege Zone History</DialogDescription>
                         </VisuallyHidden>

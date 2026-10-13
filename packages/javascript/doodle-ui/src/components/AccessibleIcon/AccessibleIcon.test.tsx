@@ -17,14 +17,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
-import { Icon } from './Icon';
+import { AccessibleIcon } from './AccessibleIcon';
 
-describe('Icon', () => {
+describe('AccessibleIcon', () => {
     it('renders an AppIcon without button semantics', () => {
         const { container } = render(
-            <Icon label='Information'>
+            <AccessibleIcon label='Information'>
                 <AppIcon.Info />
-            </Icon>
+            </AccessibleIcon>
         );
 
         expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe('Information');
@@ -34,9 +34,9 @@ describe('Icon', () => {
     it('uses its label as its accessible label and tooltip', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon label='Filter options'>
+            <AccessibleIcon label='Filter options'>
                 <AppIcon.Info />
-            </Icon>
+            </AccessibleIcon>
         );
 
         await user.hover(container.querySelector('svg') as SVGSVGElement);
@@ -47,9 +47,9 @@ describe('Icon', () => {
     it('supports an accessible label that differs from its tooltip label', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon aria-label='Saved query information' label='Learn more'>
+            <AccessibleIcon aria-label='Saved query information' label='Learn more'>
                 <AppIcon.Info />
-            </Icon>
+            </AccessibleIcon>
         );
 
         await user.hover(container.querySelector('svg') as SVGSVGElement);
@@ -61,9 +61,9 @@ describe('Icon', () => {
     it('uses aria-label as the tooltip when no label is provided', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon aria-label='Information'>
+            <AccessibleIcon aria-label='Information'>
                 <AppIcon.Info />
-            </Icon>
+            </AccessibleIcon>
         );
 
         await user.hover(container.querySelector('svg') as SVGSVGElement);
@@ -74,9 +74,9 @@ describe('Icon', () => {
     it('does not render a tooltip when it is disabled', async () => {
         const user = userEvent.setup();
         const { container } = render(
-            <Icon hideTooltip label='Information'>
+            <AccessibleIcon hideTooltip label='Information'>
                 <AppIcon.Info />
-            </Icon>
+            </AccessibleIcon>
         );
 
         await user.hover(container.querySelector('svg') as SVGSVGElement);
