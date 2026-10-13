@@ -67,6 +67,8 @@ interface ContentProps extends React.ComponentPropsWithoutRef<typeof TooltipPrim
     contentWidth?: 'default' | 'match_trigger' | 'lg' | 'md' | 'sm';
 }
 
+type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
 const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Content>, ContentProps>(
     ({ className, sideOffset = 4, contentWidth = 'default', ...props }, ref) => {
         const widthOptions: Record<typeof contentWidth, string> = {
@@ -106,6 +108,7 @@ interface TooltipProps extends React.PropsWithChildren {
     rootProps?: Omit<RootProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'delayDuration'>;
     triggerProps?: TriggerProps;
     contentWidth?: ContentProps['contentWidth'];
+    tooltipPosition?: TooltipPosition;
     contentProps?: Omit<ContentProps, 'contentWidth'>;
 }
 
@@ -121,6 +124,7 @@ const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, Toolti
         rootProps = {},
         triggerProps = {},
         contentWidth,
+        tooltipPosition,
         contentProps = {},
     } = props;
     const trigger = renderTrigger ? (
@@ -139,7 +143,10 @@ const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, Toolti
                 {...rootProps}>
                 {renderTrigger ? renderTrigger(trigger) : trigger}
                 <TooltipPortal>
-                    <TooltipContent contentWidth={contentWidth} {...contentProps}>
+                    <TooltipContent
+                        contentWidth={contentWidth}
+                        {...contentProps}
+                        side={tooltipPosition ?? contentProps.side}>
                         {tooltip}
                     </TooltipContent>
                 </TooltipPortal>
@@ -151,3 +158,4 @@ const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, Toolti
 Tooltip.displayName = 'Tooltip';
 
 export { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger };
+export type { TooltipPosition };

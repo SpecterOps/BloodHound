@@ -80,6 +80,25 @@ describe('Tooltip', () => {
         expect(tooltipContent?.classList.contains('dark:border-0')).toBe(true);
     });
 
+    it.each(['top', 'bottom', 'left', 'right'] as const)(
+        'positions the tooltip on the %s of its trigger',
+        async (tooltipPosition) => {
+            render(
+                <Tooltip
+                    open
+                    tooltip='Helpful context'
+                    tooltipPosition={tooltipPosition}
+                    contentProps={{ avoidCollisions: false }}>
+                    <button>Show tooltip</button>
+                </Tooltip>
+            );
+
+            const tooltipContent = (await screen.findByRole('tooltip')).parentElement;
+
+            expect(tooltipContent?.getAttribute('data-side')).toBe(tooltipPosition);
+        }
+    );
+
     it('forwards refs to the trigger', () => {
         const ref = createRef<HTMLButtonElement>();
 

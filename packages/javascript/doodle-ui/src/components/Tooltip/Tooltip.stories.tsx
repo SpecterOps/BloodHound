@@ -33,6 +33,7 @@ const meta = {
         onOpenChange: { type: 'function' },
         delayDuration: { type: 'number', control: 'number' },
         contentWidth: { type: 'string', control: 'select', options: ['default', 'match_trigger', 'lg', 'md', 'sm'] },
+        tooltipPosition: { type: 'string', control: 'select', options: ['top', 'bottom', 'left', 'right'] },
     },
     args: {},
 } satisfies Meta<typeof Tooltip>;
