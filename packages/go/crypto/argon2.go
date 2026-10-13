@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -145,9 +146,16 @@ type Argon2Digest struct {
 	Digest          []byte
 }
 
+// validArgon2DigestLength reports whether length falls inside the RFC 9106 §3.1
+// tag length bounds of 4 through 2^32-1 bytes.
+func validArgon2DigestLength(length uint64) bool {
+	return length >= 4 && length <= math.MaxUint32
+}
+
 func (s Argon2Digest) Validate(content string) bool {
-	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
-	if len(s.Digest) < 4 {
+	// Reject tag lengths outside the RFC 9106 §3.1 range before converting to
+	// uint32 so the conversion cannot wrap (e.g. 2^32 wraps to zero).
+	if !validArgon2DigestLength(uint64(len(s.Digest))) {
 		return false
 	}
 

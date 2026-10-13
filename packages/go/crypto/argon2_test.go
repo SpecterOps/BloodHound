@@ -18,6 +18,7 @@ package crypto
 
 import (
 	"crypto/rand"
+	"math"
 	"testing"
 
 	"golang.org/x/crypto/argon2"
@@ -126,6 +127,27 @@ func TestArgon2Digest_Validate_NonStandardDigestLength(t *testing.T) {
 			if valid := digest.Validate("This should fail."); valid {
 				t.Fatalf("Expected digest of length %d to reject incorrect content", testCase.digestLength)
 			}
+		}
+	}
+}
+
+func TestValidArgon2DigestLength(t *testing.T) {
+	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
+	for _, testCase := range []struct {
+		length  uint64
+		isValid bool
+	}{
+		{length: 0, isValid: false},
+		{length: 1, isValid: false},
+		{length: 3, isValid: false},
+		{length: 4, isValid: true},
+		{length: 16, isValid: true},
+		{length: math.MaxUint32 - 1, isValid: true},
+		{length: math.MaxUint32, isValid: true},
+		{length: math.MaxUint32 + 1, isValid: false},
+	} {
+		if valid := validArgon2DigestLength(testCase.length); valid != testCase.isValid {
+			t.Fatalf("Expected digest length %d to be %v but got %v", testCase.length, testCase.isValid, valid)
 		}
 	}
 }
