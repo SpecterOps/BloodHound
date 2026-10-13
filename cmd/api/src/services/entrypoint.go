@@ -188,13 +188,15 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
 		modules.Register(modules.Deps{
-			Router: &routerInst,
-			Pool:   connections.RDMS.Pool(),
-			Graph:  connections.Graph,
-			RateLimitMiddleware: func() mux.MiddlewareFunc {
-				return middleware.DefaultRateLimitMiddleware(connections.RDMS)
-			},
+			Router:  &routerInst,
+			Pool:    connections.RDMS.Pool(),
+			Graph:   connections.Graph,
 			DogTags: dogtagsService,
+			RateLimitMiddleware: func() mux.MiddlewareFunc {
+				return middleware.MatchedRouteRateLimitMiddleware(connections.RDMS, []string{api.UserInterfacePath}, map[string]int64{
+					"/api/v2/login": 1,
+				})
+			},
 		})
 
 		// Set neo4j batch and flush sizes
