@@ -36,13 +36,11 @@ const (
 	FeatureAlerts                     = "alerts"
 	FeatureFindingsPrioritizationV0   = appcfg.FeatureFindingsPrioritizationV0
 	FeatureArtifactExpirationCleanup  = "artifact_expiration_cleanup"
-	FeatureZoneNode                   = appcfg.FeatureZoneNode
 )
 
 // Request source values used by the feature flags slice.
 const (
 	PrioritizationFlagRequestSource = appcfg.PrioritizationFlagRequestSource
-	ZoneNodeFlagRequestSource       = appcfg.ZoneNodeFlagRequestSource
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
@@ -149,10 +147,8 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 		return flag, err
 	}
 
-	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
+	if flag.Key == FeatureFindingsPrioritizationV0 {
 		analysisRequestSource = PrioritizationFlagRequestSource
-	} else if flag.Key == FeatureZoneNode {
-		analysisRequestSource = ZoneNodeFlagRequestSource
 	}
 
 	if analysisRequestSource != "" {
