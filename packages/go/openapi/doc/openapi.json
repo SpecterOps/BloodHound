@@ -19794,7 +19794,7 @@
       "get": {
         "operationId": "ListAttackPathFindingTypes",
         "summary": "List attack path finding types",
-        "description": "Returns distinct attack path finding types available to the caller.\nResults are always returned in ascending order by `title`.\n",
+        "description": "Returns distinct attack path finding types available to the caller.\nFinding types are included even when all of their findings are archived\n(remediated, deprecated, or orphaned), so every type remains searchable by status.\nResults are always returned in ascending order by `title`.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
