@@ -49,6 +49,30 @@ on:
       ecr_aws_secret_access_key:
         required: false
 
+  workflow_dispatch:
+    inputs:
+      image_repository:
+        description: Fully qualified image repository, without a tag or digest.
+        required: true
+        type: string
+      image_digest:
+        description: Digest emitted by the image build (sha256:...).
+        required: true
+        type: string
+      registry_kind:
+        description: dockerhub or ecr.
+        required: true
+        type: string
+      aws_region:
+        description: AWS region for ECR images.
+        required: false
+        default: us-east-1
+        type: string
+      certificate_identity:
+        description: Exact Fulcio identity of this reusable workflow at the called ref.
+        required: true
+        type: string
+
 jobs:
   sign-and-verify:
     runs-on: ubuntu-latest
@@ -95,7 +119,7 @@ jobs:
           CALLER_SHA: ${{ github.sha }}
         run: >-
           cosign verify "$IMAGE_REFERENCE"
-          --certificate-identity "$CERTIFICATE_IDENITY"
+          --certificate-identity "$CERTIFICATE_IDENTITY"
           --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
           --certificate-github-workflow-repository "$CALLER_REPOSITORY"
           --certificate-github-workflow-ref "$CALLER_REF"
