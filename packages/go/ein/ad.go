@@ -1337,6 +1337,9 @@ func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
 	// RPCEncryptionEnforced
 	if enterpriseCA.CARegistryData.RPCEncryptionEnforced.Collected {
 		propMap[ad.RPCEncryptionEnforced.String()] = enterpriseCA.CARegistryData.RPCEncryptionEnforced.Value
+	// DisabledExtensions
+	if enterpriseCA.CARegistryData.DisabledExtensions.Collected {
+		propMap[ad.DisabledExtensions.String()] = enterpriseCA.CARegistryData.DisabledExtensions.Data
 	}
 
 	return IngestibleNode{
