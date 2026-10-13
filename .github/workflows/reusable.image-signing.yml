@@ -114,7 +114,7 @@ jobs:
 
       - name: Verify Image Signature
         env:
-          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity || format('https://github.com/{0}/.github/workflows/reusable.cosign-image-signing.yml@{1}', github.repository, github.ref) }}
+          CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity || format('https://github.com/{0}/.github/workflows/reusable.image-signing.yml@{1}', github.repository, github.ref) }}
           CALLER_REPOSITORY: ${{ github.repository }}
           CALLER_REF: ${{ github.ref }}
           CALLER_SHA: ${{ github.sha }}
