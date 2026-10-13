@@ -28,12 +28,22 @@ const meta = {
     tags: ['autodocs'],
     // More on argTypes: https://storybook.js.org/docs/api/argtypes
     argTypes: {
-        contentWidth: { type: 'string', control: 'select', options: ['default', 'match_trigger', 'lg', 'md', 'sm'] },
+        contentWidth: {
+            type: 'string',
+            control: 'select',
+            options: ['match_trigger', 'lg', 'md', 'sm'],
+            table: { defaultValue: { summary: 'md' } },
+        },
         defaultOpen: { type: 'boolean', control: 'boolean' },
         delayDuration: { type: 'number', control: 'number' },
         onOpenChange: { type: 'function' },
         open: { type: 'boolean', control: 'boolean' },
-        tooltipPosition: { type: 'string', control: 'select', options: ['top', 'bottom', 'left', 'right'] },
+        tooltipPosition: {
+            type: 'string',
+            control: 'select',
+            options: ['top', 'bottom', 'left', 'right'],
+            table: { defaultValue: { summary: 'top' } },
+        },
     },
     args: {},
 } satisfies Meta<typeof Tooltip>;
@@ -66,8 +76,8 @@ export const InlineTooltip: Story = {
 
 export const LongTooltip: Story = {
     args: {
-        tooltip: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Repudiandae voluptate assumenda eius ipsum ab, eum earum corrupti provident sit quaerat quasi? Repudiandae minima esse nisi nihil nam quam vel ex?`,
         contentWidth: 'lg',
+        tooltip: `Lorem ipsum dolor sit amet consectetur adipisicing elit. Repudiandae voluptate assumenda eius ipsum ab, eum earum corrupti provident sit quaerat quasi? Repudiandae minima esse nisi nihil nam quam vel ex?`,
     },
     render: (args) => {
         return <Tooltip {...args} />;
@@ -76,8 +86,8 @@ export const LongTooltip: Story = {
 
 export const CustomTrigger: Story = {
     args: {
-        tooltip: 'This tooltip has a custom trigger to demonstrate that you can add a tooltip to most things',
         contentWidth: 'lg',
+        tooltip: 'This tooltip has a custom trigger to demonstrate that you can add a tooltip to most things',
     },
     render: (args) => {
         return (

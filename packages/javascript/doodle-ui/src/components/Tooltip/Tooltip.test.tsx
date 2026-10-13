@@ -78,6 +78,7 @@ describe('Tooltip', () => {
 
         expect(tooltipContent?.classList.contains('z-[1700]')).toBe(true);
         expect(tooltipContent?.classList.contains('dark:border-0')).toBe(true);
+        expect(tooltipContent?.classList.contains('max-w-[200px]')).toBe(true);
     });
 
     it.each(['top', 'bottom', 'left', 'right'] as const)(

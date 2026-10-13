@@ -64,20 +64,20 @@ const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
 TooltipTrigger.displayName = TooltipPrimitive.Trigger.displayName;
 
 interface ContentProps extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> {
-    contentWidth?: 'default' | 'match_trigger' | 'lg' | 'md' | 'sm';
+    contentWidth?: 'match_trigger' | 'lg' | 'md' | 'sm';
 }
 
-type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+type TooltipPosition = NonNullable<ContentProps['side']>;
+
+const contentWidthOptions: Record<NonNullable<ContentProps['contentWidth']>, string> = {
+    match_trigger: 'w-[var(--radix-tooltip-trigger-width)]',
+    lg: 'max-w-[300px]',
+    md: 'max-w-[200px]',
+    sm: 'max-w-[150px]',
+};
 
 const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Content>, ContentProps>(
-    ({ className, sideOffset = 4, contentWidth = 'default', ...props }, ref) => {
-        const widthOptions: Record<typeof contentWidth, string> = {
-            default: 'max-w-[300px]',
-            match_trigger: 'w-[var(--radix-tooltip-trigger-width)]',
-            lg: 'max-w-[300px]',
-            md: 'max-w-[200px]',
-            sm: 'max-w-[150px]',
-        };
+    ({ className, sideOffset = 4, contentWidth = 'md', ...props }, ref) => {
         return (
             <TooltipPrimitive.Content
                 ref={ref}
@@ -88,7 +88,7 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                     'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
                     'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
                     'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-                    widthOptions[contentWidth],
+                    contentWidthOptions[contentWidth],
                     className
                 )}
                 {...props}
@@ -124,7 +124,7 @@ const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, Toolti
         renderTrigger,
         rootProps = {},
         tooltip,
-        tooltipPosition,
+        tooltipPosition = 'top',
         triggerProps = {},
     } = props;
     const trigger = renderTrigger ? (
