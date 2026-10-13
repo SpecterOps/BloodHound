@@ -210,7 +210,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
                             onClick={onShowNodeInExplore}>
                             <FontAwesomeIcon icon={faExternalLink} />
-                            <Typography className='ml-2'>Open in Explore</Typography>
+                            <span className='ml-2'>Open in Explore</span>
                         </Button>
                     )}
                 </Grid>

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SortOrder, SortOrderAscending, SortOrderDescending } from '../../types';
 
 type UseSortParamsOptions<TSortColumn extends string> = {
@@ -34,21 +34,24 @@ export const useSortParams = <TSortColumn extends string>({
         return `${sortOrder === SortOrderDescending ? '-' : ''}${sortColumn}`;
     }, [sortColumn, sortOrder]);
 
-    const clearSort = () => {
+    const clearSort = useCallback(() => {
         setSortColumn(undefined);
         setSortOrder(undefined);
-    };
+    }, []);
 
-    const handleSortChange = (column: TSortColumn) => {
-        if (sortColumn !== column || sortOrder === undefined) {
-            setSortColumn(column);
-            setSortOrder(SortOrderDescending);
-        } else if (sortOrder === SortOrderDescending) {
-            setSortOrder(SortOrderAscending);
-        } else {
-            clearSort();
-        }
-    };
+    const handleSortChange = useCallback(
+        (column: TSortColumn) => {
+            if (sortColumn !== column || sortOrder === undefined) {
+                setSortColumn(column);
+                setSortOrder(SortOrderDescending);
+            } else if (sortOrder === SortOrderDescending) {
+                setSortOrder(SortOrderAscending);
+            } else {
+                clearSort();
+            }
+        },
+        [sortColumn, sortOrder, clearSort]
+    );
 
     return {
         sortColumn,
