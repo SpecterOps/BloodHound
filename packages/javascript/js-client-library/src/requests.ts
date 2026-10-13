@@ -34,6 +34,19 @@ import { ConfigurationPayload } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
+export type EqualityOperator = 'eq' | 'neq';
+export type ComparisonOperator = EqualityOperator | 'gt' | 'gte' | 'lt' | 'lte';
+
+export type FilterExpression<
+    Value extends string | number | boolean,
+    Operator extends string = EqualityOperator,
+> = `${Operator}:${Value}`;
+
+export type NumberFilter = FilterExpression<number, ComparisonOperator>;
+export type EqualityFilter<Value extends string | boolean> = FilterExpression<Value>;
+
+export type SortBy<Field extends string> = `${'' | '-'}${Field}`;
+
 export interface LoginRequest {
     login_method: string;
     secret: string;
@@ -423,20 +436,20 @@ export interface CreateCollectorJobProfileRequest {
 
 export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
     params?: {
-        type?: CollectorJobSecretType | `${'eq' | 'neq'}:${CollectorJobSecretType}`;
+        type?: CollectorJobSecretType | EqualityFilter<CollectorJobSecretType>;
         display_key_id?: string;
         created_at?: string;
     };
 }
 
-export type CollectorJobSchedulesSortBy = `${'' | '-'}${'name' | 'next_run_at' | 'created_at'}`;
+export type CollectorJobSchedulesSortBy = SortBy<'name' | 'next_run_at' | 'created_at'>;
 
 export interface GetCollectorJobSchedulesOptions extends Omit<RequestOptions, 'params'> {
     params?: {
         sort_by?: CollectorJobSchedulesSortBy | CollectorJobSchedulesSortBy[];
         name?: string;
-        priority?: number | `${'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'}:${number}`;
-        disabled?: boolean | `${'eq' | 'neq'}:${boolean}`;
+        priority?: NumberFilter;
+        disabled?: EqualityFilter<boolean>;
         next_run_at?: string;
         created_at?: string;
         updated_at?: string;
