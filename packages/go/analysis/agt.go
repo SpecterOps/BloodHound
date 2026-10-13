@@ -628,6 +628,12 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 }
 
 func selectNodesWithFilter(ctx context.Context, db database.Database, graphDb graph.Database, agtParameters appcfg.AGTParameters, primaryDisplayKinds graphschema.PrimaryDisplayKinds, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod, includeNode func(model.AssetGroupSelectorNode) bool) []error {
+	return selectNodesWithFetch(ctx, db, selector, includeNode, func(ctx context.Context, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) ([]model.AssetGroupSelectorNode, []error) {
+		return fetchSelectorMembers(ctx, agtParameters, graphDb, primaryDisplayKinds, seeds, expansionMethod)
+	}, expansionMethod)
+}
+
+func selectNodesWithFetch(ctx context.Context, db database.Database, selector model.AssetGroupTagSelector, includeNode func(model.AssetGroupSelectorNode) bool, fetchMembers selectorMemberFetcher, expansionMethod model.AssetGroupExpansionMethod) []error {
 	defer measure.ContextMeasure(ctx, slog.LevelDebug, "Selecting nodes", slog.String("selector", strconv.Itoa(selector.ID)))()
 
 	var (
@@ -638,7 +644,7 @@ func selectNodesWithFilter(ctx context.Context, db database.Database, graphDb gr
 	)
 
 	// 1. Grab the graph nodes
-	if nodesWithSrcSet, fetchErrs := FetchNodesFromSeeds(ctx, agtParameters, graphDb, selector.Seeds, expansionMethod, -1); len(fetchErrs) > 0 {
+	if selectedMembers, fetchErrs := fetchMembers(ctx, selector.Seeds, expansionMethod); len(fetchErrs) > 0 {
 		for _, err := range fetchErrs {
 			errs = append(errs, fmt.Errorf("selector %d - %s fetch failure: %w", selector.ID, selector.Name, err))
 		}
@@ -647,13 +653,19 @@ func selectNodesWithFilter(ctx context.Context, db database.Database, graphDb gr
 		errs = append(errs, err)
 	} else {
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
-		for id, node := range nodesWithSrcSet {
-			certified, certifiedBy := certificationForSelectedNode(selector, *node)
+		for _, member := range selectedMembers {
+			var (
+				id                     = member.NodeId
+				node                   = nodeWithSource{Source: member.Source}
+				certified, certifiedBy = certificationForSelectedNode(selector, node)
+				selectorNode           = member
+			)
 			if oldNode, ok := oldSelectedNodesByNodeId[id]; ok {
-				certified, certifiedBy = certificationForSelectedNode(selector, *node, oldNode)
+				certified, certifiedBy = certificationForSelectedNode(selector, node, oldNode)
 			}
-
-			selectorNode := buildSelectorNode(primaryDisplayKinds, *node, selector, certified, certifiedBy)
+			selectorNode.SelectorId = selector.ID
+			selectorNode.Certified = certified
+			selectorNode.CertifiedBy = certifiedBy
 			if includeNode != nil && !includeNode(selectorNode) {
 				continue
 			}
@@ -695,7 +707,7 @@ func selectNodesWithFilter(ctx context.Context, db database.Database, graphDb gr
 			ctx,
 			"AGT: Completed selecting",
 			slog.String("selector", selector.Name),
-			slog.Int("count_total", len(nodesWithSrcSet)),
+			slog.Int("count_total", len(selectedMembers)),
 			slog.Int("count_selected", selectedCount),
 			slog.Int("count_inserted", len(nodesToInsert)),
 			slog.Int("count_updated", len(nodesToUpdate)),
@@ -744,6 +756,7 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 
 		var (
 			disabledSelectorIds []int
+			selectorsToSelect   []model.AssetGroupTagSelector
 			sendCh, getCh       = channels.BufferedPipe[model.AssetGroupTagSelector](ctx)
 			wg                  = sync.WaitGroup{}
 			expansionByTagId    = make(map[int]model.AssetGroupExpansionMethod)
@@ -755,6 +768,25 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 			expansionByTagId[tag.ID] = tag.GetExpansionMethod()
 			tagByID[tag.ID] = tag
 		}
+
+		for _, tag := range tags {
+			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
+				errs.Append(err)
+			} else {
+				// Fill worker queue with selectors
+				for _, selector := range selectors {
+					if !selector.DisabledAt.Time.IsZero() {
+						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
+						continue
+					}
+					selectorsToSelect = append(selectorsToSelect, selector)
+				}
+			}
+		}
+
+		fetchCache := newSelectorMemberCache(selectorsToSelect, expansionByTagId, func(ctx context.Context, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) ([]model.AssetGroupSelectorNode, []error) {
+			return fetchSelectorMembers(ctx, agtParameters, graphDb, primaryDisplayKinds, seeds, expansionMethod)
+		})
 
 		// Parallelize the selection of nodes
 		// Spin out some workers, capped to prevent exhausting pg connection pool
@@ -775,7 +807,7 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 							}
 						}
 
-						if selectNodeErrors := selectNodesWithFilter(ctx, db, graphDb, agtParameters, primaryDisplayKinds, selector, expansionByTagId[selector.AssetGroupTagId], selectorNodeFilter); len(selectNodeErrors) > 0 {
+						if selectNodeErrors := selectNodesWithFetch(ctx, db, selector, selectorNodeFilter, fetchCache.Fetch, expansionByTagId[selector.AssetGroupTagId]); len(selectNodeErrors) > 0 {
 							errs.Append(selectNodeErrors...)
 						}
 					}
@@ -783,19 +815,8 @@ func selectAssetGroupNodesForTags(ctx context.Context, db database.Database, gra
 			}()
 		}
 
-		for _, tag := range tags {
-			if selectors, _, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID); err != nil {
-				errs.Append(err)
-			} else {
-				// Fill worker queue with selectors
-				for _, selector := range selectors {
-					if !selector.DisabledAt.Time.IsZero() {
-						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
-						continue
-					}
-					channels.Submit(ctx, sendCh, selector)
-				}
-			}
+		for _, selector := range selectorsToSelect {
+			channels.Submit(ctx, sendCh, selector)
 		}
 
 		// Close the queue channel once filled, this will cause the worker goroutines to finish once the queue is emptied
