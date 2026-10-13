@@ -73,40 +73,37 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			attr.Scope("routine"),
 		)()
 
-		// Clear old post-processed edges that will not have a `firstseen` property
-		if err := post.MigrationForDCAPostProcessedEdges(ctx, db, escPostProcessedEdges); err != nil {
-			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed migrating ADCS ESC edges to DCA: %w", err)
-		}
-
-		// Pull a subgraph to compare against for tracking changes
-		escTracker, err := post.FetchTracker(ctx, db, escPostProcessedEdges)
-		if err != nil {
-			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching ADCS ESC edge tracker: %w", err)
-		}
-
 		var (
-			readerPool = ops.StartNewOperation[any](ops.OperationContext{
-				Parent:     ctx,
-				DB:         db,
-				NumReaders: post.MaximumDatabaseParallelWorkers,
-			})
-			escSink        = post.NewFilteredRelationshipSink(ctx, "ADCS ESC Post Processing", db, escTracker)
-			aggregateStats = post.NewAtomicPostProcessingStats()
+			esc16Sink     *post.FilteredRelationshipSink
+			operationErr  error
+			submissionErr error
 		)
 
-		aggregateStats.Merge(step1Stats)
-		aggregateStats.Merge(step2Stats)
-
-		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, readerPool, escSink)
+		esc16Sink, err = newADCSESC16Sink(ctx, db)
+		if err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed initializing ADCSESC16 sink: %w", err)
 		}
 
-		// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
-		readerErr := readerPool.Done()
-		escSink.Done()
-		aggregateStats.Merge(escSink.Stats())
+		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
 
-		return &aggregateStats, cache, readerErr
+		operation.Stats.Merge(step1Stats)
+		operation.Stats.Merge(step2Stats)
+
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
+			if submissionErr = processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation, esc16Sink); submissionErr != nil {
+				break
+			}
+		}
+
+		operationErr = errors.Join(submissionErr, operation.Done())
+		if operationErr != nil {
+			operationErr = errors.Join(operationErr, esc16Sink.Abort())
+		} else {
+			operationErr = esc16Sink.Done()
+		}
+		operation.Stats.Merge(esc16Sink.Stats())
+
+		return &operation.Stats, cache, operationErr
 	}
 }
 
@@ -185,7 +182,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 	return enrollOnBehalfOfStats, nil
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, readerPool *ops.Operation[any], escSink *post.FilteredRelationshipSink) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob], esc16Sink *post.FilteredRelationshipSink) error {
 
 	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
@@ -480,6 +477,34 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 				"Failed post processing for ADCSESC13",
 				attr.Error(err),
 			)
+		}
+		return nil
+	})
+
+	return operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- post.EnsureRelationshipJob) error {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC16",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC16(ctx, tx, esc16Sink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC16 missing property",
+				attr.Error(err),
+			)
+		} else if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC16",
+				attr.Error(err),
+			)
+			return err
 		}
 		return nil
 	})
