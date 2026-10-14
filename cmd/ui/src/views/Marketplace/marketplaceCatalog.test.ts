@@ -17,6 +17,7 @@
 import {
     communityExtensions,
     communityIntegrations,
+    developmentExtensions,
     enterpriseExtensions,
     enterpriseIntegrations,
 } from './marketplaceCatalog';
@@ -27,20 +28,24 @@ describe('Marketplace catalog', () => {
         ...communityExtensions,
         ...enterpriseIntegrations,
         ...communityIntegrations,
+        ...developmentExtensions,
     ];
 
-    it('contains complete, uniquely named CE records', () => {
+    it('contains complete, uniquely identified CE records', () => {
         expect(enterpriseExtensions).toHaveLength(5);
         expect(communityExtensions).toHaveLength(26);
         expect(enterpriseIntegrations).toHaveLength(11);
         expect(communityIntegrations).toHaveLength(3);
-        expect(new Set(catalog.map(({ name }) => name)).size).toBe(catalog.length);
+        expect(developmentExtensions).toHaveLength(8);
+        expect(
+            new Set(catalog.map(({ name, publisher, availability }) => `${name}:${publisher}:${availability}`)).size
+        ).toBe(catalog.length);
 
         for (const item of catalog) {
             expect(item).toEqual(
                 expect.objectContaining({
                     author: expect.any(String),
-                    availability: expect.stringMatching(/^(general|early-access)$/),
+                    availability: expect.stringMatching(/^(general|early-access|coming-soon)$/),
                     description: expect.any(String),
                     href: expect.stringMatching(/^https:\/\//),
                     logoPath: expect.stringMatching(/^\/img\/.+\.(png|svg)$/),
@@ -58,6 +63,29 @@ describe('Marketplace catalog', () => {
         ]);
         expect(enterpriseIntegrations.filter(({ publisher }) => publisher === 'partner')).toHaveLength(4);
         expect(enterpriseIntegrations.every(({ availability }) => availability === 'general')).toBe(true);
+        expect(developmentExtensions).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ name: 'AWS Bedrock', availability: 'coming-soon', publisher: 'specterops' }),
+                expect.objectContaining({
+                    name: 'Entra Domain Services',
+                    availability: 'coming-soon',
+                    publisher: 'specterops',
+                }),
+                expect.objectContaining({ name: 'Azure DevOps', availability: 'coming-soon', publisher: 'specterops' }),
+                expect.objectContaining({
+                    name: 'HashiCorp Vault',
+                    availability: 'coming-soon',
+                    publisher: 'specterops',
+                }),
+                expect.objectContaining({ name: 'Teleport', availability: 'coming-soon', publisher: 'specterops' }),
+                expect.objectContaining({ name: 'GitLab', availability: 'coming-soon', publisher: 'specterops' }),
+                expect.objectContaining({ name: 'Intune', availability: 'coming-soon', publisher: 'specterops' }),
+                expect.objectContaining({ name: 'Snowflake', availability: 'coming-soon', publisher: 'specterops' }),
+            ])
+        );
+        expect(
+            developmentExtensions.every(({ href }) => href === 'https://pages.specterops.io/BHE-Extensions-Beta.html')
+        ).toBe(true);
 
         for (const item of [...communityExtensions, ...communityIntegrations]) {
             expect(`${item.name} ${item.description}`).not.toMatch(/BloodHound Enterprise|upgrade your license/i);

@@ -25,6 +25,7 @@ export type ProductCardProps = {
     author: string;
     categoryLabel: string;
     badge?: string;
+    badgeColor?: 'blue' | 'orange';
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -36,6 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     author,
     categoryLabel,
     badge,
+    badgeColor = 'blue',
 }) => {
     return (
         <Card
@@ -53,11 +55,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         />
                     </div>
                     <div className='min-w-0 flex-1'>
-                        <div className='flex items-start justify-between gap-2'>
+                        <div className='flex flex-wrap items-start justify-between gap-2'>
                             <Typography component='h3' variant='h3'>
                                 {name}
                             </Typography>
-                            {badge && <Badge className='shrink-0' color='blue' label={badge} variant='fill' />}
+                            {badge && <Badge className='shrink-0' color={badgeColor} label={badge} variant='fill' />}
                         </div>
                         <Typography className='mt-1 text-muted-foreground opacity-75' variant='body2'>
                             {author}

@@ -17,7 +17,7 @@
 import type { ProductCardProps } from './ProductCard';
 
 export type MarketplacePublisher = 'specterops' | 'community' | 'partner';
-export type MarketplaceAvailability = 'general' | 'early-access';
+export type MarketplaceAvailability = 'general' | 'early-access' | 'coming-soon';
 
 export type CatalogItem = Omit<ProductCardProps, 'categoryLabel' | 'linkLabel'> & {
     publisher: MarketplacePublisher;
@@ -84,6 +84,97 @@ export const enterpriseExtensions = [
         description:
             'Model Jamf Pro users, groups, sites, scripts, API integrations, and related relationships across managed Mac environments.',
         href: 'https://bloodhound.specterops.io/opengraph/extensions/jamf/overview',
+    },
+] satisfies readonly CatalogItem[];
+
+export const developmentExtensions = [
+    {
+        name: 'AWS Bedrock',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/aws.svg',
+        description: 'Bring AWS Bedrock identities, models, and access relationships into BloodHound.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'Entra Domain Services',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/entra-id.png',
+        description: 'Map Entra Domain Services identities, resources, and privileged access.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'Azure DevOps',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/entra-id.png',
+        description: 'Understand Azure DevOps identities, projects, pipelines, and permissions.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'HashiCorp Vault',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/hashicorp-vault.svg',
+        description: 'Bring HashiCorp Vault identities, policies, and access relationships into analysis.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'Teleport',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/teleport.png',
+        description: 'Map Teleport identities, access policies, and infrastructure relationships.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'GitLab',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/community-gitlab.png',
+        description: 'Understand GitLab identities, groups, projects, pipelines, and permissions.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'Intune',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/entra-id.png',
+        description: 'Connect Intune devices, policies, identities, and access relationships.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
+    },
+    {
+        name: 'Snowflake',
+        author: 'SpecterOps',
+        publisher: 'specterops',
+        availability: 'coming-soon',
+        badge: 'Under development',
+        badgeColor: 'orange',
+        logoPath: '/img/product-logos/community-snowflake.png',
+        description: 'Map Snowflake identities, roles, data resources, and access relationships.',
+        href: 'https://pages.specterops.io/BHE-Extensions-Beta.html',
     },
 ] satisfies readonly CatalogItem[];
 

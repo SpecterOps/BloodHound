@@ -28,23 +28,35 @@ describe('Marketplace', () => {
         const extensionsRegion = screen.getByRole('region', { name: 'Community Extensions' });
         const enterpriseIntegrationsRegion = screen.getByRole('region', { name: 'Enterprise Integrations' });
         const communityIntegrationsRegion = screen.getByRole('region', { name: 'Community Integrations' });
+        const developmentExtensionsRegion = screen.getByRole('region', {
+            name: 'OpenGraph Enterprise Extensions in Development',
+        });
         expect(enterpriseExtensionsRegion).toHaveTextContent('· 5 items');
+        expect(enterpriseExtensionsRegion).toHaveTextContent(
+            'SpecterOps-authored OpenGraph extensions for additional identity and infrastructure platforms.'
+        );
         expect(extensionsRegion).toHaveTextContent('· 26 items');
         expect(enterpriseIntegrationsRegion).toHaveTextContent('· 11 items');
         expect(communityIntegrationsRegion).toHaveTextContent('· 3 items');
+        expect(developmentExtensionsRegion).toHaveTextContent('· 8 items');
         expect(
             [...document.querySelectorAll('section[aria-label]')].map((section) => section.getAttribute('aria-label'))
         ).toEqual([
             'Community Extensions',
-            'Enterprise Integrations',
             'Community Integrations',
             'OpenGraph Enterprise Extensions',
+            'OpenGraph Enterprise Extensions in Development',
+            'Enterprise Integrations',
         ]);
-        expect(screen.getAllByRole('article')).toHaveLength(45);
+        expect(screen.getAllByRole('article')).toHaveLength(53);
         expect(screen.getAllByText('Enterprise Extension')).toHaveLength(5);
         expect(screen.getAllByText('Community Extension')).toHaveLength(26);
         expect(screen.getAllByText('Enterprise Integration')).toHaveLength(11);
         expect(screen.getAllByText('Community Integration')).toHaveLength(3);
+        expect(within(developmentExtensionsRegion).getAllByText('Under development')).toHaveLength(16);
+        expect(developmentExtensionsRegion).toHaveTextContent(
+            'Explore OpenGraph extensions in active development. Roadmap items and availability are subject to change.'
+        );
         expect(screen.getByLabelText('Community Extensions disclaimer')).toHaveTextContent(
             COMMUNITY_EXTENSIONS_DISCLAIMER
         );
@@ -60,6 +72,12 @@ describe('Marketplace', () => {
         expect(onePasswordLink).toHaveAttribute('target', '_blank');
         expect(onePasswordLink).toHaveAttribute('rel', 'noopener noreferrer');
 
+        const teleportCard = screen.getByRole('article', { name: 'Teleport' });
+        const developmentCta = within(teleportCard).getByRole('link', { name: /Sign up to learn more Teleport/ });
+        expect(developmentCta).toHaveAttribute('href', 'https://pages.specterops.io/BHE-Extensions-Beta.html');
+        expect(developmentCta).toHaveAttribute('target', '_blank');
+        expect(developmentCta).toHaveAttribute('rel', 'noopener noreferrer');
+
         const awsCard = screen.getByRole('article', { name: 'AWS' });
         expect(within(awsCard).getByText('Beta')).toBeInTheDocument();
         expect(within(awsCard).getByTestId('product-logo')).toHaveAttribute('src', '/img/product-logos/aws.svg');
@@ -67,7 +85,7 @@ describe('Marketplace', () => {
         const enterpriseNote = screen.getByRole('note', { name: 'BloodHound Enterprise extension capabilities' });
         expect(enterpriseNote).toHaveTextContent('Unlock automated analysis with BloodHound Enterprise');
         expect(enterpriseNote).toHaveTextContent(
-            'In BloodHound Community Edition, these extensions do not include the continuous collection, automated analysis, findings, prioritization, trends, and reporting available with BloodHound Enterprise.'
+            'Enterprise Extensions are available for use in BloodHound Community Edition, but collection and data maintenance are manual. BloodHound Enterprise adds automated analysis with findings and prioritization, continuous collection, automated reconciliation to remove stale data, risk trends, and reporting.'
         );
         const enterpriseLink = within(enterpriseNote).getByRole('link', {
             name: /Learn More About BloodHound Enterprise/,
@@ -124,7 +142,7 @@ describe('Marketplace', () => {
 
         await user.click(publisherFilter);
         await user.click(screen.getByRole('option', { name: 'SpecterOps' }));
-        expect(screen.getAllByRole('article')).toHaveLength(8);
+        expect(screen.getAllByRole('article')).toHaveLength(16);
         expect(screen.getByRole('article', { name: 'MSSQL' })).toBeInTheDocument();
 
         await user.click(availabilityFilter);
@@ -132,6 +150,14 @@ describe('Marketplace', () => {
         expect(screen.getAllByRole('article')).toHaveLength(2);
         expect(screen.getByRole('article', { name: 'AWS' })).toBeInTheDocument();
         expect(screen.getByRole('article', { name: 'Microsoft Entra Agent ID' })).toBeInTheDocument();
+
+        await user.click(availabilityFilter);
+        await user.click(screen.getByRole('option', { name: 'Coming Soon' }));
+        expect(screen.getAllByRole('article')).toHaveLength(8);
+        expect(
+            screen.getByRole('region', { name: 'OpenGraph Enterprise Extensions in Development' })
+        ).toBeInTheDocument();
+        expect(screen.getByRole('article', { name: 'Teleport' })).toBeInTheDocument();
 
         await user.click(typeFilter);
         await user.click(screen.getByRole('option', { name: 'Integrations' }));

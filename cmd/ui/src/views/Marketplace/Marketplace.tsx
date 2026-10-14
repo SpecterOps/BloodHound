@@ -33,6 +33,7 @@ import {
     COMMUNITY_EXTENSIONS_DISCLAIMER,
     communityExtensions,
     communityIntegrations,
+    developmentExtensions,
     enterpriseExtensions,
     enterpriseIntegrations,
     type CatalogItem,
@@ -61,6 +62,7 @@ const availabilityFilters: { label: string; value: MarketplaceAvailabilityFilter
     { label: 'All availability', value: 'all' },
     { label: 'Generally Available', value: 'general' },
     { label: 'Early Access', value: 'early-access' },
+    { label: 'Coming Soon', value: 'coming-soon' },
 ];
 
 const matchesSearch = (item: CatalogItem, search: string) =>
@@ -89,10 +91,12 @@ const Marketplace = () => {
     const filteredCommunityExtensions = communityExtensions.filter(filterCatalog);
     const filteredEnterpriseIntegrations = enterpriseIntegrations.filter(filterCatalog);
     const filteredCommunityIntegrations = communityIntegrations.filter(filterCatalog);
+    const filteredDevelopmentExtensions = developmentExtensions.filter(filterCatalog);
     const showEnterpriseExtensions = typeFilter !== 'integrations' && filteredEnterpriseExtensions.length > 0;
     const showCommunityExtensions = typeFilter !== 'integrations' && filteredCommunityExtensions.length > 0;
     const showEnterpriseIntegrations = typeFilter !== 'extensions' && filteredEnterpriseIntegrations.length > 0;
     const showCommunityIntegrations = typeFilter !== 'extensions' && filteredCommunityIntegrations.length > 0;
+    const showDevelopmentExtensions = typeFilter !== 'integrations' && filteredDevelopmentExtensions.length > 0;
 
     return (
         <PageWithTitle className='pb-5' data-testid='marketplace' title='Marketplace'>
@@ -217,10 +221,133 @@ const Marketplace = () => {
                     </section>
                 )}
 
+                {showCommunityIntegrations && (
+                    <section
+                        aria-label='Community Integrations'
+                        className={showCommunityExtensions ? sectionDividerClasses : undefined}>
+                        <Typography className='mb-2' component='h2' variant='h2'>
+                            Community Integrations{' '}
+                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                                · {formatItemCount(filteredCommunityIntegrations.length)}
+                            </span>
+                        </Typography>
+                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
+                            Community tools that connect to BloodHound Community Edition for analysis, automation, and
+                            local workflows.
+                        </Typography>
+                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
+                            {filteredCommunityIntegrations.map((integration) => (
+                                <ProductCard
+                                    key={integration.name}
+                                    {...integration}
+                                    categoryLabel='Community Integration'
+                                    linkLabel='Learn More'
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {showEnterpriseExtensions && (
+                    <section
+                        aria-label='OpenGraph Enterprise Extensions'
+                        className={
+                            showCommunityExtensions || showCommunityIntegrations ? sectionDividerClasses : undefined
+                        }>
+                        <Typography className='mb-2' component='h2' variant='h2'>
+                            OpenGraph Enterprise Extensions{' '}
+                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                                · {formatItemCount(filteredEnterpriseExtensions.length)}
+                            </span>
+                        </Typography>
+                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
+                            SpecterOps-authored OpenGraph extensions for additional identity and infrastructure
+                            platforms.
+                        </Typography>
+                        <div
+                            aria-label='BloodHound Enterprise extension capabilities'
+                            className='mb-5 flex flex-col gap-4 rounded-md bg-status-info-fill p-4 text-status-info-text lg:flex-row lg:items-center lg:justify-between'
+                            role='note'>
+                            <div className='flex items-start gap-3'>
+                                <AppIcon.Info
+                                    aria-hidden='true'
+                                    className='mt-0.5 shrink-0 text-status-info-main'
+                                    size={24}
+                                />
+                                <div>
+                                    <Typography component='h3' variant='h3'>
+                                        Unlock automated analysis with BloodHound Enterprise
+                                    </Typography>
+                                    <Typography className='mt-1' variant='body2'>
+                                        Enterprise Extensions are available for use in BloodHound Community Edition, but
+                                        collection and data maintenance are manual. BloodHound Enterprise adds automated
+                                        analysis with findings and prioritization, continuous collection, automated
+                                        reconciliation to remove stale data, risk trends, and reporting.
+                                    </Typography>
+                                </div>
+                            </div>
+                            <Link
+                                className={`${ButtonVariants({ variant: 'secondary' })} shrink-0 self-start rounded-md font-bold lg:self-auto`}
+                                href='https://specterops.io/get-a-demo/'
+                                variant='unstyled'>
+                                Learn More About BloodHound Enterprise
+                            </Link>
+                        </div>
+                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
+                            {filteredEnterpriseExtensions.map((extension) => (
+                                <ProductCard
+                                    key={extension.name}
+                                    {...extension}
+                                    categoryLabel='Enterprise Extension'
+                                    linkLabel='Learn More'
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {showDevelopmentExtensions && (
+                    <section
+                        aria-label='OpenGraph Enterprise Extensions in Development'
+                        className={
+                            showCommunityExtensions || showCommunityIntegrations || showEnterpriseExtensions
+                                ? sectionDividerClasses
+                                : undefined
+                        }>
+                        <Typography className='mb-2' component='h2' variant='h2'>
+                            OpenGraph Enterprise Extensions in Development{' '}
+                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                                · {formatItemCount(filteredDevelopmentExtensions.length)}
+                            </span>
+                        </Typography>
+                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
+                            Explore OpenGraph extensions in active development. Roadmap items and availability are
+                            subject to change.
+                        </Typography>
+                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
+                            {filteredDevelopmentExtensions.map((extension) => (
+                                <ProductCard
+                                    key={extension.name}
+                                    {...extension}
+                                    categoryLabel='Under development'
+                                    linkLabel='Sign up to learn more'
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {showEnterpriseIntegrations && (
                     <section
                         aria-label='Enterprise Integrations'
-                        className={showCommunityExtensions ? sectionDividerClasses : undefined}>
+                        className={
+                            showCommunityExtensions ||
+                            showCommunityIntegrations ||
+                            showEnterpriseExtensions ||
+                            showDevelopmentExtensions
+                                ? sectionDividerClasses
+                                : undefined
+                        }>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Enterprise Integrations{' '}
                             <span className='ml-1 text-base font-normal text-muted-foreground'>
@@ -272,100 +399,11 @@ const Marketplace = () => {
                     </section>
                 )}
 
-                {showCommunityIntegrations && (
-                    <section
-                        aria-label='Community Integrations'
-                        className={
-                            showCommunityExtensions || showEnterpriseIntegrations ? sectionDividerClasses : undefined
-                        }>
-                        <Typography className='mb-2' component='h2' variant='h2'>
-                            Community Integrations{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
-                                · {formatItemCount(filteredCommunityIntegrations.length)}
-                            </span>
-                        </Typography>
-                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
-                            Community tools that connect to BloodHound Community Edition for analysis, automation, and
-                            local workflows.
-                        </Typography>
-                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
-                            {filteredCommunityIntegrations.map((integration) => (
-                                <ProductCard
-                                    key={integration.name}
-                                    {...integration}
-                                    categoryLabel='Community Integration'
-                                    linkLabel='Learn More'
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {showEnterpriseExtensions && (
-                    <section
-                        aria-label='OpenGraph Enterprise Extensions'
-                        className={
-                            showCommunityExtensions || showEnterpriseIntegrations || showCommunityIntegrations
-                                ? sectionDividerClasses
-                                : undefined
-                        }>
-                        <Typography className='mb-2' component='h2' variant='h2'>
-                            OpenGraph Enterprise Extensions{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
-                                · {formatItemCount(filteredEnterpriseExtensions.length)}
-                            </span>
-                        </Typography>
-                        <Typography className='mb-5 text-muted-foreground' variant='body2'>
-                            SpecterOps-authored extensions for additional identity and infrastructure platforms.
-                            Automated analysis, findings, trends, and reporting for these extensions require BloodHound
-                            Enterprise.
-                        </Typography>
-                        <div
-                            aria-label='BloodHound Enterprise extension capabilities'
-                            className='mb-5 flex flex-col gap-4 rounded-md bg-status-info-fill p-4 text-status-info-text lg:flex-row lg:items-center lg:justify-between'
-                            role='note'>
-                            <div className='flex items-start gap-3'>
-                                <AppIcon.Info
-                                    aria-hidden='true'
-                                    className='mt-0.5 shrink-0 text-status-info-main'
-                                    size={24}
-                                />
-                                <div>
-                                    <Typography component='h3' variant='h3'>
-                                        Unlock automated analysis with BloodHound Enterprise
-                                    </Typography>
-                                    <Typography className='mt-1' variant='body2'>
-                                        Enterprise Extensions are listed here for discovery. In BloodHound Community
-                                        Edition, these extensions do not include the continuous collection, automated
-                                        analysis, findings, prioritization, trends, and reporting available with
-                                        BloodHound Enterprise.
-                                    </Typography>
-                                </div>
-                            </div>
-                            <Link
-                                className={`${ButtonVariants({ variant: 'secondary' })} shrink-0 self-start rounded-md font-bold lg:self-auto`}
-                                href='https://specterops.io/get-a-demo/'
-                                variant='unstyled'>
-                                Learn More About BloodHound Enterprise
-                            </Link>
-                        </div>
-                        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
-                            {filteredEnterpriseExtensions.map((extension) => (
-                                <ProductCard
-                                    key={extension.name}
-                                    {...extension}
-                                    categoryLabel='Enterprise Extension'
-                                    linkLabel='Learn More'
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
                 {!showEnterpriseExtensions &&
                     !showCommunityExtensions &&
                     !showEnterpriseIntegrations &&
-                    !showCommunityIntegrations && (
+                    !showCommunityIntegrations &&
+                    !showDevelopmentExtensions && (
                         <Typography className='py-12 text-center text-muted-foreground' role='status' variant='body1'>
                             No Marketplace items match your search and filters.
                         </Typography>
