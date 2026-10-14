@@ -29,6 +29,7 @@ discovering or affecting the other.
 | Link Card          | Doc Source                                           | Destination           |
 | ------------------ | ---------------------------------------------------- | --------------------- |
 | DoodleUI Storybook | DoodleUI Storybook (`packages/javascript/doodle-ui`) | `/doodle-ui/embedded` |
+| Repo Docs          | Repo markdown (include list in `src/docSource.ts`)   | `/docs`               |
 
 ## Adding a Doc Source
 
@@ -41,6 +42,13 @@ discovering or affecting the other.
 
 Icons come from `@fortawesome/free-solid-svg-icons`.
 
+To publish more repo markdown instead, add its path or folder to the include list in `src/docSource.ts`. The Vite build
+bundles each included file as a Doc Page at `/docs/<repo-relative path without .md>`; no mount or Link Card is needed.
+Relative links to included files open their Doc Page, and other relative links open the path on GitHub
+(`SpecterOps/BloodHound`, `main`) in a new tab, as do absolute `http(s)` links. Relative images are bundled from the image globs in `src/docSource.ts`; extend those
+too when adding a folder outside the existing ones. A relative image outside those globs keeps its `src` unchanged.
+The Repo Docs sidebar searches every included file, listing matching sections at `/docs?q=<query>`.
+
 ## Themes
 
 Components never hold raw colors, fonts, or radii. They use `dp-` Tailwind utilities (`bg-dp-canvas`,
@@ -50,8 +58,8 @@ Components never hold raw colors, fonts, or radii. They use `dp-` Tailwind utili
 -   `src/theme/themes.ts` holds the themes and `applyTheme`, which writes a theme's values onto `<html>`. On startup,
     `followSystemTheme` applies `themeForScheme[light|dark]` to match the operating system and follows later changes.
 
-The `hero-*` tokens style the landing page's graph canvas; `marker` is the "you are here" color (the graph's source
-node). DoodleUI's focus ring follows the `focus` token.
+The `hero-*` tokens style the landing page's graph canvas; `marker` is the "you are here" color (the graph's source node
+and the active Doc Page). DoodleUI's focus ring follows the `focus` token.
 
 To add a theme:
 
@@ -83,8 +91,11 @@ Hosting is not covered by automated tests. After changing the compose file, ngin
    DoodleUI Storybook Link Card shows it inside the Dev Portal.
 4. Open a Dev Portal deep link such as <http://dev-portal.localhost:8888/nope> and refresh: the Dev Portal's not-found
    page stays in place, and its link returns to the landing page.
-5. With `just bh-dev` running, confirm both the product and the Dev Portal respond.
-6. Run `just dev-portal down`.
+5. Open a Doc Page such as <http://dev-portal.localhost:8888/docs/rfc/bh-rfc-0> and refresh: the same Doc Page renders
+   and is highlighted in the sidebar. On <http://dev-portal.localhost:8888/docs/packages/javascript/doodle-ui/README>,
+   the table link to `README` stays in the Dev Portal.
+6. With `just bh-dev` running, confirm both the product and the Dev Portal respond.
+7. Run `just dev-portal down`.
 
 Without a browser, the same checks can be made with
 `curl -H 'Host: dev-portal.localhost' http://127.0.0.1:8888/<path>`.
