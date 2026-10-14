@@ -17,19 +17,17 @@
 package test
 
 import (
+	"net/http/httptest"
+	"os"
+	"os/exec"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 )
 
-type responseBodyTestingT struct {
-	failed bool
-}
-
-func (s *responseBodyTestingT) Errorf(string, ...any) {
-	s.failed = true
-}
+const responseJSONBodyMismatchEnvironmentVariable = "BHE_TEST_RESPONSE_JSON_BODY_MISMATCH"
 
 func TestNormalizeResponseJSONBody(t *testing.T) {
 	const (
@@ -42,52 +40,51 @@ func TestNormalizeResponseJSONBody(t *testing.T) {
 	require.JSONEq(t, expectedBody, actualBody)
 }
 
-func TestJSONEq(t *testing.T) {
-	t.Run("matches nested values regardless of object key order", func(t *testing.T) {
-		assertionT := &responseBodyTestingT{}
+func TestResponseJSONBody(t *testing.T) {
+	const actualResponseBody = `{"timestamp":"2026-10-14T12:34:56Z","users":[{"id":1,"roles":["admin","user"]}]}`
 
-		matches := assert.JSONEq(
-			assertionT,
-			`{"users":[{"id":1,"roles":["admin","user"]}]}`,
-			`{"users":[{"roles":["admin","user"],"id":1}]}`,
-		)
+	responseRecorder := httptest.NewRecorder()
+	responseRecorder.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	responseRecorder.Body.WriteString(actualResponseBody)
 
-		require.True(t, matches)
-		require.False(t, assertionT.failed)
+	assertions := RequestResponseAssertions{
+		response: responseRecorder,
+		t:        t,
+	}
+
+	assertions.ResponseJSONBody(map[string]any{
+		"timestamp": "0001-01-01T00:00:00Z",
+		"users": []any{map[string]any{
+			"id":    1,
+			"roles": []string{"admin", "user"},
+		}},
 	})
+}
 
-	t.Run("detects a changed nested value", func(t *testing.T) {
-		assertionT := &responseBodyTestingT{}
+func TestResponseJSONBodyMismatchSubprocess(t *testing.T) {
+	if os.Getenv(responseJSONBodyMismatchEnvironmentVariable) != "1" {
+		return
+	}
 
-		matches := assert.JSONEq(
-			assertionT,
-			`{"users":[{"id":1,"roles":["admin","user"]}]}`,
-			`{"users":[{"id":2,"roles":["admin","user"]}]}`,
-		)
+	const mismatchMarker = "running ResponseJSONBody mismatch assertion"
+	t.Log(mismatchMarker)
 
-		require.False(t, matches)
-		require.True(t, assertionT.failed)
-	})
+	responseRecorder := httptest.NewRecorder()
+	responseRecorder.Header().Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+	responseRecorder.Body.WriteString(`{"id":2}`)
 
-	t.Run("detects a changed array order", func(t *testing.T) {
-		assertionT := &responseBodyTestingT{}
+	RequestResponseAssertions{
+		response: responseRecorder,
+		t:        t,
+	}.ResponseJSONBody(map[string]int{"id": 1})
+}
 
-		matches := assert.JSONEq(
-			assertionT,
-			`{"roles":["admin","user"]}`,
-			`{"roles":["user","admin"]}`,
-		)
+func TestResponseJSONBodyRejectsMismatch(t *testing.T) {
+	command := exec.Command(os.Args[0], "-test.run=^TestResponseJSONBodyMismatchSubprocess$")
+	command.Env = append(os.Environ(), responseJSONBodyMismatchEnvironmentVariable+"=1")
 
-		require.False(t, matches)
-		require.True(t, assertionT.failed)
-	})
-
-	t.Run("detects invalid actual JSON", func(t *testing.T) {
-		assertionT := &responseBodyTestingT{}
-
-		matches := assert.JSONEq(assertionT, `{"id":1}`, `not json`)
-
-		require.False(t, matches)
-		require.True(t, assertionT.failed)
-	})
+	commandOutput, err := command.CombinedOutput()
+	require.Error(t, err, "expected the subprocess test to fail on mismatched response JSON")
+	require.Contains(t, string(commandOutput), "running ResponseJSONBody mismatch assertion")
+	require.Contains(t, string(commandOutput), "FAIL")
 }
