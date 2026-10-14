@@ -125,7 +125,8 @@ func (s *Service) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
 	return s.db.GetAllFlags(ctx)
 }
 
-// ToggleFlag enables/disables the feature flag by the feature flag id
+// ToggleFlag enables/disables the feature flag by the feature flag id.
+// Findings prioritization toggles request analysis to create or remove zone nodes.
 func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error) {
 	var (
 		analysisRequestSource string

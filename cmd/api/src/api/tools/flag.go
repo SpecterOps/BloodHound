@@ -80,6 +80,7 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 	}
 
 	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 {
+		// Both toggle directions require analysis to create or remove zone nodes.
 		analysisRequestSource = appcfg.PrioritizationFlagRequestSource
 	}
 
