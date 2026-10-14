@@ -29,6 +29,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// CustomNodeKindStubConfig is the default display config used when a node kind is encountered during ingest
+// but has no display configuration yet. custom_node_kinds was originally scoped to OpenGraph extension kinds
+// but now serves as the runtime display registry for any non-built-in, non-framework kind.
 var CustomNodeKindStubConfig = model.CustomNodeKindConfig{
 	Icon: graphschema.DisplayNodeIcon{
 		Name:  "question",
