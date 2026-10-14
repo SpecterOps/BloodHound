@@ -139,6 +139,9 @@ type RoleSeparationEnabled struct {
 type RPCEncryptionEnforced struct {
 	APIResult
 	Value bool
+type DisabledExtensions struct {
+	APIResult
+	Data []string
 }
 
 type CARegistryData struct {
@@ -147,6 +150,7 @@ type CARegistryData struct {
 	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
 	RoleSeparationEnabled       RoleSeparationEnabled
 	RPCEncryptionEnforced       RPCEncryptionEnforced
+	DisabledExtensions          DisabledExtensions
 }
 
 type DCRegistryData struct {
