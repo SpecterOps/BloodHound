@@ -8,15 +8,14 @@ Because these suites drive a real browser against a running app, the live state 
 
 ## Quick Start
 
-To draft browser actions interactively, start the UI (`yarn dev` from `bhce/`) and run `yarn codegen` from `bhce/` or `cmd/ui/`. The launcher loads `cmd/ui/.env`, opens `A11Y_TEST_URL/ui/login`, and blocks service workers like the a11y suite. Pass Playwright codegen options or another URL after the script name:
+To draft browser actions interactively, run `yarn codegen [draft-name]` from `bhce/` or `cmd/ui/`. The launcher loads `cmd/ui/.env`, creates the light-theme authentication state when it is missing, always loads that state, opens the home page, and blocks service workers like the a11y suite. The optional argument is the draft file name; without it, the launcher creates a unique name from the current Git branch and prints the selected path:
 
 ```sh
 yarn codegen
-yarn codegen --load-storage playwright/.auth/user-light.json
-yarn codegen http://127.0.0.1:3000/ui/explore --browser firefox
+yarn codegen findings-table-draft
 ```
 
-Paths passed to codegen are relative to `cmd/ui/`. Generate storage state first with `yarn test:a11y` if using `--load-storage`. Codegen generates test code; it does not run the shared Playwright fixtures or automatically manage their HAR files. The target app must already be running.
+Drafts are written under `cmd/ui/playwright/`. Codegen generates test code; it does not run the shared Playwright fixtures or automatically manage their HAR files. The target app and API must be available for authentication and interaction.
 
 HAR updates replace files for tests with unchanged identities. Renamed or removed tests leave old artifact directories; preview and remove those from `bhce/` or `cmd/ui/` with:
 
