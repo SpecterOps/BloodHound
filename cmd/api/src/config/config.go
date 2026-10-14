@@ -228,7 +228,7 @@ type BucketConfiguration struct {
 	Region string `json:"region"`
 }
 
-type ExperimentStorage struct {
+type ExperimentsBucket struct {
 	Name   string `json:"name"`
 	Region string `json:"region"`
 	Prefix string `json:"prefix"`
@@ -237,7 +237,7 @@ type ExperimentStorage struct {
 type StorageConfiguration struct {
 	InstanceBucket    BucketConfiguration                 `json:"instance_bucket"`
 	FileServices      map[string]FileServiceConfiguration `json:"file_services"`
-	ExperimentStorage ExperimentStorage                   `json:"experiments"`
+	ExperimentsBucket ExperimentsBucket                   `json:"experiments_bucket"`
 }
 
 type SecretStoreConfiguration struct {
