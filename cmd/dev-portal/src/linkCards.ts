@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { faWindowMaximize } from '@fortawesome/free-solid-svg-icons';
 
 export type LinkCardConfig = {
     icon: IconDefinition;
@@ -33,4 +34,11 @@ export const linkCardForPath = (pathname: string) =>
         return pathname === destination || pathname.startsWith(`${destination}/`);
     });
 
-export const linkCards: LinkCardConfig[] = [];
+export const linkCards: LinkCardConfig[] = [
+    {
+        icon: faWindowMaximize,
+        title: 'DoodleUI Storybook',
+        description: 'Storybook inside the Dev Portal',
+        href: '/doodle-ui/embedded',
+    },
+];

@@ -35,3 +35,5 @@ services:
         volumes:
             - ./cmd/dev-portal/hosting/nginx.conf:/etc/nginx/conf.d/default.conf:ro
             - ./cmd/dev-portal/dist:/usr/share/nginx/html:ro
+            # Doc Artifacts, one read-only mount each under /srv/artifacts/<name>
+            - ./packages/javascript/doodle-ui/storybook-static:/srv/artifacts/doodle-ui:ro
