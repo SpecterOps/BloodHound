@@ -468,8 +468,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		s.GetAZRelatedEntities(request.Context(), response, request, objectID, azKind, user)
 	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if entityInformation, err := GetAZEntityInformation(
-		// this branch handles requests without related_entity_type by returning information about the anchor node
+	} else if entityInformation, err := GetAZEntityInformation( // this branch handles requests without related_entity_type by returning information about the anchor node
 		request.Context(),
 		s.DB,
 		s.Graph,
