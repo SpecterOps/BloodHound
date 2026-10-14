@@ -14,13 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
-describe('App', () => {
-    it('renders the dev portal title', () => {
-        render(<App />);
+const renderAt = (url: string) =>
+    render(
+        <MemoryRouter initialEntries={[url]}>
+            <App />
+        </MemoryRouter>
+    );
 
-        expect(screen.getByText('Bloodhound Dev Portal')).toBeInTheDocument();
+describe('Dev Portal landing page', () => {
+    it('renders one Link Card per configured destination', () => {
+        renderAt('/');
+
+        const cards = within(screen.getByRole('list')).queryAllByRole('link');
+
+        expect(cards.map((card) => card.getAttribute('href'))).toEqual([]);
+    });
+});
+
+describe('Dev Portal not-found page', () => {
+    it('shows a not-found message with a way back to the landing page', async () => {
+        const user = userEvent.setup();
+        renderAt('/nope');
+
+        expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('link', { name: 'Back to the main page' }));
+
+        expect(screen.getByRole('heading', { level: 1, name: 'BloodHound Developer Portal' })).toBeInTheDocument();
     });
 });

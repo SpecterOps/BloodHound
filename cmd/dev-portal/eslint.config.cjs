@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 const { defineConfig } = require('eslint/config');
 const globals = require('globals');
 const { fixupConfigRules } = require('@eslint/compat');
