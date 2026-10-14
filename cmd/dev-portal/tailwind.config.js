@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { DoodleUIPlugin, DoodleUIPreset } from '../../packages/javascript/doodle-ui/src/tailwind';
+import { tailwindTokens } from './src/theme/tokens';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -26,5 +27,15 @@ export default {
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
     presets: [DoodleUIPreset],
-    theme: {},
+    theme: {
+        extend: {
+            colors: { dp: tailwindTokens.colors },
+            fontFamily: Object.fromEntries(
+                Object.entries(tailwindTokens.fonts).map(([token, value]) => [`dp-${token}`, value])
+            ),
+            borderRadius: Object.fromEntries(
+                Object.entries(tailwindTokens.radii).map(([token, value]) => [`dp-${token}`, value])
+            ),
+        },
+    },
 };
