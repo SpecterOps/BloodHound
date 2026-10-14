@@ -1,0 +1,37 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Dev Portal: run with `just dev-portal`. Kept separate from docker-compose.dev.yml so neither stack affects the other.
+name: bhce-dev-portal
+
+services:
+    proxy:
+        image: docker.io/library/traefik:v3.6.1
+        command:
+            - --entrypoints.web.address=:80
+            - --providers.file.filename=/etc/traefik/dynamic.yml
+        ports:
+            - 127.0.0.1:8888:80
+        volumes:
+            - ./cmd/dev-portal/hosting/traefik-dynamic.yml:/etc/traefik/dynamic.yml:ro
+        depends_on:
+            - web
+
+    web:
+        image: docker.io/library/nginx:alpine
+        volumes:
+            - ./cmd/dev-portal/hosting/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+            - ./cmd/dev-portal/dist:/usr/share/nginx/html:ro
