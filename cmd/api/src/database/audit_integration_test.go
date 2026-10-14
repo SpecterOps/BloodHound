@@ -27,18 +27,20 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDatabase_ListAuditLogs(t *testing.T) {
 	var (
-		dbInst = integration.SetupDB(t)
-		after  = time.Now().Add(-time.Hour)
-		before time.Time
+		dbInst   = integration.SetupDB(t)
+		after    = time.Now().Add(-time.Hour)
+		midpoint time.Time
+		before   time.Time
 
 		auditLogIdFilter = model.QueryParameterFilter{
 			Name:         "id",
 			Operator:     model.GreaterThan,
-			Value:        "4",
+			Value:        "2",
 			IsStringData: false,
 		}
 		auditLogIdFilterMap = model.QueryParameterFilterMap{auditLogIdFilter.Name: model.QueryParameterFilters{auditLogIdFilter}}
@@ -53,32 +55,90 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 		testCtx = bhctx.Set(context.Background(), &mockCtx)
 	)
 
-	for i := 0; i < 7; i++ {
-		if err := dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: model.AuditLogActionCreateUser, Status: model.AuditLogStatusSuccess}); err != nil {
-			t.Fatalf("Error creating audit log: %v", err)
+	appendAuditLogs := func(numLogs int) {
+		for i := 0; i < numLogs; i++ {
+			require.NoError(t, dbInst.AppendAuditLog(testCtx, model.AuditEntry{Model: &model.User{}, Action: model.AuditLogActionCreateUser, Status: model.AuditLogStatusSuccess}))
 		}
 	}
 
+	// IDs 1-4 are created before the midpoint and IDs 5-7 are created after it
+	appendAuditLogs(4)
+	midpoint = time.Now()
+	appendAuditLogs(3)
 	before = time.Now()
 
-	if _, count, err := dbInst.ListAuditLogs(testCtx, before, after, 0, 10, "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Failed to list all audit logs: %v", err)
-	} else if count != 7 {
-		t.Fatalf("Expected 7 audit logs to be returned")
-	} else if filter, err := auditLogIdFilterMap.BuildSQLFilter(); err != nil {
-		t.Fatalf("Failed to generate SQL Filter: %v", err)
-		// Limit is set to 1 to verify that count is total filtered count, not response size
-	} else if _, count, err = dbInst.ListAuditLogs(testCtx, before, after, 0, 1, "", filter); err != nil {
-		t.Fatalf("Failed to list filtered events: %v", err)
-	} else if count != 3 {
-		t.Fatalf("Expected 3 audit logs to be returned")
-	} else if logs, count, err := dbInst.ListAuditLogs(testCtx, before.Add(2*time.Hour), before.Add(time.Hour), 0, 10, "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Failed to list events in an empty time window: %v", err)
-	} else if count != 0 || len(logs) != 0 {
-		t.Fatalf("Expected no events in an empty time window, got count %d and %d logs", count, len(logs))
-	} else if logs, count, err := dbInst.ListAuditLogs(testCtx, before.Add(2*time.Hour), before.Add(time.Hour), 0, 1, "", filter); err != nil {
-		t.Fatalf("Failed to list filtered events in an empty time window: %v", err)
-	} else if count != 0 || len(logs) != 0 {
-		t.Fatalf("Expected no filtered events in an empty time window, got count %d and %d logs", count, len(logs))
+	idFilter, err := auditLogIdFilterMap.BuildSQLFilter()
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name          string
+		before        time.Time
+		after         time.Time
+		limit         int
+		filter        model.SQLFilter
+		expectedCount int
+		expectedLogs  int
+	}{
+		{
+			name:          "full window",
+			before:        before,
+			after:         after,
+			limit:         10,
+			expectedCount: 7,
+			expectedLogs:  7,
+		},
+		{
+			// Limit is set to 1 to verify that count is total filtered count, not response size
+			name:          "full window with filter",
+			before:        before,
+			after:         after,
+			limit:         1,
+			filter:        idFilter,
+			expectedCount: 5,
+			expectedLogs:  1,
+		},
+		{
+			name:          "partial window",
+			before:        before,
+			after:         midpoint,
+			limit:         10,
+			expectedCount: 3,
+			expectedLogs:  3,
+		},
+		{
+			name:          "partial window with filter",
+			before:        midpoint,
+			after:         after,
+			limit:         1,
+			filter:        idFilter,
+			expectedCount: 2,
+			expectedLogs:  1,
+		},
+		{
+			name:          "empty window",
+			before:        before.Add(2 * time.Hour),
+			after:         before.Add(time.Hour),
+			limit:         10,
+			expectedCount: 0,
+			expectedLogs:  0,
+		},
+		{
+			name:          "empty window with filter",
+			before:        before.Add(2 * time.Hour),
+			after:         before.Add(time.Hour),
+			limit:         1,
+			filter:        idFilter,
+			expectedCount: 0,
+			expectedLogs:  0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			logs, count, err := dbInst.ListAuditLogs(testCtx, testCase.before, testCase.after, 0, testCase.limit, "", testCase.filter)
+			require.NoError(t, err)
+			require.Equal(t, testCase.expectedCount, count)
+			require.Len(t, logs, testCase.expectedLogs)
+		})
 	}
 }

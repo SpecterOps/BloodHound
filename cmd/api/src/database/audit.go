@@ -108,22 +108,22 @@ func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditL
 
 func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
 	var (
-		auditLogs  model.AuditLogs
-		result     *gorm.DB
-		cursor     = s.Scope(Paginate(offset, limit)).WithContext(ctx).Where("created_at between ? and ?", after, before)
-		countQuery = s.db.Model(&auditLogs).WithContext(ctx).Where("created_at between ? and ?", after, before)
-		count      int64
+		auditLogs model.AuditLogs
+		baseQuery = s.db.WithContext(ctx).Model(&model.AuditLog{}).Where("created_at between ? and ?", after, before)
+		count     int64
 	)
 
 	// This code went through a partial refactor when adding support for new fields.
 	// See the comments here for more information: https://github.com/SpecterOps/BloodHound/pull/297#issuecomment-1887640827
 
 	if filter.SQLString != "" {
-		countQuery = countQuery.Where(filter.SQLString, filter.Params...)
+		baseQuery = baseQuery.Where(filter.SQLString, filter.Params...)
 	}
-	result = countQuery.Count(&count)
 
-	if result.Error != nil {
+	// A new session allows baseQuery to be safely reused by both the count and list queries
+	baseQuery = baseQuery.Session(&gorm.Session{})
+
+	if result := baseQuery.Count(&count); result.Error != nil {
 		return nil, 0, CheckError(result)
 	}
 
@@ -131,11 +131,7 @@ func (s *BloodhoundDB) ListAuditLogs(ctx context.Context, before, after time.Tim
 		order = "created_at desc"
 	}
 
-	if filter.SQLString != "" {
-		result = cursor.Where(filter.SQLString, filter.Params...).Order(order).Find(&auditLogs)
-	} else {
-		result = cursor.Order(order).Find(&auditLogs)
-	}
+	result := baseQuery.Scopes(Paginate(offset, limit)).Order(order).Find(&auditLogs)
 
 	return auditLogs, int(count), CheckError(result)
 }
