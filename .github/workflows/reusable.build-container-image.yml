@@ -185,6 +185,8 @@ on:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
       image_name:
         value: ${{ jobs.build-container-image.outputs.image_name }}
+      image_digest:
+        value: ${{ jobs.build-container-image.outputs.image_digest }}
 
 permissions:
   contents: read
@@ -196,6 +198,7 @@ jobs:
     outputs:
       image_reference: ${{ steps.container-image-metadata.outputs.image_reference }}
       image_name: ${{ steps.container-image-metadata.outputs.image_name }}
+      image_digest: ${{ steps.build-container-image.outputs.digest }}
     steps:
       - name: Checkout Source Code Repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
@@ -237,9 +240,6 @@ jobs:
 
       - id: build-container-image
         uses: ./.github/actions/build-container-image
-        # TODO: verify if this breaks anything
-        # env:
-        #   DOCKER_CONTENT_TRUST: 1
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
