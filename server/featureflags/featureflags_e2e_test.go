@@ -352,15 +352,16 @@ func TestE2E_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: does not request analysis when findings prioritization is disabled",
+			name: "Success: requests analysis when findings prioritization is toggled to disabled",
 			seedFlag: func(t *testing.T) int32 {
 				t.Helper()
+				seedFeatureFlag(t, ctx, db.Pool(), appcfg.FeatureVariableAnalysisMode, "Variable Analysis Mode", false, true)
 				return seedFeatureFlag(t, ctx, db.Pool(), services.FeatureFindingsPrioritizationV0, "Findings Prioritization v0", true, true)
 			},
 			expectedStatus: http.StatusOK,
 			assertDB: func(t *testing.T) {
 				t.Helper()
-				assertNoAnalysisRequest(t, ctx, db.Pool())
+				assertAnalysisRequest(t, ctx, db.Pool(), services.PrioritizationFlagRequestSource, int32(model.AnalysisStepsNoPostProcessing().Bits()))
 			},
 		},
 		{
