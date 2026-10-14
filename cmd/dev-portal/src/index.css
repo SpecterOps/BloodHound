@@ -1,0 +1,126 @@
+/*
+    Copyright 2026 Specter Ops, Inc.
+
+    Licensed under the Apache License, Version 2.0
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    SPDX-License-Identifier: Apache-2.0
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    /* DoodleUI components draw their focus ring from these, so they follow the theme too */
+    html[data-theme] {
+        --focus-ring: var(--dp-color-focus);
+        --focus-ring-offset: var(--dp-color-canvas);
+    }
+
+    html {
+        @apply bg-dp-canvas font-dp-body text-dp-text antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--dp-color-focus);
+        outline-offset: 2px;
+    }
+}
+
+@layer components {
+    /*
+        The graph motif: a source node with edges branching to each destination, echoing the attack path
+        graphs BloodHound draws. Used by the landing page.
+    */
+    .graph-tree {
+        --graph-edge-width: 2px;
+        --graph-branch-length: 2.5rem;
+        --graph-edge-color: var(--dp-color-hero-edge);
+    }
+    .graph-tree > li {
+        @apply relative py-3;
+        padding-left: var(--graph-branch-length);
+    }
+    .graph-tree > li::before,
+    .graph-tree > li::after {
+        @apply pointer-events-none absolute left-0;
+        content: '';
+        border-color: var(--graph-edge-color);
+    }
+    /* The trunk; it stops at the last branch */
+    .graph-tree > li::before {
+        @apply inset-y-0 origin-top;
+        border-left-width: var(--graph-edge-width);
+    }
+    .graph-tree > li:last-child::before {
+        bottom: 50%;
+    }
+    /* The branch out to the destination's node */
+    .graph-tree > li::after {
+        @apply top-1/2 origin-left;
+        width: var(--graph-branch-length);
+        border-top-width: var(--graph-edge-width);
+        margin-top: calc(var(--graph-edge-width) / -2);
+    }
+
+    .graph-node {
+        @apply grid shrink-0 place-items-center rounded-full border-2 border-dp-hero-edge bg-dp-hero-node text-dp-hero-text;
+    }
+    .graph-source-node {
+        @apply block rounded-full bg-dp-marker;
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--dp-color-marker) 25%, transparent);
+    }
+}
+
+/* The one page-load moment: the landing graph's edges draw out from the source node */
+@media (prefers-reduced-motion: no-preference) {
+    .graph-lead {
+        transform-origin: top;
+        animation: graph-draw-trunk 260ms ease-in 100ms both;
+    }
+    .graph-tree-animated > li::before {
+        animation: graph-draw-trunk 200ms linear both;
+    }
+    .graph-tree-animated > li::after {
+        animation: graph-draw-branch 220ms ease-out both;
+    }
+    .graph-tree-animated > li:nth-child(1)::before {
+        animation-delay: 360ms;
+    }
+    .graph-tree-animated > li:nth-child(1)::after {
+        animation-delay: 460ms;
+    }
+    .graph-tree-animated > li:nth-child(2)::before {
+        animation-delay: 560ms;
+    }
+    .graph-tree-animated > li:nth-child(2)::after {
+        animation-delay: 660ms;
+    }
+    .graph-tree-animated > li:nth-child(n + 3)::before {
+        animation-delay: 760ms;
+    }
+    .graph-tree-animated > li:nth-child(n + 3)::after {
+        animation-delay: 860ms;
+    }
+}
+
+@keyframes graph-draw-trunk {
+    from {
+        transform: scaleY(0);
+    }
+}
+
+@keyframes graph-draw-branch {
+    from {
+        transform: scaleX(0);
+    }
+}

@@ -7998,6 +7998,51 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dev-portal@workspace:cmd/dev-portal":
+  version: 0.0.0-use.local
+  resolution: "dev-portal@workspace:cmd/dev-portal"
+  dependencies:
+    "@eslint/compat": "npm:^2.0.3"
+    "@eslint/eslintrc": "npm:^3.3.5"
+    "@eslint/js": "npm:^10.0.1"
+    "@fontsource/figtree": "npm:^5.2.10"
+    "@fontsource/nunito-sans": "npm:^5.2.10"
+    "@fortawesome/fontawesome-svg-core": "npm:^6.7.2"
+    "@fortawesome/free-solid-svg-icons": "npm:^6.7.2"
+    "@fortawesome/react-fontawesome": "npm:^3.0.2"
+    "@testing-library/dom": "npm:^10.4.1"
+    "@testing-library/jest-dom": "npm:^5.16.5"
+    "@testing-library/react": "npm:^16.3.2"
+    "@testing-library/user-event": "npm:^14.6.1"
+    "@types/node": "npm:^22.9.0"
+    "@types/react": "npm:^18.0.28"
+    "@types/react-dom": "npm:^18.0.11"
+    "@typescript-eslint/eslint-plugin": "npm:^7.3.0"
+    "@typescript-eslint/parser": "npm:^7.3.0"
+    "@vitejs/plugin-react": "npm:^4.2.1"
+    autoprefixer: "npm:^10.4.20"
+    doodle-ui: "workspace:*"
+    eslint: "npm:^9.26.0"
+    eslint-config-prettier: "npm:^9.1.0"
+    eslint-plugin-jsx-a11y: "npm:^6.10.2"
+    eslint-plugin-react: "npm:^7.34.1"
+    eslint-plugin-react-hooks: "npm:^4.6.0"
+    eslint-plugin-react-refresh: "npm:^0.4.6"
+    globals: "npm:^17.4.0"
+    jsdom: "npm:^27.0.0"
+    postcss: "npm:^8.5.1"
+    prettier: "npm:^3.2.5"
+    prettier-plugin-organize-imports: "npm:^4.1.0"
+    react: "npm:^18.2.0"
+    react-dom: "npm:^18.2.0"
+    react-router-dom: "npm:^6.30.3"
+    tailwindcss: "npm:^3.4.17"
+    typescript: "npm:^5.9.3"
+    vite: "npm:^6.4.3"
+    vitest: "npm:^4.1.0"
+  languageName: unknown
+  linkType: soft
+
 "devlop@npm:^1.0.0, devlop@npm:^1.1.0":
   version: 1.1.0
   resolution: "devlop@npm:1.1.0"
