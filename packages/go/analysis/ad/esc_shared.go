@@ -143,8 +143,26 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	return sink.Stats(), nil
 }
 
-func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+var enterpriseCAForPostProcessedEdges = graph.Kinds{
+	ad.EnterpriseCAFor,
+}
+
+func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, enterpriseCAForPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	enterpriseCAForTracker, err := post.FetchTracker(ctx, db, enterpriseCAForPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostEnterpriseCAFor", db, enterpriseCAForTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
@@ -156,7 +174,7 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 					return err
 				} else {
 					for _, rootCANodeID := range rootCAIDs {
-						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+						if !sink.Submit(ctx, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   rootCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -169,7 +187,7 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 					return err
 				} else {
 					for _, aiaCANodeID := range aiaCAIDs {
-						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+						if !sink.Submit(ctx, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   aiaCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -181,8 +199,11 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 			}
 		}
 		return nil
-	})
-	return nil
+	}); err != nil {
+		return sink.Stats(), err
+	}
+
+	return sink.Stats(), nil
 }
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
