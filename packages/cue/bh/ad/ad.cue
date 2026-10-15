@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	ADCSESC3,
 	ADCSESC4,
 	ADCSESC6a,
 	ADCSESC6b,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	EnrollOnBehalfOf,
 	GoldenCert,
 	ADCSESC1,
+	ADCSESC3,
 ]
 
 // All post-processed edges
