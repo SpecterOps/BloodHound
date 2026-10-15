@@ -2020,7 +2020,6 @@ EdgeCompositionRelationships: [
 ]
 
 PostProcessedRelationships: [
-	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
 	ADCSESC4,
@@ -2054,6 +2053,7 @@ DCAPostProcessedRelationships: [
 	EnterpriseCAFor,
 	ExtendedByPolicy,
 	EnrollOnBehalfOf,
+	GoldenCert,
 ]
 
 // All post-processed edges
