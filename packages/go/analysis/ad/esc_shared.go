@@ -101,16 +101,34 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database) (*post.AtomicP
 	return sink.Stats(), nil
 }
 
-func PostIssuedSignedBy(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range enterpriseCertAuthorities {
+var issuedSignedByPostProcessedEdges = graph.Kinds{
+	ad.IssuedSignedBy,
+}
+
+func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, issuedSignedByPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	issuedSignedByTracker, err := post.FetchTracker(ctx, db, issuedSignedByPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostIssuedSignedBy", db, issuedSignedByTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, node := range slices.Concat(enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities) {
 			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
 				return err
 			} else if errors.Is(err, ErrNoCertParent) {
 				continue
 			} else {
 				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
+					if !sink.Submit(ctx, rel) {
 						return nil
 					}
 				}
@@ -118,45 +136,11 @@ func PostIssuedSignedBy(operation post.StatTrackedOperation[post.EnsureRelations
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return sink.Stats(), err
+	}
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range rootCertAuthorities {
-			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
-				return err
-			} else if errors.Is(err, ErrNoCertParent) {
-				continue
-			} else {
-				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
-						return nil
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range aiaCertAuthorities {
-			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
-				return err
-			} else if errors.Is(err, ErrNoCertParent) {
-				continue
-			} else {
-				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
-						return nil
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	return nil
+	return sink.Stats(), nil
 }
 
 func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
