@@ -34,7 +34,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 var syncLAPSPasswordPostProcessedEdges = graph.Kinds{
@@ -239,6 +238,10 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 	return sink.Stats(), nil
 }
 
+var hasTrustKeysPostProcessedEdges = graph.Kinds{
+	ad.HasTrustKeys,
+}
+
 func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -249,64 +252,79 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostP
 		attr.Scope("process"),
 	)()
 
-	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, hasTrustKeysPostProcessedEdges); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
-	} else {
-		operation := post.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-			for _, domain := range domainNodes {
-				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
-					// The property is new and may therefore not exist
-					slog.DebugContext(
-						ctx,
-						"Skipping domain. Missing NetBIOS property",
-						slog.Uint64("domain_id", uint64(domain.ID)),
-					)
-					continue
-				} else if trustingDomains, err := getDirectOutboundTrustDomains(tx, domain); err != nil {
-					slog.ErrorContext(
-						ctx,
-						"Error getting outbound trust edges from domain",
-						slog.Uint64("domain_id", uint64(domain.ID)),
-						attr.Error(err),
-					)
-					continue
-				} else {
-					for _, trustingDomain := range trustingDomains {
-						if trustingDomainSid, err := trustingDomain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-							// DomainSID is only created after we have performed collection of the domain
-							slog.DebugContext(
-								ctx,
-								"Skipping trusting domain. Missing DomainSID property",
-								slog.Uint64("trusting_domain_id", uint64(trustingDomain.ID)),
-							)
-							continue
-						} else if trustAccount, err := getTrustAccount(tx, trustingDomainSid, netbios); err != nil {
-							// The account may not exist if we have not collected it
-							slog.DebugContext(
-								ctx,
-								"Trust account not found for domain SID and NetBIOS",
-								slog.String("trusting_domain_sid", trustingDomainSid),
-								slog.String("netbios", netbios),
-							)
-							continue
-						} else {
-							channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-								FromID: domain.ID,
-								ToID:   trustAccount.ID,
-								Kind:   ad.HasTrustKeys,
-							})
-						}
+	}
+
+	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	hasTrustKeysTracker, err := post.FetchTracker(ctx, db, hasTrustKeysPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostHasTrustKeys", db, hasTrustKeysTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, domain := range domainNodes {
+			if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
+				// The property is new and may therefore not exist
+				slog.DebugContext(
+					ctx,
+					"Skipping domain. Missing NetBIOS property",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+				)
+				continue
+			} else if trustingDomains, err := getDirectOutboundTrustDomains(tx, domain); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error getting outbound trust edges from domain",
+					slog.Uint64("domain_id", uint64(domain.ID)),
+					attr.Error(err),
+				)
+				continue
+			} else {
+				for _, trustingDomain := range trustingDomains {
+					if trustingDomainSid, err := trustingDomain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+						// DomainSID is only created after we have performed collection of the domain
+						slog.DebugContext(
+							ctx,
+							"Skipping trusting domain. Missing DomainSID property",
+							slog.Uint64("trusting_domain_id", uint64(trustingDomain.ID)),
+						)
+						continue
+					} else if trustAccount, err := getTrustAccount(tx, trustingDomainSid, netbios); err != nil {
+						// The account may not exist if we have not collected it
+						slog.DebugContext(
+							ctx,
+							"Trust account not found for domain SID and NetBIOS",
+							slog.String("trusting_domain_sid", trustingDomainSid),
+							slog.String("netbios", netbios),
+						)
+						continue
+					} else if !sink.Submit(ctx, post.EnsureRelationshipJob{
+						FromID: domain.ID,
+						ToID:   trustAccount.ID,
+						Kind:   ad.HasTrustKeys,
+					}) {
+						return fmt.Errorf("unable to submit to channel in PostHasTrustKeys")
 					}
 				}
 			}
-			return nil
-		}); err != nil {
-			return &post.AtomicPostProcessingStats{}, fmt.Errorf("error creating HasTrustKeys edges: %w", err)
 		}
 
-		return &operation.Stats, operation.Done()
+		return nil
+	}); err != nil {
+		return sink.Stats(), fmt.Errorf("error creating HasTrustKeys edges: %w", err)
 	}
+
+	return sink.Stats(), nil
 }
 
 // FetchNodeIDsByKind fetches a bitmap of node IDs where each node has at least one kind assignment
