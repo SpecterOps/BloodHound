@@ -12,7 +12,16 @@ Start the testing database and run Graphify from the BloodHound repository root:
 
 ```sh
 just bh-testing
+just bh-graphify cmd/api/src/services/graphify/fixtures/AzureFederatedIdentityCredentials
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version5JSON
 just bh-graphify cmd/api/src/services/graphify/fixtures/Version6JSON
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version5ZIP
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6ADCSJSON
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6ADCSZIP
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6AllJSON
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6AllZIP
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6JSON
+just bh-graphify cmd/api/src/services/graphify/fixtures/Version6ZIP
 ```
 
 See the [Graphify README](../../../../../../packages/go/graphify/README.md) for more information. Review the resulting golden-file changes and run the affected slow integration tests instead of editing generated files by hand.
