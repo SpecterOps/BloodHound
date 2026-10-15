@@ -136,14 +136,12 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 		attr.Scope("routine"),
 	)()
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
-
-	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
-		operation.Done()
+	enrollOnBehalfOfStats, err := PostEnrollOnBehalfOf(ctx, db, cache)
+	if err != nil {
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
-	} else {
-		return &operation.Stats, operation.Done()
 	}
+
+	return enrollOnBehalfOfStats, nil
 }
 
 func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
