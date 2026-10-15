@@ -39,9 +39,16 @@ export type HarResponseSummary = {
 };
 
 type HarEntry = {
-    request: { method: string; url: string; bodySize?: number };
+    request: { method: string; url: string; bodySize?: number; headers?: { name: string; value: string }[] };
     response: { status: number; content?: { mimeType?: string; size?: number } };
 };
+
+type HarDocument = {
+    log: { version: string; entries: HarEntry[]; [key: string]: unknown };
+    [key: string]: unknown;
+};
+
+export const HAR_AUTHORIZATION_PLACEHOLDER = 'Bearer __PLAYWRIGHT_HAR_TOKEN__';
 
 export function makeHarArtifactPaths(testInfo: TestInfo, rootDirectory: string): HarArtifactPaths {
     const relativeFile = path.relative(testInfo.config.rootDir, testInfo.file);
@@ -86,7 +93,7 @@ function isHarEntry(value: unknown): value is HarEntry {
     );
 }
 
-export async function readHar(file: string): Promise<HarEntry[]> {
+async function readHarDocument(file: string): Promise<HarDocument> {
     let parsed: unknown;
     try {
         parsed = JSON.parse(await readFile(file, 'utf8'));
@@ -100,7 +107,11 @@ export async function readHar(file: string): Promise<HarEntry[]> {
     if (typeof log?.version !== 'string' || !Array.isArray(entries) || !entries.every(isHarEntry)) {
         throw new Error(`Malformed HAR at ${file}: expected log.entries with request and response data`);
     }
-    return entries;
+    return parsed as HarDocument;
+}
+
+export async function readHar(file: string): Promise<HarEntry[]> {
+    return (await readHarDocument(file)).log.entries;
 }
 
 export async function readJsonArtifact<T>(file: string): Promise<T> {
@@ -141,7 +152,14 @@ async function writeHarSummaries(entries: HarEntry[], paths: HarArtifactPaths): 
 export async function publishHar(temporary: string, paths: HarArtifactPaths): Promise<void> {
     // Validate before replacing the canonical recording. A failed close or malformed capture
     // therefore cannot overwrite a usable fixture.
-    const entries = await readHar(temporary);
+    const document = await readHarDocument(temporary);
+    const entries = document.log.entries;
+    for (const { request } of entries) {
+        for (const header of request.headers ?? []) {
+            if (header.name.toLowerCase() === 'authorization') header.value = HAR_AUTHORIZATION_PLACEHOLDER;
+        }
+    }
+    await writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`);
     await mkdir(paths.directory, { recursive: true });
     await rename(temporary, paths.recording);
     await writeHarSummaries(entries, paths);

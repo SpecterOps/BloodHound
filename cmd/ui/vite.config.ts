@@ -115,6 +115,8 @@ export default defineConfig(({ mode }) => {
                 'scripts/prune-har.test.mjs',
                 // Node test runner — run via `yarn test:codegen`.
                 'scripts/playwright-codegen.test.mjs',
+                // Node test runner — run via `yarn test:playwright-commands`.
+                'scripts/playwright-commands.test.mjs',
             ],
             setupFiles: ['./src/setupTests.tsx'],
             testTimeout: 60000, // 1 minute,

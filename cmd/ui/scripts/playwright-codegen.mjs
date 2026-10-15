@@ -46,15 +46,78 @@ function currentBranch() {
     return result.status === 0 ? result.stdout.trim() : '';
 }
 
-async function ensureStorageState(playwrightCli, storageState) {
+export function makeDevServerArguments(baseUrl) {
+    const { hostname, port } = new URL(baseUrl);
+    return ['dev', '--mode', 'playwright', '--host', hostname, '--port', port || '3000'];
+}
+
+async function isReachable(url) {
     try {
-        await access(storageState);
-        return;
-    } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
+        const response = await fetch(url, { signal: AbortSignal.timeout(2_000) });
+        await response.body?.cancel();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function waitForServer(url, server) {
+    const deadline = Date.now() + 180_000;
+    while (Date.now() < deadline) {
+        if (await isReachable(url)) return;
+        if (server.exitCode !== null) {
+            throw new Error(`The Playwright UI server exited before ${url} became available.`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    throw new Error(`Timed out waiting for the Playwright UI server at ${url}.`);
+}
+
+async function ensureUiServer(homeUrl) {
+    if (await isReachable(homeUrl)) {
+        console.log(`Reusing the UI server already running at ${homeUrl}.`);
+        return undefined;
+    }
+    if (process.env.A11Y_TEST_SERVE?.toLowerCase() !== 'true') {
+        throw new Error(
+            `Cannot reach ${homeUrl}. Start the UI or set A11Y_TEST_SERVE=true in cmd/ui/.env so codegen can start it.`
+        );
     }
 
-    console.log(`No authentication state found at ${path.relative(uiDirectory, storageState)}; generating it now.`);
+    const serverArguments = makeDevServerArguments(process.env.A11Y_TEST_URL);
+    console.log(`No UI server detected; starting the configured default: yarn ${serverArguments.join(' ')}.`);
+    const yarnPath = process.env.npm_execpath;
+    const server = yarnPath
+        ? spawn(yarnPath, serverArguments, {
+              cwd: uiDirectory,
+              env: process.env,
+              stdio: 'inherit',
+          })
+        : spawn('yarn', serverArguments, { cwd: uiDirectory, env: process.env, stdio: 'inherit' });
+    try {
+        await waitForServer(homeUrl, server);
+    } catch (error) {
+        server.kill();
+        throw error;
+    }
+    console.log(`The UI server is ready at ${homeUrl}.`);
+    return server;
+}
+
+async function ensureStorageState(playwrightCli, storageState) {
+    let storageStateExists = true;
+    try {
+        await access(storageState);
+    } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        storageStateExists = false;
+    }
+
+    console.log(
+        storageStateExists
+            ? `Refreshing authentication state at ${path.relative(uiDirectory, storageState)} to avoid a stale session.`
+            : `No authentication state found at ${path.relative(uiDirectory, storageState)}; generating it now.`
+    );
     const result = spawnSync(
         process.execPath,
         [playwrightCli, 'test', '-c', 'playwright.a11y.config.ts', '--project=setup'],
@@ -63,6 +126,7 @@ async function ensureStorageState(playwrightCli, storageState) {
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`Unable to generate authentication state (exit code ${result.status}).`);
     await access(storageState);
+    console.log(`Using fresh authentication state at ${path.relative(uiDirectory, storageState)}.`);
 }
 
 async function run() {
@@ -77,34 +141,44 @@ async function run() {
     const require = createRequire(path.join(uiDirectory, 'package.json'));
     const playwrightCli = require.resolve('@playwright/test/cli');
 
-    await ensureStorageState(playwrightCli, storageState);
-    console.log(`Writing Playwright draft to ${path.relative(uiDirectory, output)}.`);
-    const child = spawn(
-        process.execPath,
-        [
-            playwrightCli,
-            'codegen',
-            '--block-service-workers',
-            '--load-storage',
-            storageState,
-            '--output',
-            output,
-            homeUrl,
-        ],
-        {
-            cwd: uiDirectory,
-            env: process.env,
-            stdio: 'inherit',
+    if (!requestedNames[0]) {
+        console.log(`No draft name supplied; using the current branch and a random suffix: ${draftFileName}.`);
+    }
+    const server = await ensureUiServer(homeUrl);
+    try {
+        await ensureStorageState(playwrightCli, storageState);
+        console.log(`Writing Playwright draft to ${path.relative(uiDirectory, output)}.`);
+        console.log(`Starting codegen at the default home page: ${homeUrl}.`);
+        const result = await new Promise((resolve, reject) => {
+            const child = spawn(
+                process.execPath,
+                [
+                    playwrightCli,
+                    'codegen',
+                    '--block-service-workers',
+                    '--load-storage',
+                    storageState,
+                    '--output',
+                    output,
+                    homeUrl,
+                ],
+                {
+                    cwd: uiDirectory,
+                    env: process.env,
+                    stdio: 'inherit',
+                }
+            );
+            child.on('error', reject);
+            child.on('exit', (code, signal) => resolve({ code, signal }));
+        });
+        if (result.signal) process.kill(process.pid, result.signal);
+        else process.exitCode = result.code ?? 1;
+    } finally {
+        if (server) {
+            console.log('Stopping the UI server started for codegen.');
+            server.kill();
         }
-    );
-    child.on('error', (error) => {
-        console.error(`Unable to start Playwright codegen: ${error.message}`);
-        process.exitCode = 1;
-    });
-    child.on('exit', (code, signal) => {
-        if (signal) process.kill(process.pid, signal);
-        else process.exitCode = code ?? 1;
-    });
+    }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

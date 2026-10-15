@@ -20,6 +20,7 @@ import { access, lstat, mkdtemp, readFile, readdir, realpath, rm, rmdir, unlink 
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const uiDirectory = process.cwd();
@@ -89,6 +90,12 @@ async function pruneHarArtifacts() {
     const activeIds = collectActiveTestIds(report.suites);
     const configRoot = path.resolve(report.config.rootDir);
     const root = path.resolve(configRoot, requestedRoot ?? 'test-artifacts/har');
+    if (!requestedRoot) console.log(`No HAR root supplied; using ${root}.`);
+    console.log(
+        deleteOrphans
+            ? 'Delete mode enabled; confirmed orphaned HAR directories will be removed.'
+            : 'Preview mode enabled; no HAR directories will be deleted.'
+    );
     if (!isInsideDirectory(root, uiDirectory)) {
         throw new Error(`HAR root must be a directory inside ${uiDirectory}: ${root}`);
     }
@@ -160,9 +167,7 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
     pruneHarArtifacts()
         .then(() => {
-            console.log(
-                'Pruned stale Playwright artifacts (auto-generated json and har files for mocking network calls).'
-            );
+            console.log('HAR pruning check completed.');
         })
         .catch((error) => {
             console.error(error);

@@ -15,6 +15,7 @@
         "build": "yarn workspace bloodhound-ui build",
         "audit": "yarn npm audit --recursive --all --severity high --environment production",
         "test": "yarn workspaces foreach -Apt run test run",
+        "playwright:install": "yarn workspace bloodhound-ui playwright:install",
         "test:a11y": "yarn workspace bloodhound-ui test:a11y",
         "codegen": "yarn workspace bloodhound-ui codegen",
         "har:prune": "yarn workspace bloodhound-ui har:prune",

@@ -19,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import process from 'node:process';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { findOrphanedHarDirectories } from './prune-har.mjs';

@@ -27,9 +27,8 @@ test('graph page', async ({ page }) => {
 ```
 
 ```sh
-yarn playwright test -c playwright.a11y.config.ts --project=setup
-yarn playwright test -c playwright.a11y.config.ts \
-  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
+yarn test:a11y \
+  tests/a11y/har-example.a11y.spec.ts --project=chromium-light
 ```
 
 ## Replay
@@ -42,7 +41,7 @@ test.use({ harMode: 'mock' });
 ```
 
 ```sh
-A11Y_TEST_SERVE=false yarn playwright test -c playwright.a11y.config.ts \
+A11Y_TEST_SERVE=false yarn test:a11y \
   tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
 ```
 
@@ -56,8 +55,8 @@ test.use({ harMode: 'update' });
 ```
 
 ```sh
-yarn playwright test -c playwright.a11y.config.ts \
-  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
+yarn test:a11y \
+  tests/a11y/har-example.a11y.spec.ts --project=chromium-light
 ```
 
 ## Options and artifacts
@@ -65,12 +64,14 @@ yarn playwright test -c playwright.a11y.config.ts \
 -   Set HAR options at file scope, inside `describe`, or in typed config `use`.
 -   `harRootDir` defaults to `test-artifacts/har`, relative to the configured test root.
 -   `harNotFound: 'fallback'` allows unmatched requests to reach live services.
+-   `harUrlFilter` defaults to `/\/api(?:\/|$)/`, so HARs mock API traffic while frontend assets continue loading from the UI server.
 
 ```ts
 test.use({
     harMode: 'mock',
     harRootDir: './test-artifacts/har',
     harNotFound: 'abort',
+    harUrlFilter: /\/api(?:\/|$)/,
 });
 ```
 

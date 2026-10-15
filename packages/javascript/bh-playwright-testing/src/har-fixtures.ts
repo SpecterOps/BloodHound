@@ -17,7 +17,13 @@
 import { test as base } from '@playwright/test';
 import { access, copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { makeHarArtifactPaths, publishHar, readHar, writeJsonArtifact } from './har-artifacts-utils';
+import {
+    HAR_AUTHORIZATION_PLACEHOLDER,
+    makeHarArtifactPaths,
+    publishHar,
+    readHar,
+    writeJsonArtifact,
+} from './har-artifacts-utils';
 import type { HarArtifactPaths, HarMode, HarNotFound } from './har-artifacts-utils';
 
 type HarFixtures = {
@@ -27,18 +33,21 @@ type HarFixtures = {
     harRootDir: string;
     /** Behavior for requests missing from a replayed HAR. Defaults to abort. */
     harNotFound: HarNotFound;
+    /** Requests captured and replayed by HAR. Defaults to API routes. */
+    harUrlFilter: RegExp;
     /** Canonical paths for this test, stable across retries and runs. */
     harArtifacts: HarArtifactPaths;
     harSession: { contextStarted: boolean };
 };
 
-export type HarOptions = Pick<HarFixtures, 'harMode' | 'harRootDir' | 'harNotFound'>;
+export type HarOptions = Pick<HarFixtures, 'harMode' | 'harRootDir' | 'harNotFound' | 'harUrlFilter'>;
 
 // Extend this test so HAR setup precedes page requests and teardown publishes after context closure.
 export const test = base.extend<HarFixtures>({
     harMode: ['off', { option: true }],
     harRootDir: ['test-artifacts/har', { option: true }],
     harNotFound: ['abort', { option: true }],
+    harUrlFilter: [/\/api(?:\/|$)/, { option: true }],
     harArtifacts: async ({ harRootDir }, use, testInfo) => {
         const paths = makeHarArtifactPaths(testInfo, harRootDir);
         await use(paths);
@@ -47,7 +56,7 @@ export const test = base.extend<HarFixtures>({
         void _harMode;
         await use({ contextStarted: false });
     },
-    contextOptions: async ({ contextOptions, harMode, harArtifacts, harSession }, use, testInfo) => {
+    contextOptions: async ({ contextOptions, harMode, harArtifacts, harSession, harUrlFilter }, use, testInfo) => {
         if (harMode === 'off' || harMode === 'mock') {
             await use(contextOptions);
             return;
@@ -65,7 +74,7 @@ export const test = base.extend<HarFixtures>({
         if (harMode === 'record') {
             await use({
                 ...contextOptions,
-                recordHar: { path: temporaryRecordingPath, content: 'embed', mode: 'full' },
+                recordHar: { path: temporaryRecordingPath, content: 'embed', mode: 'full', urlFilter: harUrlFilter },
             });
         } else {
             // Updates are captured by routeFromHAR in the context fixture.
@@ -89,23 +98,32 @@ export const test = base.extend<HarFixtures>({
             rootDir: testInfo.config.rootDir,
         });
     },
-    context: async ({ context, harMode, harNotFound, harArtifacts, harSession }, use, testInfo) => {
+    context: async ({ context, harMode, harNotFound, harArtifacts, harSession, harUrlFilter }, use, testInfo) => {
         const failedRequests: string[] = [];
         if (harMode === 'mock') {
             await readHar(harArtifacts.recording);
             if (harNotFound === 'abort') {
                 context.on('requestfailed', (request) => {
+                    harUrlFilter.lastIndex = 0;
+                    if (!harUrlFilter.test(request.url())) return;
                     const failureReason = request.failure()?.errorText ?? 'failed';
+                    if (failureReason === 'net::ERR_ABORTED') return;
                     failedRequests.push(`${request.method()} ${request.url()}: ${failureReason}`);
                 });
             }
-            await context.routeFromHAR(harArtifacts.recording, { notFound: harNotFound });
+            await context.routeFromHAR(harArtifacts.recording, { notFound: harNotFound, url: harUrlFilter });
+            await context.route(harUrlFilter, async (route) => {
+                const headers = await route.request().allHeaders();
+                if (headers.authorization) headers.authorization = HAR_AUTHORIZATION_PLACEHOLDER;
+                await route.fallback({ headers });
+            });
         } else if (harMode === 'update') {
             await readHar(harArtifacts.recording);
             await context.routeFromHAR(testInfo.outputPath('har', 'recording.har'), {
                 update: true,
                 updateContent: 'embed',
                 updateMode: 'full',
+                url: harUrlFilter,
             });
         }
         harSession.contextStarted = true;

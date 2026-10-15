@@ -31,16 +31,21 @@ const url = 'http://127.0.0.1:18887/value';
 
 test.describe('HAR lifecycle', () => {
     test.describe.configure({ mode: 'serial' });
-    test.use({ harMode: mode ?? 'off', harRootDir: '../playwright/har-test-fixtures' });
+    test.use({
+        harMode: mode ?? 'off',
+        harRootDir: '../playwright/har-test-fixtures',
+        harUrlFilter: /^http:\/\/127\.0\.0\.1:18887\//,
+    });
     let server: Server | undefined;
     let firstRecording: string;
     let failedRecording: string;
 
     test.beforeAll(async () => {
         if (mode === 'mock') return;
-        server = createServer((_request, response) => {
+        server = createServer((request, response) => {
             response.setHeader('Content-Type', 'text/plain');
-            response.end(mode === 'update' ? 'refreshed' : 'original');
+            const value = mode === 'update' ? 'refreshed' : 'original';
+            response.end(request.headers.authorization ? `authenticated-${value}` : value);
         });
         await new Promise<void>((resolve) => server!.listen(18887, '127.0.0.1', resolve));
     });
@@ -53,6 +58,14 @@ test.describe('HAR lifecycle', () => {
         firstRecording = harArtifacts.recording;
         await page.goto(url);
         await expect(page.locator('body')).toHaveText(mode === 'record' ? 'original' : 'refreshed');
+        const authorization = mode === 'mock' ? 'Bearer rotated-token' : 'Bearer recorded-token';
+        await expect(
+            page.evaluate(
+                async ({ requestUrl, header }) =>
+                    fetch(requestUrl, { headers: { Authorization: header } }).then((response) => response.text()),
+                { requestUrl: url, header: authorization }
+            )
+        ).resolves.toBe(`authenticated-${mode === 'record' ? 'original' : 'refreshed'}`);
         expect(await page.evaluate(() => Reflect.get(window, '__APP_TEST_RUNTIME__'))).toEqual({
             type: 'accessibility',
             runner: 'playwright',

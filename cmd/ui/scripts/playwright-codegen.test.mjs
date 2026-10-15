@@ -16,7 +16,7 @@
 
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { makeDraftFileName } from './playwright-codegen.mjs';
+import { makeDevServerArguments, makeDraftFileName } from './playwright-codegen.mjs';
 
 test('uses the requested draft file name', () => {
     assert.equal(makeDraftFileName('findings-table.ts', 'ignored', 'ignored'), 'findings-table.ts');
@@ -34,4 +34,25 @@ test('uses the branch and a random suffix when no name is supplied', () => {
 test('rejects paths and empty draft names', () => {
     assert.throws(() => makeDraftFileName('../draft.ts', 'ignored', 'ignored'), /without a directory/);
     assert.throws(() => makeDraftFileName('...', 'ignored', 'ignored'), /letter or number/);
+});
+
+test('builds the default Vite server command from the configured URL', () => {
+    assert.deepEqual(makeDevServerArguments('http://127.0.0.1:3000'), [
+        'dev',
+        '--mode',
+        'playwright',
+        '--host',
+        '127.0.0.1',
+        '--port',
+        '3000',
+    ]);
+    assert.deepEqual(makeDevServerArguments('http://bloodhound.localhost'), [
+        'dev',
+        '--mode',
+        'playwright',
+        '--host',
+        'bloodhound.localhost',
+        '--port',
+        '3000',
+    ]);
 });
