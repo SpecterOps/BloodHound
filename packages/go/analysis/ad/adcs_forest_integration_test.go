@@ -446,14 +446,14 @@ func TestADCSESC1CompositionScopesHostsToExactEnterpriseCA(t *testing.T) {
 			assert.NotContains(t, chainedDomains, crossForestCA.ID.Uint64())
 			assert.NotContains(t, chainedDomains, unknownHostDomainCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC1 exact host CA scoping")
+			esc1Sink := newTestESCSink(t, db, ad.ADCSESC1)
 			for _, certificateChains := range chainedDomains {
 				certificateChains := certificateChains
-				require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					return adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, certificateChains, cache)
+				require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+					return adAnalysis.PostADCSESC1(t.Context(), tx, esc1Sink, localGroupData, certificateChains, cache)
 				}))
 			}
-			require.NoError(t, edgeOperation.Done())
+			esc1Sink.Done()
 
 			var edge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
@@ -737,11 +737,11 @@ func TestADCSHostEligibilityFallsBackWhenEnterpriseCAForestIsUnresolved(t *testi
 			chainedDomains := cache.GetECAHostedChainedDomains()
 			require.Contains(t, chainedDomains, enterpriseCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS unresolved CA forest fallback")
-			require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				return adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, chainedDomains[enterpriseCA.ID.Uint64()], cache)
+			esc1Sink := newTestESCSink(t, db, ad.ADCSESC1)
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				return adAnalysis.PostADCSESC1(t.Context(), tx, esc1Sink, localGroupData, chainedDomains[enterpriseCA.ID.Uint64()], cache)
 			}))
-			require.NoError(t, edgeOperation.Done())
+			esc1Sink.Done()
 
 			var edge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
