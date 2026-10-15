@@ -81,6 +81,10 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	}
 }
 
+var dcSyncPostProcessedEdges = graph.Kinds{
+	ad.DCSync,
+}
+
 func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGroupData) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -91,35 +95,55 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 		attr.Scope("process"),
 	)()
 
-	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, dcSyncPostProcessedEdges); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
-	} else {
-		operation := post.NewPostRelationshipOperation(ctx, db, "DCSync Post Processing")
-
-		for _, domain := range domainNodes {
-			innerDomain := domain
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if dcSyncers, err := getDCSyncers(tx, innerDomain, localGroupData); err != nil {
-					return err
-				} else if dcSyncers.Cardinality() == 0 {
-					return nil
-				} else {
-					dcSyncers.Each(func(value uint64) bool {
-						channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-							FromID: graph.ID(value),
-							ToID:   innerDomain.ID,
-							Kind:   ad.DCSync,
-						})
-						return true
-					})
-
-					return nil
-				}
-			})
-		}
-
-		return &operation.Stats, operation.Done()
 	}
+
+	domainNodes, err := fetchCollectedDomainNodes(ctx, db)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	dcSyncTracker, err := post.FetchTracker(ctx, db, dcSyncPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostDCSync", db, dcSyncTracker)
+	defer sink.Done()
+
+	for _, domain := range domainNodes {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			dcSyncers, err := getDCSyncers(tx, domain, localGroupData)
+			if err != nil {
+				return err
+			}
+
+			submitted := true
+
+			dcSyncers.Each(func(value uint64) bool {
+				submitted = sink.Submit(ctx, post.EnsureRelationshipJob{
+					FromID: graph.ID(value),
+					ToID:   domain.ID,
+					Kind:   ad.DCSync,
+				})
+
+				return submitted
+			})
+
+			if !submitted {
+				return fmt.Errorf("unable to submit to channel in PostDCSync")
+			}
+
+			return nil
+		}); err != nil {
+			return sink.Stats(), err
+		}
+	}
+
+	return sink.Stats(), nil
 }
 
 func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
