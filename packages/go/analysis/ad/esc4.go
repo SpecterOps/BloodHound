@@ -29,10 +29,9 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
-	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	// 1.
 	var (
 		principals         = cardinality.NewBitmap64()
@@ -129,7 +128,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 
 	principals.Each(func(value uint64) bool {
 		for _, domain := range certChains.Domains.Slice() {
-			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+			sink.Submit(ctx, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   graph.ID(domain),
 				Kind:   ad.ADCSESC4,
