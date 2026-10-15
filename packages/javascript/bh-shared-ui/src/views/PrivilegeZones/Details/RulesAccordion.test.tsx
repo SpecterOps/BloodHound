@@ -23,6 +23,10 @@ import { disabledStylesOverride } from './constants';
 import { RulesAccordion } from './RulesAccordion';
 
 const mockNavigate = vi.fn();
+const mockSelectedRule = vi.hoisted(() => ({
+    disabled_at: 0,
+    is_default: false,
+}));
 
 vi.mock('../../../hooks/useSelectedTag', () => ({
     useSelectedTagPathParams: () => ({
@@ -41,10 +45,7 @@ vi.mock('../../../hooks/useAssetGroupTags', async (importOriginal) => {
     return {
         ...original,
         useRuleInfo: () => ({
-            data: {
-                disabled_at: 0,
-                is_default: false,
-            },
+            data: mockSelectedRule,
         }),
     };
 });
@@ -103,6 +104,19 @@ describe('RulesAccordion', () => {
         expect(screen.getByTestId(`privilege-zones_details_${DefaultRulesKey}-accordion-item`)).toBeInTheDocument();
 
         expect(screen.getByTestId(`privilege-zones_details_${DisabledRulesKey}-accordion-item`)).toBeInTheDocument();
+    });
+
+    it('updates the toggle when collapsing the open accordion', async () => {
+        render(<RulesAccordion />);
+
+        const toggle = screen.getByRole('button', { name: 'Collapse' });
+
+        expect(toggle).toHaveClass('rotate-180');
+
+        await userEvent.click(toggle);
+
+        expect(toggle).toHaveAccessibleName('Expand');
+        expect(toggle).not.toHaveClass('rotate-180');
     });
 
     it('navigates to all rules when clicking "All Rules"', async () => {

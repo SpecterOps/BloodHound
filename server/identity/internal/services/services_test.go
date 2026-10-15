@@ -18,6 +18,7 @@ package services_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -328,6 +329,87 @@ func TestService_ListPermissions(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expected.permissions, result)
+			}
+		})
+	}
+}
+
+func TestService_ListUsers(t *testing.T) {
+	type mock struct {
+		database *mocks.MockDatabase
+	}
+
+	type expected struct {
+		users []services.User
+		err   error
+	}
+
+	type testData struct {
+		name       string
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		ctx           = context.Background()
+		queryFilters  = params.Filters{"email_address": {{Operator: params.Equals, Value: "ada@example.com"}}}
+		sortItems     = params.SortItems{{Field: "principal_name", Direction: params.Ascending}}
+		unexpectedErr = errors.New("connection refused")
+		expectedUsers = []services.User{
+			{
+				PrincipalName: "ada",
+				EmailAddress:  sql.NullString{String: "ada@example.com", Valid: true},
+				FirstName:     sql.NullString{String: "Ada", Valid: true},
+				Roles: []services.Role{
+					{ID: 3, Name: "Administrator"},
+				},
+				CreatedAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				UpdatedAt: time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
+			},
+		}
+	)
+
+	tt := []testData{
+		{
+			name: "Success: users are returned - 200",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListUsers(ctx, queryFilters, sortItems).Return(expectedUsers, nil)
+			},
+			expected: expected{users: expectedUsers},
+		},
+		{
+			name: "Success: no users match - 200",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListUsers(ctx, queryFilters, sortItems).Return([]services.User{}, nil)
+			},
+			expected: expected{users: []services.User{}},
+		},
+		{
+			name: "Error: database query fails - 500",
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListUsers(ctx, queryFilters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{err: unexpectedErr},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			testCase.setupMocks(mock{database: databaseMock})
+
+			result, err := svc.ListUsers(ctx, queryFilters, sortItems)
+			if testCase.expected.err != nil {
+				assert.ErrorIs(t, err, testCase.expected.err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.users, result)
 			}
 		})
 	}

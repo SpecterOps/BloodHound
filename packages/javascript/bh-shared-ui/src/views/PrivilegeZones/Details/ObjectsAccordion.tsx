@@ -151,11 +151,12 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
             key={kind}
             value={kind}
             data-testid={`privilege-zones_details_${kind}-accordion-item`}
-            className='[&[data-state=open]>div>div>button>svg]:rotate-180 sticky'>
+            className='sticky'>
             <div className='w-full flex items-center justify-between border-b border-neutral-3'>
                 <div className='w-full flex items-center gap-2 h-10'>
                     <IconButton
-                        className='my-1.5 ml-2 rounded-sm'
+                        triggerClassName='my-1.5 ml-2'
+                        className={cn('rounded-sm transition-transform', { 'rotate-180': isOpen })}
                         aria-label={isOpen ? 'Collapse' : 'Expand'}
                         data-testid={`privilege-zones_details_${kind}-accordion_open-toggle-button`}
                         onClick={() => {

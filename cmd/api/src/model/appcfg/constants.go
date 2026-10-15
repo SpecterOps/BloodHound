@@ -18,5 +18,4 @@ package appcfg
 
 const (
 	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
-	ZoneNodeFlagRequestSource       = "zone-node-feature-flag-toggle"
 )

@@ -1,10 +1,10 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,23 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 package ingest
-
-import (
-	"encoding/json"
-	"errors"
-
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
-)
-
-var AllowedZipFileUploadTypes = []string{
-	mediatypes.ApplicationZip.String(),
-	"application/x-zip-compressed", // Not currently available in mediatypes
-	"application/zip-compressed",   // Not currently available in mediatypes
-}
-
-var AllowedFileUploadTypes = append([]string{mediatypes.ApplicationJson.String()}, AllowedZipFileUploadTypes...)
 
 type OpengraphMetadata struct {
 	SourceKind string `json:"source_kind"`
@@ -61,10 +45,10 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
+	DataTypeOpenGraph      DataType = "opengraph"
 	DataTypeSite           DataType = "sites"
 	DataTypeSiteServer     DataType = "siteservers"
 	DataTypeSiteSubnet     DataType = "sitesubnets"
-	DataTypeOpenGraph      DataType = "opengraph"
 )
 
 func AllOriginalIngestDataTypes() []DataType {
@@ -171,22 +155,3 @@ func (s CollectionMethod) And(flag CollectionMethod) CollectionMethod {
 func (s CollectionMethod) Or(flag CollectionMethod) CollectionMethod {
 	return s | flag
 }
-
-const (
-	DelimOpenBracket        = json.Delim('{')
-	DelimCloseBracket       = json.Delim('}')
-	DelimOpenSquareBracket  = json.Delim('[')
-	DelimCloseSquareBracket = json.Delim(']')
-)
-
-var (
-	ErrMetaTagNotFound     = errors.New("no valid meta tag found")
-	ErrDataTagNotFound     = errors.New("no data tag found")
-	ErrNoTagFound          = errors.New("no valid meta tag or data tag found")
-	ErrInvalidDataTag      = errors.New("invalid data tag found")
-	ErrJSONDecoderInternal = errors.New("json decoder internal error")
-	ErrInvalidZipFile      = errors.New("failed to find zip file header")
-	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
-
-	ErrOpenGraphMetaTagValidation = errors.New("metadata tag is invalid")
-)

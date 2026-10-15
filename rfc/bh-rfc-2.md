@@ -63,12 +63,17 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 | Type     | Description                                                                                                                                                                                             |
 | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | feat     | For introducing a new feature in the application. Denotes that the release which will include this commit will have a `MINOR` version bump if there are no other `MAJOR` version changes being applied. |
-| fix      | For fixing a bug in the application. Denotes that the release which will include this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied.   |
-| docs     | For updating existing documentation or creating new documentation.                                                                                                                                      |
-| refactor | For changes that may change logic but does not fix a bug or introduce a new feature.                                                                                                                    |
-| test     | For updating existing tests or introducing new tests.                                                                                                                                                   |
-| chore    | For miscellaneous changes that do not change application functionality or fit well into any of the types listed above.                                                                                  |
-| wip      | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                                    |
+| fix      | For fixing a bug in the application. Denotes that the release which will include this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied. |
+| docs     | For updating existing documentation or creating new documentation. |
+| refactor | For changes that may change logic but does not fix a bug or introduce a new feature. |
+| test     | For updating existing tests or introducing new tests. |
+| build    | For changes to the build system or external dependencies. |
+| ci       | For changes to continuous integration configuration or scripts. |
+| perf     | For changes that improve application performance. |
+| revert   | For reverting a previous commit. |
+| style    | For changes to code formatting or style that do not affect application behavior. |
+| chore    | For miscellaneous changes that do not change application functionality or fit well into any of the types listed above. |
+| wip      | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch. |
 
 ### 3.2 Scope
 

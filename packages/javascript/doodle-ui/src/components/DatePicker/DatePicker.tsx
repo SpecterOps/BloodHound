@@ -17,8 +17,8 @@ import { faCalendarDay } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
-import { IconButton } from '../Button';
 import { Calendar, CalendarProps } from '../Calendar';
+import { IconButton } from '../IconButton';
 import { Input, InputProps } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { cn } from '../utils';
@@ -56,7 +56,8 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     )}
                     <PopoverTrigger asChild>
                         <IconButton
-                            className='absolute right-2 top-1 p-0 h-6 opacity-50 peer-hover:opacity-100'
+                            triggerClassName='absolute right-2 top-1/2 -translate-y-1/2'
+                            className='h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100'
                             aria-label='Choose Date'>
                             <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
                         </IconButton>

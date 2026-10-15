@@ -34,7 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
@@ -74,7 +74,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	switch {
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		extractExtensionData = extractExtensionDataFromJSON
-	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), upload.AllowedZipFileUploadTypes()...):
 		extractExtensionData = extractBundleFromZip
 	default:
 		var errMessage = fmt.Sprintf("%s; Content type must be application/json or application/zip",
