@@ -16,9 +16,12 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useLoginRedirect } from 'src/hooks/useLoginRedirect';
+import { ROUTE_EXPLORE } from 'src/routes/constants';
 
 const Home: React.FC = () => {
-    return <Navigate to='/explore' replace />;
+    const redirectTo = useLoginRedirect(true, ROUTE_EXPLORE);
+    return <Navigate to={redirectTo} replace />;
 };
 
 export default Home;

@@ -50,7 +50,7 @@ const server = setupServer(
 
 const authenticatedState: DeepPartial<AppState> = {
     auth: {
-        ...createAuthStateWithPermissions([]),
+        user: { ...createAuthStateWithPermissions([]).user, AuthSecret: { expires_at: '9999-01-01T00:00:00Z' } },
         sessionToken: 'session-token',
     },
 };

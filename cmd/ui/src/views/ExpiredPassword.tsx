@@ -22,7 +22,7 @@ import { Helmet } from 'react-helmet-async';
 import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME } from 'src/routes/constants';
+import { useLoginRedirect } from 'src/hooks/useLoginRedirect';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const PasswordReset: React.FC = () => {
@@ -31,6 +31,7 @@ const PasswordReset: React.FC = () => {
     const authState = useAppSelector((state) => state.auth);
     const authExpired = useAppSelector(authExpiredSelector);
     const appName = useAppName();
+    const redirectTo = useLoginRedirect(authExpired === false);
 
     /* Event Handlers */
     const handleSubmit = (payload: PutUserAuthSecretRequest) => {
@@ -42,7 +43,7 @@ const PasswordReset: React.FC = () => {
     };
 
     // Redirect if auth is not expired
-    if (authExpired === false) return <Navigate to={ROUTE_HOME} />;
+    if (authExpired === false) return <Navigate to={redirectTo} replace />;
 
     return (
         <LoginPage>
