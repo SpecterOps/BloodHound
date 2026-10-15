@@ -32,8 +32,6 @@ PathfindingRelationshipsMatchFrontend: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
-PostProcessedRelationships: [...types.#Kind]
-DCAPostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1920,7 +1918,15 @@ ACLRelationships: [
 	WritePublicInformation,
 ]
 
-IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
+// ACL edges which are created by post-processing rather than ingested from collected data
+PostProcessedACLRelationships: [
+	Owns,
+	WriteOwner,
+	DCSync,
+	SyncLAPSPassword,
+]
+
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedACLRelationships, r) {r}],
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
@@ -2018,44 +2024,3 @@ EdgeCompositionRelationships: [
 	GPOAppliesTo,
 	CanApplyGPO,
 ]
-
-PostProcessedRelationships: [
-
-]
-
-DCAPostProcessedRelationships: [
-	Owns,
-	WriteOwner,
-	DCSync,
-	ProtectAdminGroups,
-	SyncLAPSPassword,
-	HasTrustKeys,
-	CanRDP,
-	AdminTo,
-	CanPSRemote,
-	ExecuteDCOM,
-	TrustedForNTAuth,
-	IssuedSignedBy,
-	EnterpriseCAFor,
-	ExtendedByPolicy,
-	EnrollOnBehalfOf,
-	GoldenCert,
-	ADCSESC1,
-	ADCSESC3,
-	ADCSESC4,
-	ADCSESC6a,
-	ADCSESC6b,
-	ADCSESC9a,
-	ADCSESC9b,
-	ADCSESC10a,
-	ADCSESC10b,
-	ADCSESC13,
-	CoerceAndRelayNTLMToADCS,
-	CoerceAndRelayNTLMToSMB,
-	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS,
-	SyncedToADUser,
-]
-
-// All post-processed edges
-AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])
