@@ -439,6 +439,7 @@ export const typography: Partial<Theme['typography']> = {
 // Temporary until MUI dialogs migrate to doodle-ui, to fix z-index issue with the side nav bar.
 export const themeZIndex: ThemeOptions['zIndex'] = {
     modal: 1410,
+    snackbar: 1700,
 };
 
 export const defaultPortalContainer = {

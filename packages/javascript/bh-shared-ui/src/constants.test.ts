@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { graphSchema } from './constants';
+import { graphSchema, themeZIndex } from './constants';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from './graphSchema';
 
 describe('graphSchema', () => {
@@ -73,5 +73,11 @@ describe('graphSchema', () => {
 
         expect(result.labels).toEqual([]);
         expect(result.relationshipTypes).toEqual([]);
+    });
+});
+
+describe('themeZIndex', () => {
+    it('renders snackbars above application dialogs', () => {
+        expect(themeZIndex?.snackbar).toBeGreaterThan(1600);
     });
 });
