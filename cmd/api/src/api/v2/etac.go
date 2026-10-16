@@ -22,6 +22,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -209,4 +210,102 @@ func filterETACGraph(graphResponse model.UnifiedGraph, user model.User) (model.U
 	filteredResponse.Literals = graph.Literals{}
 
 	return filteredResponse, nil
+}
+
+// pathSetToBloodHoundGraphETAC converts a graph.PathSet to BloodHound graph items, replacing nodes
+// the user cannot access (and edges with at least one inaccessible endpoint) with hidden placeholders.
+func pathSetToBloodHoundGraphETAC(graphSchemaNodeValidDisplayKinds graphschema.PrimaryDisplayKinds, paths graph.PathSet, allowList []string) map[string]any {
+	var (
+		startHidden, endHidden bool
+		hiddenNodes            = make(map[graph.ID]struct{})
+		result                 = make(map[string]any)
+	)
+
+	for _, node := range paths.AllNodes() {
+		var convertedNode bloodhoundgraph.BloodHoundGraphNode
+
+		if nodeGatedByETAC(allowList, node) {
+			convertedNode = redactedNodeToBloodHoundGraphETAC()
+			hiddenNodes[node.ID] = struct{}{}
+		} else {
+			convertedNode = bloodhoundgraph.NodeToBloodHoundGraph(graphSchemaNodeValidDisplayKinds, node)
+		}
+		result[node.ID.String()] = convertedNode
+	}
+
+	for _, path := range paths.Paths() {
+		for _, rel := range path.Edges {
+			var (
+				convertedEdge bloodhoundgraph.BloodHoundGraphLink
+				edgeKey       = "rel_" + rel.ID.String()
+			)
+
+			// since different paths can have the same edges, skip already-processed ones
+			if _, exists := result[edgeKey]; exists {
+				continue
+			}
+
+			_, startHidden = hiddenNodes[rel.StartID]
+			_, endHidden = hiddenNodes[rel.EndID]
+
+			if startHidden || endHidden {
+				convertedEdge = redactedEdgeToBloodHoundGraphETAC(rel)
+			} else {
+				convertedEdge = bloodhoundgraph.RelationshipToBloodHoundGraph(rel)
+			}
+			result[edgeKey] = convertedEdge
+		}
+	}
+
+	return result
+}
+
+// redactedNodeToBloodHoundGraphETAC returns the placeholder that stands in for a hidden node.
+func redactedNodeToBloodHoundGraphETAC() bloodhoundgraph.BloodHoundGraphNode {
+	return bloodhoundgraph.BloodHoundGraphNode{
+		BloodHoundGraphItem: &bloodhoundgraph.BloodHoundGraphItem{
+			Color: "#FFFFFF",
+			Data: map[string]any{
+				"nodetype": "HIDDEN",
+				"objectid": "HIDDEN",
+				"kinds":    []string{},
+			},
+		},
+		FontIcon: &bloodhoundgraph.BloodHoundGraphFontIcon{
+			Text: "fas fa-eye-slash",
+		},
+		Label: &bloodhoundgraph.BloodHoundGraphNodeLabel{
+			Text: "** Hidden Object **",
+		},
+		Size: 1,
+	}
+}
+
+// redactedEdgeToBloodHoundGraphETAC returns the placeholder that stands in for an edge adjacent to at least one hidden node.
+func redactedEdgeToBloodHoundGraphETAC(edge *graph.Relationship) bloodhoundgraph.BloodHoundGraphLink {
+	return bloodhoundgraph.BloodHoundGraphLink{
+		ID: edge.ID,
+		End2: &bloodhoundgraph.BloodHoundGraphLinkEnd{
+			Arrow: true,
+		},
+		ID1: edge.StartID.String(),
+		ID2: edge.EndID.String(),
+		Label: &bloodhoundgraph.BloodHoundGraphLinkLabel{
+			Text: "** Hidden Edge **",
+		},
+	}
+}
+
+// filterNodeSetByETAC drops nodes the user cannot access.
+// A nil allowList imposes no environment restriction, while an empty allowList drops everything.
+func filterNodeSetByETAC(nodeSet graph.NodeSet, allowList []string) graph.NodeSet {
+	var result = make(graph.NodeSet)
+
+	for _, node := range nodeSet {
+		if !nodeGatedByETAC(allowList, node) {
+			result[node.ID] = node
+		}
+	}
+
+	return result
 }
