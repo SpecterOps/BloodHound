@@ -89,7 +89,6 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.GenericAll,
                     ActiveDirectoryRelationshipKind.Owns,
                     ActiveDirectoryRelationshipKind.OwnsLimitedRights,
-                    ActiveDirectoryRelationshipKind.ProtectAdminGroups,
                     ActiveDirectoryRelationshipKind.GenericWrite,
                     ActiveDirectoryRelationshipKind.WriteDACL,
                     ActiveDirectoryRelationshipKind.WriteOwner,
