@@ -405,7 +405,7 @@ export interface UpdateCollectorJobProfileRequest {
     params?: Record<string, unknown>;
     scope_client_id?: string;
     secret_id?: string;
-    schedule_ids?: number[];
+    schedule_ids?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -431,7 +431,7 @@ export interface CreateCollectorJobProfileRequest {
     params: Record<string, unknown>;
     scope_client_id?: string;
     secret_id?: string;
-    schedule_ids?: number[];
+    schedule_ids?: string[];
 }
 
 export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
