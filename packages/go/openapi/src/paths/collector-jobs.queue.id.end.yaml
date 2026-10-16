@@ -42,6 +42,7 @@ post:
                 - succeeded
                 - partially-succeeded
                 - failed
+                - cancelled
                 - requeue
             failure_message:
               type: string
