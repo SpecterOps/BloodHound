@@ -146,15 +146,30 @@ jobs:
         uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
 
       - name: Verify Image Signature
+        shell: bash
         env:
           CERTIFICATE_IDENTITY: ${{ inputs.certificate_identity }}
           CALLER_REPOSITORY: ${{ github.repository }}
           CALLER_REF: ${{ github.ref }}
           CALLER_SHA: ${{ github.sha }}
-        run: >-
-          cosign verify "$IMAGE_REFERENCE"
-          --certificate-identity "$CERTIFICATE_IDENTITY"
-          --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
-          --certificate-github-workflow-repository "$CALLER_REPOSITORY"
-          --certificate-github-workflow-ref "$CALLER_REF"
-          --certificate-github-workflow-sha "$CALLER_SHA"
+        run: |
+          max_attempts=5
+          for attempt in $(seq 1 $max_attempts); do
+
+            if cosign verify "$IMAGE_REFERENCE" \
+              --certificate-identity "$CERTIFICATE_IDENTITY" \
+              --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+              --certificate-github-workflow-repository "$CALLER_REPOSITORY" \
+              --certificate-github-workflow-ref "$CALLER_REF" \
+              --certificate-github-workflow-sha "$CALLER_SHA"; then
+              exit 0
+            fi
+
+            delay=$((2 ** attempt))
+            echo "Verification attempt $attempt failed. Retrying in ${delay}s"
+            sleep $delay
+
+          done
+
+          echo "::error::Image signature verification failed after 5 attempts."
+          exit 1
