@@ -55,6 +55,7 @@ const TooltipTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>((props,
     const {
         asChild = props.children == null || React.isValidElement(props.children),
         'aria-describedby': ariaDescribedBy,
+        'aria-label': ariaLabel,
         children,
         className,
         onFocusCapture,
@@ -74,6 +75,7 @@ const TooltipTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>((props,
         <BaseUITooltip.Trigger
             ref={ref}
             aria-describedby={describedBy}
+            aria-label={ariaLabel ?? (children == null ? 'Information' : undefined)}
             className={cn('focus:outline-none focus-visible:focus-ring', className)}
             onFocusCapture={(event) => {
                 onFocusCapture?.(event);
@@ -145,6 +147,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
                 className='z-[1700]'>
                 <BaseUITooltip.Popup
                     ref={ref}
+                    id={id}
                     className={cn(
                         'TooltipContent',
                         'text-main break-words rounded-lg border bg-neutral-light-2 border-[#939597] dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-outer-1',
@@ -155,7 +158,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
                         className
                     )}
                     {...props}>
-                    <span id={id ?? descriptionId} role='tooltip'>
+                    <span id={descriptionId} role='tooltip'>
                         {children}
                     </span>
                 </BaseUITooltip.Popup>

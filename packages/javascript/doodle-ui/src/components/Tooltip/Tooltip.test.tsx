@@ -50,6 +50,12 @@ describe('Tooltip', () => {
         expect(handleSubmit).not.toHaveBeenCalled();
     });
 
+    it('preserves an explicit accessible name for the default trigger', () => {
+        render(<Tooltip tooltip='Helpful context' triggerProps={{ 'aria-label': 'More details' }} />);
+
+        expect(screen.getByRole('img').getAttribute('aria-label')).toBe('More details');
+    });
+
     it('opens the default trigger tooltip on keyboard focus', async () => {
         const user = userEvent.setup();
         render(<Tooltip tooltip='Helpful context' />);
@@ -61,7 +67,7 @@ describe('Tooltip', () => {
 
         const tooltip = await screen.findByRole('tooltip', { name: 'Helpful context' });
         expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id);
-        expect(trigger.hasAttribute('aria-label')).toBe(false);
+        expect(trigger.getAttribute('aria-label')).toBe('Information');
     });
 
     it('applies the default overlay z-index', async () => {
@@ -79,6 +85,17 @@ describe('Tooltip', () => {
         expect(tooltipContent?.classList.contains('z-[1700]')).toBe(true);
         expect(tooltipContent?.classList.contains('border-[#939597]')).toBe(true);
         expect(tooltipContent?.classList.contains('max-w-[200px]')).toBe(true);
+    });
+
+    it('applies a content id without replacing the trigger description id', async () => {
+        render(<Tooltip open tooltip='Helpful context' contentProps={{ id: 'tooltip-popup' }} />);
+
+        const trigger = screen.getByRole('img');
+        const tooltip = await screen.findByRole('tooltip', { name: 'Helpful context' });
+
+        expect(tooltip.parentElement?.getAttribute('id')).toBe('tooltip-popup');
+        expect(tooltip.id).not.toBe('tooltip-popup');
+        expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id);
     });
 
     it.each(['top', 'bottom', 'left', 'right'] as const)(
