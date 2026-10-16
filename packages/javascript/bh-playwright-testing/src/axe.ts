@@ -16,8 +16,9 @@
 
 import AxeBuilder from '@axe-core/playwright';
 import type { ElementHandle, Locator, Page, TestInfo } from '@playwright/test';
-import { expect, test as base } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { AxeResults, NodeResult, Result } from 'axe-core';
+import { test as base, type HarOptions } from './har-fixtures';
 import { installGraphHasDataStub } from './stubs/graphs/cypher';
 import type { TestOptions } from './themes';
 
@@ -241,6 +242,7 @@ export { expect };
 // Combined Playwright options shape for a11y consumers. Pass to `defineConfig<A11yTestOptions>` so a
 // config's `use` block can set the theme matrix option plus the a11y fixture options below.
 export type A11yTestOptions = TestOptions &
+    HarOptions &
     Pick<AxeFixtures, 'a11yDefaults' | 'a11yDefaultInclude' | 'navToggleName' | 'installGraphDataStub'>;
 
 // Optional inputs that opt into per-node screenshot attachments. When `page` is provided,

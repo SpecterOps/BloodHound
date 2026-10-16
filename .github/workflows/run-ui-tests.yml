@@ -57,6 +57,7 @@ jobs:
         run: |
           export CI=false
           go tool stbernard deps
+          yarn workspace bh-playwright-testing playwright install --with-deps chromium
           go tool stbernard test -y
 
       - name: Upload Allure Results
