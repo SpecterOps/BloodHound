@@ -50,6 +50,19 @@ describe('IconButton', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Built-in extensions cannot be deleted');
     });
 
+    it('supports positioning the tooltip', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' tooltipPosition='right'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'More information' }));
+
+        expect((await screen.findByRole('tooltip')).parentElement?.getAttribute('data-side')).toBe('right');
+    });
+
     it('hides both the button and child AccessibleIcon tooltips when requested', async () => {
         const user = userEvent.setup();
         render(

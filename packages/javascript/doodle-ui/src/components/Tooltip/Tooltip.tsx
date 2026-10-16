@@ -50,7 +50,6 @@ const TooltipTrigger = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 type={asChild ? type : type ?? 'button'}
                 {...rest}>
                 {children ?? (
-                    // TODO BED-7769 - refactor icon usage
                     // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
                     <span role='img' tabIndex={0} className='inline-flex items-center justify-center rounded-full'>
                         <AppIcon.Info size={16} aria-hidden='true' />
@@ -84,7 +83,7 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
                 sideOffset={sideOffset}
                 className={cn(
                     'TooltipContent',
-                    'text-main break-words rounded-md border dark:border-0 bg-neutral-light-2 dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-md',
+                    'text-main break-words rounded-lg border bg-neutral-light-2 border-[#939597] dark:bg-neutral-dark-5 px-3 py-1.5 text-xs text-popover-foreground shadow-outer-1',
                     'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
                     'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
                     'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
@@ -99,7 +98,7 @@ const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
 interface TooltipProps extends React.PropsWithChildren {
-    contentProps?: Omit<ContentProps, 'contentWidth'>;
+    contentProps?: Omit<ContentProps, 'contentWidth' | 'side'>;
     contentWidth?: ContentProps['contentWidth'];
     defaultOpen?: RootProps['defaultOpen'];
     delayDuration?: RootProps['delayDuration'];
@@ -143,10 +142,7 @@ const Tooltip = React.forwardRef<React.ElementRef<typeof TooltipTrigger>, Toolti
                 {...rootProps}>
                 {renderTrigger ? renderTrigger(trigger) : trigger}
                 <TooltipPortal>
-                    <TooltipContent
-                        contentWidth={contentWidth}
-                        {...contentProps}
-                        side={tooltipPosition ?? contentProps.side}>
+                    <TooltipContent contentWidth={contentWidth} {...contentProps} side={tooltipPosition}>
                         {tooltip}
                     </TooltipContent>
                 </TooltipPortal>
