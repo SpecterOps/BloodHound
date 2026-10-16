@@ -45,6 +45,9 @@ export type DetailsAccordionProps<T extends Record<string, unknown>> = {
 
     /** Index of the item that should start open (`undefined` = none) */
     openIndex?: number;
+
+    /** Optional replacement classes for the item surface. */
+    itemClassName?: string;
 };
 
 /**
@@ -81,6 +84,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
     itemDisabled = () => false,
     Header,
     openIndex,
+    itemClassName,
 }: DetailsAccordionProps<T>) => {
     if (items === undefined && Empty) {
         return <Empty />;
@@ -103,7 +107,10 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
 
                 return (
                     <AccordionItem
-                        className='bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
+                        className={
+                            itemClassName ??
+                            'bg-neutral-light-2 dark:bg-neutral-dark-2 border-t dark:border-neutral-dark-4 first:border-none'
+                        }
                         disabled={isDisabled}
                         key={key}
                         value={String(idx)}
