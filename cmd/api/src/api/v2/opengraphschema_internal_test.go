@@ -220,11 +220,36 @@ func TestExtractBundleFromZip(t *testing.T) {
 			},
 		},
 		{
+			name: "filenames containing __MACOSX are unexpected files",
+			archive: newExtensionZip(t, map[string]string{
+				"schema.json":       validSchemaJSON,
+				"notes__MACOSX.txt": "not a component",
+			}),
+			expected: expectedResults{
+				errorText: `unexpected file "notes__MACOSX.txt" in zip archive`,
+			},
+		},
+		{
+			name: "ordinary directories and nested metadata are rejected",
+			archive: newExtensionZip(t, map[string]string{
+				"schema.json":                 validSchemaJSON,
+				"empty/":                      "",
+				"folder/__MACOSX/schema.json": "{ not valid json",
+			}),
+			expected: expectedResults{
+				errorText: strings.Join([]string{
+					`unexpected directory "empty/" in zip archive`,
+					`component "schema.json" must be at the ZIP root; found "folder/__MACOSX/schema.json"`,
+				}, "\n"),
+			},
+		},
+		{
 			name: "valid zip with all three components ignores saved-query ZIP exclusions",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":          validSchemaJSON,
 				"pz_rules.json":        validPZRulesComponentJSON,
 				"saved_queries.json":   validSavedQueriesJSON,
+				"__MACOSX/":            "",
 				"__MACOSX/schema.json": "{ not valid json",
 				".DS_Store":            "{ not valid json",
 			}),

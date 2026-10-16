@@ -20,7 +20,7 @@ put:
 
     The request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json` at its root, without embedded optional components. Optional `pz_rules.json` and `saved_queries.json` must also be at the ZIP root. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.
 
-    ZIP directory entries and files whose archive paths contain `__MACOSX` or start with `.` are ignored. All other files remain subject to normal component validation.
+    The root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. All other directory entries are rejected, and all other files remain subject to normal component validation.
 
     Each recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.
   tags:

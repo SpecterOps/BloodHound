@@ -245,11 +245,14 @@ func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error
 	}
 
 	for _, file := range zipReader.File {
-		if file.FileInfo().IsDir() {
-			// ignore directories
+		if file.Name == "__MACOSX" || strings.HasPrefix(file.Name, "__MACOSX/") {
 			continue
 		}
-		if strings.Contains(file.Name, "__MACOSX") || strings.HasPrefix(file.Name, ".") {
+		if file.FileInfo().IsDir() {
+			errs = append(errs, fmt.Errorf("unexpected directory %q in zip archive", file.Name))
+			continue
+		}
+		if strings.HasPrefix(file.Name, ".") && !strings.Contains(file.Name, "/") {
 			continue
 		}
 		var fileBaseName = path.Base(file.Name)
