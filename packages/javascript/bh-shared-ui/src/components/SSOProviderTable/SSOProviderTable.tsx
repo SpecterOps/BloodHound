@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Menu,
     MenuItem,
+    Paper,
     Skeleton,
     Table,
     TableBody,
@@ -32,8 +33,9 @@ import { IconButton, TextButton } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import { FC, MouseEventHandler, useState } from 'react';
 import { usePermissions } from '../../hooks';
+import { LEGACY_MUI_TABLE_CLASS } from '../../styles';
 import { SortOrder } from '../../types';
-import { Permission } from '../../utils';
+import { cn, Permission } from '../../utils';
 
 const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
@@ -117,7 +119,7 @@ const SSOProviderTable: FC<{
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
 
     return (
-        <TableContainer className='max-h-[777px]'>
+        <TableContainer component={Paper} elevation={0} className={cn(LEGACY_MUI_TABLE_CLASS, 'max-h-[777px]')}>
             <Table stickyHeader aria-label='sso provider table'>
                 <TableHead>
                     <TableRow className='font-bold *:bg-neutral-2'>
@@ -158,7 +160,7 @@ const SSOProviderTable: FC<{
                         </TableRow>
                     ) : (
                         ssoProviders.map((ssoProvider) => (
-                            <TableRow key={ssoProvider.id} className='odd:bg-neutral-3'>
+                            <TableRow key={ssoProvider.id}>
                                 <TableCell align='center' padding='checkbox'>
                                     <SSOProviderTableActionsMenu
                                         onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}
