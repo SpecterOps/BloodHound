@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EnvironmentRequest } from './requests';
+import type { EnvironmentRequest } from './requests';
 import type { SupportBundleSummaryStatus } from './responses';
+
+export type SortBy<Field extends string> = `${'' | '-'}${Field}`;
 
 export interface Serial {
     id: number;
@@ -642,25 +644,9 @@ export type Webhook = {
     disabled_by: string | null;
 };
 
-export type WebhookSortBy =
-    | 'name'
-    | 'created_at'
-    | 'updated_at'
-    | 'health'
-    | 'type'
-    | 'url'
-    | 'last_triggered_at'
-    | 'last_error'
-    | 'attempts'
-    | '-name'
-    | '-created_at'
-    | '-updated_at'
-    | '-health'
-    | '-type'
-    | '-url'
-    | '-last_triggered_at'
-    | '-last_error'
-    | '-attempts';
+export type WebhookSortBy = SortBy<
+    'name' | 'created_at' | 'updated_at' | 'health' | 'type' | 'url' | 'last_triggered_at' | 'last_error' | 'attempts'
+>;
 
 export interface GetWebhooksParams {
     skip?: number;
@@ -669,7 +655,7 @@ export interface GetWebhooksParams {
     name?: string;
 }
 
-export type AlertsSortBy = 'name' | 'created_at' | 'updated_at' | '-name' | '-created_at' | '-updated_at';
+export type AlertsSortBy = SortBy<'name' | 'created_at' | 'updated_at'>;
 
 export interface WebhookParams {
     skip?: number;
@@ -1014,7 +1000,8 @@ export interface CollectorJobSecret {
     id: string;
     type: CollectorJobSecretType;
     key_id: string;
-    display_key_id: string;
+    external_key_id: string;
+    name: string;
     created_at: string;
 }
 
@@ -1125,17 +1112,11 @@ export interface CollectorJobHistory {
     failure_reason: string | null;
 }
 
-export type JobHistorySortBy =
-    | 'recorded_at'
-    | '-recorded_at'
-    | 'last_claimed_at'
-    | '-last_claimed_at'
-    | 'job_created_at'
-    | '-job_created_at';
+export type JobHistorySortBy = SortBy<'recorded_at' | 'last_claimed_at' | 'job_created_at'>;
 
 export type JobHistoryOptions = {
     skip?: number;
     limit?: number;
     sort_by?: JobHistorySortBy;
-    outcome?: string;
+    outcome?: CollectorJobOutcome;
 };
