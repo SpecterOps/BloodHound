@@ -133,6 +133,7 @@ export const KnownNodePropertiesToDisplay = {
     kinds: 'Node Kinds',
     isTierZero: 'Tier Zero',
     isOwnedObject: 'Is Owned',
+    isDecoyObject: 'Is Decoy',
     label: CommonKindPropertiesToDisplay(CommonKindProperties.Name)!,
     objectId: CommonKindPropertiesToDisplay(CommonKindProperties.ObjectID)!,
     lastSeen: CommonKindPropertiesToDisplay(CommonKindProperties.LastSeen)!,

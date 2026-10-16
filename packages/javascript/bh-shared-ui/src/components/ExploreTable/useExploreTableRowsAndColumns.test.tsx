@@ -32,6 +32,7 @@ describe('useExploreTableRowsAndColumns', () => {
                         lastSeen: '2026-01-01',
                         isTierZero: false,
                         isOwnedObject: false,
+                        isDecoyObject: false,
                         properties: { id: nodeIdProperty },
                     },
                 },
@@ -51,6 +52,38 @@ describe('useExploreTableRowsAndColumns', () => {
 
             expect(row.bhGraphId).toBe(graphNodeKey);
             expect(row.bhGraphId).not.toBe(nodeIdProperty);
+        });
+    });
+
+    describe('decoy status', () => {
+        it('is not overwritten by a node property with the same name', () => {
+            const exploreTableData = {
+                nodes: {
+                    '100': {
+                        label: 'TestNode',
+                        kind: 'User',
+                        kinds: ['User'],
+                        objectId: 'obj-123',
+                        lastSeen: '2026-01-01',
+                        isTierZero: false,
+                        isOwnedObject: false,
+                        isDecoyObject: true,
+                        properties: { isDecoyObject: false },
+                    },
+                },
+                node_keys: ['isDecoyObject'],
+            };
+
+            const { result } = renderHook(() =>
+                useExploreTableRowsAndColumns({
+                    onKebabMenuClick: vi.fn(),
+                    searchInput: '',
+                    selectedColumns: {},
+                    exploreTableData,
+                })
+            );
+
+            expect(result.current.rows[0].isDecoyObject).toBe(true);
         });
     });
 });

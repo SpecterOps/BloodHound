@@ -42,6 +42,7 @@ export const DEFAULT_EXPLORE_TABLE_COLUMN_KEYS = [
 export const KNOWN_NODE_KEYS = [
     ...DEFAULT_EXPLORE_TABLE_COLUMN_KEYS,
     'isOwnedObject',
+    'isDecoyObject',
     'lastSeen',
 ] satisfies KnownNodeProperties[];
 export const DEFAULT_PINNED_COLUMN_KEYS = ['action-menu', 'kind', 'label'] satisfies (

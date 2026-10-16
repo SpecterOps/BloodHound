@@ -87,4 +87,9 @@ describe('getExploreTableData', () => {
             expect.arrayContaining(expected.filter((key) => !DUPLICATED_KNOWN_KEYS.includes(key)))
         );
     });
+    it('makes decoy status available as a table column', () => {
+        const actual = getExploreTableData(cypherTestResponse);
+
+        expect(actual?.node_keys).toContain('isDecoyObject');
+    });
 });
