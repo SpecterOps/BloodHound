@@ -1138,5 +1138,5 @@ export type JobHistoryOptions = {
     skip?: number;
     limit?: number;
     sort_by?: JobHistorySortBy;
-    outcome?: string;
+    outcome?: CollectorJobOutcome;
 };

@@ -24,8 +24,10 @@ import {
     AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
+    CollectorJobOutcome,
     CollectorJobSecret,
     CollectorJobSecretType,
+    JobHistorySortBy,
     SeedExpansionMethod,
     SSOProviderConfiguration,
     WebhookType,
@@ -434,10 +436,18 @@ export interface CreateCollectorJobProfileRequest {
     schedule_ids?: number[];
 }
 
+export interface GetCollectorJobHistoryOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        sort_by?: JobHistorySortBy;
+        outcome?: EqualityFilter<CollectorJobOutcome>;
+    };
+}
+
 export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
     params?: {
         type?: CollectorJobSecretType | EqualityFilter<CollectorJobSecretType>;
-        display_key_id?: string;
+        external_key_id?: EqualityFilter<string>;
+        name?: FilterExpression<string, EqualityOperator | '~eq'>;
         created_at?: string;
     };
 }
