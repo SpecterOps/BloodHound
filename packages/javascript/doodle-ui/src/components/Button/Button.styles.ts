@@ -23,7 +23,7 @@ export const buttonBaseClasses = [
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-const containedButtonGeometryClasses = 'rounded p-2 text-sm/5';
+const containedButtonGeometryClasses = 'rounded p-2 text-sm/none';
 
 const containedButtonStateClasses = [
     'hover:bg-secondary hover:text-text-contrast',
