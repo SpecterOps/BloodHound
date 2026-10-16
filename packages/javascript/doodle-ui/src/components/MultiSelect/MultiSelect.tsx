@@ -146,7 +146,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                     ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
                     : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate'
+            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
         />
     </div>
 );
@@ -163,7 +163,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
                 multiSelectInteractiveRowStyles,
                 'text-base font-normal leading-4'
             )}
-            labelClassName='min-w-0 flex-1 truncate'
+            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
         />
     </div>
 );
