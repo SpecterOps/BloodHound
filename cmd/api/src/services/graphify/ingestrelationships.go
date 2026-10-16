@@ -41,6 +41,8 @@ import (
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
 // Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(ingestCtx *IngestContext, sourceKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+	ingestCtx.Stats.RelationshipsAttempted.Add(int64(len(relationships)))
+
 	var (
 		errs                  = errorlist.NewBuilder()
 		resolvedRelationships []ein.IngestibleRelationship
@@ -149,6 +151,8 @@ func ingestDNRelationship(batch *IngestContext, nextRel ein.IngestibleRelationsh
 }
 
 func IngestDNRelationships(batch *IngestContext, relationships []ein.IngestibleRelationship) error {
+	batch.Stats.RelationshipsAttempted.Add(int64(len(relationships)))
+
 	var (
 		errs = util.NewErrorCollector()
 	)
@@ -193,6 +197,8 @@ func ingestSession(batch *IngestContext, nextSession ein.IngestibleSession) erro
 }
 
 func IngestSessions(batch *IngestContext, sessions []ein.IngestibleSession) error {
+	batch.Stats.RelationshipsAttempted.Add(int64(len(sessions)))
+
 	var (
 		errs = util.NewErrorCollector()
 	)
