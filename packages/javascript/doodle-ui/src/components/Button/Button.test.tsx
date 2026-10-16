@@ -47,7 +47,7 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: variant })).toHaveClass(
             'rounded',
             'p-2',
-            'text-sm/5',
+            'text-sm/none',
             'hover:bg-secondary',
             'hover:text-text-contrast',
             'focus-visible:bg-secondary',
@@ -60,7 +60,7 @@ describe('Button', () => {
     });
 
     it.each(['small', 'medium', 'large'] as const)('keeps uniform geometry for the deprecated %s size', (size) => {
-        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/5');
+        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/none');
     });
 
     it('keeps deprecated variants free of contained-button geometry', () => {
