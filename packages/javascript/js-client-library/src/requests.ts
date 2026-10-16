@@ -29,6 +29,7 @@ import {
     CollectorJobSecretType,
     JobHistorySortBy,
     SeedExpansionMethod,
+    type SortBy,
     SSOProviderConfiguration,
     WebhookType,
 } from './types';
@@ -46,8 +47,6 @@ export type FilterExpression<
 
 export type NumberFilter = FilterExpression<number, ComparisonOperator>;
 export type EqualityFilter<Value extends string | boolean> = FilterExpression<Value>;
-
-export type SortBy<Field extends string> = `${'' | '-'}${Field}`;
 
 export interface LoginRequest {
     login_method: string;
