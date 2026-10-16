@@ -73,6 +73,8 @@ export default {
                 'text-muted': 'var(--text-muted)',
                 'text-disabled': 'var(--text-disabled)',
                 'text-contrast': 'var(--text-contrast)',
+                faint: 'var(--text-faint)',
+
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
@@ -307,7 +309,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|checkbox|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|checkbox|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app|faint)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

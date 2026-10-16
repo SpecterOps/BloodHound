@@ -53,7 +53,15 @@ export const SchemaUploadDialog = () => {
             if (hasUploadPermission) setDialogOpen(true);
         },
         {
-            acceptedTypes: ['application/json'],
+            // Some browsers do not provide a MIME type during drag; the API validates the dropped file.
+            acceptedTypes: [
+                'application/json',
+                'application/zip',
+                'application/x-zip-compressed',
+                'application/zip-compressed',
+                'application/octet-stream',
+                '',
+            ],
             condition: shouldRespondToDrag,
         }
     );
@@ -76,18 +84,29 @@ export const SchemaUploadDialog = () => {
                 </DialogTrigger>
             </ConditionalTooltip>
             <DialogContent>
-                <DialogTitle>Upload Schema Files</DialogTitle>
+                <DialogTitle>Upload Extension</DialogTitle>
                 <DialogDescription className='sr-only'>
-                    An interface for uploading JSON OpenGraph schema files
+                    An interface for uploading OpenGraph Extension Bundles (zip) or JSON files
                 </DialogDescription>
                 <FileDrop
                     onDrop={handleFileDrop}
                     disabled={!!file || !hasUploadPermission}
                     multiple={false}
                     icon={faCubes}
-                    accept={['application/json']}
+                    accept={[
+                        '.json',
+                        '.zip',
+                        'application/json',
+                        'application/zip',
+                        'application/x-zip-compressed',
+                        'application/zip-compressed',
+                    ]}
+                    uploadLabel='Choose an OpenGraph Extension to upload'
+                    uploadInstructions='Click here or drag and drop to upload an OpenGraph Extension'
                 />
-                <p className='text-xs text-center -mt-2 mb-4'>Only single JSON file upload supported at this time</p>
+                <p className='text-xs text-center -mt-2 mb-4'>
+                    Only a single Extension Bundle (zip) / JSON file supported at this time
+                </p>
                 {file && (
                     <FileStatusListItem
                         file={file}
