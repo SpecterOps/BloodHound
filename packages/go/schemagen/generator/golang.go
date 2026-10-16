@@ -310,25 +310,10 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 		),
 	)
 
-	root.Func().Id("InboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
+	root.Func().Id("PathfindingRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
-				for _, relKind := range graphSchema.InboundRelationshipKinds {
-					switch relKind.Schema {
-					case "active_directory":
-						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
-					case "azure":
-						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
-					}
-				}
-			}),
-		),
-	)
-
-	root.Func().Id("OutboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
-		jen.Return(
-			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
-				for _, relKind := range graphSchema.OutboundRelationshipKinds {
+				for _, relKind := range graphSchema.PathfindingRelationships {
 					switch relKind.Schema {
 					case "active_directory":
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
@@ -398,36 +383,6 @@ func GenerateGolangActiveDirectory(pkgName, dir string, adSchema model.ActiveDir
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, pathRelationship := range adSchema.PathfindingRelationships {
-					group.Id(pathRelationship.Symbol)
-				}
-			}),
-		),
-	)
-
-	root.Func().Id("PathfindingRelationshipsMatchFrontend").Params().Index().Qual(GraphPackageName, "Kind").Block(
-		jen.Return(
-			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
-				for _, pathRelationship := range adSchema.PathfindingRelationshipsMatchFrontend {
-					group.Id(pathRelationship.Symbol)
-				}
-			}),
-		),
-	)
-
-	root.Func().Id("InboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
-		jen.Return(
-			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
-				for _, pathRelationship := range adSchema.InboundRelationshipKinds {
-					group.Id(pathRelationship.Symbol)
-				}
-			}),
-		),
-	)
-
-	root.Func().Id("OutboundRelationshipKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
-		jen.Return(
-			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
-				for _, pathRelationship := range adSchema.OutboundRelationshipKinds {
 					group.Id(pathRelationship.Symbol)
 				}
 			}),

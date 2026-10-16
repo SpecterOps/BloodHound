@@ -27,8 +27,7 @@ import (
 Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
-InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind]
+PathfindingRelationships: [...types.#Kind]
 
 // Property name enumerations
 ObjectID: types.#StringEnum & {
@@ -208,5 +207,4 @@ NodeKinds: [
 RelationshipKinds: [
 ]
 
-InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
-OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
+PathfindingRelationships: list.Concat([ad.PathfindingRelationships, azure.PathfindingRelationships])
