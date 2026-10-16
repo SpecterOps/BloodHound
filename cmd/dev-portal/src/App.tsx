@@ -15,12 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Route, Routes } from 'react-router-dom';
+import { EmbeddedDoodleUIPage } from './pages/EmbeddedDoodleUIPage';
 import { LandingPage } from './pages/LandingPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 const App = () => (
     <Routes>
         <Route path='/' element={<LandingPage />} />
+        <Route path='/doodle-ui/embedded' element={<EmbeddedDoodleUIPage />} />
         <Route path='*' element={<NotFoundPage />} />
     </Routes>
 );
