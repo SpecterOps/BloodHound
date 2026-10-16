@@ -36,6 +36,7 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GetCollectorJobHistoryOptions,
     GetCollectorJobSchedulesOptions,
     GetCollectorJobSecretsOptions,
     LoginRequest,
@@ -822,7 +823,7 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
+    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: GetCollectorJobHistoryOptions) =>
         this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
