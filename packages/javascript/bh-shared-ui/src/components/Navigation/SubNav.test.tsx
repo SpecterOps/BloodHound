@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
 import SubNav from './SubNav';
-import userEvent from "@testing-library/user-event";
 
 describe('SubNav', () => {
     it('should render a single section with a single navigation item', () => {

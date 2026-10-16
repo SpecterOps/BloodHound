@@ -20,10 +20,10 @@ import { setupServer } from 'msw/node';
 import { NAV_EXPANDED_STORAGE_KEY } from '../../hooks';
 import { act, render, screen, waitFor, within } from '../../test-utils';
 import { createMatchMediaController } from '../../testing';
+import { SubNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
-import { SubNavItem } from '../../types';
 
 const MainNavLogoData: MainNavLogoDataObject = {
     project: {
@@ -323,7 +323,7 @@ describe('MainNav collapsed item content', () => {
     it('hides the footer when collapsed', () => {
         renderNav(false);
         expect(screen.getByTestId('global_nav-footer')).toHaveClass('invisible', 'opacity-0', 'h-0');
-    })
+    });
 });
 
 describe('MainNav label typography', () => {

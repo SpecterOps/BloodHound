@@ -164,13 +164,15 @@ const MainNavFooter: FC<{
 
     return (
         <div
-          className={cn(
-                    'w-[264px] shrink-0 overflow-hidden border-primary pl-4 pr-2 text-left dark:border-neutral-4',
-                    'transition-all duration-300 ease-in',
-                    {
-                        'h-[58px] py-2 border-t opacity-100 visible': isExpanded,
-                        'h-0 py-0 border-t-0 opacity-0 invisible': !isExpanded,
-                    })} data-testid='global_nav-footer'>
+            className={cn(
+                'w-[264px] shrink-0 overflow-hidden border-primary pl-4 pr-2 text-left dark:border-neutral-4',
+                'transition-all duration-300 ease-in',
+                {
+                    'h-[58px] py-2 border-t opacity-100 visible': isExpanded,
+                    'h-0 py-0 border-t-0 opacity-0 invisible': !isExpanded,
+                }
+            )}
+            data-testid='global_nav-footer'>
             {/* App version */}
             <Typography className='!text-[#BCB8E1]' data-testid='global_nav-version-number' variant='subtitle2'>
                 BloodHound: {apiVersion}
