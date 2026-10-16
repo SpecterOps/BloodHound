@@ -106,6 +106,12 @@ describe('MainNav', () => {
         expect(screen.getByTestId('global_nav-version-number')).toBeInTheDocument();
         expect(screen.getByTestId('global_nav-powered-by')).toBeInTheDocument();
     });
+    it('should label the logo link as the BloodHound home link', () => {
+        const homeLink = screen.getByRole('link', { name: 'BloodHound home' });
+        expect(homeLink).toBeInTheDocument();
+        expect(screen.getByTestId('global_nav-home')).toContainElement(homeLink);
+    });
+
     it('should render a navigation list item', async () => {
         const testLinkItem = MainNavPrimaryListData[0];
 
@@ -233,6 +239,7 @@ describe('Main Nav Route Highlighting', () => {
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
         expect(elem).toHaveClass('bg-primary');
+        expect(screen.getByTestId('global_nav-test-link')).toHaveAttribute('aria-current', 'page');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -242,6 +249,7 @@ describe('Main Nav Route Highlighting', () => {
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
         expect(selected).toHaveClass('bg-primary');
         expect(unselected).not.toHaveClass('bg-primary');
+        expect(screen.getByTestId('global_nav-test-link')).not.toHaveAttribute('aria-current');
     });
 });
 
@@ -369,8 +377,12 @@ describe('MainNav subnav item', () => {
     it('opens the subnav when the trigger is clicked', async () => {
         const user = userEvent.setup();
         render(<MainNav mainNavData={subNavData} />);
-        await user.click(screen.getByTestId('global_nav-test-subnav'));
+        const trigger = screen.getByTestId('global_nav-test-subnav');
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
 
+        await user.click(trigger);
+
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
         expect(await screen.findByTestId('sub-nav')).toBeInTheDocument();
         expect(screen.getByText('Child')).toBeInTheDocument();
     });

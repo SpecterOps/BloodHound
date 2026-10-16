@@ -40,6 +40,7 @@ const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item
             {/* Full width ensures that even clicking white space activates the link */}
             {/* Anchor uses block display instead of inline so full width works */}
             <AppLink
+                aria-current={isActiveRoute ? 'page' : undefined}
                 className={cn(
                     'w-full block px-2 py-0.5',
                     TypographyVariants({ variant: 'body2' }),

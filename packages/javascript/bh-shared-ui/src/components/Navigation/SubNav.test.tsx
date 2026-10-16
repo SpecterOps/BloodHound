@@ -107,6 +107,8 @@ describe('SubNav styling', () => {
         });
         expect(screen.getByText('Active').closest('li')).toHaveClass('bg-primary');
         expect(screen.getByText('Inactive').closest('li')).not.toHaveClass('bg-primary');
+        expect(screen.getByText('Active')).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByText('Inactive')).not.toHaveAttribute('aria-current');
     });
     it('renders the section title as an h6 list item', () => {
         render(<SubNav close={() => {}} isExpanded={false} sections={sections} />);

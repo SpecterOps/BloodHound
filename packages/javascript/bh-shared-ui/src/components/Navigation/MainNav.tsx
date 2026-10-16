@@ -40,6 +40,7 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean
                 })}
                 data-testid='global_nav-home'>
                 <AppLink
+                    aria-label={"BloodHound home"}
                     className='block h-[30px] w-[166px] focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
                     to={data.project.route}>
                     {data.project.icon}
@@ -110,6 +111,7 @@ const MainNavListItem: FC<{
     // If route is defined, render a link otherwise item is an action or subnav item
     const navItem = route ? (
         <AppLink
+            aria-current={isActiveRoute ? 'page' : undefined}
             className={navItemClasses}
             data-testid={testId}
             // PZ pages discard environment query params so all Zone Objects are counted
@@ -125,6 +127,7 @@ const MainNavListItem: FC<{
         </AppLink>
     ) : (
         <div
+            aria-expanded={subNav ? isSubNavOpen : undefined}
             className={navItemClasses}
             data-testid={testId}
             onClick={onClick}
