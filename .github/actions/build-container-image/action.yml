@@ -151,7 +151,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
+    - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # ratchet:docker/login-action@v4
       name: Authenticate with DockerHub Registry
       if: ${{ inputs.dockerhub_account != '' }}
       with:
@@ -159,7 +159,7 @@ runs:
         username: ${{ inputs.dockerhub_account }}
         password: ${{ inputs.dockerhub_token }}
 
-    - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
+    - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # ratchet:docker/login-action@v4
       name: Authenticate with GitHub Container Registry
       if: ${{ inputs.ghcr_account != '' }}
       with:
@@ -171,7 +171,7 @@ runs:
       uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # ratchet:docker/setup-qemu-action@v3
 
     - name: Set up buildx
-      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # ratchet:docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # ratchet:docker/setup-buildx-action@v4
 
     - name: Build
       id: build
