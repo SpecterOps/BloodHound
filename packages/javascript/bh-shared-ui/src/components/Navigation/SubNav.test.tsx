@@ -16,6 +16,7 @@
 
 import { render, screen } from '../../test-utils';
 import SubNav from './SubNav';
+import userEvent from "@testing-library/user-event";
 
 describe('SubNav', () => {
     it('should render a single section with a single navigation item', () => {
@@ -87,5 +88,45 @@ describe('SubNav', () => {
                 ).toHaveAttribute('href', item.path);
             }
         }
+    });
+});
+
+describe('SubNav styling', () => {
+    const sections = [
+        {
+            title: 'Section Title',
+            items: [
+                { label: 'Active', path: '/administration/active' },
+                { label: 'Inactive', path: '/administration/inactive' },
+            ],
+        },
+    ];
+    it('highlights only the active route item', () => {
+        render(<SubNav close={() => {}} isExpanded={false} sections={sections} />, {
+            route: '/administration/active',
+        });
+        expect(screen.getByText('Active').closest('li')).toHaveClass('bg-primary');
+        expect(screen.getByText('Inactive').closest('li')).not.toHaveClass('bg-primary');
+    });
+    it('renders the section title as an h6 list item', () => {
+        render(<SubNav close={() => {}} isExpanded={false} sections={sections} />);
+        const title = screen.getByText('Section Title');
+        expect(title.tagName).toBe('LI');
+        expect(title).toHaveClass('font-semibold');
+    });
+    it.each([
+        [true, 'left-subnav-expanded'],
+        [false, 'left-subnav-collapsed'],
+    ])('positions based on isExpanded=%s', (isExpanded, expectedClass) => {
+        render(<SubNav close={() => {}} isExpanded={isExpanded} sections={sections} />);
+        expect(screen.getByTestId('sub-nav')).toHaveClass(expectedClass);
+    });
+    it('calls close on mouse leave', async () => {
+        const close = vi.fn();
+        const user = userEvent.setup();
+        render(<SubNav close={close} isExpanded={false} sections={sections} />);
+        await user.hover(screen.getByTestId('sub-nav'));
+        await user.unhover(screen.getByTestId('sub-nav'));
+        expect(close).toHaveBeenCalled();
     });
 });

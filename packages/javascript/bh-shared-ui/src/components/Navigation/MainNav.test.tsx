@@ -23,6 +23,7 @@ import { createMatchMediaController } from '../../testing';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
 import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
+import { SubNavItem } from '../../types';
 
 const MainNavLogoData: MainNavLogoDataObject = {
     project: {
@@ -231,7 +232,7 @@ describe('Main Nav Route Highlighting', () => {
         });
         expect(window.location.pathname).toBe('/test');
         const elem = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(elem).toHaveClass('bg-neutral-4');
+        expect(elem).toHaveClass('bg-primary');
     });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
@@ -239,8 +240,8 @@ describe('Main Nav Route Highlighting', () => {
         });
         const selected = screen.getByTestId('global_nav-test-link-2').closest('li');
         const unselected = screen.getByTestId('global_nav-test-link').closest('li');
-        expect(selected).toHaveClass('bg-neutral-4');
-        expect(unselected).not.toHaveClass('bg-neutral-light-4');
+        expect(selected).toHaveClass('bg-primary');
+        expect(unselected).not.toHaveClass('bg-primary');
     });
 });
 
@@ -260,5 +261,117 @@ describe('Keyboard shortcuts', () => {
         await user.keyboard('{Alt>}1{/Alt}');
 
         expect(window.location.pathname).toBe('/test');
+    });
+});
+
+describe('MainNav collapsed item content', () => {
+    const collapsibleNavData: MainNavData = {
+        ...mainNavData,
+        secondaryList: [
+            {
+                label: 'External Link',
+                icon: <AppIcon.LineChart size={24} />,
+                route: 'https://example.com',
+                target: '_blank',
+                testId: 'global_nav-test-external',
+            },
+            {
+                label: 'Control Item',
+                icon: <AppIcon.LineChart size={24} />,
+                onClick: vi.fn(),
+                control: <span data-testid='test-control'>control</span>,
+                testId: 'global_nav-test-control',
+            },
+        ],
+    };
+    const renderNav = (isExpanded: boolean) => {
+        createMatchMediaController(isExpanded);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(isExpanded));
+        render(<MainNav mainNavData={collapsibleNavData} />);
+    };
+    afterEach(() => {
+        window.localStorage.clear();
+        vi.unstubAllGlobals();
+    });
+    it('shows the control and external link icon only when expanded', () => {
+        renderNav(true);
+        expect(screen.getByTestId('test-control')).toBeInTheDocument();
+        expect(
+            within(screen.getByTestId('global_nav-test-external')).getByText('arrow-up-right-from-square')
+        ).toBeInTheDocument();
+    });
+    it('hides the control and external link icon when collapsed', () => {
+        renderNav(false);
+        expect(screen.queryByTestId('test-control')).not.toBeInTheDocument();
+        expect(
+            within(screen.getByTestId('global_nav-test-external')).queryByText('arrow-up-right-from-square')
+        ).not.toBeInTheDocument();
+    });
+    it('sizes the logo container to full width when expanded', () => {
+        renderNav(true);
+        expect(screen.getByTestId('global_nav-home')).toHaveClass('w-[166px]');
+        expect(screen.getByTestId('global_nav-home')).not.toHaveClass('w-10');
+    });
+    it('sizes the logo container when collapsed', () => {
+        renderNav(false);
+        expect(screen.getByTestId('global_nav-home')).toHaveClass('w-10');
+    });
+    it('shows the footer when expanded', () => {
+        renderNav(true);
+        expect(screen.getByTestId('global_nav-footer')).toHaveClass('visible', 'opacity-100', 'h-[58px]');
+    });
+    it('hides the footer when collapsed', () => {
+        renderNav(false);
+        expect(screen.getByTestId('global_nav-footer')).toHaveClass('invisible', 'opacity-0', 'h-0');
+    })
+});
+
+describe('MainNav label typography', () => {
+    it('uses h5 for primary items and body1 for secondary items', () => {
+        render(<MainNav mainNavData={mainNavData} />);
+
+        const primaryLabel = within(screen.getByTestId('global_nav-primary-list')).getAllByTestId(
+            'global_nav-item-label-text'
+        )[0];
+        const secondaryLabel = within(screen.getByTestId('global_nav-secondary-list')).getByTestId(
+            'global_nav-item-label-text'
+        );
+        expect(primaryLabel).toHaveClass('font-bold', 'text-lg');
+        expect(secondaryLabel).toHaveClass('font-normal', 'text-base');
+    });
+});
+describe('MainNav subnav item', () => {
+    const subNavData: MainNavData = {
+        ...mainNavData,
+        secondaryList: [
+            {
+                label: 'Administration',
+                icon: <AppIcon.LineChart size={24} />,
+                testId: 'global_nav-test-subnav',
+                subNav: [
+                    {
+                        title: 'Section',
+                        items: [{ label: 'Child', path: '/administration/child' } as SubNavItem],
+                    },
+                ],
+            },
+        ],
+    };
+    it('highlights the subnav trigger when a child route is active', () => {
+        render(<MainNav mainNavData={subNavData} />, { route: '/administration/child' });
+        expect(screen.getByTestId('global_nav-test-subnav').closest('li')).toHaveClass('bg-primary');
+    });
+    it('does not highlight the subnav trigger on an unrelated route', () => {
+        render(<MainNav mainNavData={subNavData} />, { route: '/test' });
+        expect(screen.getByTestId('global_nav-test-subnav').closest('li')).not.toHaveClass('bg-primary');
+    });
+
+    it('opens the subnav when the trigger is clicked', async () => {
+        const user = userEvent.setup();
+        render(<MainNav mainNavData={subNavData} />);
+        await user.click(screen.getByTestId('global_nav-test-subnav'));
+
+        expect(await screen.findByTestId('sub-nav')).toBeInTheDocument();
+        expect(screen.getByText('Child')).toBeInTheDocument();
     });
 });
