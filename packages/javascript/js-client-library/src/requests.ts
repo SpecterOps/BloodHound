@@ -411,7 +411,7 @@ export interface UpdateCollectorJobProfileRequest {
 // ---------------------------------------------------------------------------
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------
-export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
+export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'external_key_id' | 'name'> & {
     value: string;
 };
 

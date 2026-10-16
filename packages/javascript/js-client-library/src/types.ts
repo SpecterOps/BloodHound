@@ -1014,7 +1014,8 @@ export interface CollectorJobSecret {
     id: string;
     type: CollectorJobSecretType;
     key_id: string;
-    display_key_id: string;
+    external_key_id: string;
+    name: string;
     created_at: string;
 }
 
