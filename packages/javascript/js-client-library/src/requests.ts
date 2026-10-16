@@ -437,7 +437,7 @@ export interface CreateCollectorJobProfileRequest {
 
 export interface GetCollectorJobHistoryOptions extends Omit<RequestOptions, 'params'> {
     params?: {
-        sort_by?: JobHistorySortBy;
+        sort_by?: JobHistorySortBy | JobHistorySortBy[];
         outcome?: EqualityFilter<CollectorJobOutcome>;
     };
 }
