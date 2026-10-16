@@ -22,8 +22,9 @@ import { useQuery, useQueryClient } from 'react-query';
 import { Navigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
-import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
+import { authExpiredSelector, login as loginAction, logout } from 'src/ducks/auth/authSlice';
+import { saveLoginRedirect, useLoginRedirect } from 'src/hooks/useLoginRedirect';
+import { ROUTE_USER_DISABLED } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
@@ -34,6 +35,10 @@ const Login: React.FC = () => {
 
     const authState = useAppSelector((state) => state.auth);
     const appName = useAppName();
+
+    const isAuthenticated = authState.sessionToken !== null && authState.user !== null;
+    const authExpired = useAppSelector(authExpiredSelector);
+    const redirectTo = useLoginRedirect(isAuthenticated && authExpired === false);
 
     const [useSSO, setUseSSO] = useState(false);
 
@@ -75,13 +80,14 @@ const Login: React.FC = () => {
     };
 
     const handleSubmitLoginViaSSOForm = (providerSlug: string) => {
+        saveLoginRedirect(redirectTo);
         window.location.assign(`/api/v2/sso/${providerSlug}/login`);
     };
 
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
+    if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (
