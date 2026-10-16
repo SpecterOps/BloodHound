@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
+	ingestmetrics "github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -41,15 +42,17 @@ type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
 
 func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, conversionFunc ConversionFuncWithTime[T]) error {
 	var (
-		count         = 0
-		convertedData ConvertedData
-		errs          = errorlist.NewBuilder()
+		count          = 0
+		convertedData  ConvertedData
+		errs           = errorlist.NewBuilder()
+		stageStartedAt = time.Now()
 	)
 
 	for decoder.More() {
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
+			stageDuration := time.Since(stageStartedAt)
 			slog.Error(
 				"Error decoding object",
 				slog.String("decode_target", fmt.Sprintf("%T", decodeTarget)),
@@ -58,6 +61,7 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			count++
@@ -65,16 +69,18 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 		}
 
 		if count == IngestCountThreshold {
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 			if err := IngestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
 			count = 0
-
+			stageStartedAt = time.Now()
 		}
 	}
 
 	if count > 0 {
+		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestBasicData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
@@ -85,15 +91,18 @@ func decodeBasicData[T any](batch *IngestContext, decoder *json.Decoder, convers
 
 func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourceKind graph.Kind, conversionFunc ConversionFunc[T]) error {
 	var (
-		count         = 0
-		convertedData ConvertedData
-		errs          = errorlist.NewBuilder()
+		count           = 0
+		convertedData   ConvertedData
+		errs            = errorlist.NewBuilder()
+		failedItemCount = 0
+		stageStartedAt  = time.Now()
 	)
 
 	for decoder.More() {
 		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
 		var decodeTarget T
 		if err := decoder.Decode(&decodeTarget); err != nil {
+			stageDuration := time.Since(stageStartedAt)
 			slog.Error(
 				"Error decoding object",
 				slog.String("decode_target", fmt.Sprintf("%T", decodeTarget)),
@@ -102,25 +111,30 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, failedItemCount+1)
 			return err
 		} else {
 			count++
 			if err := conversionFunc(decodeTarget, &convertedData); err != nil {
+				failedItemCount++
 				errs.Add(err)
 			}
 		}
 
 		if count == IngestCountThreshold {
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, failedItemCount)
 			if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
 			count = 0
-
+			failedItemCount = 0
+			stageStartedAt = time.Now()
 		}
 	}
 
 	if count > 0 {
+		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, failedItemCount)
 		if err := IngestGenericData(batch, sourceKind, convertedData); err != nil {
 			errs.Add(err)
 		}
@@ -132,14 +146,16 @@ func DecodeGenericData[T any](batch *IngestContext, decoder *json.Decoder, sourc
 func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 
 	var (
-		convertedData = ConvertedGroupData{}
-		count         = 0
-		errs          = errorlist.NewBuilder()
+		convertedData  = ConvertedGroupData{}
+		count          = 0
+		errs           = errorlist.NewBuilder()
+		stageStartedAt = time.Now()
 	)
 
 	for decoder.More() {
 		var group ein.Group
 		if err := decoder.Decode(&group); err != nil {
+			stageDuration := time.Since(stageStartedAt)
 			slog.Error(
 				"Error decoding group object",
 				attr.Error(err),
@@ -147,22 +163,26 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			count++
 			convertGroupData(group, &convertedData, batch.IngestTime)
 			if count == IngestCountThreshold {
+				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
 				}
 
 				convertedData.Clear()
 				count = 0
+				stageStartedAt = time.Now()
 			}
 		}
 	}
 
 	if count > 0 {
+		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestGroupData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
@@ -173,14 +193,16 @@ func decodeGroupData(batch *IngestContext, decoder *json.Decoder) error {
 
 func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
-		convertedData = ConvertedSessionData{}
-		count         = 0
-		errs          = errorlist.NewBuilder()
+		convertedData  = ConvertedSessionData{}
+		count          = 0
+		errs           = errorlist.NewBuilder()
+		stageStartedAt = time.Now()
 	)
 
 	for decoder.More() {
 		var session ein.Session
 		if err := decoder.Decode(&session); err != nil {
+			stageDuration := time.Since(stageStartedAt)
 			slog.Error(
 				"Error decoding session object",
 				attr.Error(err),
@@ -188,21 +210,25 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			count++
 			convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
+				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
 					errs.Add(err)
 				}
 				convertedData.Clear()
 				count = 0
+				stageStartedAt = time.Now()
 			}
 		}
 	}
 
 	if count > 0 {
+		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestSessions(batch, convertedData.SessionProps); err != nil {
 			errs.Add(err)
 		}
@@ -213,14 +239,16 @@ func decodeSessionData(batch *IngestContext, decoder *json.Decoder) error {
 
 func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 	var (
-		convertedData = ConvertedAzureData{}
-		count         = 0
-		errs          = errorlist.NewBuilder()
+		convertedData  = ConvertedAzureData{}
+		count          = 0
+		errs           = errorlist.NewBuilder()
+		stageStartedAt = time.Now()
 	)
 
 	for decoder.More() {
 		var data AzureBase
 		if err := decoder.Decode(&data); err != nil {
+			stageDuration := time.Since(stageStartedAt)
 			slog.Error(
 				"Error decoding azure object",
 				attr.Error(err),
@@ -228,22 +256,26 @@ func decodeAzureData(batch *IngestContext, decoder *json.Decoder) error {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, stageDuration, count+1, 1)
 			return err
 		} else {
 			convert := getKindConverter(data.Kind)
 			convert(data.Data, &convertedData, batch.IngestTime)
 			count++
 			if count == IngestCountThreshold {
+				ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 				if err = IngestAzureData(batch, convertedData); err != nil {
 					errs.Add(err)
 				}
 				convertedData.Clear()
 				count = 0
+				stageStartedAt = time.Now()
 			}
 		}
 	}
 
 	if count > 0 {
+		ingestmetrics.RecordIngestStage(ingestmetrics.IngestStageDecodeConvert, time.Since(stageStartedAt), count, 0)
 		if err := IngestAzureData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
