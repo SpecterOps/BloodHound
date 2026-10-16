@@ -74,7 +74,7 @@ on:
         type: string
 
 jobs:
-  sign-and-verify:
+  sign-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -110,6 +110,40 @@ jobs:
 
       - name: Sign Image Digest
         run: cosign sign --yes "$IMAGE_REFERENCE"
+
+  verify-image:
+    runs-on: ubuntu-latest
+    needs: sign-image
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_REFERENCE: ${{ format('{0}@{1}', inputs.image_repository, inputs.image_digest) }}
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # ratchet:sigstore/cosign-installer@v4.1.2
+        with:
+          cosign-release: v3.1.3
+
+      - name: Login to DockerHub
+        if: inputs.registry_kind == 'dockerhub'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # ratchet:docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - name: Configure AWS Credentials
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # ratchet:aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.ecr_aws_secret_access_key }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        if: inputs.registry_kind == 'ecr'
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # ratchet:aws-actions/amazon-ecr-login@v2
 
       - name: Verify Image Signature
         env:
