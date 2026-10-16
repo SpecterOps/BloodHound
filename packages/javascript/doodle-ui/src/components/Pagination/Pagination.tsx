@@ -97,14 +97,14 @@ const PaginationSelect = (props: PaginationSelectProps) => {
 
     return (
         <Select {...rest}>
-            <SelectTrigger className='w-fit'>
+            <SelectTrigger className='w-fit gap-2'>
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectPortal>
                 <SelectContent>
                     {selectItems.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                            <span className='pr-2'>{option.display}</span>
+                            {option.display}
                         </SelectItem>
                     ))}
                 </SelectContent>
