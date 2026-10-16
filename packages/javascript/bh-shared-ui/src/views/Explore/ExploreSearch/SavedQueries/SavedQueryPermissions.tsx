@@ -192,10 +192,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                         {filteredUsers?.length ? (
                             <DataTable
                                 TableHeadProps={{
-                                    className: 'text-s pl-3 first:text-center',
+                                    className: 'text-s pl-3 first:pl-0 first:text-center',
                                 }}
                                 TableBodyProps={{ className: 'text-s' }}
-                                TableCellProps={{ className: 'pl-3 first:text-center' }}
+                                TableCellProps={{
+                                    className: 'pl-3 first:pl-0 first:text-center',
+                                }}
                                 columns={columns}
                                 data={filteredUsers}
                             />
