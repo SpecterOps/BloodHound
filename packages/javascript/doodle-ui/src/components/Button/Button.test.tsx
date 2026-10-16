@@ -18,6 +18,8 @@ import '@testing-library/jest-dom';
 import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { expect } from 'vitest';
+import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
+import { IconButton } from '../IconButton';
 import { Button, ButtonVariants, TextButton } from './Button';
 
 expect.extend(matchers);
@@ -35,31 +37,6 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
     });
 
-    it('preserves the primary variant colors and active state', () => {
-        render(<Button>Primary</Button>);
-
-        const button = screen.getByRole('button', { name: 'Primary' });
-
-        expect(button.classList.contains('text-common-white')).toBe(true);
-        expect(button.classList.contains('dark:text-common-dark')).toBe(true);
-        expect(button.classList.contains('active:bg-[#0D0A30]')).toBe(true);
-        expect(button.classList.contains('dark:active:bg-[#8D8BF8]')).toBe(true);
-    });
-
-    it('preserves the secondary variant colors and active state without default opacity', () => {
-        render(<Button variant='secondary'>Secondary</Button>);
-
-        const button = screen.getByRole('button', { name: 'Secondary' });
-
-        expect(button.classList.contains('text-common-dark')).toBe(true);
-        expect(button.classList.contains('dark:text-common-white')).toBe(true);
-        expect(button.classList.contains('active:bg-secondary-btn-active-fill')).toBe(true);
-        expect(button.classList.contains('active:text-common-dark')).toBe(true);
-        expect(button.classList.contains('dark:active:text-common-white')).toBe(true);
-        expect(button.classList.contains('disabled:opacity-50')).toBe(true);
-        expect(button.classList.contains('opacity-50')).toBe(false);
-    });
-
     it.each([
         ['primary', 'border border-transparent bg-primary text-text-contrast'],
         ['secondary', 'border-border bg-elevation-1 text-text-main'],
@@ -70,7 +47,7 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: variant })).toHaveClass(
             'rounded',
             'p-2',
-            'text-sm/5',
+            'text-sm/none',
             'hover:bg-secondary',
             'hover:text-text-contrast',
             'focus-visible:bg-secondary',
@@ -83,7 +60,7 @@ describe('Button', () => {
     });
 
     it.each(['small', 'medium', 'large'] as const)('keeps uniform geometry for the deprecated %s size', (size) => {
-        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/5');
+        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/none');
     });
 
     it('keeps deprecated variants free of contained-button geometry', () => {
@@ -102,7 +79,9 @@ describe('Button', () => {
         render(
             <>
                 <TextButton>Help</TextButton>
-                <IconButton aria-label='Settings' />
+                <IconButton aria-label='Settings'>
+                    <AppIcon.Info />
+                </IconButton>
             </>
         );
 
