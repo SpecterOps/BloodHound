@@ -49,11 +49,12 @@ describe('Marketplace', () => {
             'Enterprise Integrations',
         ]);
         expect(screen.getAllByRole('article')).toHaveLength(53);
-        expect(screen.getAllByText('Enterprise Extension')).toHaveLength(5);
+        expect(screen.getAllByText('Enterprise Extension')).toHaveLength(13);
         expect(screen.getAllByText('Community Extension')).toHaveLength(26);
         expect(screen.getAllByText('Enterprise Integration')).toHaveLength(11);
         expect(screen.getAllByText('Community Integration')).toHaveLength(3);
-        expect(within(developmentExtensionsRegion).getAllByText('Under development')).toHaveLength(16);
+        expect(within(developmentExtensionsRegion).getAllByText('Under development')).toHaveLength(8);
+        expect(within(developmentExtensionsRegion).getAllByText('Enterprise Extension')).toHaveLength(8);
         expect(developmentExtensionsRegion).toHaveTextContent(
             'Explore OpenGraph extensions in active development. Roadmap items and availability are subject to change.'
         );

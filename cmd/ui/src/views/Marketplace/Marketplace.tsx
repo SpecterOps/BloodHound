@@ -329,7 +329,7 @@ const Marketplace = () => {
                                 <ProductCard
                                     key={extension.name}
                                     {...extension}
-                                    categoryLabel='Under development'
+                                    categoryLabel='Enterprise Extension'
                                     linkLabel='Sign up to learn more'
                                 />
                             ))}
