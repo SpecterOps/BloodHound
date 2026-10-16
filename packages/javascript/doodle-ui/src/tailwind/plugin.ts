@@ -535,32 +535,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         '.clip-left-rounded': {
             'clip-path': 'inset(0 -100vw 0 0 round 0.25rem)',
         },
-        ".TooltipContent[data-side='top']": {
-            'animation-name': 'slideUp',
-        },
-        ".TooltipContent[data-side='bottom']": {
-            'animation-name': 'slideDown',
-        },
-        '@keyframes slideDown': {
-            from: {
-                opacity: '0',
-                transform: 'translateY(-10px)',
-            },
-            to: {
-                opacity: '1',
-                transform: 'translateY(0)',
-            },
-        },
-        '@keyframes slideUp': {
-            from: {
-                opacity: '0',
-                transform: 'translateY(10px)',
-            },
-            to: {
-                opacity: '1',
-                transform: 'translateY(0)',
-            },
-        },
     });
 };
 

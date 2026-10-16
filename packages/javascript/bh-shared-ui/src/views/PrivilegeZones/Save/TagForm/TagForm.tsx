@@ -432,15 +432,15 @@ export const TagForm: FC = () => {
                                                 <div className='flex gap-2 items-center'>
                                                     <FormLabel htmlFor='analysis_enabled'>Enable Analysis</FormLabel>
                                                     <Tooltip
+                                                        contentProps={{
+                                                            align: 'end',
+                                                            className:
+                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                        }}
                                                         tooltip={
                                                             'Enables Analysis to produce Attack Path Findings for the Zone.'
                                                         }
-                                                        contentProps={{
-                                                            className:
-                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
-                                                            side: 'right',
-                                                            align: 'end',
-                                                        }}
+                                                        tooltipPosition='right'
                                                     />
                                                 </div>
                                                 <div className='mb-4'>
@@ -520,15 +520,15 @@ export const TagForm: FC = () => {
                                                             Enable Certification
                                                         </FormLabel>
                                                         <Tooltip
+                                                            contentProps={{
+                                                                align: 'end',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            }}
                                                             tooltip={
                                                                 'Require manual review and approval of object membership in the Zone.'
                                                             }
-                                                            contentProps={{
-                                                                className:
-                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
-                                                                side: 'right',
-                                                                align: 'end',
-                                                            }}
+                                                            tooltipPosition='right'
                                                         />
                                                     </div>
                                                     <div>
@@ -557,15 +557,15 @@ export const TagForm: FC = () => {
                                                     <div className='flex gap-2 items-center'>
                                                         <FormLabel>Apply Custom Glyph</FormLabel>
                                                         <Tooltip
+                                                            contentProps={{
+                                                                align: 'end',
+                                                                className:
+                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            }}
                                                             tooltip={
                                                                 'Custom glyphs visually mark nodes in the graph for quick context.'
                                                             }
-                                                            contentProps={{
-                                                                className:
-                                                                    'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
-                                                                side: 'right',
-                                                                align: 'end',
-                                                            }}
+                                                            tooltipPosition='right'
                                                         />
                                                     </div>
                                                     <FormControl>
