@@ -18,9 +18,9 @@ put:
   description: |
     **Experimental** - Upserts the OpenGraph extension.
 
-    The request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json` at its root, without embedded optional components. Optional `pz_rules.json` and `saved_queries.json` must also be at the ZIP root. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.
+    The request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.
 
-    The root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. All other directory entries are rejected, and all other files remain subject to normal component validation.
+    The root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.
 
     Each recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.
   tags:

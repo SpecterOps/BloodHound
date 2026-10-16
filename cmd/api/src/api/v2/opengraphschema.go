@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"path"
@@ -249,7 +250,9 @@ func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error
 			continue
 		}
 		if file.FileInfo().IsDir() {
-			errs = append(errs, fmt.Errorf("unexpected directory %q in zip archive", file.Name))
+			if strings.Contains(strings.TrimSuffix(file.Name, "/"), "/") {
+				errs = append(errs, fmt.Errorf("unexpected directory %q in zip archive", file.Name))
+			}
 			continue
 		}
 		if strings.HasPrefix(file.Name, ".") && !strings.Contains(file.Name, "/") {
@@ -258,6 +261,10 @@ func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error
 		var fileBaseName = path.Base(file.Name)
 		if fileBaseName == bundleFileNameSchema {
 			schemaPresent = true
+		}
+		if !fs.ValidPath(file.Name) || strings.Count(file.Name, "/") > 1 {
+			errs = append(errs, fmt.Errorf("unexpected file %q in zip archive", file.Name))
+			continue
 		}
 		if err = decodeFileIntoPayload(&extension, &schemaDecoded, file); err != nil {
 			errs = append(errs, err)
@@ -277,7 +284,7 @@ func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error
 
 func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaDecoded *bool, file *zip.File) error {
 	// instead of switching on the filename, we could open each file and inspect for known keys. This is nice and simple though.
-	switch file.Name {
+	switch path.Base(file.Name) {
 	case bundleFileNameSchema:
 		if *schemaDecoded {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSchema)

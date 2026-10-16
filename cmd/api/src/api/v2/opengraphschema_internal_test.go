@@ -233,25 +233,27 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name: "ordinary directories and nested metadata are rejected",
 			archive: newExtensionZip(t, map[string]string{
 				"schema.json":                 validSchemaJSON,
-				"empty/":                      "",
+				"folder/":                     "",
+				"folder/nested/":              "",
 				"folder/__MACOSX/schema.json": "{ not valid json",
 			}),
 			expected: expectedResults{
 				errorText: strings.Join([]string{
-					`unexpected directory "empty/" in zip archive`,
-					`component "schema.json" must be at the ZIP root; found "folder/__MACOSX/schema.json"`,
+					`unexpected directory "folder/nested/" in zip archive`,
+					`unexpected file "folder/__MACOSX/schema.json" in zip archive`,
 				}, "\n"),
 			},
 		},
 		{
 			name: "valid zip with all three components ignores saved-query ZIP exclusions",
 			archive: newExtensionZip(t, map[string]string{
-				"schema.json":          validSchemaJSON,
-				"pz_rules.json":        validPZRulesComponentJSON,
-				"saved_queries.json":   validSavedQueriesJSON,
-				"__MACOSX/":            "",
-				"__MACOSX/schema.json": "{ not valid json",
-				".DS_Store":            "{ not valid json",
+				"folder/":                   "",
+				"folder/schema.json":        validSchemaJSON,
+				"folder/pz_rules.json":      validPZRulesComponentJSON,
+				"folder/saved_queries.json": validSavedQueriesJSON,
+				"__MACOSX/":                 "",
+				"__MACOSX/schema.json":      "{ not valid json",
+				".DS_Store":                 "{ not valid json",
 			}),
 			expected: expectedResults{
 				schemaName: "TestExtension",
@@ -270,28 +272,28 @@ func TestExtractBundleFromZip(t *testing.T) {
 		{
 			name: "misplaced components and unexpected files report full paths and preserve root components",
 			archive: newExtensionZip(t, map[string]string{
-				"schema.json":               validSchemaJSON,
-				"pz_rules.json":             validPZRulesComponentJSON,
-				"saved_queries.json":        validSavedQueriesJSON,
-				"folder/schema.json":        "{ not valid json",
-				"folder/pz_rules.json":      "{ not valid json",
-				"folder/saved_queries.json": "{ not valid json",
-				"folder/README.md":          "{ not valid json",
+				"schema.json":                      validSchemaJSON,
+				"pz_rules.json":                    validPZRulesComponentJSON,
+				"saved_queries.json":               validSavedQueriesJSON,
+				"folder/nested/schema.json":        "{ not valid json",
+				"folder/nested/pz_rules.json":      "{ not valid json",
+				"folder/nested/saved_queries.json": "{ not valid json",
+				"folder/README.md":                 "{ not valid json",
 			}),
 			expected: expectedResults{
 				errorText: strings.Join([]string{
-					`component "schema.json" must be at the ZIP root; found "folder/schema.json"`,
-					`component "pz_rules.json" must be at the ZIP root; found "folder/pz_rules.json"`,
-					`component "saved_queries.json" must be at the ZIP root; found "folder/saved_queries.json"`,
+					`unexpected file "folder/nested/schema.json" in zip archive`,
+					`unexpected file "folder/nested/pz_rules.json" in zip archive`,
+					`unexpected file "folder/nested/saved_queries.json" in zip archive`,
 					`unexpected file "folder/README.md" in zip archive`,
 				}, "\n"),
 			},
 		},
 		{
 			name:    "misplaced schema reports its placement error",
-			archive: newExtensionZip(t, map[string]string{"folder/schema.json": "{ not valid json"}),
+			archive: newExtensionZip(t, map[string]string{"folder/nested/schema.json": "{ not valid json"}),
 			expected: expectedResults{
-				errorText: `component "schema.json" must be at the ZIP root; found "folder/schema.json"`,
+				errorText: `unexpected file "folder/nested/schema.json" in zip archive`,
 			},
 		},
 		{
@@ -318,13 +320,13 @@ func TestExtractBundleFromZip(t *testing.T) {
 		{
 			name: "metadata is ignored while an unexpected file errors and the schema still populates",
 			archive: newExtensionZip(t, map[string]string{
-				"schema.json":          validSchemaJSON,
+				"folder/schema.json":   validSchemaJSON,
 				"__MACOSX/schema.json": "{ not valid json",
 				".DS_Store":            "{ not valid json",
-				"README.md":            "not a component",
+				"folder/README.md":     "not a component",
 			}),
 			expected: expectedResults{
-				errorText: "unexpected file \"README.md\" in zip archive",
+				errorText: "unexpected file \"folder/README.md\" in zip archive",
 			},
 		},
 		{
