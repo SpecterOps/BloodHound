@@ -43,7 +43,5 @@ post:
         application/json:
           schema:
             $ref: './../schemas/api.error-wrapper.yaml'
-    415:
-      $ref: './../responses/unsupported-media-type.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

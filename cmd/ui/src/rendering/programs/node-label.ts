@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { truncateText } from 'bh-shared-ui';
+import { formatGraphNodeSublabel, truncateText } from 'bh-shared-ui';
 import { Settings } from 'sigma/settings';
 import {
     EDGE_MIDDLE_ALIGN_OFFSET,
@@ -110,7 +110,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     if (data.source && data.kind) {
         const nodeSource = labelTextRendered(data.source);
         const nodeKind = labelTextRendered(data.kind);
-        const sublabelText = `${nodeSource} | ${nodeKind}`;
+        const sublabelText = formatGraphNodeSublabel(nodeSource, nodeKind);
         const sublabelSize = size * SUBLABEL_FONT_RATIO;
         context.font = `${weight} ${sublabelSize}px ${font}`;
 
