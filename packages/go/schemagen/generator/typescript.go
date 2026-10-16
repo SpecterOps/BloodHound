@@ -116,7 +116,6 @@ func GenerateTypeScriptActiveDirectory(root tsgen.File, schema model.ActiveDirec
 	GenerateTypeScriptStringEnum(root, "ActiveDirectoryKindProperties", schema.Properties)
 
 	GenerateTypeScriptPathfindingEdgesFn(root, "ActiveDirectoryPathfindingEdges", "ActiveDirectoryRelationshipKind", schema.PathfindingRelationships)
-	GenerateTypeScriptPathfindingEdgesFn(root, "ActiveDirectoryPathfindingEdgesMatchFrontend", "ActiveDirectoryRelationshipKind", schema.PathfindingRelationshipsMatchFrontend)
 }
 
 func GenerateTypeScriptAzure(root tsgen.File, schema model.Azure) {
