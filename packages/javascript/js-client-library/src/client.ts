@@ -822,7 +822,7 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
+    getCollectorJobHistory = (profileId: string, skip = 0, limit = 25, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
             ...options,
             params: {
@@ -870,10 +870,10 @@ class BHEAPIClient {
             options
         );
 
-    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+    deleteCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
 
-    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+    runCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
         this.baseClient.post<RunCollectorJobProfileResponse>(
             '/api/v2/collector-job-queue',
             { job_profile_id: profileId },
@@ -883,11 +883,11 @@ class BHEAPIClient {
     createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
         this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
 
-    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+    getCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
         this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
 
     updateCollectorJobProfile = (
-        profileId: number,
+        profileId: string,
         payload: UpdateCollectorJobProfileRequest,
         options?: RequestOptions
     ) =>
