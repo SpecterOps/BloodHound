@@ -40,7 +40,7 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean
                 })}
                 data-testid='global_nav-home'>
                 <AppLink
-                    aria-label={"BloodHound home"}
+                    aria-label={'BloodHound home'}
                     className='block h-[30px] w-[166px] focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
                     to={data.project.route}>
                     {data.project.icon}
