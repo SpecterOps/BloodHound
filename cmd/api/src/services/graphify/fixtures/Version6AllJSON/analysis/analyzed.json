@@ -7543,9 +7543,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "GoldenCert",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:05.986258771Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -7637,9 +7635,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "DCSync",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.760705081Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -8094,9 +8090,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "DCSync",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.760705081Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -27096,9 +27090,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266-1000"
         },
         "kind": "AdminTo",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.770958425Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -31429,9 +31421,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266-1000"
         },
         "kind": "AdminTo",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.770958425Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55538,9 +55528,7 @@
           "value": "63FB126D-499F-48DA-A707-A134B92764BD"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55552,9 +55540,7 @@
           "value": "251BB763-E8FE-4B7A-9E61-1EDE247847E1"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55566,9 +55552,7 @@
           "value": "441D7EAE-CF79-4B97-83A2-B770C231E4DA"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55580,9 +55564,7 @@
           "value": "EDB16956-50D9-4E16-B448-441EFC1D1FB8"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55609,9 +55591,7 @@
           "value": "C6DC9FD9-2A52-4064-9D8E-ED9BBA52FD51"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55623,9 +55603,7 @@
           "value": "72F15D5F-C7B4-4FD9-ADCE-302F0D3DC91A"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55637,9 +55615,7 @@
           "value": "621424AD-1DD5-487C-B38D-12D094A38153"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -55651,9 +55627,7 @@
           "value": "E249A350-93EA-4290-9E28-CFC9A5718C86"
         },
         "kind": "EnrollOnBehalfOf",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.864774135Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -56426,9 +56400,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "ADCSESC1",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:05.986258771Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -56557,9 +56529,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "ADCSESC1",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:05.986258771Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -57306,9 +57276,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266-1000"
         },
         "kind": "AdminTo",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.770958425Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -63078,9 +63046,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266-1103"
         },
         "kind": "AdminTo",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.770958425Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -63138,9 +63104,7 @@
           "value": "722A8BB3-AEF5-49C7-9C8C-C1C97A219007"
         },
         "kind": "TrustedForNTAuth",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.779975615Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -63152,9 +63116,7 @@
           "value": "4B5183E1-DB57-4A57-8159-3E9649F3B01C"
         },
         "kind": "EnterpriseCAFor",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.779975615Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -63166,9 +63128,7 @@
           "value": "6345151F-D854-4D83-B7D0-D94E10CFBAF2"
         },
         "kind": "EnterpriseCAFor",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:02.779975615Z"
-        }
+        "properties": {}
       },
       {
         "start": {
@@ -63555,9 +63515,7 @@
           "value": "S-1-5-21-909015691-3030120388-2582151266"
         },
         "kind": "ADCSESC1",
-        "properties": {
-          "lastseen": "2025-10-17T22:46:05.986258771Z"
-        }
+        "properties": {}
       },
       {
         "start": {
