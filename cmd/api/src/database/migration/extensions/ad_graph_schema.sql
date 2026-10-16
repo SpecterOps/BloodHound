@@ -257,10 +257,6 @@ BEGIN
 	PERFORM genscript_upsert_kind('ClaimSpecialIdentity');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToLDAP');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToLDAPS');
-	PERFORM genscript_upsert_kind('ContainsIdentity');
-	PERFORM genscript_upsert_kind('PropagatesACEsTo');
-	PERFORM genscript_upsert_kind('GPOAppliesTo');
-	PERFORM genscript_upsert_kind('CanApplyGPO');
 	PERFORM genscript_upsert_kind('HasTrustKeys');
 	PERFORM genscript_upsert_kind('WriteAltSecurityIdentities');
 	PERFORM genscript_upsert_kind('WritePublicInformation');
@@ -385,10 +381,6 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ClaimSpecialIdentity', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToLDAP', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToLDAPS', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ContainsIdentity', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'PropagatesACEsTo', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GPOAppliesTo', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CanApplyGPO', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasTrustKeys', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAltSecurityIdentities', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WritePublicInformation', '', true);
