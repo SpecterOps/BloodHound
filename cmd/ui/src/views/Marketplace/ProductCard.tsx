@@ -69,13 +69,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <Typography className='flex-1 text-muted-foreground' variant='body1'>
                     {description}
                 </Typography>
-                <div className='flex flex-wrap items-center justify-between gap-3'>
-                    <Typography className='text-muted-foreground opacity-75' variant='body2'>
+                <div className='flex flex-col items-stretch gap-3'>
+                    <Typography className='min-w-0 text-muted-foreground opacity-75' variant='body2'>
                         {categoryLabel}
                     </Typography>
                     <Link
                         aria-label={`${linkLabel} ${name} (opens in a new tab)`}
-                        className={`${ButtonVariants({ variant: 'secondary' })} rounded-md font-bold`}
+                        className={`${ButtonVariants({ variant: 'secondary' })} w-full justify-center rounded-md font-bold`}
                         href={href}
                         variant='unstyled'>
                         {linkLabel}
