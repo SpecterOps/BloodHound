@@ -31,7 +31,7 @@ const NotificationsProvider = ({ children }: NotificationProviderProps) => {
     return (
         <NotificationsContext.Provider value={notifications}>
             <NotificationsDispatchContext.Provider value={dispatch}>
-                <SnackbarProvider>{children}</SnackbarProvider>
+                <SnackbarProvider classes={{ containerRoot: 'z-[1601]' }}>{children}</SnackbarProvider>
             </NotificationsDispatchContext.Provider>
         </NotificationsContext.Provider>
     );
