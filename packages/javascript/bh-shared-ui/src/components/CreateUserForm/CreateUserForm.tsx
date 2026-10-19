@@ -186,10 +186,8 @@ const CreateUserFormInner: React.FC<{
 
                                                 <Tooltip
                                                     tooltip='Only Read-Only and Users roles contain the environment target access control.'
-                                                    triggerProps={{ className: 'mb-0.5 size-4 shrink-0 rounded-full' }}
-                                                    contentProps={{
-                                                        className: 'max-w-80',
-                                                    }}
+                                                    triggerProps={{ className: 'size-4' }}
+                                                    tooltipPosition='right'
                                                 />
                                             </div>
                                             <Select

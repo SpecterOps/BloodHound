@@ -434,12 +434,9 @@ export const TagForm: FC = () => {
                                                     <Tooltip
                                                         contentProps={{
                                                             align: 'end',
-                                                            className:
-                                                                'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
+                                                            className: 'max-w-80',
                                                         }}
-                                                        tooltip={
-                                                            'Enables Analysis to produce Attack Path Findings for the Zone.'
-                                                        }
+                                                        tooltip='Enables Analysis to produce Attack Path Findings for the Zone.'
                                                         tooltipPosition='right'
                                                     />
                                                 </div>
@@ -525,9 +522,7 @@ export const TagForm: FC = () => {
                                                                 className:
                                                                     'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             }}
-                                                            tooltip={
-                                                                'Require manual review and approval of object membership in the Zone.'
-                                                            }
+                                                            tooltip='Require manual review and approval of object membership in the Zone.'
                                                             tooltipPosition='right'
                                                         />
                                                     </div>
@@ -562,9 +557,7 @@ export const TagForm: FC = () => {
                                                                 className:
                                                                     'max-w-80 dark:bg-neutral-dark-5 dark:text-neutral-light-1 border-0',
                                                             }}
-                                                            tooltip={
-                                                                'Custom glyphs visually mark nodes in the graph for quick context.'
-                                                            }
+                                                            tooltip='Custom glyphs visually mark nodes in the graph for quick context.'
                                                             tooltipPosition='right'
                                                         />
                                                     </div>

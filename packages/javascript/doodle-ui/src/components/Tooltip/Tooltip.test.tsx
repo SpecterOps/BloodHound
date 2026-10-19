@@ -84,7 +84,7 @@ describe('Tooltip', () => {
 
         expect(tooltipContent?.classList.contains('z-[1700]')).toBe(true);
         expect(tooltipContent?.classList.contains('border-[#939597]')).toBe(true);
-        expect(tooltipContent?.classList.contains('max-w-[200px]')).toBe(true);
+        expect(tooltipContent?.classList.contains('max-w-[225px]')).toBe(true);
     });
 
     it('applies a content id without replacing the trigger description id', async () => {
