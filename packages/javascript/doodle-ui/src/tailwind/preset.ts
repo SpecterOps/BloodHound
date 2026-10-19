@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { switchBackgroundColors } from '../components/Switch/Switch.styles';
 
 export default {
     theme: {
@@ -31,6 +32,7 @@ export default {
             },
         },
         extend: {
+            backgroundColor: switchBackgroundColors,
             colors: {
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
@@ -87,11 +89,6 @@ export default {
                 'common-dark': 'var(--common-dark)',
                 'common-white': 'var(--common-white)',
                 // contrast: 'var(--common-dark)',
-
-                'switch-fill': 'var(--switch-fill)',
-                'switch-disabled-fill': 'var(--switch-disabled-fill)',
-                'switch-thumb-fill': 'var(--switch-thumb-fill)',
-                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
 
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-100': 'var(--neutral-100)',

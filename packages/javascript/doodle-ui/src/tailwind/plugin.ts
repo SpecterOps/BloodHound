@@ -183,11 +183,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-option-hover-fill': palette.neutral.light[300],
             '--dropdown-option-disabled-fill': palette.neutral.light[300],
             '--dropdown-tooltip-fill': palette.neutral.light[300],
-            '--switch-fill': palette.neutral.dark[700],
-            '--switch-disabled-fill': palette.neutral.light[300],
-            '--switch-thumb-fill': palette.neutral.light[50],
-            '--switch-thumb-disabled-fill': palette.neutral.light[400],
-
             // // Components/Data Display/ DataTable
             '--data-table-fill': palette.neutral.light[100],
             '--data-table-header-fill': palette.neutral.light[100],
@@ -431,11 +426,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-option-hover-fill': palette.neutral.dark[600],
             '--dropdown-option-disabled-fill': palette.neutral.dark[700],
             '--dropdown-tooltip-fill': palette.neutral.dark[600],
-            '--switch-fill': common.white,
-            '--switch-disabled-fill': common.disabled,
-            '--switch-thumb-fill': palette.neutral.dark[50],
-            '--switch-thumb-disabled-fill': palette.neutral.light[400],
-
             // // Components/Data Display/ DataTable
             '--data-table-fill': palette.neutral.dark[400],
             '--data-table-header-fill': palette.neutral.dark[400],
