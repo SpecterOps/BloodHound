@@ -71,6 +71,19 @@ describe('AccessibleIcon', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Information');
     });
 
+    it('positions its tooltip', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <AccessibleIcon label='Information' tooltipPosition='top'>
+                <AppIcon.Info />
+            </AccessibleIcon>
+        );
+
+        await user.hover(container.querySelector('svg') as SVGSVGElement);
+
+        expect((await screen.findByRole('tooltip')).parentElement?.getAttribute('data-side')).toBe('top');
+    });
+
     it('does not render a tooltip when it is disabled', async () => {
         const user = userEvent.setup();
         const { container } = render(

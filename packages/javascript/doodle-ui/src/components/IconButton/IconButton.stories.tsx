@@ -26,32 +26,15 @@ const meta = {
     component: IconButton,
     tags: ['autodocs'],
     args: {
-        variant: 'default',
+        'aria-label': 'More options',
+        children: <FontAwesomeIcon icon={faEllipsisVertical} />,
         disabled: false,
         hideTooltip: false,
         size: 16,
-        'aria-label': 'More options',
-        children: <FontAwesomeIcon icon={faEllipsisVertical} />,
+        tooltipPosition: 'bottom',
+        variant: 'default',
     },
     argTypes: {
-        variant: {
-            options: ['default', 'primary', 'secondary'],
-            control: 'select',
-            description: 'Sets the visual emphasis of the button.',
-            table: {
-                category: 'Appearance',
-                defaultValue: {
-                    summary: 'default',
-                },
-            },
-        },
-        children: {
-            control: false,
-            description: 'A single AppIcon, Font Awesome icon, or AccessibleIcon element.',
-            table: {
-                category: 'Content',
-            },
-        },
         'aria-label': {
             description: 'Required accessible name describing the action performed by the icon button.',
             control: 'text',
@@ -62,12 +45,28 @@ const meta = {
                 },
             },
         },
-        tooltip: {
-            description:
-                'Visible tooltip content. Defaults to aria-label; override it when the tooltip needs additional context.',
-            control: 'text',
+        children: {
+            control: false,
+            description: 'A single AppIcon, Font Awesome icon, or AccessibleIcon element.',
             table: {
-                category: 'Accessibility',
+                category: 'Content',
+            },
+        },
+        className: {
+            control: 'text',
+            description: 'Classes applied to the button element.',
+            table: {
+                category: 'Appearance',
+            },
+        },
+        disabled: {
+            control: 'boolean',
+            description: 'Disables button interaction. The tooltip remains available unless hideTooltip is true.',
+            table: {
+                category: 'State',
+                defaultValue: {
+                    summary: 'false',
+                },
             },
         },
         hideTooltip: {
@@ -98,21 +97,34 @@ const meta = {
                 },
             },
         },
-        disabled: {
-            control: 'boolean',
-            description: 'Disables button interaction. The tooltip remains available unless hideTooltip is true.',
+        tooltip: {
+            description:
+                'Visible tooltip content. Defaults to aria-label; override it when the tooltip needs additional context.',
+            control: 'text',
             table: {
-                category: 'State',
+                category: 'Accessibility',
+            },
+        },
+        tooltipPosition: {
+            control: 'select',
+            description: 'Sets the side of the button where the tooltip appears.',
+            options: ['top', 'bottom', 'left', 'right'],
+            table: {
+                category: 'Accessibility',
                 defaultValue: {
-                    summary: 'false',
+                    summary: 'bottom',
                 },
             },
         },
-        className: {
-            control: 'text',
-            description: 'Classes applied to the button element.',
+        variant: {
+            options: ['default', 'primary', 'secondary'],
+            control: 'select',
+            description: 'Sets the visual emphasis of the button.',
             table: {
                 category: 'Appearance',
+                defaultValue: {
+                    summary: 'default',
+                },
             },
         },
     },
