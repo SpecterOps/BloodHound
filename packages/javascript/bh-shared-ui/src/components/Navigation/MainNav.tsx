@@ -81,8 +81,8 @@ const MainNavListItem: FC<{
         'focus-within:before:pointer-events-none focus-within:before:absolute focus-within:before:inset-y-0 focus-within:before:-inset-x-2',
         'focus-within:before:border-y-[length:var(--focus-ring-width)] focus-within:before:border-common-white',
         {
-            'text-common-white bg-primary dark:text-[#8D8BF8] dark:bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
-            'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-[#1A1A1A]':
+            'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
+            'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
                 !isActiveRoute && !isActiveSubNavRoute,
         }
     );
@@ -275,7 +275,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 className={cn(
                     'flex flex-col flex-none font-medium z-nav print:hidden overflow-hidden',
                     'transition-all duration-300 ease-in',
-                    'text-common-white bg-primary-variant dark:text-main dark:bg-[#1F1F1F]',
+                    'text-common-white bg-primary-variant dark:text-main dark:bg-neutral-300',
                     { 'basis-nav-width': !isExpanded, 'basis-nav-width-expanded': isExpanded }
                 )}>
                 {/* Bloodhound logo */}

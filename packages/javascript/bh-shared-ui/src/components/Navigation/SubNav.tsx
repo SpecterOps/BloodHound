@@ -34,8 +34,8 @@ const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item
                 'focus-within:before:pointer-events-none focus-within:before:absolute focus-within:before:inset-y-0 focus-within:before:-inset-x-2',
                 'focus-within:before:border-y-[length:var(--focus-ring-width)] focus-within:before:border-common-white',
                 {
-                    'text-common-white bg-primary dark:text-[#8D8BF8] dark:bg-neutral-4': isActiveRoute,
-                    'hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-[#1A1A1A]':
+                    'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute,
+                    'hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
                         !isActiveRoute,
                 }
             )}>
@@ -92,7 +92,7 @@ const SubNav: React.FC<{
             className={cn(
                 'bottom-2 w-[264px] p-2 rounded cursor-default z-subNav',
                 'flex flex-col gap-8 absolute',
-                'text-common-white bg-primary-variant dark:text-main dark:bg-[#1F1F1F]',
+                'text-common-white bg-primary-variant dark:text-main dark:bg-neutral-300',
                 'transform-gpu translate-z-[0px]', // This line addresses a Safari hardware rendering bug
                 'transition-all duration-300 ease-out',
                 {
