@@ -58,6 +58,9 @@ const (
 
 	// IngestSourceClient represents tasks from automated collector clients.
 	IngestSourceClient IngestSource = "client"
+
+	// IngestSourceCollector represents tasks from managed collectors.
+	IngestSourceCollector IngestSource = "collector"
 )
 
 // IngestStage identifies a bounded stage of ingest processing. Publishers must
@@ -180,6 +183,18 @@ var (
 		[]string{"stage", "result"},
 	)
 
+	// ingestStageThroughput retains the last published value until replaced.
+	// Item units depend on the stage.
+	ingestStageThroughput = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "stage_throughput_items_per_second",
+			Help:      "Attempted items per second, including failures, for the most recent completed non-empty ingest stage observation per stage/result label set",
+		},
+		[]string{"stage", "result"},
+	)
+
 	// ingestStageItems tracks individual items or attempted targets, depending on
 	// the stage, by outcome through aggregated additions per stage observation.
 	ingestStageItems = prometheus.NewCounterVec(
@@ -249,12 +264,15 @@ func RecordIngestTaskQueueLatency(taskCreatedAt time.Time, source IngestSource) 
 	ingestTaskQueueLatency.WithLabelValues(string(source)).Observe(time.Since(taskCreatedAt).Seconds())
 }
 
-// RecordIngestStage records the duration and aggregated outcomes for one
-// non-empty stage observation: a function, block, or decoder chunk. Item counts
-// represent individual items or attempted targets, depending on the stage, and
-// include failures. Publishers must supply bounded typed stage constants.
+// RecordIngestStage records duration, aggregated outcomes, and attempted items per
+// second for source records in a decode/conversion chunk, relationship inputs in a
+// resolution call, targets in a reconciliation operation, or requested node IDs in a removal call.
+// Failed attempts are included. Publishers must supply bounded typed stage constants.
 // The histogram records a derived observation result, while the counter records
-// individual outcomes through aggregated additions. Invalid measurements are ignored.
+// individual outcomes through aggregated additions. The throughput gauge records
+// the latest completed observation per stage/result label set, skipping zero
+// duration while the histogram and counters still record. Invalid measurements
+// are ignored.
 func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int, failedItemCount int) {
 	if duration < 0 || itemCount <= 0 || failedItemCount < 0 || failedItemCount > itemCount {
 		return
@@ -275,6 +293,10 @@ func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int,
 	}
 
 	ingestStageDuration.WithLabelValues(string(stage), string(result)).Observe(duration.Seconds())
+
+	if duration > 0 {
+		ingestStageThroughput.WithLabelValues(string(stage), string(result)).Set(float64(itemCount) / duration.Seconds())
+	}
 
 	if successfulItemCount > 0 {
 		ingestStageItems.WithLabelValues(string(stage), string(IngestResultSuccess)).Add(float64(successfulItemCount))
@@ -320,6 +342,8 @@ func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 		return fmt.Errorf("failed to register ingest graphify duration histogram: %w", err)
 	} else if err := registerer.Register(ingestGraphifyItems); err != nil {
 		return fmt.Errorf("failed to register ingest graphify item counter: %w", err)
+	} else if err := registerer.Register(ingestStageThroughput); err != nil {
+		return fmt.Errorf("failed to register ingest stage throughput gauge: %w", err)
 	} else {
 		return nil
 	}
