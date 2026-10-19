@@ -18,18 +18,13 @@ import { DeepPartial } from 'bh-shared-ui';
 import { createAuthStateWithPermissions } from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { LoginRedirectState } from 'src/routes/loginRedirect';
 import { AppState } from 'src/store';
 import { render, waitFor } from 'src/test-utils';
 
 import Login from './Login';
 
-let locationState: {
-    from?: {
-        hash?: string;
-        pathname: string;
-        search?: string;
-    };
-} | null = null;
+let locationState: LoginRedirectState | null = null;
 
 vi.mock('react-router-dom', async () => ({
     ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
@@ -63,7 +58,7 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('Login', () => {
-    it('redirects an authenticated user to the saved destination including its query and hash', async () => {
+    it('forwards the original destination to home after authentication', async () => {
         locationState = {
             from: {
                 hash: '#findings',
@@ -75,9 +70,8 @@ describe('Login', () => {
         render(<Login />, { initialState: authenticatedState, route: '/login' });
 
         await waitFor(() => {
-            expect(window.location.pathname).toBe('/explore');
-            expect(window.location.search).toBe('?type=computer');
-            expect(window.location.hash).toBe('#findings');
+            expect(window.location.pathname).toBe('/');
+            expect(window.history.state.usr).toEqual(locationState);
         });
     });
 

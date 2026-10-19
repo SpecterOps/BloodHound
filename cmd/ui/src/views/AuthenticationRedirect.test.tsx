@@ -20,7 +20,7 @@ import { createAuthStateWithPermissions } from 'bh-shared-ui/testing';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute/AuthenticatedRoute';
 import { initialState as initialAuthState } from 'src/ducks/auth/authSlice';
-import { LOGIN_REDIRECT_STORAGE_KEY } from 'src/hooks/useLoginRedirect';
+import { LOGIN_REDIRECT_STORAGE_KEY } from 'src/routes/loginRedirect';
 import { AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
 import ExpiredPassword from './ExpiredPassword';
@@ -94,15 +94,36 @@ const submitPasswordReset = async () => {
     await user.click(screen.getByRole('button', { name: /reset password/i }));
 };
 
+const submitLogin = async () => {
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Email Address'), 'user@example.com');
+    await user.type(screen.getByLabelText('Password'), 'Password123!');
+    await user.click(screen.getByRole('button', { name: 'LOGIN' }));
+};
+
 describe('authentication deeplink redirects', () => {
     it('preserves a deeplink through username/password login', async () => {
         vi.spyOn(apiClient, 'login').mockResolvedValue({ data: { data: { session_token: 'session-token' } } } as any);
         vi.spyOn(apiClient.baseClient, 'get').mockResolvedValue({ data: { data: authenticatedState.user } });
         renderRoutes(initialAuthState);
-        const user = userEvent.setup();
-        await user.type(await screen.findByLabelText('Email Address'), 'user@example.com');
-        await user.type(screen.getByLabelText('Password'), 'Password123!');
-        await user.click(screen.getByRole('button', { name: 'LOGIN' }));
+        await submitLogin();
+        await expectDestination();
+    });
+
+    it('preserves a deeplink through login followed by a required password reset', async () => {
+        const expiredUser = {
+            ...authenticatedState.user,
+            AuthSecret: { expires_at: '1970-01-01T00:00:00Z' },
+        };
+        vi.spyOn(apiClient, 'login').mockResolvedValue({ data: { data: { session_token: 'session-token' } } } as any);
+        vi.spyOn(apiClient.baseClient, 'get').mockResolvedValue({ data: { data: expiredUser } });
+        vi.spyOn(apiClient, 'putUserAuthSecret').mockResolvedValue({} as any);
+        vi.spyOn(apiClient, 'getSelf').mockResolvedValue({ data: { data: authenticatedState.user } } as any);
+
+        renderRoutes(initialAuthState);
+        await submitLogin();
+        await submitPasswordReset();
+
         await expectDestination();
     });
 
@@ -123,6 +144,7 @@ describe('authentication deeplink redirects', () => {
         );
         await userEvent.click(screen.getByRole('button', { name: 'LOGIN VIA SSO' }));
         await waitFor(() => expect(assign).toHaveBeenCalledWith('/api/v2/sso/provider/login'));
+        expect(assign).toHaveBeenCalledTimes(1);
         expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBe(destination);
         unmount();
         vi.unstubAllGlobals();
@@ -131,6 +153,41 @@ describe('authentication deeplink redirects', () => {
         renderRoutes(authenticatedState, '/');
         await expectDestination();
         expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+    });
+
+    it('lets users choose an SSO provider before saving the destination and leaving', async () => {
+        vi.spyOn(apiClient, 'listSSOProviders').mockResolvedValue({
+            data: {
+                data: [
+                    { id: 1, name: 'First provider', slug: 'first-provider' },
+                    { id: 2, name: 'Second provider', slug: 'second-provider' },
+                ],
+            },
+        } as any);
+        const assign = vi.fn();
+        const originalWindow = window;
+        renderRoutes(initialAuthState);
+        await screen.findByRole('button', { name: 'LOGIN VIA SSO' });
+        vi.stubGlobal(
+            'window',
+            new Proxy(originalWindow, {
+                get(target, property) {
+                    if (property === 'location') return { ...target.location, assign };
+                    return Reflect.get(target, property, target);
+                },
+            })
+        );
+        const user = userEvent.setup();
+        await user.click(screen.getByRole('button', { name: 'LOGIN VIA SSO' }));
+        expect(assign).not.toHaveBeenCalled();
+        expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+
+        await user.click(screen.getByRole('combobox', { name: 'Choose your SSO Provider' }));
+        await user.click(screen.getByRole('option', { name: 'Second provider' }));
+        await user.click(screen.getByRole('button', { name: 'CONTINUE' }));
+
+        expect(assign).toHaveBeenCalledExactlyOnceWith('/api/v2/sso/second-provider/login');
+        expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBe(destination);
     });
 
     it('preserves a deeplink through an expired-password reset', async () => {
@@ -155,6 +212,8 @@ describe('authentication deeplink redirects', () => {
             },
             '/'
         );
+        await screen.findByLabelText('Expired password');
+        expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBe(destination);
         await submitPasswordReset();
         await expectDestination();
         expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();

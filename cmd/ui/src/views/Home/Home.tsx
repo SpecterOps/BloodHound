@@ -14,13 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useLoginRedirect } from 'src/hooks/useLoginRedirect';
-import { ROUTE_EXPLORE } from 'src/routes/constants';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { clearLoginRedirect, getLoginDestination } from 'src/routes/loginRedirect';
 
 const Home: React.FC = () => {
-    const redirectTo = useLoginRedirect(true, ROUTE_EXPLORE);
+    const { state } = useLocation();
+    // AuthenticatedRoute mounts Home only after login and any required password reset.
+    // Capture the destination before clearing storage so rerenders keep the same target.
+    const [redirectTo] = useState(() => getLoginDestination(state));
+
+    useEffect(() => {
+        clearLoginRedirect();
+    }, []);
+
     return <Navigate to={redirectTo} replace />;
 };
 
