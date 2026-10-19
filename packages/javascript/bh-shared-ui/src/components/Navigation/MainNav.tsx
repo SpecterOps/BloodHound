@@ -242,11 +242,6 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
             <IconButton
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
-                // Negative right margin allows button to hover outside nav bar bounds
-                triggerClassName={cn('absolute top-14 z-navToggle transition-all duration-300 ease-in', {
-                    'rotate-180 left-[15.5rem]': isExpanded,
-                    'left-10': !isExpanded,
-                })}
                 className={cn(
                     'h-8 w-8 p-2 border-none',
                     'text-common-white bg-primary dark:text-main dark:bg-neutral-5',
@@ -255,8 +250,14 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                     'focus-visible:text-common-white focus-visible:bg-secondary focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]',
                     'dark:focus-visible:text-white dark:focus-visible:bg-neutral-3'
                 )}
+                onClick={handleToggleNav}
                 size={16}
-                onClick={handleToggleNav}>
+                tooltipPosition='right'
+                // Negative right margin allows button to hover outside nav bar bounds
+                triggerClassName={cn('absolute top-14 z-navToggle transition-all duration-300 ease-in', {
+                    'rotate-180 left-[15.5rem]': isExpanded,
+                    'left-10': !isExpanded,
+                })}>
                 <FontAwesomeIcon icon={faCaretRight} />
             </IconButton>
 
