@@ -324,9 +324,9 @@ describe('MainNav collapsed item content', () => {
         renderNav(false);
         expect(screen.getByTestId('global_nav-logo')).toHaveClass('w-10');
     });
-    it('spans the home link across the full nav width', () => {
+    it('sizes the home link to fit the logo', () => {
         renderNav(false);
-        expect(screen.getByRole('link', { name: 'BloodHound home' })).toHaveClass('w-full');
+        expect(screen.getByRole('link', { name: 'BloodHound home' })).toHaveClass('w-fit');
     });
     it('shows the footer when expanded', () => {
         renderNav(true);

@@ -37,9 +37,8 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean
                 <AppLink
                     aria-label={'BloodHound home'}
                     className={cn(
-                        'block h-[46px] w-full overflow-hidden py-2 pl-2',
-                        'focus-visible:outline-none focus-visible:[--focus-ring:var(--common-white)]',
-                        'focus-visible:shadow-[inset_0_var(--focus-ring-width)_0_0_var(--focus-ring),inset_0_calc(-1*var(--focus-ring-width))_0_0_var(--focus-ring)]'
+                        'ml-1 mt-1 block w-fit overflow-hidden rounded p-1',
+                        'focus-visible:outline-none focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
                     )}
                     to={data.project.route}>
                     <span
@@ -77,9 +76,7 @@ const MainNavListItem: FC<{
 
     // Handles nav item text color and background with hover/active interactions
     const navItemContainerClasses = cn(
-        'relative rounded flex items-center cursor-pointer',
-        'focus-within:before:pointer-events-none focus-within:before:absolute focus-within:before:inset-y-0 focus-within:before:-inset-x-2',
-        'focus-within:before:border-y-[length:var(--focus-ring-width)] focus-within:before:border-common-white',
+        'rounded flex items-center cursor-pointer focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
         {
             'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
             'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':

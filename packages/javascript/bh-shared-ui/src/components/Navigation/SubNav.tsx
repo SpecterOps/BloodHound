@@ -30,9 +30,7 @@ const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item
     return (
         <li
             className={cn(
-                'relative min-h-7 rounded',
-                'focus-within:before:pointer-events-none focus-within:before:absolute focus-within:before:inset-y-0 focus-within:before:-inset-x-2',
-                'focus-within:before:border-y-[length:var(--focus-ring-width)] focus-within:before:border-common-white',
+                'min-h-7 rounded focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
                 {
                     'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute,
                     'hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
