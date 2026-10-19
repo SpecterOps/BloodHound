@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, ListItem, ListItemText } from '@mui/material';
+import { ListItem, ListItemText } from '@mui/material';
+import { Tooltip, Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { cn } from '../../utils';
 import HighlightedText from '../HighlightedText';
@@ -25,6 +26,7 @@ export type NodeSearchResult = {
     objectId: string;
     kind: string;
     id?: string;
+    distinguishedName?: string;
 };
 
 const SearchResultItem: FC<{
@@ -34,13 +36,14 @@ const SearchResultItem: FC<{
     highlightedIndex?: number;
     style?: React.CSSProperties;
     keyword?: string;
-}> = ({ style, item, index, highlightedIndex, keyword, getItemProps }) => {
+    showDistinguishedName?: boolean;
+}> = ({ style, item, index, highlightedIndex, keyword, getItemProps, showDistinguishedName = false }) => {
     return (
         <ListItem
             dense
             style={style}
             className={cn(
-                'group cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
+                'group w-[584px] cursor-pointer hover:bg-secondary hover:text-common-white hover:dark:bg-secondary-variant-2 hover:dark:text-common-dark focus:bg-secondary focus:text-common-white focus:dark:bg-secondary-variant-2 focus:dark:text-common-dark focus-visible:bg-secondary focus-visible:text-common-white focus-visible:dark:bg-secondary-variant-2 focus-visible:dark:text-common-dark',
                 {
                     'bg-secondary text-common-white dark:bg-secondary-variant-2 dark:text-common-dark':
                         highlightedIndex === index,
@@ -51,37 +54,44 @@ const SearchResultItem: FC<{
             tabIndex={0}
             {...getItemProps({ item, index })}>
             <ListItemText
+                disableTypography
                 primary={
-                    <Box
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}>
-                        <NodeIcon
-                            nodeType={item.kind}
-                            className={cn(
-                                'group-hover:text-inherit group-focus:text-inherit group-focus-visible:text-inherit',
-                                {
-                                    'text-inherit': highlightedIndex === index,
-                                }
+                    <div className='flex items-center min-w-0'>
+                        <NodeIcon nodeType={item.kind} />
+                        <div className='flex flex-col min-w-0 flex-1'>
+                            <Tooltip
+                                tooltip={item.label || item.objectId}
+                                contentProps={{
+                                    className:
+                                        'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
+                                }}>
+                                <div className='truncate'>
+                                    <HighlightedText text={item.label || item.objectId} search={keyword} />
+                                </div>
+                            </Tooltip>
+                            {showDistinguishedName && item.distinguishedName && (
+                                <Tooltip
+                                    tooltip={item.distinguishedName}
+                                    contentProps={{
+                                        className:
+                                            'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
+                                    }}>
+                                    <Typography
+                                        variant='caption'
+                                        className={cn(
+                                            // TODO: Tokenize when available
+                                            'truncate text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
+                                            {
+                                                'text-common-white dark:text-common-dark': highlightedIndex === index,
+                                            }
+                                        )}>
+                                        {item.distinguishedName}
+                                    </Typography>
+                                </Tooltip>
                             )}
-                        />
-                        <Box
-                            style={{
-                                flexGrow: 1,
-                                marginRight: '1em',
-                            }}>
-                            <HighlightedText text={item.label || item.objectId} search={keyword} />
-                        </Box>
-                    </Box>
+                        </div>
+                    </div>
                 }
-                primaryTypographyProps={{
-                    style: {
-                        whiteSpace: 'nowrap',
-                        verticalAlign: 'center',
-                    },
-                }}
             />
         </ListItem>
     );

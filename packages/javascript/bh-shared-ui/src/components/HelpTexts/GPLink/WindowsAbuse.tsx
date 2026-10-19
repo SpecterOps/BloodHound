@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
@@ -22,11 +23,21 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
             <Typography variant='body2'>
-                With full control of a GPO, you may make modifications to that GPO which will then apply to the users
-                and computers affected by the GPO. Select the target object you wish to push an evil policy down to,
-                then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such
-                as a new immediate scheduled task. Then wait for the group policy client to pick up and execute the new
-                evil policy. See the references tab for a more detailed write up on this abuse.
+                If you control a GPO linked to a target object, you can modify that GPO to inject malicious
+                configuration. For example, you can add an immediate scheduled task that runs on the computers or users
+                that process the GPO, compromising those objects. Some settings, including scheduled tasks, support
+                item-level targeting, which can limit execution to specific objects. GPOs apply every 90 minutes for
+                standard objects (with a random offset of 0 to 30 minutes), and every 5 minutes for domain controllers.
+                See the References tab for more detail.
+            </Typography>
+
+            <Typography variant='body2'>
+                On a domain-joined Windows machine, you can edit GPOs with the native Group Policy Management Console
+                (GPMC). On a non-domain-joined Windows machine, use the{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/CCob/DRSAT'>
+                    DRSAT (Disconnected RSAT)
+                </Link>{' '}
+                tool.
             </Typography>
         </>
     );

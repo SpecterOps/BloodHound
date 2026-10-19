@@ -203,7 +203,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: disabling findings prioritization does not request analysis and returns disabled response",
+			name: "Success: disabling findings prioritization requests analysis and returns disabled response",
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 
@@ -219,6 +219,7 @@ func TestToolContainer_ToggleFlag(t *testing.T) {
 						return nil
 					},
 				)
+				mock.database.EXPECT().RequestAnalysis(gomock.Any(), appcfg.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
 			assert: func(t *testing.T, response *httptest.ResponseRecorder) {
 				t.Helper()

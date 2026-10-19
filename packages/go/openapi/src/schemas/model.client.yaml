@@ -73,3 +73,7 @@ allOf:
         readOnly: true
         allOf:
           - $ref: './enum.client-type.yaml'
+      provided_identifier:
+        readOnly: true
+        allOf:
+          - $ref: './null.string.yaml'

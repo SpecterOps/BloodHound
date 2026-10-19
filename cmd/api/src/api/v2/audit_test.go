@@ -221,7 +221,7 @@ func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 	)
 	defer mockCtrl.Finish()
 
-	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = 'foo'"}).Return(model.AuditLogs{}, 1000, nil)
+	mockDB.EXPECT().ListAuditLogs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "", model.SQLFilter{SQLString: "actor_name = E'foo'"}).Return(model.AuditLogs{}, 1000, nil)
 	endpoint := "/api/v2/audit"
 
 	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
@@ -360,5 +360,35 @@ func TestResources_ListAuditLogs_InvalidSkip(t *testing.T) {
 		router.ServeHTTP(response, req)
 		require.Equal(t, http.StatusBadRequest, response.Code)
 		require.Contains(t, response.Body.String(), "query parameter \\\"skip\\\" is malformed")
+	}
+}
+
+func TestResources_ListAuditLogs_AfterLaterThanBefore(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+	)
+	defer mockCtrl.Finish()
+
+	endpoint := "/api/v2/audit"
+
+	if req, err := http.NewRequest("GET", endpoint, nil); err != nil {
+		t.Fatal(err)
+	} else {
+		q := url.Values{}
+		q.Add("before", "2026-01-01T00:00:00Z")
+		q.Add("after", "2026-01-02T00:00:00Z")
+
+		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+		req.URL.RawQuery = q.Encode()
+
+		router := mux.NewRouter()
+		router.HandleFunc(endpoint, resources.ListAuditLogs).Methods("GET")
+
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, req)
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, response.Body.String(), "query parameter \\\"after\\\" must not be later than \\\"before\\\"")
 	}
 }

@@ -28,7 +28,7 @@ import (
 // that should not be treated as a user-ingested node kind.
 func IsExtendedNodeKind(kind graph.Kind) bool {
 	return strings.HasPrefix(kind.String(), AssetGroupTagKindPrefix) ||
-		kind.Is(common.MigrationData, graphschema.Meta, graphschema.MetaDetail)
+		kind.Is(common.MigrationData, graphschema.Meta, graphschema.MetaDetail, graphschema.Zone)
 }
 
 type Kind struct {

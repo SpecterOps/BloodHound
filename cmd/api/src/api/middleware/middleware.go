@@ -61,6 +61,15 @@ func (s *Wrapper) Use(middlewareFunc ...mux.MiddlewareFunc) {
 	s.middleware = append(s.middleware, middlewareFunc...)
 }
 
+// UseBefore prepends middleware so it executes outside middleware that is
+// attached to the route later during route configuration.
+func (s *Wrapper) UseBefore(middlewareFunc ...mux.MiddlewareFunc) {
+	middleware := make([]mux.MiddlewareFunc, 0, len(middlewareFunc)+len(s.middleware))
+	middleware = append(middleware, middlewareFunc...)
+	middleware = append(middleware, s.middleware...)
+	s.middleware = middleware
+}
+
 func (s *Wrapper) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	handler := s.handler
 

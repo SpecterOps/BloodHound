@@ -58,9 +58,9 @@ St Bernard includes automated DORA (DevOps Research and Assessment) metrics coll
 
 The repository includes a GitHub Actions workflow that automatically generates quarterly DORA metrics reports:
 
-- **Schedule**: Runs on the 5th of February, May, August, and November
+- **Schedule**: Runs on the 20th of February, May, August, and November
 - **Reports**: Most recent complete fiscal quarter (Feb/May/Aug/Nov start)
-- **Artifacts**: Text and JSON reports retained for 90 days
+- **Artifacts**: Text and JSON reports retained for 400 days
 - **Summary**: Metrics displayed in GitHub Actions summary view
 
 **Manual Trigger:**
@@ -77,6 +77,9 @@ The repository includes a GitHub Actions workflow that automatically generates q
 ```bash
 # Collect data for a time period
 stbernard dora collect -start 2026-02-01 -end 2026-04-30
+
+# Collect the last complete fiscal quarter
+stbernard dora collect -last-quarter
 
 # Generate report
 stbernard dora report -start 2026-02-01 -end 2026-04-30

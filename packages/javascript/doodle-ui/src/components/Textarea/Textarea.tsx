@@ -16,17 +16,22 @@
 import * as React from 'react';
 import { cn } from '../utils';
 
-function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
-    return (
-        <textarea
-            data-slot='textarea'
-            className={cn(
-                'resize-none rounded-md border border-textarea-border-default bg-textarea-fill text-main placeholder:text-input-placeholder-text px-3 py-2 w-full enabled:hover:border-textarea-border-hover focus:outline-none focus:focus-ring dark:focus:border-textarea-border-default disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled disabled:opacity-100 md:text-sm transition-[color,box-shadow] aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
-                className
-            )}
-            {...props}
-        />
-    );
-}
+const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<'textarea'>>(
+    ({ className, ...props }, ref) => {
+        return (
+            <textarea
+                ref={ref}
+                data-slot='textarea'
+                className={cn(
+                    'resize-none rounded-md border border-textarea-border-default bg-textarea-fill text-main placeholder:text-input-placeholder-text px-3 py-2 w-full enabled:hover:border-textarea-border-hover focus:outline-none focus:focus-ring dark:focus:border-textarea-border-default disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled disabled:opacity-100 md:text-sm transition-[color,box-shadow] aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
+                    className
+                )}
+                {...props}
+            />
+        );
+    }
+);
+
+Textarea.displayName = 'Textarea';
 
 export { Textarea };

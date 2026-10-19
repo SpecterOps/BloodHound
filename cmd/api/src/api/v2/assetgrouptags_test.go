@@ -220,7 +220,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: queryParamName + " = '123'",
+							SQLString: queryParamName + " = E'123'",
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Name: "123"},
@@ -242,7 +242,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: queryParamName + " = 't'",
+							SQLString: queryParamName + " = E't'",
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Name: "t"},
@@ -3229,7 +3229,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
 						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
-							SQLString: "AND (node_primary_kind = 'User')",
+							SQLString: "AND (node_primary_kind = E'User')",
 						}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{
 							{
@@ -3286,7 +3286,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 						Return(assetGroupSelector, nil)
 					mockDB.EXPECT().
 						GetSelectorNodesBySelectorIdsFilteredAndPaginated(gomock.Any(), model.SQLFilter{
-							SQLString: "AND (node_primary_kind = 'User') AND certified > ?",
+							SQLString: "AND (node_primary_kind = E'User') AND certified > ?",
 							Params:    []any{model.AssetGroupCertificationRevoked},
 						}, model.Sort{}, 0, 0, 1).
 						Return([]model.AssetGroupSelectorNode{
@@ -4118,7 +4118,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupHistoryRecords(gomock.Any(),
-							model.SQLFilter{SQLString: "created_at > '2025-06-17T00:00:00Z'"},
+							model.SQLFilter{SQLString: "created_at > E'2025-06-17T00:00:00Z'"},
 							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
 							v2.AssetGroupTagDefaultLimit).

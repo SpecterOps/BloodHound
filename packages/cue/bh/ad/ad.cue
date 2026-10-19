@@ -32,8 +32,6 @@ PathfindingRelationshipsMatchFrontend: [...types.#Kind]
 InboundRelationshipKinds: [...types.#Kind]
 OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
-PostProcessedRelationships: [...types.#Kind]
-DCAPostProcessedRelationships: [...types.#Kind]
 
 // Property name enumerations
 
@@ -1037,6 +1035,27 @@ ServicePrincipalNames: types.#StringEnum & {
 	representation: "serviceprincipalnames"
 }
 
+ServerReference: types.#StringEnum & {
+	symbol:         "ServerReference"
+	schema:         "ad"
+	name:           "Server Reference"
+	representation: "serverreference"
+}
+
+SiteObject: types.#StringEnum & {
+	symbol:         "SiteObject"
+	schema:         "ad"
+	name:           "Site Object"
+	representation: "siteobject"
+}
+
+ObjectClass: types.#StringEnum & {
+	symbol:         "ObjectClass"
+	schema:         "ad"
+	name:           "Object Class"
+	representation: "objectclass"
+}
+
 GPOStatusRaw: types.#StringEnum & {
 	symbol:         "GPOStatusRaw"
 	schema:         "ad"
@@ -1192,6 +1211,9 @@ Properties: [
 	NetBIOS,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
+	ServerReference,
+	SiteObject,
+	ObjectClass,
 	GPOStatusRaw,
 	GPOStatus,
 ]
@@ -1280,6 +1302,21 @@ IssuancePolicy: types.#Kind & {
 	schema: "active_directory"
 }
 
+Site: types.#Kind & {
+	symbol: "Site"
+	schema: "active_directory"
+}
+
+SiteServer: types.#Kind & {
+	symbol: "SiteServer"
+	schema: "active_directory"
+}
+
+SiteSubnet: types.#Kind & {
+	symbol: "SiteSubnet"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -1297,6 +1334,9 @@ NodeKinds: [
 	NTAuthStore,
 	CertTemplate,
 	IssuancePolicy,
+	Site,
+	SiteServer,
+	SiteSubnet
 ]
 
 Owns: types.#Kind & {
@@ -1362,6 +1402,11 @@ HasSession: types.#Kind & {
 
 Contains: types.#Kind & {
 	symbol: "Contains"
+	schema: "active_directory"
+}
+
+ServerIs: types.#Kind & {
+	symbol: "ServerIs"
 	schema: "active_directory"
 }
 
@@ -1759,6 +1804,7 @@ RelationshipKinds: [
 	AddMember,
 	HasSession,
 	Contains,
+	ServerIs,
 	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
@@ -1872,7 +1918,15 @@ ACLRelationships: [
 	WritePublicInformation,
 ]
 
-IngestACLRelationships: [for r in ACLRelationships if !list.Contains(AllPostProcessedRelationships, r) {r}],
+// ACL edges which are created by post-processing rather than ingested from collected data
+PostProcessedACLRelationships: [
+	Owns,
+	WriteOwner,
+	DCSync,
+	SyncLAPSPassword,
+]
+
+IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedACLRelationships, r) {r}],
 
 // these edges are common to inbound/outbound/pathfinding
 SharedRelationshipKinds: [
@@ -1935,6 +1989,7 @@ SharedRelationshipKinds: [
 	WritePublicInformation,
 	ManageCA,
 	ManageCertificates,
+	ServerIs,
 ]
 
 // Edges that are used during inbound traversal
@@ -1969,45 +2024,3 @@ EdgeCompositionRelationships: [
 	GPOAppliesTo,
 	CanApplyGPO,
 ]
-
-PostProcessedRelationships: [
-	DCSync,
-	ProtectAdminGroups,
-	SyncLAPSPassword,
-	CanRDP,
-	AdminTo,
-	CanPSRemote,
-	ExecuteDCOM,
-	TrustedForNTAuth,
-	IssuedSignedBy,
-	EnterpriseCAFor,
-	GoldenCert,
-	ADCSESC1,
-	ADCSESC3,
-	ADCSESC4,
-	ADCSESC6a,
-	ADCSESC6b,
-	ADCSESC10a,
-	ADCSESC10b,
-	ADCSESC9a,
-	ADCSESC9b,
-	ADCSESC13,
-	EnrollOnBehalfOf,
-	SyncedToADUser,
-	ExtendedByPolicy,
-	CoerceAndRelayNTLMToADCS,
-	CoerceAndRelayNTLMToSMB,
-	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS,
-	GPOAppliesTo,
-	CanApplyGPO,
-	HasTrustKeys,
-]
-
-DCAPostProcessedRelationships: [
-	Owns,
-	WriteOwner
-]
-
-// All post-processed edges
-AllPostProcessedRelationships: list.Concat([PostProcessedRelationships,DCAPostProcessedRelationships])

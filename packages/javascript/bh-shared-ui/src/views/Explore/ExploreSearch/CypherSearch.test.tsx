@@ -127,6 +127,10 @@ describe('CypherSearch', () => {
                 })
             );
         }),
+        rest.get('/api/v2/extensions', (_req, res, ctx) => res(ctx.json({ data: { extensions: [] } }))),
+        rest.get('/api/v2/saved-queries/:id/permissions', (_req, res, ctx) =>
+            res(ctx.json({ data: { shared_to_user_ids: [], public: false } }))
+        ),
         rest.get('/api/v2/self', async (req, res, ctx) => {
             return res(
                 ctx.json({
@@ -211,6 +215,35 @@ describe('CypherSearch', () => {
         await user.keyboard('{Alt>}s{/Alt}');
 
         expect(screen.queryByTestId('save-query-dialog')).toBeInTheDocument();
+    });
+
+    it('shows a managed-query error rather than opening the editor when saving an extension query', async () => {
+        server.use(
+            rest.get('/api/v2/saved-queries', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: [
+                            {
+                                id: 99,
+                                name: 'Managed Query',
+                                description: '',
+                                query: CYPHER,
+                                user_id: 'owner',
+                                extension_id: 42,
+                            },
+                        ],
+                    })
+                )
+            )
+        );
+        const { screen, user } = await setup({ ...testState, cypherQuery: CYPHER });
+
+        await user.click(screen.getByTestId('common-queries-toggle'));
+        await user.click(await screen.findByText('Managed Query'));
+        await user.click(screen.getByRole('button', { name: 'Save query' }));
+
+        expect(screen.getByRole('status')).toHaveTextContent('managed by an extension');
+        expect(screen.queryByTestId('save-query-dialog')).not.toBeInTheDocument();
     });
 
     describe('Minimize explorer page elements when multiple nodes are returned', () => {

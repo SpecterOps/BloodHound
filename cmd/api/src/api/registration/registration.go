@@ -20,7 +20,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -33,8 +32,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
-	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/dawgs/graph"
 )
@@ -52,11 +51,9 @@ func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configur
 		routerInst.UsePrerouting(middleware.LoggingMiddleware(identityResolver, bypassLimitsParam))
 	}
 
-	routerInst.UsePostrouting(
-		middleware.PanicHandler,
-		middleware.AuthMiddleware(authenticator),
-		middleware.CompressionMiddleware,
-	)
+	routerInst.UsePanicRecovery(middleware.PanicHandler)
+	routerInst.UseAuthenticationMiddleware(middleware.AuthMiddleware(authenticator))
+	routerInst.UsePostrouting(middleware.CompressionMiddleware)
 }
 
 func RegisterFossRoutes(
@@ -69,28 +66,20 @@ func RegisterFossRoutes(
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
-	ingestSchema upload.IngestSchema,
+	ingestSchema payload.Schema,
 	fileServiceResolver storage.FileServiceResolver,
 	dogtagsService dogtags.Service,
 	openGraphSchemaService v2.OpenGraphSchemaService,
 	alertPublisher alerts.Publisher,
 ) {
-	router.With(func() mux.MiddlewareFunc {
-		return middleware.DefaultRateLimitMiddleware(rdms)
-	},
-		// Health Endpoint
-		routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
-			response.WriteHeader(http.StatusOK)
-		}),
+	routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+	routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
+		http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
+	})
 
-		// Redirect root resource to the UI
-		routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
-			http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
-		}),
-	)
-
-	// Static asset handling for the UI. This route intentionally sits outside the default API rate limiter
-	// because a single page load can request many static HTML, JavaScript, CSS, and media assets.
+	// Static UI assets are exempt from the matched-route API rate limit.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)

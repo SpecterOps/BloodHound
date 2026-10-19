@@ -166,6 +166,21 @@ func (mr *MockGraphMockRecorder) FetchNodesByObjectIDsAndKinds(ctx, kinds any, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodesByObjectIDsAndKinds", reflect.TypeOf((*MockGraph)(nil).FetchNodesByObjectIDsAndKinds), varargs...)
 }
 
+// GetADEntityDetails mocks base method.
+func (m *MockGraph) GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetADEntityDetails", ctx, objectID, entityType)
+	ret0, _ := ret[0].(*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetADEntityDetails indicates an expected call of GetADEntityDetails.
+func (mr *MockGraphMockRecorder) GetADEntityDetails(ctx, objectID, entityType any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityDetails", reflect.TypeOf((*MockGraph)(nil).GetADEntityDetails), ctx, objectID, entityType)
+}
+
 // GetADEntityQueryResult mocks base method.
 func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
 	m.ctrl.T.Helper()
@@ -392,18 +407,18 @@ func (mr *MockGraphMockRecorder) SearchByNameOrObjectID(ctx, includeOpenGraphNod
 }
 
 // SearchNodesByNameOrObjectId mocks base method.
-func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip, limit int, useRawObjectID bool) ([]*graph.Node, error) {
+func (m *MockGraph) SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip, limit int, useRawObjectID bool, etacAllowedList []string) ([]*graph.Node, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID)
+	ret := m.ctrl.Call(m, "SearchNodesByNameOrObjectId", ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID, etacAllowedList)
 	ret0, _ := ret[0].([]*graph.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SearchNodesByNameOrObjectId indicates an expected call of SearchNodesByNameOrObjectId.
-func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID any) *gomock.Call {
+func (mr *MockGraphMockRecorder) SearchNodesByNameOrObjectId(ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID, etacAllowedList any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodesByNameOrObjectId", reflect.TypeOf((*MockGraph)(nil).SearchNodesByNameOrObjectId), ctx, nodeKinds, nameOrObjectIdQuery, skip, limit, useRawObjectID, etacAllowedList)
 }
 
 // UpdateSelectorTags mocks base method.

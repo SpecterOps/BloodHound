@@ -33,7 +33,7 @@ function NodeIcon({ nodeType = '', className }: NodeIconProps) {
     return (
         <Tooltip
             tooltip={nodeType}
-            contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast' }}>
+            contentProps={{ className: 'bg-neutral-5 border-none text-contrast dark:text-contrast z-[1400]' }}>
             <div className='inline-block relative mr-1'>
                 <div
                     className={cn(
@@ -45,7 +45,7 @@ function NodeIcon({ nodeType = '', className }: NodeIconProps) {
                     {nodeType === MetaNodeKind || nodeType === MetaDetailNodeKind ? (
                         <img src={'/ui/meta.png'} alt='meta node' className='size-full' />
                     ) : (
-                        <FontAwesomeIcon icon={iconInfo.icon} transform='shrink-2' fixedWidth />
+                        <FontAwesomeIcon icon={iconInfo.icon} transform='shrink-2' />
                     )}
                 </div>
             </div>

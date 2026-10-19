@@ -36,7 +36,6 @@ import (
 )
 
 func TestAZAddOwner(t *testing.T) {
-	t.Parallel()
 
 	//#region Setup for test
 	suite := setupIntegrationTestSuite(t)
@@ -953,7 +952,6 @@ func TestEntityDetails(t *testing.T) {
 // TestFetchEntityDescendentPaths_DirectPathsToRoot verifies that each terminal node with a direct
 // azure.Contains edge to the root tenant is included in the returned path set.
 func TestFetchEntityDescendentPaths_DirectPathsToRoot(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -987,7 +985,6 @@ func TestFetchEntityDescendentPaths_DirectPathsToRoot(t *testing.T) {
 // root through one or more intermediate azure.Contains hops is fully represented in the path set,
 // with every intermediary node included.
 func TestFetchEntityDescendentPaths_MultiHopPathToRoot(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1025,7 +1022,6 @@ func TestFetchEntityDescendentPaths_MultiHopPathToRoot(t *testing.T) {
 // TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty verifies that an empty path set is
 // returned when no nodes of the requested kind exist within the tenant.
 func TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1049,7 +1045,6 @@ func TestFetchEntityDescendentPaths_NoTerminalsReturnsEmpty(t *testing.T) {
 // an intermediate container node both produce complete paths reaching root. Each traversal
 // independently reaches root through the shared intermediate without being truncated.
 func TestFetchEntityDescendentPaths_SharedIntermediateNode(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1091,7 +1086,6 @@ func TestFetchEntityDescendentPaths_SharedIntermediateNode(t *testing.T) {
 // which exists in the same tenant but has no azure.Contains path leading back to root
 // is excluded from the returned path set.
 func TestFetchEntityDescendentPaths_TerminalNotConnectedToRoot(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
@@ -1125,7 +1119,6 @@ func TestFetchEntityDescendentPaths_TerminalNotConnectedToRoot(t *testing.T) {
 // nested under one or more intermediate ManagementGroups is returned when listing the
 // DescendentSubscriptions of an ancestor ManagementGroup.
 func TestListEntityDescendents_NestedManagementGroupToSubscription(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)

@@ -17,11 +17,12 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
+import { getDuplicateDisplayNames } from './utils';
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
@@ -70,6 +71,9 @@ const ExploreSearchCombobox: React.FC<{
         },
         itemToString: (item) => item?.name || item?.objectid || '',
     });
+
+    // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
+    const duplicateDisplayNames = useMemo(() => getDuplicateDisplayNames(data ?? []), [data]);
 
     const disabledText: string = getEmptyResultsText(
         isLoading,
@@ -162,12 +166,14 @@ const ExploreSearchCombobox: React.FC<{
                                             label: item.name,
                                             objectId: item.objectid,
                                             kind: item.type,
+                                            distinguishedName: item.distinguishedname,
                                         }}
                                         index={index}
                                         key={index}
                                         highlightedIndex={highlightedIndex}
                                         keyword={keyword}
                                         getItemProps={getItemProps}
+                                        showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
                                     />
                                 );
                             })

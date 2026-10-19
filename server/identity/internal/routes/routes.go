@@ -28,11 +28,29 @@ import (
 // Register attaches the identity endpoints to the given router instance.
 func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
-		permissions = auth.Permissions()
-		roleList    = handlers.RoleListView{}
+		permissions         = auth.Permissions()
+		roleList            = handlers.RoleListView{}
+		permissionList      = handlers.PermissionListView{}
+		roleListRoute       = routerInst.GET("/api/v2/roles", handler.ListRoles)
+		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
+		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
+		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
 	)
 
-	routerInst.GET("/api/v2/roles", handler.ListRoles).RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
-	routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole).RequirePermissions(permissions.AuthManageSelf)
-	routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission).RequirePermissions(permissions.AuthManageSelf)
+	RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
+	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
+	roleRoute.RequirePermissions(permissions.AuthManageSelf)
+	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
+	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
+}
+
+// RegisterUserListRoute registers the list-users route at the given path and returns it. It is
+// exported so the enterprise /api/v2/bhe-users backwards-compat alias can reuse the same route.
+func RegisterUserListRoute(routerInst *router.Router, handler *handlers.Handlers, path string) *router.Route {
+	var (
+		permissions = auth.Permissions()
+		userList    = handlers.UserListView{}
+	)
+
+	return routerInst.GET(path, handler.ListUsers).RequireAtLeastOnePermission(permissions.AuthManageUsers, permissions.AuthReadUsers).WithSort(userList).WithFilters(userList)
 }

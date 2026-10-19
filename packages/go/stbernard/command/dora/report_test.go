@@ -123,42 +123,46 @@ func TestCalculateLastFiscalQuarter(t *testing.T) {
 			expectedEnd:      "2026-03-31 23:59:59",
 		},
 		{
-			name:             "January FY, reference at end of Q3 (September 30)",
-			fiscalStartMonth: 1, // January FY: Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec
+			name:             "January FY, reference in Q3 (September)",
+			fiscalStartMonth: 1,
 			referenceTime:    "2026-09-30",
-			expectedStart:    "2026-07-01 00:00:00", // monthsIntoFY=8, (8-1)/3=2 (Q3), return Q3
-			expectedEnd:      "2026-09-30 23:59:59",
+			expectedStart:    "2026-04-01 00:00:00",
+			expectedEnd:      "2026-06-30 23:59:59",
 		},
 		{
-			name:             "February FY, reference at end of Q2 (July 31)",
-			fiscalStartMonth: 2, // February FY: Q1=Feb-Apr, Q2=May-Jul, Q3=Aug-Oct, Q4=Nov-Jan
+			name:             "February FY, reference in Q2 (July)",
+			fiscalStartMonth: 2,
 			referenceTime:    "2026-07-31",
-			expectedStart:    "2026-05-01 00:00:00", // monthsIntoFY=5, (5-1)/3=1 (Q2), return Q2
-			expectedEnd:      "2026-07-31 23:59:59",
+			expectedStart:    "2026-02-01 00:00:00",
+			expectedEnd:      "2026-04-30 23:59:59",
 		},
 		{
 			name:             "October FY, reference in Q1 (November)",
-			fiscalStartMonth: 10, // October FY: Q1=Oct-Dec, Q2=Jan-Mar, Q3=Apr-Jun, Q4=Jul-Sep
+			fiscalStartMonth: 10,
 			referenceTime:    "2025-11-15",
-			expectedStart:    "2025-10-01 00:00:00", // monthsIntoFY=1, (1-1)/3=0 (Q1), return Q1
-			expectedEnd:      "2025-12-31 23:59:59",
+			expectedStart:    "2025-07-01 00:00:00",
+			expectedEnd:      "2025-09-30 23:59:59",
 		},
 		{
 			name:             "October FY, reference in Q2 (February)",
-			fiscalStartMonth: 10, // October
+			fiscalStartMonth: 10,
 			referenceTime:    "2026-02-28",
-			expectedStart:    "2026-01-01 00:00:00", // monthsIntoFY=4, (4-1)/3=1 (Q2), return Q2
-			expectedEnd:      "2026-03-31 23:59:59",
+			expectedStart:    "2025-10-01 00:00:00",
+			expectedEnd:      "2025-12-31 23:59:59",
 		},
 		{
-			name:             "January FY, reference early in Q1 (January 15)",
-			fiscalStartMonth: 1, // January
+			name:             "January FY, reference in Q1 (January)",
+			fiscalStartMonth: 1,
 			referenceTime:    "2026-01-15",
-			// Note: monthsIntoFY=0, (0-1)/3=-1 should return Q4 of prev FY (Oct-Dec 2025)
-			// but current implementation returns Q1. This may be intentional to avoid
-			// returning incomplete quarter data at the start of the fiscal year.
-			expectedStart: "2026-01-01 00:00:00",
-			expectedEnd:   "2026-03-31 23:59:59",
+			expectedStart:    "2025-10-01 00:00:00",
+			expectedEnd:      "2025-12-31 23:59:59",
+		},
+		{
+			name:             "February FY, reference in Q1 (February)",
+			fiscalStartMonth: 2,
+			referenceTime:    "2026-02-20",
+			expectedStart:    "2025-11-01 00:00:00",
+			expectedEnd:      "2026-01-31 23:59:59",
 		},
 	}
 
@@ -214,6 +218,117 @@ func TestCalculateLastFiscalQuarter(t *testing.T) {
 			t.Logf("✓ Fiscal start=%s, ref=%s: Q = %v to %v",
 				time.Month(tt.fiscalStartMonth), tt.referenceTime,
 				start.Format("2006-01-02"), end.Format("2006-01-02"))
+		})
+	}
+}
+
+func TestResolveTimeRange(t *testing.T) {
+	referenceTime, err := time.Parse(time.RFC3339, "2026-08-20T10:15:30Z")
+	if err != nil {
+		t.Fatalf("parsing reference time: %v", err)
+	}
+
+	testCases := []struct {
+		name             string
+		days             int
+		startDate        string
+		endDate          string
+		lastQuarter      bool
+		fiscalStartMonth int
+		expectedStart    string
+		expectedEnd      string
+		expectedError    string
+	}{
+		{
+			name:             "days range",
+			days:             90,
+			fiscalStartMonth: 2,
+			expectedStart:    "2026-05-22T10:15:30Z",
+			expectedEnd:      "2026-08-20T10:15:30Z",
+		},
+		{
+			name:             "custom range includes the end date",
+			startDate:        "2026-02-01",
+			endDate:          "2026-04-30",
+			fiscalStartMonth: 2,
+			expectedStart:    "2026-02-01T00:00:00Z",
+			expectedEnd:      "2026-04-30T23:59:59Z",
+		},
+		{
+			name:             "last complete fiscal quarter",
+			lastQuarter:      true,
+			fiscalStartMonth: 2,
+			expectedStart:    "2026-05-01T00:00:00Z",
+			expectedEnd:      "2026-07-31T23:59:59Z",
+		},
+		{
+			name:             "last quarter takes precedence over explicit dates",
+			startDate:        "2026-01-01",
+			endDate:          "2026-01-31",
+			lastQuarter:      true,
+			fiscalStartMonth: 2,
+			expectedStart:    "2026-05-01T00:00:00Z",
+			expectedEnd:      "2026-07-31T23:59:59Z",
+		},
+		{
+			name:             "invalid fiscal start month",
+			lastQuarter:      true,
+			fiscalStartMonth: 13,
+			expectedError:    "fiscal start month must be between 1 and 12",
+		},
+		{
+			name:             "invalid custom range",
+			startDate:        "2026-05-01",
+			endDate:          "2026-04-30",
+			fiscalStartMonth: 2,
+			expectedError:    "start date (2026-05-01) cannot be after end date (2026-04-30)",
+		},
+		{
+			name:             "end date requires start date",
+			endDate:          "2026-04-30",
+			fiscalStartMonth: 2,
+			expectedError:    "end date requires start date",
+		},
+		{
+			name:             "zero days is invalid",
+			fiscalStartMonth: 2,
+			expectedError:    "days must be greater than zero",
+		},
+		{
+			name:             "negative days is invalid",
+			days:             -1,
+			fiscalStartMonth: 2,
+			expectedError:    "days must be greater than zero",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			actualStart, actualEnd, err := resolveTimeRange(
+				testCase.days,
+				testCase.startDate,
+				testCase.endDate,
+				testCase.lastQuarter,
+				testCase.fiscalStartMonth,
+				referenceTime,
+			)
+			if testCase.expectedError != "" {
+				if err == nil || err.Error() != testCase.expectedError {
+					t.Fatalf("resolveTimeRange() error = %v, want %q", err, testCase.expectedError)
+				}
+
+				return
+			}
+			if err != nil {
+				t.Fatalf("resolveTimeRange() error = %v", err)
+			}
+
+			if actualStart.Format(time.RFC3339) != testCase.expectedStart {
+				t.Errorf("start = %s, want %s", actualStart.Format(time.RFC3339), testCase.expectedStart)
+			}
+			if actualEnd.Format(time.RFC3339) != testCase.expectedEnd {
+				t.Errorf("end = %s, want %s", actualEnd.Format(time.RFC3339), testCase.expectedEnd)
+			}
 		})
 	}
 }

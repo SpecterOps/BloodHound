@@ -131,5 +131,20 @@
       "description": "Lists dogs and their registered owners.",
       "category": "Dog Park"
     }
+  ],
+  "pz_rules": [
+    {
+      "key": "large_dog_area",
+      "name": "Large Dog Area",
+      "description": "Protects all Large Dog Area environment nodes in the dog park.",
+      "enabled": true,
+      "allow_disable": true,
+      "seeds": [
+        {
+          "type": 2,
+          "value": "MATCH (n:dogpark_LargeDogArea) RETURN n"
+        }
+      ]
+    }
   ]
 }

@@ -51,6 +51,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
                     ActiveDirectoryRelationshipKind.SameForestTrust,
+                    ActiveDirectoryRelationshipKind.ServerIs,
                 ],
             },
             {

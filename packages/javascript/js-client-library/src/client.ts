@@ -36,6 +36,9 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GetCollectorJobHistoryOptions,
+    GetCollectorJobSchedulesOptions,
+    GetCollectorJobSecretsOptions,
     LoginRequest,
     PostureRequest,
     PreviewSelectorsRequest,
@@ -96,9 +99,13 @@ import {
     GetAlertResponse,
     GetAlertsResponse,
     GetClientResponse,
+    GetCollectorJobHistoryResponse,
     GetCollectorJobProfilesResponse,
     GetCollectorJobScheduleResponse,
+    GetCollectorJobSchedulesResponse,
     GetCollectorJobSecretResponse,
+    GetCollectorJobSecretsResponse,
+    GetCollectorJobTypesResponse,
     GetCollectorsResponse,
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
@@ -107,7 +114,6 @@ import {
     GetEnterpriseCollectorsResponse,
     GetExportQueryResponse,
     GetExtensionsResponse,
-    GetLatestCollectorJobHistoryResponse,
     GetNodeKindResponse,
     GetNodeResponse,
     GetRelationshipKindResponse,
@@ -536,6 +542,12 @@ class BHEAPIClient {
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
 
+    downloadUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<Blob>('/api/v2/attack-paths/findings', {
+            ...options,
+            headers: { ...options?.headers, Accept: 'text/csv' },
+            responseType: 'blob',
+        });
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
@@ -811,30 +823,42 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-
-    getLatestCollectorJobHistory = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<GetLatestCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: GetCollectorJobHistoryOptions) =>
+        this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collie-job-history', {
             ...options,
             params: {
                 ...options?.params,
                 job_profile_id: `eq:${profileId}`,
-                sort_by: '-recorded_at',
-                skip: 0,
-                limit: 1,
+                sort_by: options?.params?.sort_by ?? '-recorded_at',
+                skip,
+                limit,
             },
         });
 
+    getCollectorJobTypes = (skip = 0, limit = 100, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobTypesResponse>('/api/v2/collie-job-types', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
     getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collie-job-profiles', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
+    getCollectorJobSchedules = (skip = 0, limit = 100, options?: GetCollectorJobSchedulesOptions) =>
+        this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collie-job-schedules', {
+            paramsSerializer: { indexes: null },
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collie-job-schedules/${scheduleId}`, options);
 
     createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
-        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collie-job-schedules', request, options);
 
     updateCollectorJobSchedule = (
         scheduleId: number,
@@ -842,26 +866,26 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
-            `/api/v2/collector-job-schedules/${scheduleId}`,
+            `/api/v2/collie-job-schedules/${scheduleId}`,
             request,
             options
         );
 
     deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+        this.baseClient.delete<void>(`/api/v2/collie-job-profiles/${profileId}`, options);
 
     runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
         this.baseClient.post<RunCollectorJobProfileResponse>(
-            '/api/v2/collector-job-queue',
+            '/api/v2/collie-job-queue',
             { job_profile_id: profileId },
             options
         );
 
     createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
-        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collie-job-profiles', payload, options);
 
     getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collie-job-profiles/${profileId}`, options);
 
     updateCollectorJobProfile = (
         profileId: number,
@@ -869,16 +893,22 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.patch<CollectorJobProfileResponse>(
-            `/api/v2/collector-job-profiles/${profileId}`,
+            `/api/v2/collie-job-profiles/${profileId}`,
             payload,
             options
         );
 
+    getCollectorJobSecrets = (skip = 0, limit = 100, options?: GetCollectorJobSecretsOptions) =>
+        this.baseClient.get<GetCollectorJobSecretsResponse>('/api/v2/collie-job-secrets', {
+            ...options,
+            params: { ...options?.params, skip, limit },
+        });
+
     getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collie-job-secrets/${secretId}`, options);
 
     createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
-        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collie-job-secrets', request, options);
 
     /* clients */
 
@@ -2008,6 +2038,21 @@ class BHEAPIClient {
             )
         );
 
+    getGPOSitesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/gpos/${id}/sites`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
     getGPOControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/controllers`,
@@ -2771,6 +2816,102 @@ class BHEAPIClient {
                         skip,
                         limit,
                         type,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/controllers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/linked-gpos`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedServersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/siteservers`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+    getSiteLinkedSubnetsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sites/${id}/sitesubnets`,
+            Object.assign(
+                {
+                    params: {
+                        skip,
+                        limit,
+                        type,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteServerV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/siteservers/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
+                    },
+                },
+                options
+            )
+        );
+
+    getSiteSubnetV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/sitesubnets/${id}`,
+            Object.assign(
+                {
+                    params: {
+                        counts,
                     },
                 },
                 options

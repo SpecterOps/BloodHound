@@ -118,14 +118,14 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 			}
 		}
 	)
-	t.Parallel()
+
 	testSuite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &testSuite)
 
 	type testCase struct {
 		name     string
 		setup    func(t *testing.T, testSuite IntegrationTestSuite) testSetupData
-		assert   func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, updated bool, err error)
+		assert   func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, result model.GraphExtensionUpsertResult, err error)
 		teardown func(t *testing.T, testSuite IntegrationTestSuite, setupData testSetupData)
 	}
 	tests := []testCase{
@@ -147,10 +147,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 					expectedSavedQueries: expectedSavedQueries,
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.False(t, updated)
+				assert.False(t, result.ExtensionExisted)
 				graphSchemaExtensions, _, lookupErr := testSuite.BHDatabase.GetGraphSchemaExtensions(
 					testSuite.Context,
 					model.Filters{"name": []model.Filter{{Operator: model.Equals, Value: setupData.graphExtensionInput.ExtensionInput.Name, SetOperator: model.FilterAnd}}},
@@ -187,10 +187,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 					existingSavedQueriesByKey: existingSavedQueriesByKey,
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				currentSavedQueriesByKey := assertExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
 				require.Equal(t, setupData.existingSavedQueriesByKey["keep"].ID, currentSavedQueriesByKey["keep"].ID)
 			},
@@ -217,10 +217,10 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 					deletedSavedQueryIDs: []int64{savedQueriesByKey["drop"].ID},
 				}
 			},
-			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, updated bool, err error) {
+			assert: func(t *testing.T, testSuite IntegrationTestSuite, setupData *testSetupData, result model.GraphExtensionUpsertResult, err error) {
 				t.Helper()
 				require.NoError(t, err)
-				assert.True(t, updated)
+				assert.True(t, result.ExtensionExisted)
 				assertExtensionSavedQueries(t, testSuite, setupData.extensionID, setupData.expectedSavedQueries...)
 				assertSavedQueriesDeleted(t, testSuite, setupData.deletedSavedQueryIDs...)
 			},
@@ -236,8 +236,8 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionSavedQueries(t *testing.T) {
 				})
 			}
 
-			updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.graphExtensionInput)
-			currentTestCase.assert(t, testSuite, &setupData, updated, err)
+			result, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.graphExtensionInput)
+			currentTestCase.assert(t, testSuite, &setupData, result, err)
 		})
 	}
 }

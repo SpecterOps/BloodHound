@@ -122,31 +122,6 @@ func TestDatabase_Installation(t *testing.T) {
 	}
 }
 
-func TestDatabase_InitializePermissions(t *testing.T) {
-	dbInst := integration.SetupDB(t)
-
-	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Error fetching permissions: %v", err)
-	} else {
-		templates := auth.Permissions().All()
-
-		for _, permissionTemplate := range templates {
-			found := false
-
-			for _, permission := range permissions {
-				if permission.Equals(permissionTemplate) {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Fatalf("Missing permission %s", permissionTemplate)
-			}
-		}
-	}
-}
-
 func TestDatabase_InitializeRoles(t *testing.T) {
 	var (
 		_, roles  = initAndGetRoles(t)

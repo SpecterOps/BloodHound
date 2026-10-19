@@ -20,7 +20,6 @@
     "author": "The BloodHound Enterprise Team (https://bloodhoundenterprise.io/)",
     "license": "MIT",
     "dependencies": {
-        "@date-io/luxon": "^3.2.0",
         "@fortawesome/fontawesome-free": "^6.7.2",
         "@fortawesome/fontawesome-svg-core": "^6.7.2",
         "@fortawesome/free-regular-svg-icons": "^6.7.2",
@@ -61,7 +60,6 @@
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
         "@faker-js/faker": "^10.6.0",
-        "@mui/lab": "^5.0.0-alpha.136",
         "@mui/material": "^5.14.0",
         "@mui/styles": "^5.14.0",
         "@rollup/plugin-terser": "^0.4.4",
@@ -105,7 +103,6 @@
     "peerDependencies": {
         "@emotion/react": "11.x",
         "@emotion/styled": "11.x",
-        "@mui/lab": "5.x",
         "@mui/material": "5.x",
         "@mui/styles": "5.x",
         "react": "18.x",

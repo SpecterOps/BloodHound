@@ -212,6 +212,20 @@ func getGPOLinks(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship,
 		return query.And(
 			query.Equals(query.StartID(), node.ID),
 			query.Kind(query.Relationship(), ad.GPLink),
+			query.KindIn(query.End(), ad.Domain, ad.OU, ad.Site),
+		)
+	})); err != nil {
+		return nil, err
+	} else {
+		return gpLinks, nil
+	}
+}
+
+func getGPOLinksWithoutSite(tx graph.Transaction, node *graph.Node) ([]*graph.Relationship, error) {
+	if gpLinks, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.StartID(), node.ID),
+			query.Kind(query.Relationship(), ad.GPLink),
 			query.KindIn(query.End(), ad.Domain, ad.OU),
 		)
 	})); err != nil {
@@ -323,7 +337,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
 
-	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+	if gpLinks, err := getGPOLinksWithoutSite(tx, node); err != nil {
 		return nil, err
 	} else {
 		for _, rel := range gpLinks {
@@ -372,6 +386,57 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 		}
 
 		return pathSet, nil
+	}
+}
+
+func FetchGPOAffectedSitePaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
+
+	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+		return nil, err
+	} else {
+		for _, rel := range gpLinks {
+			if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
+				return nil, err
+			} else {
+				// Not bothering with enforcement status here since inheritance does not affect Sites
+				// We only want Sites here. We won't traverse further down.
+				if end.Kinds.ContainsOneOf(ad.Site) {
+					pathSet.AddPath(graph.Path{
+						Nodes: []*graph.Node{node, end},
+						Edges: []*graph.Relationship{rel},
+					})
+				}
+			}
+		}
+		return pathSet, nil
+	}
+}
+
+func FetchGPOAffectedSites(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	var (
+		nodeSet          = graph.NewNodeSet()
+		seenSites        = graph.NewNodeSet()
+		limitSkipTracker = ops.LimitSkipTracker{
+			Limit: limit,
+			Skip:  skip,
+		}
+	)
+
+	if gpLinks, err := getGPOLinks(tx, node); err != nil {
+		return nil, err
+	} else {
+		for _, rel := range gpLinks {
+			if limitSkipTracker.AtLimit() {
+				break
+			} else if _, end, err := ops.FetchRelationshipNodes(tx, rel); err != nil {
+				return nil, err
+			} else if end.Kinds.ContainsOneOf(ad.Site) && seenSites.AddIfNotExists(end) && limitSkipTracker.ShouldCollect() {
+				nodeSet.Add(end)
+			}
+		}
+
+		return nodeSet, nil
 	}
 }
 
@@ -426,7 +491,7 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.And(
-				query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+				query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.GPO),
 				query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
 			)
 		},
@@ -451,8 +516,8 @@ func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int
 				// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
 				// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
 				segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-					if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
-						// If we run into anything that isn't an OU or a Domain node then we're done checking for
+					if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain, ad.Site) {
+						// If we run into anything that isn't an OU, Domain, or Site node then we're done checking for
 						// inheritance blocking
 						return false
 					} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
@@ -503,7 +568,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 			Direction: graph.DirectionInbound,
 			BranchQuery: func() graph.Criteria {
 				return query.And(
-					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.GPO),
+					query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.GPO),
 					query.KindIn(query.Relationship(), ad.Contains, ad.GPLink),
 				)
 			},
@@ -527,8 +592,8 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 					// Walk the GPO path to see if any of the nodes between the GPO and the enforcement target block GPO
 					// inheritance. This walk starts at the GPO and moves down, with end being the GPO to start
 					segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
-						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
-							// If we run into anything that isn't an OU or a Domain node then we're done checking for
+						if !start.Kinds.ContainsOneOf(ad.OU, ad.Domain, ad.Site) {
+							// If we run into anything that isn't an OU, Domain, or Site node then we're done checking for
 							// inheritance blocking
 							return false
 						} else if lastNodeBlocks && start.Kinds.ContainsOneOf(ad.OU) {
@@ -585,7 +650,7 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 				Direction: graph.DirectionInbound,
 				BranchQuery: func() graph.Criteria {
 					return query.And(
-						query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Container),
+						query.KindIn(query.Start(), ad.Domain, ad.OU, ad.Site, ad.Container),
 						query.KindIn(query.Relationship(), ad.Contains),
 					)
 				},
@@ -665,7 +730,7 @@ func FetchContainersOfNode(tx graph.Transaction, target *graph.Node) (graph.Node
 	return containers, nil
 }
 
-func CreateOUContainedListDelegate(kind graph.Kind) ListDelegate {
+func CreateContainedListDelegate(kind graph.Kind) ListDelegate {
 	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
 		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
 			Root:      node,
@@ -684,7 +749,7 @@ func CreateOUContainedListDelegate(kind graph.Kind) ListDelegate {
 	}
 }
 
-func CreateOUContainedPathDelegate(kind graph.Kind) PathDelegate {
+func CreateContainedPathDelegate(kind graph.Kind) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
 			Root:      node,
@@ -1723,10 +1788,19 @@ func FetchEnterpriseCAsCertChainPathToDomain(tx graph.Transaction, enterpriseCA,
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
 		},
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return !segment.Trunk.Node.Kinds.ContainsOneOf(ad.Domain)
+			if segment.Edge.Kind.Is(ad.RootCAFor) {
+				return segment.Depth() >= 2 &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.RootCA) &&
+					segment.Node.Kinds.ContainsOneOf(ad.Domain) &&
+					segment.Node.ID == domain.ID
+			}
+
+			return segment.Edge.Kind.Is(ad.IssuedSignedBy, ad.EnterpriseCAFor) &&
+				segment.Trunk.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA) &&
+				segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA, ad.RootCA)
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.ID == domain.ID
+			return segment.Depth() >= 2 && segment.Node.ID == domain.ID
 		},
 	})
 }
@@ -1738,8 +1812,22 @@ func FetchEnterpriseCAsTrustedForAuthPathToDomain(tx graph.Transaction, enterpri
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.TrustedForNTAuth) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) &&
+					segment.Node.Kinds.ContainsOneOf(ad.NTAuthStore)
+			} else if segment.Depth() == 2 {
+				return segment.Edge.Kind.Is(ad.NTAuthStoreFor) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.NTAuthStore) &&
+					segment.Node.Kinds.ContainsOneOf(ad.Domain) &&
+					segment.Node.ID == domain.ID
+			}
+
+			return false
+		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.ID == domain.ID
+			return segment.Depth() == 2 && segment.Node.ID == domain.ID
 		},
 	})
 }
@@ -1754,25 +1842,29 @@ func FetchHostsCAServiceComputers(tx graph.Transaction, enterpriseCA *graph.Node
 }
 
 func FetchEnterpriseCAsTrustedForNTAuthToDomain(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
-	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
 		Root:      domain,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.TrustedForNTAuth, ad.NTAuthStoreFor)
 		},
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			depth := segment.Depth()
-			if depth == 1 && !segment.Edge.Kind.Is(ad.NTAuthStoreFor) {
-				return false
-			} else if depth == 2 && !segment.Edge.Kind.Is(ad.TrustedForNTAuth) {
-				return false
-			} else {
-				return true
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.NTAuthStoreFor) &&
+					segment.Node.Kinds.ContainsOneOf(ad.NTAuthStore)
+			} else if segment.Depth() == 2 {
+				return segment.Edge.Kind.Is(ad.TrustedForNTAuth) &&
+					segment.Trunk.Node.Kinds.ContainsOneOf(ad.NTAuthStore) &&
+					segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 			}
+
+			return false
 		},
 		PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-			return segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+			return segment.Depth() == 2 && segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 		},
+	}, func(node *graph.Node) bool {
+		return node.Kinds.ContainsOneOf(ad.EnterpriseCA)
 	})
 }
 
@@ -1807,6 +1899,14 @@ func FetchEnterpriseCAsRootCAForPathToDomain(tx graph.Transaction, domain *graph
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor, ad.RootCAFor)
+		},
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 1 {
+				return segment.Edge.Kind.Is(ad.RootCAFor) && segment.Node.Kinds.ContainsOneOf(ad.RootCA)
+			}
+
+			return segment.Edge.Kind.Is(ad.IssuedSignedBy, ad.EnterpriseCAFor) &&
+				segment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA, ad.AIACA)
 		},
 	}, func(node *graph.Node) bool {
 		return node.Kinds.ContainsOneOf(ad.EnterpriseCA)

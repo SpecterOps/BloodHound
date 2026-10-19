@@ -26,7 +26,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/teambition/rrule-go"
@@ -34,31 +33,6 @@ import (
 
 type ListAppConfigParametersResponse struct {
 	Data appcfg.Parameters `json:"data"`
-}
-
-func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, request *http.Request) {
-	var cfgParameter appcfg.Parameter
-
-	const queryParameterName = "parameter"
-
-	if queryFilters, err := s.QueryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if parameterFilter, hasParameterFilter := queryFilters.FirstFilter(queryParameterName); hasParameterFilter {
-		parameterFilterValue := appcfg.ParameterKey(parameterFilter.Value)
-		if parameterFilter.Operator != model.Equals {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
-		} else if !cfgParameter.IsValidKey(parameterFilterValue) || cfgParameter.IsProtectedKey(parameterFilterValue) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
-		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilterValue); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), appcfg.Parameters{cfgParameter}, http.StatusOK, response)
-		}
-	} else if cfgParameters, err := s.DB.GetAllConfigurationParameters(request.Context()); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), cfgParameters, http.StatusOK, response)
-	}
 }
 
 func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, request *http.Request) {
