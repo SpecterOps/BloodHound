@@ -20,6 +20,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -187,15 +188,14 @@ func TestExtractBundleFromZip(t *testing.T) {
 			name:    "schema.json exceeding decompressed component limit is rejected",
 			archive: newOversizedExtensionZip(t, bundleFileNameSchema, validSchemaJSON),
 			expected: expectedResults{
-				errorText: fmt.Sprintf("component %q exceeds decompressed size limit of %d bytes", bundleFileNameSchema, bundleComponentDecompressedReadLimitBytes),
+				errorText: fmt.Sprintf("unable to open schema.json in zip archive: component %q exceeds decompressed size limit of %d bytes", bundleFileNameSchema, bundleComponentDecompressedReadLimitBytes),
 			},
 		},
 		{
 			name:    "zip schema with findings requires pz_rules.json",
 			archive: newExtensionZip(t, map[string]string{"schema.json": validSchemaWithFindingsJSON}),
 			expected: expectedResults{
-				errorText:  "requires a \"pz_rules.json\" component",
-				schemaName: "TestExtension",
+				errorText: "extension declares relationship findings and requires a \"pz_rules.json\" component",
 			},
 		},
 		{
@@ -205,9 +205,7 @@ func TestExtractBundleFromZip(t *testing.T) {
 				"pz_rules.json": `{"pz_rules": []}`,
 			}),
 			expected: expectedResults{
-				errorText:  "\"pz_rules.json\" must contain at least one rule",
-				schemaName: "TestExtension",
-				hasPZRules: true,
+				errorText: "extension declares relationship findings and \"pz_rules.json\" must contain at least one rule",
 			},
 		},
 		{
@@ -222,11 +220,40 @@ func TestExtractBundleFromZip(t *testing.T) {
 			},
 		},
 		{
-			name: "valid zip with all three components populates the full bundle",
+			name: "filenames containing __MACOSX are unexpected files",
 			archive: newExtensionZip(t, map[string]string{
-				"schema.json":        validSchemaJSON,
-				"pz_rules.json":      validPZRulesComponentJSON,
-				"saved_queries.json": validSavedQueriesJSON,
+				"schema.json":       validSchemaJSON,
+				"notes__MACOSX.txt": "not a component",
+			}),
+			expected: expectedResults{
+				errorText: `unexpected file "notes__MACOSX.txt" in zip archive`,
+			},
+		},
+		{
+			name: "ordinary directories and nested metadata are rejected",
+			archive: newExtensionZip(t, map[string]string{
+				"schema.json":                 validSchemaJSON,
+				"folder/":                     "",
+				"folder/nested/":              "",
+				"folder/__MACOSX/schema.json": "{ not valid json",
+			}),
+			expected: expectedResults{
+				errorText: strings.Join([]string{
+					`unexpected directory "folder/nested/" in zip archive`,
+					`unexpected file "folder/__MACOSX/schema.json" in zip archive`,
+				}, "\n"),
+			},
+		},
+		{
+			name: "valid zip with all three components ignores saved-query ZIP exclusions",
+			archive: newExtensionZip(t, map[string]string{
+				"folder/":                   "",
+				"folder/schema.json":        validSchemaJSON,
+				"folder/pz_rules.json":      validPZRulesComponentJSON,
+				"folder/saved_queries.json": validSavedQueriesJSON,
+				"__MACOSX/":                 "",
+				"__MACOSX/schema.json":      "{ not valid json",
+				".DS_Store":                 "{ not valid json",
 			}),
 			expected: expectedResults{
 				schemaName: "TestExtension",
@@ -243,68 +270,91 @@ func TestExtractBundleFromZip(t *testing.T) {
 			},
 		},
 		{
+			name: "misplaced components and unexpected files report full paths and preserve root components",
+			archive: newExtensionZip(t, map[string]string{
+				"schema.json":                      validSchemaJSON,
+				"pz_rules.json":                    validPZRulesComponentJSON,
+				"saved_queries.json":               validSavedQueriesJSON,
+				"folder/nested/schema.json":        "{ not valid json",
+				"folder/nested/pz_rules.json":      "{ not valid json",
+				"folder/nested/saved_queries.json": "{ not valid json",
+				"folder/README.md":                 "{ not valid json",
+			}),
+			expected: expectedResults{
+				errorText: strings.Join([]string{
+					`unexpected file "folder/nested/schema.json" in zip archive`,
+					`unexpected file "folder/nested/pz_rules.json" in zip archive`,
+					`unexpected file "folder/nested/saved_queries.json" in zip archive`,
+					`unexpected file "folder/README.md" in zip archive`,
+				}, "\n"),
+			},
+		},
+		{
+			name:    "misplaced schema reports its placement error",
+			archive: newExtensionZip(t, map[string]string{"folder/nested/schema.json": "{ not valid json"}),
+			expected: expectedResults{
+				errorText: `unexpected file "folder/nested/schema.json" in zip archive`,
+			},
+		},
+		{
 			name:    "missing schema.json is an extractor error",
 			archive: newExtensionZip(t, map[string]string{"pz_rules.json": validPZRulesComponentJSON}),
 			expected: expectedResults{
-				errorText:  "required component \"schema.json\" not found in extension bundle",
-				hasPZRules: true,
+				errorText: "required component \"schema.json\" not found in extension bundle",
 			},
 		},
 		{
 			name:    "malformed archive returns an open error",
 			archive: []byte("this is not a zip archive"),
 			expected: expectedResults{
-				errorText: "unable to open zip archive",
+				errorText: "unable to open zip archive: zip: not a valid zip file",
 			},
 		},
 		{
 			name:    "invalid json in schema.json returns a decode error",
 			archive: newExtensionZip(t, map[string]string{"schema.json": "{ not valid json"}),
 			expected: expectedResults{
-				errorText: "unable to decode graph extension payload",
+				errorText: "unable to decode graph extension payload: invalid character 'n' looking for beginning of object key string",
 			},
 		},
 		{
-			name: "unexpected file returns an error but recognized components still populate",
+			name: "metadata is ignored while an unexpected file errors and the schema still populates",
 			archive: newExtensionZip(t, map[string]string{
-				"schema.json": validSchemaJSON,
-				"README.md":   "not a component",
+				"folder/schema.json":   validSchemaJSON,
+				"__MACOSX/schema.json": "{ not valid json",
+				".DS_Store":            "{ not valid json",
+				"folder/README.md":     "not a component",
 			}),
 			expected: expectedResults{
-				errorText:  "unexpected file \"README.md\" in zip archive",
-				schemaName: "TestExtension",
+				errorText: "unexpected file \"folder/README.md\" in zip archive",
 			},
 		},
 		{
 			name:    "duplicate component (same file name twice) returns an error",
 			archive: newExtensionZipWithDuplicate(t, "schema.json", validSchemaJSON),
 			expected: expectedResults{
-				errorText:  "duplicate component \"schema.json\" in zip archive",
-				schemaName: "TestExtension",
+				errorText: "duplicate component \"schema.json\" in zip archive",
 			},
 		},
 		{
 			name:    "duplicate null saved query components are rejected",
 			archive: newExtensionZipWithDuplicate(t, "saved_queries.json", `{"queries": null}`),
 			expected: expectedResults{
-				errorText:    "duplicate component \"saved_queries.json\" in zip archive",
-				savedQueries: new(model.SavedQueriesPayload),
+				errorText: "duplicate component \"saved_queries.json\" in zip archive\nrequired component \"schema.json\" not found in extension bundle",
 			},
 		},
 		{
 			name:    "duplicate empty saved query components are rejected",
 			archive: newExtensionZipWithDuplicate(t, "saved_queries.json", `{"queries": []}`),
 			expected: expectedResults{
-				errorText:    "duplicate component \"saved_queries.json\" in zip archive",
-				savedQueries: &model.SavedQueriesPayload{},
+				errorText: "duplicate component \"saved_queries.json\" in zip archive\nrequired component \"schema.json\" not found in extension bundle",
 			},
 		},
 		{
 			name:    "duplicate saved query components with missing queries are rejected",
 			archive: newExtensionZipWithDuplicate(t, "saved_queries.json", `{}`),
 			expected: expectedResults{
-				errorText:    "duplicate component \"saved_queries.json\" in zip archive",
-				savedQueries: new(model.SavedQueriesPayload),
+				errorText: "duplicate component \"saved_queries.json\" in zip archive\nrequired component \"schema.json\" not found in extension bundle",
 			},
 		},
 		{
@@ -335,15 +385,14 @@ func TestExtractBundleFromZip(t *testing.T) {
 			extension, err := extractBundleFromZip(bytes.NewReader(tt.archive))
 			if tt.expected.errorText != "" {
 				if assert.Error(t, err) {
-					assert.Contains(t, err.Error(), tt.expected.errorText)
+					assert.ElementsMatch(t, strings.Split(tt.expected.errorText, "\n"), strings.Split(err.Error(), "\n"))
 				}
 			} else {
 				assert.NoError(t, err)
+				assert.Equal(t, tt.expected.schemaName, extension.GraphSchemaExtension.Name)
+				assert.Equal(t, tt.expected.hasPZRules, extension.PZRules != nil)
+				assert.Equal(t, tt.expected.savedQueries, extension.SavedQueries)
 			}
-
-			assert.Equal(t, tt.expected.schemaName, extension.GraphSchemaExtension.Name)
-			assert.Equal(t, tt.expected.hasPZRules, extension.PZRules != nil)
-			assert.Equal(t, tt.expected.savedQueries, extension.SavedQueries)
 		})
 	}
 }

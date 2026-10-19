@@ -128,6 +128,12 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
 
     const secondaryList: MainNavData['secondaryList'] = [
         {
+            label: 'Marketplace',
+            icon: <AppIcon.Marketplace aria-hidden='true' data-testid='marketplace-icon' focusable='false' size={24} />,
+            route: routes.ROUTE_MARKETPLACE,
+            testId: 'global_nav-marketplace',
+        },
+        {
             label: 'Profile',
             icon: <AppIcon.User size={24} />,
             route: routes.ROUTE_MY_PROFILE,

@@ -50,6 +50,7 @@ export * from './LinesWithMagnifyingGlass';
 export * from './Lock';
 export * from './Logout';
 export * from './MagnifyingGlass';
+export * from './Marketplace';
 export * from './Progress';
 export * from './ShadowedShield';
 export * from './Shield';
