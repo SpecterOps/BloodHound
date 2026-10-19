@@ -106,7 +106,6 @@ const Layout: React.FC<{
     return (
         <div className='relative'>
             <TableContainer component={Paper} className={LEGACY_MUI_TABLE_CLASS} elevation={0}>
-                {' '}
                 <Table>
                     <TableBody>
                         {Object.keys(DomainMap).map((key) => {
