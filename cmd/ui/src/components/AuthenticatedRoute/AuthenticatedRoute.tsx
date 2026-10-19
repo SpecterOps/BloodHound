@@ -20,6 +20,7 @@ import { useMemo } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
+import { LoginRedirectState } from 'src/routes/loginRedirect';
 import { useAppSelector } from 'src/store';
 
 type AuthenticatedRouteProps = {
@@ -31,6 +32,10 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
     const authState = useAppSelector((state) => state.auth);
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const location = useLocation();
+    // Keep the original destination when login or password reset adds an intermediate route.
+    const redirectState: LoginRedirectState = {
+        from: (location.state as LoginRedirectState | null)?.from ?? location,
+    };
 
     const invalidRolesForThisUser = useMemo(
         () =>
@@ -42,13 +47,13 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
 
     // If user is not authenticated, redirect to login screen
     if (authState.sessionToken === null || authState.user === null) {
-        return <Navigate to={ROUTE_LOGIN} state={{ from: location }} />;
+        return <Navigate to={ROUTE_LOGIN} state={redirectState} />;
     }
 
     // If user password is expired, redirect to expired password screen unless they are on the expired password screen
     if (isAuthExpired) {
         if (location.pathname !== ROUTE_EXPIRED_PASSWORD) {
-            return <Navigate to={ROUTE_EXPIRED_PASSWORD} state={{ from: location }} />;
+            return <Navigate to={ROUTE_EXPIRED_PASSWORD} state={redirectState} />;
         } else {
             return children;
         }
