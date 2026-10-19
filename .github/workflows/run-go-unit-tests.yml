@@ -82,7 +82,7 @@ jobs:
           docker compose -f docker-compose.testing.yml down
 
       - name: Upload Allure Results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # ratchet:actions/upload-artifact@v7
         with:
           name: allure-results-go
           path: allure-results
