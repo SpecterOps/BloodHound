@@ -133,7 +133,6 @@ const Layout: React.FC<{
                 component={Paper}
                 className={LEGACY_MUI_TABLE_CLASS}
                 elevation={0}>
-                {' '}
                 <Table>
                     <TableBody>
                         <LoadContainer

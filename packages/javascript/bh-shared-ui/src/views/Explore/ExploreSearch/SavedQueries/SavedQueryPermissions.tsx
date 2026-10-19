@@ -188,9 +188,10 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                     </div>
-                    <div className='h-[335px] overflow-auto'>
+                    <div className='h-[335px] overflow-auto border border-solid border-neutral-light-4 dark:border-neutral-900'>
                         {filteredUsers?.length ? (
                             <DataTable
+                                className='border-0'
                                 TableHeadProps={{
                                     className: 'text-s pl-3 first:pl-0 first:text-center',
                                 }}

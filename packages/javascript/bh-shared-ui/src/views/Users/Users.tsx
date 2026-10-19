@@ -181,7 +181,10 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                     />
                 </Box>
-                <Paper className={LEGACY_MUI_TABLE_CLASS} data-testid='manage-users_table' elevation={0}>
+                <Paper
+                    className={`${LEGACY_MUI_TABLE_CLASS} overflow-hidden`}
+                    data-testid='manage-users_table'
+                    elevation={0}>
                     <UsersTable
                         onDeleteUser={toggleDeleteUserDialog}
                         onDisabledUser={toggleDisableUserDialog}
