@@ -19,7 +19,7 @@ import createPalette, { Palette } from '@mui/material/styles/createPalette';
 import { makeStyles } from '@mui/styles';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from './graphSchema';
 import { BaseExploreLayoutOptions, MappedStringLiteral } from './types';
-import { addOpacityToHex } from './utils';
+import { addOpacityToHex } from './utils/colors';
 
 // Max and min length requirements for creating/updating a user
 export const MAX_NAME_LENGTH = 319;
