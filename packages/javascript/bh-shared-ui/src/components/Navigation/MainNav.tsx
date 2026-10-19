@@ -78,7 +78,8 @@ const MainNavListItem: FC<{
     const navItemContainerClasses = cn(
         'rounded flex items-center cursor-pointer focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
         {
-            'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
+            'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4':
+                isActiveRoute || isActiveSubNavRoute,
             'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
                 !isActiveRoute && !isActiveSubNavRoute,
         }
