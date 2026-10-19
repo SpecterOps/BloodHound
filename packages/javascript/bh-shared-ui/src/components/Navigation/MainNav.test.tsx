@@ -317,16 +317,12 @@ describe('MainNav collapsed item content', () => {
     });
     it('sizes the logo container to full width when expanded', () => {
         renderNav(true);
-        expect(screen.getByTestId('global_nav-logo')).toHaveClass('w-[166px]');
-        expect(screen.getByTestId('global_nav-logo')).not.toHaveClass('w-10');
+        expect(screen.getByTestId('global_nav-home')).toHaveClass('w-[166px]');
+        expect(screen.getByTestId('global_nav-home')).not.toHaveClass('w-10');
     });
     it('sizes the logo container when collapsed', () => {
         renderNav(false);
-        expect(screen.getByTestId('global_nav-logo')).toHaveClass('w-10');
-    });
-    it('spans the home link across the full nav width', () => {
-        renderNav(false);
-        expect(screen.getByRole('link', { name: 'BloodHound home' })).toHaveClass('w-full');
+        expect(screen.getByTestId('global_nav-home')).toHaveClass('w-10');
     });
     it('shows the footer when expanded', () => {
         renderNav(true);

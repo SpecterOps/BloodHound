@@ -33,23 +33,17 @@ import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavAction
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean }> = ({ data, isExpanded = true }) => {
     return (
         <div className='h-[72px] flex-none border-b border-primary dark:border-neutral-4'>
-            <div className='mt-2 h-[46px] w-full overflow-hidden' data-testid='global_nav-home'>
+            <div
+                className={cn('ml-2 mt-4 h-[30px] overflow-hidden', {
+                    'w-[166px]': isExpanded,
+                    'w-10': !isExpanded,
+                })}
+                data-testid='global_nav-home'>
                 <AppLink
                     aria-label={'BloodHound home'}
-                    className={cn(
-                        'block h-[46px] w-full overflow-hidden py-2 pl-2',
-                        'focus-visible:outline-none focus-visible:[--focus-ring:var(--common-white)]',
-                        'focus-visible:shadow-[inset_0_var(--focus-ring-width)_0_0_var(--focus-ring),inset_0_calc(-1*var(--focus-ring-width))_0_0_var(--focus-ring)]'
-                    )}
+                    className='block h-[30px] w-[166px] focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
                     to={data.project.route}>
-                    <span
-                        className={cn('block h-[30px] overflow-hidden', {
-                            'w-[166px]': isExpanded,
-                            'w-10': !isExpanded,
-                        })}
-                        data-testid='global_nav-logo'>
-                        {data.project.icon}
-                    </span>
+                    {data.project.icon}
                 </AppLink>
             </div>
         </div>
@@ -77,9 +71,7 @@ const MainNavListItem: FC<{
 
     // Handles nav item text color and background with hover/active interactions
     const navItemContainerClasses = cn(
-        'relative rounded flex items-center cursor-pointer',
-        'focus-within:before:pointer-events-none focus-within:before:absolute focus-within:before:inset-y-0 focus-within:before:-inset-x-2',
-        'focus-within:before:border-y-[length:var(--focus-ring-width)] focus-within:before:border-common-white',
+        'rounded flex items-center cursor-pointer focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
         {
             'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
             'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
@@ -89,7 +81,7 @@ const MainNavListItem: FC<{
 
     // Full width ensures that even clicking white space activates menu item
     const navItemClasses =
-        'h-8 w-full min-w-0 overflow-hidden px-2 py-1 flex items-center gap-2 outline-none group-hover:cursor-pointer';
+        'h-8 w-full min-w-0 overflow-hidden px-2 py-1 flex items-center gap-2 group-hover:cursor-pointer';
 
     const labelElement = (
         <span className='min-w-0 flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap'>
