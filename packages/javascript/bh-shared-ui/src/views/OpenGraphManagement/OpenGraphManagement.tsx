@@ -24,8 +24,8 @@ const OpenGraphManagement: React.FC = () => {
             title='OpenGraph Management'
             pageDescription={
                 <p className='text-sm'>
-                    OpenGraph Management provides a centralized space to define and maintain the structures that shape
-                    how BloodHound understands relationships in an environment.
+                    OpenGraph Management provides a centralized space to install and manage extensions that expand
+                    BloodHound's capabilities to model additional technologies and platforms.
                 </p>
             }>
             {/* Cards */}

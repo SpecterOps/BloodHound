@@ -19,7 +19,6 @@
 package ad_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -291,18 +290,17 @@ func TestADCSESC3SelectsPublishersForTargetDomain(t *testing.T) {
 			localGroupData, cache, err := FetchADCSPrereqs(db)
 			require.NoError(t, err)
 
-			enrollOnBehalfOfOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance - EnrollOnBehalfOf")
-			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, enrollOnBehalfOfOperation))
-			require.NoError(t, enrollOnBehalfOfOperation.Done())
+			_, err = adAnalysis.PostEnrollOnBehalfOf(t.Context(), db, cache)
+			require.NoError(t, err)
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC3 publisher provenance")
+			esc3Sink := newTestESCSink(t, db, ad.ADCSESC3)
 			for _, certificateChains := range cache.GetECAHostedChainedDomains() {
 				certificateChains := certificateChains
-				require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					return adAnalysis.PostADCSESC3(ctx, tx, outC, localGroupData, certificateChains, cache)
+				require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+					return adAnalysis.PostADCSESC3(t.Context(), tx, esc3Sink, localGroupData, certificateChains, cache)
 				}))
 			}
-			require.NoError(t, edgeOperation.Done())
+			esc3Sink.Done()
 
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				fetchEdge := func(principal, domain *graph.Node) (*graph.Relationship, error) {
@@ -447,14 +445,14 @@ func TestADCSESC1CompositionScopesHostsToExactEnterpriseCA(t *testing.T) {
 			assert.NotContains(t, chainedDomains, crossForestCA.ID.Uint64())
 			assert.NotContains(t, chainedDomains, unknownHostDomainCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS ESC1 exact host CA scoping")
+			esc1Sink := newTestESCSink(t, db, ad.ADCSESC1)
 			for _, certificateChains := range chainedDomains {
 				certificateChains := certificateChains
-				require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-					return adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, certificateChains, cache)
+				require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+					return adAnalysis.PostADCSESC1(t.Context(), tx, esc1Sink, localGroupData, certificateChains, cache)
 				}))
 			}
-			require.NoError(t, edgeOperation.Done())
+			esc1Sink.Done()
 
 			var edge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
@@ -576,9 +574,8 @@ func TestEnrollOnBehalfOfRequiresSharedHostedCAChains(t *testing.T) {
 			_, cache, err := FetchADCSPrereqs(db)
 			require.NoError(t, err)
 
-			operation := post.NewPostRelationshipOperation(t.Context(), db, "EnrollOnBehalfOf shared hosted CA chains")
-			require.NoError(t, adAnalysis.PostEnrollOnBehalfOf(cache, operation))
-			require.NoError(t, operation.Done())
+			_, err = adAnalysis.PostEnrollOnBehalfOf(t.Context(), db, cache)
+			require.NoError(t, err)
 
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
 				for _, agentTemplate := range []*graph.Node{validAgent, noNTAuthAgent, noHostAgent, otherDomainAgent} {
@@ -646,11 +643,14 @@ func TestGoldenCertCreationAndCompositionUseOnlyQualifyingHosts(t *testing.T) {
 			chainedDomains := cache.GetECAHostedChainedDomains()
 			require.Contains(t, chainedDomains, enterpriseCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "GoldenCert exact host scoping")
-			require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				return adAnalysis.PostGoldenCert(ctx, tx, outC, chainedDomains[enterpriseCA.ID.Uint64()])
+			goldenCertTracker, err := post.FetchTracker(t.Context(), db, graph.Kinds{ad.GoldenCert})
+			require.NoError(t, err)
+
+			goldenCertSink := post.NewFilteredRelationshipSink(t.Context(), "GoldenCert exact host scoping", db, goldenCertTracker)
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				return adAnalysis.PostGoldenCert(t.Context(), tx, goldenCertSink, chainedDomains[enterpriseCA.ID.Uint64()])
 			}))
-			require.NoError(t, edgeOperation.Done())
+			goldenCertSink.Done()
 
 			var goldenCertEdge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
@@ -736,11 +736,11 @@ func TestADCSHostEligibilityFallsBackWhenEnterpriseCAForestIsUnresolved(t *testi
 			chainedDomains := cache.GetECAHostedChainedDomains()
 			require.Contains(t, chainedDomains, enterpriseCA.ID.Uint64())
 
-			edgeOperation := post.NewPostRelationshipOperation(t.Context(), db, "ADCS unresolved CA forest fallback")
-			require.NoError(t, edgeOperation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				return adAnalysis.PostADCSESC1(ctx, tx, outC, localGroupData, chainedDomains[enterpriseCA.ID.Uint64()], cache)
+			esc1Sink := newTestESCSink(t, db, ad.ADCSESC1)
+			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
+				return adAnalysis.PostADCSESC1(t.Context(), tx, esc1Sink, localGroupData, chainedDomains[enterpriseCA.ID.Uint64()], cache)
 			}))
-			require.NoError(t, edgeOperation.Done())
+			esc1Sink.Done()
 
 			var edge *graph.Relationship
 			require.NoError(t, db.ReadTransaction(t.Context(), func(tx graph.Transaction) error {

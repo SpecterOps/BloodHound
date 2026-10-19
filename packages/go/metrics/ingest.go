@@ -58,6 +58,9 @@ const (
 
 	// IngestSourceClient represents tasks from automated collector clients.
 	IngestSourceClient IngestSource = "client"
+
+	// IngestSourceCollector represents tasks from managed collectors.
+	IngestSourceCollector IngestSource = "collector"
 )
 
 // IngestStage identifies a bounded stage of ingest processing. Publishers must

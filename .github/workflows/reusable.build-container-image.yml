@@ -153,7 +153,7 @@ on:
         type: string
         description: |-
           The directory path where the tar file of the built image will be saved,
-          to be used as an artifact upload location with the `actions/upload-artifact@v4` GitHub Action.
+          to be used as an artifact upload location with the `actions/upload-artifact@v7` GitHub Action.
           This tar archive can then be retrieved from the workflow artifacts for further use or distribution.
         default: "/tmp"
       push_image:
@@ -185,6 +185,8 @@ on:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
       image_name:
         value: ${{ jobs.build-container-image.outputs.image_name }}
+      image_digest:
+        value: ${{ jobs.build-container-image.outputs.image_digest }}
 
 permissions:
   contents: read
@@ -196,6 +198,7 @@ jobs:
     outputs:
       image_reference: ${{ steps.container-image-metadata.outputs.image_reference }}
       image_name: ${{ steps.container-image-metadata.outputs.image_name }}
+      image_digest: ${{ steps.build-container-image.outputs.digest }}
     steps:
       - name: Checkout Source Code Repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
@@ -218,7 +221,7 @@ jobs:
 
       - name: Configure ECR AWS Credentials
         if: contains(inputs.container_image_repository_name, '.dkr.ecr.')
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # ratchet:aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # ratchet:aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.ecr_aws_access_key_id }}
           aws-secret-access-key: ${{ secrets.ecr_aws_secret_access_key }}
@@ -237,9 +240,6 @@ jobs:
 
       - id: build-container-image
         uses: ./.github/actions/build-container-image
-        # TODO: verify if this breaks anything
-        # env:
-        #   DOCKER_CONTENT_TRUST: 1
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
