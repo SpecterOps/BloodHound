@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import * as React from 'react';
-import { Tooltip } from '../Tooltip';
+import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn } from '../utils';
 
 interface AccessibleIconBaseProps {
@@ -22,6 +22,7 @@ interface AccessibleIconBaseProps {
     children: React.ReactElement;
     className?: string;
     hideTooltip?: boolean;
+    tooltipPosition?: TooltipPosition;
 }
 
 type AccessibleIconLabelProps =
@@ -43,6 +44,7 @@ export const AccessibleIcon: React.FC<AccessibleIconProps> = ({
     className,
     hideTooltip = false,
     label,
+    tooltipPosition,
 }) => {
     const accessibleLabel = ariaLabel || label;
     const tooltipLabel = label || accessibleLabel;
@@ -54,7 +56,7 @@ export const AccessibleIcon: React.FC<AccessibleIconProps> = ({
     if (ariaHidden || hideTooltip) return <span className={cn('inline-flex', className)}>{iconElement}</span>;
 
     return (
-        <Tooltip tooltip={tooltipLabel} contentProps={{ side: 'bottom', align: 'start' }}>
+        <Tooltip tooltip={tooltipLabel} tooltipPosition={tooltipPosition}>
             <span className={cn('inline-flex', className)}>{iconElement}</span>
         </Tooltip>
     );
