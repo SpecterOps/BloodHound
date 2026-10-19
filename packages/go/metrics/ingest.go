@@ -152,6 +152,18 @@ var (
 		[]string{"entity_type", "result"},
 	)
 
+	// ingestGraphifyThroughput retains the latest value until the next observation
+	// with matching entity_type/result labels.
+	ingestGraphifyThroughput = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: model.Namespace,
+			Subsystem: ingestSubsystem,
+			Name:      "graphify_throughput_items_per_second",
+			Help:      "Attempted items per second, including failed attempts, for the most recent returned graphify batch per entity type and overall result, including zero-item batches",
+		},
+		[]string{"entity_type", "result"},
+	)
+
 	ingestStageDurationBuckets = []float64{
 		0.01,
 		0.1,
@@ -307,10 +319,13 @@ func RecordIngestStage(stage IngestStage, duration time.Duration, itemCount int,
 	}
 }
 
-// RecordIngestGraphify records a returning graphify batch, including zero-item
-// batches. Duration and all attempted totals use the supplied overall ingest
-// result, including partial per-file outcomes. Invalid measurements and results
-// are ignored.
+// RecordIngestGraphify records duration, attempted counts, and attempted items per
+// second for one returned graphify batch, including zero-item batches. Counts and
+// rates track source objects, nodes, and relationships separately, including failed
+// attempts, under the supplied overall ingest result including partial per-file
+// outcomes. Each entity/result throughput value persists until replaced. Zero
+// duration skips only throughput; duration and counts are still recorded. Invalid
+// measurements and results are ignored.
 func RecordIngestGraphify(duration time.Duration, sourceObjectsAttempted, nodesAttempted, relationshipsAttempted int64, result IngestResult) {
 	if duration < 0 || sourceObjectsAttempted < 0 || nodesAttempted < 0 || relationshipsAttempted < 0 {
 		return
@@ -326,6 +341,13 @@ func RecordIngestGraphify(duration time.Duration, sourceObjectsAttempted, nodesA
 	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntitySourceObjects), string(result)).Add(float64(sourceObjectsAttempted))
 	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntityNodes), string(result)).Add(float64(nodesAttempted))
 	ingestGraphifyItems.WithLabelValues(string(ingestGraphifyEntityRelationships), string(result)).Add(float64(relationshipsAttempted))
+
+	if duration > 0 {
+		durationSeconds := duration.Seconds()
+		ingestGraphifyThroughput.WithLabelValues(string(ingestGraphifyEntitySourceObjects), string(result)).Set(float64(sourceObjectsAttempted) / durationSeconds)
+		ingestGraphifyThroughput.WithLabelValues(string(ingestGraphifyEntityNodes), string(result)).Set(float64(nodesAttempted) / durationSeconds)
+		ingestGraphifyThroughput.WithLabelValues(string(ingestGraphifyEntityRelationships), string(result)).Set(float64(relationshipsAttempted) / durationSeconds)
+	}
 }
 
 // RegisterIngestMetrics registers all ingest-subsystem Prometheus metrics with the provided registerer.
@@ -344,6 +366,8 @@ func RegisterIngestMetrics(registerer prometheus.Registerer) error {
 		return fmt.Errorf("failed to register ingest graphify item counter: %w", err)
 	} else if err := registerer.Register(ingestStageThroughput); err != nil {
 		return fmt.Errorf("failed to register ingest stage throughput gauge: %w", err)
+	} else if err := registerer.Register(ingestGraphifyThroughput); err != nil {
+		return fmt.Errorf("failed to register ingest graphify throughput gauge: %w", err)
 	} else {
 		return nil
 	}
