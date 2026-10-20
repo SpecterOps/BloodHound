@@ -1026,7 +1026,7 @@ export interface CollectorJobType {
 }
 
 export interface CollectorJobProfileMinimal {
-    id: number;
+    id: string;
     name: string;
     job_type_id: number;
     params: Record<string, unknown>;
@@ -1065,7 +1065,7 @@ export enum CollectorJobStatus {
 export interface CollectorJob {
     id: string;
     job_schedule_id: number | null;
-    job_profile_id: number | null;
+    job_profile_id: string | null;
     job_type_id: number;
     job_key: string;
     params_version: string;
@@ -1100,7 +1100,7 @@ export interface CollectorJobHistory {
     last_claimed_at: string | null;
     last_claimed_by: string | null;
     job_schedule_id: number | null;
-    job_profile_id: number | null;
+    job_profile_id: string | null;
     job_type_id: number;
     job_key: string;
     params_version: string;

@@ -421,7 +421,7 @@ export interface CreateCollectorJobScheduleRequest {
     rrule: string;
     priority?: number;
     disabled?: boolean;
-    profile_ids?: number[];
+    profile_ids?: string[];
 }
 
 export type UpdateCollectorJobScheduleRequest = Partial<CreateCollectorJobScheduleRequest>;
