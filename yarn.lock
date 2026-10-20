@@ -6874,7 +6874,7 @@ __metadata:
     tailwind-merge: "npm:^2.5.4"
     tailwindcss: "npm:^3.4.17"
     typescript: "npm:^5.9.3"
-    vite: "npm:^6.4.3"
+    vite: "npm:^6.4.4"
     vitest: "npm:^4.1.11"
     whatwg-fetch: "npm:^3.6.2"
   peerDependencies:
@@ -7021,7 +7021,7 @@ __metadata:
     sigma: "npm:^2.4.0"
     tailwindcss: "npm:^3.4.17"
     typescript: "npm:^5.9.3"
-    vite: "npm:^6.4.3"
+    vite: "npm:^6.4.4"
     vite-plugin-glsl: "npm:^1.3.0"
     vitest: "npm:^4.1.11"
     vitest-canvas-mock: "npm:^0.3.3"
@@ -8191,7 +8191,7 @@ __metadata:
     tailwindcss-animate: "npm:^1.0.7"
     tsx: "npm:^4.23.15"
     typescript: "npm:^5.9.3"
-    vite: "npm:^6.4.3"
+    vite: "npm:^6.4.4"
     vite-plugin-dts: "npm:^4.4.0"
     vitest: "npm:^4.1.11"
   peerDependencies:
@@ -16457,9 +16457,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^6.4.3":
-  version: 6.4.3
-  resolution: "vite@npm:6.4.3"
+"vite@npm:^6.4.4":
+  version: 6.4.4
+  resolution: "vite@npm:6.4.4"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.4.4"
@@ -16508,7 +16508,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10/d43ffaf4f165720bcc825c7c515e9c859bed748e0c62b248fca24ca3f949c8b4203dae7df6c613cd8e357579f1c71863d2d09cbae3b454c73b9dfc8fb07f7e8f
+  checksum: 10/26145545fc7488ccbc00180992f929a7fff8f30cb83cff37a69b2b8a6a24730044121d69b891125196ee1704c82d6a9afec13d31f0fa10d2282304816ff2586c
   languageName: node
   linkType: hard
 
