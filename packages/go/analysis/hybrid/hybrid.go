@@ -168,30 +168,34 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		if entraGroups, err := fetchEntraGroups(tx); err != nil {
 			return err
 		} else if len(entraGroups) > 0 {
-			// Map on-prem SID -> cloud-managed Entra group node id.
-			sidToAZGroup := make(map[string]graph.ID, len(entraGroups))
+			// Map on-prem SID -> cloud-managed Entra group node ids. A slice is kept per SID so that if more
+			// than one cloud-managed Entra group resolves to the same on-prem SID, each gets an edge, matching
+			// the multiple-match behavior of the synced-user mapping above.
+			sidToAZGroups := make(map[string][]graph.ID, len(entraGroups))
 			for _, azGroup := range entraGroups {
 				if cloudManaged, hasSID, sid, err := cloudManagedGroupSID(azGroup); err != nil {
 					return err
 				} else if cloudManaged && hasSID {
-					sidToAZGroup[sid] = azGroup.ID
+					sidToAZGroups[sid] = append(sidToAZGroups[sid], azGroup.ID)
 				}
 			}
 
-			if len(sidToAZGroup) > 0 {
+			if len(sidToAZGroups) > 0 {
 				if adGroups, err := fetchADGroups(tx); err != nil {
 					return err
 				} else {
 					for _, adGroup := range adGroups {
 						if objectID, err := adGroup.Properties.Get(common.ObjectID.String()).String(); err != nil {
 							return err
-						} else if azGroupID, ok := sidToAZGroup[objectID]; ok && !isCloudSyncExcludedGroup(adGroup) {
-							if !sink.Submit(ctx, post.EnsureRelationshipJob{
-								FromID: azGroupID,
-								ToID:   adGroup.ID,
-								Kind:   azure.CloudSyncGroupWriteback,
-							}) {
-								return fmt.Errorf("unable to submit %s relationship to the sink", azure.CloudSyncGroupWriteback)
+						} else if azGroupIDs, ok := sidToAZGroups[objectID]; ok && !isCloudSyncExcludedGroup(adGroup) {
+							for _, azGroupID := range azGroupIDs {
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
+									FromID: azGroupID,
+									ToID:   adGroup.ID,
+									Kind:   azure.CloudSyncGroupWriteback,
+								}) {
+									return fmt.Errorf("unable to submit %s relationship to the sink", azure.CloudSyncGroupWriteback)
+								}
 							}
 						}
 					}
