@@ -110,6 +110,20 @@ describe('SubNav styling', () => {
         expect(screen.getByText('Active')).toHaveAttribute('aria-current', 'page');
         expect(screen.getByText('Inactive')).not.toHaveAttribute('aria-current');
     });
+    it('highlights the item on a child route', () => {
+        render(<SubNav close={() => {}} isExpanded={false} sections={sections} />, {
+            route: '/administration/active/child',
+        });
+        expect(screen.getByText('Active').closest('li')).toHaveClass('bg-primary');
+        expect(screen.getByText('Active')).toHaveAttribute('aria-current', 'page');
+    });
+    it('does not highlight an item that only shares a prefix with the current path', () => {
+        render(<SubNav close={() => {}} isExpanded={false} sections={sections} />, {
+            route: '/administration/active-other',
+        });
+        expect(screen.getByText('Active').closest('li')).not.toHaveClass('bg-primary');
+        expect(screen.getByText('Active')).not.toHaveAttribute('aria-current');
+    });
     it('renders the section title as an h6 list item', () => {
         render(<SubNav close={() => {}} isExpanded={false} sections={sections} />);
         const title = screen.getByText('Section Title');

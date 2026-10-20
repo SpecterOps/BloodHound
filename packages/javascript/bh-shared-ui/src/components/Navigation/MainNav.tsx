@@ -29,6 +29,7 @@ import { AppLink } from './AppLink';
 import { SkipLink } from './SkipLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
+import { isRouteActive } from './utils';
 
 export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean }> = ({ data, isExpanded = true }) => {
     return (
@@ -68,9 +69,9 @@ const MainNavListItem: FC<{
     const navItemRef = useRef<HTMLLIElement>(null);
     const { control, icon, label, route, subNav, target, testId } = item;
 
-    const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
+    const isActiveRoute = isRouteActive(location.pathname, route);
     const isActiveSubNavRoute = subNav
-        ? subNav.some((section) => section.items.some((item) => location.pathname.includes(item.path)))
+        ? subNav.some((section) => section.items.some((item) => isRouteActive(location.pathname, item.path)))
         : false;
     const isSubNavVisible = subNav && isSubNavOpen;
 

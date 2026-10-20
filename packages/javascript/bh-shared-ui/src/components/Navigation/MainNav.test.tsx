@@ -23,7 +23,7 @@ import { createMatchMediaController } from '../../testing';
 import { SubNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
-import { MainNavData, MainNavDataListItem, MainNavLogoDataObject } from './types';
+import { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavLinkItem } from './types';
 
 const MainNavLogoData: MainNavLogoDataObject = {
     project: {
@@ -39,7 +39,7 @@ const MainNavLogoData: MainNavLogoDataObject = {
         },
     },
 };
-const MainNavPrimaryListData: MainNavDataListItem[] = [
+const MainNavPrimaryListData: NavLinkItem[] = [
     {
         label: 'Link Item',
         icon: <AppIcon.LineChart size={24} />,
@@ -241,6 +241,33 @@ describe('Main Nav Route Highlighting', () => {
         expect(elem).toHaveClass('bg-primary');
         expect(screen.getByTestId('global_nav-test-link')).toHaveAttribute('aria-current', 'page');
     });
+    it.each([
+        ['/', '/', true],
+        ['/test', '/test', true],
+        ['/test', '/test/', true],
+        ['/test', '/test/child', true],
+        ['/test/*', '/test', true],
+        ['/test/*', '/test/child', true],
+        ['/test/', '/test', true],
+        ['/test/', '/test/child', true],
+        ['/test', '/test-other', false],
+        ['/test', '/other/test', false],
+        ['/test/*', '/test-other', false],
+        ['/', '/test', false],
+    ])('matches link %s at %s: %s', (route, pathname, active) => {
+        render(
+            <MainNav
+                mainNavData={{
+                    ...mainNavData,
+                    primaryList: [{ ...MainNavPrimaryListData[0], route }],
+                }}
+            />,
+            { route: pathname }
+        );
+        const link = screen.getByTestId('global_nav-test-link');
+        expect(link.getAttribute('aria-current')).toBe(active ? 'page' : null);
+        expect(link.closest('li')?.classList.contains('bg-primary')).toBe(active);
+    });
     it('should highlight main nav route when navigating to child route', () => {
         render(<MainNav mainNavData={mainNavData} />, {
             route: '/secondroute/child',
@@ -369,12 +396,15 @@ describe('MainNav subnav item', () => {
             },
         ],
     };
-    it('highlights the subnav trigger when a child route is active', () => {
-        render(<MainNav mainNavData={subNavData} />, { route: '/administration/child' });
-        expect(screen.getByTestId('global_nav-test-subnav').closest('li')).toHaveClass('bg-primary');
-    });
-    it('does not highlight the subnav trigger on an unrelated route', () => {
-        render(<MainNav mainNavData={subNavData} />, { route: '/test' });
+    it.each(['/administration/child', '/administration/child/details'])(
+        'highlights the subnav trigger at %s',
+        (pathname) => {
+            render(<MainNav mainNavData={subNavData} />, { route: pathname });
+            expect(screen.getByTestId('global_nav-test-subnav').closest('li')).toHaveClass('bg-primary');
+        }
+    );
+    it.each(['/test', '/administration/child-other'])('does not highlight the subnav trigger at %s', (pathname) => {
+        render(<MainNav mainNavData={subNavData} />, { route: pathname });
         expect(screen.getByTestId('global_nav-test-subnav').closest('li')).not.toHaveClass('bg-primary');
     });
 

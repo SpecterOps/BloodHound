@@ -21,11 +21,12 @@ import { useOnClickOutside } from '../../hooks';
 import { SubNavItem, SubNavSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
+import { isRouteActive } from './utils';
 
 const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item }) => {
     const location = useLocation();
     const { label, path } = item;
-    const isActiveRoute = path ? location.pathname.includes(path.replace(/\*/g, '')) : false;
+    const isActiveRoute = isRouteActive(location.pathname, path);
 
     return (
         <li
