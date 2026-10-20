@@ -26,7 +26,7 @@ required:
   - job_profile_id
   - job_type_id
   - job_key
-  - params_version
+  - version
   - priority
   - params
   - attempts
@@ -62,7 +62,7 @@ properties:
     format: int32
   job_key:
     type: string
-  params_version:
+  version:
     type: string
   priority:
     type: integer
