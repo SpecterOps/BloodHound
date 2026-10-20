@@ -99,7 +99,7 @@ const expectedListUsersFilteredNotNullSQL = `SELECT id, sso_provider_id, first_n
 
 // expectedListActiveUsersMinimalSQL is the literal SQL the Store issues for
 // ListActiveUsersMinimal when no filters or sorts are supplied.
-const expectedListActiveUsersMinimalSQL = `SELECT id, email_address, first_name, last_name FROM users WHERE support_account = $1 AND is_disabled = $2`
+const expectedListActiveUsersMinimalSQL = `SELECT id, email_address, first_name, last_name FROM users WHERE support_account = $1 AND is_disabled IS NOT TRUE`
 
 // expectedListActiveUsersMinimalSortedSQL is the literal SQL issued when a
 // single ascending sort on email_address is supplied.
@@ -107,11 +107,11 @@ const expectedListActiveUsersMinimalSortedSQL = expectedListActiveUsersMinimalSQ
 
 // expectedListActiveUsersMinimalApproxSQL is the literal SQL issued for a ~eq
 // filter on first_name, which must render a case-insensitive ILIKE.
-const expectedListActiveUsersMinimalApproxSQL = expectedListActiveUsersMinimalSQL + ` AND (first_name ILIKE $3)`
+const expectedListActiveUsersMinimalApproxSQL = expectedListActiveUsersMinimalSQL + ` AND (first_name ILIKE $2)`
 
 // expectedListActiveUsersMinimalNotEqualSQL is the literal SQL issued for a neq
 // filter on email_address.
-const expectedListActiveUsersMinimalNotEqualSQL = expectedListActiveUsersMinimalSQL + ` AND (email_address <> $3)`
+const expectedListActiveUsersMinimalNotEqualSQL = expectedListActiveUsersMinimalSQL + ` AND (email_address <> $2)`
 
 // expectedRolesForUsersOneSQL / TwoSQL are the batched roles query for one and
 // two listed users respectively.
@@ -947,7 +947,7 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 				userRows := mock.pool.NewRows(userMinimalRowColumns())
 				addUserMinimalRow(userRows, user1)
 				addUserMinimalRow(userRows, user2)
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false, false).WillReturnRows(userRows)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnRows(userRows)
 			},
 			expected: expected{users: []services.UserMinimal{user1, user2}},
 		},
@@ -957,7 +957,7 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 			setupMocks: func(mock mock) {
 				userRows := mock.pool.NewRows(userMinimalRowColumns())
 				addUserMinimalRow(userRows, user1)
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSortedSQL).WithArgs(false, false).WillReturnRows(userRows)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSortedSQL).WithArgs(false).WillReturnRows(userRows)
 			},
 			expected: expected{users: []services.UserMinimal{user1}},
 		},
@@ -967,7 +967,7 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 			setupMocks: func(mock mock) {
 				userRows := mock.pool.NewRows(userMinimalRowColumns())
 				addUserMinimalRow(userRows, user1)
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, false, "%aD%").WillReturnRows(userRows)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, "%aD%").WillReturnRows(userRows)
 			},
 			expected: expected{users: []services.UserMinimal{user1}},
 		},
@@ -975,7 +975,7 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 			name:    "Success: approximate equality with null compares against NULL - 200",
 			filters: params.Filters{"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "null", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock mock) {
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, false, nil).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, nil).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
 			},
 			expected: expected{users: []services.UserMinimal{}},
 		},
@@ -983,14 +983,14 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 			name:    "Success: users are filtered by email_address neq - 200",
 			filters: params.Filters{"email_address": {{Field: "email_address", Operator: params.NotEquals, Value: "ada@example.com", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock mock) {
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalNotEqualSQL).WithArgs(false, false, "ada@example.com").WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalNotEqualSQL).WithArgs(false, "ada@example.com").WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
 			},
 			expected: expected{users: []services.UserMinimal{}},
 		},
 		{
 			name: "Success: no users match - 200",
 			setupMocks: func(mock mock) {
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false, false).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
 			},
 			expected: expected{users: []services.UserMinimal{}},
 		},
@@ -1015,7 +1015,7 @@ func TestStore_ListActiveUsersMinimal(t *testing.T) {
 		{
 			name: "Error: users query fails - 500",
 			setupMocks: func(mock mock) {
-				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false, false).WillReturnError(dbErr)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnError(dbErr)
 			},
 			expected: expected{err: dbErr},
 		},

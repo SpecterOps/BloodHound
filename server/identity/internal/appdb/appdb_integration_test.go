@@ -772,6 +772,24 @@ func seedUserWithNullDetails(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	return id
 }
 
+// seedUserWithNullIsDisabled inserts a user row whose is_disabled is left NULL
+// and returns its id.
+func seedUserWithNullIsDisabled(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO users (id, principal_name, first_name, last_name, email_address, last_login, is_disabled, all_environments, eula_accepted, support_account, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, now(), NULL, true, false, false, now(), now())`,
+		id.String(), principalName, principalName+"-first", principalName+"-last", principalName+"@example.com",
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
 func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
 	type expected struct {
 		userIDs []uuid.UUID
@@ -785,11 +803,12 @@ func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
 	}
 
 	var (
-		ctx           = context.Background()
-		store, pool   = setupStoreAndPool(t)
-		aliceID       = seedUser(t, ctx, pool, "alice", false)
-		bobID         = seedUser(t, ctx, pool, "bob", false)
-		nullDetailsID = seedUserWithNullDetails(t, ctx, pool, "null-details")
+		ctx            = context.Background()
+		store, pool    = setupStoreAndPool(t)
+		aliceID        = seedUser(t, ctx, pool, "alice", false)
+		bobID          = seedUser(t, ctx, pool, "bob", false)
+		nullDetailsID  = seedUserWithNullDetails(t, ctx, pool, "null-details")
+		nullDisabledID = seedUserWithNullIsDisabled(t, ctx, pool, "dana")
 	)
 
 	seedDisabledUser(t, ctx, pool, "carol")
@@ -799,12 +818,19 @@ func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
 		{
 			name:      "Success: disabled users and support accounts are excluded",
 			sortItems: params.SortItems{{Field: "email_address", Direction: params.Ascending}},
-			expected:  expected{userIDs: []uuid.UUID{aliceID, bobID, nullDetailsID}},
+			expected:  expected{userIDs: []uuid.UUID{aliceID, bobID, nullDisabledID, nullDetailsID}},
+		},
+		{
+			name: "Success: users with a NULL is_disabled are treated as active",
+			filters: params.Filters{
+				"id": {{Field: "id", Operator: params.Equals, Value: nullDisabledID.String(), SetOperator: params.FilterAnd}},
+			},
+			expected: expected{userIDs: []uuid.UUID{nullDisabledID}},
 		},
 		{
 			name:      "Success: users are sorted by first_name descending",
 			sortItems: params.SortItems{{Field: "first_name", Direction: params.Descending}},
-			expected:  expected{userIDs: []uuid.UUID{nullDetailsID, bobID, aliceID}},
+			expected:  expected{userIDs: []uuid.UUID{nullDetailsID, nullDisabledID, bobID, aliceID}},
 		},
 		{
 			name: "Success: approximate equality matches case-insensitively",
@@ -825,7 +851,7 @@ func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
 			filters: params.Filters{
 				"email_address": {{Field: "email_address", Operator: params.NotEquals, Value: "alice@example.com", SetOperator: params.FilterAnd}},
 			},
-			expected: expected{userIDs: []uuid.UUID{bobID}},
+			expected: expected{userIDs: []uuid.UUID{bobID, nullDisabledID}},
 		},
 		{
 			name: "Success: filtering on a disabled user returns no users",

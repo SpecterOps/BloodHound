@@ -926,7 +926,7 @@ func (s *Store) ListActiveUsersMinimal(ctx context.Context, queryFilters params.
 	)
 
 	userSB.Select(validUserMinimalColumns...).From(tableUsers)
-	userSB.Where(userSB.Equal("support_account", false), userSB.Equal("is_disabled", false))
+	userSB.Where(userSB.Equal("support_account", false), "is_disabled IS NOT TRUE")
 
 	if err = applyUserFilters(userSB, queryFilters); err != nil {
 		return nil, err

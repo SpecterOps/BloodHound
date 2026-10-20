@@ -23,6 +23,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	testutils "github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
@@ -906,6 +908,156 @@ func TestUserMinimalListView_ValidFilters(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantString, field.IsStringData)
 			assert.ElementsMatch(t, tt.wantOperators, field.Operators)
+		})
+	}
+}
+
+// TestUserMinimalListView_FilterParsingContract compares the legacy regex-based
+// filter parser with the FilterMiddleware parser used by the migrated route.
+// Cases where the two differ are intentional: the new parser keeps the full
+// value after the first colon and rejects malformed operators instead of
+// searching the value for one.
+func TestUserMinimalListView_FilterParsingContract(t *testing.T) {
+	type expected struct {
+		legacyFiltered bool
+		legacyValue    string
+		responseCode   int
+		filters        params.Filters
+	}
+
+	type testData struct {
+		name     string
+		field    string
+		value    string
+		expected expected
+	}
+
+	stringFilter := func(field string, operator params.FilterOperator, value string) params.Filters {
+		return params.Filters{field: {{Field: field, Operator: operator, Value: value, SetOperator: params.FilterAnd, IsStringData: true}}}
+	}
+
+	tt := []testData{
+		{
+			name:  "Unchanged: simple value",
+			field: "first_name",
+			value: "eq:Ada",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ada"),
+			},
+		},
+		{
+			name:  "Unchanged: value containing a space",
+			field: "first_name",
+			value: "eq:Ada Lovelace",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada Lovelace",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ada Lovelace"),
+			},
+		},
+		{
+			name:  "Unchanged: value containing a colon",
+			field: "first_name",
+			value: "eq:a:b",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "a:b",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "a:b"),
+			},
+		},
+		{
+			name:     "Unchanged: value without an operator is ignored",
+			field:    "first_name",
+			value:    "Ada",
+			expected: expected{responseCode: http.StatusOK, filters: params.Filters{}},
+		},
+		{
+			name:     "Changed: empty eq value was ignored and now filters for an empty string",
+			field:    "first_name",
+			value:    "eq:",
+			expected: expected{responseCode: http.StatusOK, filters: stringFilter("first_name", params.Equals, "")},
+		},
+		{
+			name:     "Changed: empty ~eq value was ignored and now matches every non-NULL value",
+			field:    "first_name",
+			value:    "~eq:",
+			expected: expected{responseCode: http.StatusOK, filters: stringFilter("first_name", params.ApproximatelyEquals, "")},
+		},
+		{
+			name:  "Changed: apostrophe was truncated and is now kept",
+			field: "email_address",
+			value: "eq:o'brien@example.com",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "o",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("email_address", params.Equals, "o'brien@example.com"),
+			},
+		},
+		{
+			name:  "Changed: comma was truncated and is now kept",
+			field: "first_name",
+			value: "eq:Ann,Marie",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ann",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ann,Marie"),
+			},
+		},
+		{
+			name:  "Changed: non-ASCII character was truncated and is now kept",
+			field: "first_name",
+			value: "eq:José",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Jos",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "José"),
+			},
+		},
+		{
+			name:  "Changed: operator after leading text was found and is now rejected",
+			field: "first_name",
+			value: "x eq:Ada",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada",
+				responseCode:   http.StatusBadRequest,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				legacyParser = model.NewQueryParameterFilterParser()
+				parsed       params.Filters
+				recorder     = httptest.NewRecorder()
+				query        = url.Values{testCase.field: {testCase.value}}.Encode()
+				request      = bhctx.SetRequestContext(httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal?"+query, nil), &bhctx.Context{})
+				next         = http.HandlerFunc(func(_ http.ResponseWriter, request *http.Request) {
+					parsed = bhctx.Get(request.Context()).Filters
+				})
+			)
+
+			legacyFilter, err := legacyParser.ParseQueryParameterFilter(testCase.field, testCase.value)
+			if testCase.expected.legacyFiltered {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.legacyValue, legacyFilter.Value)
+			} else {
+				assert.ErrorIs(t, err, model.ErrNotFiltered)
+			}
+
+			middleware.FilterMiddleware(handlers.UserMinimalListView{})(next).ServeHTTP(recorder, request)
+
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.filters, parsed)
 		})
 	}
 }
