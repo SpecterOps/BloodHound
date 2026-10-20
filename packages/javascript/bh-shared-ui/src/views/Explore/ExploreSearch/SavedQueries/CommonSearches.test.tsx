@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, within } from '@testing-library/react';
+import { render, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -179,7 +179,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
+        await waitFor(() => expect(within(testListBox).getAllByRole('option')).toHaveLength(6));
         expect(await within(testListBox).findByRole('option', { name: 'Asset Explorer' })).toBeInTheDocument();
         expect(within(testListBox).getByRole('option', { name: 'Other Extension' })).toBeInTheDocument();
 
@@ -209,7 +209,7 @@ describe('CommonSearches', () => {
         expect(testListBox).toBeInTheDocument();
         expect(testListBox).toBeVisible();
 
-        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
+        await waitFor(() => expect(within(testListBox).getAllByRole('option')).toHaveLength(6));
 
         //select Azure
         await user.click(within(testListBox).getByRole('option', { name: 'Azure' }));
@@ -240,7 +240,7 @@ describe('CommonSearches', () => {
         expect(testPlatforms).toBeInTheDocument();
         await user.click(testPlatforms);
         const testListBox = await screen.findByRole('listbox');
-        expect(within(testListBox).getAllByRole('option')).toHaveLength(4);
+        await waitFor(() => expect(within(testListBox).getAllByRole('option')).toHaveLength(6));
 
         //select AD
         await user.click(within(testListBox).getByRole('option', { name: 'Active Directory' }));
@@ -303,13 +303,14 @@ describe('CommonSearches', () => {
         expect(screen.queryByText('me save a query 1')).not.toBeInTheDocument();
 
         await user.click(screen.getByLabelText('Categories'));
-        expect(screen.getByRole('option', { name: 'Asset Management' })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: 'Uncategorized' })).toBeInTheDocument();
-        expect(screen.queryByRole('option', { name: 'User Reports' })).not.toBeInTheDocument();
-        await user.click(screen.getByRole('option', { name: 'Uncategorized' }));
+        expect(screen.getByRole('menuitemcheckbox', { name: 'Asset Management' })).toBeInTheDocument();
+        expect(screen.getByRole('menuitemcheckbox', { name: 'Uncategorized' })).toBeInTheDocument();
+        expect(screen.queryByRole('menuitemcheckbox', { name: 'User Reports' })).not.toBeInTheDocument();
+        await user.click(screen.getByRole('menuitemcheckbox', { name: 'Uncategorized' }));
         expect(screen.getByText('Find Uncategorized Assets')).toBeInTheDocument();
         expect(screen.queryByText('Find Custom Assets')).not.toBeInTheDocument();
 
+        await user.keyboard('{Escape}');
         await user.click(screen.getByLabelText('Platforms'));
         await user.click(screen.getByRole('option', { name: 'Saved Queries' }));
         expect(screen.getByText('me save a query 1')).toBeInTheDocument();

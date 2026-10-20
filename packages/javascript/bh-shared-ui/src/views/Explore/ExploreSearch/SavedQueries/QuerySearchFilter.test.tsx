@@ -93,7 +93,7 @@ describe('QuerySearchFilter', () => {
 
         expect(platformsSelect).toBeInTheDocument();
 
-        expect(testPlatforms).toHaveTextContent('All');
+        expect(platformsSelect).toHaveTextContent('All');
 
         await user.click(platformsSelect);
 
