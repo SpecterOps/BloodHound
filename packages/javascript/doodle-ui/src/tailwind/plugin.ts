@@ -126,13 +126,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': light.tertiary.main,
 
             // // Components/Button
-            '--secondary-btn-fill': palette.neutral.light[300],
-            '--secondary-btn-active-fill': palette.neutral.light[400],
-            // TODO remove
-            '--tertiary-btn-border': palette.neutral.light[400],
-            '--transparent-btn-border': palette.neutral.light[400],
-            '--icon-btn-fill': palette.neutral.light[400],
-            '--btn-disabled-fill': palette.neutral.light[200],
             '--toggle-btn-fill': common.white,
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': palette.neutral.light[100],
@@ -368,12 +361,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': dark.tertiary.main,
 
             // // Components/Button
-            '--secondary-btn-fill': palette.neutral.dark[700],
-            '--secondary-btn-active-fill': palette.neutral.dark[700],
-            '--tertiary-btn-border': palette.neutral.light[400],
-            '--transparent-btn-border': palette.neutral.dark[700],
-            '--icon-btn-fill': palette.neutral.light[400],
-            '--btn-disabled-fill': palette.neutral.dark[700],
             '--toggle-btn-fill': common.dark,
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': palette.neutral.dark[400],

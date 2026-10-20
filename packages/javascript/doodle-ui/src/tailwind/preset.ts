@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { buttonBackgroundColors, buttonBorderColors } from '../components/Button/Button.styles';
 import { switchBackgroundColors } from '../components/Switch/Switch.styles';
 
 export default {
@@ -32,7 +33,11 @@ export default {
             },
         },
         extend: {
-            backgroundColor: switchBackgroundColors,
+            backgroundColor: {
+                ...buttonBackgroundColors,
+                ...switchBackgroundColors,
+            },
+            borderColor: buttonBorderColors,
             colors: {
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
@@ -138,12 +143,6 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                'secondary-btn-fill': 'var(--secondary-btn-fill)',
-                'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
-                'tertiary-btn-border': 'var(--tertiary-btn-border)',
-                'transparent-btn-border': 'var(--transparent-btn-border)',
-                'icon-btn-fill': 'var(--icon-btn-fill)',
-                'btn-disabled-fill': 'var(--btn-disabled-fill)',
                 'toggle-btn-fill': 'var(--toggle-btn-fill)',
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
