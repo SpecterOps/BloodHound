@@ -231,11 +231,9 @@ func newListUsersHandler(db *database.BloodhoundDB) http.HandlerFunc {
 }
 
 // registerIdentityRoutes registers the identity slice's production routes on the
-// harness router with a pass-through rate limiter.
+// harness router.
 func registerIdentityRoutes(routerInst *router.Router, db *database.BloodhoundDB) {
-	identity.Register(routerInst, db.Pool(), func() mux.MiddlewareFunc {
-		return func(next http.Handler) http.Handler { return next }
-	})
+	identity.Register(routerInst, db.Pool())
 }
 
 // seedUser inserts a user row directly via the pool with every non-defaulted

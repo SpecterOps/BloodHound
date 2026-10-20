@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"path"
@@ -34,7 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bomenc"
@@ -74,7 +75,7 @@ func (s Resources) OpenGraphSchemaIngest(response http.ResponseWriter, request *
 	switch {
 	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 		extractExtensionData = extractExtensionDataFromJSON
-	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), upload.AllowedZipFileUploadTypes()...):
 		extractExtensionData = extractBundleFromZip
 	default:
 		var errMessage = fmt.Sprintf("%s; Content type must be application/json or application/zip",
@@ -229,12 +230,13 @@ func validateSchemaComponent(payload model.GraphExtensionPayload) error {
 // schema.json component and may contain the optional pz_rules.json and saved_queries.json components
 func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error) {
 	var (
-		extension    model.GraphExtensionPayload
-		archiveBytes []byte
-		zipReader    *zip.Reader
-		schemaFound  bool
-		errs         []error
-		err          error
+		extension     model.GraphExtensionPayload
+		archiveBytes  []byte
+		zipReader     *zip.Reader
+		schemaDecoded bool // Root schema decoded and accepted.
+		schemaPresent bool // Schema exists, including rejected files.
+		errs          []error
+		err           error
 	)
 
 	if archiveBytes, err = io.ReadAll(payload); err != nil {
@@ -244,29 +246,47 @@ func extractBundleFromZip(payload io.Reader) (model.GraphExtensionPayload, error
 	}
 
 	for _, file := range zipReader.File {
-		if file.FileInfo().IsDir() {
-			// ignore directories
+		if file.Name == "__MACOSX" || strings.HasPrefix(file.Name, "__MACOSX/") {
 			continue
 		}
-		if err = decodeFileIntoPayload(&extension, &schemaFound, file); err != nil {
+		if file.FileInfo().IsDir() {
+			if strings.Contains(strings.TrimSuffix(file.Name, "/"), "/") {
+				errs = append(errs, fmt.Errorf("unexpected directory %q in zip archive", file.Name))
+			}
+			continue
+		}
+		if strings.HasPrefix(file.Name, ".") && !strings.Contains(file.Name, "/") {
+			continue
+		}
+		var fileBaseName = path.Base(file.Name)
+		if fileBaseName == bundleFileNameSchema {
+			schemaPresent = true
+		}
+		if !fs.ValidPath(file.Name) || strings.Count(file.Name, "/") > 1 {
+			errs = append(errs, fmt.Errorf("unexpected file %q in zip archive", file.Name))
+			continue
+		}
+		if err = decodeFileIntoPayload(&extension, &schemaDecoded, file); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if !schemaFound {
+	if !schemaPresent {
 		errs = append(errs, fmt.Errorf("required component %q not found in extension bundle", bundleFileNameSchema))
-	} else if err = validateZipBundle(extension); err != nil {
-		errs = append(errs, err)
+	} else if schemaDecoded {
+		if err = validateZipBundle(extension); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	return extension, errors.Join(errs...)
 }
 
-func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *bool, file *zip.File) error {
+func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaDecoded *bool, file *zip.File) error {
 	// instead of switching on the filename, we could open each file and inspect for known keys. This is nice and simple though.
-	switch file.Name {
+	switch path.Base(file.Name) {
 	case bundleFileNameSchema:
-		if *schemaFound {
+		if *schemaDecoded {
 			return fmt.Errorf("duplicate component %q in zip archive", bundleFileNameSchema)
 		} else if reader, err := openBundleComponent(file); err != nil {
 			return fmt.Errorf("unable to open %s in zip archive: %w", bundleFileNameSchema, err)
@@ -281,7 +301,7 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 				schema.PZRules = extension.PZRules
 				schema.SavedQueries = extension.SavedQueries
 				*extension = schema
-				*schemaFound = true
+				*schemaDecoded = true
 			}
 		}
 	case bundleFileNamePzRules:
@@ -311,7 +331,12 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaFound *
 			}
 		}
 	default:
-		return fmt.Errorf("unexpected file %q in zip archive", path.Base(file.Name))
+		switch componentName := path.Base(file.Name); componentName {
+		case bundleFileNameSchema, bundleFileNamePzRules, bundleFileNameSavedQueries:
+			return fmt.Errorf("component %q must be at the ZIP root; found %q", componentName, file.Name)
+		default:
+			return fmt.Errorf("unexpected file %q in zip archive", file.Name)
+		}
 	}
 
 	return nil

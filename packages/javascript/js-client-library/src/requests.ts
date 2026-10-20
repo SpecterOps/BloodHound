@@ -24,14 +24,29 @@ import {
     AuthenticationMethod,
     CertificationManual,
     CertificationRevoked,
+    CollectorJobOutcome,
     CollectorJobSecret,
+    CollectorJobSecretType,
+    JobHistorySortBy,
     SeedExpansionMethod,
+    type SortBy,
     SSOProviderConfiguration,
     WebhookType,
 } from './types';
 import { ConfigurationPayload } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
+
+export type EqualityOperator = 'eq' | 'neq';
+export type ComparisonOperator = EqualityOperator | 'gt' | 'gte' | 'lt' | 'lte';
+
+export type FilterExpression<
+    Value extends string | number | boolean,
+    Operator extends string = EqualityOperator,
+> = `${Operator}:${Value}`;
+
+export type NumberFilter = FilterExpression<number, ComparisonOperator>;
+export type EqualityFilter<Value extends string | boolean> = FilterExpression<Value>;
 
 export interface LoginRequest {
     login_method: string;
@@ -386,15 +401,6 @@ export interface AlertRetryRequest {
     event_id: string;
 }
 
-export interface CreateCollectorJobProfileRequest {
-    name: string;
-    job_type_id: number;
-    params: Record<string, unknown>;
-    scope_client_id?: string;
-    secret_id?: string;
-    schedule_ids?: number[];
-}
-
 export interface UpdateCollectorJobProfileRequest {
     name?: string;
     params?: Record<string, unknown>;
@@ -406,7 +412,7 @@ export interface UpdateCollectorJobProfileRequest {
 // ---------------------------------------------------------------------------
 //  Collectors - Managed Collections
 // ---------------------------------------------------------------------------
-export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'key_id' | 'display_key_id'> & {
+export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'external_key_id' | 'name'> & {
     value: string;
 };
 
@@ -419,3 +425,42 @@ export interface CreateCollectorJobScheduleRequest {
 }
 
 export type UpdateCollectorJobScheduleRequest = Partial<CreateCollectorJobScheduleRequest>;
+
+export interface CreateCollectorJobProfileRequest {
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id?: string;
+    secret_id?: string;
+    schedule_ids?: number[];
+}
+
+export interface GetCollectorJobHistoryOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        sort_by?: JobHistorySortBy | JobHistorySortBy[];
+        outcome?: EqualityFilter<CollectorJobOutcome>;
+    };
+}
+
+export interface GetCollectorJobSecretsOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        type?: CollectorJobSecretType | EqualityFilter<CollectorJobSecretType>;
+        external_key_id?: EqualityFilter<string>;
+        name?: FilterExpression<string, EqualityOperator | '~eq'>;
+        created_at?: string;
+    };
+}
+
+export type CollectorJobSchedulesSortBy = SortBy<'name' | 'next_run_at' | 'created_at'>;
+
+export interface GetCollectorJobSchedulesOptions extends Omit<RequestOptions, 'params'> {
+    params?: {
+        sort_by?: CollectorJobSchedulesSortBy | CollectorJobSchedulesSortBy[];
+        name?: string;
+        priority?: NumberFilter;
+        disabled?: EqualityFilter<boolean>;
+        next_run_at?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
+}

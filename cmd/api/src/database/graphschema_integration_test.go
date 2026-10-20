@@ -4636,6 +4636,30 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 		assert func(t *testing.T, testSuite IntegrationTestSuite)
 	}{
 		{
+			name: "Success: preserves registered Zone display metadata",
+			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
+				var (
+					expectedDisplayKind = graphschema.DisplayKind{
+						Name: graphschema.Zone.String(),
+						Icon: graphschema.DisplayNodeIcon{
+							Name:  "shield",
+							Color: "blue",
+							Type:  graphschema.DisplayNodeTypeFontAwesome,
+						},
+					}
+					extension = createTestExtension(t, testSuite, "zone_display_test", "Zone display test", "1.0.0", "Test")
+				)
+				createTestNodeKind(t, testSuite, graphschema.Zone.String(), extension.ID, "Zone", "Zone display metadata", true, "shield", "blue")
+				defer func() {
+					require.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID))
+				}()
+
+				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
+				require.NoError(t, err)
+				assert.Equal(t, expectedDisplayKind, displayKinds[graphschema.Zone])
+			},
+		},
+		{
 			name: "Success: returns display kinds",
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				baseline, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)

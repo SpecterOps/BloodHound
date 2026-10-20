@@ -39,12 +39,13 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router              *router.Router
-	Pool                *pgxpool.Pool
-	Graph               graph.Database
+	Router         *router.Router
+	Pool           *pgxpool.Pool
+	Graph          graph.Database
+	DogTags        dogtags.Service
+	AlertPublisher alerts.Publisher
+	// RateLimitMiddleware is installed once for matched routes before authentication.
 	RateLimitMiddleware func() mux.MiddlewareFunc
-	DogTags             dogtags.Service
-	AlertPublisher      alerts.Publisher
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -60,11 +61,14 @@ func Register(deps Deps) {
 	if deps.Graph == nil {
 		panic("modules: Register requires a non-nil Graph")
 	}
+	if deps.DogTags == nil {
+		panic("modules: Register requires a non-nil DogTags")
+	}
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
-	if deps.DogTags == nil {
-		panic("modules: Register requires a non-nil DogTags")
+	if err := deps.Router.EnsureMatchedRouteRateLimit(deps.RateLimitMiddleware); err != nil {
+		panic("modules: failed to install RateLimitMiddleware: " + err.Error())
 	}
 
 	if deps.AlertPublisher == nil {
@@ -73,8 +77,8 @@ func Register(deps Deps) {
 
 	analysis.Register(deps.Router, deps.Pool)
 	appcfg.Register(deps.Router, deps.Pool)
-	identity.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
+	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
-	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
-	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
+	extensions.Register(deps.Router, deps.Pool)
 }

@@ -16,7 +16,7 @@
 
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
 import React from 'react';
-import { Label } from '../Label/Label';
+import { Label } from '../Label';
 import { cn } from '../utils';
 
 interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
@@ -51,7 +51,7 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <Label className='flex items-center font-normal cursor-pointer mb-1 mr-4 rounded-md px-1 [&:has(:focus-visible)]:bg-radio-label-focus-fill'>
+        <Label className='flex items-center font-normal cursor-pointer has-[:disabled]:cursor-default has-[:disabled]:text-text-disabled mb-1 mr-4 rounded-md px-1 [&:has(:focus-visible)]:bg-radio-label-focus-fill'>
             <RadioGroupPrimitive.Item
                 value={value}
                 ref={ref}

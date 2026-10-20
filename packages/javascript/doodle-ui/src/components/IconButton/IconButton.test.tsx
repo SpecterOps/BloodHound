@@ -17,8 +17,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
+import { AccessibleIcon } from '../AccessibleIcon';
 import { primaryClasses, secondaryClasses } from '../Button/Button.styles';
-import { Icon } from '../Icon';
 import { IconButton } from './IconButton';
 
 describe('IconButton', () => {
@@ -50,13 +50,29 @@ describe('IconButton', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Built-in extensions cannot be deleted');
     });
 
-    it('hides both the button and child Icon tooltips when requested', async () => {
+    it('supports positioning the tooltip on the horizontal axis', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' tooltipPosition='right'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'More information' }));
+
+        // Base UI may flip the requested side when collision detection runs in JSDOM.
+        expect(['left', 'right']).toContain(
+            (await screen.findByRole('tooltip')).parentElement?.getAttribute('data-side')
+        );
+    });
+
+    it('hides both the button and child AccessibleIcon tooltips when requested', async () => {
         const user = userEvent.setup();
         render(
             <IconButton aria-label='More information' hideTooltip>
-                <Icon aria-label='More information'>
+                <AccessibleIcon aria-label='More information'>
                     <AppIcon.Info />
-                </Icon>
+                </AccessibleIcon>
             </IconButton>
         );
 
@@ -65,13 +81,13 @@ describe('IconButton', () => {
         expect(screen.queryByRole('tooltip')).toBeNull();
     });
 
-    it('suppresses the child Icon tooltip in favor of the button tooltip', async () => {
+    it('suppresses the child AccessibleIcon tooltip in favor of the button tooltip', async () => {
         const user = userEvent.setup();
         render(
             <IconButton aria-label='Button information'>
-                <Icon aria-label='Icon information'>
+                <AccessibleIcon aria-label='Icon information'>
                     <AppIcon.Info />
-                </Icon>
+                </AccessibleIcon>
             </IconButton>
         );
 
@@ -110,7 +126,7 @@ describe('IconButton', () => {
 
         expect((button as HTMLButtonElement).disabled).toBe(true);
         expect(tooltipTrigger?.tagName).toBe('SPAN');
-        expect(tooltipTrigger?.getAttribute('data-state')).toBe('closed');
+        expect(tooltipTrigger?.hasAttribute('data-popup-open')).toBe(false);
 
         await user.hover(tooltipTrigger!);
 

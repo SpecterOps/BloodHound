@@ -23,6 +23,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -30,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify/endpoint"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/packages/go/errorlist"
 	"github.com/specterops/bloodhound/packages/go/metrics"
 	"github.com/specterops/bloodhound/packages/go/storage"
@@ -57,7 +59,7 @@ type IngestFileData struct {
 	UserDataErrs []string
 }
 
-func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) error {
+func processSingleFile(ctx context.Context, fileService storage.FileService, tempDirectory string, fileData IngestFileData, ingestContext *IngestContext, readOpts ReadOptions) (payload.ValidationReport, error) {
 	defer measure.ContextLogAndMeasureWithThreshold(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", fileData.Path))()
 
 	file, scratchPath, err := OpenScratchReadSeeker(ctx, tempDirectory, fileService, fileData.Path)
@@ -68,7 +70,7 @@ func processSingleFile(ctx context.Context, fileService storage.FileService, tem
 			slog.String("filepath", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return payload.ValidationReport{}, err
 	}
 
 	defer func() {
@@ -101,24 +103,25 @@ func processSingleFile(ctx context.Context, fileService storage.FileService, tem
 		}
 	}()
 
-	if err := ReadFileForIngest(ingestContext, file, readOpts); err != nil {
+	report, err := ReadFileForIngest(ingestContext, file, readOpts)
+	if err != nil {
 		slog.ErrorContext(
 			ctx,
 			"Error reading ingest file",
 			slog.String("storage_path", fileData.Path),
 			attr.Error(err),
 		)
-		return err
+		return report, err
 	}
 
-	return nil
+	return report, nil
 }
 
 // ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
 func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService storage.FileService, task model.IngestTask) ([]IngestFileData, error) {
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%d_", ic.JobId)); err != nil {
+	if fileData, err := ExtractIngestFiles(ic.Ctx, s.cfg.ScratchDirectory(), fileService, task.StoredFileName, task.OriginalFileName, task.FileType, fmt.Sprintf("file_upload_job_%s_", ic.JobId)); err != nil {
 		return fileData, err
 	} else {
 		errs := errorlist.NewBuilder()
@@ -137,13 +140,22 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 					continue
 				}
 
-				if err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
+				if report, err := processSingleFile(ic.Ctx, fileService, s.cfg.ScratchDirectory(), data, ic, readOpts); err != nil {
 					var (
 						graphifyError errorlist.Error
 						resolutionErr endpoint.ResolutionError
 					)
 
-					if errors.As(err, &graphifyError) {
+					switch {
+					case len(report.CriticalErrors) > 0 || len(report.ValidationErrors) > 0:
+						for _, criticalErr := range report.CriticalErrors {
+							fileData[i].Errors = append(fileData[i].Errors, criticalErr.Message)
+						}
+						for _, valErr := range report.ValidationErrors {
+							fileData[i].Errors = append(fileData[i].Errors, valErr.Error())
+						}
+						errs.Add(err)
+					case errors.As(err, &graphifyError):
 						for _, graphifyErr := range graphifyError.Errors {
 							if ok := errors.As(graphifyErr, &resolutionErr); ok {
 								// Resolution errors are data quality issues. They are surfaced to the user via
@@ -154,7 +166,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 								errs.Add(graphifyErr)
 							}
 						}
-					} else {
+					default:
 						fileData[i].Errors = append(fileData[i].Errors, err.Error())
 						errs.Add(err)
 					}
@@ -165,7 +177,7 @@ func (s *GraphifyService) ProcessIngestFile(ic *IngestContext, fileService stora
 	}
 }
 
-func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId int64, useRawObjectIDs bool) *IngestContext {
+func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.Time, useChangelog bool, jobId string, useRawObjectIDs bool) *IngestContext {
 	opts := []IngestOption{
 		WithIngestTime(ingestTime),
 		WithEndpointResolver(s.endpointResolver),
@@ -177,7 +189,7 @@ func (s *GraphifyService) NewIngestContext(ctx context.Context, ingestTime time.
 		opts = append(opts, WithChangeManager(s.changeManager))
 	}
 
-	if jobId > 0 {
+	if jobId != "" {
 		opts = append(opts, WithJobId(jobId))
 	}
 
@@ -236,7 +248,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 		// Record task latency metric: time from when task was created until picked up for processing
 		metrics.RecordIngestTaskQueueLatency(task.CreatedAt, metrics.IngestSourceFile)
 
-		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, task.JobId.ValueOrZero(), flagUseRawObjectIDsEnabled)
+		ingestCtx := s.NewIngestContext(s.ctx, time.Now().UTC(), flagChangeLogEnabled, strconv.FormatInt(task.JobId.ValueOrZero(), 10), flagUseRawObjectIDsEnabled)
 		fileData, err := s.ProcessIngestFile(ingestCtx, ingestFileService, task)
 
 		switch {

@@ -16,6 +16,7 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createRef } from 'react';
 import { Tooltip } from './Tooltip';
 
 describe('Tooltip', () => {
@@ -23,7 +24,7 @@ describe('Tooltip', () => {
         const { container } = render(<Tooltip tooltip='Helpful context' />);
 
         expect(screen.queryByRole('button')).toBeNull();
-        const trigger = screen.getByRole('img', { name: 'Helpful context' });
+        const trigger = screen.getByRole('img');
 
         expect(trigger.getAttribute('tabindex')).toBe('0');
         expect(trigger.classList.contains('rounded-full')).toBe(true);
@@ -44,9 +45,15 @@ describe('Tooltip', () => {
             </form>
         );
 
-        await user.click(screen.getByRole('img', { name: 'Helpful context' }));
+        await user.click(screen.getByRole('img'));
 
         expect(handleSubmit).not.toHaveBeenCalled();
+    });
+
+    it('preserves an explicit accessible name for the default trigger', () => {
+        render(<Tooltip tooltip='Helpful context' triggerProps={{ 'aria-label': 'More details' }} />);
+
+        expect(screen.getByRole('img').getAttribute('aria-label')).toBe('More details');
     });
 
     it('opens the default trigger tooltip on keyboard focus', async () => {
@@ -55,8 +62,12 @@ describe('Tooltip', () => {
 
         await user.tab();
 
-        expect(document.activeElement).toBe(screen.getByRole('img', { name: 'Helpful context' }));
-        expect(await screen.findByRole('tooltip', { name: 'Helpful context' })).not.toBeNull();
+        const trigger = screen.getByRole('img');
+        expect(document.activeElement).toBe(trigger);
+
+        const tooltip = await screen.findByRole('tooltip', { name: 'Helpful context' });
+        expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id);
+        expect(trigger.getAttribute('aria-label')).toBe('Information');
     });
 
     it('applies the default overlay z-index', async () => {
@@ -72,6 +83,49 @@ describe('Tooltip', () => {
         const tooltipContent = (await screen.findByRole('tooltip')).parentElement;
 
         expect(tooltipContent?.classList.contains('z-[1700]')).toBe(true);
-        expect(tooltipContent?.classList.contains('dark:border-0')).toBe(true);
+        expect(tooltipContent?.classList.contains('border-[#939597]')).toBe(true);
+        expect(tooltipContent?.classList.contains('max-w-[225px]')).toBe(true);
+    });
+
+    it('applies a content id without replacing the trigger description id', async () => {
+        render(<Tooltip open tooltip='Helpful context' contentProps={{ id: 'tooltip-popup' }} />);
+
+        const trigger = screen.getByRole('img');
+        const tooltip = await screen.findByRole('tooltip', { name: 'Helpful context' });
+
+        expect(tooltip.parentElement?.getAttribute('id')).toBe('tooltip-popup');
+        expect(tooltip.id).not.toBe('tooltip-popup');
+        expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id);
+    });
+
+    it.each(['top', 'bottom', 'left', 'right'] as const)(
+        'positions the tooltip on the %s of its trigger',
+        async (tooltipPosition) => {
+            render(
+                <Tooltip
+                    open
+                    tooltip='Helpful context'
+                    tooltipPosition={tooltipPosition}
+                    contentProps={{ avoidCollisions: false }}>
+                    <button>Show tooltip</button>
+                </Tooltip>
+            );
+
+            const tooltipContent = (await screen.findByRole('tooltip')).parentElement;
+
+            expect(tooltipContent?.getAttribute('data-side')).toBe(tooltipPosition);
+        }
+    );
+
+    it('forwards refs to the trigger', () => {
+        const ref = createRef<HTMLButtonElement>();
+
+        render(
+            <Tooltip ref={ref} tooltip='Helpful context'>
+                <button>Show tooltip</button>
+            </Tooltip>
+        );
+
+        expect(ref.current).toBe(screen.getByRole('button', { name: 'Show tooltip' }));
     });
 });

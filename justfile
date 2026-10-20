@@ -11,10 +11,10 @@ goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 _goose-populate-descriptions:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Ensure description column exists
   psql -q "{{goose_db}}" -c "SET client_min_messages TO WARNING; ALTER TABLE goose_db_version ADD COLUMN IF NOT EXISTS description TEXT;"
-  
+
   # Loop through migration files and update descriptions
   for f in {{goose_migrations_dir}}/*.sql; do
     [[ -f "$f" ]] || continue
@@ -26,7 +26,7 @@ _goose-populate-descriptions:
     desc="${desc//_/ }"
     # Escape single quotes to prevent SQL injection
     desc="${desc//\'/\'\'}"
-    
+
     psql -q "{{goose_db}}" -c "UPDATE goose_db_version SET description = '$desc' WHERE version_id = $version AND (description IS NULL OR description = '');"
   done
 
@@ -264,17 +264,6 @@ init wipe="":
     echo "Backing up existing environment file"
     mv ./.env ./.env.bak
   fi
-
-  if [[ -f "./go.work" ]]; then
-    echo "Backing up existing go.work file"
-    mv ./go.work ./go.work.bak
-  fi
-
-  echo "Removing go.work.sum file"
-  rm -f ./go.work.sum
-
-  echo "Copying go.work template"
-  cp ./go.work.template ./go.work
 
   echo "Run modsync to ensure workspace is up to date"
   just modsync

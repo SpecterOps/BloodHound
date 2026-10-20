@@ -17,6 +17,7 @@
 package config_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -193,6 +194,8 @@ func TestSetValuesFromEnv(t *testing.T) {
 }
 
 func TestParseConfiguration_Storage(t *testing.T) {
+	var serializedStorage []byte
+
 	configuration, err := config.ParseConfiguration([]byte(`{
 		"storage": {
 			"instance_bucket": {
@@ -208,6 +211,11 @@ func TestParseConfiguration_Storage(t *testing.T) {
 					"provider": "local",
 					"prefix": ""
 				}
+			},
+			"experiments_bucket": {
+				"name": "experiment-bucket",
+				"region": "us-west-2",
+				"prefix": "experiments"
 			}
 		}
 	}`))
@@ -222,6 +230,29 @@ func TestParseConfiguration_Storage(t *testing.T) {
 	assert.Equal(t, config.FileServiceConfiguration{
 		Provider: "local",
 	}, configuration.Storage.FileServices["work"])
+	assert.Equal(t, config.ExperimentsBucket{
+		Name:   "experiment-bucket",
+		Region: "us-west-2",
+		Prefix: "experiments",
+	}, configuration.Storage.ExperimentsBucket)
+
+	serializedStorage, err = json.Marshal(configuration.Storage)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{
+		"experiments_bucket": {
+			"name": "experiment-bucket",
+			"region": "us-west-2",
+			"prefix": "experiments"
+		},
+		"instance_bucket": {
+			"name": "test-bucket",
+			"region": "us-east-1"
+		},
+		"file_services": {
+			"ingest": {"provider": "s3", "prefix": "ingest"},
+			"work": {"provider": "local", "prefix": ""}
+		}
+	}`, string(serializedStorage))
 }
 
 func TestConfiguration_SecretStore(t *testing.T) {

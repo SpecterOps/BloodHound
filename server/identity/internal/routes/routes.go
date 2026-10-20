@@ -19,7 +19,6 @@ package routes
 import (
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -27,7 +26,7 @@ import (
 )
 
 // Register attaches the identity endpoints to the given router instance.
-func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit func() mux.MiddlewareFunc) {
+func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
 		permissions         = auth.Permissions()
 		roleList            = handlers.RoleListView{}
@@ -37,11 +36,10 @@ func Register(routerInst *router.Router, handler *handlers.Handlers, rateLimit f
 		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
 		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
 		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
-		userListRoute       = RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
 		userMinimalRoute    = routerInst.GET("/api/v2/bloodhound-users-minimal", handler.ListActiveUsersMinimal)
 	)
 
-	router.With(rateLimit, roleListRoute, roleRoute, permissionRoute, permissionListRoute, userListRoute, userMinimalRoute)
+	RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
 	roleListRoute.RequirePermissions(permissions.AuthManageSelf).WithFilters(roleList).WithSort(roleList)
 	roleRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
