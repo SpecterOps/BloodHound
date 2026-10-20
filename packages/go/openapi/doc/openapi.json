@@ -3643,7 +3643,7 @@
           },
           {
             "name": "after",
-            "description": "Return logs created after the specified time. Value should be in the RFC-3339 format. If not supplied, this will default to 1 year before the current time.",
+            "description": "Return logs created after the specified time. Value should be in the RFC-3339 format. If not supplied, this will default to 1 year before the current time. Must not be later than `before`.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -7824,7 +7824,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP root must contain `schema.json` without optional components and may contain `pz_rules.json` (`{\"pz_rules\":[...]}`) and `saved_queries.json` (`{\"queries\":[...]}`). Duplicate or unexpected files are rejected; findings require `pz_rules.json` with at least one rule.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.\n\nThe root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -20950,7 +20950,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `CompositeRisk`, `FindingCount`, `ImpactedAssetCount`, `domain_sid`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `CompositeRisk`, `FindingCount`, `ImpactedAssetCount`, `domain_sid`, `id`, `created_at`, and `updated_at`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"

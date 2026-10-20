@@ -52,10 +52,6 @@ func (s ToolContainer) GetFlags(response http.ResponseWriter, request *http.Requ
 	}
 }
 
-func shouldRequestAnalysisOnEnable(previouslyEnabled bool, currentlyEnabled bool) bool {
-	return !previouslyEnabled && currentlyEnabled
-}
-
 func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Request) {
 	var (
 		analysisRequestSource string
@@ -83,10 +79,9 @@ func (s ToolContainer) ToggleFlag(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 && shouldRequestAnalysisOnEnable(previouslyEnabled, featureFlag.Enabled) {
+	if featureFlag.Key == appcfg.FeatureFindingsPrioritizationV0 {
+		// Both toggle directions require analysis to create or remove zone nodes.
 		analysisRequestSource = appcfg.PrioritizationFlagRequestSource
-	} else if featureFlag.Key == appcfg.FeatureZoneNode {
-		analysisRequestSource = appcfg.ZoneNodeFlagRequestSource
 	}
 
 	if analysisRequestSource != "" {

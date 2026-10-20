@@ -118,6 +118,8 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
 		} else if getLogsAfter, err := ParseTimeQueryParameter(queryParams, logsAfterQueryParam, getLogsBefore.Add(-time.Hour*24*365)); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsAfterQueryParam, err), response)
+		} else if getLogsAfter.After(getLogsBefore) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter \"%s\" must not be later than \"%s\"", logsAfterQueryParam, logsBeforeQueryParam), request), response)
 		} else if logs, count, err := s.DB.ListAuditLogs(request.Context(), getLogsBefore, getLogsAfter, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {

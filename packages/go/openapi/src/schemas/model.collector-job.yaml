@@ -44,9 +44,13 @@ properties:
     type: string
     format: uuid
   job_schedule_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_profile_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_type_id:
     type: integer
     format: int32
