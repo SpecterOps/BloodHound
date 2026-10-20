@@ -26,7 +26,9 @@ const FileDrop: React.FC<{
     multiple?: boolean;
     icon?: IconDefinition;
     className?: string;
-}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className }) => {
+    uploadLabel?: string;
+    uploadInstructions?: string;
+}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className, uploadLabel, uploadInstructions }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
     const [isHoverActive, setHoverActive] = useState(false);
@@ -59,7 +61,7 @@ const FileDrop: React.FC<{
     const handleMouseLeave = () => setHoverActive(false);
 
     const formatAcceptList = () => (accept && accept.length ? accept.join(',') : undefined);
-    const uploadLabel = multiple
+    const defaultUploadLabel = multiple
         ? 'Choose JSON or zip/compressed JSON files to upload'
         : 'Choose a JSON file to upload';
 
@@ -77,7 +79,7 @@ const FileDrop: React.FC<{
             />
             <button
                 type='button'
-                aria-label={uploadLabel}
+                aria-label={uploadLabel ?? defaultUploadLabel}
                 disabled={disabled}
                 className={cn(
                     'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 py-4 flex flex-col items-center justify-center bg-neutral-2 focus-visible:focus-ring',
@@ -96,9 +98,10 @@ const FileDrop: React.FC<{
                 onDrop={handleDrop}>
                 <FontAwesomeIcon className='pointer-events-none' icon={isDragActive ? faArrowDown : icon} size='3x' />
                 <span className='pt-2 pointer-events-none'>
-                    {multiple
-                        ? 'Click here or drag and drop to upload JSON or zip/compressed JSON files'
-                        : 'Click here or drag and drop to upload a JSON file'}
+                    {uploadInstructions ??
+                        (multiple
+                            ? 'Click here or drag and drop to upload JSON or zip/compressed JSON files'
+                            : 'Click here or drag and drop to upload a JSON file')}
                 </span>
             </button>
         </>
