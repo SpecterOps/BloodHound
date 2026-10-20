@@ -141,12 +141,18 @@ type RPCEncryptionEnforced struct {
 	Value bool
 }
 
+type DisabledExtensions struct {
+	APIResult
+	Data []string
+}
+
 type CARegistryData struct {
 	CASecurity                  CASecurity
 	EnrollmentAgentRestrictions EnrollmentAgentRestrictions
 	IsUserSpecifiesSanEnabled   IsUserSpecifiesSanEnabled
 	RoleSeparationEnabled       RoleSeparationEnabled
 	RPCEncryptionEnforced       RPCEncryptionEnforced
+	DisabledExtensions          DisabledExtensions
 }
 
 type DCRegistryData struct {
