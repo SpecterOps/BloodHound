@@ -33,6 +33,7 @@ export enum ActiveDirectoryNodeKind {
     Site = 'Site',
     SiteServer = 'SiteServer',
     SiteSubnet = 'SiteSubnet',
+    DMSA = 'DMSA',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -74,6 +75,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'SiteServer';
         case ActiveDirectoryNodeKind.SiteSubnet:
             return 'SiteSubnet';
+        case ActiveDirectoryNodeKind.DMSA:
+            return 'DMSA';
         default:
             return undefined;
     }
@@ -168,6 +171,10 @@ export enum ActiveDirectoryRelationshipKind {
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
     ProtectAdminGroups = 'ProtectAdminGroups',
+    DMSAPrecededBy = 'DMSAPrecededBy',
+    CreateDMSA = 'CreateDMSA',
+    BadSuccessor = 'BadSuccessor',
+    OuroborosSelfEnroll = 'OuroborosSelfEnroll',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -349,6 +356,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WritePublicInformation';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
+        case ActiveDirectoryRelationshipKind.DMSAPrecededBy:
+            return 'DMSAPrecededBy';
+        case ActiveDirectoryRelationshipKind.CreateDMSA:
+            return 'CreateDMSA';
+        case ActiveDirectoryRelationshipKind.BadSuccessor:
+            return 'BadSuccessor';
+        case ActiveDirectoryRelationshipKind.OuroborosSelfEnroll:
+            return 'OuroborosSelfEnroll';
         default:
             return undefined;
     }
@@ -878,6 +893,10 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.ServerIs,
+        ActiveDirectoryRelationshipKind.DMSAPrecededBy,
+        ActiveDirectoryRelationshipKind.CreateDMSA,
+        ActiveDirectoryRelationshipKind.BadSuccessor,
+        ActiveDirectoryRelationshipKind.OuroborosSelfEnroll,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -943,6 +962,10 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.ServerIs,
+        ActiveDirectoryRelationshipKind.DMSAPrecededBy,
+        ActiveDirectoryRelationshipKind.CreateDMSA,
+        ActiveDirectoryRelationshipKind.BadSuccessor,
+        ActiveDirectoryRelationshipKind.OuroborosSelfEnroll,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
