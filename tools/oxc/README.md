@@ -41,8 +41,8 @@ unknown identifiers.
 
 Stbernard accepts Oxlint JSON, converts workspace-relative filenames to paths,
 and preserves severity and line locations. Exit 1 with findings is a normal lint
-failure; missing/invalid output and other exit codes are tooling errors. ESLint
-JSON remains supported so BHE and BHCE can migrate independently.
+failure; missing/invalid output and other exit codes are tooling errors. Only
+Oxlint JSON is accepted; ESLint output is rejected as invalid tooling output.
 
 ## Known differences and limits
 

@@ -34,16 +34,6 @@ type oxlintOutput struct {
 	Diagnostics []oxlintDiagnostic `json:"diagnostics"`
 }
 
-type eslintEntry struct {
-	FilePath string `json:"filePath"`
-	Messages []struct {
-		RuleID   string `json:"ruleId"`
-		Severity int    `json:"severity"`
-		Message  string `json:"message"`
-		Line     uint64 `json:"line"`
-	} `json:"messages"`
-}
-
 type oxlintDiagnostic struct {
 	Code     string `json:"code"`
 	Severity string `json:"severity"`
@@ -99,18 +89,10 @@ func runLint(path string, env environment.Environment) ([]codeclimate.Entry, err
 
 func decodeDiagnostics(reader io.Reader, workspacePath string) ([]codeclimate.Entry, error) {
 	var (
-		rawOutput json.RawMessage
-		output    oxlintOutput
-		entries   []codeclimate.Entry
+		output  oxlintOutput
+		entries []codeclimate.Entry
 	)
-	if err := json.NewDecoder(reader).Decode(&rawOutput); err != nil {
-		return nil, err
-	}
-	// Keep supporting ESLint workspaces while BHE and BHCE migrate separately.
-	if len(rawOutput) > 0 && rawOutput[0] == '[' {
-		return decodeESLintDiagnostics(rawOutput)
-	}
-	if err := json.Unmarshal(rawOutput, &output); err != nil {
+	if err := json.NewDecoder(reader).Decode(&output); err != nil {
 		return nil, err
 	}
 	if output.Diagnostics == nil {
@@ -152,35 +134,6 @@ func decodeDiagnostics(reader io.Reader, workspacePath string) ([]codeclimate.En
 				Lines: codeclimate.Lines{Begin: line},
 			},
 		})
-	}
-	return entries, nil
-}
-
-func decodeESLintDiagnostics(rawOutput json.RawMessage) ([]codeclimate.Entry, error) {
-	var (
-		output     []eslintEntry
-		entries    []codeclimate.Entry
-		severities = [...]codeclimate.Severity{
-			codeclimate.SeverityInfo, codeclimate.SeverityMinor, codeclimate.SeverityMajor,
-		}
-	)
-	if err := json.Unmarshal(rawOutput, &output); err != nil {
-		return nil, err
-	}
-	for _, file := range output {
-		for _, message := range file.Messages {
-			if message.Severity < 0 || message.Severity > 2 {
-				return nil, fmt.Errorf("unknown ESLint severity %d", message.Severity)
-			}
-			entries = append(entries, codeclimate.Entry{
-				Description: message.RuleID + ": " + message.Message,
-				Severity:    severities[message.Severity],
-				Location: codeclimate.Location{
-					Path:  file.FilePath,
-					Lines: codeclimate.Lines{Begin: message.Line},
-				},
-			})
-		}
 	}
 	return entries, nil
 }

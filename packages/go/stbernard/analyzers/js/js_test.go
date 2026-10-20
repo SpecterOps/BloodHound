@@ -49,7 +49,7 @@ func TestDecodeDiagnosticsInvalidOutput(t *testing.T) {
 		`{"diagnostics":null}`,
 		`{"diagnostics":[{"severity":"unknown","filename":"example.ts"}]}`,
 		`{"diagnostics":[{"severity":"error"}]}`,
-		`[{"filePath":"example.ts","messages":[{"severity":3}]}]`,
+		`[]`,
 	}
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
@@ -57,22 +57,6 @@ func TestDecodeDiagnosticsInvalidOutput(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
-}
-
-func TestDecodeDiagnosticsESLint(t *testing.T) {
-	var input = `[{"filePath":"/workspace/src/file.ts","messages":[
-		{"ruleId":"info","severity":0,"message":"information","line":2},
-		{"ruleId":"warning","severity":1,"message":"warning","line":3},
-		{"ruleId":"error","severity":2,"message":"error","line":4}
-	]}]`
-	entries, err := decodeDiagnostics(strings.NewReader(input), "/workspace")
-
-	require.NoError(t, err)
-	require.Equal(t, []codeclimate.Entry{
-		{Description: "info: information", Severity: codeclimate.SeverityInfo, Location: codeclimate.Location{Path: "/workspace/src/file.ts", Lines: codeclimate.Lines{Begin: 2}}},
-		{Description: "warning: warning", Severity: codeclimate.SeverityMinor, Location: codeclimate.Location{Path: "/workspace/src/file.ts", Lines: codeclimate.Lines{Begin: 3}}},
-		{Description: "error: error", Severity: codeclimate.SeverityMajor, Location: codeclimate.Location{Path: "/workspace/src/file.ts", Lines: codeclimate.Lines{Begin: 4}}},
-	}, entries)
 }
 
 func TestRunExitHandling(t *testing.T) {
@@ -83,8 +67,6 @@ func TestRunExitHandling(t *testing.T) {
 		wantError   bool
 		wantEntries int
 	}{
-		{name: "ESLint clean", output: `[]`, exit: "0"},
-		{name: "ESLint failure", output: `[{"filePath":"/workspace/file.ts","messages":[{"ruleId":"no-debugger","severity":2,"message":"debugger","line":3}]}]`, exit: "1", wantEntries: 1},
 		{name: "clean", output: `{"diagnostics":[]}`, exit: "0"},
 		{name: "lint failure", output: `{"diagnostics":[{"code":"rule","message":"message","severity":"error","filename":"src/file.ts","labels":[{"span":{"line":3}}]}]}`, exit: "1", wantEntries: 1},
 		{name: "configuration failure", output: `{"diagnostics":[]}`, exit: "1", wantError: true},
