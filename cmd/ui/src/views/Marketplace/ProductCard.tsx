@@ -55,11 +55,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         />
                     </div>
                     <div className='min-w-0 flex-1'>
-                        <div className='flex flex-wrap items-start justify-between gap-2'>
+                        <div className='flex min-w-0 flex-col items-start gap-2'>
                             <Typography component='h3' variant='h3'>
                                 {name}
                             </Typography>
-                            {badge && <Badge className='shrink-0' color={badgeColor} label={badge} variant='fill' />}
+                            {badge && (
+                                <Badge
+                                    className='min-w-0 max-w-full text-center [overflow-wrap:anywhere]'
+                                    color={badgeColor}
+                                    label={badge}
+                                    variant='fill'
+                                />
+                            )}
                         </div>
                         <Typography className='mt-1 text-muted-foreground opacity-75' variant='body2'>
                             {author}
