@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable no-useless-assignment */
+/* oxlint-disable no-useless-assignment */
 /* stop strict complaints about `i` from eslint */
 
 /**
@@ -67,7 +67,7 @@ type ImageReady = { status: 'ready' } & Coordinates & Dimensions;
 type ImageType = ImageLoading | ImageError | ImagePending | ImageReady;
 
 // This class only exists for the return typing of `getNodeCombinedProgram`:
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable no-unused-vars */
 class AbstractNodeCombinedProgram extends AbstractNodeProgram {
     constructor(gl: WebGLRenderingContext, renderer: Sigma) {
         super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
@@ -77,7 +77,7 @@ class AbstractNodeCombinedProgram extends AbstractNodeProgram {
     render(params: RenderParams): void {}
     rebindTexture() {}
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+/* oxlint-enable no-unused-vars */
 
 /**
  * To share the texture between the program instances of the graph and the

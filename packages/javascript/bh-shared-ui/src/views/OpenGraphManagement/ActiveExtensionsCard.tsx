@@ -129,7 +129,7 @@ export const ActiveExtensionsCard = () => {
                             role='img'
                             aria-describedby='namespace-info-tooltip'
                             /* The informational tooltip must be keyboard-focusable without presenting as a button. */
-                            /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
+                            /* oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex */
                             tabIndex={0}
                             aria-label='Namespace information'>
                             <FontAwesomeIcon icon={faInfoCircle} size='sm' />
