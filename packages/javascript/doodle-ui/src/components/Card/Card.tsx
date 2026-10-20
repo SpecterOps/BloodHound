@@ -17,15 +17,16 @@ import * as React from 'react';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
-    return (
-        <div
-            ref={ref}
-            className={cn('rounded-lg shadow-outer-1 bg-neutral-light-2 dark:bg-neutral-dark-2 text-main', className)}
-            {...props}
-        />
-    );
-});
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+    <div
+        ref={ref}
+        className={cn(
+            'rounded-lg text-main bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900',
+            className
+        )}
+        {...props}
+    />
+));
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
