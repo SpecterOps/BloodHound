@@ -18,6 +18,7 @@ import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
     DEFAULT_PINNED_COLUMN_KEYS,
+    EdgeTraversability,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -36,6 +37,7 @@ import {
     useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
+    useEdgeTraversability,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
@@ -85,6 +87,12 @@ const GraphView: FC = () => {
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
+    const { data: edgeTraversability } = useEdgeTraversability();
+    // Read at graph build time so traversability updates do not rebuild the graph or rerun its layout.
+    const edgeTraversabilityRef = useRef(edgeTraversability);
+    edgeTraversabilityRef.current = edgeTraversability;
+    // The traversability map whose dashed edge styles are applied to the most recently built graph.
+    const appliedEdgeTraversabilityRef = useRef<EdgeTraversability>();
 
     // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
     useAutomaticGraphActions(graphQuery.data);
@@ -138,10 +146,23 @@ const GraphView: FC = () => {
         if (graphOptions.hideNodes) {
             setGraphologyGraph(undefined);
         } else {
-            const graph = initGraph(graphData, graphOptions);
+            const currentEdgeTraversability = edgeTraversabilityRef.current;
+            const graph = initGraph(graphData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
+            appliedEdgeTraversabilityRef.current = currentEdgeTraversability;
             setGraphologyGraph(graph);
         }
     }, [graphQuery.data, graphOptions]);
+
+    // Update styles when schema metadata arrives without rebuilding the graph or its layout.
+    useEffect(() => {
+        if (!graphologyGraph || appliedEdgeTraversabilityRef.current === edgeTraversability) return;
+
+        graphologyGraph.updateEachEdgeAttributes(
+            (_edgeId, attributes) => ({ ...attributes, dashed: !edgeTraversability.get(attributes.kind) }),
+            { attributes: ['dashed'] }
+        );
+        appliedEdgeTraversabilityRef.current = edgeTraversability;
+    }, [graphologyGraph, edgeTraversability]);
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(

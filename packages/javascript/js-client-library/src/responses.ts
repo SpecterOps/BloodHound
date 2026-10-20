@@ -54,7 +54,7 @@ import {
     Webhook,
     WebhookSecret,
 } from './types';
-import { ConfigurationPayload } from './utils/config';
+import { type ConfigurationPayload } from './utils';
 
 export interface BasicResponse<T> {
     data: T;
@@ -321,6 +321,8 @@ export type SavedQuery = {
     description: string;
     query: string;
     user_id: string;
+    category?: string;
+    extension_id?: number | null;
 };
 
 export type SavedQueryPermissionsResponse = {
@@ -385,11 +387,15 @@ export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: Coll
 
 export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
 
+export type GetCollectorJobSchedulesResponse = PaginatedResponse<{ schedules: CollectorJobSchedule[] }>;
+
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
-export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+export type GetCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
 
 export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretsResponse = PaginatedResponse<{ secrets: CollectorJobSecret[] }>;
 
 export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
 

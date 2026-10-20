@@ -2621,10 +2621,10 @@ func (mr *MockDatabaseMockRecorder) GetSchemaFindingsByExtensionId(ctx, extensio
 }
 
 // GetScopeForSavedQuery mocks base method.
-func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopeMap, error) {
+func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetScopeForSavedQuery", ctx, queryID, userID)
-	ret0, _ := ret[0].(database.SavedQueryScopeMap)
+	ret0, _ := ret[0].(database.SavedQueryScopes)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

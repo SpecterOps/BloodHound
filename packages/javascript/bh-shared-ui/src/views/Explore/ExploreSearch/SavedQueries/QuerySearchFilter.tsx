@@ -40,6 +40,7 @@ interface QuerySearchProps {
     exportHandler: () => void;
     deleteHandler: (id: number) => void;
     categories: string[];
+    platforms: string[];
     searchTerm: string;
     platform: string;
     categoryFilter: string[];
@@ -52,6 +53,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         exportHandler,
         deleteHandler,
         categories,
+        platforms,
         searchTerm,
         platform,
         categoryFilter,
@@ -66,7 +68,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const handlePlatformFilter = (val: string) => {
-        queryFilterHandler(searchTerm, val, categoryFilter, source);
+        queryFilterHandler(searchTerm, val, [], source);
     };
 
     const handleSourceFilter = (val: string) => {
@@ -74,7 +76,8 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const exportEnabled = selectedQuery?.id ? true : false;
-    const deleteEnabled = selectedQuery?.id && selectedQuery?.canEdit ? true : false;
+    const deleteEnabled =
+        selectedQuery?.id && selectedQuery?.canEdit && selectedQuery.schema_extension_id == null ? true : false;
 
     const importHandler = () => {
         setShowImportDialog(true);
@@ -105,12 +108,14 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         <Button disabled={!exportEnabled} variant='secondary' onClick={exportHandler}>
                             Export
                         </Button>
-                        <IconButton
-                            aria-label='delete'
-                            disabled={!deleteEnabled}
-                            onClick={() => deleteHandler(selectedQuery?.id as number)}>
-                            <FontAwesomeIcon icon={faTrash} />
-                        </IconButton>
+                        {selectedQuery?.schema_extension_id == null && (
+                            <IconButton
+                                aria-label='delete'
+                                disabled={!deleteEnabled}
+                                onClick={() => deleteHandler(selectedQuery?.id as number)}>
+                                <FontAwesomeIcon icon={faTrash} />
+                            </IconButton>
+                        )}
                     </div>
                 </div>
                 <div className='grid w-full grid-cols-3 items-center gap-2'>
@@ -124,9 +129,11 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value='__all__'>All</SelectItem>
-                                <SelectItem value='Active Directory'>Active Directory</SelectItem>
-                                <SelectItem value='Azure'>Azure</SelectItem>
-                                <SelectItem value='Saved Queries'>Saved Queries</SelectItem>
+                                {platforms.map((platformOption) => (
+                                    <SelectItem key={platformOption} value={platformOption}>
+                                        {platformOption}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -180,6 +187,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                                 <SelectItem value='prebuilt'>Prebuilt</SelectItem>
                                 <SelectItem value='personal'>Personal</SelectItem>
                                 <SelectItem value='shared'>Shared</SelectItem>
+                                <SelectItem value='extension'>Extension</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

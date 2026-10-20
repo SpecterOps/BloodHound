@@ -32,115 +32,136 @@ import (
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
+	"github.com/specterops/dawgs/traversal"
 )
 
-func PostTrustedForNTAuth(ctx context.Context, db graph.Database, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) error {
-	if ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore); err != nil {
-		return err
-	} else {
-		for _, node := range ntAuthStoreNodes {
-			innerNode := node
+var trustedForNTAuthPostProcessedEdges = graph.Kinds{
+	ad.TrustedForNTAuth,
+}
 
-			operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-				if thumbprints, err := innerNode.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
-					if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
-						slog.WarnContext(
-							ctx,
-							"Unable to post-process TrustedForNTAuth edge for NTAuthStore due to missing adcs data",
-							slog.Uint64("nt_auth_store_id", uint64(innerNode.ID)),
-							attr.Error(err),
-						)
-						return nil
-					}
-					return err
-				} else {
-					for _, thumbprint := range thumbprints {
-						if thumbprint != "" {
-							if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
-								return err
-							} else {
-								for _, sourceNodeID := range sourceNodeIDs {
-									if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-										FromID: sourceNodeID,
-										ToID:   innerNode.ID,
-										Kind:   ad.TrustedForNTAuth,
-									}) {
-										return nil
-									}
+func PostTrustedForNTAuth(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, trustedForNTAuthPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	ntAuthStoreNodes, err := FetchNodesByKind(ctx, db, ad.NTAuthStore)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	trustedForNTAuthTracker, err := post.FetchTracker(ctx, db, trustedForNTAuthPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostTrustedForNTAuth", db, trustedForNTAuthTracker)
+	defer sink.Done()
+
+	for _, node := range ntAuthStoreNodes {
+		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+			if thumbprints, err := node.Properties.Get(ad.CertThumbprints.String()).StringSlice(); err != nil {
+				if strings.Contains(err.Error(), graph.ErrPropertyNotFound.Error()) {
+					slog.WarnContext(
+						ctx,
+						"Unable to post-process TrustedForNTAuth edge for NTAuthStore due to missing adcs data",
+						slog.Uint64("nt_auth_store_id", uint64(node.ID)),
+						attr.Error(err),
+					)
+					return nil
+				}
+				return err
+			} else {
+				for _, thumbprint := range thumbprints {
+					if thumbprint != "" {
+						if sourceNodeIDs, err := findNodesByCertThumbprint(thumbprint, tx, ad.EnterpriseCA); err != nil {
+							return err
+						} else {
+							for _, sourceNodeID := range sourceNodeIDs {
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
+									FromID: sourceNodeID,
+									ToID:   node.ID,
+									Kind:   ad.TrustedForNTAuth,
+								}) {
+									return nil
 								}
 							}
 						}
 					}
 				}
-				return nil
-			})
+			}
+			return nil
+		}); err != nil {
+			return sink.Stats(), err
 		}
 	}
 
-	return nil
+	return sink.Stats(), nil
 }
 
-func PostIssuedSignedBy(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range enterpriseCertAuthorities {
-			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
-				return err
-			} else if errors.Is(err, ErrNoCertParent) {
-				continue
-			} else {
-				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
-						return nil
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range rootCertAuthorities {
-			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
-				return err
-			} else if errors.Is(err, ErrNoCertParent) {
-				continue
-			} else {
-				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
-						return nil
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-		for _, node := range aiaCertAuthorities {
-			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
-				return err
-			} else if errors.Is(err, ErrNoCertParent) {
-				continue
-			} else {
-				for _, rel := range postRels {
-					if !channels.Submit(ctx, outC, rel) {
-						return nil
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	return nil
+var issuedSignedByPostProcessedEdges = graph.Kinds{
+	ad.IssuedSignedBy,
 }
 
-func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelationshipJob], enterpriseCertAuthorities []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAuthorities []*graph.Node, rootCertAuthorities []*graph.Node, aiaCertAuthorities []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, issuedSignedByPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	issuedSignedByTracker, err := post.FetchTracker(ctx, db, issuedSignedByPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostIssuedSignedBy", db, issuedSignedByTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		for _, node := range slices.Concat(enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities) {
+			if postRels, err := processCertChainParent(node, tx); err != nil && !errors.Is(err, ErrNoCertParent) {
+				return err
+			} else if errors.Is(err, ErrNoCertParent) {
+				continue
+			} else {
+				for _, rel := range postRels {
+					if !sink.Submit(ctx, rel) {
+						return nil
+					}
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return sink.Stats(), err
+	}
+
+	return sink.Stats(), nil
+}
+
+var enterpriseCAForPostProcessedEdges = graph.Kinds{
+	ad.EnterpriseCAFor,
+}
+
+func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertAuthorities []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, enterpriseCAForPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	enterpriseCAForTracker, err := post.FetchTracker(ctx, db, enterpriseCAForPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostEnterpriseCAFor", db, enterpriseCAForTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
 			if thumbprint, err := ecaNode.Properties.Get(ad.CertThumbprint.String()).String(); err != nil {
 				if graph.IsErrPropertyNotFound(err) {
@@ -152,7 +173,7 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 					return err
 				} else {
 					for _, rootCANodeID := range rootCAIDs {
-						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+						if !sink.Submit(ctx, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   rootCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -165,7 +186,7 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 					return err
 				} else {
 					for _, aiaCANodeID := range aiaCAIDs {
-						if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+						if !sink.Submit(ctx, post.EnsureRelationshipJob{
 							FromID: ecaNode.ID,
 							ToID:   aiaCANodeID,
 							Kind:   ad.EnterpriseCAFor,
@@ -177,34 +198,145 @@ func PostEnterpriseCAFor(operation post.StatTrackedOperation[post.EnsureRelation
 			}
 		}
 		return nil
-	})
-	return nil
+	}); err != nil {
+		return sink.Stats(), err
+	}
+
+	return sink.Stats(), nil
 }
 
-func PostGoldenCert(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, certChains *EnterpriseCAChainedDomains) error {
-	if hostCAServiceComputers, err := FetchHostsCAServiceComputers(tx, certChains.EnterpriseCA); err != nil {
-		slog.ErrorContext(
-			ctx,
-			"Error fetching host ca computer for enterprise ca",
-			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
-			attr.Error(err),
-		)
+func PostGoldenCert(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, certChains *EnterpriseCAChainedDomains) error {
+	var (
+		enterpriseCAIDs = cardinality.NewBitmap64()
+		domains         []*graph.Node
+	)
+
+	if fetchedDomains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain))); err != nil && !graph.IsErrNotFound(err) {
+		return fmt.Errorf("failed fetching domains for GoldenCert host validation: %w", err)
 	} else {
-		for _, computer := range hostCAServiceComputers {
-			for _, domain := range certChains.Domains.Slice() {
-				channels.Submit(ctx, outC, post.EnsureRelationshipJob{
-					FromID: computer.ID,
-					ToID:   graph.ID(domain),
-					Kind:   ad.GoldenCert,
-				})
+		domains = fetchedDomains
+	}
+
+	enterpriseCAIDs.Add(certChains.EnterpriseCA.ID.Uint64())
+	qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAIDs, indexDomainsBySID(domains))
+	if err != nil {
+		return fmt.Errorf("failed fetching qualifying hosts for GoldenCert: %w", err)
+	}
+
+	for _, hostPath := range qualifyingHostPaths[certChains.EnterpriseCA.ID] {
+		for _, domain := range certChains.Domains.Slice() {
+			if !sink.Submit(ctx, post.EnsureRelationshipJob{
+				FromID: hostPath.Root().ID,
+				ToID:   graph.ID(domain),
+				Kind:   ad.GoldenCert,
+			}) {
+				return fmt.Errorf("context timed out while creating GoldenCert edge")
 			}
 		}
 	}
+
 	return nil
 }
 
-func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.EnsureRelationshipJob], certTemplates []*graph.Node) error {
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+// fetchQualifyingEnterpriseCAHostPaths returns only HostsCAService paths whose
+// computer satisfies the same enabled and forest-scoping rules used by ADCS
+// edge creation. Results are keyed by the exact Enterprise CA they host so a
+// qualifying host for one CA cannot validate a different CA candidate.
+func fetchQualifyingEnterpriseCAHostPaths(ctx context.Context, db graph.Database, enterpriseCAs cardinality.Duplex[uint64]) (map[graph.ID]graph.PathSet, error) {
+	var hostPathsByEnterpriseCA = make(map[graph.ID]graph.PathSet)
+
+	if enterpriseCAs.Cardinality() == 0 {
+		return hostPathsByEnterpriseCA, nil
+	}
+
+	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		domains, err := ops.FetchNodes(tx.Nodes().Filter(query.Kind(query.Node(), ad.Domain)))
+		if err != nil && !graph.IsErrNotFound(err) {
+			return err
+		}
+
+		hostPathsByEnterpriseCA, err = fetchQualifyingEnterpriseCAHostPathsForTransaction(tx, enterpriseCAs, indexDomainsBySID(domains))
+		return err
+	})
+
+	return hostPathsByEnterpriseCA, err
+}
+
+func enterpriseCAChainPattern(pattern traversal.PatternContinuation, rootCAForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.RootCAFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, rootCAForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(0, 0, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
+		)).
+		OutboundWithDepth(1, 1, query.And(
+			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
+			query.Kind(query.End(), ad.RootCA),
+		)).
+		OutboundWithDepth(1, 1, query.And(criteria...))
+}
+
+func enterpriseCAChainToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCAChainPattern(pattern, query.Equals(query.EndID(), domainID))
+}
+
+func enterpriseCATrustedForNTAuthPattern(pattern traversal.PatternContinuation, ntAuthStoreForCriteria ...graph.Criteria) traversal.PatternContinuation {
+	var criteria = []graph.Criteria{
+		query.Kind(query.Relationship(), ad.NTAuthStoreFor),
+		query.Kind(query.End(), ad.Domain),
+	}
+	criteria = append(criteria, ntAuthStoreForCriteria...)
+
+	return pattern.
+		OutboundWithDepth(1, 1, query.And(
+			query.Kind(query.Relationship(), ad.TrustedForNTAuth),
+			query.Kind(query.End(), ad.NTAuthStore),
+		)).
+		OutboundWithDepth(1, 1, query.And(criteria...))
+}
+
+func enterpriseCATrustedForNTAuthToDomainPattern(pattern traversal.PatternContinuation, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthPattern(pattern, query.Equals(query.EndID(), domainID))
+}
+
+func adcsCAEnrollmentPathPattern(enterpriseCAs []graph.ID, domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
+		OutboundWithDepth(0, 0, query.And(
+			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.End(), ad.Group),
+		)).
+		Outbound(query.And(
+			query.Kind(query.Relationship(), ad.Enroll),
+			query.Kind(query.End(), ad.EnterpriseCA),
+			query.InIDs(query.End(), enterpriseCAs...),
+		)), domainID)
+}
+
+var extendedByPolicyPostProcessedEdges = graph.Kinds{
+	ad.ExtendedByPolicy,
+}
+
+func PostExtendedByPolicyBinding(ctx context.Context, db graph.Database, certTemplates []*graph.Node) (*post.AtomicPostProcessingStats, error) {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, extendedByPolicyPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	extendedByPolicyTracker, err := post.FetchTracker(ctx, db, extendedByPolicyPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	sink := post.NewFilteredRelationshipSink(ctx, "PostExtendedByPolicyBinding", db, extendedByPolicyTracker)
+	defer sink.Done()
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
 			return err
 		} else {
@@ -226,7 +358,7 @@ func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.Ensure
 								continue
 							} else if certTemplateDomain != "" && certTemplateDomain == issuancePolicyDomain {
 								// Create ExtendedByPolicy edge
-								if !channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
 									FromID: certTemplate.ID,
 									ToID:   issuancePolicy.ID,
 									Kind:   ad.ExtendedByPolicy,
@@ -240,8 +372,11 @@ func PostExtendedByPolicyBinding(operation post.StatTrackedOperation[post.Ensure
 			}
 			return nil
 		}
-	})
-	return nil
+	}); err != nil {
+		return sink.Stats(), err
+	}
+
+	return sink.Stats(), nil
 }
 
 func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {
@@ -386,28 +521,30 @@ func certTemplateValidForUserVictim(certTemplate *graph.Node) bool {
 }
 
 func filterUserDNSResults(tx graph.Transaction, bitmap cardinality.Duplex[uint64], certTemplate *graph.Node) (cardinality.Duplex[uint64], error) {
+	if certTemplateValidForUserVictim(certTemplate) {
+		return bitmap, nil
+	}
+
 	// gMSAs and sMSAs are ingested as User nodes but behave like Computer objects in AD
 	// and possess DNS names, so they should not be filtered out of attack paths that
 	// require DNS in the SubjectAltName
 	if userNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Node(), ad.User),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.GMSA.String())),
-				query.Equals(query.NodeProperty(ad.GMSA.String()), true),
-			)),
-			query.Not(query.And(
-				query.Exists(query.NodeProperty(ad.MSA.String())),
-				query.Equals(query.NodeProperty(ad.MSA.String()), true),
-			)),
 			query.InIDs(query.NodeID(), graph.DuplexToGraphIDs(bitmap)...),
 		)
 	})); err != nil {
 		if !graph.IsErrNotFound(err) {
 			return nil, err
 		}
-	} else if len(userNodes) > 0 && !certTemplateValidForUserVictim(certTemplate) {
-		bitmap.Xor(graph.NodeSetToDuplex(userNodes))
+	} else {
+		for _, userNode := range userNodes {
+			if managedServiceAccount, err := isManagedServiceAccount(userNode); err != nil {
+				return nil, err
+			} else if !managedServiceAccount {
+				bitmap.Remove(userNode.ID.Uint64())
+			}
+		}
 	}
 
 	return bitmap, nil

@@ -228,9 +228,22 @@ type BucketConfiguration struct {
 	Region string `json:"region"`
 }
 
+type ExperimentsBucket struct {
+	Name   string `json:"name"`
+	Region string `json:"region"`
+	Prefix string `json:"prefix"`
+}
+
 type StorageConfiguration struct {
-	InstanceBucket BucketConfiguration                 `json:"instance_bucket"`
-	FileServices   map[string]FileServiceConfiguration `json:"file_services"`
+	InstanceBucket    BucketConfiguration                 `json:"instance_bucket"`
+	FileServices      map[string]FileServiceConfiguration `json:"file_services"`
+	ExperimentsBucket ExperimentsBucket                   `json:"experiments_bucket"`
+}
+
+type SecretStoreConfiguration struct {
+	Provider string `json:"provider"`
+	Prefix   string `json:"prefix"`
+	Region   string `json:"region"`
 }
 
 type Configuration struct {
@@ -270,6 +283,7 @@ type Configuration struct {
 	EmbeddedExtensionsBasePath      string                    `json:"embedded_extensions_base_path"`
 	Teleport                        TeleportConfiguration     `json:"teleport"`
 	Storage                         StorageConfiguration      `json:"storage"`
+	SecretStore                     SecretStoreConfiguration  `json:"secret_store"`
 }
 
 func (s Configuration) ScratchDirectory() string {

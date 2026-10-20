@@ -84,6 +84,14 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			setupMocks: func(mock) {},
 			expected:   expected{routeRegistered: true},
 		},
+		{
+			name: "Success: GET /api/v2/bloodhound-users is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{routeRegistered: true},
+		},
 	}
 
 	for _, testCase := range tests {
@@ -99,9 +107,7 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 				match      mux.RouteMatch
 			)
 
-			routes.Register(&routerInst, handlerSet, func() mux.MiddlewareFunc {
-				return func(next http.Handler) http.Handler { return next }
-			})
+			routes.Register(&routerInst, handlerSet)
 			testCase.setupMocks(mock)
 
 			assert.Equal(t, testCase.expected.routeRegistered, routerInst.MuxRouter().Match(testCase.buildRequest(), &match))
@@ -162,6 +168,14 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 			setupMocks: func(mock) {},
 			expected:   expected{responseCode: http.StatusUnauthorized},
 		},
+		{
+			name: "Error: unauthenticated GET /api/v2/bloodhound-users - 401",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{responseCode: http.StatusUnauthorized},
+		},
 	}
 
 	for _, testCase := range tests {
@@ -177,9 +191,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 				recorder   = httptest.NewRecorder()
 			)
 
-			routes.Register(&routerInst, handlerSet, func() mux.MiddlewareFunc {
-				return func(next http.Handler) http.Handler { return next }
-			})
+			routes.Register(&routerInst, handlerSet)
 			testCase.setupMocks(mock)
 			routerInst.Handler().ServeHTTP(recorder, testCase.buildRequest())
 
@@ -251,9 +263,12 @@ func TestRegister_RateLimitingReturns429(t *testing.T) {
 			)
 
 			testCase.setupMocks(mock)
-			routes.Register(&routerInst, handlerSet, func() mux.MiddlewareFunc {
+			assert.NoError(t, routerInst.WithRouteMiddleware(func() mux.MiddlewareFunc {
 				return middleware.RateLimitMiddleware(mock.database, 1)
-			})
+			}, func() error {
+				routes.Register(&routerInst, handlerSet)
+				return nil
+			}))
 
 			for index, request := range testCase.buildRequests() {
 				recorder := httptest.NewRecorder()

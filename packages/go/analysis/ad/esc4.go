@@ -29,10 +29,9 @@ import (
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/traversal"
-	"github.com/specterops/dawgs/util/channels"
 )
 
-func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
+func PostADCSESC4(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, localGroupData *LocalGroupData, certChains *EnterpriseCAChainedDomains, cache *ADCSCache) error {
 	// 1.
 	var (
 		principals         = cardinality.NewBitmap64()
@@ -129,7 +128,7 @@ func PostADCSESC4(ctx context.Context, tx graph.Transaction, outC chan<- post.En
 
 	principals.Each(func(value uint64) bool {
 		for _, domain := range certChains.Domains.Slice() {
-			channels.Submit(ctx, outC, post.EnsureRelationshipJob{
+			sink.Submit(ctx, post.EnsureRelationshipJob{
 				FromID: graph.ID(value),
 				ToID:   graph.ID(domain),
 				Kind:   ad.ADCSESC4,
@@ -534,9 +533,10 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		startNode  *graph.Node
 		startNodes = graph.NodeSet{}
 
-		enrollAndNTAuthECAs cardinality.Duplex[uint64]
-		domainID            = edge.EndID
-		paths               = graph.PathSet{}
+		enrollAndNTAuthECAs     cardinality.Duplex[uint64]
+		domainID                = edge.EndID
+		paths                   = graph.PathSet{}
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
 
 		enrollAndNTAuthECASegments = map[graph.ID][]*graph.PathSegment{}
 		finalECAs                  = cardinality.NewBitmap64()
@@ -572,6 +572,20 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	} else {
 		enrollAndNTAuthECASegments = paths
 		enrollAndNTAuthECAs = ecaIDs
+	}
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, enrollAndNTAuthECAs); err != nil {
+		return nil, err
+	} else {
+		qualifyingEnterpriseCAs := cardinality.NewBitmap64()
+		for enterpriseCAID := range qualifyingHostPaths {
+			qualifyingEnterpriseCAs.Add(enterpriseCAID.Uint64())
+		}
+
+		enrollAndNTAuthECAs.And(qualifyingEnterpriseCAs)
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+	if enrollAndNTAuthECAs.Cardinality() == 0 {
+		return paths, nil
 	}
 
 	// p1, p2
@@ -706,6 +720,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				for _, segment := range enrollAndNTAuthECASegments[graph.ID(value)] {
 					paths.AddPath(segment.Path())
 				}
+				paths.AddPathSet(hostPathsByEnterpriseCA[graph.ID(value)])
 				return true
 			})
 	}
@@ -714,7 +729,7 @@ func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 }
 
 func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCATrustedForNTAuthToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -724,22 +739,12 @@ func ntAuthStoreToDomainTraversal(domainId graph.ID) traversal.PatternContinuati
 			query.And(
 				query.KindIn(query.Relationship(), ad.Enroll),
 				query.KindIn(query.End(), ad.EnterpriseCA),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-				query.Kind(query.End(), ad.NTAuthStore),
-			)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-				query.Equals(query.EndID(), domainId),
-			))
+			)), domainId)
 }
 
 // This traversal goes from principal -> domain via a cert template that has an inbound edge(s) corresponding to whatever `priveleges` are provided
 func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainID graph.ID, enrollAndNTAuthECAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return traversal.NewPattern().
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().
 		OutboundWithDepth(0, 0,
 			query.And(
 				query.Kind(query.Relationship(), ad.MemberOf),
@@ -754,20 +759,7 @@ func certTemplateWithPrivelegesToDomainTraversal(priveleges graph.Kinds, domainI
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.InIDs(query.End(), graph.DuplexToGraphIDs(enrollAndNTAuthECAs)...),
 			query.Kind(query.End(), ad.EnterpriseCA),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(
-			query.And(
-				query.KindIn(query.Relationship(), ad.RootCAFor),
-				query.Equals(query.EndID(), domainID),
-			))
+		)), domainID)
 }
 
 func certTemplateWithEnrollmentRightsTraversal(certTemplates cardinality.Duplex[uint64], criteria graph.Criteria) traversal.PatternContinuation {

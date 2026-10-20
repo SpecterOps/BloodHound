@@ -48,12 +48,15 @@ properties:
     $ref: './null.time.response.yaml'
   last_claimed_by:
     type: string
-    format: uuid
     nullable: true
   job_schedule_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_profile_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_type_id:
     type: integer
     format: int32
@@ -75,6 +78,7 @@ properties:
     type: string
     enum:
       - succeeded
+      - partially-succeeded
       - failed
       - cancelled
   outcome_metadata:

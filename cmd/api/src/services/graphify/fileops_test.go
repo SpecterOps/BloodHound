@@ -22,7 +22,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,27 +71,27 @@ func generateAssertionsForKey(key string) []dataTagAssertion {
 		},
 		{
 			rawString: fmt.Sprintf("{\"%s\": {}}", key),
-			err:       ingest.ErrInvalidDataTag,
+			err:       graphify.ErrInvalidDataTag,
 		},
 		{
 			rawString: fmt.Sprintf("{\"%s\": ]}", key),
-			err:       ingest.ErrJSONDecoderInternal,
+			err:       graphify.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: "",
-			err:       ingest.ErrDataTagNotFound,
+			err:       graphify.ErrDataTagNotFound,
 		},
 		{
 			rawString: "{[]}",
-			err:       ingest.ErrJSONDecoderInternal,
+			err:       graphify.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: fmt.Sprintf("{\"%s\": \"oops\"}", key),
-			err:       ingest.ErrInvalidDataTag,
+			err:       graphify.ErrInvalidDataTag,
 		},
 		{
 			rawString: "{\"nothing\": [}",
-			err:       ingest.ErrJSONDecoderInternal,
+			err:       graphify.ErrJSONDecoderInternal,
 		},
 		{
 			rawString: fmt.Sprintf(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "%s": []}`, key),

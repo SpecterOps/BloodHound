@@ -736,43 +736,43 @@ paths:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
   # collector jobs
-#  /api/v2/collector-job-queue:
+#  /api/v2/collie-job-queue:
 #    $ref: './paths/collector-jobs.queue.yaml'
-#  /api/v2/collector-job-queue/available:
+#  /api/v2/collie-job-queue/available:
 #    $ref: './paths/collector-jobs.queue.available.yaml'
-#  /api/v2/collector-job-queue/current:
+#  /api/v2/collie-job-queue/current:
 #    $ref: './paths/collector-jobs.queue.current.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}:
+#  /api/v2/collie-job-queue/{collector_job_id}:
 #    $ref: './paths/collector-jobs.queue.id.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/claim:
+#  /api/v2/collie-job-queue/{collector_job_id}/claim:
 #    $ref: './paths/collector-jobs.queue.id.claim.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/start:
+#  /api/v2/collie-job-queue/{collector_job_id}/start:
 #    $ref: './paths/collector-jobs.queue.id.start.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/heartbeat:
+#  /api/v2/collie-job-queue/{collector_job_id}/heartbeat:
 #    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/ingest:
+#  /api/v2/collie-job-queue/{collector_job_id}/ingest:
 #    $ref: './paths/collector-jobs.queue.id.ingest.yaml'
-#  /api/v2/collector-job-queue/{collector_job_id}/end:
+#  /api/v2/collie-job-queue/{collector_job_id}/end:
 #    $ref: './paths/collector-jobs.queue.id.end.yaml'
-#  /api/v2/collector-job-types:
+#  /api/v2/collie-job-types:
 #    $ref: './paths/collector-jobs.types.yaml'
-#  /api/v2/collector-job-types/{collector_job_type_id}:
+#  /api/v2/collie-job-types/{collector_job_type_id}:
 #    $ref: './paths/collector-jobs.types.id.yaml'
-#  /api/v2/collector-job-profiles:
+#  /api/v2/collie-job-profiles:
 #    $ref: './paths/collector-jobs.profiles.yaml'
-#  /api/v2/collector-job-profiles/{collector_job_profile_id}:
+#  /api/v2/collie-job-profiles/{collector_job_profile_id}:
 #    $ref: './paths/collector-jobs.profiles.id.yaml'
-#  /api/v2/collector-job-schedules:
+#  /api/v2/collie-job-schedules:
 #    $ref: './paths/collector-jobs.schedules.yaml'
-#  /api/v2/collector-job-schedules/{collector_job_schedule_id}:
+#  /api/v2/collie-job-schedules/{collector_job_schedule_id}:
 #    $ref: './paths/collector-jobs.schedules.id.yaml'
-#  /api/v2/collector-job-secrets:
+#  /api/v2/collie-job-secrets:
 #    $ref: './paths/collector-jobs.secrets.yaml'
-#  /api/v2/collector-job-secrets/{collector_job_secret_id}:
+#  /api/v2/collie-job-secrets/{collector_job_secret_id}:
 #    $ref: './paths/collector-jobs.secrets.id.yaml'
-#  /api/v2/collector-job-history:
+#  /api/v2/collie-job-history:
 #    $ref: './paths/collector-jobs.history.yaml'
-#  /api/v2/collector-job-history/{collector_job_id}:
+#  /api/v2/collie-job-history/{collector_job_id}:
 #    $ref: './paths/collector-jobs.history.id.yaml'
 
   # management operations
@@ -848,6 +848,8 @@ paths:
     $ref: './paths/attack-paths.domains.id.sparkline.yaml'
   /api/v2/attack-paths/{attack_path_id}/acceptance:
     $ref: './paths/attack-paths.attack-paths.id.acceptance.yaml'
+  /api/v2/attack-paths/findings/{finding_id}/status:
+    $ref: './paths/attack-paths.attack-paths-findings.id.status.yaml'
 
   # risk posture
   /api/v2/posture-stats:

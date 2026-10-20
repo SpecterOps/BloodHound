@@ -16,7 +16,7 @@
 
 import '@testing-library/jest-dom';
 import matchers from '@testing-library/jest-dom/matchers';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, vi } from 'vitest';
 import { Slider } from './Slider';
@@ -49,8 +49,10 @@ describe('Slider Tests', () => {
             <Slider defaultValue={50} min={0} max={100} step={1} thumbAriaLabel='Value' onValueChange={onValueChange} />
         );
 
-        const thumb = screen.getByRole('slider', { name: 'Value' });
-        thumb.focus();
+        act(() => {
+            const thumb = screen.getByRole('slider', { name: 'Value' });
+            thumb.focus();
+        });
         await user.keyboard('{ArrowRight}');
 
         expect(onValueChange).toHaveBeenCalled();
@@ -77,8 +79,10 @@ describe('Slider Tests', () => {
         const thumbInput = screen.getByRole('slider', { name: 'Value' });
         const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
 
-        thumbInput.focus();
-        await user.keyboard('{ArrowRight}');
+        await act(async () => {
+            thumbInput.focus();
+            await user.keyboard('{ArrowRight}');
+        });
 
         expect(thumbInput).toHaveValue('0');
         expect(thumbDot).toHaveClass('hidden');
@@ -102,8 +106,10 @@ describe('Slider Tests', () => {
         const thumbInput = screen.getByRole('slider', { name: 'Value' });
         const thumbDot = thumbInput.parentElement?.querySelector('span[aria-hidden]');
 
-        thumbInput.focus();
-        await user.keyboard('{ArrowRight}');
+        await act(async () => {
+            thumbInput.focus();
+            await user.keyboard('{ArrowRight}');
+        });
 
         expect(thumbInput).toHaveValue('0');
         expect(thumbDot).toHaveClass('hidden');
