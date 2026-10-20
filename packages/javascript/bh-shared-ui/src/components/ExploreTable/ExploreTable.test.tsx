@@ -636,7 +636,8 @@ describe('ExploreTable', async () => {
         expect(guestRowBefore).toBeInTheDocument();
         expect(svcRowBefore).toBeInTheDocument();
 
-        await user.type(searchInput, object_id_of_name_1);
+        await user.click(searchInput);
+        await user.paste(object_id_of_name_1);
 
         const andyRowAfter = screen.queryByText(name_1);
         const svcRowAfter = screen.queryByText(name_2);
@@ -647,7 +648,8 @@ describe('ExploreTable', async () => {
         expect(svcRowAfter).not.toBeInTheDocument();
 
         await user.clear(searchInput);
-        await user.type(searchInput, name_3);
+        await user.click(searchInput);
+        await user.paste(name_3);
 
         const andyRowFinal = screen.queryByText(name_1);
         const svcRowFinal = screen.queryByText(name_2);

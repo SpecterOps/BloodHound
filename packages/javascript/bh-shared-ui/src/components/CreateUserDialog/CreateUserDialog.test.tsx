@@ -228,15 +228,20 @@ describe('CreateUserDialog', () => {
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
-        await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
+        await user.click(screen.getByLabelText('Email Address'));
+        await user.paste(testUser.emailAddress);
 
-        await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
+        await user.click(screen.getByLabelText('Principal Name'));
+        await user.paste(testUser.principalName);
 
-        await user.type(screen.getByLabelText('First Name'), testUser.firstName);
+        await user.click(screen.getByLabelText('First Name'));
+        await user.paste(testUser.firstName);
 
-        await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
+        await user.click(screen.getByLabelText('Last Name'));
+        await user.paste(testUser.lastName);
 
-        await user.type(screen.getByLabelText('Initial Password'), testUser.password);
+        await user.click(screen.getByLabelText('Initial Password'));
+        await user.paste(testUser.password);
 
         await user.click(saveButton);
 
@@ -299,10 +304,14 @@ describe('CreateUserDialog', () => {
 
         const saveButton = await screen.findByRole('button', { name: 'Save' });
 
-        await user.type(screen.getByLabelText('Email Address'), testUser.emailAddress);
-        await user.type(screen.getByLabelText('Principal Name'), testUser.principalName);
-        await user.type(screen.getByLabelText('First Name'), testUser.firstName);
-        await user.type(screen.getByLabelText('Last Name'), testUser.lastName);
+        await user.click(screen.getByLabelText('Email Address'));
+        await user.paste(testUser.emailAddress);
+        await user.click(screen.getByLabelText('Principal Name'));
+        await user.paste(testUser.principalName);
+        await user.click(screen.getByLabelText('First Name'));
+        await user.paste(testUser.firstName);
+        await user.click(screen.getByLabelText('Last Name'));
+        await user.paste(testUser.lastName);
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Single Sign-On (SSO)' }));
@@ -312,7 +321,8 @@ describe('CreateUserDialog', () => {
 
         await user.click(await screen.findByLabelText('Authentication Method'));
         await user.click(await screen.findByRole('option', { name: 'Username / Password' }));
-        await user.type(screen.getByLabelText('Initial Password'), testUser.password);
+        await user.click(screen.getByLabelText('Initial Password'));
+        await user.paste(testUser.password);
 
         await user.click(saveButton);
 

@@ -149,7 +149,8 @@ describe('ManageColumnsComboBox', () => {
     it('filters unselected columns when typing in the filter input', async () => {
         const { user } = setup({ selectedColumns: {} });
         await user.click(screen.getByRole('button', { name: /columns/i }));
-        await user.type(screen.getByLabelText('Filter columns'), 'custom');
+        await user.click(screen.getByLabelText('Filter columns'));
+        await user.paste('custom');
         expect(screen.getByText('Custom Column 1')).toBeInTheDocument();
         expect(screen.queryByText('Object ID')).not.toBeInTheDocument();
         expect(screen.queryByText('Is Tier Zero')).not.toBeInTheDocument();

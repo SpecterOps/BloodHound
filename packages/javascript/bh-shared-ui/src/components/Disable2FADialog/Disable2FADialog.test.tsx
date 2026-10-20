@@ -108,7 +108,8 @@ describe('Enable2FADialog', () => {
 
     describe('user enters valid password', () => {
         beforeEach(async () => {
-            await user.type(screen.getByLabelText('Password'), testValidPassword);
+            await user.click(screen.getByLabelText('Password'));
+            await user.paste(testValidPassword);
         });
 
         // TODO: it('should not display a validation error', () => {})

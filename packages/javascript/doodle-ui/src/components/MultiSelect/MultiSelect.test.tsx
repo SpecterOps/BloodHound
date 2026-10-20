@@ -182,7 +182,8 @@ describe('MultiSelect', () => {
             name: 'Search Items',
         });
 
-        await user.type(searchInput, 'mEnU iTeM a');
+        await user.click(searchInput);
+        await user.paste('mEnU iTeM a');
 
         expect(screen.getByRole('checkbox', { name: 'Menu Item A' })).toBeInTheDocument();
         expect(screen.queryByRole('checkbox', { name: 'Menu Item B' })).not.toBeInTheDocument();
@@ -207,7 +208,8 @@ describe('MultiSelect', () => {
             name: 'Search Items',
         });
 
-        await user.type(searchInput, 'Menu Item F');
+        await user.click(searchInput);
+        await user.paste('Menu Item F');
 
         expect(screen.getByText('No matches')).toBeInTheDocument();
         expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
@@ -226,7 +228,8 @@ describe('MultiSelect', () => {
         const trigger = screen.getByRole('button', { name: 'All Items' });
 
         await user.click(trigger);
-        await user.type(screen.getByRole('textbox', { name: 'All Items' }), 'a');
+        await user.click(screen.getByRole('textbox', { name: 'All Items' }));
+        await user.paste('a');
         await user.keyboard('{Escape}');
 
         expect(trigger).toHaveAttribute('aria-expanded', 'false');

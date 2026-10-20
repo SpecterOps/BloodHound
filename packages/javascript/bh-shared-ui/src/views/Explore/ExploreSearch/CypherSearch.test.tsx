@@ -181,7 +181,8 @@ describe('CypherSearch', () => {
         const { screen, user, state } = await setup();
         const searchbox = screen.getAllByRole('textbox');
 
-        await user.type(searchbox[1], CYPHER);
+        await user.click(searchbox[1]);
+        await user.paste(CYPHER);
 
         expect(state.setCypherQuery).toHaveBeenCalled();
     });

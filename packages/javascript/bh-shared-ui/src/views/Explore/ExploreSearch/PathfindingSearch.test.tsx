@@ -94,13 +94,15 @@ describe('Pathfinding: interaction', () => {
         expect(swapButton).toBeDisabled();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin1');
+        await user.click(startInput);
+        await user.paste('admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
         expect(swapButton).toBeDisabled();
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'admin1');
+        await user.click(destinationInput);
+        await user.paste('admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
         expect(swapButton).toBeEnabled();
@@ -113,11 +115,13 @@ describe('Pathfinding: interaction', () => {
         expect(swapButton).toBeDisabled();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin1');
+        await user.click(startInput);
+        await user.paste('admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'computer');
+        await user.click(destinationInput);
+        await user.paste('computer');
         await user.click(await screen.findByRole('option', { name: /computer/i }));
 
         expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
@@ -133,7 +137,8 @@ describe('Pathfinding: interaction', () => {
         const { screen, user } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin1');
+        await user.click(startInput);
+        await user.paste('admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
         expect(window.location.search).toContain('searchType=node');
@@ -144,7 +149,8 @@ describe('Pathfinding: interaction', () => {
         const { screen, user } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin1');
+        await user.click(startInput);
+        await user.paste('admin1');
 
         const startOption = await screen.findByRole('option', { name: /admin1/i });
         await user.click(startOption);
@@ -154,7 +160,8 @@ describe('Pathfinding: interaction', () => {
         expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
-        await user.type(destinationInput, 'computer');
+        await user.click(destinationInput);
+        await user.paste('computer');
 
         const destinationOption = await screen.findByRole('option', { name: /computer/i });
         await user.click(destinationOption);

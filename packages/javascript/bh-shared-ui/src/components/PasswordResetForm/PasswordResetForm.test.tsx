@@ -45,9 +45,12 @@ describe('PasswordResetForm', () => {
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
-        await user.type(screen.getByLabelText(/^expired password/i), testExpiredPassword);
-        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword);
+        await user.click(screen.getByLabelText(/^new password$/i));
+        await user.paste(testPassword);
+        await user.click(screen.getByLabelText(/^expired password/i));
+        await user.paste(testExpiredPassword);
+        await user.click(screen.getByLabelText(/^new password confirmation/i));
+        await user.paste(testPassword);
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
         expect(testOnSubmit).toHaveBeenCalledWith({
             currentSecret: testExpiredPassword,
@@ -63,8 +66,10 @@ describe('PasswordResetForm', () => {
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
-        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword + 'extracharacters');
+        await user.click(screen.getByLabelText(/^new password$/i));
+        await user.paste(testPassword);
+        await user.click(screen.getByLabelText(/^new password confirmation/i));
+        await user.paste(testPassword + 'extracharacters');
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
         expect(screen.getByText(/password does not match/i)).toBeInTheDocument();
         expect(testOnSubmit).not.toHaveBeenCalled();
@@ -78,8 +83,10 @@ describe('PasswordResetForm', () => {
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
-        await user.type(screen.getByLabelText(/^new password confirmation/i), testConfirmPassword);
+        await user.click(screen.getByLabelText(/^new password$/i));
+        await user.paste(testPassword);
+        await user.click(screen.getByLabelText(/^new password confirmation/i));
+        await user.paste(testConfirmPassword);
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
         expect(screen.getByText(/expired password is required/i)).toBeInTheDocument();
         expect(testOnSubmit).not.toHaveBeenCalled();
@@ -92,9 +99,12 @@ describe('PasswordResetForm', () => {
 
         render(<PasswordResetForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
-        await user.type(screen.getByLabelText(/^new password$/i), testPassword);
-        await user.type(screen.getByLabelText(/^new password confirmation/i), testPassword);
-        await user.type(screen.getByLabelText(/^expired password/i), testPassword);
+        await user.click(screen.getByLabelText(/^new password$/i));
+        await user.paste(testPassword);
+        await user.click(screen.getByLabelText(/^new password confirmation/i));
+        await user.paste(testPassword);
+        await user.click(screen.getByLabelText(/^expired password/i));
+        await user.paste(testPassword);
         await user.click(screen.getByRole('button', { name: /reset password$/i }));
         expect(screen.getByText(/new password must not match expired password/i)).toBeInTheDocument();
         expect(testOnSubmit).not.toHaveBeenCalled();

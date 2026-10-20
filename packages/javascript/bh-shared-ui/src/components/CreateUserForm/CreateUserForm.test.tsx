@@ -95,9 +95,12 @@ const MOCK_ROLES = [
 const fillRequiredFieldsAndSubmit = async (user: ReturnType<typeof userEvent.setup>, password: string) => {
     const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
 
-    await user.type(screen.getByLabelText(/principal/i), 'testuser');
-    await user.type(screen.getByLabelText(/first/i), 'Test');
-    await user.type(screen.getByLabelText(/last/i), 'User');
+    await user.click(screen.getByLabelText(/principal/i));
+    await user.paste('testuser');
+    await user.click(screen.getByLabelText(/first/i));
+    await user.paste('Test');
+    await user.click(screen.getByLabelText(/last/i));
+    await user.paste('User');
     await user.click(screen.getByLabelText(/Initial password/i));
     await user.paste(password);
     await user.click(button);
@@ -136,10 +139,14 @@ describe('CreateUserForm', () => {
 
         const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }));
 
-        await user.type(screen.getByLabelText(/principal/i), ' ');
-        await user.type(screen.getByLabelText(/first/i), ' ');
-        await user.type(screen.getByLabelText(/last/i), ' ');
-        await user.type(screen.getByLabelText(/Initial password/i), ' ');
+        await user.click(screen.getByLabelText(/principal/i));
+        await user.paste(' ');
+        await user.click(screen.getByLabelText(/first/i));
+        await user.paste(' ');
+        await user.click(screen.getByLabelText(/last/i));
+        await user.paste(' ');
+        await user.click(screen.getByLabelText(/Initial password/i));
+        await user.paste(' ');
         await user.click(button);
 
         expect(
@@ -196,9 +203,12 @@ describe('CreateUserForm', () => {
         const button = await waitFor(() => screen.getByRole('button', { name: 'Save' }), {
             timeout: 30000,
         });
-        await user.type(screen.getByLabelText(/principal/i), ' dd');
-        await user.type(screen.getByLabelText(/first/i), ' bsg!');
-        await user.type(screen.getByLabelText(/last/i), 'asdfw ');
+        await user.click(screen.getByLabelText(/principal/i));
+        await user.paste(' dd');
+        await user.click(screen.getByLabelText(/first/i));
+        await user.paste(' bsg!');
+        await user.click(screen.getByLabelText(/last/i));
+        await user.paste('asdfw ');
         await user.click(button);
 
         expect(await screen.findByText('Principal Name does not allow leading or trailing spaces')).toBeInTheDocument();

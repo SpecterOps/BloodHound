@@ -198,7 +198,8 @@ describe('DatabaseManagement', () => {
         await user.click(deleteButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Delete this environment data');
+        await user.click(textField);
+        await user.paste('Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
@@ -234,7 +235,8 @@ describe('DatabaseManagement', () => {
         await user.click(deleteButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Delete this environment data');
+        await user.click(textField);
+        await user.paste('Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
@@ -267,7 +269,8 @@ describe('DatabaseManagement', () => {
         await user.click(deleteButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Delete this environment data');
+        await user.click(textField);
+        await user.paste('Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
@@ -301,7 +304,8 @@ describe('DatabaseManagement', () => {
         await user.click(deleteButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Delete this environment data');
+        await user.click(textField);
+        await user.paste('Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);

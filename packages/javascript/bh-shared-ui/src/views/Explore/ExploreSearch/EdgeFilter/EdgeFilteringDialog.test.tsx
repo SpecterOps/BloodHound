@@ -194,7 +194,8 @@ describe('Pathfinding', () => {
         const user = userEvent.setup();
 
         const searchInput = screen.getByPlaceholderText('Search edges...');
-        await user.type(searchInput, 'Contains');
+        await user.click(searchInput);
+        await user.paste('Contains');
 
         // matching edge should be visible
         expect(screen.getByRole('checkbox', { name: /^Contains$/i })).toBeInTheDocument();
@@ -207,7 +208,8 @@ describe('Pathfinding', () => {
         const user = userEvent.setup();
 
         const searchInput = screen.getByPlaceholderText('Search edges...');
-        await user.type(searchInput, 'Contains');
+        await user.click(searchInput);
+        await user.paste('Contains');
 
         const highlightedSpan = document.querySelector('.text-link');
         expect(highlightedSpan).toBeInTheDocument();
@@ -223,7 +225,8 @@ describe('Pathfinding', () => {
 
         // search for an edge type
         const searchInput = screen.getByPlaceholderText('Search edges...');
-        await user.type(searchInput, 'Contains');
+        await user.click(searchInput);
+        await user.paste('Contains');
 
         // matching category and subcategory should be force-expanded
         expect(screen.getByRole('checkbox', { name: /^Contains$/i })).toBeInTheDocument();
@@ -239,7 +242,8 @@ describe('Pathfinding', () => {
         expect(collapseAllButton).not.toBeDisabled();
 
         const searchInput = screen.getByPlaceholderText('Search edges...');
-        await user.type(searchInput, 'test');
+        await user.click(searchInput);
+        await user.paste('test');
 
         expect(expandAllButton).toBeDisabled();
         expect(collapseAllButton).toBeDisabled();

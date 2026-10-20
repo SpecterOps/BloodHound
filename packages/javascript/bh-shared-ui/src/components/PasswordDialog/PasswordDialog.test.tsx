@@ -155,11 +155,14 @@ describe('PasswordDialog', () => {
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
-        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(currentPasswordLabel));
+        await user.paste(testCurrentPassword);
 
-        await user.type(screen.getByLabelText(newPasswordLabel), 'aA1!');
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste('aA1!');
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), 'aA1!');
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste('aA1!');
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -184,11 +187,14 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(currentPasswordLabel));
+        await user.paste(testCurrentPassword);
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testValidPassword);
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword + 'extracharacters');
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testValidPassword + 'extracharacters');
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -213,9 +219,11 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testValidPassword);
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -240,11 +248,14 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(currentPasswordLabel));
+        await user.paste(testCurrentPassword);
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testCurrentPassword);
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testCurrentPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -262,8 +273,10 @@ describe('PasswordDialog', () => {
         render(<PasswordDialog open={true} onSave={testOnSave} onClose={testOnClose} userId={testUserId} />);
         expect(screen.queryByText('Current Password')).not.toBeInTheDocument();
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testValidPassword);
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -291,11 +304,14 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText(currentPasswordLabel), testCurrentPassword);
+        await user.click(screen.getByLabelText(currentPasswordLabel));
+        await user.paste(testCurrentPassword);
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testValidPassword);
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -325,9 +341,11 @@ describe('PasswordDialog', () => {
             />
         );
 
-        await user.type(screen.getByLabelText(newPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(newPasswordLabel));
+        await user.paste(testValidPassword);
 
-        await user.type(screen.getByLabelText(confirmPasswordLabel), testValidPassword);
+        await user.click(screen.getByLabelText(confirmPasswordLabel));
+        await user.paste(testValidPassword);
 
         await user.click(screen.getByRole('button', { name: 'Save' }));
 

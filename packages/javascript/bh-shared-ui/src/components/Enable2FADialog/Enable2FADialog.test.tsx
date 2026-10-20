@@ -139,7 +139,8 @@ describe('Enable2FADialog', () => {
         );
 
         // type password
-        await user.type(screen.getByTestId('enable-2fa-dialog_input-password'), testValidPassword);
+        await user.click(screen.getByTestId('enable-2fa-dialog_input-password'));
+        await user.paste(testValidPassword);
 
         // click next
         await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -150,7 +151,8 @@ describe('Enable2FADialog', () => {
         expect(screen.getAllByText('One-Time Password')).toHaveLength(2);
 
         // type otp
-        await user.type(screen.getByTestId('enable-2fa-dialog_input-one-time-password'), testValidOtp);
+        await user.click(screen.getByTestId('enable-2fa-dialog_input-one-time-password'));
+        await user.paste(testValidOtp);
 
         // click next
         await user.click(screen.getByRole('button', { name: 'Next' }));

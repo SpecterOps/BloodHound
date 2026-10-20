@@ -61,7 +61,8 @@ describe('SearchBar', () => {
 
         const input = screen.getByPlaceholderText(/search/i);
         const user = userEvent.setup();
-        await user.type(input, 'ab');
+        await user.click(input);
+        await user.paste('ab');
 
         // Nothing should appear
         expect(screen.queryByText('Zones')).not.toBeInTheDocument();

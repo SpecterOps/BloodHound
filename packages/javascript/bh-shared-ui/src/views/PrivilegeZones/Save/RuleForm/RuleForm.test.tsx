@@ -258,7 +258,8 @@ describe('Rule Form', () => {
         });
 
         await act(async () => {
-            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this rule');
+            await user.click(screen.getByTestId('confirmation-dialog_challenge-text'));
+            await user.paste('delete this rule');
             await user.click(screen.getByRole('button', { name: /Confirm/ }));
         });
 

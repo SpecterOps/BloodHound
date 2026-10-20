@@ -42,7 +42,8 @@ describe('OneTimePasscodeForm', () => {
         render(<OneTimePasscodeForm onSubmit={testOnSubmit} onCancel={testOnCancel} />);
 
         await act(async () => {
-            await user.type(screen.getByLabelText(/6-digit code/i), testOneTimePasscode);
+            await user.click(screen.getByLabelText(/6-digit code/i));
+            await user.paste(testOneTimePasscode);
             await user.click(screen.getByRole('button', { name: /check code/i }));
         });
         expect(testOnSubmit).toHaveBeenCalledWith(testOneTimePasscode);

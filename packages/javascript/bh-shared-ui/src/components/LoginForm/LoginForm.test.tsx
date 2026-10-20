@@ -41,8 +41,10 @@ describe('LoginForm', () => {
 
         render(<LoginForm onSubmit={testOnSubmit} onLoginViaSSO={testOnLoginViaSSO} />);
 
-        await user.type(screen.getByLabelText(/email address/i), testEmailAddress);
-        await user.type(screen.getByLabelText(/password/i), testPassword);
+        await user.click(screen.getByLabelText(/email address/i));
+        await user.paste(testEmailAddress);
+        await user.click(screen.getByLabelText(/password/i));
+        await user.paste(testPassword);
         await user.click(screen.getByRole('button', { name: /login$/i }));
         expect(testOnSubmit).toHaveBeenCalledWith(testEmailAddress, testPassword);
     });

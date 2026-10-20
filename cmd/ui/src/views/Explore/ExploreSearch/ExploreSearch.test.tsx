@@ -240,7 +240,8 @@ describe('ExploreSearch interaction', () => {
         const { screen, user } = await setup();
         const searchInput = screen.getByPlaceholderText('Search Nodes');
         const userSuppliedSearchTerm = 'admin';
-        await user.type(searchInput, userSuppliedSearchTerm);
+        await user.click(searchInput);
+        await user.paste(userSuppliedSearchTerm);
 
         // select first option from list and check that text field input is updated
         const firstOption = await screen.findByRole('option', { name: /admin/i });
@@ -260,7 +261,8 @@ describe('ExploreSearch interaction', () => {
         await user.click(pathfindingTab);
 
         const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
+        await user.click(startInput);
+        await user.paste('admin');
         await user.click(await screen.findByRole('option', { name: /admin/i }));
 
         const exploreSearchTab = screen.getByRole('tab', { name: /search/i });

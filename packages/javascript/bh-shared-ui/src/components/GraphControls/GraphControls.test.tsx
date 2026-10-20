@@ -588,7 +588,8 @@ describe('GraphControls', () => {
 
             const searchInput = await screen.findByPlaceholderText('Search node in results');
 
-            await user.type(searchInput, currentNodes[1].label);
+            await user.click(searchInput);
+            await user.paste(currentNodes[1].label);
 
             const searchedNode = await screen.findByTestId('explore_search_result-list-item');
             await act(async () => {

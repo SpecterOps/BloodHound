@@ -205,7 +205,8 @@ describe('SSOConfiguration', () => {
 
         await user.click(screen.getByRole('menuitem', { name: /saml provider/i }));
 
-        await user.type(screen.getByLabelText(/^SAML Provider Name/), newSAMLProviderRequest.name);
+        await user.click(screen.getByLabelText(/^SAML Provider Name/));
+        await user.paste(newSAMLProviderRequest.name);
         await user.upload(screen.getByLabelText('Choose File'), newSAMLProviderRequest.metadata);
 
         await user.click(screen.getByRole('button', { name: 'Submit' }));

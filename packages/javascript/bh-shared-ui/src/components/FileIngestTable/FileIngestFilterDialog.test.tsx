@@ -56,13 +56,14 @@ const clickSelect = async (user: ReturnType<typeof userEvent.setup>, name: strin
     await user.click(select);
 };
 
-// Click on a date input and type in a date
+// Enter a date and blur the input
 const inputDate = async (user: ReturnType<typeof userEvent.setup>, placeholder: string, value: string) => {
     const input = screen.getByPlaceholderText(placeholder);
     await user.click(input);
 
     if (value) {
-        await user.type(input, value);
+        await user.click(input);
+        await user.paste(value);
     }
 
     // Dates are not updated until input loses focus

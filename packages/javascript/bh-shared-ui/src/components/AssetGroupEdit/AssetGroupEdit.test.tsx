@@ -77,7 +77,8 @@ describe('AssetGroupEdit', () => {
         const { screen, user } = await setup();
         const input = screen.getByRole('combobox');
 
-        await user.type(input, 'test');
+        await user.click(input);
+        await user.paste('test');
         expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText('00001.TESTLAB.LOCAL'));
@@ -90,7 +91,8 @@ describe('AssetGroupEdit', () => {
 
         const input = screen.getByRole('combobox');
 
-        await user.type(input, 'test');
+        await user.click(input);
+        await user.paste('test');
         expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText(selection.name));
@@ -108,7 +110,8 @@ describe('AssetGroupEdit', () => {
         const selection = searchResults[0];
 
         const input = screen.getByRole('combobox');
-        await user.type(input, 'test');
+        await user.click(input);
+        await user.paste('test');
         expect(input).toHaveAttribute('value', 'test');
 
         const result = await waitFor(() => screen.getByText(selection.name));

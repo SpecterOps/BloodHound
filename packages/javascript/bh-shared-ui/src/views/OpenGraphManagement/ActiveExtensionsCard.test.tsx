@@ -173,7 +173,8 @@ describe('ActiveExtensionsCard', () => {
         render(<ActiveExtensionsCard />);
 
         const searchInput = screen.getByLabelText('Search');
-        await user.type(searchInput, 'Azure');
+        await user.click(searchInput);
+        await user.paste('Azure');
 
         await waitFor(() => {
             expect(screen.getByText('Azure')).toBeInTheDocument();
@@ -188,7 +189,8 @@ describe('ActiveExtensionsCard', () => {
         render(<ActiveExtensionsCard />);
 
         const searchInput = screen.getByLabelText('Search');
-        await user.type(searchInput, 'NonExistent');
+        await user.click(searchInput);
+        await user.paste('NonExistent');
 
         await waitFor(() => {
             expect(screen.getByText(NO_SEARCH_RESULTS_MESSAGE)).toBeInTheDocument();
@@ -201,7 +203,8 @@ describe('ActiveExtensionsCard', () => {
         render(<ActiveExtensionsCard />);
 
         const searchInput = screen.getByLabelText('Search');
-        await user.type(searchInput, 'Azure');
+        await user.click(searchInput);
+        await user.paste('Azure');
 
         await waitFor(() => {
             expect(screen.getByText('Azure')).toBeInTheDocument();
@@ -346,7 +349,8 @@ describe('ActiveExtensionsCard', () => {
         await user.click(deleteButton);
 
         const input = screen.getByPlaceholderText('Custom Extension');
-        await user.type(input, 'Custom Extension');
+        await user.click(input);
+        await user.paste('Custom Extension');
 
         const cancelButton = screen.getByRole('button', { name: /cancel/i });
         await user.click(cancelButton);

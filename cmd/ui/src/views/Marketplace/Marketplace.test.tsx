@@ -129,7 +129,8 @@ describe('Marketplace', () => {
         expect(publisherFilter).toHaveTextContent('All publishers');
         expect(availabilityFilter).toHaveTextContent('All availability');
 
-        await user.type(search, 'terminal companion');
+        await user.click(search);
+        await user.paste('terminal companion');
         expect(screen.getByRole('article', { name: 'CypherHound' })).toBeInTheDocument();
         expect(screen.getAllByRole('article')).toHaveLength(1);
         expect(screen.queryByRole('region', { name: 'Community Extensions' })).not.toBeInTheDocument();

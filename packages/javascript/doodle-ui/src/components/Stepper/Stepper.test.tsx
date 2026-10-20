@@ -78,7 +78,8 @@ describe('BasicStepper', () => {
         );
         const name = screen.getByLabelText('Profile name');
         const secret = screen.getByLabelText('Secret value');
-        await userEvent.type(name, 'Production');
+        await userEvent.click(name);
+        await userEvent.paste('Production');
         expect(secret).not.toBeVisible();
         await userEvent.click(getTab(2));
         expect(name).not.toBeVisible();

@@ -122,7 +122,8 @@ describe('ExploreSearchCombobox', () => {
             );
         });
 
-        await user.type(screen.getByLabelText(labelText), 'admin');
+        await user.click(screen.getByLabelText(labelText));
+        await user.paste('admin');
         const options = await screen.findAllByRole('option');
         await user.click(options[0]);
 
@@ -252,7 +253,8 @@ describe('ExploreSearchCombobox with null response', () => {
             );
         });
 
-        await user.type(screen.getByLabelText(labelText), searchText);
+        await user.click(screen.getByLabelText(labelText));
+        await user.paste(searchText);
 
         expect(await screen.findByText(`No results found for "blah"`)).toBeInTheDocument();
     });
@@ -285,7 +287,8 @@ describe('ExploreSearchCombobox with search timeout', () => {
             );
         });
 
-        await user.type(screen.getByLabelText(labelText), searchText);
+        await user.click(screen.getByLabelText(labelText));
+        await user.paste(searchText);
 
         expect(await screen.findByText(`Search has timed out. Please try again.`)).toBeInTheDocument();
     });

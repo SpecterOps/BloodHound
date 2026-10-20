@@ -586,12 +586,14 @@ describe('Tag Form', () => {
         expect(confirmButton).toBeDisabled();
 
         const textField = screen.getByTestId('confirmation-dialog_challenge-text');
-        await user.type(textField, 'incorrect text');
+        await user.click(textField);
+        await user.paste('incorrect text');
 
         expect(confirmButton).toBeDisabled();
 
         await user.clear(textField);
-        await user.type(textField, 'delete this label');
+        await user.click(textField);
+        await user.paste('delete this label');
 
         expect(confirmButton).not.toHaveAttribute('disabled', true);
     });
@@ -658,7 +660,8 @@ describe('Tag Form', () => {
         const textField = screen.getByTestId('confirmation-dialog_challenge-text');
 
         await act(async () => {
-            await user.type(textField, 'Delete this label');
+            await user.click(textField);
+            await user.paste('Delete this label');
         });
 
         await waitFor(() => {

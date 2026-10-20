@@ -104,7 +104,8 @@ describe('Rule Object Select', () => {
 
         const input = screen.getByLabelText('Search Objects To Add');
 
-        user.type(input, 'foo');
+        await user.click(input);
+        await user.paste('foo');
 
         const options = await screen.findAllByRole('option');
 

@@ -57,7 +57,8 @@ describe('DeleteConfirmationDialog', () => {
     });
 
     it('should fire Confirm once with true after typing challenge text', async () => {
-        await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this test-type');
+        await user.click(screen.getByTestId('confirmation-dialog_challenge-text'));
+        await user.paste('delete this test-type');
         expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /confirm/i }));
 

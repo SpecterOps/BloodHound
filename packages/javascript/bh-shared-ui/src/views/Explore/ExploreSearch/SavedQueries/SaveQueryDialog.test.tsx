@@ -503,7 +503,8 @@ describe('SaveQueryDialog', () => {
 
         expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 
-        await user.type(screen.getByLabelText(/query name/i), testQueryName);
+        await user.click(screen.getByLabelText(/query name/i));
+        await user.paste(testQueryName);
 
         expect(screen.getByRole('button', { name: /save/i })).not.toBeDisabled();
     });
@@ -525,7 +526,8 @@ describe('SaveQueryDialog', () => {
 
         render(<SaveQueryDialogWithProvider />);
 
-        await user.type(screen.getByLabelText(/query name/i), testQueryName);
+        await user.click(screen.getByLabelText(/query name/i));
+        await user.paste(testQueryName);
         await user.click(screen.getByRole('button', { name: /save/i }));
 
         expect(testOnSave).toHaveBeenCalled();
