@@ -48,7 +48,6 @@ properties:
     $ref: './null.time.response.yaml'
   last_claimed_by:
     type: string
-    format: uuid
     nullable: true
   job_schedule_id:
     type: string

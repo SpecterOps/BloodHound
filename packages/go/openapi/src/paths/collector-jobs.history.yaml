@@ -61,7 +61,7 @@ get:
     - name: last_claimed_by
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
     - name: recorded_at
       in: query
       schema:
