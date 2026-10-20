@@ -115,8 +115,8 @@ post:
               type: array
               uniqueItems: true
               items:
-                type: integer
-                format: int64
+                type: string
+                format: uuid
   responses:
     201:
       description: Created

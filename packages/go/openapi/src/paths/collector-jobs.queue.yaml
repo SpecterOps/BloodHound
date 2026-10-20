@@ -36,11 +36,11 @@ get:
     - name: job_schedule_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: job_profile_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: job_type_id
       in: query
       schema:
@@ -135,8 +135,8 @@ post:
                 - job_profile_id
               properties:
                 job_profile_id:
-                  type: integer
-                  format: int64
+                  type: string
+                  format: uuid
                 priority:
                   type: integer
                   format: int32

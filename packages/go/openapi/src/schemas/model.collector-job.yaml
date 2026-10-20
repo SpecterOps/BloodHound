@@ -23,7 +23,7 @@ required:
   - job_profile_id
   - job_type_id
   - job_key
-  - params_version
+  - version
   - params
   - scope_client_id
   - secret_key_id
@@ -44,15 +44,19 @@ properties:
     type: string
     format: uuid
   job_schedule_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_profile_id:
-    $ref: './null.int64.response.yaml'
+    type: string
+    format: uuid
+    nullable: true
   job_type_id:
     type: integer
     format: int32
   job_key:
     type: string
-  params_version:
+  version:
     type: string
   params:
     type: object
