@@ -854,14 +854,14 @@ class BHEAPIClient {
             params: { ...options?.params, skip, limit },
         });
 
-    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
+    getCollectorJobSchedule = (scheduleId: string, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collie-job-schedules/${scheduleId}`, options);
 
     createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
         this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collie-job-schedules', request, options);
 
     updateCollectorJobSchedule = (
-        scheduleId: number,
+        scheduleId: string,
         request: UpdateCollectorJobScheduleRequest,
         options?: RequestOptions
     ) =>
