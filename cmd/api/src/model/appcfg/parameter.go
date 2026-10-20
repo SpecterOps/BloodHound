@@ -627,7 +627,7 @@ func (s *SupportAccountProvisioningParameters) UnmarshalJSON(data []byte) error 
 func GetSupportAccountProvisioningParameters(ctx context.Context, service ParameterService) SupportAccountProvisioningParameters {
 	result := SupportAccountProvisioningParameters{
 		Enabled:    true,
-		SessionTTL: time.Hour * 2,
+		SessionTTL: time.Hour * 8,
 	}
 
 	if jitParametersCfg, err := service.GetConfigurationParameter(ctx, SupportAccountProvisioningKey); err != nil {

@@ -188,7 +188,7 @@ func TestParameters_GetEnvironmentTargetedAccessControlParameters(t *testing.T) 
 func TestParameters_SupportAccountProvisioningParameters(t *testing.T) {
 	result := appcfg.SupportAccountProvisioningParameters{
 		Enabled:    true,
-		SessionTTL: time.Hour * 2,
+		SessionTTL: time.Hour * 8,
 	}
 	require.Equal(t, result, appcfg.GetSupportAccountProvisioningParameters(context.Background(), integration.SetupDB(t)))
 }
