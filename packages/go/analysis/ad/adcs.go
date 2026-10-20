@@ -98,12 +98,18 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		aggregateStats.Merge(step2Stats)
 
 		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, readerPool, escSink)
+			if err := processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, readerPool, escSink); err != nil {
+				return &aggregateStats, cache, errors.Join(err, readerPool.Done(), escSink.Abort())
+			}
 		}
 
 		// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
 		readerErr := readerPool.Done()
-		escSink.Done()
+		if readerErr != nil {
+			readerErr = errors.Join(readerErr, escSink.Abort())
+		} else {
+			readerErr = escSink.Done()
+		}
 		aggregateStats.Merge(escSink.Stats())
 
 		return &aggregateStats, cache, readerErr
@@ -124,6 +130,7 @@ var escPostProcessedEdges = graph.Kinds{
 	ad.ADCSESC10a,
 	ad.ADCSESC10b,
 	ad.ADCSESC13,
+	ad.ADCSESC16,
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
@@ -185,7 +192,7 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 	return enrollOnBehalfOfStats, nil
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, readerPool *ops.Operation[any], escSink *post.FilteredRelationshipSink) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, readerPool *ops.Operation[any], escSink *post.FilteredRelationshipSink) error {
 
 	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
@@ -480,6 +487,33 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 				"Failed post processing for ADCSESC13",
 				attr.Error(err),
 			)
+		}
+		return nil
+	})
+	return readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC16",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC16(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC16 missing property",
+				attr.Error(err),
+			)
+		} else if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC16",
+				attr.Error(err),
+			)
+			return err
 		}
 		return nil
 	})
