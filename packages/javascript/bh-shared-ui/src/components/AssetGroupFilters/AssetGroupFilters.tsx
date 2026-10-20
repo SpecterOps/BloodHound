@@ -23,7 +23,6 @@ import {
     Grid,
     InputLabel,
     MenuItem,
-    Paper,
     Select,
 } from '@mui/material';
 import clsx from 'clsx';
@@ -31,7 +30,6 @@ import { Button, Typography } from 'doodle-ui';
 import { AssetGroupMemberCounts } from 'js-client-library';
 import { AssetGroupMemberParams } from 'js-client-library/dist/types';
 import { FC, useState } from 'react';
-import { useTheme } from '../../hooks/useTheme';
 import { cn } from '../../utils';
 import NodeIcon from '../NodeIcon';
 
@@ -48,7 +46,6 @@ interface Props {
 
 const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, memberCounts = { counts: {} } }) => {
     const [displayFilters, setDisplayFilters] = useState(false);
-    const theme = useTheme();
 
     const handleClearFilters = () => {
         for (const filter of FILTERABLE_PARAMS) {
@@ -59,12 +56,8 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
     const active = !!filterParams.primary_kind || !!filterParams.custom_member;
 
     return (
-        <Box
-            p={1}
-            component={Paper}
-            bgcolor={theme.neutral.secondary}
-            elevation={0}
-            marginBottom={1}
+        <div
+            className='p-2 mb-2 rounded bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'
             data-testid='asset-group-filters-container'>
             <Button
                 onClick={() => setDisplayFilters((prev) => !prev)}
@@ -127,7 +120,7 @@ const AssetGroupFilters: FC<Props> = ({ filterParams, handleFilterChange, member
                     </Grid>
                 </Grid>
             </Collapse>
-        </Box>
+        </div>
     );
 };
 

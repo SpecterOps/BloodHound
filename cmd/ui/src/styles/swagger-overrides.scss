@@ -92,6 +92,10 @@
     }
 
     .models {
+        background-color: var(--neutral-1);
+        border-color: var(--neutral-light-4);
+        box-shadow: none;
+
         h4 {
             border-bottom-color: var(--input-border-default);
         }
@@ -139,6 +143,28 @@
     }
 
     .opblock {
+        border-color: var(--neutral-light-4);
+        box-shadow: none;
+
+        &.opblock-get,
+        &.opblock-post,
+        &.opblock-put,
+        &.opblock-delete,
+        &.opblock-patch,
+        &.opblock-options,
+        &.opblock-head,
+        &.opblock-trace {
+            border-color: var(--neutral-light-4);
+
+            .dark & {
+                border-color: var(--neutral-900);
+            }
+        }
+
+        .opblock-body {
+            background-color: var(--neutral-1);
+        }
+
         .opblock-section-header {
             color: var(--text-main);
             background-color: var(--neutral-100);
@@ -148,8 +174,16 @@
                 color: var(--text-main);
             }
         }
+
         .opblock-section .parameters tr .col_header {
             border-color: var(--neutral-700);
+        }
+    }
+
+    .dark & {
+        .models,
+        .opblock {
+            border-color: var(--neutral-900);
         }
     }
 }
