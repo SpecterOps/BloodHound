@@ -154,6 +154,9 @@ dev-portal *ARGS='up':
   #!/usr/bin/env bash
   set -euo pipefail
   if [[ "{{ARGS}}" == "up" || "{{ARGS}}" == "up "* ]]; then
+    # DoodleUI's Storybook build fails unless its library type declarations already exist
+    [[ -f packages/javascript/doodle-ui/dist/index.d.ts ]] || yarn workspace doodle-ui build
+    STORYBOOK_DISABLE_TELEMETRY=true yarn workspace doodle-ui build:storybook
     yarn workspace dev-portal build
   fi
   docker compose -f docker-compose.dev-portal.yml {{ARGS}}
