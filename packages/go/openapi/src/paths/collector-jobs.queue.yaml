@@ -36,7 +36,7 @@ get:
     - name: job_schedule_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: job_profile_id
       in: query
       schema:
