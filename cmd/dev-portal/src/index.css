@@ -37,9 +37,74 @@
 }
 
 @layer components {
+    /* Repo Docs reading surface: rendered markdown */
+    .doc-page {
+        @apply max-w-[72ch] text-base leading-7;
+    }
+    .doc-page :is(h1, h2, h3, h4, h5, h6) {
+        @apply scroll-mt-20 font-dp-display font-bold text-dp-text;
+    }
+    .doc-page h1 {
+        @apply mb-6 mt-2 text-4xl font-extrabold leading-tight tracking-tight;
+    }
+    .doc-page h2 {
+        @apply mb-3 mt-10 text-2xl leading-snug;
+    }
+    .doc-page h3 {
+        @apply mb-2 mt-8 text-xl;
+    }
+    .doc-page :is(h4, h5, h6) {
+        @apply mb-2 mt-6 text-base;
+    }
+    .doc-page p {
+        @apply my-4;
+    }
+    .doc-page a {
+        @apply text-dp-link underline decoration-1 underline-offset-2 hover:text-dp-link-hover;
+    }
+    .doc-page ul {
+        @apply my-4 list-disc pl-6;
+    }
+    .doc-page ol {
+        @apply my-4 list-decimal pl-6;
+    }
+    .doc-page li {
+        @apply my-1 marker:text-dp-text-muted;
+    }
+    .doc-page li:has(> input[type='checkbox']) {
+        @apply list-none;
+    }
+    .doc-page blockquote {
+        @apply my-4 border-l-2 border-dp-accent pl-4 text-dp-text-muted;
+    }
+    .doc-page code {
+        @apply rounded-dp-sm bg-dp-sunken px-1 py-0.5 font-dp-code text-[0.875em];
+    }
+    .doc-page pre {
+        @apply my-5 overflow-auto rounded-dp-md border border-dp-border bg-dp-sunken p-4 text-sm leading-6;
+    }
+    .doc-page pre code {
+        @apply bg-transparent p-0;
+    }
+    .doc-page hr {
+        @apply my-8 border-dp-border;
+    }
+    .doc-page table {
+        @apply my-5 block overflow-auto text-sm;
+    }
+    .doc-page th {
+        @apply bg-dp-sunken font-dp-display font-bold;
+    }
+    .doc-page :is(th, td) {
+        @apply border border-dp-border px-3 py-2 text-left align-top;
+    }
+    .doc-page img {
+        @apply inline max-w-full;
+    }
+
     /*
         The graph motif: a source node with edges branching to each destination, echoing the attack path
-        graphs BloodHound draws. Used by the landing page.
+        graphs BloodHound draws. Used by the landing page and, more quietly, by the Repo Docs sidebar.
     */
     .graph-tree {
         --graph-edge-width: 2px;
@@ -78,6 +143,22 @@
     .graph-source-node {
         @apply block rounded-full bg-dp-marker;
         box-shadow: 0 0 0 6px color-mix(in srgb, var(--dp-color-marker) 25%, transparent);
+    }
+
+    /* Repo Docs sidebar: each folder is a node, its Doc Pages hang off one edge */
+    .doc-tree {
+        @apply ml-[0.4375rem] border-l border-dp-border;
+    }
+    .doc-tree-link {
+        @apply relative block break-words py-1 pl-4 pr-2 text-sm text-dp-text-muted hover:text-dp-text;
+    }
+    .doc-tree-link[aria-current='page'] {
+        @apply font-semibold text-dp-text;
+    }
+    .doc-tree-link[aria-current='page']::before {
+        @apply absolute left-0 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dp-marker;
+        content: '';
+        margin-left: -0.5px;
     }
 }
 
