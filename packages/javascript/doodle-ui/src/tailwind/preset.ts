@@ -15,7 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { badgeColors } from '../components/Badge/Badge.styles';
 import { buttonBackgroundColors, buttonBorderColors } from '../components/Button/Button.styles';
+import { menuBackgroundColors, menuBorderColors, menuTextColors } from '../components/Menu/Menu.styles';
 import { switchBackgroundColors } from '../components/Switch/Switch.styles';
 
 export default {
@@ -35,10 +37,17 @@ export default {
         extend: {
             backgroundColor: {
                 ...buttonBackgroundColors,
+                ...menuBackgroundColors,
                 ...switchBackgroundColors,
             },
-            borderColor: buttonBorderColors,
+            borderColor: {
+                ...buttonBorderColors,
+                ...menuBorderColors,
+            },
+            textColor: menuTextColors,
             colors: {
+                ...badgeColors,
+
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
                 'neutral-2': 'var(--neutral-2)',
@@ -196,29 +205,6 @@ export default {
                 'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
                 'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
                 'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
-
-                // 'menu-bg': 'var(--menu-bg)',
-
-                'badge-primary-fill': 'var(--badge-primary-fill)',
-                'badge-primary-outline': 'var(--badge-primary-outline)',
-
-                'badge-secondary-fill': 'var(--badge-secondary-fill)',
-                'badge-secondary-outline': 'var(--badge-secondary-outline)',
-
-                'badge-grey-fill': 'var(--badge-grey-fill)',
-                'badge-grey-outline': 'var(--badge-grey-outline)',
-
-                'badge-red-fill': 'var(--badge-red-fill)',
-                'badge-red-outline': 'var(--badge-red-outline)',
-
-                'badge-orange-fill': 'var(--badge-orange-fill)',
-                'badge-orange-outline': 'var(--badge-orange-outline)',
-
-                'badge-green-fill': 'var(--badge-green-fill)',
-                'badge-green-outline': 'var(--badge-green-outline)',
-
-                'badge-blue-fill': 'var(--badge-blue-fill)',
-                'badge-blue-outline': 'var(--badge-blue-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',

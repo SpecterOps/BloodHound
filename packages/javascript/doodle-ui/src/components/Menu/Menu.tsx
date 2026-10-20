@@ -18,6 +18,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import * as React from 'react';
 import { cn } from '../utils';
+import {
+    menuContentStyles,
+    menuItemIconStyles,
+    menuItemStyles,
+    menuItemTextStyles,
+    menuLabelStyles,
+    menuSecondaryIconStyles,
+    menuSeparatorStyles,
+    menuSubContentStyles,
+    menuSubTriggerStyles,
+    menuSubTriggerTextStyles,
+    menuTriggerStyles,
+} from './Menu.styles';
 
 /**
  * Root
@@ -31,11 +44,7 @@ const MenuTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Trigger
-        ref={ref}
-        className={cn('focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring', className)}
-        {...props}
-    />
+    <DropdownMenuPrimitive.Trigger ref={ref} className={cn(menuTriggerStyles, className)} {...props} />
 ));
 MenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 
@@ -55,14 +64,7 @@ const MenuContent = React.forwardRef<
         <DropdownMenuPrimitive.Content
             ref={ref}
             sideOffset={sideOffset}
-            className={cn(
-                'z-50 min-w-[8rem] overflow-hidden rounded-md border-neutral-light-4 bg-neutral-1 p-1 shadow-md',
-                'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
-                'data-[state=open]:animate-in data-[state=closed]:animate-out',
-                'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
-                'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-                className
-            )}
+            className={cn(menuContentStyles, className)}
             {...props}
         />
     </DropdownMenuPrimitive.Portal>
@@ -83,22 +85,10 @@ interface MenuItemProps extends React.ComponentPropsWithoutRef<typeof DropdownMe
 
 const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.Item>, MenuItemProps>(
     ({ className, icon, iconLeft = false, secondaryMenu = false, children, ...props }, ref) => (
-        <DropdownMenuPrimitive.Item
-            ref={ref}
-            className={cn(
-                'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
-                'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
-                'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-                'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
-                'data-[highlighted]:active:bg-[#2C2677] dark:data-[highlighted]:active:bg-[#a1a0ff] dark:data-[highlighted]:active:text-black',
-                'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-neutral-light-3 data-[disabled]:text-[#616161]',
-                'dark:data-[disabled]:bg-neutral-dark-5 dark:data-[disabled]:text-[#a6a6a6]',
-                className
-            )}
-            {...props}>
-            {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
-            <span className='flex-1 leading-4'>{children}</span>
-            {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
+        <DropdownMenuPrimitive.Item ref={ref} className={cn(menuItemStyles, className)} {...props}>
+            {iconLeft && icon && <span className={menuItemIconStyles}>{icon}</span>}
+            <span className={menuItemTextStyles}>{children}</span>
+            {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className={menuSecondaryIconStyles} />}
         </DropdownMenuPrimitive.Item>
     )
 );
@@ -111,7 +101,7 @@ const MenuLabel = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label ref={ref} className={cn('px-2 py-1.5 text-sm font-semibold', className)} {...props} />
+    <DropdownMenuPrimitive.Label ref={ref} className={cn(menuLabelStyles, className)} {...props} />
 ));
 MenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
@@ -127,20 +117,9 @@ const MenuSubTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>
 >(({ className, children, ...props }, ref) => (
-    <DropdownMenuPrimitive.SubTrigger
-        ref={ref}
-        className={cn(
-            'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
-            'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
-            'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] data-[state=open]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-            'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
-            'data-[state=open]:bg-[#4A3BD7] data-[state=open]:text-white',
-            'dark:data-[state=open]:bg-[#66a3ff] dark:data-[state=open]:text-black',
-            className
-        )}
-        {...props}>
-        <span className='flex flex-1 items-center'>{children}</span>
-        <FontAwesomeIcon icon={faCaretRight} className='ml-2' />
+    <DropdownMenuPrimitive.SubTrigger ref={ref} className={cn(menuSubTriggerStyles, className)} {...props}>
+        <span className={menuSubTriggerTextStyles}>{children}</span>
+        <FontAwesomeIcon icon={faCaretRight} className={menuSecondaryIconStyles} />
     </DropdownMenuPrimitive.SubTrigger>
 ));
 MenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
@@ -153,18 +132,7 @@ const MenuSubContent = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
     <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.SubContent
-            ref={ref}
-            className={cn(
-                'z-50 min-w-[8rem] overflow-hidden rounded-md bg-neutral-1 p-1 shadow-md',
-                'dark:border-neutral-dark-4 dark:bg-neutral-dark-2',
-                'data-[state=open]:animate-in data-[state=closed]:animate-out',
-                'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
-                'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
-                className
-            )}
-            {...props}
-        />
+        <DropdownMenuPrimitive.SubContent ref={ref} className={cn(menuSubContentStyles, className)} {...props} />
     </DropdownMenuPrimitive.Portal>
 ));
 MenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
@@ -176,11 +144,7 @@ const MenuSeparator = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Separator
-        ref={ref}
-        className={cn('my-1 h-px bg-neutral-light-4 dark:bg-neutral-dark-4', className)}
-        {...props}
-    />
+    <DropdownMenuPrimitive.Separator ref={ref} className={cn(menuSeparatorStyles, className)} {...props} />
 ));
 MenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
 
