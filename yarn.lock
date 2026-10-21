@@ -4341,15 +4341,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/theming@npm:8.6.19":
-  version: 8.6.19
-  resolution: "@storybook/theming@npm:8.6.19"
-  peerDependencies:
-    storybook: ^8.2.0 || ^8.3.0-0 || ^8.4.0-0 || ^8.5.0-0 || ^8.6.0-0
-  checksum: 10/39ac3f4c823e161420b9156e2e34dd174d32dec5dee2964be7957e25c63483767d674089129cbec49b3847fa992d00eb22f7c16075f50193a91af2ddd2d70902
-  languageName: node
-  linkType: hard
-
 "@swagger-api/apidom-ast@npm:^1.0.0-alpha.9":
   version: 1.0.0-alpha.9
   resolution: "@swagger-api/apidom-ast@npm:1.0.0-alpha.9"
