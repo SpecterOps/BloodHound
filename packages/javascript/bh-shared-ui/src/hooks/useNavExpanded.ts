@@ -24,7 +24,7 @@ import { useLocalStorage } from './useLocalStorage';
 export const NAV_EXPANDED_STORAGE_KEY = 'isNavExpanded';
 
 /** Default expanded state used when the key is absent from localStorage. */
-export const NAV_EXPANDED_DEFAULT = true;
+export const NAV_EXPANDED_DEFAULT = false;
 
 /**
  * Syncs with the main navigation's expanded/collapsed state persisted in

@@ -151,9 +151,22 @@ describe('MainNav', () => {
 });
 
 describe('MainNav responsive expansion', () => {
+    beforeEach(() => {
+        window.localStorage.clear();
+    });
+
     afterEach(() => {
         window.localStorage.clear();
         vi.unstubAllGlobals();
+    });
+
+    it.each([false, true])('defaults to collapsed without a saved preference (xl viewport: %s)', (isExtraLarge) => {
+        createMatchMediaController(isExtraLarge);
+
+        render(<MainNav mainNavData={mainNavData} />);
+
+        expect(screen.getByRole('button', { name: 'Toggle Navigation' })).toHaveAttribute('aria-expanded', 'false');
+        expect(window.localStorage.getItem(NAV_EXPANDED_STORAGE_KEY)).toBe(JSON.stringify(false));
     });
 
     it('contracts an expanded nav when the viewport shrinks below the xl breakpoint', async () => {
@@ -211,6 +224,7 @@ describe('MainNav responsive expansion', () => {
     it('preserves the user-selected state after a refresh without a breakpoint crossing', async () => {
         const user = userEvent.setup();
         createMatchMediaController(false);
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
         const { unmount } = render(<MainNav mainNavData={mainNavData} />);
 
         await user.click(screen.getByRole('button', { name: 'Toggle Navigation' }));
