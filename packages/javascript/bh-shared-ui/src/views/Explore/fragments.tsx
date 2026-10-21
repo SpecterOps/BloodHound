@@ -17,8 +17,9 @@
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
-import { EntityField, format } from '../../utils';
+import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import InlineField from './InlineField';
 
 const accordionCountClassName =
     'flex h-[1.6rem] min-w-12 items-center justify-center rounded-lg bg-neutral-5 px-2 text-[0.9rem] font-bold leading-[1.6em]';
@@ -117,11 +118,10 @@ export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFi
 }) => {
     return (
         <div
-            className={
-                layout === 'inline'
-                    ? '[&>:nth-child(even)]:bg-neutral-1 [&>:nth-child(odd)]:bg-neutral-2'
-                    : 'rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'
-            }>
+            className={cn(
+                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+                layout === 'spread' && 'rounded-lg text-xs'
+            )}>
             {children}
         </div>
     );
@@ -161,37 +161,16 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
         const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
 
         return (
-            <>
-                {values?.map((formattedItem, index) => {
-                    const accessibleLabel =
+            <InlineField
+                label={label}
+                values={(values ?? []).map((formattedItem, index) => ({
+                    value: formattedItem,
+                    accessibleLabel:
                         Array.isArray(value) && value.length > 0
                             ? getEmptyValueAccessibleLabel(value[index])
-                            : emptyValueAccessibleLabel;
-
-                    return (
-                        <div className='p-2' key={`${keyprop}-${index}`}>
-                            {index === 0 && (
-                                <Typography
-                                    component='span'
-                                    variant='body2'
-                                    className='mr-2 font-semibold text-text-main'>
-                                    {typeof label === 'string' ? label.replace(/:$/, '') : label}
-                                </Typography>
-                            )}
-                            <Typography component='span' variant='body2' className='break-words' title={formattedItem}>
-                                {accessibleLabel ? (
-                                    <>
-                                        <span aria-hidden='true'>{formattedItem}</span>
-                                        <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
-                                    </>
-                                ) : (
-                                    formattedItem
-                                )}
-                            </Typography>
-                        </div>
-                    );
-                })}
-            </>
+                            : emptyValueAccessibleLabel,
+                }))}
+            />
         );
     }
 
