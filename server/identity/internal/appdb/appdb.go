@@ -67,9 +67,6 @@ type pgxQuerier interface {
 	queryExecer
 }
 
-// permission is the flat projection of a permissions row. Nullable columns use
-// stdlib nullable types so pgx can scan NULLs that gorm would otherwise coerce
-// to zero values.
 type permission struct {
 	Authority sql.NullString `db:"authority"`
 	Name      sql.NullString `db:"name"`
@@ -78,9 +75,6 @@ type permission struct {
 	UpdatedAt sql.NullTime   `db:"updated_at"`
 }
 
-// role is the flat projection of a roles row. Nullable columns use stdlib
-// nullable types so pgx can scan NULLs that gorm would otherwise coerce to zero
-// values.
 type role struct {
 	ID          int32          `db:"id"`
 	Name        sql.NullString `db:"name"`
