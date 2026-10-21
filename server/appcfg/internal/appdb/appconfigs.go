@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
@@ -130,4 +131,22 @@ func (s *Store) GetAllConfigurationParameters(ctx context.Context) (services.Par
 	}
 
 	return services.Parameters(returnParameters), nil
+}
+
+func (s *Store) UpsertConfigurationParameter(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error {
+	now := time.Now().UTC()
+
+	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
+	insertBuilder.InsertInto(tableParameters)
+	insertBuilder.Cols("key", "value", "name", "description", "created_at", "updated_at")
+	insertBuilder.Values(parameterKey, value, "", "", now, now)
+	insertBuilder.SQL(`
+		ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = EXCLUDED.updated_at
+	`)
+
+	sqlQuery, args := insertBuilder.Build()
+	_, err := s.db.Exec(ctx, sqlQuery, args...)
+	return err
 }
