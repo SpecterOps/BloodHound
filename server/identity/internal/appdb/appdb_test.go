@@ -171,6 +171,15 @@ func TestStore_GetPermission(t *testing.T) {
 			expected: expected{permission: expectedPermission},
 		},
 		{
+			name: "Success: NULL columns scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedGetPermissionSQL).WithArgs(permissionID, 1).WillReturnRows(
+					mock.pool.NewRows(permissionRowColumns()).AddRow(nil, nil, int32(permissionID), nil, nil),
+				)
+			},
+			expected: expected{permission: services.Permission{ID: int32(permissionID)}},
+		},
+		{
 			name: "Error: missing permission maps to ErrNoPermissionFound - 404",
 			setupMocks: func(mock mock) {
 				// Query succeeds but returns zero rows; CollectOneRow returns pgx.ErrNoRows
@@ -293,6 +302,18 @@ func TestStore_GetRole(t *testing.T) {
 				)
 			},
 			expected: expected{role: expectedRole},
+		},
+		{
+			name: "Success: NULL columns on role and permissions scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnRows(
+					mock.pool.NewRows(roleRowColumns()).AddRow(roleID, nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedGetRolePermissionsSQL).WithArgs(roleID).WillReturnRows(
+					mock.pool.NewRows(rolePermissionRowColumns()).AddRow(int32(1), nil, nil, nil, nil),
+				)
+			},
+			expected: expected{role: services.Role{ID: roleID, Permissions: []services.Permission{{ID: 1}}}},
 		},
 		{
 			name: "Error: missing role maps to ErrNoRoleFound - 404",
@@ -447,6 +468,18 @@ func TestStore_ListRoles(t *testing.T) {
 			expected: expected{roles: []services.Role{readOnly}},
 		},
 		{
+			name: "Success: NULL columns on roles and permissions scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(
+					mock.pool.NewRows(roleRowColumns()).AddRow(int32(9), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(int32(9)).WillReturnRows(
+					mock.pool.NewRows(listRolePermissionRowColumns()).AddRow(int32(9), int32(8), nil, nil, nil, nil),
+				)
+			},
+			expected: expected{roles: []services.Role{{ID: 9, Permissions: []services.Permission{{ID: 8}}}}},
+		},
+		{
 			name:    "Error: filter field is unknown - 400",
 			filters: params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock mock) {
@@ -586,6 +619,15 @@ func TestStore_ListPermissions(t *testing.T) {
 			expected: expected{permissions: []services.Permission{}},
 		},
 		{
+			name: "Success: NULL columns scan as zero values",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSQL).WithArgs().WillReturnRows(
+					mock.pool.NewRows(permissionRowColumns()).AddRow(nil, nil, int32(7), nil, nil),
+				)
+			},
+			expected: expected{permissions: []services.Permission{{ID: 7}}},
+		},
+		{
 			name:       "Error: filter field is unknown",
 			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock) {},
@@ -673,14 +715,15 @@ func TestStore_ListUsers(t *testing.T) {
 	}
 
 	var (
-		ctx       = context.Background()
-		dbErr     = errors.New("connection refused")
-		createdAt = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		updatedAt = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
-		lastLogin = time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
-		expiresAt = time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-		user1ID   = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
-		user2ID   = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		ctx        = context.Background()
+		dbErr      = errors.New("connection refused")
+		createdAt  = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		updatedAt  = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+		lastLogin  = time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
+		expiresAt  = time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
+		user1ID    = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		user2ID    = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		nullUserID = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
 
 		permission1 = services.Permission{ID: 1, Authority: "auth", Name: "ManageProviders", CreatedAt: createdAt, UpdatedAt: updatedAt}
 		role1       = services.Role{ID: 1, Name: "Administrator", Description: "Can manage the application", Permissions: []services.Permission{permission1}, CreatedAt: createdAt, UpdatedAt: updatedAt}
@@ -826,6 +869,32 @@ func TestStore_ListUsers(t *testing.T) {
 				mock.pool.ExpectQuery(expectedListUsersSQL).WithArgs(false).WillReturnRows(mock.pool.NewRows(userRowColumns()))
 			},
 			expected: expected{users: []services.User{}},
+		},
+		{
+			name: "Success: NULL columns on users and associations scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListUsersSQL).WithArgs(false).WillReturnRows(
+					mock.pool.NewRows(userRowColumns()).AddRow(nullUserID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedRolesForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userRoleRowColumns()).AddRow(nullUserID, int32(9), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(int32(9)).WillReturnRows(
+					mock.pool.NewRows(listRolePermissionRowColumns()).AddRow(int32(9), int32(8), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedETACForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userETACRowColumns()).AddRow(int64(11), nullUserID, "env-1", nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedAuthSecretsForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userAuthSecretRowColumns()).AddRow(int32(101), nullUserID, nil, nil, nil, nil, nil),
+				)
+			},
+			expected: expected{users: []services.User{{
+				ID:                               nullUserID,
+				Roles:                            []services.Role{{ID: 9, Permissions: []services.Permission{{ID: 8}}}},
+				EnvironmentTargetedAccessControl: []services.EnvironmentAccessControl{{ID: 11, UserID: nullUserID.String(), EnvironmentID: "env-1"}},
+				AuthSecret:                       &services.AuthSecret{ID: 101},
+			}}},
 		},
 		{
 			name:       "Error: filter field is unknown - 400",
