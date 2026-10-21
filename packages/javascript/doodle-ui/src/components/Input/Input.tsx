@@ -13,31 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { cva, VariantProps } from 'class-variance-authority';
+import { VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { Label } from '../Label';
-import { cn } from '../utils';
 import { Typography } from '../Typography';
-
-export const InputVariants = cva(
-    'flex h-10 w-full text-base text-main placeholder:text-input-placeholder-text disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main file:cursor-pointer',
-    {
-        variants: {
-            variant: {
-                outlined:
-                    'rounded-md border border-input-outlined-border-default bg-input-fill px-3 py-2 text-sm enabled:hover:border-input-outlined-border-hover focus:outline-none focus:focus-ring dark:focus:border-input-outlined-border-default disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled disabled:opacity-100 aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
-                underlined:
-                    'rounded-sm bg-transparent border-b-input-border-default border-b hover:border-b-2 focus:outline-none focus:focus-ring focus:border-input-border-focus focus:border-b-2',
-            },
-            intent: {
-                time: 'appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none',
-            },
-        },
-        defaultVariants: {
-            variant: 'underlined',
-        },
-    }
-);
+import { cn } from '../utils';
+import { InputVariants } from './Input.styles';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof InputVariants> {
     label?: React.ReactNode;
