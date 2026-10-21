@@ -1026,7 +1026,7 @@ export interface CollectorJobType {
 }
 
 export interface CollectorJobProfileMinimal {
-    id: number;
+    id: string;
     name: string;
     job_type_id: number;
     params: Record<string, unknown>;
