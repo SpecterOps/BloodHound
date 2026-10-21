@@ -26,30 +26,11 @@ import {
     faUserLock,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, MenuProps } from '@mui/material';
-import withStyles from '@mui/styles/withStyles';
+import { IconButton } from '@mui/material';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import React from 'react';
 import { useAPITokensConfiguration, usePermissions } from '../../hooks';
 import { Permission } from '../../utils';
-
-const StyledMenu = withStyles({
-    paper: {
-        border: '1px solid #d3d4d5',
-    },
-})((props: MenuProps) => (
-    <Menu
-        elevation={0}
-        anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-        }}
-        transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-        }}
-        {...props}
-    />
-));
 
 interface UserActionsMenuProps {
     userId: string;
@@ -88,44 +69,22 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
 }) => {
     /* Hooks */
 
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
     const apiTokensEnabled = useAPITokensConfiguration();
 
     /* Event Handlers */
-
-    const handleOnOpen: React.MouseEventHandler<HTMLButtonElement> = (event) => {
-        setAnchorEl(event.currentTarget);
-        onOpen(event, userId);
-    };
-
-    const isMenuOpen = Boolean(anchorEl);
 
     const getAbleUserComponent = (): JSX.Element | null => {
         if (!showAuthMgmtButtons) return null;
         if (userDisabled)
             return (
-                <MenuItem
-                    onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                        onEnableUser(e);
-                        setAnchorEl(null);
-                    }}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faUserCheck} />
-                    </ListItemIcon>
-                    <ListItemText primary={'Enable User'} />
+                <MenuItem onSelect={onEnableUser} iconLeft icon={<FontAwesomeIcon icon={faUserCheck} />}>
+                    Enable User
                 </MenuItem>
             );
         else {
             return (
-                <MenuItem
-                    onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                        onDisableUser(e);
-                        setAnchorEl(null);
-                    }}>
-                    <ListItemIcon>
-                        <FontAwesomeIcon icon={faUserLock} />
-                    </ListItemIcon>
-                    <ListItemText primary={'Disable User'} />
+                <MenuItem onSelect={onDisableUser} iconLeft icon={<FontAwesomeIcon icon={faUserLock} />}>
+                    Disable User
                 </MenuItem>
             );
         }
@@ -137,104 +96,67 @@ const UserActionsMenu: React.FC<UserActionsMenuProps> = ({
     /* Implementation */
 
     return (
-        <div>
-            <IconButton
-                disabled={!hasManagePermission}
-                data-testid='manage-users_user-row-action-menu-button'
-                aria-label='Show user actions'
-                onClick={handleOnOpen}
-                size='large'>
-                <FontAwesomeIcon icon={faBars} />
-            </IconButton>
-            {isMenuOpen && (
-                <StyledMenu
-                    anchorEl={anchorEl}
-                    data-testid={`manage-users_user-row-action-menu-${index}`}
-                    keepMounted
-                    open
-                    onClose={() => {
-                        setAnchorEl(null);
-                    }}>
-                    <MenuItem
-                        data-testid='manage-users_user-row-action-menu-update-user-button'
-                        onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                            onUpdateUser(e);
-                            setAnchorEl(null);
-                        }}>
-                        <ListItemIcon>
-                            <FontAwesomeIcon icon={faEdit} />
-                        </ListItemIcon>
-                        <ListItemText primary='Update User' />
+        <Menu>
+            <MenuTrigger asChild>
+                <IconButton
+                    disabled={!hasManagePermission}
+                    data-testid='manage-users_user-row-action-menu-button'
+                    aria-label='Show user actions'
+                    onPointerDown={(event) => {
+                        // Radix opens on pointer-down, before a click can select the row's user.
+                        if (event.button === 0 && !event.ctrlKey) onOpen(event, userId);
+                    }}
+                    onKeyDown={(event) => {
+                        if (['Enter', ' ', 'ArrowDown'].includes(event.key)) onOpen(event, userId);
+                    }}
+                    size='large'>
+                    <FontAwesomeIcon icon={faBars} />
+                </IconButton>
+            </MenuTrigger>
+            <MenuContent
+                className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
+                align='end'
+                data-testid={`manage-users_user-row-action-menu-${index}`}>
+                <MenuItem
+                    data-testid='manage-users_user-row-action-menu-update-user-button'
+                    onSelect={onUpdateUser}
+                    iconLeft
+                    icon={<FontAwesomeIcon icon={faEdit} />}>
+                    Update User
+                </MenuItem>
+
+                {showPasswordOptions && (
+                    <MenuItem onSelect={onUpdateUserPassword} iconLeft icon={<FontAwesomeIcon icon={faKey} />}>
+                        Change Password
                     </MenuItem>
+                )}
 
-                    {showPasswordOptions && (
-                        <MenuItem
-                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                                onUpdateUserPassword(e);
-                                setAnchorEl(null);
-                            }}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faKey} />
-                            </ListItemIcon>
-                            <ListItemText primary='Change Password' />
-                        </MenuItem>
-                    )}
+                {showPasswordOptions && showAuthMgmtButtons && (
+                    <MenuItem onSelect={onExpireUserPassword} iconLeft icon={<FontAwesomeIcon icon={faLock} />}>
+                        Force Password Reset
+                    </MenuItem>
+                )}
 
-                    {showPasswordOptions && showAuthMgmtButtons && (
-                        <MenuItem
-                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                                onExpireUserPassword(e);
-                                setAnchorEl(null);
-                            }}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faLock} />
-                            </ListItemIcon>
-                            <ListItemText primary='Force Password Reset' />
-                        </MenuItem>
-                    )}
+                {apiTokensEnabled && (
+                    <MenuItem onSelect={onManageUserTokens} iconLeft icon={<FontAwesomeIcon icon={faCogs} />}>
+                        Generate / Revoke API Tokens
+                    </MenuItem>
+                )}
+                {showDisableMfaButton && (
+                    <MenuItem onSelect={onDisableUserMfa} iconLeft icon={<FontAwesomeIcon icon={faUnlockAlt} />}>
+                        Disable MFA
+                    </MenuItem>
+                )}
 
-                    {apiTokensEnabled && (
-                        <MenuItem
-                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                                onManageUserTokens(e);
-                                setAnchorEl(null);
-                            }}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faCogs} />
-                            </ListItemIcon>
-                            <ListItemText primary='Generate / Revoke API Tokens' />
-                        </MenuItem>
-                    )}
-                    {showDisableMfaButton && (
-                        <MenuItem
-                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                                onDisableUserMfa(e);
-                                setAnchorEl(null);
-                            }}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faUnlockAlt} />
-                            </ListItemIcon>
-                            <ListItemText primary='Disable MFA' />
-                        </MenuItem>
-                    )}
+                {showAuthMgmtButtons && getAbleUserComponent()}
 
-                    {showAuthMgmtButtons && getAbleUserComponent()}
-
-                    {showAuthMgmtButtons && (
-                        <MenuItem
-                            onClick={(e: React.MouseEvent<HTMLLIElement>) => {
-                                onDeleteUser(e);
-                                setAnchorEl(null);
-                            }}>
-                            <ListItemIcon>
-                                <FontAwesomeIcon icon={faTrash} />
-                            </ListItemIcon>
-                            <ListItemText primary='Delete User' />
-                        </MenuItem>
-                    )}
-                </StyledMenu>
-            )}
-        </div>
+                {showAuthMgmtButtons && (
+                    <MenuItem onSelect={onDeleteUser} iconLeft icon={<FontAwesomeIcon icon={faTrash} />}>
+                        Delete User
+                    </MenuItem>
+                )}
+            </MenuContent>
+        </Menu>
     );
 };
 
