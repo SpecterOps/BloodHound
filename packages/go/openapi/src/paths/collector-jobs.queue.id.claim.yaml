@@ -24,7 +24,7 @@ post:
   description: Atomically claims an eligible ready job. Re-claim by the current
     holder is idempotent.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

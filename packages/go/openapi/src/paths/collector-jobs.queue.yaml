@@ -22,7 +22,7 @@ get:
   summary: List live collector jobs
   description: Returns a paginated list of non-terminal collector job queue entries.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'
@@ -121,7 +121,7 @@ post:
   description: Enqueues immediately due work from either an existing profile or
     schema-validated inline parameters.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   requestBody:
     required: true

@@ -27,7 +27,7 @@ get:
   operationId: GetCollectorJobType
   summary: Get a collector job type
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

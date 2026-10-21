@@ -23,7 +23,7 @@ get:
   description: Returns due jobs eligible for the caller, ordered by priority
     ascending and creation time ascending.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'

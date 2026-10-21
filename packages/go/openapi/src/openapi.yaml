@@ -192,7 +192,7 @@ x-tagGroups:
       - Client Ingest
       - Clients
       - Jobs
-      - Collector Jobs
+      - Collector Jobs (Experimental)
       - Tasks
       - Events (Schedules)
       - Attack Paths

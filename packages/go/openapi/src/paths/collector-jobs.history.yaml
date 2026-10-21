@@ -23,7 +23,7 @@ get:
   description: Returns immutable terminal collector job records. Filter
     `outcome=failed` to triage dead-lettered jobs.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'

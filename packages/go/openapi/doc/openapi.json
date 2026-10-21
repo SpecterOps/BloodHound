@@ -17420,7 +17420,7 @@
         "summary": "List collector jobs available to the authenticated collector",
         "description": "Returns due jobs eligible for the caller, ordered by priority ascending and creation time ascending.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -17539,7 +17539,7 @@
         "operationId": "GetCurrentCollectorJob",
         "summary": "Get the authenticated collector's current job",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -17598,7 +17598,7 @@
         "summary": "Claim a collector job",
         "description": "Atomically claims an eligible ready job. Re-claim by the current holder is idempotent.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -17670,7 +17670,7 @@
         "summary": "Start a claimed collector job",
         "description": "Moves a claimed job to running and renews `claim_expires_at`. Duplicate starts are idempotent.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -17719,7 +17719,7 @@
         "summary": "Ingest data collected by a running job",
         "description": "Streams a collected data file for ingestion and renews the job claim. Ingest requests must complete before the job is ended.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -17768,7 +17768,7 @@
         "summary": "End a collector job",
         "description": "Succeeded, partially-succeeded, and failed outcomes create immutable history; requeue returns the job to ready with backoff and consumes an attempt.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -17848,7 +17848,7 @@
         "summary": "List collector job types",
         "description": "Returns the read-only registry of collector job wire contracts and execution policies.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -17954,7 +17954,7 @@
         "operationId": "ListCollectorJobProfiles",
         "summary": "List collector job profiles",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -18058,7 +18058,7 @@
         "operationId": "CreateCollectorJobProfile",
         "summary": "Create a collector job profile",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -18196,7 +18196,7 @@
         "operationId": "GetCollectorJobProfile",
         "summary": "Get a collector job profile",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -18251,7 +18251,7 @@
         "summary": "Update a collector job profile",
         "description": "Partially updates a profile. `job_type_id` is immutable; `schedule_ids`, when present, atomically replaces all schedule links.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -18365,7 +18365,7 @@
         "operationId": "DeleteCollectorJobProfile",
         "summary": "Delete a collector job profile",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -18403,7 +18403,7 @@
         "operationId": "ListCollectorJobSchedules",
         "summary": "List collector job schedules",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -18514,7 +18514,7 @@
         "operationId": "CreateCollectorJobSchedule",
         "summary": "Create a collector job schedule",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -18646,7 +18646,7 @@
         "operationId": "GetCollectorJobSchedule",
         "summary": "Get a collector job schedule",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -18701,7 +18701,7 @@
         "summary": "Update a collector job schedule",
         "description": "Partially updates a schedule. `profile_ids`, when present, atomically replaces all profile links; enabling recomputes the next future run.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -18811,7 +18811,7 @@
         "operationId": "DeleteCollectorJobSchedule",
         "summary": "Delete a collector job schedule",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -18849,7 +18849,7 @@
         "operationId": "ListCollectorJobSecrets",
         "summary": "List collector job secret references",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -18942,7 +18942,7 @@
         "operationId": "CreateCollectorJobSecret",
         "summary": "Create a collector job secret reference",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "requestBody": {
@@ -19058,7 +19058,7 @@
         "operationId": "GetCollectorJobSecret",
         "summary": "Get a collector job secret reference",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -19113,7 +19113,7 @@
         "summary": "Delete a collector job secret reference",
         "description": "Detaches referencing profiles while in-flight jobs retain their snapshotted key reference.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "responses": {
@@ -19152,7 +19152,7 @@
         "summary": "List collector job history",
         "description": "Returns immutable terminal collector job records. Filter `outcome=failed` to triage dead-lettered jobs.",
         "tags": [
-          "Collector Jobs",
+          "Collector Jobs (Experimental)",
           "Enterprise"
         ],
         "parameters": [
@@ -31211,7 +31211,7 @@
         "Client Ingest",
         "Clients",
         "Jobs",
-        "Collector Jobs",
+        "Collector Jobs (Experimental)",
         "Tasks",
         "Events (Schedules)",
         "Attack Paths",

@@ -22,7 +22,7 @@ get:
   operationId: GetCollectorJob
   summary: Get a live collector job
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:
@@ -60,7 +60,7 @@ delete:
   description: Atomically records a cancelled history outcome and deletes the
     queue entry from any non-terminal state.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     204:

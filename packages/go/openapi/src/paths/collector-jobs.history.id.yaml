@@ -22,7 +22,7 @@ get:
   operationId: GetCollectorJobHistory
   summary: Get a collector job history record
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

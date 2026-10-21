@@ -24,7 +24,7 @@ post:
   description: Renews `claim_expires_at` for the current holder. A missing,
     inactive, or no-longer-owned job returns 404 so the collector aborts local work.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

@@ -24,7 +24,7 @@ post:
   description: Moves a claimed job to running and renews `claim_expires_at`.
     Duplicate starts are idempotent.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

@@ -24,7 +24,7 @@ post:
   description: Streams a collected data file for ingestion and renews the job
     claim. Ingest requests must complete before the job is ended.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     202:
