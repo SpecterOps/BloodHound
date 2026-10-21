@@ -30,6 +30,13 @@ import (
 	"github.com/specterops/dawgs/util"
 )
 
+// ScratchFileProvider transfers ownership of an already prepared scratch file
+// to ingest. The caller closes the file and removes its path after processing.
+// File services without prefetch support continue to use the normal spool path.
+type ScratchFileProvider interface {
+	OpenScratchFile(ctx context.Context, storedFileName string) (*os.File, string, error)
+}
+
 func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService storage.FileService, storedFileName string) (string, error) {
 	var (
 		streamDiagnostic ingestStorageStreamDiagnostic
@@ -41,6 +48,17 @@ func SpoolToScratch(ctx context.Context, scratchDirectory string, fileService st
 		err              error
 		success          bool
 	)
+
+	if provider, ok := fileService.(ScratchFileProvider); ok {
+		if scratchFile, scratchPath, err = provider.OpenScratchFile(ctx, storedFileName); err != nil {
+			return "", err
+		}
+		if err = scratchFile.Close(); err != nil {
+			_ = os.Remove(scratchPath)
+			return "", err
+		}
+		return scratchPath, nil
+	}
 
 	logStoredIngestFileOpenStarted(ctx, storedFileName)
 	sourceFile, fileInfo, err = fileService.GetFile(ctx, storedFileName)
@@ -89,6 +107,10 @@ func OpenScratchReadSeeker(ctx context.Context, scratchDirectory string, fileSer
 		scratchFile *os.File
 		err         error
 	)
+
+	if provider, ok := fileService.(ScratchFileProvider); ok {
+		return provider.OpenScratchFile(ctx, storedFileName)
+	}
 
 	if scratchPath, err = SpoolToScratch(ctx, scratchDirectory, fileService, storedFileName); err != nil {
 		return nil, "", err
