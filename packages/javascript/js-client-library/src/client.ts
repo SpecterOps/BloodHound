@@ -303,7 +303,13 @@ class BHEAPIClient {
         this.baseClient.get<BasicResponse<Environment[]>>('/api/v2/available-domains', options);
 
     /* audit */
-    getAuditLogs = (options?: RequestOptions) => this.baseClient.get<AuditLogsResponse>('/api/v2/audit', options);
+    getAuditLogs = (options?: RequestOptions) =>
+        this.baseClient.get<AuditLogsResponse>('/api/v2/audit', {
+            paramsSerializer: {
+                indexes: null,
+            },
+            ...options,
+        });
 
     /* asset group tags (AGT) */
 
