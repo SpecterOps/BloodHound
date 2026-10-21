@@ -38,7 +38,6 @@ const MenuWithDropdown: React.FC<{
             </MenuTrigger>
             <MenuContent
                 className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
-                id='create-menu'
                 align='start'>
                 {menuItems.map((menuItem) => (
                     <MenuItem key={menuItem.title} onSelect={menuItem.onClick}>
