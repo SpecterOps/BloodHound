@@ -177,7 +177,7 @@ func fetchReadWriteServicePrincipals(tx graph.Transaction, relationship graph.Ki
 			query.Kind(query.Start(), azure.ServicePrincipal),
 			query.Kind(query.Relationship(), relationship),
 			query.Kind(query.End(), azure.ServicePrincipal),
-			query.InIDs(query.EndID(), targetID),
+			query.Equals(query.EndID(), targetID),
 		)
 	}))
 }
