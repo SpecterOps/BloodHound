@@ -24,18 +24,30 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/cache"
+	"github.com/specterops/bloodhound/packages/go/chow/payload"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
@@ -411,4 +423,266 @@ func TestGetAppConfigs(t *testing.T) {
 			assert.NotEmpty(t, envelope.Errors)
 		})
 	}
+}
+
+// # Application Configuration Tests
+
+// ## Testing legacy pre-onion implementation - routing setup
+
+// getAppcfgPostgresConfig reads the integration test configuration from the
+// environment and returns a pgtestdb.Config for the appcfg e2e tests.
+func getAppcfgPostgresConfig(t *testing.T) pgtestdb.Config {
+	t.Helper()
+
+	cfg, err := utils.LoadIntegrationTestConfig()
+	require.NoError(t, err)
+
+	environmentMap := make(map[string]string)
+	for entry := range strings.FieldsSeq(cfg.Database.Connection) {
+		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
+			environmentMap[parts[0]] = parts[1]
+		}
+	}
+
+	if strings.HasPrefix(environmentMap["host"], "/") {
+		return pgtestdb.Config{
+			DriverName: "pgx",
+			User:       environmentMap["user"],
+			Password:   environmentMap["password"],
+			Database:   environmentMap["dbname"],
+			Options:    fmt.Sprintf("host=%s", url.PathEscape(environmentMap["host"])),
+			TestRole: &pgtestdb.Role{
+				Username:     environmentMap["user"],
+				Password:     environmentMap["password"],
+				Capabilities: "NOSUPERUSER NOCREATEROLE",
+			},
+		}
+	}
+
+	return pgtestdb.Config{
+		DriverName:                "pgx",
+		Host:                      environmentMap["host"],
+		Port:                      environmentMap["port"],
+		User:                      environmentMap["user"],
+		Password:                  environmentMap["password"],
+		Database:                  environmentMap["dbname"],
+		Options:                   "sslmode=disable",
+		ForceTerminateConnections: true,
+	}
+}
+
+// setupAppcfgDB creates an isolated test database with all migrations applied.
+// The database is automatically closed when the test ends.
+func setupAppcfgDB(t *testing.T) *database.BloodhoundDB {
+	t.Helper()
+
+	var (
+		ctx      = context.Background()
+		connConf = pgtestdb.Custom(t, getAppcfgPostgresConfig(t), pgtestdb.NoopMigrator{})
+	)
+
+	cfg, err := config.NewDefaultConnectionConfiguration(connConf.URL())
+	require.NoError(t, err)
+
+	gormDB, dbPool, err := database.OpenDatabase(cfg.Database)
+	require.NoError(t, err)
+
+	db := database.NewBloodhoundDB(gormDB, dbPool, auth.NewIdentityResolver(), cfg)
+	require.NoError(t, db.Migrate(ctx))
+
+	t.Cleanup(func() { db.Close(ctx) })
+
+	return db
+}
+
+// newSetConfigsHandler wires the legacy SetApplicationConfigurations handler
+// backed by the given database. This mirrors the pre-migration wiring so the
+// e2e test locks in the existing HTTP contract before the endpoint is moved
+// into the identity vertical slice. Only the necessary resources are loaded.
+func newSetConfigsHandler(t *testing.T, db *database.BloodhoundDB, cfg config.Configuration, auther api.Authenticator) http.Handler {
+	t.Helper()
+
+	// Register the actual production routes using v2.Resources and NewV2API
+	// This ensures we're testing the real route wiring, not a test-specific mock.
+	// Most parameters can be nil since we're only testing the datapipe/status endpoint.
+
+	var (
+		resolver   = auth.NewIdentityResolver()
+		authorizer = auth.NewAuthorizer(db)
+		routerInst = router.NewRouter(cfg, authorizer, "")
+	)
+
+	// Set up JWT signing key
+	cfg.Crypto.JWT.SetSigningKeyBytes([]byte("test-secret-key-that-is-at-least-32-bytes-long"))
+
+	apiCache, err := cache.NewCache(cache.Config{MaxSize: 1000})
+	require.NoError(t, err)
+
+	// Register global middleware (auth, rate limiting, etc)
+	registration.RegisterFossGlobalMiddleware(&routerInst, cfg, resolver, auther, db)
+	resources := v2.NewResources(
+		db,                          // rdms database.Database
+		nil,                         // graphDB *graph.DatabaseSwitch (not needed)
+		cfg,                         // cfg config.Configuration
+		apiCache,                    // apiCache cache.Cache
+		nil,                         // graphQuery queries.Graph (not needed)
+		config.CollectorManifests{}, // collectorManifests
+		authorizer,                  // authorizer
+		auther,                      // authenticator
+		payload.Schema{},            // ingestSchema (needs non-nil struct)
+		nil,                         // fileServiceResolver (not needed)
+		nil,                         // dogtagsService (not needed)
+		nil,                         // openGraphSchemaService (not needed)
+		nil,                         // alerts.Publisher (not needed)
+	)
+	registration.NewV2API(resources, &routerInst)
+
+	return routerInst.Handler()
+}
+
+type setConfigsResponseEnvelope struct {
+	Data appcfg.Parameter `json:"data"`
+}
+
+func TestSetAppConfigs(t *testing.T) {
+	var (
+		ctx     = context.Background()
+		db      = setupAppcfgDB(t)
+		cfg, _  = config.NewDefaultConfiguration()
+		authExt = api.NewAuthExtensions(cfg, db)
+		auther  = api.NewAuthenticator(cfg, db, authExt)
+		handler = newSetConfigsHandler(t, db, cfg, auther)
+		user    = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
+		}
+		token    = servertest.MintJWT(t, ctx, db, auther, user)
+		testBody = `{
+			"key":"auth.password_expiration_window",
+			"value":{"duration":"P45D"}
+		}`
+	)
+
+	// Note: I am not testing the special cases/side effects here
+	// since the DB setup across the relevant tables would be too cumbersome
+	// in an integration test.
+	// That behavior is tested within the unit tests.
+
+	t.Run("returns 200 OK updating a config", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBody))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		require.Equal(t, http.StatusOK, recorder.Code, recorder.Body.String())
+
+		var envelope setConfigsResponseEnvelope
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+
+		// Minimal assertions to avoid live data changes breaking tests
+		assert.Equal(t, "auth.password_expiration_window", string(envelope.Data.Key))
+		expectedval, err := types.NewJSONBObject(map[string]any{"duration": "P45D"})
+		require.NoError(t, err)
+		assert.Equal(t, expectedval,
+			envelope.Data.Value)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided", func(t *testing.T) {
+		recorder := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBody))
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 401 Unauthorized when no auth token is provided", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBody))
+		recorder := httptest.NewRecorder()
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("Fails if key doesn't exist", func(t *testing.T) {
+		testBodyNoKey := `{
+			"key":"nonexistant",
+			"value":{"duration":"P45D"}
+		}`
+
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBodyNoKey))
+		recorder := httptest.NewRecorder()
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("cannot update not allowed key", func(t *testing.T) {
+		testBodyProtectedKey := `{
+			"key":"http.trusted_proxies",
+			"value":{"trusted_proxies": 2}
+		}`
+
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBodyProtectedKey))
+		recorder := httptest.NewRecorder()
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("Fails type validation", func(t *testing.T) {
+		testBodyBadValue := `{
+			"key":"auth.password_expiration_window",
+			"value":{"wololo":"P45D"}
+		}`
+
+		req := httptest.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(testBodyBadValue))
+		recorder := httptest.NewRecorder()
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", "application/json")
+
+		handler.ServeHTTP(recorder, req)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(recorder.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
 }
