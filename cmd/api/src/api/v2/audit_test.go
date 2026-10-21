@@ -213,6 +213,70 @@ func TestResources_ListAuditLogs(t *testing.T) {
 	}
 }
 
+func TestResources_ListAuditLogs_FilterCombinations(t *testing.T) {
+	var testCases = []struct {
+		name        string
+		queryParams url.Values
+		expectedSQL string
+	}{
+		{
+			name:        "status equality uses OR",
+			queryParams: url.Values{"status": {"eq:success", "eq:failure"}},
+			expectedSQL: "(status = E'success' or status = E'failure')",
+		},
+		{
+			name:        "action equality uses OR",
+			queryParams: url.Values{"action": {"eq:LoginAttempt", "eq:CreateUser"}},
+			expectedSQL: "(action = E'LoginAttempt' or action = E'CreateUser')",
+		},
+		{
+			name:        "ID range retains AND",
+			queryParams: url.Values{"id": {"gt:100", "lt:110"}},
+			expectedSQL: "id > 100 and id < 110",
+		},
+		{
+			name:        "other equality filters retain AND",
+			queryParams: url.Values{"id": {"eq:100", "eq:110"}},
+			expectedSQL: "id = 100 and id = 110",
+		},
+		{
+			name:        "status exclusions retain AND",
+			queryParams: url.Values{"status": {"neq:failure", "neq:intent"}},
+			expectedSQL: "status != E'failure' and status != E'intent'",
+		},
+		{
+			name:        "mixed status predicates retain AND",
+			queryParams: url.Values{"status": {"eq:success", "eq:failure", "neq:intent"}},
+			expectedSQL: "status = E'success' and status = E'failure' and status != E'intent'",
+		},
+		{
+			name:        "mixed action predicates retain AND",
+			queryParams: url.Values{"action": {"eq:LoginAttempt", "eq:CreateUser", "neq:DeleteUser"}},
+			expectedSQL: "action = E'LoginAttempt' and action = E'CreateUser' and action != E'DeleteUser'",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				mockController = gomock.NewController(t)
+				mockDatabase   = mocks.NewMockDatabase(mockController)
+				resources      = v2.Resources{DB: mockDatabase}
+				request        = httptest.NewRequest(http.MethodGet, "/api/v2/audit?"+testCase.queryParams.Encode(), nil)
+				response       = httptest.NewRecorder()
+			)
+
+			mockDatabase.EXPECT().ListAuditLogs(
+				gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), "",
+				model.SQLFilter{SQLString: testCase.expectedSQL},
+			).Return(model.AuditLogs{}, 0, nil)
+
+			resources.ListAuditLogs(response, request)
+			require.Equal(t, http.StatusOK, response.Code)
+		})
+	}
+}
+
 func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
