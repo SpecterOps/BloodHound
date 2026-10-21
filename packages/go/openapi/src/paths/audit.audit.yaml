@@ -19,7 +19,10 @@ parameters:
 get:
   operationId: ListAuditLogs
   summary: List audit logs
-  description: Returns a list of audit logs.
+  description: >
+    Returns a list of audit logs. Filters on different fields are combined
+    with AND. Repeated filters on the same field also use AND, except when
+    every predicate on action or status is eq; those values use OR.
   tags:
     - Audit
     - Community
@@ -46,7 +49,7 @@ get:
     - name: after
       description: Return logs created after the specified time. Value should be in
         the RFC-3339 format. If not supplied, this will default to 1
-        year before the current time. Must not be later than `before`.
+        year before the supplied or defaulted before value. Must not be later than `before`.
       in: query
       schema:
         type: string
@@ -68,9 +71,17 @@ get:
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: action
+      description: >
+        Filter by event type using eq or neq predicates. Multiple eq values
+        match any selected event type. If any predicate is neq, all predicates
+        on this field are combined with AND.
       in: query
+      style: form
+      explode: true
       schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+        type: array
+        items:
+          $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: request_id
       in: query
       schema:
@@ -80,12 +91,18 @@ get:
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
     - name: status
-      description: Filter results by column value. Valid filter predicates are `eq`,
-        `neq`. Valid values are `success` and `failure`.
+      description: >
+        Filter by status using eq or neq predicates. Valid values are success,
+        failure, and intent. Multiple eq values match any selected status.
+        If any predicate is neq, all predicates on this field are combined
+        with AND.
       in: query
+      style: form
+      explode: true
       schema:
-        # this might be suitable for a pattern match
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+        type: array
+        items:
+          $ref: './../schemas/api.params.predicate.filter.string.yaml'
   responses:
     200:
       description: OK
