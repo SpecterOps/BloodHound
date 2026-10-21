@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
@@ -68,20 +67,26 @@ type pgxQuerier interface {
 	queryExecer
 }
 
+// permission is the flat projection of a permissions row. Nullable columns use
+// stdlib nullable types so pgx can scan NULLs that gorm would otherwise coerce
+// to zero values.
 type permission struct {
-	Authority string    `db:"authority"`
-	Name      string    `db:"name"`
-	ID        int32     `db:"id"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	Authority sql.NullString `db:"authority"`
+	Name      sql.NullString `db:"name"`
+	ID        int32          `db:"id"`
+	CreatedAt sql.NullTime   `db:"created_at"`
+	UpdatedAt sql.NullTime   `db:"updated_at"`
 }
 
+// role is the flat projection of a roles row. Nullable columns use stdlib
+// nullable types so pgx can scan NULLs that gorm would otherwise coerce to zero
+// values.
 type role struct {
-	ID          int32     `db:"id"`
-	Name        string    `db:"name"`
-	Description string    `db:"description"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
+	ID          int32          `db:"id"`
+	Name        sql.NullString `db:"name"`
+	Description sql.NullString `db:"description"`
+	CreatedAt   sql.NullTime   `db:"created_at"`
+	UpdatedAt   sql.NullTime   `db:"updated_at"`
 }
 
 type Store struct {
@@ -94,11 +99,11 @@ func NewStore(db pgxQuerier) *Store {
 
 func toPermission(row permission) services.Permission {
 	return services.Permission{
-		Authority: row.Authority,
-		Name:      row.Name,
+		Authority: row.Authority.String,
+		Name:      row.Name.String,
 		ID:        row.ID,
-		CreatedAt: row.CreatedAt,
-		UpdatedAt: row.UpdatedAt,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
 	}
 }
 
@@ -109,11 +114,11 @@ func toRole(row role, permissionRows []permission) services.Role {
 	}
 	return services.Role{
 		ID:          row.ID,
-		Name:        row.Name,
-		Description: row.Description,
+		Name:        row.Name.String,
+		Description: row.Description.String,
 		Permissions: permissions,
-		CreatedAt:   row.CreatedAt,
-		UpdatedAt:   row.UpdatedAt,
+		CreatedAt:   row.CreatedAt.Time,
+		UpdatedAt:   row.UpdatedAt.Time,
 	}
 }
 
@@ -547,13 +552,13 @@ type userRow struct {
 	FirstName       sql.NullString `db:"first_name"`
 	LastName        sql.NullString `db:"last_name"`
 	EmailAddress    sql.NullString `db:"email_address"`
-	PrincipalName   string         `db:"principal_name"`
+	PrincipalName   sql.NullString `db:"principal_name"`
 	LastLogin       sql.NullTime   `db:"last_login"`
-	IsDisabled      bool           `db:"is_disabled"`
-	AllEnvironments bool           `db:"all_environments"`
-	EULAAccepted    bool           `db:"eula_accepted"`
-	CreatedAt       time.Time      `db:"created_at"`
-	UpdatedAt       time.Time      `db:"updated_at"`
+	IsDisabled      sql.NullBool   `db:"is_disabled"`
+	AllEnvironments sql.NullBool   `db:"all_environments"`
+	EULAAccepted    sql.NullBool   `db:"eula_accepted"`
+	CreatedAt       sql.NullTime   `db:"created_at"`
+	UpdatedAt       sql.NullTime   `db:"updated_at"`
 }
 
 // userRole carries the owning user id alongside a role so that a single batched
@@ -564,25 +569,27 @@ type userRole struct {
 }
 
 // etacRow is the flat projection of an environment_targeted_access_control row.
-// updated_at has no default and may be NULL for rows not written through gorm.
+// The timestamp columns are nullable and may be NULL for rows not written
+// through gorm.
 type etacRow struct {
 	ID            int64        `db:"id"`
 	UserID        uuid.UUID    `db:"user_id"`
 	EnvironmentID string       `db:"environment_id"`
-	CreatedAt     time.Time    `db:"created_at"`
+	CreatedAt     sql.NullTime `db:"created_at"`
 	UpdatedAt     sql.NullTime `db:"updated_at"`
 }
 
 // authSecretRow is the flat projection of an auth_secrets row. Secret material
-// such as the digest and TOTP secret is intentionally left unselected.
+// such as the digest and TOTP secret is intentionally left unselected. Nullable
+// columns use stdlib nullable types so pgx can scan NULLs.
 type authSecretRow struct {
-	ID            int32        `db:"id"`
-	UserID        uuid.UUID    `db:"user_id"`
-	DigestMethod  string       `db:"digest_method"`
-	ExpiresAt     sql.NullTime `db:"expires_at"`
-	TOTPActivated bool         `db:"totp_activated"`
-	CreatedAt     time.Time    `db:"created_at"`
-	UpdatedAt     time.Time    `db:"updated_at"`
+	ID            int32          `db:"id"`
+	UserID        uuid.UUID      `db:"user_id"`
+	DigestMethod  sql.NullString `db:"digest_method"`
+	ExpiresAt     sql.NullTime   `db:"expires_at"`
+	TOTPActivated sql.NullBool   `db:"totp_activated"`
+	CreatedAt     sql.NullTime   `db:"created_at"`
+	UpdatedAt     sql.NullTime   `db:"updated_at"`
 }
 
 func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
@@ -590,7 +597,7 @@ func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
 		ID:            row.ID,
 		UserID:        row.UserID.String(),
 		EnvironmentID: row.EnvironmentID,
-		CreatedAt:     row.CreatedAt,
+		CreatedAt:     row.CreatedAt.Time,
 		UpdatedAt:     row.UpdatedAt.Time,
 	}
 }
@@ -598,11 +605,11 @@ func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
 func toAuthSecret(row authSecretRow) services.AuthSecret {
 	return services.AuthSecret{
 		ID:            row.ID,
-		DigestMethod:  row.DigestMethod,
+		DigestMethod:  row.DigestMethod.String,
 		ExpiresAt:     row.ExpiresAt.Time,
-		TOTPActivated: row.TOTPActivated,
-		CreatedAt:     row.CreatedAt,
-		UpdatedAt:     row.UpdatedAt,
+		TOTPActivated: row.TOTPActivated.Bool,
+		CreatedAt:     row.CreatedAt.Time,
+		UpdatedAt:     row.UpdatedAt.Time,
 	}
 }
 
@@ -613,16 +620,16 @@ func toUser(row userRow, roles []services.Role, environmentAccessControl []servi
 		FirstName:                        row.FirstName,
 		LastName:                         row.LastName,
 		EmailAddress:                     row.EmailAddress,
-		PrincipalName:                    row.PrincipalName,
+		PrincipalName:                    row.PrincipalName.String,
 		LastLogin:                        row.LastLogin.Time,
-		IsDisabled:                       row.IsDisabled,
-		AllEnvironments:                  row.AllEnvironments,
-		EULAAccepted:                     row.EULAAccepted,
+		IsDisabled:                       row.IsDisabled.Bool,
+		AllEnvironments:                  row.AllEnvironments.Bool,
+		EULAAccepted:                     row.EULAAccepted.Bool,
 		Roles:                            roles,
 		EnvironmentTargetedAccessControl: environmentAccessControl,
 		AuthSecret:                       authSecret,
-		CreatedAt:                        row.CreatedAt,
-		UpdatedAt:                        row.UpdatedAt,
+		CreatedAt:                        row.CreatedAt.Time,
+		UpdatedAt:                        row.UpdatedAt.Time,
 	}
 }
 
