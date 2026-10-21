@@ -65,6 +65,8 @@ describe('AssetGroupMenuItem', async () => {
                 );
             }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
+                expect(req.url.searchParams.get('object_id')).toBe('eq:1234');
+
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
                     return res(
@@ -205,6 +207,8 @@ describe('AssetGroupMenuItem', async () => {
                 );
             }),
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
+                expect(req.url.searchParams.get('object_id')).toBe('eq:1234');
+
                 // handle `tier zero` requests
                 if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
                     return res(

@@ -99,6 +99,12 @@ get:
     schema:
       type: integer
       enum: [1, 2]
+  - name: value
+    description: Filter results by selector seed value.
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string.yaml'
   - name: counts
     description: Whether to include counts of members for each selector
     in: query

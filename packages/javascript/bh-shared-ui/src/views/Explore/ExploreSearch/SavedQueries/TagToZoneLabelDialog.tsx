@@ -33,6 +33,7 @@ import {
 } from 'doodle-ui';
 import {
     AssetGroupTag,
+    AssetGroupTagTypeDecoy,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeZone,
@@ -55,7 +56,9 @@ const TagToZoneLabelDialog = (props: TagToZoneLabelDialogProps) => {
     const tagsQuery = useTagsQuery();
     const { ruleCreateLink } = usePZPathParams();
     const isLabelTagType = (tag: AssetGroupTag) =>
-        tag.type === AssetGroupTagTypeLabel || tag.type === AssetGroupTagTypeOwned;
+        tag.type === AssetGroupTagTypeLabel ||
+        tag.type === AssetGroupTagTypeOwned ||
+        tag.type === AssetGroupTagTypeDecoy;
     const isZoneTagType = (tag: AssetGroupTag) => tag.type === AssetGroupTagTypeZone;
 
     const typeMatcher = isLabel ? isLabelTagType : isZoneTagType;

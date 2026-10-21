@@ -30,6 +30,8 @@ properties:
     type: boolean
   isOwnedObject:
     type: boolean
+  isDecoyObject:
+    type: boolean
   lastSeen:
     type: string
     format: date-time

@@ -27,11 +27,13 @@ import (
 const (
 	StrTagTierZero = "Tag_Tier_Zero"
 	StrTagOwned    = "Tag_Owned"
+	StrTagDecoy    = "Tag_Decoy"
 )
 
 var (
 	KindTagTierZero = graph.StringKind(StrTagTierZero)
 	KindTagOwned    = graph.StringKind(StrTagOwned)
+	KindTagDecoy    = graph.StringKind(StrTagDecoy)
 )
 
 func IsTierZero(node *graph.Node) bool {
@@ -51,5 +53,15 @@ func IsOwned(node *graph.Node) bool {
 		// We can safely ignore the error here
 		startSystemTags, _ := node.Properties.Get(common.SystemTags.String()).String()
 		return strings.Contains(startSystemTags, ad.Owned)
+	}
+}
+
+func IsDecoy(node *graph.Node) bool {
+	if node.Kinds.ContainsOneOf(KindTagDecoy) {
+		return true
+	} else {
+		// We can safely ignore the error here
+		startSystemTags, _ := node.Properties.Get(common.SystemTags.String()).String()
+		return strings.Contains(startSystemTags, ad.Decoy)
 	}
 }
