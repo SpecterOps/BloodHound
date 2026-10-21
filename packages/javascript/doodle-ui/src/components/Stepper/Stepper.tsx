@@ -205,7 +205,7 @@ const Stepper = ({
         <StepperContext.Provider value={contextValue}>
             <div
                 data-slot='stepper'
-                className={cn('w-full font-sans text-text-main', className)}
+                className={cn('w-full font-sans text-main', className)}
                 data-orientation={orientation}
                 {...props}>
                 {children}
@@ -358,8 +358,8 @@ function StepperIndicator({ children, className, ...props }: ComponentProps<'div
             <div
                 className={cn(
                     'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[#939597] dark:group-data-[state=inactive]/indicator:border-input-border-default',
-                    'group-data-[state=completed]/indicator:border-primary group-data-[state=completed]/indicator:bg-primary group-data-[state=completed]/indicator:text-text-contrast',
-                    'group-data-[state=active]/indicator:rounded-sm group-data-[state=active]/indicator:border-secondary group-data-[state=active]/indicator:bg-secondary group-data-[state=active]/indicator:text-text-contrast'
+                    'group-data-[state=completed]/indicator:border-primary group-data-[state=completed]/indicator:bg-primary group-data-[state=completed]/indicator:text-inverse',
+                    'group-data-[state=active]/indicator:rounded-sm group-data-[state=active]/indicator:border-secondary group-data-[state=active]/indicator:bg-secondary group-data-[state=active]/indicator:text-inverse'
                 )}>
                 {(isLoading && indicators.loading) || indicators[state] || children}
             </div>
@@ -409,7 +409,7 @@ function StepperDescription({ children, className, ...props }: ComponentProps<'d
             data-slot='stepper-description'
             variant='subtitle2'
             data-state={state}
-            className={cn('text-text-muted leading-4', className)}>
+            className={cn('text-muted leading-4', className)}>
             {children}
         </Typography>
     );

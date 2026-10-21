@@ -24,17 +24,17 @@ import { DEFAULT_VARIANT, Variant, variantMapping } from './utils';
 export const TypographyVariants = cva('break-words', {
     variants: {
         variant: {
-            h1: 'font-heading text-2xl font-bold leading-7 tracking-normal text-text-main',
-            h2: 'font-heading text-[1.375rem] font-bold leading-6 tracking-normal text-text-main',
-            h3: 'font-heading text-xl font-bold leading-[1.375rem] tracking-normal text-text-main',
-            h4: 'font-heading text-xl font-semibold leading-[1.375rem] tracking-normal text-text-main',
-            h5: 'font-heading text-lg font-bold leading-5 tracking-[.25px] text-text-main',
-            h6: 'font-heading text-base font-semibold leading-[1.125rem] tracking-[.25px] text-text-main',
-            body1: 'font-sans text-base font-normal leading-6 tracking-normal text-text-muted dark:text-text-main',
-            body2: 'font-sans text-sm font-normal leading-[1.375rem] tracking-normal text-text-muted dark:text-text-main',
-            subtitle1: 'font-sans text-[.9375rem] font-medium leading-6 tracking-[.25px] text-text-main',
-            subtitle2: 'font-sans text-[.8125rem] font-medium leading-[1.375rem] tracking-[.25px] text-text-main',
-            caption: 'font-sans text-xs font-normal leading-5 tracking-[.25px] text-text-muted dark:text-text-main',
+            h1: 'font-heading text-2xl font-bold leading-7 tracking-normal text-main',
+            h2: 'font-heading text-[1.375rem] font-bold leading-6 tracking-normal text-main',
+            h3: 'font-heading text-xl font-bold leading-[1.375rem] tracking-normal text-main',
+            h4: 'font-heading text-xl font-semibold leading-[1.375rem] tracking-normal text-main',
+            h5: 'font-heading text-lg font-bold leading-5 tracking-[.25px] text-main',
+            h6: 'font-heading text-base font-semibold leading-[1.125rem] tracking-[.25px] text-main',
+            body1: 'font-sans text-base font-normal leading-6 tracking-normal text-muted dark:text-main',
+            body2: 'font-sans text-sm font-normal leading-[1.375rem] tracking-normal text-muted dark:text-main',
+            subtitle1: 'font-sans text-[.9375rem] font-medium leading-6 tracking-[.25px] text-main',
+            subtitle2: 'font-sans text-[.8125rem] font-medium leading-[1.375rem] tracking-[.25px] text-main',
+            caption: 'font-sans text-xs font-normal leading-5 tracking-[.25px] text-muted dark:text-main',
         },
     },
     defaultVariants: {
