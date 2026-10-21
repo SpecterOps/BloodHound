@@ -20,8 +20,8 @@ parameters:
     in: path
     required: true
     schema:
-      type: integer
-      format: int64
+      type: string
+      format: uuid
 
 get:
   operationId: GetCollectorJobSchedule
@@ -90,8 +90,8 @@ patch:
               type: array
               uniqueItems: true
               items:
-                type: integer
-                format: int64
+                type: string
+                format: uuid
   responses:
     200:
       description: OK
