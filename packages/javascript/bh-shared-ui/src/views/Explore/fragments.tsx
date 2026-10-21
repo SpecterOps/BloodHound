@@ -109,9 +109,19 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     );
 };
 
-export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
+export type ObjectInfoFieldLayout = 'spread' | 'inline';
+
+export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFieldLayout }>> = ({
+    children,
+    layout = 'spread',
+}) => {
     return (
-        <div className='rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'>
+        <div
+            className={
+                layout === 'inline'
+                    ? '[&>:nth-child(even)]:bg-neutral-1 [&>:nth-child(odd)]:bg-neutral-2'
+                    : 'rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'
+            }>
             {children}
         </div>
     );
@@ -131,8 +141,8 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
     }
 };
 
-export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, value, keyprop } = entityField;
+export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> = (entityField) => {
+    const { label, value, keyprop, layout = 'spread' } = entityField;
 
     try {
         if (
@@ -146,6 +156,44 @@ export const Field: React.FC<EntityField> = (entityField) => {
 
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
+
+    if (layout === 'inline') {
+        const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
+
+        return (
+            <>
+                {values?.map((formattedItem, index) => {
+                    const accessibleLabel =
+                        Array.isArray(value) && value.length > 0
+                            ? getEmptyValueAccessibleLabel(value[index])
+                            : emptyValueAccessibleLabel;
+
+                    return (
+                        <div className='p-2' key={`${keyprop}-${index}`}>
+                            {index === 0 && (
+                                <Typography
+                                    component='span'
+                                    variant='body2'
+                                    className='mr-2 font-semibold text-text-main'>
+                                    {typeof label === 'string' ? label.replace(/:$/, '') : label}
+                                </Typography>
+                            )}
+                            <Typography component='span' variant='body2' className='break-words' title={formattedItem}>
+                                {accessibleLabel ? (
+                                    <>
+                                        <span aria-hidden='true'>{formattedItem}</span>
+                                        <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
+                                    </>
+                                ) : (
+                                    formattedItem
+                                )}
+                            </Typography>
+                        </div>
+                    );
+                })}
+            </>
+        );
+    }
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -192,7 +240,10 @@ export const Field: React.FC<EntityField> = (entityField) => {
     return <>{content}</>;
 };
 
-export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
+export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: ObjectInfoFieldLayout }> = ({
+    fields,
+    layout,
+}): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
     return (
@@ -205,6 +256,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         value={field.value}
                         keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
+                        layout={layout}
                     />
                 );
             })}

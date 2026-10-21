@@ -19,7 +19,7 @@ import NodeIcon from '../../components/NodeIcon';
 import { ActiveDirectoryNodeKind, AzureNodeKind, CommonKindProperties } from '../../graphSchema';
 import { EntityKinds, KnownNodeProperties, formatPotentiallyUnknownLabel } from '../../utils';
 import { SearchValue } from './ExploreSearch/types';
-import { Field } from './fragments';
+import { Field, ObjectInfoFieldLayout } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
     properties: Record<string, any> & {
@@ -41,6 +41,7 @@ interface BasicObjectInfoFieldsProps {
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
     nodeType?: string;
     zone?: string;
+    layout?: ObjectInfoFieldLayout;
 }
 
 const RelatedKindField = (
@@ -92,6 +93,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
     labels,
     nodeType,
     zone,
+    layout,
 }): JSX.Element => {
     const fieldValues = { ...props, labels: labels?.length ? labels.join(', ') : undefined, nodeType, zone };
     return (
@@ -100,7 +102,14 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
                 const value = fieldValues[field];
                 if (value === undefined) return null; // <Field /> doesn't support undefined values
 
-                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
+                return (
+                    <Field
+                        key={field}
+                        label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
+                        value={value}
+                        layout={layout}
+                    />
+                );
             })}
             {handleSourceNodeSelected && (
                 <>
