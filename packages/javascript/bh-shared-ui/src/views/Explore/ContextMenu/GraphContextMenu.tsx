@@ -20,7 +20,7 @@ import { FC, ReactNode, useCallback, useEffect, useRef } from 'react';
 // Shared canvas integration for the legacy and privilege-zone graph menus.
 const GraphContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
-    onClose: () => void;
+    onClose: () => VoidFunction;
     children: ReactNode;
 }> = ({ contextMenu, onClose, children }) => {
     const lastPosition = useRef(contextMenu);
