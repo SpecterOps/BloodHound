@@ -439,6 +439,8 @@ export const typography: Partial<Theme['typography']> = {
 // Temporary until MUI dialogs migrate to doodle-ui, to fix z-index issue with the side nav bar.
 export const themeZIndex: ThemeOptions['zIndex'] = {
     modal: 1410,
+    // This value is used in notistack v2 and therefore needs to be higher than the highest dialog z-index (1600)
+    snackbar: 1601,
 };
 
 export const defaultPortalContainer = {

@@ -28,24 +28,6 @@ const meta = {
         label: 'Information',
     },
     argTypes: {
-        children: {
-            control: false,
-            description:
-                'Exactly one SVG icon element, such as an AppIcon or Font Awesome icon. AccessibleIcon clones this element to apply its accessibility attributes.',
-            table: { category: 'Content' },
-        },
-        'aria-label': {
-            control: 'text',
-            description:
-                'Accessible name applied to the SVG. Use it with label when assistive technology needs a more descriptive name than the visible tooltip. When label is omitted, this value is also used by the tooltip.',
-            table: { category: 'Accessibility' },
-        },
-        label: {
-            control: 'text',
-            description:
-                'Visible tooltip content and, unless aria-label overrides it, the SVG accessible name. Describe the meaning conveyed by the icon rather than its appearance.',
-            table: { category: 'Content' },
-        },
         'aria-hidden': {
             control: false,
             description:
@@ -54,6 +36,18 @@ const meta = {
                 category: 'Accessibility',
                 defaultValue: { summary: 'false' },
             },
+        },
+        'aria-label': {
+            control: 'text',
+            description:
+                'Accessible name applied to the SVG. Use it with label when assistive technology needs a more descriptive name than the visible tooltip. When label is omitted, this value is also used by the tooltip.',
+            table: { category: 'Accessibility' },
+        },
+        children: {
+            control: false,
+            description:
+                'Exactly one SVG icon element, such as an AppIcon or Font Awesome icon. AccessibleIcon clones this element to apply its accessibility attributes.',
+            table: { category: 'Content' },
         },
         className: {
             control: 'text',
@@ -68,6 +62,21 @@ const meta = {
             table: {
                 category: 'Accessibility',
                 defaultValue: { summary: 'false' },
+            },
+        },
+        label: {
+            control: 'text',
+            description:
+                'Visible tooltip content and, unless aria-label overrides it, the SVG accessible name. Describe the meaning conveyed by the icon rather than its appearance.',
+            table: { category: 'Content' },
+        },
+        tooltipPosition: {
+            control: 'select',
+            description: 'Positions the tooltip relative to the icon. Supports top, bottom, left, and right.',
+            options: ['top', 'bottom', 'left', 'right'],
+            table: {
+                category: 'Appearance',
+                defaultValue: { summary: 'top' },
             },
         },
     },
@@ -109,6 +118,14 @@ Use <code>aria-label</code> as an override when the accessible name should provi
 ### Tooltip behavior
 
 The tooltip is displayed on pointer hover by default. AccessibleIcon remains non-interactive and does not add a tab stop. Its accessible name is always applied to the SVG, so the icon's meaning does not depend on the tooltip being open.
+
+Use <code>tooltipPosition</code> to place the tooltip on the <code>top</code>, <code>bottom</code>, <code>left</code>, or <code>right</code> of the icon. The default position is <code>top</code>.
+
+~~~tsx
+<AccessibleIcon label='Important information' tooltipPosition='right'>
+    <AppIcon.Info />
+</AccessibleIcon>
+~~~
 
 Use <code>hideTooltip</code> when equivalent visible text is already adjacent to the icon. This removes only the visual tooltip; it does not remove the SVG accessible name.
 
@@ -170,8 +187,8 @@ export const Default: Story = {
 
 export const DistinctAccessibleLabel: Story = {
     args: {
-        label: 'Learn more',
         'aria-label': 'Learn more about saved queries',
+        label: 'Learn more',
     },
     parameters: {
         docs: {
