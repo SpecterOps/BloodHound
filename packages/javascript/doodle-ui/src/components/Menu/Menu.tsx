@@ -82,9 +82,10 @@ interface MenuItemProps extends React.ComponentPropsWithoutRef<typeof DropdownMe
 }
 
 const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.Item>, MenuItemProps>(
-    ({ className, icon, iconLeft = false, secondaryMenu = false, children, ...props }, ref) => (
+    ({ className, icon, iconLeft = false, secondaryMenu = false, asChild, children, ...props }, ref) => (
         <DropdownMenuPrimitive.Item
             ref={ref}
+            asChild={asChild}
             className={cn(
                 'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
                 'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
@@ -96,9 +97,15 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
                 className
             )}
             {...props}>
-            {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
-            <span className='flex-1 leading-4'>{children}</span>
-            {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
+            {asChild ? (
+                children
+            ) : (
+                <>
+                    {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
+                    <span className='flex-1 leading-4'>{children}</span>
+                    {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
+                </>
+            )}
         </DropdownMenuPrimitive.Item>
     )
 );

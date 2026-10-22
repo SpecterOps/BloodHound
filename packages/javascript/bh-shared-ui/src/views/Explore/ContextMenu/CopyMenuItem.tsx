@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Menu, MenuItem } from '@mui/material';
+import { MenuItem, MenuSub, MenuSubContent, MenuSubTrigger } from 'doodle-ui';
+
 import { NodeDetails } from 'js-client-library';
-import { KeyboardEvent, MouseEvent, useRef, useState } from 'react';
 import { useExploreSelectedItem } from '../../../hooks';
 import { usePrimaryKind } from '../../../hooks/usePrimaryKind';
 import { useNotifications } from '../../../providers';
@@ -26,35 +24,16 @@ import { escapeCypherString } from '../../../utils/cypher';
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
-    const triggerRef = useRef<HTMLLIElement>(null);
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
     const { selectedItemQuery } = useExploreSelectedItem();
     const nodeInfo = selectedItemQuery.data as NodeDetails | undefined;
 
     const primaryKind = usePrimaryKind(nodeInfo?.kinds || []);
-
-    const closeMenu = () => {
-        setAnchorEl(null);
-        requestAnimationFrame(() => triggerRef.current?.focus());
-    };
-
-    const handleOpen = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleTriggerKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-        if (event.key === 'ArrowRight' || event.key === 'Enter' || event.key === ' ') handleOpen(event);
-    };
 
     const handleCopyName = () => {
         if (nodeInfo) {
             navigator.clipboard.writeText(nodeInfo.properties.name || nodeInfo.properties.objectid || '');
             addNotification(`Name copied to clipboard`, 'copyToClipboard');
         }
-        closeMenu();
     };
 
     const handleCopyObjectId = () => {
@@ -62,7 +41,6 @@ const CopyMenuItem = () => {
             navigator.clipboard.writeText(nodeInfo.properties.objectid || '');
             addNotification(`Object ID copied to clipboard`, 'copyToClipboard');
         }
-        closeMenu();
     };
 
     const handleCopyCypher = () => {
@@ -71,38 +49,19 @@ const CopyMenuItem = () => {
             navigator.clipboard.writeText(cypher);
             addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
         }
-        closeMenu();
     };
 
     return (
-        <>
-            <MenuItem
-                ref={triggerRef}
-                className='justify-between'
-                aria-haspopup='menu'
-                aria-expanded={Boolean(anchorEl)}
-                onClick={handleOpen}
-                onKeyDown={handleTriggerKeyDown}>
-                Copy <FontAwesomeIcon icon={faCaretRight} />
-            </MenuItem>
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={closeMenu}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                MenuListProps={{
-                    'aria-label': 'Copy options',
-                    onKeyDown: (event) => {
-                        if (event.key === 'Tab' || event.key === 'Escape') return;
-                        event.stopPropagation();
-                    },
-                }}>
-                <MenuItem onClick={handleCopyName}>Name</MenuItem>
-                <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
-                <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
-            </Menu>
-        </>
+        <MenuSub>
+            <MenuSubTrigger>Copy</MenuSubTrigger>
+            <MenuSubContent
+                className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
+                aria-label='Copy options'>
+                <MenuItem onSelect={handleCopyName}>Name</MenuItem>
+                <MenuItem onSelect={handleCopyObjectId}>Object ID</MenuItem>
+                <MenuItem onSelect={handleCopyCypher}>Cypher</MenuItem>
+            </MenuSubContent>
+        </MenuSub>
     );
 };
 
