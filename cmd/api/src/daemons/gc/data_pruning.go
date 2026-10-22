@@ -21,21 +21,34 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
 // Daemon holds data relevant to the data daemon
 type Daemon struct {
-	exitC chan struct{}
-	db    database.Database
+	exitC                    chan struct{}
+	db                       database.Database
+	auditPartitionMaintainer AuditPartitionMaintainer
+	haMutex                  ha.HAMutex
 }
 
-// NewDataPruningDaemon creates a new data pruning daemon
-func NewDataPruningDaemon(db database.Database) *Daemon {
+// AuditPartitionMaintainer defines the partition operations used by this daemon.
+type AuditPartitionMaintainer interface {
+	CreateNextPartition(ctx context.Context, asOf time.Time) error
+	DropExpiredPartitions(ctx context.Context, asOf time.Time, retentionMonths int) error
+}
+
+const defaultAuditRetentionMonths = 3
+
+// NewDataPruningDaemon creates a new data pruning daemon.
+func NewDataPruningDaemon(db database.Database, auditPartitionMaintainer AuditPartitionMaintainer, haMutex ha.HAMutex) *Daemon {
 	return &Daemon{
-		exitC: make(chan struct{}),
-		db:    db,
+		exitC:                    make(chan struct{}),
+		db:                       db,
+		auditPartitionMaintainer: auditPartitionMaintainer,
+		haMutex:                  haMutex,
 	}
 }
 
@@ -55,6 +68,7 @@ func (s *Daemon) Start(ctx context.Context) {
 	s.db.SweepSessions(ctx)
 	s.db.SweepAssetGroupCollections(ctx)
 	runSAMLConsumedIdentifiersSweep(ctx, s.db)
+	s.sweepAuditPartitions(ctx)
 
 	// thereafter, prune conditionally once a day
 	for {
@@ -63,10 +77,34 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.db.SweepSessions(ctx)
 			s.db.SweepAssetGroupCollections(ctx)
 			runSAMLConsumedIdentifiersSweep(ctx, s.db)
+			s.sweepAuditPartitions(ctx)
 
 		case <-s.exitC:
 			return
 		}
+	}
+}
+
+func (s *Daemon) sweepAuditPartitions(ctx context.Context) {
+	if s.auditPartitionMaintainer == nil || s.haMutex == nil {
+		return
+	}
+
+	lockResult, err := s.haMutex.TryLock()
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to validate HA leader for audit partition maintenance", attr.Error(err))
+		return
+	}
+	if !lockResult.IsPrimary {
+		return
+	}
+
+	var now = time.Now().UTC()
+	if err := s.auditPartitionMaintainer.CreateNextPartition(lockResult.Context, now); err != nil {
+		slog.ErrorContext(lockResult.Context, "Failed to create audit partitions", attr.Error(err))
+	}
+	if err := s.auditPartitionMaintainer.DropExpiredPartitions(lockResult.Context, now, defaultAuditRetentionMonths); err != nil {
+		slog.ErrorContext(lockResult.Context, "Failed to drop expired audit partitions", attr.Error(err))
 	}
 }
 

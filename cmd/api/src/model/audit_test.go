@@ -17,10 +17,12 @@
 package model
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockAuditable struct {
@@ -137,4 +139,26 @@ func TestAuditLogs_SourceMetadata(t *testing.T) {
 	assert.True(t, auditLogs.IsSortable("source"))
 	assert.True(t, auditLogs.IsString("source"))
 	assert.Equal(t, []FilterOperator{Equals, NotEquals}, auditLogs.ValidFilters()["source"])
+}
+
+func TestAuditable_AuditDataOmitsSecretMaterial(t *testing.T) {
+	const secretMaterial = "must-not-be-audited"
+
+	testCases := []struct {
+		name      string
+		auditable Auditable
+	}{
+		{name: "auth token omits key", auditable: AuthToken{Key: secretMaterial}},
+		{name: "auth secret omits credentials", auditable: AuthSecret{Digest: secretMaterial, TOTPSecret: secretMaterial}},
+		{name: "SAML provider omits metadata", auditable: SAMLProvider{MetadataXML: []byte(secretMaterial)}},
+		{name: "user omits nested auth secret", auditable: &User{AuthSecret: &AuthSecret{Digest: secretMaterial, TOTPSecret: secretMaterial}}},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			auditData, err := json.Marshal(testCase.auditable.AuditData())
+			require.NoError(t, err)
+			require.NotContains(t, string(auditData), secretMaterial)
+		})
+	}
 }
