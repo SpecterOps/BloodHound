@@ -85,7 +85,7 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
 }) => {
     return (
         <div className='flex w-full items-center justify-between'>
-            <Typography variant='h6' className='ml-4 text-sm leading-[3em]'>
+            <Typography variant='h6' className='ml-4 text-body-2 leading-[3em]'>
                 {label}
             </Typography>
             {isLoading ? (
@@ -111,7 +111,7 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
 
 export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
     return (
-        <div className='rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'>
+        <div className='rounded-lg text-caption/4 [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'>
             {children}
         </div>
     );

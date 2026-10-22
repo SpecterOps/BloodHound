@@ -60,8 +60,8 @@ export const ImpactTable: Story = {
             <DataTable
                 columns={getColumns()}
                 data={getData(10)}
-                TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs' }}
+                TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                TableBodyProps={{ className: 'text-caption/4' }}
                 TableCellProps={{ className: 'pl-2  pr-4' }}
                 columnPinning={{
                     left: ['action-menu'],
@@ -118,8 +118,8 @@ export const ResizableColumns: Story = {
                 columns={getColumns()}
                 data={getData(10)}
                 enableResizing={args.enableResizing}
-                TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs' }}
+                TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                TableBodyProps={{ className: 'text-caption/4' }}
                 TableCellProps={{ className: 'pl-2  pr-4' }}
                 columnPinning={{
                     left: ['action-menu'],
@@ -152,8 +152,8 @@ export const ResizeAndGrowLastColumn: Story = {
                 columns={getColumns().filter((_, i) => i < 5)}
                 data={getData(10)}
                 enableResizing={args.enableResizing}
-                TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs' }}
+                TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                TableBodyProps={{ className: 'text-caption/4' }}
                 TableCellProps={{ className: 'pl-2  pr-4' }}
                 columnPinning={{
                     left: ['action-menu'],
@@ -182,8 +182,8 @@ export const ResizeAndPinnedColumns: Story = {
                 columns={getColumns()}
                 data={getData(10)}
                 enableResizing={args.enableResizing}
-                TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs' }}
+                TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                TableBodyProps={{ className: 'text-caption/4' }}
                 TableCellProps={{ className: 'pl-2  pr-4' }}
                 columnPinning={{
                     left: ['action-menu', 'nonTierZeroPrincipal', 'email'],
@@ -235,8 +235,8 @@ export const ResetColumnSizingButton: Story = {
                     Reset Column Sizing
                 </Button>
                 <DataTable
-                    TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                    TableBodyProps={{ className: 'text-xs' }}
+                    TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                    TableBodyProps={{ className: 'text-caption/4' }}
                     TableCellProps={{ className: 'pl-2  pr-4' }}
                     data={DATA}
                     enableResizing={args.enableResizing}
@@ -327,8 +327,8 @@ export const DragAndDrop: Story = {
         return (
             <>
                 <DataTable
-                    TableHeadProps={{ className: 'font-bold text-base text-nowrap pl-2 pr-4' }}
-                    TableBodyProps={{ className: 'text-xs' }}
+                    TableHeadProps={{ className: 'font-bold text-body text-nowrap pl-2 pr-4' }}
+                    TableBodyProps={{ className: 'text-caption/4' }}
                     TableCellProps={{ className: 'pl-2  pr-4' }}
                     data={DATA}
                     enableResizing={args.enableResizing}

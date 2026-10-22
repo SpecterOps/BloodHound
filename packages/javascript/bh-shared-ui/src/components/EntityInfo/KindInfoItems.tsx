@@ -31,7 +31,7 @@ function KindInfoItem({ item }: KindInfoItemProps) {
             data-testid='entity-info_kind-info-item'
             value={item.name}
             className='h-fit align-middle border-t border-neutral-400 dark:border-neutral-700'>
-            <AccordionHeader className='text-sm p-0 pt-2 pb-3 my-2 -mx-4 px-4 w-full h-full dark:hover:bg-neutral-700 hover:bg-neutral-200 hover:no-underline'>
+            <AccordionHeader className='text-body-2 p-0 pt-2 pb-3 my-2 -mx-4 px-4 w-full h-full dark:hover:bg-neutral-700 hover:bg-neutral-200 hover:no-underline'>
                 <FontAwesomeIcon icon={faChevronDown} size='sm' />
                 <Tooltip tooltip={item.title}>
                     <span className='ml-3 truncate'>{item.title}</span>

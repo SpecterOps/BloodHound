@@ -28,7 +28,7 @@ const Table = React.forwardRef<
     React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean; tableContainerClassName?: string }
 >(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => (
     <div className={cn('relative w-full', { 'overflow-auto': !disableDefaultOverflowAuto }, tableContainerClassName)}>
-        <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+        <table ref={ref} className={cn('w-full caption-bottom text-body-2', className)} {...props} />
     </div>
 ));
 Table.displayName = 'Table';
@@ -37,7 +37,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
     ({ className, ...props }, ref) => (
         <thead
             ref={ref}
-            className={cn('[&_tr]:border-b bg-neutral-light-2 dark:bg-neutral-dark-2', className)}
+            className={cn('[&_tr]:border-b bg-data-table-header-fill dark:bg-data-table-header-fill', className)}
             {...props}
         />
     )
@@ -48,7 +48,7 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes
     ({ className, ...props }, ref) => (
         <tbody
             ref={ref}
-            className={cn('[&_tr:last-child]:border-0 bg-neutral-light-2 dark:bg-neutral-dark-2', className)}
+            className={cn('[&_tr:last-child]:border-0 bg-data-table-fill dark:bg-data-table-fill', className)}
             {...props}
         />
     )
@@ -179,7 +179,7 @@ TableCell.displayName = 'TableCell';
 
 const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
     ({ className, ...props }, ref) => (
-        <caption ref={ref} className={cn('mt-4 text-sm text-muted-foreground', className)} {...props} />
+        <caption ref={ref} className={cn('mt-4 text-body-2 text-muted-foreground', className)} {...props} />
     )
 );
 TableCaption.displayName = 'TableCaption';

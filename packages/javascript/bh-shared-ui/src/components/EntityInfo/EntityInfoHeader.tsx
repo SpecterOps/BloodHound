@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
     };
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold'>
+        <div className='flex justify-between items-center text-body-2 font-bold'>
             <IconButton
                 aria-label='Collapse All'
                 className='px-4'

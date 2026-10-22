@@ -16,7 +16,7 @@
 const ShortcutSection = ({ heading, bindings }: { heading: string; bindings: string[][] }) => (
     <div className='mb-5' key={heading}>
         <div className='font-bold flex sm:justify-center p-2'>{heading}</div>
-        <div className='flex flex-col gap-2 text-sm'>
+        <div className='flex flex-col gap-2 text-body-2'>
             {bindings.map((binding: string[]) => (
                 <div key={`${binding[0]}-${heading}`} className='flex gap-2'>
                     <div className='w-1/2 text-right p-2 flex md:justify-end sm:justify-center xs:justify-center items-center'>

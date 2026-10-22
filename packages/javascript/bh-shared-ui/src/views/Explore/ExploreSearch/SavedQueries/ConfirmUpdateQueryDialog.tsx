@@ -40,7 +40,7 @@ const ConfirmUpdateQueryDialog: FC<{
                     <DialogDescription className='text-neutral-dark-5 dark:text-neutral-light-5'>
                         {dialogContent}
                     </DialogDescription>
-                    <DialogActions className='px-0 flex-row justify-end gap-4 text-sm'>
+                    <DialogActions className='px-0 flex-row justify-end gap-4 text-body-2'>
                         <TextButton onClick={handleCancel}>Cancel</TextButton>
                         <TextButton fontColor='primary' onClick={handleApply}>
                             Ok

@@ -21,7 +21,7 @@ const BloodHoundConfiguration = () => {
         <PageWithTitle
             title='BloodHound Configuration'
             pageDescription={
-                <p className='text-sm'>
+                <p className='text-body-2'>
                     Modify the configuration of your BloodHound tenant. See our{' '}
                     <a
                         className='text-link underline'

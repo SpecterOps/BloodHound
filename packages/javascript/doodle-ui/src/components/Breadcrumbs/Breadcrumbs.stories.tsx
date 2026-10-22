@@ -89,11 +89,11 @@ export const CustomSeparator: Story = {
                 <BreadcrumbItem>
                     <BreadcrumbLink href='#'>Tier</BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator children={<span className='text-xs'>→</span>} />
+                <BreadcrumbSeparator children={<span className='text-caption/4'>→</span>} />
                 <BreadcrumbItem>
                     <BreadcrumbLink href='#'>Tier Details</BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator children={<span className='text-xs'>→</span>} />
+                <BreadcrumbSeparator children={<span className='text-caption/4'>→</span>} />
                 <BreadcrumbItem>
                     <BreadcrumbPage>Selector</BreadcrumbPage>
                 </BreadcrumbItem>

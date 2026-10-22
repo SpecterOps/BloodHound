@@ -42,7 +42,7 @@ type MultiSelectVariant = 'outlined' | 'filled';
 
 const MultiSelectTriggerVariants = cva(
     [
-        'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px]',
+        'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-body font-normal leading-6 tracking-[0.15px]',
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-text-contrast',
         'data-[state=open]:bg-primary data-[state=open]:text-text-contrast',
@@ -141,7 +141,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
             className={multiSelectCheckboxStyles}
             fieldClassName={cn(
                 multiSelectRowStyles,
-                'text-base font-normal leading-4',
+                'text-body font-normal leading-4',
                 option.disabled
                     ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
                     : multiSelectInteractiveRowStyles
@@ -161,7 +161,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
             fieldClassName={cn(
                 multiSelectRowStyles,
                 multiSelectInteractiveRowStyles,
-                'text-base font-normal leading-4'
+                'text-body font-normal leading-4'
             )}
             labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
         />

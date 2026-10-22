@@ -87,13 +87,13 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
             ref={ref}
             asChild={asChild}
             className={cn(
-                'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
-                'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
+                'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-body-2 outline-none',
+                'data-[highlighted]:border-secondary data-[highlighted]:bg-secondary data-[highlighted]:text-white',
                 'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-                'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
-                'data-[highlighted]:active:bg-[#2C2677] dark:data-[highlighted]:active:bg-[#a1a0ff] dark:data-[highlighted]:active:text-black',
-                'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-neutral-light-3 data-[disabled]:text-[#616161]',
-                'dark:data-[disabled]:bg-neutral-dark-5 dark:data-[disabled]:text-[#a6a6a6]',
+                'dark:data-[highlighted]:border-secondary dark:data-[highlighted]:bg-secondary dark:data-[highlighted]:text-black',
+                'data-[highlighted]:active:bg-primary dark:data-[highlighted]:active:bg-primary dark:data-[highlighted]:active:text-black',
+                'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-neutral-light-3 data-[disabled]:text-text-disabled',
+                'dark:data-[disabled]:bg-neutral-dark-5 dark:data-[disabled]:text-text-disabled',
                 className
             )}
             {...props}>
@@ -118,7 +118,11 @@ const MenuLabel = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label ref={ref} className={cn('px-2 py-1.5 text-sm font-semibold', className)} {...props} />
+    <DropdownMenuPrimitive.Label
+        ref={ref}
+        className={cn('px-2 py-1.5 text-body-2 font-semibold', className)}
+        {...props}
+    />
 ));
 MenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
@@ -137,12 +141,12 @@ const MenuSubTrigger = React.forwardRef<
     <DropdownMenuPrimitive.SubTrigger
         ref={ref}
         className={cn(
-            'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
-            'data-[highlighted]:border-[#4A3BD7] data-[highlighted]:bg-[#4A3BD7] data-[highlighted]:text-white',
+            'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-body-2 outline-none',
+            'data-[highlighted]:border-secondary data-[highlighted]:bg-secondary data-[highlighted]:text-white',
             'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] data-[state=open]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-            'dark:data-[highlighted]:border-[#66a3ff] dark:data-[highlighted]:bg-[#66a3ff] dark:data-[highlighted]:text-black',
-            'data-[state=open]:bg-[#4A3BD7] data-[state=open]:text-white',
-            'dark:data-[state=open]:bg-[#66a3ff] dark:data-[state=open]:text-black',
+            'dark:data-[highlighted]:border-secondary dark:data-[highlighted]:bg-secondary dark:data-[highlighted]:text-black',
+            'data-[state=open]:bg-secondary data-[state=open]:text-white',
+            'dark:data-[state=open]:bg-secondary dark:data-[state=open]:text-black',
             className
         )}
         {...props}>

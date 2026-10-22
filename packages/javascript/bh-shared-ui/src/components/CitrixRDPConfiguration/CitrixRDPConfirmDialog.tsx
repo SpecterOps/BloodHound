@@ -48,8 +48,8 @@ const CitrixRDPConfirmDialog: FC<CitrixRDPConfirmDialogProps> = ({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogPortal>
-                <DialogContent className='text-sm'>
-                    <DialogTitle className='text-xl'>{dialogTitle}</DialogTitle>
+                <DialogContent className='text-body-2'>
+                    <DialogTitle className='text-headline-3/7'>{dialogTitle}</DialogTitle>
                     <VisuallyHidden>
                         <DialogDescription>Confirm Citrix Configuration Changes</DialogDescription>
                     </VisuallyHidden>

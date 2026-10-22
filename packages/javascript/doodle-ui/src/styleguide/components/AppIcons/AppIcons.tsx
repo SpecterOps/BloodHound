@@ -32,7 +32,7 @@ const AppIcons = () => {
                     <div className='flex flex-col items-center justify-center'>
                         <Card className='flex items-center justify-center h-32  mb-2'>
                             <CardContent className='px-6'>
-                                <AppIcon.BHCELogoFull size={300} className='text-base' />
+                                <AppIcon.BHCELogoFull size={300} className='text-body' />
                             </CardContent>
                         </Card>
                         <p>BHCELogoFull</p>

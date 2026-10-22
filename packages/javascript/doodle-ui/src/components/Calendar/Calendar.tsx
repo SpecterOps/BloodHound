@@ -62,7 +62,7 @@ function Calendar({
                 head_row: 'flex',
                 head_cell: 'rounded-md w-9 font-normal text-[0.8rem] dark:text-neutral-light-1 opacity-70',
                 row: 'flex w-full mt-2',
-                cell: 'h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected]:not(.day-range))]:rounded-md [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-range-start)]:rounded-l-md [&:has([aria-selected].day-outside)]:bg-neutral-light-2 [&:has([aria-selected])]:bg-neutral-light-3 dark:[&:has([aria-selected])]:bg-neutral-dark-5 dark:[&:has([aria-selected].day-outside)]:bg-neutral-dark-2 dark:[&:has([aria-selected])]:bg-neutral-dark-3 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+                cell: 'h-9 w-9 text-center text-body-2 p-0 relative [&:has([aria-selected]:not(.day-range))]:rounded-md [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-range-start)]:rounded-l-md [&:has([aria-selected].day-outside)]:bg-neutral-light-2 [&:has([aria-selected])]:bg-neutral-light-3 dark:[&:has([aria-selected])]:bg-neutral-dark-5 dark:[&:has([aria-selected].day-outside)]:bg-neutral-dark-2 dark:[&:has([aria-selected])]:bg-neutral-dark-3 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
                 day: cn(
                     TextButtonVariants(),
                     'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:no-underline hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-5 dark:aria-selected:text-black dark:aria-selected:hover:bg-secondary-main aria-selected:hover:bg-secondary-main aria-selected:hover:text-white rounded-md'
@@ -93,7 +93,7 @@ function Calendar({
                         <SelectTrigger
                             className={cn(
                                 TextButtonVariants(),
-                                'py-2 px-1 rounded-sm border-0 h-7 w-fit font-medium text-base dark:text-white [.is-between_&]:hidden [.is-end_&]:hidden [.is-start.is-end_&]:flex'
+                                'py-2 px-1 rounded-sm border-0 h-7 w-fit font-medium text-body dark:text-white [.is-between_&]:hidden [.is-end_&]:hidden [.is-start.is-end_&]:flex'
                             )}>
                             <SelectValue placeholder={props?.caption}>{props?.caption}</SelectValue>
                         </SelectTrigger>
@@ -103,7 +103,7 @@ function Calendar({
                                     React.Children.map(props.children, (child) => (
                                         <SelectItem
                                             value={(child as React.ReactElement)?.props?.value}
-                                            className='text-sm min-w-[var(--radix-popper-anchor-width)]'>
+                                            className='text-body-2 min-w-[var(--radix-popper-anchor-width)]'>
                                             {(child as React.ReactElement)?.props?.children}
                                         </SelectItem>
                                     ))}

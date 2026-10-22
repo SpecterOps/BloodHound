@@ -205,12 +205,12 @@ const SaveQueryDialog: React.FC<{
                                     ) : null}
 
                                     <DialogActions className='flex justify-end gap-4'>
-                                        <TextButton className='text-sm' onClick={onCancel}>
+                                        <TextButton className='text-body-2' onClick={onCancel}>
                                             Cancel
                                         </TextButton>
                                         <TextButton
                                             fontColor='primary'
-                                            className='text-sm'
+                                            className='text-body-2'
                                             disabled={saveDisabled}
                                             onClick={handleSave}>
                                             Save

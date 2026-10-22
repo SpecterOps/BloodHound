@@ -20,15 +20,22 @@ import { DEFAULT_VARIANT, variantMapping } from './utils';
 
 describe('Typography', () => {
     const expectedVariantClasses = {
-        h1: ['font-heading', 'text-2xl', 'font-bold', 'leading-7', 'tracking-normal', 'text-text-main'],
+        h1: ['font-heading', 'text-headline-2', 'font-bold', 'leading-7', 'tracking-normal', 'text-text-main'],
         h2: ['font-heading', 'text-[1.375rem]', 'font-bold', 'leading-6', 'tracking-normal', 'text-text-main'],
-        h3: ['font-heading', 'text-xl', 'font-bold', 'leading-[1.375rem]', 'tracking-normal', 'text-text-main'],
-        h4: ['font-heading', 'text-xl', 'font-semibold', 'leading-[1.375rem]', 'tracking-normal', 'text-text-main'],
+        h3: ['font-heading', 'text-headline-3', 'font-bold', 'leading-[1.375rem]', 'tracking-normal', 'text-text-main'],
+        h4: [
+            'font-heading',
+            'text-headline-3',
+            'font-semibold',
+            'leading-[1.375rem]',
+            'tracking-normal',
+            'text-text-main',
+        ],
         h5: ['font-heading', 'text-lg', 'font-bold', 'leading-5', 'tracking-[.25px]', 'text-text-main'],
-        h6: ['font-heading', 'text-base', 'font-semibold', 'leading-[1.125rem]', 'tracking-[.25px]', 'text-text-main'],
+        h6: ['font-heading', 'text-body', 'font-semibold', 'leading-[1.125rem]', 'tracking-[.25px]', 'text-text-main'],
         body1: [
             'font-sans',
-            'text-base',
+            'text-body',
             'font-normal',
             'leading-6',
             'tracking-normal',
@@ -37,7 +44,7 @@ describe('Typography', () => {
         ],
         body2: [
             'font-sans',
-            'text-sm',
+            'text-body-2',
             'font-normal',
             'leading-[1.375rem]',
             'tracking-normal',
@@ -55,7 +62,7 @@ describe('Typography', () => {
         ],
         caption: [
             'font-sans',
-            'text-xs',
+            'text-caption',
             'font-normal',
             'leading-5',
             'tracking-[.25px]',
@@ -127,6 +134,19 @@ describe('Typography', () => {
     });
 
     describe('className', () => {
+        it('keeps the caller’s explicit line height when overriding the size and color', () => {
+            render(
+                <Typography variant='body1' className='text-caption/4 leading-6 text-text-disabled'>
+                    Compact
+                </Typography>
+            );
+            const element = screen.getByText('Compact');
+            expect(Array.from(element.classList)).toEqual(
+                expect.arrayContaining(['text-caption/4', 'leading-6', 'text-text-disabled'])
+            );
+            expect(element.classList.contains('text-body')).toBe(false);
+        });
+
         it('applies additional className alongside variant styles', () => {
             render(<Typography className='extra-class'>Styled</Typography>);
             expect(screen.getByText('Styled').classList.contains('extra-class')).toBe(true);

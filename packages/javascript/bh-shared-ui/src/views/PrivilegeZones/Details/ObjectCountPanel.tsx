@@ -46,7 +46,7 @@ const ObjectCountPanel: FC = () => {
                 </div>
 
                 <div className='border-neutral-light-3 dark:border-neutral-dark-3'>
-                    <span className='text-base'>There was an error fetching this data</span>
+                    <span className='text-body'>There was an error fetching this data</span>
                 </div>
             </Card>
         );

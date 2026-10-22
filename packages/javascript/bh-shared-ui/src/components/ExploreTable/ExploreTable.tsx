@@ -41,7 +41,7 @@ const tableProps: DataTableProps['TableProps'] = {
 };
 
 const tableHeaderProps: DataTableProps['TableHeaderProps'] = {
-    className: 'sticky top-0 z-10 shadow-sm text-base',
+    className: 'sticky top-0 z-10 shadow-sm text-body',
 };
 
 const tableHeadProps: DataTableProps['TableHeadProps'] = {

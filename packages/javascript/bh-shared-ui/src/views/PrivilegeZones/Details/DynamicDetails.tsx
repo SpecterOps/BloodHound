@@ -83,7 +83,7 @@ const TagDetails: FC<{ tagData: AssetGroupTag; hasObjectCountPanel: boolean }> =
             <Card className='min-w-0 max-w-full overflow-auto min-h-36 p-6'>
                 <div className='flex items-center min-w-0' title={name}>
                     {glyph && <ZoneIcon zone={tagData} persistGlyph size={20} wrapperClasses='shrink-0' />}
-                    <span className='min-w-0 flex-1 truncate text-xl font-bold'>{name}</span>
+                    <span className='min-w-0 flex-1 truncate text-headline-3/7 font-bold'>{name}</span>
                 </div>
                 {Certification && (
                     <div className='mt-4'>
@@ -132,7 +132,7 @@ const RuleDetails: FC<{ ruleData: AssetGroupTagSelector }> = ({ ruleData }) => {
     return (
         <div className='flex flex-col gap-6' data-testid='privilege-zones_selector-details-card'>
             <Card className='p-6'>
-                <div className='text-xl font-bold break-all line-clamp-2' title={name}>
+                <div className='text-headline-3/7 font-bold break-all line-clamp-2' title={name}>
                     {name}
                 </div>
                 <div className='mt-4'>
@@ -178,7 +178,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({
     } else if (isError) {
         return (
             <Card className='p-6'>
-                <span className='text-base'>There was an error fetching this data</span>
+                <span className='text-body'>There was an error fetching this data</span>
             </Card>
         );
     } else if (isTag(data)) {

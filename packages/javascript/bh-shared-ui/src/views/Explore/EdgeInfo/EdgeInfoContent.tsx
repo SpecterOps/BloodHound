@@ -144,7 +144,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<RelationshipDetailsWithInf
             {isHidden ? (
                 <FieldsContainer>
                     <div>
-                        <p className='text-sm'>
+                        <p className='text-body-2'>
                             This edge's information is not disclosed. Please contact your admin in order to get access.
                         </p>
                     </div>

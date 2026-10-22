@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const triggerStyles =
-    'items-center max-w-56 text-sm text-main rounded-md bg-transparent hover:bg-secondary hover:text-common-white border shadow-outer-0 hover:border-transparent focus-visible:border-transparent border-dropdown-trigger-border group';
+    'items-center max-w-56 text-body-2 text-main rounded-md bg-transparent hover:bg-secondary hover:text-common-white border shadow-outer-0 hover:border-transparent focus-visible:border-transparent border-dropdown-trigger-border group';
 
 export const popoverContentStyles =
     'flex flex-col p-0 rounded-md border border-dropdown-popover-border bg-dropdown-popover-fill';

@@ -152,7 +152,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
     const selectItems = paginationOptions ?? ['5', '10', '25', '100'];
 
     return (
-        <PaginationNav className={cn('text-sm tabular-nums', className)} {...rest}>
+        <PaginationNav className={cn('text-body-2 tabular-nums', className)} {...rest}>
             <PaginationContent>
                 <PaginationItem className='flex justify-center items-center gap-2 px-1 py-2 mx-2'>
                     Rows per page:

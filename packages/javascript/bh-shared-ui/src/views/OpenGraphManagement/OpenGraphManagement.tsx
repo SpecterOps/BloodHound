@@ -23,7 +23,7 @@ const OpenGraphManagement: React.FC = () => {
         <PageWithTitle
             title='OpenGraph Management'
             pageDescription={
-                <p className='text-sm'>
+                <p className='text-body-2'>
                     OpenGraph Management provides a centralized space to install and manage extensions that expand
                     BloodHound's capabilities to model additional technologies and platforms.
                 </p>

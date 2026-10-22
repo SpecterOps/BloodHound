@@ -36,7 +36,7 @@ const RiskBadgeContentVariants = cva('rounded-full', {
         },
         type: {
             labeled: 'size-max w-32 px-6 py-2.5 border-none text-center tracking-[.25px]',
-            'sm-labeled': 'size-max px-1 py-1 border-none text-center font-bold min-w-14 w-14 text-sm',
+            'sm-labeled': 'size-max px-1 py-1 border-none text-center font-bold min-w-14 w-14 text-body-2',
             'sm-circle': 'size-full shadow-inner1xl',
             'md-circle': 'size-full shadow-inner1xl',
         },

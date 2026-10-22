@@ -65,14 +65,14 @@ const AnalyzeNowConfiguration: React.FC<AnalyzeNowProps> = ({ description, note 
         <>
             <div>
                 <div className='flex justify-between items-center'>
-                    <h4 className='font-medium text-xl '>Run Analysis Now</h4>
+                    <h4 className='font-medium text-headline-3/7 '>Run Analysis Now</h4>
                     <Button disabled={buttonDisabled} onClick={showDialog}>
                         {dataProcessing ? <ProcessingIndicator title='Analyzing' /> : 'Analyze Now'}
                     </Button>
                 </div>
                 <div className='w-[677px] flex flex-col items-start gap-2 shrink-0'>
                     <p>{description}</p>
-                    {note && <p className='text-xs italic'>{note}</p>}
+                    {note && <p className='text-caption/4 italic'>{note}</p>}
                 </div>
             </div>
 

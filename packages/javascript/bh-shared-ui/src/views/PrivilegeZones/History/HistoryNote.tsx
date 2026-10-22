@@ -34,7 +34,7 @@ const HistoryNote = () => {
             {selected && (
                 <Card className='p-4'>
                     <CardContent>
-                        <p className='text-xl'>{selected.note}</p>
+                        <p className='text-headline-3/7'>{selected.note}</p>
                     </CardContent>
                     <CardFooter>
                         <p>

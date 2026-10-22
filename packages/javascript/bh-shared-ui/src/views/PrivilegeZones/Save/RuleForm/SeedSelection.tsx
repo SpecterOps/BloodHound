@@ -113,8 +113,8 @@ const SeedSelection: FC<{
                     )}
                 />
                 <Card className='mb-5 pl-4 px-4 py-2'>
-                    <CardHeader className='text-xl font-bold'>
-                        <Label className='text-base font-bold' htmlFor='rule-seed-type-select'>
+                    <CardHeader className='text-headline-3/7 font-bold'>
+                        <Label className='text-body font-bold' htmlFor='rule-seed-type-select'>
                             Rule Type
                         </Label>
                     </CardHeader>

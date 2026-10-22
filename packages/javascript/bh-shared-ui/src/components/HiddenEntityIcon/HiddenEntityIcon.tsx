@@ -21,7 +21,7 @@ import { Box, Tooltip } from '@mui/material';
 const HiddenEntityIconRootStyles = 'inline-block relative';
 
 const HiddenEntityIconContainerStyles =
-    'flex border border-neutral-dark-1 rounded-full p-1 w-[22px] h-[22px] items-center justify-center text-sm text-neutral-dark-1 bg-neutral-light-1 ';
+    'flex border border-neutral-dark-1 rounded-full p-1 w-[22px] h-[22px] items-center justify-center text-body-2 text-neutral-dark-1 bg-neutral-light-1 ';
 
 const HiddenEntityIcon: React.FC = () => {
     return (

@@ -14,4 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export * from './components';
+export * from './mergeDoodleClasses';
 export * from './tailwind';

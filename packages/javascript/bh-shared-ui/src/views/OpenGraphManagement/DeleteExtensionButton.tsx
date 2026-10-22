@@ -65,7 +65,7 @@ export const ConfirmDeleteExtensionDialog: FC<{
                         <div className='pb-1'>
                             <div>This will permanently delete the selected extension.</div>
                             <div className='font-bold'>Warning: This change is irreversible.</div>
-                            <div className='mt-3 text-xs'>Input "{extensionName}" in order to proceed.</div>
+                            <div className='mt-3 text-caption/4'>Input "{extensionName}" in order to proceed.</div>
                             <Input
                                 aria-label={`Type ${extensionName} to confirm deletion`}
                                 variant='outlined'
@@ -76,7 +76,7 @@ export const ConfirmDeleteExtensionDialog: FC<{
                             />
                         </div>
                     </DialogDescription>
-                    <DialogActions className='text-sm gap-4'>
+                    <DialogActions className='text-body-2 gap-4'>
                         <TextButton onClick={handleCancel} disabled={isDeleting}>
                             Cancel
                         </TextButton>

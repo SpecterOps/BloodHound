@@ -75,7 +75,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                 return (
                     <div className='flex justify-start items-center max-w-2 dark:text-neutral-light-1 text-nowrap text-black'>
                         <span className='p-2 border border-black rounded-full bg-[#17E625] mr-2 size-4 flex justify-center items-center'>
-                            <FontAwesomeIcon icon={faUser} className='text-xs' />
+                            <FontAwesomeIcon icon={faUser} className='text-caption/4' />
                         </span>
                         {row.getValue('nonTierZeroPrincipal')}
                     </div>
@@ -92,7 +92,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
             header: () => (
                 <div className='flex justify-start items-center dark:text-neutral-light-1 text-nowrap'>
                     <span className='p-2 rounded-full bg-black mr-2 size-4 flex justify-center items-center'>
-                        <FontAwesomeIcon icon={faGem} className='text-xs' color='white' />
+                        <FontAwesomeIcon icon={faGem} className='text-caption/4' color='white' />
                     </span>
                     Tier Zero Principal
                     {sortOrder !== undefined ? (
@@ -111,7 +111,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                 return (
                     <div className='flex justify-start items-center dark:text-neutral-light-1 text-black'>
                         <span className='p-2 border border-black rounded-full bg-[#DBE617] mr-2 size-4 flex justify-center items-center'>
-                            <FontAwesomeIcon icon={faUserGroup} className='text-xs' />
+                            <FontAwesomeIcon icon={faUserGroup} className='text-caption/4' />
                         </span>
                         {row.getValue('tierZeroPrincipal')}
                     </div>

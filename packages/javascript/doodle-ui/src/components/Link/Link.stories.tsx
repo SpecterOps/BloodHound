@@ -69,7 +69,7 @@ export const Unstyled: Story = {
 export const InText: Story = {
     name: 'In text',
     render: (args) => (
-        <p className='text-sm text-neutral-dark-1 dark:text-white'>
+        <p className='text-body-2 text-neutral-dark-1 dark:text-white'>
             Read the <Link {...args} /> for more details.
         </p>
     ),

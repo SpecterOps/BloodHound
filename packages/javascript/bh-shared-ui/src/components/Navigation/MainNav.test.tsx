@@ -376,7 +376,7 @@ describe('MainNav label typography', () => {
             'global_nav-item-label-text'
         );
         expect(primaryLabel).toHaveClass('font-bold', 'text-lg');
-        expect(secondaryLabel).toHaveClass('font-normal', 'text-base');
+        expect(secondaryLabel).toHaveClass('font-normal', 'text-body');
     });
 });
 describe('MainNav subnav item', () => {

@@ -103,7 +103,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                         this selector.
                     </p>
                 )}
-                <p className='italic text-sm px-5 py-2'>
+                <p className='italic text-body-2 px-5 py-2'>
                     Note: The sample results from running this cypher search may include additional entities that are
                     not directly associated with the cypher query due to default rule expansion. In contrast, 'View in
                     Explore' will show only the entities that are directly associated with the cypher query.
@@ -140,7 +140,7 @@ export const PrivilegeZonesCypherEditor: FC<{
                     />
                 </div>
                 {showLabelWarning && (
-                    <p className='text-error text-sm p-2'>
+                    <p className='text-error text-body-2 p-2'>
                         Privilege Zone labels should only be used in cypher within the Explore page. Utilizing Privilege
                         Zone labels in a cypher based Rule seed may result in incomplete data.
                     </p>

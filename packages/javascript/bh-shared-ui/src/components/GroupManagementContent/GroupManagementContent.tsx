@@ -156,7 +156,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             container
                             className='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
                             <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography className='font-medium text-sm uppercase'>Group:</Typography>
+                                <Typography className='font-medium text-body-2 uppercase'>Group:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8}>
                                 <div className='p-2'>
@@ -169,7 +169,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                                 </div>
                             </Grid>
                             <Grid item xs={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
-                                <Typography className='font-medium text-sm uppercase'>Environment:</Typography>
+                                <Typography className='font-medium text-body-2 uppercase'>Environment:</Typography>
                             </Grid>
                             <Grid item xs={12} xl={8} className='p-2'>
                                 <SimpleEnvironmentSelector

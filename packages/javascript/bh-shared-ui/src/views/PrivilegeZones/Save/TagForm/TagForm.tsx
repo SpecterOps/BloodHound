@@ -447,7 +447,7 @@ export const TagForm: FC = () => {
                                                             {...field}
                                                             value={''}
                                                             label={field.value ? 'Enabled' : 'Disabled'}
-                                                            labelClassName='text-sm'
+                                                            labelClassName='text-body-2'
                                                             data-testid='privilege-zones_save_tag-form_enable-analysis-toggle'
                                                             checked={field.value || false}
                                                             onCheckedChange={field.onChange}
@@ -532,7 +532,7 @@ export const TagForm: FC = () => {
                                                                 {...field}
                                                                 id='enable-certification'
                                                                 label={field.value ? 'Enabled' : 'Disabled'}
-                                                                labelClassName='text-sm'
+                                                                labelClassName='text-body-2'
                                                                 value={field.value?.toString()}
                                                                 data-testid='privilege-zones_save_tag-form_require-certify-toggle'
                                                                 checked={field.value || false}
@@ -570,7 +570,7 @@ export const TagForm: FC = () => {
                                                         />
                                                     </FormControl>
                                                     <div className='w-full flex items-end justify-between'>
-                                                        <div className='flex gap-4 text-sm'>
+                                                        <div className='flex gap-4 text-body-2'>
                                                             <div>
                                                                 <p className='font-medium'>Selected Glyph:</p>
                                                                 <p className={clsx(glyph && 'italic')}>

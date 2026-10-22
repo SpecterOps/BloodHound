@@ -124,7 +124,7 @@ const SpacingControl = ({ axis, icon, onChange, value }: SpacingControlProps) =>
                         step={1}
                         value={value}
                     />
-                    <div className='flex justify-between text-xs'>
+                    <div className='flex justify-between text-caption/4'>
                         <span>Compact</span>
                         <span>Spacious</span>
                     </div>

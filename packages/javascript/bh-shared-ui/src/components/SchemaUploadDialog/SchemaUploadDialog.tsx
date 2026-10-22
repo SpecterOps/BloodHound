@@ -104,7 +104,7 @@ export const SchemaUploadDialog = () => {
                     uploadLabel='Choose an OpenGraph Extension to upload'
                     uploadInstructions='Click here or drag and drop to upload an OpenGraph Extension'
                 />
-                <p className='text-xs text-center -mt-2 mb-4'>
+                <p className='text-caption/4 text-center -mt-2 mb-4'>
                     Only a single Extension Bundle (zip) / JSON file supported at this time
                 </p>
                 {file && (

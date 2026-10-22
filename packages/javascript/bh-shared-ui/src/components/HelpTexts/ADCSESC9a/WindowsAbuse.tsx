@@ -101,7 +101,7 @@ const WindowsAbuse: FC = () => {
                 <br />
                 If the victim is a user, you have the following options for obtaining the credentials:
             </Typography>
-            <List className='text-xs'>
+            <List className='text-caption/4'>
                 <ListItem>
                     Shadow Credentials attack (see{' '}
                     <Link

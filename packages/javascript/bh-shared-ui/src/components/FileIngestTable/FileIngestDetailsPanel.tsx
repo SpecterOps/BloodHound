@@ -41,8 +41,8 @@ const FileHeader: React.FC<FileIngestCompletedTask> = ({ file_name, errors, warn
         return 'Failure';
     })();
     return (
-        <div className='flex-grow text-left text-xs font-normal ml-4'>
-            <div className='text-base font-bold'>{file_name}</div>
+        <div className='flex-grow text-left text-caption/4 font-normal ml-4'>
+            <div className='text-body font-bold'>{file_name}</div>
             <StatusIndicator status={status} label={label} />
         </div>
     );

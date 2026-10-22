@@ -73,7 +73,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
                         selectedNode={selectedNode}
                     />
                 ) : (
-                    <p className='text-sm'>
+                    <p className='text-body-2'>
                         {showPlaceholderMessage
                             ? 'Select an object to view the associated information'
                             : NoEntitySelectedMessage}

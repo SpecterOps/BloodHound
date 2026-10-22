@@ -75,7 +75,7 @@ const TableControls = <TData, TValue>({
         <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
                 <div className='font-bold text-lg'>{tableName}</div>
-                {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
+                {typeof resultsCount === 'number' && <div className='text-body-2'>{resultsCount} results</div>}
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (

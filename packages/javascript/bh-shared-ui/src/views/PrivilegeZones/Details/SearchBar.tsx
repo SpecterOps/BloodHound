@@ -166,7 +166,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
                                                 })}
                                             </ul>
                                         ) : (
-                                            <p className='pl-6 text-sm text-neutral-500'>No results</p>
+                                            <p className='pl-6 text-body-2 text-neutral-500'>No results</p>
                                         )}
                                     </li>
                                 );

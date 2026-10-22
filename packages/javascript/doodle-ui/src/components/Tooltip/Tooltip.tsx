@@ -150,7 +150,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
                     id={id}
                     className={cn(
                         'TooltipContent',
-                        'text-main text-xs text-balance break-words rounded-lg border bg-neutral-light-2 border-[#939597] dark:bg-neutral-dark-5 px-3 py-1.5 text-popover-foreground shadow-outer-1',
+                        'text-main text-caption/4 text-balance break-words rounded-lg border bg-neutral-light-2 border-[#939597] dark:bg-neutral-dark-5 px-3 py-1.5 text-popover-foreground shadow-outer-1',
                         'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
                         'data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95',
                         'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',

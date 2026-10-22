@@ -36,7 +36,7 @@ export const BaseColumnHeader: React.FC<BaseColumnHeader> = (props) => {
         'text-right': textAlign === 'right',
     };
 
-    return <div className={cn('font-semibold text-base text-text-main -mb-1', textAlignment, className)}>{title}</div>;
+    return <div className={cn('font-semibold text-body text-text-main -mb-1', textAlignment, className)}>{title}</div>;
 };
 
 interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -72,7 +72,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             aria-label={`Sort by ${title}`}
                             aria-describedby={tooltipText ? tooltipDescriptionId : undefined}
                             className={cn(
-                                'p-0 font-semibold rounded-sm text-base text-text-main hover:no-underline relative',
+                                'p-0 font-semibold rounded-sm text-body text-text-main hover:no-underline relative',
                                 buttonClass
                             )}
                             onClick={onSort}

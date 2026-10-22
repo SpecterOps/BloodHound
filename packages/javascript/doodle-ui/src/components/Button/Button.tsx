@@ -56,10 +56,10 @@ export const ButtonVariants = cva(buttonBaseClasses, {
          */
         size: {
             // TODO remove small variant in BED-7635
-            small: 'h-9 px-4 py-1 text-xs',
-            medium: 'h-10 px-6 py-2 text-sm/5',
+            small: 'h-9 px-4 py-1 text-caption/4',
+            medium: 'h-10 px-6 py-2 text-body-2/5',
             // TODO remove large variant in BED-7635
-            large: 'h-11 px-8 py-3 text-base',
+            large: 'h-11 px-8 py-3 text-body',
         },
     },
 

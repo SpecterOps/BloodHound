@@ -131,7 +131,7 @@ export const DetailsAccordion = <T extends Record<string, unknown>>({
                             <Header {...item} />
                         </AccordionHeader>
 
-                        <AccordionContent className='p-0 text-base border-t dark:border-neutral-dark-4'>
+                        <AccordionContent className='p-0 text-body border-t dark:border-neutral-dark-4'>
                             <Content {...item} />
                         </AccordionContent>
                     </AccordionItem>

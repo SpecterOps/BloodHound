@@ -97,8 +97,8 @@ const ExampleDataTable: React.FC = () => {
             </div>
             <DataTable
                 TableProps={{ heightContainerClassName: 'overflow-auto' }}
-                TableHeadProps={{ className: 'font-bold text-base pl-2 pr-4' }}
-                TableBodyProps={{ className: 'text-xs' }}
+                TableHeadProps={{ className: 'font-bold text-body pl-2 pr-4' }}
+                TableBodyProps={{ className: 'text-caption/4' }}
                 TableCellProps={{ className: 'pl-2 pr-4' }}
                 onRowClick={console.log}
                 selectedRow={data[0].id}

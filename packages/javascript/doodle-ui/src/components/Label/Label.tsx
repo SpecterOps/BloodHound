@@ -21,8 +21,8 @@ import { cn } from '../utils';
 const LabelVariants = cva('leading-none peer-disabled:cursor-not-allowed peer-disabled:text-text-disabled', {
     variants: {
         size: {
-            small: 'text-sm font-medium',
-            medium: 'text-base font-bold',
+            small: 'text-body-2 font-medium',
+            medium: 'text-body font-bold',
             large: 'text-lg font-bold',
         },
     },

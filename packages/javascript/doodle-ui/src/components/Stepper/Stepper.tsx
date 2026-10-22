@@ -352,7 +352,7 @@ function StepperIndicator({ children, className, ...props }: ComponentProps<'div
             data-slot='stepper-indicator'
             data-state={state}
             className={cn(
-                'group/indicator flex size-10 shrink-0 items-center justify-center rounded border border-transparent text-base font-bold leading-6 data-[state=active]:border-secondary',
+                'group/indicator flex size-10 shrink-0 items-center justify-center rounded border border-transparent text-body font-bold leading-6 data-[state=active]:border-secondary',
                 className
             )}>
             <div
@@ -393,7 +393,7 @@ function StepperTitle({ children, className, ...props }: ComponentProps<'h3'>) {
             variant='h3'
             data-slot='stepper-title'
             data-state={state}
-            className={cn('whitespace-nowrap text-base font-normal leading-4', className)}>
+            className={cn('whitespace-nowrap text-body font-normal leading-4', className)}>
             {children}
         </Typography>
     );

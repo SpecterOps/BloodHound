@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     };
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
+        <div className='flex justify-between items-center text-body-2 font-bold mx-2 gap-2'>
             <IconButton
                 aria-label='Collapse All'
                 onClick={handleCollapseAll}

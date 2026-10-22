@@ -134,7 +134,7 @@ const SearchCurrentNodes: FC<{
                         }
                         {items.length === 0 && inputValue && (
                             <li
-                                className='text-sm opacity-70 mb-2'
+                                className='text-body-2 opacity-70 mb-2'
                                 {...getItemProps({
                                     disabled: true,
                                     'aria-disabled': true,
@@ -163,7 +163,7 @@ const SearchCurrentNodes: FC<{
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
                     {...inputProps}
-                    className={cn('text-sm w-full', inputProps.className)}
+                    className={cn('text-body-2 w-full', inputProps.className)}
                 />
             </div>
         </div>

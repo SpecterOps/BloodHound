@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { mergeDoodleClasses } from '../mergeDoodleClasses';
 import { CustomColorOptions, themeOptions, ThemeOptions } from '../types';
 
 export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
+    return mergeDoodleClasses(clsx(inputs));
 }
 
 /**

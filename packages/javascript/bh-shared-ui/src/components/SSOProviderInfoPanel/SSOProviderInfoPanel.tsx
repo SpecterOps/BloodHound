@@ -133,25 +133,31 @@ const SSOProviderInfoPanel: FC<{
                         </h5>
                     </div>
                     <div className='bg-neutral-1 overflow-x-hidden overflow-y-auto px-4 py-2 rounded border border-solid border-neutral-light-4 dark:border-neutral-900'>
-                        <div className='font-bold ml-2 text-sm'>Provider Information:</div>
+                        <div className='font-bold ml-2 text-body-2'>Provider Information:</div>
                         <FieldsContainer>
                             {innerInfoPanel}
                             <Field
-                                label={<Label className='text-xs'>Automatically create new users on login</Label>}
+                                label={
+                                    <Label className='text-caption/4'>Automatically create new users on login</Label>
+                                }
                                 value={ssoProvider.config?.auto_provision?.enabled ? 'Yes' : 'No'}
                             />
                             {ssoProvider.config?.auto_provision?.enabled && (
                                 <>
                                     <Field
                                         label={
-                                            <Label className='text-xs'>
+                                            <Label className='text-caption/4'>
                                                 Allow SSO provider to manage roles for new users
                                             </Label>
                                         }
                                         value={ssoProvider.config?.auto_provision?.role_provision ? 'Yes' : 'No'}
                                     />
                                     <Field
-                                        label={<Label className='text-xs'>Default role when creating new users</Label>}
+                                        label={
+                                            <Label className='text-caption/4'>
+                                                Default role when creating new users
+                                            </Label>
+                                        }
                                         value={defaultRoleName ?? 'Read-Only'}
                                     />
                                 </>

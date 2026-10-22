@@ -70,7 +70,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
     return (
         <div className={'max-lg:w-full w-96 h-[36rem]'}>
             <Card className='p-3'>
-                <CardHeader className='text-xl font-bold'>Defining Rule</CardHeader>
+                <CardHeader className='text-headline-3/7 font-bold'>Defining Rule</CardHeader>
                 <CardContent>
                     {ruleId !== '' && (
                         <div className='mb-4'>
@@ -162,7 +162,7 @@ const BasicInfo: FC<{ control: Control<RuleFormInputs, any, RuleFormInputs> }> =
                                                 <FormLabel aria-labelledby='auto_certify'>
                                                     Automatic Certification
                                                 </FormLabel>
-                                                <div className='text-sm [&>p]:mt-2'>
+                                                <div className='text-body-2 [&>p]:mt-2'>
                                                     Choose how new objects are certified.
                                                     <p>
                                                         <strong>Direct Objects</strong> - Only the object explicitly

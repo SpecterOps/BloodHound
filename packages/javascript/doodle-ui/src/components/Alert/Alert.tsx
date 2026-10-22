@@ -21,7 +21,7 @@ import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { cn } from '../utils';
 
-const alertVariants = cva('flex text-sm w-full rounded px-4 py-2 ', {
+const alertVariants = cva('flex text-body-2 w-full rounded px-4 py-2 ', {
     variants: {
         variant: {
             // TODO: Update in https://specterops.atlassian.net/browse/BED-8069
@@ -60,7 +60,7 @@ const Alert = forwardRef<
         <div className='my-3 mr-2'>{iconMap[variant ?? 'default']}</div>
 
         <div className='flex flex-col justify-center flex-grow py-2 gap-1'>
-            {title && <h5 className={cn('text-base/6 font-medium tracking-tight')}>{title}</h5>}
+            {title && <h5 className={cn('text-body/6 font-medium tracking-tight')}>{title}</h5>}
             {children}
         </div>
 

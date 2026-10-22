@@ -34,7 +34,7 @@ const FileStatusListItem: React.FC<{
 
     return (
         <div
-            className={cn('mb-2 relative flex flex-row h-8 justify-between text-sm rounded-lg', {
+            className={cn('mb-2 relative flex flex-row h-8 justify-between text-body-2 rounded-lg', {
                 'bg-red-500/10': hasErrors,
                 'bg-purple-300/20': isComplete,
             })}>

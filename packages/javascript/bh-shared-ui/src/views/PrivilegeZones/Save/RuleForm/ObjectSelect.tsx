@@ -49,7 +49,7 @@ const ObjectSelect = ({ errorMessage }: { errorMessage?: string }) => {
 
     return (
         <Card className='min-h-[33rem] h-[33rem]'>
-            <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
+            <CardHeader className='px-6 first:pt-6 text-headline-3/7 font-bold'>
                 <div className='flex justify-between'>
                     <span>Object Rule</span>
                 </div>

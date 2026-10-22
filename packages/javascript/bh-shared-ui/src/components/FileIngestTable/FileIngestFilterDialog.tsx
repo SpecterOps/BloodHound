@@ -110,7 +110,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     }}>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
-                        <TextButton fontColor='primary' className='font-bold h-fit text-sm' onClick={clearFilters}>
+                        <TextButton fontColor='primary' className='font-bold h-fit text-body-2' onClick={clearFilters}>
                             Clear All
                         </TextButton>
                     </DialogTitle>
@@ -137,7 +137,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                         <UserMinimalSelect user={filters.state.user_id} onSelect={selectUser} />
                     </DialogDescription>
 
-                    <DialogActions className='text-sm gap-4'>
+                    <DialogActions className='text-body-2 gap-4'>
                         <DialogClose asChild>
                             <TextButton data-testid='file_ingest_log-filter_dialog_close' type='button'>
                                 Cancel

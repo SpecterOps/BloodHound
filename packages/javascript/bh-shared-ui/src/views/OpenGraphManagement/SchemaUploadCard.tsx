@@ -19,7 +19,7 @@ import { SchemaUploadDialog } from '../../components/SchemaUploadDialog/SchemaUp
 export const SchemaUploadCard = () => {
     return (
         <Card className='flex flex-col p-6 gap-4'>
-            <h2 className='text-xl font-bold'>Extension Installation</h2>
+            <h2 className='text-headline-3/7 font-bold'>Extension Installation</h2>
             <div>
                 <p>Install an OpenGraph Extension Bundle or JSON files to expand platform functionality, including:</p>
                 <ul className='list-disc pl-6 mt-2'>

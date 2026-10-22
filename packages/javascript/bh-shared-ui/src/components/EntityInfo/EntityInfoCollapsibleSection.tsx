@@ -35,7 +35,7 @@ const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) 
     }
     return (
         <Alert severity='error' icon={false}>
-            <AlertTitle className='text-xs'>{statusMessage}</AlertTitle>
+            <AlertTitle className='text-caption/4'>{statusMessage}</AlertTitle>
         </Alert>
     );
 };

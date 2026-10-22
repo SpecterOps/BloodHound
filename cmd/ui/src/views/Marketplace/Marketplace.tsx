@@ -194,7 +194,7 @@ const Marketplace = () => {
                     <section aria-label='Community Extensions'>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Community Extensions{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                            <span className='ml-1 text-body font-normal text-muted-foreground'>
                                 · {formatItemCount(filteredCommunityExtensions.length)}
                             </span>
                         </Typography>
@@ -227,7 +227,7 @@ const Marketplace = () => {
                         className={showCommunityExtensions ? sectionDividerClasses : undefined}>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Community Integrations{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                            <span className='ml-1 text-body font-normal text-muted-foreground'>
                                 · {formatItemCount(filteredCommunityIntegrations.length)}
                             </span>
                         </Typography>
@@ -256,7 +256,7 @@ const Marketplace = () => {
                         }>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             OpenGraph Enterprise Extensions{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                            <span className='ml-1 text-body font-normal text-muted-foreground'>
                                 · {formatItemCount(filteredEnterpriseExtensions.length)}
                             </span>
                         </Typography>
@@ -316,7 +316,7 @@ const Marketplace = () => {
                         }>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             OpenGraph Enterprise Extensions in Development{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                            <span className='ml-1 text-body font-normal text-muted-foreground'>
                                 · {formatItemCount(filteredDevelopmentExtensions.length)}
                             </span>
                         </Typography>
@@ -350,7 +350,7 @@ const Marketplace = () => {
                         }>
                         <Typography className='mb-2' component='h2' variant='h2'>
                             Enterprise Integrations{' '}
-                            <span className='ml-1 text-base font-normal text-muted-foreground'>
+                            <span className='ml-1 text-body font-normal text-muted-foreground'>
                                 · {formatItemCount(filteredEnterpriseIntegrations.length)}
                             </span>
                         </Typography>

@@ -199,7 +199,7 @@ const PathfindingSearch = ({
                 {totalNodeCount < maxNodes && (
                     <button
                         onClick={handleAddNode}
-                        className='flex items-center gap-1.5 ml-4 text-xs text-light hover:text-main dark:text-common-white dark:hover:text-neutral-light-5 py-0.5 cursor-pointer'
+                        className='flex items-center gap-1.5 ml-4 text-caption/4 text-light hover:text-main dark:text-common-white dark:hover:text-neutral-light-5 py-0.5 cursor-pointer'
                         aria-label='Add destination'>
                         <FontAwesomeIcon icon={faPlus} size='xs' />
                         <span>Add Destination</span>

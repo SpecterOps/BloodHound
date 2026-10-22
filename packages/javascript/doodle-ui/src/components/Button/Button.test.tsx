@@ -37,8 +37,8 @@ describe('Button', () => {
 
         expect(button.classList.contains('text-common-white')).toBe(true);
         expect(button.classList.contains('dark:text-common-dark')).toBe(true);
-        expect(button.classList.contains('active:bg-[#0D0A30]')).toBe(true);
-        expect(button.classList.contains('dark:active:bg-[#8D8BF8]')).toBe(true);
+        expect(button.classList.contains('active:bg-primary-variant')).toBe(true);
+        expect(button.classList.contains('dark:active:bg-primary-variant')).toBe(true);
     });
 
     it('preserves the secondary variant colors and active state without default opacity', () => {

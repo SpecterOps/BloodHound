@@ -139,7 +139,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                         onClick={() => {
                             onObjectClick(item);
                         }}>
-                        <span className='pl-8 text-base ml-3.5'>{item.name}</span>
+                        <span className='pl-8 text-body ml-3.5'>{item.name}</span>
                     </TextButton>
                 </div>
             </Tooltip>

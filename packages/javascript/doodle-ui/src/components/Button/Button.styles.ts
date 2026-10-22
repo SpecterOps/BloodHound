@@ -17,7 +17,7 @@
 export const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
     'focus:outline-none focus-visible:focus-ring',
-    'disabled:text-[#616161] dark:disabled:text-[#A6A6A6] disabled:pointer-events-none disabled:opacity-50',
+    'disabled:text-text-disabled dark:disabled:text-text-disabled disabled:pointer-events-none disabled:opacity-50',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
@@ -25,10 +25,8 @@ export const primaryClasses = [
     'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
-    'active:bg-[#0D0A30] dark:active:bg-[#8D8BF8]',
-    // Implement text-common when token experiment is ready - #0D0A30 matches light.primary.variant, #8D8BF8 matches dark.primary.variant.
-    'disabled:shadow-none disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
-    // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)
+    'active:bg-primary-variant dark:active:bg-primary-variant',
+    'disabled:shadow-none disabled:bg-btn-disabled-fill dark:disabled:bg-btn-disabled-fill',
 ];
 
 export const secondaryClasses = [

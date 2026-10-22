@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { mergeDoodleClasses } from 'doodle-ui';
 
 /**
  * This function sets the name of our current theme as a class on the html document root. This will ensure the correct styles are applied to components attached elsewhere in the DOM, such as modals and popover menus.
@@ -39,5 +39,5 @@ export const setRootClass = (value: 'dark' | 'light') => {
  * @returns a merged class list as a string. For more information about how merging tailwind classes works: [twMerge docs](https://github.com/dcastil/tailwind-merge/blob/v2.5.4/docs/what-is-it-for.md)
  */
 export const cn = (...inputs: ClassValue[]) => {
-    return twMerge(clsx(inputs));
+    return mergeDoodleClasses(clsx(inputs));
 };

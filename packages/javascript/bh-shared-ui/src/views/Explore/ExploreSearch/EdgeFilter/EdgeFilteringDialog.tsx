@@ -84,14 +84,14 @@ const EdgeFilteringDialog = ({
                     </div>
                     <div className='flex gap-5'>
                         <TextButton
-                            className='text-sm'
+                            className='text-body-2'
                             disabled={isSearching}
                             onClick={() => setExpandSignal((s) => s + 1)}>
                             <FontAwesomeIcon icon={faAnglesDown} />
                             Expand All
                         </TextButton>
                         <TextButton
-                            className='text-sm'
+                            className='text-body-2'
                             disabled={isSearching}
                             onClick={() => setCollapseSignal((s) => s + 1)}>
                             <FontAwesomeIcon icon={faAnglesUp} />
@@ -479,7 +479,7 @@ const IndeterminateListItem = ({
                         onCheckedChange={() => handleCheck()}
                         onClick={(e) => e.stopPropagation()}
                         icon={isIndeterminate ? <span className='block w-2/3 mx-auto h-0.5 bg-current' /> : undefined}
-                        className='text-sm font-medium'
+                        className='text-body-2 font-medium'
                     />
                 </div>
                 <button

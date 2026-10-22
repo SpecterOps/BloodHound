@@ -206,7 +206,9 @@ const UpdateUserFormInner: React.FC<{
                                             <>
                                                 <FormItem>
                                                     <div className='flex row'>
-                                                        <FormLabel className='mr-2 font-medium !text-sm' htmlFor='role'>
+                                                        <FormLabel
+                                                            className='mr-2 font-medium !text-body-2'
+                                                            htmlFor='role'>
                                                             Role
                                                         </FormLabel>
                                                         <div
@@ -280,7 +282,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className='font-medium !text-sm' htmlFor='emailAddress'>
+                                            <FormLabel className='font-medium !text-body-2' htmlFor='emailAddress'>
                                                 Email Address
                                             </FormLabel>
                                             <FormControl>
@@ -316,7 +318,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className='font-medium !text-sm' htmlFor='principal'>
+                                            <FormLabel className='font-medium !text-body-2' htmlFor='principal'>
                                                 Principal Name
                                             </FormLabel>
                                             <FormControl>
@@ -352,7 +354,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className='font-medium !text-sm' htmlFor='firstName'>
+                                            <FormLabel className='font-medium !text-body-2' htmlFor='firstName'>
                                                 First Name
                                             </FormLabel>
                                             <FormControl>
@@ -388,7 +390,7 @@ const UpdateUserFormInner: React.FC<{
                                     }}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className='font-medium !text-sm' htmlFor='lastName'>
+                                            <FormLabel className='font-medium !text-body-2' htmlFor='lastName'>
                                                 Last Name
                                             </FormLabel>
                                             <FormControl>
@@ -403,7 +405,7 @@ const UpdateUserFormInner: React.FC<{
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
                                     <FormItem>
-                                        <FormLabel className='font-medium !text-sm' htmlFor='authenticationMethod'>
+                                        <FormLabel className='font-medium !text-body-2' htmlFor='authenticationMethod'>
                                             Authentication Method
                                         </FormLabel>
 
@@ -443,7 +445,7 @@ const UpdateUserFormInner: React.FC<{
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel
-                                                    className='font-medium !text-sm'
+                                                    className='font-medium !text-body-2'
                                                     htmlFor='sso'
                                                     id='SSOProviderId-label'>
                                                     SSO Provider

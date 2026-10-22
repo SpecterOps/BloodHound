@@ -181,7 +181,7 @@ export const ManagedDatePicker: FC<Props> = ({
             </span>
 
             {validationError && (
-                <span className='text-error text-sm' id={errorId}>
+                <span className='text-error text-body-2' id={errorId}>
                     {validationError}
                 </span>
             )}
