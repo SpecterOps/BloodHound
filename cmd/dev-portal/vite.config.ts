@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
