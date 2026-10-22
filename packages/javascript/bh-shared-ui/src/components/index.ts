@@ -143,3 +143,5 @@ export * from './UserTokenManagementDialog';
 export { default as UserTokenManagementDialog } from './UserTokenManagementDialog';
 export * from './WebGLDisabledAlert';
 export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
+
+export * from './GraphSimplificationControls';
