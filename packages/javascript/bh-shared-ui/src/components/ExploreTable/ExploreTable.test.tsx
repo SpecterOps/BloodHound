@@ -24,7 +24,7 @@ import { useState } from 'react';
 import { cypherTestResponse } from '../../mocks';
 import { render } from '../../test-utils';
 import { makeStoreMapFromColumnOptions } from './explore-table-utils';
-const SELECTED_ROW_INDICATOR_CLASS = 'shadow-data-table-row-selected';
+const SELECTED_ROW_INDICATOR_CLASS = 'shadow-[shadow:var(--data-table-row-selected)]';
 
 const closeCallbackSpy = vi.fn();
 const kebabCallbackSpy = vi.fn();

@@ -14,35 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { common, dark, light, palette } from '../../tailwind/colors';
-
-const selectedItemTextDark = '#99A3FF';
-
-export const selectBackgroundColors = {
-    'select-trigger-fill': 'var(--surface-subtle)',
-    'select-trigger-outlined-fill': common.white,
-    'select-trigger-outlined-fill-dark': palette.neutral.dark[50],
-    'select-content-fill': common.white,
-    'select-content-fill-dark': palette.neutral.dark[400],
-    'select-separator-fill': palette.neutral.light[200],
-    'select-item-disabled-fill': palette.neutral.light[300],
-    'select-item-disabled-fill-dark': palette.neutral.dark[700],
-};
-
-export const selectTextColors = {
-    'select-trigger-placeholder-text': palette.neutral.light[400],
-    'select-trigger-placeholder-text-dark': dark.input.placeholder,
-    'select-item-checked-text': light.primary.main,
-    'select-item-checked-text-dark': selectedItemTextDark,
-};
-
-export const selectBorderColors = {
-    'select-border-default': palette.neutral.dark[700],
-    'select-border-default-dark': palette.neutral.light[400],
-    'select-border-focus': 'var(--control-accent)',
-    'select-content-border': palette.neutral.light[400],
-    'select-content-border-dark': palette.neutral.light[900],
-};
 
 export const SelectTriggerVariants = cva(
     [
@@ -68,6 +39,8 @@ export const SelectTriggerVariants = cva(
                     'data-[state=open]:enabled:hover:border-primary data-[state=open]:enabled:hover:bg-primary',
                     '[&[data-state=open]>span]:text-[color:var(--select-highlight-text)] [&[aria-invalid=true][data-state=open]:not([data-placeholder])>span]:text-[color:var(--select-highlight-text)]',
                     'bg-[color:var(--select-trigger-outlined-fill)]',
+                    'disabled:aria-[invalid=true]:hover:data-[state=open]:border-[color:var(--input-disabled-invalid-border)]',
+                    'disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)] disabled:data-[state=open]:border-[color:var(--select-disabled-open-border)]',
                     'disabled:data-[state=open]:bg-[color:var(--select-open-disabled-fill)] disabled:data-[placeholder]:text-[color:var(--select-disabled-placeholder-text)] disabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-highlight-text)]',
                     'aria-[invalid=true]:data-[placeholder]:data-[state=open]:text-[color:var(--select-invalid-placeholder-open-text)]',
                     'data-[state=open]:focus:border-[color:var(--select-open-focus-border)] aria-[invalid=true]:data-[state=open]:focus:border-status-error-main',
@@ -120,7 +93,8 @@ export const selectItemClasses = [
     'relative flex w-full cursor-default select-none items-center rounded-lg p-2 outline-none',
     'data-[highlighted]:bg-secondary data-[highlighted]:text-[color:var(--select-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[disabled]:pointer-events-none data-[disabled]:bg-dropdown-option-disabled-fill',
+    'data-[disabled]:pointer-events-none data-[disabled]:bg-[color:var(--select-item-disabled-fill)]',
+    'data-[disabled]:data-[highlighted]:bg-[color:var(--select-disabled-highlighted-fill)]',
     'data-[disabled]:text-disabled data-[disabled]:opacity-100',
     'data-[state=checked]:font-bold data-[state=checked]:text-[color:var(--select-item-checked-text)]',
     'data-[highlighted]:data-[state=checked]:text-[color:var(--select-highlight-text)]',

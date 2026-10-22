@@ -322,6 +322,26 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-dark-3': palette.neutral.dark[500],
             '--neutral-dark-4': palette.neutral.dark[600],
             '--neutral-dark-5': palette.neutral.dark[700],
+
+            // Component state tokens
+            '--checkbox-invalid-hover-border': 'var(--status-error-main)',
+            '--checkbox-unchecked-active-hover-border': 'var(--primary-variant)',
+            '--checkbox-checked-active-hover-fill': 'var(--primary-variant)',
+            '--data-table-row-selected': 'inset 0px 0px 0px 2px var(--primary)',
+            '--data-table-wrapper-border': 'var(--neutral-light-4)',
+            '--data-table-resize-fill': 'var(--neutral-5)',
+            '--data-table-resize-active-fill': 'var(--primary)',
+            '--input-disabled-invalid-border': 'var(--status-error-main)',
+            '--input-fill-disabled': palette.neutral.light[100],
+            '--select-disabled-open-border': 'var(--primary)',
+            '--select-disabled-highlighted-fill': 'var(--secondary)',
+            '--select-item-disabled-fill': palette.neutral.light[300],
+            '--toggle-hover-border': 'var(--secondary)',
+            '--toggle-active-border': 'var(--primary-variant)',
+            '--toggle-selected-border': 'var(--primary)',
+            '--toggle-disabled-border': 'var(--button-disabled-fill)',
+            '--toggle-disabled-hover-text': 'var(--disabled)',
+            '--toggle-highlight-text': 'var(--common-white)',
         },
 
         '.dark': {
@@ -582,6 +602,27 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--link': secondaryVariant2,
 
             '--error': '#e9827c',
+
+            // Component state tokens
+            '--checkbox-invalid-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-unchecked-active-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-checked-active-hover-fill': 'var(--checkbox-hover)',
+            '--data-table-row-selected': `inset 0px 0px 0px 2px ${darkDataTableRowSelectedOutline}`,
+            '--data-table-wrapper-border': 'var(--neutral-900)',
+            '--data-table-resize-fill': 'var(--neutral-light-5)',
+            '--data-table-resize-active-fill': 'var(--secondary)',
+            '--input-disabled-invalid-border': 'var(--input-border-disabled)',
+            '--input-fill-disabled': palette.neutral.dark[400],
+            '--select-disabled-open-border': 'var(--input-border-disabled)',
+            '--select-disabled-highlighted-fill': 'var(--select-item-disabled-fill)',
+            '--select-item-disabled-fill': palette.neutral.dark[700],
+            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--toggle-hover-border': 'var(--toggle-btn-border)',
+            '--toggle-active-border': 'var(--toggle-btn-border)',
+            '--toggle-selected-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-hover-text': 'var(--toggle-highlight-text)',
+            '--toggle-highlight-text': 'var(--common-dark)',
         },
     });
 

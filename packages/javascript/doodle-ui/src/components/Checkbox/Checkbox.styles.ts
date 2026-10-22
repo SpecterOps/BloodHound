@@ -14,31 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { common, dark, light } from '../../tailwind/colors';
-
-export const checkboxBorderColors = {
-    'checkbox-border': 'var(--border-control)',
-    'checkbox-hover': light.secondary.main,
-    'checkbox-hover-dark': dark.badge.secondary.outline,
-};
-
-export const checkboxTextColors = {
-    'checkbox-border': 'var(--border-control)',
-    'checkbox-check': common.white,
-    'checkbox-check-dark': common.dark,
-};
-
-export const checkboxBackgroundColors = {
-    'checkbox-hover': light.secondary.main,
-    'checkbox-hover-dark': dark.badge.secondary.outline,
-    'checkbox-unchecked-fill': 'var(--surface)',
-    'checkbox-fill': common.dark,
-    'checkbox-fill-dark': common.white,
-};
-
-export const checkboxRingOffsetColors = {
-    'checkbox-unchecked-fill': 'var(--surface)',
-};
 
 export const CheckboxVariants = cva(
     [
@@ -55,6 +30,9 @@ export const CheckboxVariants = cva(
         'enabled:hover:active:data-[state=checked]:border-[color:var(--checkbox-hover)] enabled:hover:active:data-[state=indeterminate]:border-[color:var(--checkbox-hover)]',
         'disabled:hover:data-[state=checked]:bg-[color:var(--checkbox-disabled-checked-hover-fill)]',
         'enabled:aria-[invalid=true]:data-[state=unchecked]:border-status-error-main',
+        'enabled:hover:aria-[invalid=true]:data-[state=unchecked]:border-[color:var(--checkbox-invalid-hover-border)]',
+        'enabled:hover:active:data-[state=unchecked]:border-[color:var(--checkbox-unchecked-active-hover-border)]',
+        'enabled:hover:active:data-[state=checked]:bg-[color:var(--checkbox-checked-active-hover-fill)]',
     ],
     {
         variants: {
@@ -81,8 +59,7 @@ export const checkboxIndeterminateIconClasses = 'hidden h-full w-full group-data
 
 export const checkboxLabelClasses = [
     'inline-flex items-center gap-2 rounded-sm',
-    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
-    'dark:[&:has(:focus-visible)]:ring-secondary-variant-2',
+    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-[color:var(--checkbox-focus-ring)]',
     '[&:has(:focus-visible)]:ring-offset-2',
-    '[&:has(:focus-visible)]:ring-offset-checkbox-unchecked-fill',
+    '[&:has(:focus-visible)]:ring-offset-[color:var(--checkbox-unchecked-fill)]',
 ];
