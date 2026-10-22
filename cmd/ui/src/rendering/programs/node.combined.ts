@@ -379,23 +379,7 @@ export default function getNodeCombinedProgram(): typeof AbstractNodeCombinedPro
             if (typeof imageSource === 'string' && !imageState) loadImage(imageSource);
 
             if (hidden) {
-                // x,y,size,color
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                // Texture:
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                // Angle:
-                array[i++] = 0;
-                // Border Color:
-                array[i++] = 0;
-                // Dim:
-                array[i++] = 0;
-                // BgColor:
-                array[i++] = 0;
+                array.fill(0, i, i + POINTS * ATTRIBUTES);
                 return;
             }
 
