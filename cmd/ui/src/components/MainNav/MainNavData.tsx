@@ -35,18 +35,16 @@ import { adminSections } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 export const useMainNavLogoData = (): MainNavData['logo'] => {
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const soImageUrlDarkMode = '/img/banner-so-dark-mode.png';
-    const soImageUrlLightMode = '/img/banner-so-light-mode.png';
+
     return {
         project: {
             route: routes.ROUTE_EXPLORE,
-            icon: <AppIcon.BHCELogoFull height='40' width='155' className='rounded' />,
+            icon: <AppIcon.BHCELogoFull height='30' width='166' className='rounded h-full' />,
         },
         specterOps: {
             image: {
-                imageUrl: `${import.meta.env.BASE_URL}${darkMode ? soImageUrlDarkMode : soImageUrlLightMode}`,
+                imageUrl: `${import.meta.env.BASE_URL}${soImageUrlDarkMode}`,
                 dimensions: { height: 25, width: 110 },
                 altText: 'SpecterOps Text Logo',
             },
@@ -176,9 +174,9 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Dark Mode',
             control: (
-                /* 
-                 `inert` is a native property that tells screen readers to 
-                 disregard this non-interactive, presentational button. 
+                /*
+                 `inert` is a native property that tells screen readers to
+                 disregard this non-interactive, presentational button.
                  It is unavailable in React 18 (enabled in v19), so this spread
                  workaround applies the property without triggering type errors
                 */

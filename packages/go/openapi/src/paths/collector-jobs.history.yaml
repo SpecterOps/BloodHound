@@ -37,11 +37,11 @@ get:
     - name: job_schedule_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: job_profile_id
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: job_type_id
       in: query
       schema:
@@ -61,7 +61,7 @@ get:
     - name: last_claimed_by
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
     - name: recorded_at
       in: query
       schema:

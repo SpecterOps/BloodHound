@@ -16,7 +16,7 @@
 
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton } from 'doodle-ui';
+import { IconButton, Typography } from 'doodle-ui';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
@@ -29,11 +29,29 @@ import { AppLink } from './AppLink';
 import { SkipLink } from './SkipLink';
 import SubNav from './SubNav';
 import type { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
+import { isRouteActive } from './utils';
 
-export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
+export const MainNavLogo: FC<{ data: MainNavLogoDataObject; isExpanded?: boolean }> = ({ data, isExpanded = true }) => {
     return (
-        <div className='flex-none basis-10 m-2 mt-4 mb-6 overflow-hidden' data-testid='global_nav-home'>
-            <AppLink to={data.project.route}>{data.project.icon}</AppLink>
+        <div className='h-[72px] flex-none border-b border-primary dark:border-neutral-4'>
+            <div className='mt-2 h-[46px] w-full overflow-hidden' data-testid='global_nav-home'>
+                <AppLink
+                    aria-label={'BloodHound home'}
+                    className={cn(
+                        'ml-1 mt-1 block w-fit overflow-hidden rounded p-1',
+                        'focus-visible:outline-none focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]'
+                    )}
+                    to={data.project.route}>
+                    <span
+                        className={cn('block h-[30px] overflow-hidden', {
+                            'w-[166px]': isExpanded,
+                            'w-10': !isExpanded,
+                        })}
+                        data-testid='global_nav-logo'>
+                        {data.project.icon}
+                    </span>
+                </AppLink>
+            </div>
         </div>
     );
 };
@@ -41,36 +59,50 @@ export const MainNavLogo: FC<{ data: MainNavLogoDataObject }> = ({ data }) => {
 const MainNavListItem: FC<{
     /** Whether the main nav is in its expanded (wide) state; controls tooltip visibility */
     isExpanded: boolean;
+    /** Typography variant applied to the item label */
+    labelVariant: 'h5' | 'body1';
     /** The navigation item data to render, either a link, action, or subnav trigger */
     item: MainNavDataListItem;
-}> = ({ isExpanded, item }) => {
+}> = ({ isExpanded, item, labelVariant }) => {
     const location = useLocation();
     const [isSubNavOpen, setIsSubNavOpen] = useState(false);
     const navItemRef = useRef<HTMLLIElement>(null);
     const { control, icon, label, route, subNav, target, testId } = item;
 
-    const isActiveRoute = route ? location.pathname.includes(route.replace(/\*/g, '')) : false;
+    const isActiveRoute = isRouteActive(location.pathname, route);
     const isActiveSubNavRoute = subNav
-        ? subNav.some((section) => section.items.some((item) => location.pathname.includes(item.path)))
+        ? subNav.some((section) => section.items.some((item) => isRouteActive(location.pathname, item.path)))
         : false;
     const isSubNavVisible = subNav && isSubNavOpen;
 
     // Handles nav item text color and background with hover/active interactions
-    const navItemContainerClasses = cn('text-xl rounded flex items-center cursor-pointer', {
-        'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute || isActiveSubNavRoute,
-        'group hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
-            !isActiveRoute && !isActiveSubNavRoute,
-    });
+    const navItemContainerClasses = cn(
+        'rounded flex items-center cursor-pointer focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
+        {
+            'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4':
+                isActiveRoute || isActiveSubNavRoute,
+            'group hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
+                !isActiveRoute && !isActiveSubNavRoute,
+        }
+    );
 
     // Full width ensures that even clicking white space activates menu item
-    const navItemClasses = 'h-10 w-full px-2 flex items-center gap-x-2 group-hover:cursor-pointer';
+    const navItemClasses =
+        'h-8 w-full min-w-0 overflow-hidden px-2 py-1 flex items-center gap-2 outline-none group-hover:cursor-pointer';
 
     const labelElement = (
-        <span className='whitespace-nowrap flex items-center gap-x-2'>
-            <span data-testid='global_nav-item-label-icon'>{icon}</span>
-            <span data-testid='global_nav-item-label-text' aria-label={label}>
-                {label}
+        <span className='min-w-0 flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap'>
+            <span className='flex size-6 shrink-0 items-center justify-center' data-testid='global_nav-item-label-icon'>
+                {icon}
             </span>
+            <Typography
+                aria-label={label}
+                className='block min-w-0 truncate !text-inherit'
+                component='span'
+                data-testid='global_nav-item-label-text'
+                variant={labelVariant}>
+                {label}
+            </Typography>
         </span>
     );
 
@@ -86,6 +118,7 @@ const MainNavListItem: FC<{
     // If route is defined, render a link otherwise item is an action or subnav item
     const navItem = route ? (
         <AppLink
+            aria-current={isActiveRoute ? 'page' : undefined}
             className={navItemClasses}
             data-testid={testId}
             // PZ pages discard environment query params so all Zone Objects are counted
@@ -95,10 +128,13 @@ const MainNavListItem: FC<{
             target={target}
             to={route}>
             {labelElement}
-            {target === '_blank' && <FontAwesomeIcon icon={faExternalLink} size='sm' />}
+            {target === '_blank' && isExpanded && (
+                <FontAwesomeIcon className='shrink-0' icon={faExternalLink} size='sm' />
+            )}
         </AppLink>
     ) : (
         <div
+            aria-expanded={subNav ? isSubNavOpen : undefined}
             className={navItemClasses}
             data-testid={testId}
             onClick={onClick}
@@ -106,7 +142,7 @@ const MainNavListItem: FC<{
             role='button'
             tabIndex={0}>
             {labelElement}
-            {control && <span className='ml-1'>{control}</span>}
+            {control && isExpanded && <span className='ml-1 shrink-0'>{control}</span>}
         </div>
     );
 
@@ -131,29 +167,42 @@ const MainNavListItem: FC<{
 const MainNavFooter: FC<{
     /** Object containing image props */
     image: MainNavLogoDataObject['specterOps']['image'];
-}> = ({ image }) => {
+    isExpanded: boolean;
+}> = ({ image, isExpanded }) => {
     const { data: apiVersionResponse, isSuccess } = useApiVersion();
     const apiVersion = isSuccess && apiVersionResponse?.server_version;
 
     return (
-        <div className='py-3 text-xs'>
-            {/* Container div keeps footer content centered */}
-            <div className='flex flex-col w-[264px] items-center gap-2'>
-                {/* App version */}
-                <div data-testid='global_nav-version-number'>BloodHound: {apiVersion}</div>
+        <div
+            className={cn(
+                'w-[264px] shrink-0 overflow-hidden border-primary pl-4 pr-2 text-left dark:border-neutral-4',
+                'transition-all duration-300 ease-in',
+                {
+                    'h-[58px] py-2 border-t opacity-100 visible': isExpanded,
+                    'h-0 py-0 border-t-0 opacity-0 invisible': !isExpanded,
+                }
+            )}
+            data-testid='global_nav-footer'>
+            {/* App version */}
+            <Typography className='!text-[#BCB8E1]' data-testid='global_nav-version-number' variant='subtitle2'>
+                BloodHound: {apiVersion}
+            </Typography>
 
-                {/* SpecterOps logo */}
-                <div className='flex items-center gap-1' data-testid='global_nav-powered-by'>
-                    powered by
-                    <img
-                        src={image.imageUrl}
-                        alt={image.altText}
-                        height={image.dimensions.height}
-                        width={image.dimensions.width}
-                        className={image.classes}
-                    />
-                </div>
-            </div>
+            {/* SpecterOps logo */}
+            <Typography
+                className='flex items-center gap-1 !text-inherit'
+                component='div'
+                data-testid='global_nav-powered-by'
+                variant='caption'>
+                Powered by
+                <img
+                    src={image.imageUrl}
+                    alt={image.altText}
+                    height={image.dimensions.height}
+                    width={image.dimensions.width}
+                    className={image.classes}
+                />
+            </Typography>
         </div>
     );
 };
@@ -201,20 +250,20 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
                 className={cn(
-                    'min-h-6 min-w-6 w-5 p-1 border-none',
-                    'text-main',
-                    'bg-neutral-4 dark:bg-neutral-5',
-                    'hover:bg-[#B2B8BE] hover:text-main dark:hover:bg-neutral-3 dark:hover:text-main',
-                    'active:ring-0 active:bg-[#C0C6CB] dark:active:bg-neutral-2',
-                    'dark:focus-visible:text-white'
+                    'h-8 w-8 p-2 border-none',
+                    'text-common-white bg-primary dark:text-main dark:bg-neutral-5',
+                    'hover:text-common-white hover:bg-secondary dark:hover:text-main dark:hover:bg-neutral-3',
+                    'active:text-common-white active:bg-primary-variant dark:active:text-main dark:active:bg-neutral-2',
+                    'focus-visible:text-common-white focus-visible:bg-secondary focus-visible:focus-ring-inset focus-visible:[--focus-ring:var(--common-white)]',
+                    'dark:focus-visible:text-white dark:focus-visible:bg-neutral-3'
                 )}
                 onClick={handleToggleNav}
                 size={16}
                 tooltipPosition='right'
                 // Negative right margin allows button to hover outside nav bar bounds
                 triggerClassName={cn('absolute top-14 z-navToggle transition-all duration-300 ease-in', {
-                    'rotate-180 left-[16.75rem]': isExpanded,
-                    'left-[2.75rem]': !isExpanded,
+                    'rotate-180 left-[15.5rem]': isExpanded,
+                    'left-10': !isExpanded,
                 })}>
                 <FontAwesomeIcon icon={faCaretRight} />
             </IconButton>
@@ -224,29 +273,34 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-label='Global navigation'
                 tabIndex={-1}
                 className={cn(
-                    'flex flex-col flex-none font-medium shadow-md z-nav print:hidden overflow-hidden',
+                    'flex flex-col flex-none font-medium z-nav print:hidden overflow-hidden',
                     'transition-all duration-300 ease-in',
-                    'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                    'text-common-white bg-primary-variant dark:text-main dark:bg-neutral-300',
                     { 'basis-nav-width': !isExpanded, 'basis-nav-width-expanded': isExpanded }
                 )}>
                 {/* Bloodhound logo */}
-                <MainNavLogo data={mainNavData.logo} />
+                <MainNavLogo data={mainNavData.logo} isExpanded={isExpanded} />
 
-                <div className='flex flex-col h-full mx-2 overflow-x-hidden overflow-y-auto'>
+                <div className='flex flex-col h-full overflow-x-hidden overflow-y-auto'>
                     {/* Nav menu top and bottom lists of items */}
-                    <ul className='flex flex-col flex-grow gap-2' data-testid='global_nav-primary-list'>
+                    <ul className='flex flex-col flex-grow gap-4 px-2 py-4' data-testid='global_nav-primary-list'>
                         {mainNavData.primaryList.map((item: MainNavDataListItem) => (
-                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} labelVariant='h5' />
                         ))}
                     </ul>
 
-                    <ul className='flex flex-col gap-2 mt-2' data-testid='global_nav-secondary-list'>
+                    <ul className='flex flex-col gap-2 px-2 py-4' data-testid='global_nav-secondary-list'>
                         {mainNavData.secondaryList.map((item: MainNavDataListItem) => (
-                            <MainNavListItem item={item} isExpanded={isExpanded} key={item.testId} />
+                            <MainNavListItem
+                                item={item}
+                                isExpanded={isExpanded}
+                                key={item.testId}
+                                labelVariant='body1'
+                            />
                         ))}
                     </ul>
 
-                    <MainNavFooter image={mainNavData.logo.specterOps.image} />
+                    <MainNavFooter image={mainNavData.logo.specterOps.image} isExpanded={isExpanded} />
                 </div>
             </nav>
         </>

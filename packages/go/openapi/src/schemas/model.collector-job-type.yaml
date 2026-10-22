@@ -20,7 +20,7 @@ required:
   - id
   - key
   - display_name
-  - params_version
+  - version
   - params_schema
   - backoff_strategy
   - backoff_base
@@ -43,7 +43,7 @@ properties:
     description: Immutable wire identifier recognized by collectors.
   display_name:
     type: string
-  params_version:
+  version:
     type: string
   params_schema:
     type: object
