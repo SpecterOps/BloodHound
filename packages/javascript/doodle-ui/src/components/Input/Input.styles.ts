@@ -14,18 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { common, palette } from '../../tailwind/colors';
-
-export const inputBackgroundColors = {
-    'input-fill': common.white,
-    'input-fill-dark': palette.neutral.dark[50],
-    'input-fill-disabled': palette.neutral.light[100],
-    'input-fill-disabled-dark': palette.neutral.dark[400],
-};
 
 const inputBaseClasses = [
     'flex h-10 w-full',
-    'text-base text-main placeholder:text-input-placeholder-text',
+    'text-base text-main placeholder:text-[color:var(--input-placeholder-text)]',
     'disabled:cursor-not-allowed disabled:opacity-50',
     'file:cursor-pointer file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main',
 ];
@@ -34,19 +26,16 @@ export const InputVariants = cva(inputBaseClasses, {
     variants: {
         variant: {
             outlined: [
-                'rounded-md border border-input-outlined-border-default bg-input-fill px-3 py-2 text-sm',
-                'dark:bg-input-fill-dark',
-                'enabled:hover:border-input-outlined-border-hover',
-                'focus:outline-none focus:focus-ring dark:focus:border-input-outlined-border-default',
-                'disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                'dark:disabled:bg-input-fill-disabled-dark',
-                'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main',
-                'dark:aria-[invalid=true]:focus:border-status-error-main',
+                'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
+                'enabled:hover:border-[color:var(--input-outlined-border-hover)]',
+                'focus:outline-none focus:focus-ring focus:border-[color:var(--input-outlined-border-default)] enabled:hover:focus:border-[color:var(--input-outlined-hover-focus-border)]',
+                'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
+                'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main',
             ],
             underlined: [
-                'rounded-sm border-b border-b-input-border-default bg-transparent',
+                'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent',
                 'hover:border-b-2',
-                'focus:border-b-2 focus:border-input-border-focus focus:outline-none focus:focus-ring',
+                'focus:border-b-2 focus:border-[color:var(--input-border-focus)] focus:outline-none focus:focus-ring',
             ],
         },
         intent: {

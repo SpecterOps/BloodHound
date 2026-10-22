@@ -94,10 +94,9 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                 htmlFor={checkboxId}
                 className={cn(
                     'inline-flex items-center gap-2 rounded-sm',
-                    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
-                    'dark:[&:has(:focus-visible)]:ring-secondary-variant-2',
+                    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-[color:var(--checkbox-focus-ring)]',
                     '[&:has(:focus-visible)]:ring-offset-2',
-                    '[&:has(:focus-visible)]:ring-offset-checkbox-unchecked-fill',
+                    '[&:has(:focus-visible)]:ring-offset-[color:var(--checkbox-unchecked-fill)]',
                     fieldClassName
                 )}>
                 <Checkbox

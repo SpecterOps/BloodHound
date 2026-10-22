@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const textareaStyles = [
-    'w-full resize-none rounded-md border border-textarea-border-default bg-textarea-fill px-3 py-2 text-main placeholder:text-input-placeholder-text',
-    'enabled:hover:border-textarea-border-hover',
-    'focus:outline-none focus:focus-ring dark:focus:border-textarea-border-default',
-    'disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100 dark:disabled:bg-input-fill-disabled-dark',
+    'w-full resize-none rounded-md border border-[color:var(--textarea-border-default)] bg-[color:var(--textarea-fill)] px-3 py-2 text-main placeholder:text-[color:var(--input-placeholder-text)]',
+    'enabled:hover:border-[color:var(--textarea-border-hover)]',
+    'focus:outline-none focus:focus-ring focus:border-[color:var(--textarea-focus-border)] enabled:hover:focus:border-[color:var(--textarea-hover-focus-border)]',
+    'disabled:cursor-not-allowed disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--textarea-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
     'transition-[color,box-shadow] md:text-sm',
-    'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
+    'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main',
 ];

@@ -136,13 +136,23 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': 'var(--surface-subtle)',
+
+            // // Components/Checkbox
+            '--checkbox-checked-active-border': 'var(--primary)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-fill)',
             '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': light.secondary.main,
             '--checkbox-unchecked-fill': 'var(--surface)',
             '--checkbox-fill': common.dark,
             '--checkbox-check': common.white,
+            '--checkbox-checked-fill': 'var(--checkbox-fill)',
+            '--checkbox-disabled-fill': palette.neutral.light[100],
+            '--checkbox-focus-ring': 'var(--secondary)',
 
             // // Components/Input
+            '--input-fill': common.white,
+            '--input-disabled-fill': palette.neutral.light[100],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.grey[700],
             '--input-border-focus': 'var(--control-accent)',
@@ -153,6 +163,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-outlined-border-hover': 'var(--secondary)',
 
             // // Components/Textarea
+            '--textarea-disabled-fill': palette.neutral.light[100],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-hover)',
             '--textarea-fill': 'var(--surface)',
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
@@ -167,6 +180,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
+            '--select-open-fill': 'var(--primary)',
+            '--select-open-disabled-fill': 'var(--primary)',
+            '--select-disabled-placeholder-text': 'var(--disabled)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-open-focus-border': 'var(--primary)',
+            '--select-open-invalid-hover-focus-border': 'var(--primary)',
+            '--select-highlight-text': 'var(--common-white)',
+            '--select-placeholder-text': 'inherit',
+            '--select-disabled-fill': palette.neutral.light[100],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
             '--select-trigger-fill': 'var(--surface-subtle)',
             '--select-trigger-placeholder-text': palette.neutral.light[400],
             '--select-trigger-outlined-fill': common.white,
@@ -374,13 +398,23 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': 'var(--surface-subtle)',
+
+            // // Components/Checkbox
+            '--checkbox-checked-active-border': 'var(--primary-variant)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-hover)',
             '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': dark.badge.secondary.outline,
             '--checkbox-unchecked-fill': 'var(--surface)',
             '--checkbox-fill': common.white,
             '--checkbox-check': common.dark,
+            '--checkbox-checked-fill': 'var(--primary)',
+            '--checkbox-disabled-fill': palette.neutral.dark[400],
+            '--checkbox-focus-ring': secondaryVariant2,
 
             // // Components/Input
+            '--input-fill': palette.neutral.dark[50],
+            '--input-disabled-fill': palette.neutral.dark[400],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.neutral.light[400],
             '--input-border-focus': 'var(--control-accent)',
@@ -392,6 +426,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-outlined-border-hover': 'var(--secondary)',
 
             // // Components/Textarea
+            '--textarea-disabled-fill': palette.neutral.dark[400],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-default)',
             '--textarea-fill': 'var(--surface)',
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
@@ -406,6 +443,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
+            '--select-open-fill': 'var(--input-fill)',
+            '--select-open-disabled-fill': 'var(--select-disabled-fill)',
+            '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-invalid-placeholder-open-text': 'var(--select-highlight-text)',
+            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
+            '--select-highlight-text': 'var(--common-dark)',
+            '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-disabled-fill': palette.neutral.dark[400],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
             '--select-trigger-fill': 'var(--surface-subtle)',
             '--select-trigger-placeholder-text': dark.input.placeholder,
             '--select-trigger-outlined-fill': palette.neutral.dark[50],

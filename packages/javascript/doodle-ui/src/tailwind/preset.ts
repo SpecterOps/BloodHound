@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
-import { inputBackgroundColors } from '../components/Input/Input.styles';
+import { palette } from './colors';
 
 export default {
     theme: {
@@ -32,7 +32,10 @@ export default {
             },
         },
         extend: {
-            backgroundColor: inputBackgroundColors,
+            backgroundColor: {
+                'input-fill-disabled': palette.neutral.light[100],
+                'input-fill-disabled-dark': palette.neutral.dark[400],
+            },
             textColor: {
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
@@ -156,23 +159,13 @@ export default {
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
                 'checkbox-border': 'var(--checkbox-border)',
-                'checkbox-hover': 'var(--checkbox-hover)',
                 'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
-                'checkbox-fill': 'var(--checkbox-fill)',
-                'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
                 'input-border-default': 'var(--input-border-default)',
-                'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',
-                'input-outlined-border-default': 'var(--input-outlined-border-default)',
-                'input-outlined-border-hover': 'var(--input-outlined-border-hover)',
-
-                'textarea-fill': 'var(--textarea-fill)',
-                'textarea-border-default': 'var(--textarea-border-default)',
-                'textarea-border-hover': 'var(--textarea-border-hover)',
 
                 'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
                 'radio-border-default': 'var(--radio-border-default)',
@@ -182,15 +175,8 @@ export default {
                 'radio-indicator-fill': 'var(--radio-indicator-fill)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
-                'select-trigger-fill': 'var(--select-trigger-fill)',
-                'select-trigger-placeholder-text': 'var(--select-trigger-placeholder-text)',
                 'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
-                'select-border-default': 'var(--select-border-default)',
-                'select-border-focus': 'var(--select-border-focus)',
-                'select-content-border': 'var(--select-content-border)',
                 'select-content-fill': 'var(--select-content-fill)',
-                'select-item-checked-text': 'var(--select-item-checked-text)',
-                'select-separator-fill': 'var(--select-separator-fill)',
                 'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
                 'dropdown-popover-border': 'var(--dropdown-popover-border)',
                 'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
