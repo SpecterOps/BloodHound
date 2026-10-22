@@ -18,6 +18,9 @@
 package audit
 
 import (
+	"context"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/audit/internal/appdb"
@@ -26,8 +29,20 @@ import (
 	"github.com/specterops/bloodhound/server/audit/internal/services"
 )
 
+// Entry describes one audited action.
+type Entry = services.Entry
+
+// Service records an action's audit lifecycle.
+type Service = services.Service
+
+// Runtime exposes the audit service and partition-maintenance behavior.
+type Runtime struct {
+	Service *Service
+	store   *appdb.Store
+}
+
 // Register builds the audit store -> service -> handler chain and attaches its routes.
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool) *Runtime {
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
@@ -35,4 +50,17 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	)
 
 	routes.Register(routerInst, handlerSet)
+
+	return &Runtime{
+		Service: svc,
+		store:   store,
+	}
+}
+
+func (s *Runtime) CreateNextPartition(ctx context.Context, asOf time.Time) error {
+	return s.store.CreateNextPartition(ctx, asOf)
+}
+
+func (s *Runtime) DropExpiredPartitions(ctx context.Context, asOf time.Time, retentionMonths int) error {
+	return s.store.DropExpiredPartitions(ctx, asOf, retentionMonths)
 }

@@ -18,14 +18,22 @@ package appdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/audit/internal/services"
+)
+
+const (
+	tableAuditLogs                     = "audit_logs"
+	errorCodeNotNullConstraint         = "23502"
+	errorCodeInvalidTextRepresentation = "22P02"
 )
 
 const auditLogsUnion = `(
@@ -61,6 +69,7 @@ var selectedAuditLogColumns = []string{
 
 type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
 type auditLogRow struct {
@@ -89,6 +98,46 @@ type Store struct {
 // NewStore returns a Store backed by databaseInterface.
 func NewStore(databaseInterface pgxQuerier) *Store {
 	return &Store{database: databaseInterface}
+}
+
+func (s *Store) InsertAuditLog(ctx context.Context, record services.AuditRecord) error {
+	var (
+		fields  any = record.Fields
+		builder     = sqlbuilder.PostgreSQL.NewInsertBuilder()
+	)
+
+	if len(record.Fields) == 0 {
+		fields = nil
+	}
+
+	builder.InsertInto(tableAuditLogs)
+	builder.Cols(
+		"created_at", "action", "actor_id", "actor_name", "actor_email",
+		"request_id", "source_ip_address", "status", "commit_id", "fields",
+	)
+	builder.Values(
+		time.Now().UTC(), record.Action, record.ActorID, record.ActorName, record.ActorEmail,
+		record.RequestID, record.SourceIPAddress, string(record.Status), record.CommitID.String(), fields,
+	)
+
+	query, args := builder.Build()
+	if _, err := s.database.Exec(ctx, query, args...); err != nil {
+		return mapError(err)
+	}
+
+	return nil
+}
+
+func mapError(err error) error {
+	var postgresError *pgconn.PgError
+	if errors.As(err, &postgresError) {
+		switch postgresError.Code {
+		case errorCodeNotNullConstraint, errorCodeInvalidTextRepresentation:
+			return fmt.Errorf("%w: %s", services.ErrInvalidAuditRecord, postgresError.Message)
+		}
+	}
+
+	return fmt.Errorf("inserting audit log: %w", err)
 }
 
 // ListAuditLogs queries the legacy and partitioned tables as one logical dataset.
