@@ -74,13 +74,13 @@ func RegisterFossRoutes(
 ) {
 	routerInst.GET("/health", func(response http.ResponseWriter, _ *http.Request) {
 		response.WriteHeader(http.StatusOK)
-	})
+	}).ExcludeFromAudit()
 	routerInst.GET("/", func(response http.ResponseWriter, request *http.Request) {
 		http.Redirect(response, request, api.UserInterfacePath, http.StatusMovedPermanently)
-	})
+	}).ExcludeFromAudit()
 
 	// Static UI assets are exempt from the matched-route API rate limit.
-	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
+	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler).ExcludeFromAudit()
 	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)
 }

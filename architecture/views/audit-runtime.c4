@@ -3,10 +3,14 @@
 views {
 
   view auditRuntime of bloodhound.apiServer {
-    title 'Audit Logging – Runtime Foundation'
-    description 'The audit service persists lifecycle records while the leader-scoped data-pruning daemon maintains monthly partitions.'
+    title 'Audit Logging – Request and Maintenance Runtime'
+    description 'Accepted requests pass through audit middleware before their handler; the leader-scoped data-pruning daemon maintains monthly partitions.'
 
     include
+      bloodhound.apiServer.httpRouter,
+      bloodhound.apiServer.authMiddleware,
+      bloodhound.apiServer.auditMiddleware,
+      bloodhound.apiServer.restApi,
       bloodhound.apiServer.auditService,
       bloodhound.apiServer.auditStore,
       bloodhound.apiServer.gcDaemon,
@@ -14,6 +18,11 @@ views {
 
     style bloodhound.apiServer.auditService {
       color primary
+    }
+
+    style bloodhound.apiServer.auditMiddleware {
+      notation 'HTTP middleware'
+      color sky
     }
 
     style bloodhound.apiServer.auditStore {
