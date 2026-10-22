@@ -20,9 +20,11 @@ package appdb_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/server/extensions/internal/appdb"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -96,4 +98,325 @@ func seedKindInfos(t *testing.T, ctx context.Context, pool *pgxpool.Pool, kindID
 		       ($1, $2, 'overview', 'Overview', 0, '{"markdown":{"content":"overview md"}}')`,
 		kindID, nodeKindID)
 	require.NoError(t, err)
+}
+
+func TestStore_CreateKindInfo_Integration(t *testing.T) {
+
+	type testSetupData struct {
+		kindID       int32
+		nodeKindID   int32
+		input        services.KindInfoInput
+		wantKindInfo services.KindInfo
+		wantError    error
+	}
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData
+		assert   func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, created services.KindInfo, err error)
+		teardown func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData)
+	}
+
+	var (
+		ctx   = context.Background()
+		input = services.KindInfoInput{
+			InfoKey:  "overview",
+			Title:    "Overview",
+			Position: 0,
+			Content:  json.RawMessage(`{"markdown":{"content":"Overview content"}}`),
+		}
+		teardown = func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData) {
+			t.Helper()
+			_, err := pool.Exec(ctx, `DELETE FROM schema_kind_info WHERE kind_id = $1`, data.kindID)
+			require.NoError(t, err)
+		}
+		tests = []testCase{
+			{
+				name: "success_-_creates_kind_info",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seed := seedNodeKind(t, ctx, pool)
+					return testSetupData{
+						kindID:     seed.kindID,
+						nodeKindID: seed.nodeKindID,
+						input:      input,
+						wantKindInfo: services.KindInfo{
+							KindID:     seed.kindID,
+							NodeKindID: &seed.nodeKindID,
+							Name:       "TestNodeKind",
+							InfoKey:    input.InfoKey,
+							Title:      input.Title,
+							Position:   input.Position,
+							Content:    input.Content,
+						},
+					}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, created services.KindInfo, err error) {
+					t.Helper()
+
+					require.NoError(t, err)
+					assert.NotZero(t, created.ID)
+					assert.Equal(t, data.wantKindInfo.KindID, created.KindID)
+					assert.Equal(t, data.wantKindInfo.NodeKindID, created.NodeKindID)
+					assert.Equal(t, data.wantKindInfo.RelationshipKindID, created.RelationshipKindID)
+					assert.Equal(t, data.wantKindInfo.Name, created.Name)
+					assert.Equal(t, data.wantKindInfo.InfoKey, created.InfoKey)
+					assert.Equal(t, data.wantKindInfo.Title, created.Title)
+					assert.Equal(t, data.wantKindInfo.Position, created.Position)
+					assert.JSONEq(t, string(data.wantKindInfo.Content), string(created.Content))
+					assert.False(t, created.CreatedAt.IsZero())
+					assert.False(t, created.UpdatedAt.IsZero())
+				},
+				teardown: teardown,
+			},
+			{
+				name: "error_-_duplicate_info_key",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+
+					var (
+						seed = seedNodeKind(t, ctx, pool)
+						data = testSetupData{
+							kindID:     seed.kindID,
+							nodeKindID: seed.nodeKindID,
+							input:      input,
+							wantError:  services.ErrKindInfoDuplicateInfoKey,
+						}
+					)
+
+					_, err := store.CreateKindInfo(ctx, data.kindID, &data.nodeKindID, nil, input)
+					require.NoError(t, err)
+					data.input.Position = 1
+					return data
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, created services.KindInfo, err error) {
+					t.Helper()
+
+					assert.Equal(t, data.wantKindInfo, created)
+					assert.ErrorIs(t, err, data.wantError)
+
+					var rowCount int
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_kind_info WHERE kind_id = $1`, data.kindID).Scan(&rowCount))
+					assert.Equal(t, 1, rowCount)
+				},
+				teardown: teardown,
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, store, pool)
+			)
+			t.Cleanup(func() { test.teardown(t, ctx, pool, data) })
+
+			created, err := store.CreateKindInfo(ctx, data.kindID, &data.nodeKindID, nil, data.input)
+			test.assert(t, ctx, pool, data, created, err)
+		})
+	}
+}
+
+func TestStore_UpdateKindInfo_Integration(t *testing.T) {
+
+	type testSetupData struct {
+		kindID       int32
+		kindInfo     services.KindInfo
+		wantKindInfo services.KindInfo
+		wantError    error
+	}
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData
+		assert   func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, updated services.KindInfo, err error)
+		teardown func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData)
+	}
+
+	var (
+		ctx   = context.Background()
+		input = services.KindInfoInput{
+			InfoKey:  "overview",
+			Title:    "Overview",
+			Position: 0,
+			Content:  json.RawMessage(`{"markdown":{"content":"Original content"}}`),
+		}
+		teardown = func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData) {
+			t.Helper()
+			_, err := pool.Exec(ctx, `DELETE FROM schema_kind_info WHERE kind_id = $1`, data.kindID)
+			require.NoError(t, err)
+		}
+		tests = []testCase{
+			{
+				name: "success_-_updates_kind_info_fields",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seed := seedNodeKind(t, ctx, pool)
+					created, err := store.CreateKindInfo(ctx, seed.kindID, &seed.nodeKindID, nil, input)
+					require.NoError(t, err)
+
+					created.InfoKey = "summary"
+					created.Title = "Summary"
+					created.Position = 1
+					created.Content = json.RawMessage(`{"markdown":{"content":"Updated content"}}`)
+
+					return testSetupData{kindID: seed.kindID, kindInfo: created, wantKindInfo: created}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, updated services.KindInfo, err error) {
+					t.Helper()
+
+					require.NoError(t, err)
+					assert.Equal(t, data.wantKindInfo.ID, updated.ID)
+					assert.Equal(t, data.wantKindInfo.KindID, updated.KindID)
+					assert.Equal(t, data.wantKindInfo.NodeKindID, updated.NodeKindID)
+					assert.Equal(t, data.wantKindInfo.RelationshipKindID, updated.RelationshipKindID)
+					assert.Equal(t, data.wantKindInfo.Name, updated.Name)
+					assert.Equal(t, data.wantKindInfo.InfoKey, updated.InfoKey)
+					assert.Equal(t, data.wantKindInfo.Title, updated.Title)
+					assert.Equal(t, data.wantKindInfo.Position, updated.Position)
+					assert.JSONEq(t, string(data.wantKindInfo.Content), string(updated.Content))
+					assert.Equal(t, data.wantKindInfo.CreatedAt, updated.CreatedAt)
+					assert.False(t, updated.UpdatedAt.IsZero())
+				},
+				teardown: teardown,
+			},
+			{
+				name: "error_-_kind_info_not_found",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seed := seedNodeKind(t, ctx, pool)
+					return testSetupData{
+						kindID: seed.kindID,
+						kindInfo: services.KindInfo{
+							ID:         -1,
+							KindID:     seed.kindID,
+							NodeKindID: &seed.nodeKindID,
+							InfoKey:    input.InfoKey,
+							Title:      input.Title,
+							Position:   input.Position,
+							Content:    input.Content,
+						},
+						wantError: services.ErrKindInfoNotFound,
+					}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, updated services.KindInfo, err error) {
+					t.Helper()
+
+					assert.Equal(t, data.wantKindInfo, updated)
+					assert.ErrorIs(t, err, data.wantError)
+
+					var rowCount int
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_kind_info WHERE kind_id = $1`, data.kindID).Scan(&rowCount))
+					assert.Zero(t, rowCount)
+				},
+				teardown: teardown,
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, store, pool)
+			)
+			t.Cleanup(func() { test.teardown(t, ctx, pool, data) })
+
+			updated, err := store.UpdateKindInfo(ctx, data.kindInfo)
+			test.assert(t, ctx, pool, data, updated, err)
+		})
+	}
+}
+
+func TestStore_DeleteKindInfo_Integration(t *testing.T) {
+
+	type testSetupData struct {
+		kindID     int32
+		kindInfoID int32
+		wantCount  int
+		wantError  error
+	}
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData
+		assert   func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error)
+		teardown func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData)
+	}
+
+	var (
+		ctx   = context.Background()
+		input = services.KindInfoInput{
+			InfoKey:  "overview",
+			Title:    "Overview",
+			Position: 0,
+			Content:  json.RawMessage(`{"markdown":{"content":"Overview content"}}`),
+		}
+		teardown = func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData) {
+			t.Helper()
+			_, err := pool.Exec(ctx, `DELETE FROM schema_kind_info WHERE kind_id = $1`, data.kindID)
+			require.NoError(t, err)
+		}
+		tests = []testCase{
+			{
+				name: "success_-_deletes_kind_info",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seed := seedNodeKind(t, ctx, pool)
+					created, err := store.CreateKindInfo(ctx, seed.kindID, &seed.nodeKindID, nil, input)
+					require.NoError(t, err)
+					return testSetupData{kindID: seed.kindID, kindInfoID: created.ID}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error) {
+					t.Helper()
+
+					assert.ErrorIs(t, err, data.wantError)
+
+					var rowCount int
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_kind_info WHERE kind_id = $1`, data.kindID).Scan(&rowCount))
+					assert.Equal(t, data.wantCount, rowCount)
+				},
+				teardown: teardown,
+			},
+			{
+				name: "error_-_kind_info_not_found",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seed := seedNodeKind(t, ctx, pool)
+					_, err := store.CreateKindInfo(ctx, seed.kindID, &seed.nodeKindID, nil, input)
+					require.NoError(t, err)
+					return testSetupData{
+						kindID:     seed.kindID,
+						kindInfoID: -1,
+						wantCount:  1,
+						wantError:  services.ErrKindInfoNotFound,
+					}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error) {
+					t.Helper()
+
+					assert.ErrorIs(t, err, data.wantError)
+
+					var rowCount int
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_kind_info WHERE kind_id = $1`, data.kindID).Scan(&rowCount))
+					assert.Equal(t, data.wantCount, rowCount)
+				},
+				teardown: teardown,
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, store, pool)
+			)
+			t.Cleanup(func() { test.teardown(t, ctx, pool, data) })
+
+			err := store.DeleteKindInfo(ctx, data.kindInfoID)
+			test.assert(t, ctx, pool, data, err)
+		})
+	}
 }
