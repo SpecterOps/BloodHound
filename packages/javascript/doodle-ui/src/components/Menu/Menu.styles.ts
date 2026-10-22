@@ -22,12 +22,12 @@ const menuPopupBaseStyles = [
 
 export const menuContentStyles = [
     ...menuPopupBaseStyles,
-    'border-[color:var(--menu-content-border)]',
+    'border border-[color:var(--menu-content-border)]',
     'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
 ];
 
 export const menuItemStyles = [
-    'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
+    'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent p-2 text-sm outline-none',
     'data-[highlighted]:border-[color:var(--menu-item-highlight-border)] data-[highlighted]:bg-[color:var(--menu-item-highlight-fill)] data-[highlighted]:text-[color:var(--menu-item-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
     'data-[highlighted]:active:bg-[color:var(--menu-item-active-fill)]',
@@ -43,7 +43,7 @@ export const menuSubTriggerStyles = [
 
 export const menuSubContentStyles = [
     ...menuPopupBaseStyles,
-    'border-[color:var(--menu-sub-content-border)]',
+    'border border-[color:var(--menu-sub-content-border)]',
     'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
 ];
 
