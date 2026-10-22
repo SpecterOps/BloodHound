@@ -1,0 +1,141 @@
+figma_name,token_name,css_variable,tailwind_classes,light_hex,dark_hex,scope,deprecated_class_names,notes
+Color/badge/blue/fill,badge-blue-fill,--badge-blue-fill,bg-badge-blue-fill; border-badge-blue-fill; text-badge-blue-fill,#81D4FA,#0277BD,global,,
+Color/badge/blue/outline,badge-blue-outline,--badge-blue-outline,bg-badge-blue-outline; border-badge-blue-outline; text-badge-blue-outline,#0288D1,#81D4FA,global,,
+Color/badge/green/fill,badge-green-fill,--badge-green-fill,bg-badge-green-fill; border-badge-green-fill; text-badge-green-fill,#A5D6A7,#2E7D32,global,,
+Color/badge/green/outline,badge-green-outline,--badge-green-outline,bg-badge-green-outline; border-badge-green-outline; text-badge-green-outline,#43A047,#A5D6A7,global,,
+Color/badge/grey/fill,badge-grey-fill,--badge-grey-fill,bg-badge-grey-fill; border-badge-grey-fill; text-badge-grey-fill,#E3E7EA,#272727,global,,
+Color/badge/grey/outline,badge-grey-outline,--badge-grey-outline,bg-badge-grey-outline; border-badge-grey-outline; text-badge-grey-outline,#CACFD3,#2E2E2E,global,,
+Color/badge/orange/fill,badge-orange-fill,--badge-orange-fill,bg-badge-orange-fill; border-badge-orange-fill; text-badge-orange-fill,#FFCC80,#C15012,global,,
+Color/badge/orange/outline,badge-orange-outline,--badge-orange-outline,bg-badge-orange-outline; border-badge-orange-outline; text-badge-orange-outline,#E65100,#FFCC80,global,,
+Color/badge/primary/fill,badge-primary-fill,--badge-primary-fill,bg-badge-primary-fill; border-badge-primary-fill; text-badge-primary-fill,#A1A0FF,#605DF7,global,,
+Color/badge/primary/outline,badge-primary-outline,--badge-primary-outline,bg-badge-primary-outline; border-badge-primary-outline; text-badge-primary-outline,#2C2677,#A1A0FF,global,,
+Color/badge/red/fill,badge-red-fill,--badge-red-fill,bg-badge-red-fill; border-badge-red-fill; text-badge-red-fill,#EF9A9A,#D32F2F,global,,
+Color/badge/red/outline,badge-red-outline,--badge-red-outline,bg-badge-red-outline; border-badge-red-outline; text-badge-red-outline,#B44641,#EF9A9A,global,,
+Color/badge/secondary/fill,badge-secondary-fill,--badge-secondary-fill,bg-badge-secondary-fill; border-badge-secondary-fill; text-badge-secondary-fill,#66A3FF,#1569E7,global,,
+Color/badge/secondary/outline,badge-secondary-outline,--badge-secondary-outline,bg-badge-secondary-outline; border-badge-secondary-outline; text-badge-secondary-outline,#4A3BD7,#66A3FF,global,,
+Color/bhce/main,bhce-main,--bhce-main,bg-bhce-main; border-bhce-main; text-bhce-main,#E02F35,#F35857,global,,
+Color/bhe/main,bhe-main,--bhe-main,bg-bhe-main; border-bhe-main; text-bhe-main,#2C2677,#A1A0FF,global,,
+Color/border/control,border-control,--border-control,bg-border-control; border-border-control; text-border-control,#616161,#515151,global,,Shared global token introduced by the color-token cleanup.
+Color/btn/disabled/fill,btn-disabled-fill,--btn-disabled-fill,bg-btn-disabled-fill; border-btn-disabled-fill; text-btn-disabled-fill,#E3E7EA,#2E2E2E,global,,
+Color/checkbox/border,checkbox-border,--border-control,border-checkbox-border; text-checkbox-border,#616161,#515151,component,,
+Color/checkbox/check,checkbox-check,,dark:text-checkbox-check-dark; text-checkbox-check,#FFFFFF,#121212,component,,Uses an explicit dark utility class.
+Color/checkbox/fill,checkbox-fill,,bg-checkbox-fill; dark:bg-checkbox-fill-dark,#121212,#FFFFFF,component,,Uses an explicit dark utility class.
+Color/checkbox/hover,checkbox-hover,,bg-checkbox-hover; border-checkbox-hover; dark:bg-checkbox-hover-dark; dark:border-checkbox-hover-dark,#4A3BD7,#66A3FF,component,,Uses an explicit dark utility class.
+Color/checkbox/unchecked/fill,checkbox-unchecked-fill,--surface,bg-checkbox-unchecked-fill; ring-offset-checkbox-unchecked-fill,#FFFFFF,#121212,component,,
+Color/common/dark,common-dark,--common-dark,bg-common-dark; border-common-dark; text-common-dark,#121212,#121212,global,,
+Color/common/white,common-white,--common-white,bg-common-white; border-common-white; text-common-white,#FFFFFF,#FFFFFF,global,,
+Color/contrast,contrast,--contrast,bg-contrast; border-contrast; text-contrast,#121212,#FFFFFF,component; global,,
+Color/control/accent,control-accent,--control-accent,bg-control-accent; border-control-accent; text-control-accent,#4A3BD7,#99A3FF,global,,Shared global token introduced by the color-token cleanup.
+Color/data/table/fill,data-table-fill,--surface-subtle,bg-data-table-fill,#F4F4F4,#222222,component,,
+Color/data/table/header/fill,data-table-header-fill,--surface-subtle,bg-data-table-header-fill,#F4F4F4,#222222,component,,
+Color/data/table/row/even/fill,data-table-row-even-fill,,bg-data-table-row-even-fill; dark:bg-data-table-row-even-fill-dark,#E3E7EA,#272727,component,,Uses an explicit dark utility class.
+Color/data/table/row/hover/fill,data-table-row-hover-fill,--surface-hover,bg-data-table-row-hover-fill,#DADEE1,#2C2C2C,component,,
+Color/data/table/row/odd/fill,data-table-row-odd-fill,--surface-subtle,bg-data-table-row-odd-fill,#F4F4F4,#222222,component,,
+Color/disabled,disabled,--disabled,bg-disabled; border-disabled; text-disabled,#616161,#A6A6A6,component; global,text-text-disabled,
+Color/dropdown/option/disabled/fill,dropdown-option-disabled-fill,--dropdown-option-disabled-fill,bg-dropdown-option-disabled-fill; border-dropdown-option-disabled-fill; text-dropdown-option-disabled-fill,#DADEE1,#2E2E2E,global,,
+Color/dropdown/option/hover/fill,dropdown-option-hover-fill,--dropdown-option-hover-fill,bg-dropdown-option-hover-fill; border-dropdown-option-hover-fill; text-dropdown-option-hover-fill,#DADEE1,#2C2C2C,global,,
+Color/dropdown/popover/border,dropdown-popover-border,--dropdown-popover-border,bg-dropdown-popover-border; border-dropdown-popover-border; text-dropdown-popover-border,#CACFD3,#2E2E2E,global,,
+Color/dropdown/popover/fill,dropdown-popover-fill,--dropdown-popover-fill,bg-dropdown-popover-fill; border-dropdown-popover-fill; text-dropdown-popover-fill,#FFFFFF,#121212,global,,
+Color/dropdown/tooltip/fill,dropdown-tooltip-fill,--dropdown-tooltip-fill,bg-dropdown-tooltip-fill; border-dropdown-tooltip-fill; text-dropdown-tooltip-fill,#DADEE1,#2C2C2C,global,,
+Color/dropdown/trigger/border,dropdown-trigger-border,--dropdown-trigger-border,bg-dropdown-trigger-border; border-dropdown-trigger-border; text-dropdown-trigger-border,#CACFD3,#CACFD3,global,,
+Color/elevation/1,elevation-1,--elevation-1,bg-elevation-1; border-elevation-1; text-elevation-1,#FFFFFF,#121212,global,,
+Color/elevation/2,elevation-2,--elevation-2,bg-elevation-2; border-elevation-2; text-elevation-2,#F4F4F4,#222222,global,,
+Color/elevation/3,elevation-3,--elevation-3,bg-elevation-3; border-elevation-3; text-elevation-3,#E3E7EA,#272727,global,,
+Color/elevation/4,elevation-4,--elevation-4,bg-elevation-4; border-elevation-4; text-elevation-4,#DADEE1,#2C2C2C,global,,
+Color/elevation/5,elevation-5,--elevation-5,bg-elevation-5; border-elevation-5; text-elevation-5,#CACFD3,#2E2E2E,global,,
+Color/error,error,--error,bg-error; border-error; text-error,#B44641,#E9827C,global,,
+Color/faint,faint,--text-faint,text-faint,#707070,#919191,component,,
+Color/icon/btn/fill,icon-btn-fill,--icon-btn-fill,bg-icon-btn-fill; border-icon-btn-fill; text-icon-btn-fill,#CACFD3,#CACFD3,global,,
+Color/icon/disabled,icon-disabled,--icon-disabled,bg-icon-disabled; border-icon-disabled; text-icon-disabled,#616161,#A6A6A6,global,,
+Color/input/border/default,input-border-default,,border-input-border-default; dark:border-input-border-default-dark; dark:ring-input-border-default-dark; ring-input-border-default,#616161,#CACFD3,component,,Uses an explicit dark utility class.
+Color/input/border/disabled,input-border-disabled,,border-input-border-disabled; dark:border-input-border-disabled-dark,#848C91,#363636,component,,Uses an explicit dark utility class.
+Color/input/border/focus,input-border-focus,--control-accent,border-input-border-focus,#4A3BD7,#99A3FF,component,,
+Color/input/fill,input-fill,,bg-input-fill; dark:bg-input-fill-dark,#FFFFFF,#121212,component,,Uses an explicit dark utility class.
+Color/input/fill/disabled,input-fill-disabled,,bg-input-fill-disabled; dark:bg-input-fill-disabled-dark,#F4F4F4,#222222,component,,Uses an explicit dark utility class.
+Color/input/outlined/border/default,input-outlined-border-default,--border-control,border-input-outlined-border-default,#616161,#515151,component,,
+Color/input/outlined/border/hover,input-outlined-border-hover,--secondary,bg-input-outlined-border-hover; border-input-outlined-border-hover,#4A3BD7,#66A3FF,component,,
+Color/input/placeholder/text,input-placeholder-text,,dark:text-input-placeholder-text-dark; text-input-placeholder-text,#6D6D6D,#868686,component,,Uses an explicit dark utility class.
+Color/inverse,inverse,--text-contrast,text-inverse,#FFFFFF,#121212,component,text-text-contrast,
+Color/light,light,--text-light,text-light,#505050,#CDCDCD,component,text-text-light,
+Color/link,link,--link-main,bg-link; border-link; text-link,#4A3BD7,#66A3FF,global,,
+Color/link/hover,link-hover,--link-hover,bg-link-hover; border-link-hover; text-link-hover,#3729BB,#4E95FF,global,,
+Color/main,main,--text-main,text-main,#121212,#FFFFFF,component,text-text-main,
+Color/muted,muted,--text-light,text-muted,#505050,#CDCDCD,component,text-text-muted,
+Color/neutral/1,neutral-1,--neutral-1,bg-neutral-1; border-neutral-1; text-neutral-1,#FFFFFF,#121212,global,,Legacy theme-aware alias.
+Color/neutral/100,neutral-100,--neutral-100,bg-neutral-100; border-neutral-100; text-neutral-100,#F4F4F4,#161616,global,,
+Color/neutral/2,neutral-2,--neutral-2,bg-neutral-2; border-neutral-2; text-neutral-2,#F4F4F4,#222222,global,,Legacy theme-aware alias.
+Color/neutral/200,neutral-200,--neutral-200,bg-neutral-200; border-neutral-200; text-neutral-200,#E3E7EA,#1A1A1A,global,,
+Color/neutral/3,neutral-3,--neutral-3,bg-neutral-3; border-neutral-3; text-neutral-3,#E3E7EA,#272727,global,,Legacy theme-aware alias.
+Color/neutral/300,neutral-300,--neutral-300,bg-neutral-300; border-neutral-300; text-neutral-300,#DADEE1,#1F1F1F,global,,
+Color/neutral/4,neutral-4,--neutral-4,bg-neutral-4; border-neutral-4; text-neutral-4,#DADEE1,#2C2C2C,global,,Legacy theme-aware alias.
+Color/neutral/400,neutral-400,--neutral-400,bg-neutral-400; border-neutral-400; text-neutral-400,#CACFD3,#222222,global,,
+Color/neutral/5,neutral-5,--neutral-5,bg-neutral-5; border-neutral-5; text-neutral-5,#CACFD3,#2E2E2E,global,,Legacy theme-aware alias.
+Color/neutral/50,neutral-50,--neutral-50,bg-neutral-50; border-neutral-50; text-neutral-50,#F2F2F2,#121212,global,,
+Color/neutral/500,neutral-500,--neutral-500,bg-neutral-500; border-neutral-500; text-neutral-500,#C0C6CB,#272727,global,,
+Color/neutral/600,neutral-600,--neutral-600,bg-neutral-600; border-neutral-600; text-neutral-600,#B2B8BD,#2C2C2C,global,,
+Color/neutral/700,neutral-700,--neutral-700,bg-neutral-700; border-neutral-700; text-neutral-700,#A6ADB2,#2E2E2E,global,,
+Color/neutral/800,neutral-800,--neutral-800,bg-neutral-800; border-neutral-800; text-neutral-800,#979FA4,#323232,global,,
+Color/neutral/900,neutral-900,--neutral-900,bg-neutral-900; border-neutral-900; text-neutral-900,#848C91,#363636,global,,
+Color/neutral/dark/1,neutral-dark-1,--neutral-dark-1,bg-neutral-dark-1; border-neutral-dark-1; text-neutral-dark-1,#121212,#121212,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/2,neutral-dark-2,--neutral-dark-2,bg-neutral-dark-2; border-neutral-dark-2; text-neutral-dark-2,#222222,#222222,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/3,neutral-dark-3,--neutral-dark-3,bg-neutral-dark-3; border-neutral-dark-3; text-neutral-dark-3,#272727,#272727,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/4,neutral-dark-4,--neutral-dark-4,bg-neutral-dark-4; border-neutral-dark-4; text-neutral-dark-4,#2C2C2C,#2C2C2C,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/5,neutral-dark-5,--neutral-dark-5,bg-neutral-dark-5; border-neutral-dark-5; text-neutral-dark-5,#2E2E2E,#2E2E2E,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/1,neutral-light-1,--neutral-light-1,bg-neutral-light-1; border-neutral-light-1; text-neutral-light-1,#FFFFFF,#FFFFFF,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/2,neutral-light-2,--neutral-light-2,bg-neutral-light-2; border-neutral-light-2; text-neutral-light-2,#F4F4F4,#F4F4F4,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/3,neutral-light-3,--neutral-light-3,bg-neutral-light-3; border-neutral-light-3; text-neutral-light-3,#E3E7EA,#E3E7EA,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/4,neutral-light-4,--neutral-light-4,bg-neutral-light-4; border-neutral-light-4; text-neutral-light-4,#DADEE1,#DADEE1,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/5,neutral-light-5,--neutral-light-5,bg-neutral-light-5; border-neutral-light-5; text-neutral-light-5,#CACFD3,#CACFD3,global,,Fixed-color neutral; does not switch with theme.
+Color/primary,primary,--primary,bg-primary; border-primary; text-primary,#2C2677,#A1A0FF,global,bg-primary-main; text-primary-main; border-primary-main,
+Color/primary/variant,primary-variant,--primary-variant,bg-primary-variant; border-primary-variant; text-primary-variant,#0D0A30,#8D8BF8,global,,
+Color/radio/border/default,radio-border-default,--radio-border-default,bg-radio-border-default; border-radio-border-default; text-radio-border-default,#CACFD3,#CACFD3,global,,
+Color/radio/border/hover,radio-border-hover,--radio-border-hover,bg-radio-border-hover; border-radio-border-hover; text-radio-border-hover,#4A3BD7,#99A3FF,global,,
+Color/radio/disabled/border,radio-disabled-border,--radio-disabled-border,bg-radio-disabled-border; border-radio-disabled-border; text-radio-disabled-border,#DADEE1,#2C2C2C,global,,
+Color/radio/disabled/fill,radio-disabled-fill,--radio-disabled-fill,bg-radio-disabled-fill; border-radio-disabled-fill; text-radio-disabled-fill,#F4F4F4,#222222,global,,
+Color/radio/indicator/fill,radio-indicator-fill,--radio-indicator-fill,bg-radio-indicator-fill; border-radio-indicator-fill; text-radio-indicator-fill,#2C2677,#99A3FF,global,,
+Color/radio/label/focus/fill,radio-label-focus-fill,--radio-label-focus-fill,bg-radio-label-focus-fill; border-radio-label-focus-fill; text-radio-label-focus-fill,#E3E7EA,#2C2C2C,global,,
+Color/secondary,secondary,--secondary,bg-secondary; border-secondary; text-secondary,#4A3BD7,#66A3FF,global,bg-secondary-main; text-secondary-main; border-secondary-main,
+Color/secondary/btn/active/fill,secondary-btn-active-fill,--secondary-btn-active-fill,bg-secondary-btn-active-fill; border-secondary-btn-active-fill; text-secondary-btn-active-fill,#CACFD3,#2E2E2E,global,,
+Color/secondary/btn/fill,secondary-btn-fill,--secondary-btn-fill,bg-secondary-btn-fill; border-secondary-btn-fill; text-secondary-btn-fill,#DADEE1,#2E2E2E,global,,
+Color/secondary/variant,secondary-variant,--secondary-variant,bg-secondary-variant; border-secondary-variant; text-secondary-variant,#3729BB,#4E95FF,global,,
+Color/secondary/variant/2,secondary-variant-2,--secondary-variant-2,bg-secondary-variant-2; border-secondary-variant-2; text-secondary-variant-2,#99A3FF,#99A3FF,global,,
+Color/select/border/default,select-border-default,,border-select-border-default; dark:border-select-border-default-dark,#2E2E2E,#CACFD3,component,,Uses an explicit dark utility class.
+Color/select/border/focus,select-border-focus,--control-accent,border-select-border-focus,#4A3BD7,#99A3FF,component,,
+Color/select/content/border,select-content-border,,border-select-content-border; dark:border-select-content-border-dark,#CACFD3,#848C91,component,,Uses an explicit dark utility class.
+Color/select/content/fill,select-content-fill,,bg-select-content-fill; dark:bg-select-content-fill-dark,#FFFFFF,#222222,component,,Uses an explicit dark utility class.
+Color/select/item/checked/text,select-item-checked-text,,dark:text-select-item-checked-text-dark; text-select-item-checked-text,#2C2677,#99A3FF,component,,Uses an explicit dark utility class.
+Color/select/item/disabled/fill,select-item-disabled-fill,,bg-select-item-disabled-fill; dark:bg-select-item-disabled-fill-dark,#DADEE1,#2E2E2E,component,,Uses an explicit dark utility class.
+Color/select/separator/fill,select-separator-fill,,bg-select-separator-fill,#E3E7EA,#E3E7EA,component,,
+Color/select/trigger/fill,select-trigger-fill,--surface-subtle,bg-select-trigger-fill,#F4F4F4,#222222,component,,
+Color/select/trigger/outlined/fill,select-trigger-outlined-fill,,bg-select-trigger-outlined-fill; dark:bg-select-trigger-outlined-fill-dark,#FFFFFF,#121212,component,,Uses an explicit dark utility class.
+Color/select/trigger/placeholder/text,select-trigger-placeholder-text,,dark:text-select-trigger-placeholder-text-dark; text-select-trigger-placeholder-text,#CACFD3,#868686,component,,Uses an explicit dark utility class.
+Color/status/error/fill,status-error-fill,--status-error-fill,bg-status-error-fill; border-status-error-fill; text-status-error-fill,#FEEBEE,#5F2120,global,,
+Color/status/error/main,status-error-main,--status-error-main,bg-status-error-main; border-status-error-main; text-status-error-main,#B44641,#EF9A9A,global,,
+Color/status/error/text,status-error-text,--status-error-text,bg-status-error-text; border-status-error-text; text-status-error-text,#5F2120,#FECDD2,global,,
+Color/status/indeterminate/fill,status-indeterminate-fill,--status-indeterminate-fill,bg-status-indeterminate-fill; border-status-indeterminate-fill; text-status-indeterminate-fill,#222222,#FFFFFF,global,,
+Color/status/info/fill,status-info-fill,--status-info-fill,bg-status-info-fill; border-status-info-fill; text-status-info-fill,#E1F5FE,#103440,global,,
+Color/status/info/main,status-info-main,--status-info-main,bg-status-info-main; border-status-info-main; text-status-info-main,#0288D1,#81D4FA,global,,
+Color/status/info/text,status-info-text,--status-info-text,bg-status-info-text; border-status-info-text; text-status-info-text,#004465,#B3E5FC,global,,
+Color/status/success/fill,status-success-fill,--status-success-fill,bg-status-success-fill; border-status-success-fill; text-status-success-fill,#E8F5E9,#1E4620,global,,
+Color/status/success/main,status-success-main,--status-success-main,bg-status-success-main; border-status-success-main; text-status-success-main,#43A047,#A5D6A7,global,,
+Color/status/success/text,status-success-text,--status-success-text,bg-status-success-text; border-status-success-text; text-status-success-text,#1E4620,#C8E6C9,global,,
+Color/status/warning/fill,status-warning-fill,--status-warning-fill,bg-status-warning-fill; border-status-warning-fill; text-status-warning-fill,#FFE1D1,#452F16,global,,
+Color/status/warning/main,status-warning-main,--status-warning-main,bg-status-warning-main; border-status-warning-main; text-status-warning-main,#E65100,#FF9800,global,,
+Color/status/warning/text,status-warning-text,--status-warning-text,bg-status-warning-text; border-status-warning-text; text-status-warning-text,#6D3900,#FFE0B2,global,,
+Color/surface,surface,--surface,bg-surface; border-surface; text-surface,#FFFFFF,#121212,global,,Shared global token introduced by the color-token cleanup.
+Color/surface/hover,surface-hover,--surface-hover,bg-surface-hover; border-surface-hover; text-surface-hover,#DADEE1,#2C2C2C,global,,Shared global token introduced by the color-token cleanup.
+Color/surface/subtle,surface-subtle,--surface-subtle,bg-surface-subtle; border-surface-subtle; text-surface-subtle,#F4F4F4,#222222,global,,Shared global token introduced by the color-token cleanup.
+Color/switch/disabled/fill,switch-disabled-fill,--switch-disabled-fill,bg-switch-disabled-fill; border-switch-disabled-fill; text-switch-disabled-fill,#DADEE1,#A6A6A6,global,,
+Color/switch/fill,switch-fill,--switch-fill,bg-switch-fill; border-switch-fill; text-switch-fill,#2E2E2E,#FFFFFF,global,,
+Color/switch/thumb/disabled/fill,switch-thumb-disabled-fill,--switch-thumb-disabled-fill,bg-switch-thumb-disabled-fill; border-switch-thumb-disabled-fill; text-switch-thumb-disabled-fill,#CACFD3,#CACFD3,global,,
+Color/switch/thumb/fill,switch-thumb-fill,--switch-thumb-fill,bg-switch-thumb-fill; border-switch-thumb-fill; text-switch-thumb-fill,#F2F2F2,#121212,global,,
+Color/tertiary,tertiary,--tertiary,bg-tertiary; border-tertiary; text-tertiary,#00AA66,#57E7AD,global,bg-tertiary-main; text-tertiary-main; border-tertiary-main,
+Color/tertiary/btn/border,tertiary-btn-border,--tertiary-btn-border,bg-tertiary-btn-border; border-tertiary-btn-border; text-tertiary-btn-border,#CACFD3,#CACFD3,global,,
+Color/tertiary/variant,tertiary-variant,--tertiary-variant,bg-tertiary-variant; border-tertiary-variant; text-tertiary-variant,#008751,#7BC9A2,global,,
+Color/textarea/border/default,textarea-border-default,--border-control,border-textarea-border-default,#616161,#515151,component,,
+Color/textarea/border/hover,textarea-border-hover,--secondary,border-textarea-border-hover,#4A3BD7,#66A3FF,component,,
+Color/textarea/fill,textarea-fill,--surface,bg-textarea-fill,#FFFFFF,#121212,component,,
+Color/toggle/btn/border,toggle-btn-border,,border-toggle-btn-border; dark:border-toggle-btn-border-dark,#C0C6CB,#2C2C2C,component,,Uses an explicit dark utility class.
+Color/toggle/btn/fill,toggle-btn-fill,--surface,bg-toggle-btn-fill,#FFFFFF,#121212,component,,
+Color/toggle/group/fill,toggle-group-fill,--surface-subtle,bg-toggle-group-fill,#F4F4F4,#222222,component,,
+Color/transparent/btn/border,transparent-btn-border,--transparent-btn-border,bg-transparent-btn-border; border-transparent-btn-border; text-transparent-btn-border,#CACFD3,#2E2E2E,global,,

@@ -20,7 +20,13 @@ import * as React from 'react';
 import { Label } from '../Label';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
-import { CheckboxVariants } from './Checkbox.styles';
+import {
+    CheckboxVariants,
+    checkboxCheckedIconClasses,
+    checkboxIndeterminateIconClasses,
+    checkboxIndicatorClasses,
+    checkboxLabelClasses,
+} from './Checkbox.styles';
 
 interface CheckboxProps
     extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
@@ -35,7 +41,7 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
                 ref={ref}
                 className={cn(CheckboxVariants({ size, focusRing, className }))}
                 {...props}>
-                <CheckboxPrimitive.Indicator className='group flex items-center justify-center text-current'>
+                <CheckboxPrimitive.Indicator className={checkboxIndicatorClasses}>
                     {/*
     Both icons are rendered with `display: none` by default. When the indicator's `data-state` is
     set to `checked` or `indeterminate`, the appropriate icon changes to `display: block`. With
@@ -45,13 +51,9 @@ const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimitive.Root
                         icon
                     ) : (
                         <>
-                            <Check
-                                className='hidden h-full w-full group-data-[state=checked]:block'
-                                absoluteStrokeWidth={true}
-                                strokeWidth={3}
-                            />
+                            <Check className={checkboxCheckedIconClasses} absoluteStrokeWidth={true} strokeWidth={3} />
                             <Minus
-                                className='hidden h-full w-full group-data-[state=indeterminate]:block'
+                                className={checkboxIndeterminateIconClasses}
                                 absoluteStrokeWidth={true}
                                 strokeWidth={3}
                             />
@@ -90,16 +92,7 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
         const checkboxId = id ?? generatedId;
 
         return (
-            <Label
-                htmlFor={checkboxId}
-                className={cn(
-                    'inline-flex items-center gap-2 rounded-sm',
-                    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
-                    'dark:[&:has(:focus-visible)]:ring-secondary-variant-2',
-                    '[&:has(:focus-visible)]:ring-offset-2',
-                    '[&:has(:focus-visible)]:ring-offset-checkbox-unchecked-fill',
-                    fieldClassName
-                )}>
+            <Label htmlFor={checkboxId} className={cn(checkboxLabelClasses, fieldClassName)}>
                 <Checkbox
                     {...props}
                     ref={ref}

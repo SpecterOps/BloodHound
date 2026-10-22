@@ -14,11 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export const textareaBackgroundColors = {
+    'textarea-fill': 'var(--surface)',
+};
+
+export const textareaBorderColors = {
+    'textarea-border-default': 'var(--border-control)',
+    'textarea-border-hover': 'var(--secondary)',
+};
+
 export const textareaStyles = [
-    'w-full resize-none rounded-md border border-textarea-border-default bg-textarea-fill px-3 py-2 text-main placeholder:text-input-placeholder-text',
+    'w-full resize-none rounded-md border border-textarea-border-default bg-textarea-fill px-3 py-2 text-main placeholder:text-input-placeholder-text dark:placeholder:text-input-placeholder-text-dark',
     'enabled:hover:border-textarea-border-hover',
     'focus:outline-none focus:focus-ring dark:focus:border-textarea-border-default',
-    'disabled:cursor-not-allowed disabled:border-input-border-disabled disabled:bg-input-fill-disabled disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100 dark:disabled:bg-input-fill-disabled-dark',
+    'disabled:cursor-not-allowed disabled:border-input-border-disabled dark:disabled:border-input-border-disabled-dark disabled:bg-input-fill-disabled disabled:text-disabled disabled:placeholder:text-disabled dark:disabled:placeholder:text-disabled disabled:opacity-100 dark:disabled:bg-input-fill-disabled-dark',
     'transition-[color,box-shadow] md:text-sm',
     'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main dark:aria-[invalid=true]:focus:border-status-error-main',
 ];

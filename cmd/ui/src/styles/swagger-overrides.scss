@@ -14,6 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 .swagger-ui {
+    --input-fill: theme('backgroundColor.input-fill');
+    --input-fill-disabled: theme('backgroundColor.input-fill-disabled');
+    --input-border-default: theme('borderColor.input-border-default');
+    --input-border-disabled: theme('borderColor.input-border-disabled');
+
     .opblock-summary {
         .opblock-summary-method {
             color: #000;
@@ -157,6 +162,11 @@
             border-color: var(--neutral-light-4);
 
             .dark & {
+                --input-fill: theme('backgroundColor.input-fill-dark');
+                --input-fill-disabled: theme('backgroundColor.input-fill-disabled-dark');
+                --input-border-default: theme('borderColor.input-border-default-dark');
+                --input-border-disabled: theme('borderColor.input-border-disabled-dark');
+
                 border-color: var(--neutral-900);
             }
         }

@@ -17,7 +17,6 @@ import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
 const secondaryVariant2 = '#99a3ff';
-const darkDataTableRowSelectedOutline = '#4A42B5';
 const focusRingWidth = '2px';
 const focusRingOffsetWidth = '2px';
 
@@ -133,29 +132,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.light[200],
-            '--toggle-btn-fill': 'var(--surface)',
-            '--toggle-btn-border': palette.neutral.light[500],
-            '--toggle-group-fill': 'var(--surface-subtle)',
-            '--checkbox-border': 'var(--border-control)',
-            '--checkbox-hover': light.secondary.main,
-            '--checkbox-unchecked-fill': 'var(--surface)',
-            '--checkbox-fill': common.dark,
-            '--checkbox-check': common.white,
-
-            // // Components/Input
-            // '--input-label': 'var(--text-main)',
-            '--input-border-default': palette.grey[700],
-            '--input-border-focus': 'var(--control-accent)',
-            // '--input-border-hover': 'var(--secondary)',
-            '--input-border-disabled': palette.neutral.light[900],
-            '--input-placeholder-text': text.placeholder,
-            '--input-outlined-border-default': 'var(--border-control)',
-            '--input-outlined-border-hover': 'var(--secondary)',
-
-            // // Components/Textarea
-            '--textarea-fill': 'var(--surface)',
-            '--textarea-border-default': 'var(--border-control)',
-            '--textarea-border-hover': 'var(--secondary)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
@@ -167,15 +143,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': 'var(--surface-subtle)',
-            '--select-trigger-placeholder-text': palette.neutral.light[400],
-            '--select-trigger-outlined-fill': common.white,
-            '--select-border-default': palette.neutral.dark[700],
-            '--select-border-focus': 'var(--control-accent)',
-            '--select-content-border': palette.neutral.light[400],
-            '--select-content-fill': common.white,
-            '--select-item-checked-text': light.primary.main,
-            '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.light[400],
             '--dropdown-popover-fill': 'var(--surface)',
@@ -186,14 +153,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--switch-disabled-fill': palette.neutral.light[300],
             '--switch-thumb-fill': palette.neutral.light[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
-
-            // // Components/Data Display/ DataTable
-            '--data-table-fill': 'var(--surface-subtle)',
-            '--data-table-header-fill': 'var(--surface-subtle)',
-            '--data-table-row-even-fill': palette.neutral.light[200],
-            '--data-table-row-odd-fill': 'var(--surface-subtle)',
-            '--data-table-row-hover-fill': 'var(--surface-hover)',
-            '--data-table-row-selected-outline': light.primary.main,
 
             // // Components/Data Display/ Menu
             // '--menu-bg': 'var(--elevation-0)',
@@ -371,30 +330,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.dark[700],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.dark[700],
-            '--toggle-btn-fill': 'var(--surface)',
-            '--toggle-btn-border': palette.neutral.dark[600],
-            '--toggle-group-fill': 'var(--surface-subtle)',
-            '--checkbox-border': 'var(--border-control)',
-            '--checkbox-hover': dark.badge.secondary.outline,
-            '--checkbox-unchecked-fill': 'var(--surface)',
-            '--checkbox-fill': common.white,
-            '--checkbox-check': common.dark,
-
-            // // Components/Input
-            // '--input-label': 'var(--text-main)',
-            '--input-border-default': palette.neutral.light[400],
-            '--input-border-focus': 'var(--control-accent)',
-            // '--input-border-hover': 'var(--secondary)',
-            '--input-border-disabled': palette.neutral.dark[900],
-
-            '--input-placeholder-text': dark.input.placeholder,
-            '--input-outlined-border-default': 'var(--border-control)',
-            '--input-outlined-border-hover': 'var(--secondary)',
-
-            // // Components/Textarea
-            '--textarea-fill': 'var(--surface)',
-            '--textarea-border-default': 'var(--border-control)',
-            '--textarea-border-hover': 'var(--secondary)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
@@ -406,15 +341,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': 'var(--surface-subtle)',
-            '--select-trigger-placeholder-text': dark.input.placeholder,
-            '--select-trigger-outlined-fill': palette.neutral.dark[50],
-            '--select-border-default': palette.neutral.light[400],
-            '--select-border-focus': 'var(--control-accent)',
-            '--select-content-border': palette.neutral.light[900],
-            '--select-content-fill': palette.neutral.dark[400],
-            '--select-item-checked-text': secondaryVariant2,
-            '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.dark[700],
             '--dropdown-popover-fill': 'var(--surface)',
@@ -425,14 +351,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--switch-disabled-fill': common.disabled,
             '--switch-thumb-fill': palette.neutral.dark[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
-
-            // // Components/Data Display/ DataTable
-            '--data-table-fill': 'var(--surface-subtle)',
-            '--data-table-header-fill': 'var(--surface-subtle)',
-            '--data-table-row-even-fill': palette.neutral.dark[500],
-            '--data-table-row-odd-fill': 'var(--surface-subtle)',
-            '--data-table-row-hover-fill': 'var(--surface-hover)',
-            '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
             // // Components/Data Display/ Menu
             // '--menu-bg': 'var(--elevation-2)',

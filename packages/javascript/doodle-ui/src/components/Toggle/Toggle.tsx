@@ -14,32 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import * as TogglePrimitive from '@radix-ui/react-toggle';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
-
-const ToggleVariants = cva(
-    [
-        'inline-flex items-center justify-center gap-2 rounded border border-toggle-btn-border bg-toggle-btn-fill text-sm text-main transition-colors',
-        '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
-        'hover:border-secondary hover:bg-secondary hover:text-common-white hover:underline dark:hover:text-common-dark',
-        'focus:outline-none focus-visible:border-secondary focus-visible:bg-secondary focus-visible:text-common-white focus-visible:focus-ring dark:focus-visible:text-common-dark',
-        'active:border-primary-variant active:bg-primary-variant active:text-common-white dark:active:text-common-dark',
-        'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-common-white dark:data-[state=on]:text-common-dark',
-        'disabled:cursor-not-allowed disabled:border-btn-disabled-fill disabled:bg-btn-disabled-fill disabled:text-disabled',
-    ],
-    {
-        variants: {
-            size: {
-                sm: 'h-6 px-2 py-1',
-                lg: 'h-10 px-2',
-            },
-        },
-        defaultVariants: {
-            size: 'sm',
-        },
-    }
-);
+import { ToggleVariants } from './Toggle.styles';
 
 const Toggle = React.forwardRef<
     React.ElementRef<typeof TogglePrimitive.Root>,
