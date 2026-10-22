@@ -21,13 +21,9 @@ import { cn } from '../utils';
 import {
     menuContentStyles,
     menuItemStyles,
-    menuLabelStyles,
-    menuSecondaryIconStyles,
     menuSeparatorStyles,
     menuSubContentStyles,
     menuSubTriggerStyles,
-    menuSubTriggerTextStyles,
-    menuTriggerStyles,
 } from './Menu.styles';
 
 /**
@@ -42,7 +38,11 @@ const MenuTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Trigger ref={ref} className={cn(menuTriggerStyles, className)} {...props} />
+    <DropdownMenuPrimitive.Trigger
+        ref={ref}
+        className={cn('focus:outline-none', 'focus-visible:focus-ring data-[state=open]:focus-ring', className)}
+        {...props}
+    />
 ));
 MenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 
@@ -105,7 +105,7 @@ const MenuLabel = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label ref={ref} className={cn(menuLabelStyles, className)} {...props} />
+    <DropdownMenuPrimitive.Label ref={ref} className={cn('px-2 py-1.5 text-sm font-semibold', className)} {...props} />
 ));
 MenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
@@ -122,8 +122,8 @@ const MenuSubTrigger = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>
 >(({ className, children, ...props }, ref) => (
     <DropdownMenuPrimitive.SubTrigger ref={ref} className={cn(menuSubTriggerStyles, className)} {...props}>
-        <span className={menuSubTriggerTextStyles}>{children}</span>
-        <FontAwesomeIcon icon={faCaretRight} className={menuSecondaryIconStyles} />
+        <span className='flex flex-1 items-center'>{children}</span>
+        <FontAwesomeIcon icon={faCaretRight} className='ml-2' />
     </DropdownMenuPrimitive.SubTrigger>
 ));
 MenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;

@@ -42,8 +42,6 @@ export const menuTextColors = {
     'menu-item-disabled-text-dark': common.disabled,
 };
 
-export const menuTriggerStyles = ['focus:outline-none', 'focus-visible:focus-ring data-[state=open]:focus-ring'];
-
 const menuPopupBaseStyles = [
     'z-50 min-w-[8rem] overflow-hidden rounded-md bg-menu-content-fill p-1 shadow-md dark:bg-menu-content-fill-dark',
     'data-[state=open]:animate-in data-[state=closed]:animate-out',
@@ -66,14 +64,6 @@ export const menuItemStyles = [
     'dark:data-[disabled]:bg-menu-item-disabled-fill-dark dark:data-[disabled]:text-menu-item-disabled-text-dark',
 ];
 
-export const menuItemIconStyles = 'mr-2 flex items-center';
-
-export const menuItemTextStyles = 'flex-1 leading-4';
-
-export const menuSecondaryIconStyles = 'ml-2';
-
-export const menuLabelStyles = 'px-2 py-1.5 text-sm font-semibold';
-
 export const menuSubTriggerStyles = [
     'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
     'data-[highlighted]:border-menu-item-highlight-border data-[highlighted]:bg-menu-item-highlight-fill data-[highlighted]:text-menu-item-highlight-text',
@@ -82,8 +72,6 @@ export const menuSubTriggerStyles = [
     'data-[state=open]:bg-menu-item-highlight-fill data-[state=open]:text-menu-item-highlight-text',
     'dark:data-[state=open]:bg-menu-item-highlight-fill-dark dark:data-[state=open]:text-menu-item-highlight-text-dark',
 ];
-
-export const menuSubTriggerTextStyles = 'flex flex-1 items-center';
 
 export const menuSubContentStyles = [
     ...menuPopupBaseStyles,
