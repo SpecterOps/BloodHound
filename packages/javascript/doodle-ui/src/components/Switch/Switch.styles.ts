@@ -14,26 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { common, palette } from '../../tailwind/colors';
-
-export const switchBackgroundColors = {
-    'switch-fill': palette.neutral.dark[700],
-    'switch-fill-dark': common.white,
-    'switch-disabled-fill': palette.neutral.light[300],
-    'switch-disabled-fill-dark': common.disabled,
-    'switch-thumb-fill': palette.neutral.light[50],
-    'switch-thumb-fill-dark': palette.neutral.dark[50],
-    'switch-thumb-disabled-fill': palette.neutral.light[400],
-};
 
 export const switchWrapperStyles = cva('inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:focus-ring');
 
 export const switchRootStyles = cva(
-    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-switch-fill dark:bg-switch-fill-dark data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-switch-disabled-fill dark:disabled:data-[state=checked]:bg-switch-disabled-fill-dark disabled:cursor-not-allowed disabled:bg-switch-disabled-fill dark:disabled:bg-switch-disabled-fill-dark focus:outline-none'
+    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-[color:var(--switch-fill)] data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-[color:var(--switch-disabled-fill)] disabled:cursor-not-allowed disabled:bg-[color:var(--switch-disabled-fill)] focus:outline-none'
 );
 
 export const switchThumbStyles = cva(
-    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-switch-thumb-fill dark:bg-switch-thumb-fill-dark data-[state=checked]:translate-x-[13px] group-data-[disabled]:bg-switch-thumb-disabled-fill group-data-[disabled]:data-[state=checked]:bg-switch-thumb-disabled-fill'
+    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-[color:var(--switch-thumb-fill)] data-[state=checked]:translate-x-[13px]'
 );
 
 export const LabelVariants = cva('text-base text-main transition-all ease-in-out px-0.5', {

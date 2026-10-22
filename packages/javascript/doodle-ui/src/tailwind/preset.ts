@@ -15,9 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
-import { buttonBackgroundColors, buttonBorderColors } from '../components/Button/Button.styles';
-import { menuBackgroundColors, menuBorderColors, menuTextColors } from '../components/Menu/Menu.styles';
-import { switchBackgroundColors } from '../components/Switch/Switch.styles';
+import { palette } from './colors';
 
 export default {
     theme: {
@@ -35,15 +33,13 @@ export default {
         },
         extend: {
             backgroundColor: {
-                ...buttonBackgroundColors,
-                ...menuBackgroundColors,
-                ...switchBackgroundColors,
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
             },
             borderColor: {
-                ...buttonBorderColors,
-                ...menuBorderColors,
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
             },
-            textColor: menuTextColors,
             colors: {
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',

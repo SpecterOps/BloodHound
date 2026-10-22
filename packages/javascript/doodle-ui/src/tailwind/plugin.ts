@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import tailwindColors from 'tailwindcss/colors';
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
@@ -183,6 +184,36 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': palette.neutral.light[100],
             '--data-table-row-hover-fill': palette.neutral.light[300],
             '--data-table-row-selected-outline': light.primary.main,
+
+            // // Components/Switch
+            '--switch-fill': palette.neutral.dark[700],
+            '--switch-disabled-fill': palette.neutral.light[300],
+            '--switch-thumb-fill': palette.neutral.light[50],
+
+            // // Components/Button
+            '--button-secondary-fill': palette.neutral.light[300],
+            '--button-secondary-active-fill': palette.neutral.light[400],
+            '--button-icon-fill': palette.neutral.light[400],
+            '--button-disabled-fill': palette.neutral.light[200],
+            '--button-transparent-border': palette.neutral.light[400],
+            '--button-disabled-text': palette.grey[700],
+            '--button-primary-text': 'var(--common-white)',
+            '--button-secondary-text': 'var(--common-dark)',
+            '--button-highlight-text': 'var(--common-white)',
+            '--button-primary-active-fill': light.primary.variant,
+            '--button-text-active': light.primary.variant,
+
+            // // Components/Menu
+            '--menu-content-fill': common.white,
+            '--menu-item-highlight-fill': light.secondary.main,
+            '--menu-item-active-fill': light.primary.main,
+            '--menu-item-disabled-fill': palette.neutral.light[200],
+            '--menu-separator-fill': palette.neutral.light[300],
+            '--menu-content-border': palette.neutral.light[300],
+            '--menu-sub-content-border': tailwindColors.gray[200],
+            '--menu-item-highlight-border': light.secondary.main,
+            '--menu-item-highlight-text': common.white,
+            '--menu-item-disabled-text': palette.grey[700],
 
             // // Components/Data Display/Badge & Chip / Badge
             '--badge-primary-surface': light.badge.primary.fill,
@@ -414,6 +445,36 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': palette.neutral.dark[400],
             '--data-table-row-hover-fill': palette.neutral.dark[600],
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
+
+            // // Components/Switch
+            '--switch-fill': common.white,
+            '--switch-disabled-fill': common.disabled,
+            '--switch-thumb-fill': palette.neutral.dark[50],
+
+            // // Components/Button
+            '--button-secondary-fill': palette.neutral.dark[700],
+            '--button-secondary-active-fill': palette.neutral.dark[700],
+            '--button-icon-fill': palette.neutral.light[400],
+            '--button-disabled-fill': palette.neutral.dark[700],
+            '--button-transparent-border': palette.neutral.dark[700],
+            '--button-disabled-text': common.disabled,
+            '--button-primary-text': 'var(--common-dark)',
+            '--button-secondary-text': 'var(--common-white)',
+            '--button-highlight-text': 'var(--common-dark)',
+            '--button-primary-active-fill': dark.primary.variant,
+            '--button-text-active': 'var(--primary)',
+
+            // // Components/Menu
+            '--menu-content-fill': palette.neutral.dark[400],
+            '--menu-item-highlight-fill': dark.secondary.main,
+            '--menu-item-active-fill': dark.primary.main,
+            '--menu-item-disabled-fill': palette.neutral.dark[700],
+            '--menu-separator-fill': palette.neutral.dark[600],
+            '--menu-content-border': palette.neutral.dark[600],
+            '--menu-sub-content-border': palette.neutral.dark[600],
+            '--menu-item-highlight-border': dark.secondary.main,
+            '--menu-item-highlight-text': common.black,
+            '--menu-item-disabled-text': common.disabled,
 
             // // Components/Data Display/Badge & Chip / Badge
             '--badge-primary-surface': dark.badge.primary.fill,

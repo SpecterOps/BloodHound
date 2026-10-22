@@ -13,70 +13,38 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { common, dark, light, palette } from '../../tailwind/colors';
-
-export const menuBackgroundColors = {
-    'menu-content-fill': common.white,
-    'menu-content-fill-dark': palette.neutral.dark[400],
-    'menu-item-highlight-fill': light.secondary.main,
-    'menu-item-highlight-fill-dark': dark.secondary.main,
-    'menu-item-active-fill': light.primary.main,
-    'menu-item-active-fill-dark': dark.primary.main,
-    'menu-item-disabled-fill': palette.neutral.light[200],
-    'menu-item-disabled-fill-dark': palette.neutral.dark[700],
-    'menu-separator-fill': palette.neutral.light[300],
-    'menu-separator-fill-dark': palette.neutral.dark[600],
-};
-
-export const menuBorderColors = {
-    'menu-content-border': palette.neutral.light[300],
-    'menu-content-border-dark': palette.neutral.dark[600],
-    'menu-item-highlight-border': light.secondary.main,
-    'menu-item-highlight-border-dark': dark.secondary.main,
-};
-
-export const menuTextColors = {
-    'menu-item-highlight-text': common.white,
-    'menu-item-highlight-text-dark': common.black,
-    'menu-item-disabled-text': palette.grey[700],
-    'menu-item-disabled-text-dark': common.disabled,
-};
 
 const menuPopupBaseStyles = [
-    'z-50 min-w-[8rem] overflow-hidden rounded-md bg-menu-content-fill p-1 shadow-md dark:bg-menu-content-fill-dark',
+    'z-50 min-w-[8rem] overflow-hidden rounded-md bg-[color:var(--menu-content-fill)] p-1 shadow-md',
     'data-[state=open]:animate-in data-[state=closed]:animate-out',
     'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
 ];
 
 export const menuContentStyles = [
     ...menuPopupBaseStyles,
-    'border-menu-content-border dark:border-menu-content-border-dark',
+    'border-[color:var(--menu-content-border)]',
     'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
 ];
 
 export const menuItemStyles = [
     'relative flex cursor-pointer select-none items-center rounded-lg border-none p-2 text-sm outline-none',
-    'data-[highlighted]:border-menu-item-highlight-border data-[highlighted]:bg-menu-item-highlight-fill data-[highlighted]:text-menu-item-highlight-text',
-    'dark:data-[highlighted]:border-menu-item-highlight-border-dark dark:data-[highlighted]:bg-menu-item-highlight-fill-dark dark:data-[highlighted]:text-menu-item-highlight-text-dark',
+    'data-[highlighted]:border-[color:var(--menu-item-highlight-border)] data-[highlighted]:bg-[color:var(--menu-item-highlight-fill)] data-[highlighted]:text-[color:var(--menu-item-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[highlighted]:active:bg-menu-item-active-fill dark:data-[highlighted]:active:bg-menu-item-active-fill-dark dark:data-[highlighted]:active:text-menu-item-highlight-text-dark',
-    'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-menu-item-disabled-fill data-[disabled]:text-menu-item-disabled-text',
-    'dark:data-[disabled]:bg-menu-item-disabled-fill-dark dark:data-[disabled]:text-menu-item-disabled-text-dark',
+    'data-[highlighted]:active:bg-[color:var(--menu-item-active-fill)]',
+    'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-[color:var(--menu-item-disabled-fill)] data-[disabled]:text-[color:var(--menu-item-disabled-text)]',
 ];
 
 export const menuSubTriggerStyles = [
     'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
-    'data-[highlighted]:border-menu-item-highlight-border data-[highlighted]:bg-menu-item-highlight-fill data-[highlighted]:text-menu-item-highlight-text',
-    'dark:data-[highlighted]:border-menu-item-highlight-border-dark dark:data-[highlighted]:bg-menu-item-highlight-fill-dark dark:data-[highlighted]:text-menu-item-highlight-text-dark',
+    'data-[highlighted]:border-[color:var(--menu-item-highlight-border)] data-[highlighted]:bg-[color:var(--menu-item-highlight-fill)] data-[highlighted]:text-[color:var(--menu-item-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] data-[state=open]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[state=open]:bg-menu-item-highlight-fill data-[state=open]:text-menu-item-highlight-text',
-    'dark:data-[state=open]:bg-menu-item-highlight-fill-dark dark:data-[state=open]:text-menu-item-highlight-text-dark',
+    'data-[state=open]:bg-[color:var(--menu-item-highlight-fill)] data-[state=open]:text-[color:var(--menu-item-highlight-text)]',
 ];
 
 export const menuSubContentStyles = [
     ...menuPopupBaseStyles,
-    'dark:border-menu-content-border-dark',
+    'border-[color:var(--menu-sub-content-border)]',
     'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
 ];
 
-export const menuSeparatorStyles = 'my-1 h-px bg-menu-separator-fill dark:bg-menu-separator-fill-dark';
+export const menuSeparatorStyles = 'my-1 h-px bg-[color:var(--menu-separator-fill)]';
