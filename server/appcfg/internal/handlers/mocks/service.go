@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -288,6 +289,69 @@ func (_c *MockService_IsAPIAllowedKey_Call) Return(b bool) *MockService_IsAPIAll
 }
 
 func (_c *MockService_IsAPIAllowedKey_Call) RunAndReturn(run func(parameterKey services.ParameterKey) bool) *MockService_IsAPIAllowedKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpsertApplicationConfiguration provides a mock function for the type MockService
+func (_mock *MockService) UpsertApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error {
+	ret := _mock.Called(ctx, parameterKey, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertApplicationConfiguration")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey, types.JSONBObject) error); ok {
+		r0 = returnFunc(ctx, parameterKey, value)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockService_UpsertApplicationConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertApplicationConfiguration'
+type MockService_UpsertApplicationConfiguration_Call struct {
+	*mock.Call
+}
+
+// UpsertApplicationConfiguration is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parameterKey services.ParameterKey
+//   - value types.JSONBObject
+func (_e *MockService_Expecter) UpsertApplicationConfiguration(ctx interface{}, parameterKey interface{}, value interface{}) *MockService_UpsertApplicationConfiguration_Call {
+	return &MockService_UpsertApplicationConfiguration_Call{Call: _e.mock.On("UpsertApplicationConfiguration", ctx, parameterKey, value)}
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) Run(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject)) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.ParameterKey
+		if args[1] != nil {
+			arg1 = args[1].(services.ParameterKey)
+		}
+		var arg2 types.JSONBObject
+		if args[2] != nil {
+			arg2 = args[2].(types.JSONBObject)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) Return(err error) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error) *MockService_UpsertApplicationConfiguration_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -17,6 +17,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
@@ -36,6 +38,7 @@ type Service interface {
 	GetDatapipeStatus(context.Context) (services.DatapipeStatus, error)
 	GetApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error)
 	GetAllApplicationConfigurations(ctx context.Context) (services.Parameters, error)
+	UpsertApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error
 
 	IsAPIAllowedKey(parameterKey services.ParameterKey) bool
 }
@@ -102,6 +105,39 @@ func (s *Handlers) GetApplicationConfiguration(response http.ResponseWriter, req
 	}
 
 	responses.WriteBasic(ctx, BuildParameterListView(params), http.StatusOK, response)
+}
+
+func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, request *http.Request) {
+	var ctx = request.Context()
+
+	// read request body
+	var setConfigBody UpdateParameterView
+	err := json.NewDecoder(request.Body).Decode(&setConfigBody)
+	if err != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, "error unmarshalling JSON payload", response)
+		return
+	}
+
+	// validate writeable key
+	if allowed := s.service.IsAPIAllowedKey(setConfigBody.Key); !allowed {
+		responses.WriteError(ctx, http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", setConfigBody.Key), response)
+		return
+	}
+
+	// validate according to parameter type (TODO BED-9765)
+
+	// validate feature flag special case (TODO BED-9765)
+
+	// update the parameter
+	if err := s.service.UpsertApplicationConfiguration(ctx, setConfigBody.Key, setConfigBody.Value); err != nil {
+		handleServiceError(ctx, response, err)
+		return
+	}
+
+	// execute custom key-specific side-effects (TODO BED-9765)
+
+	// return new data
+	responses.WriteBasic(ctx, setConfigBody, http.StatusOK, response)
 }
 
 func handleServiceError(ctx context.Context, response http.ResponseWriter, err error) {

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -332,6 +334,52 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 			Once()
 
 		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
+}
+
+// I don't plan to cover the same ground covered in the integration test here
+// will focus on error responses and custom special handling cases
+func TestHandlers_SetApplicationConfiguration(t *testing.T) {
+	newRequest := func(t *testing.T, body string) *http.Request {
+		t.Helper()
+
+		req, err := http.NewRequest(http.MethodPut, "/api/v2/config", strings.NewReader(body))
+		require.NoError(t, err)
+		return req
+	}
+
+	type errorEnvelope struct {
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	var unexpectedErr = errors.New("unexpected database failure")
+
+	t.Run("Update param returns error", func(t *testing.T) {
+		var (
+			mockSvc   = mocks.NewMockService(t)
+			h         = handlers.NewHandlers(mockSvc)
+			rr        = httptest.NewRecorder()
+			inputBody = `{"key":"akey","value":{"subparam":"avalue"}}`
+			req       = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ParameterKey("akey")).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.ParameterKey("akey"), mock.Anything).
+			Return(unexpectedErr).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 		var envelope = errorEnvelope{}

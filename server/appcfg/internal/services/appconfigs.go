@@ -62,6 +62,10 @@ func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameter
 	return s.db.GetAllConfigurationParameters(ctx)
 }
 
+func (s Service) UpsertApplicationConfiguration(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error {
+	return s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+}
+
 type GetConfigError struct {
 	Err            error
 	ParameterKey   ParameterKey
