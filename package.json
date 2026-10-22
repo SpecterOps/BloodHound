@@ -4,6 +4,7 @@
     "workspaces": {
         "packages": [
             "cmd/ui",
+            "cmd/dev-portal",
             "packages/javascript/**"
         ]
     },
