@@ -24,6 +24,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/appcfg/internal/adapter"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
@@ -47,7 +48,7 @@ func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
 		service = services.NewService(store)
 	)
 
-	return service
+	return adapter.NewConfigurationAdapter(store, service)
 }
 
 // Register builds the appcfg store -> service -> handler chain and attaches
