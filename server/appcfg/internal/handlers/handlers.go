@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
@@ -41,6 +42,7 @@ type Service interface {
 	UpsertApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error
 
 	IsAPIAllowedKey(parameterKey services.ParameterKey) bool
+	ValidateValue(key services.ParameterKey, value types.JSONBObject) utils.Errors
 }
 
 type Handlers struct {
@@ -124,7 +126,11 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 		return
 	}
 
-	// validate according to parameter type (TODO BED-9765)
+	// validate according to parameter type
+	if errs := s.service.ValidateValue(setConfigBody.Key, setConfigBody.Value); errs != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, errs.Error(), response)
+		return
+	}
 
 	// validate feature flag special case (TODO BED-9765)
 

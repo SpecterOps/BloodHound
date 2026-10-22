@@ -21,11 +21,15 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
@@ -44,6 +48,34 @@ type Parameter struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt sql.NullTime
+}
+
+func (s Service) ValidateValue(key ParameterKey, value types.JSONBObject) utils.Errors {
+	var (
+		objMap map[string]any
+		ok     bool
+	)
+	if objMap, ok = value.Object.(map[string]any); !ok || len(objMap) == 0 {
+		return utils.Errors{errors.New("missing or invalid property: value")}
+	}
+
+	// validate the specific parameter value
+	paramdef, ok := ParamTypeDefinitions[key]
+	if !ok {
+		return utils.Errors{errors.New("invalid key")}
+	}
+	paramTypeInstance := paramdef.GetType()
+
+	// numField panics when val is not a struct, so we need both checks
+	if val := reflect.Indirect(reflect.ValueOf(paramTypeInstance)); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
+		return utils.Errors{errors.New("value property contains an invalid field")}
+	} else if err := value.Map(&paramTypeInstance); err != nil {
+		return utils.Errors{err}
+	} else if errs := validation.Validate(paramTypeInstance); errs != nil {
+		return errs
+	}
+
+	return nil
 }
 
 func (s Service) IsAPIAllowedKey(key ParameterKey) bool {

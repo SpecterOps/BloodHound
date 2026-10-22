@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -352,6 +353,65 @@ func (_c *MockService_UpsertApplicationConfiguration_Call) Return(err error) *Mo
 }
 
 func (_c *MockService_UpsertApplicationConfiguration_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ValidateValue provides a mock function for the type MockService
+func (_mock *MockService) ValidateValue(key services.ParameterKey, value types.JSONBObject) utils.Errors {
+	ret := _mock.Called(key, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateValue")
+	}
+
+	var r0 utils.Errors
+	if returnFunc, ok := ret.Get(0).(func(services.ParameterKey, types.JSONBObject) utils.Errors); ok {
+		r0 = returnFunc(key, value)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(utils.Errors)
+		}
+	}
+	return r0
+}
+
+// MockService_ValidateValue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateValue'
+type MockService_ValidateValue_Call struct {
+	*mock.Call
+}
+
+// ValidateValue is a helper method to define mock.On call
+//   - key services.ParameterKey
+//   - value types.JSONBObject
+func (_e *MockService_Expecter) ValidateValue(key interface{}, value interface{}) *MockService_ValidateValue_Call {
+	return &MockService_ValidateValue_Call{Call: _e.mock.On("ValidateValue", key, value)}
+}
+
+func (_c *MockService_ValidateValue_Call) Run(run func(key services.ParameterKey, value types.JSONBObject)) *MockService_ValidateValue_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 services.ParameterKey
+		if args[0] != nil {
+			arg0 = args[0].(services.ParameterKey)
+		}
+		var arg1 types.JSONBObject
+		if args[1] != nil {
+			arg1 = args[1].(types.JSONBObject)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_ValidateValue_Call) Return(errors utils.Errors) *MockService_ValidateValue_Call {
+	_c.Call.Return(errors)
+	return _c
+}
+
+func (_c *MockService_ValidateValue_Call) RunAndReturn(run func(key services.ParameterKey, value types.JSONBObject) utils.Errors) *MockService_ValidateValue_Call {
 	_c.Call.Return(run)
 	return _c
 }

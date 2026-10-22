@@ -82,26 +82,109 @@ func (s *ISODuration) UnmarshalJSON(b []byte) error {
 
 // ## Param types list
 
+type PasswordExpiration struct {
+	Duration ISODuration `json:"duration"`
+}
+
+type Neo4jParameters struct {
+	WriteFlushSize int `json:"write_flush_size,omitempty"`
+	BatchWriteSize int `json:"batch_write_size,omitempty"`
+}
+
+type CitrixRDPSupport struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type PruneTTLParameters struct {
+	BaseTTL           ISODuration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
+	HasSessionEdgeTTL ISODuration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
+}
+
+type ReconciliationParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
 type ScheduledAnalysisParameter struct {
 	Enabled bool   `json:"enabled,omitempty"`
 	RRule   string `json:"rrule,omitempty" validate:"rrule"`
 }
 
-// Example:
-// type POCGraphStorageOptimizationParam struct {
-//	AfterBoot          bool `json:"after_boot"`
-//	AfterAnalysis      bool `json:"after_analysis"`
-//	MinIntervalSeconds int  `json:"min_interval_seconds"`
-// }
+type TrustedProxiesParameters struct {
+	TrustedProxies int `json:"trusted_proxies,omitempty"`
+}
+
+type TieringParameters struct {
+	TierLimit                int  `json:"tier_limit,omitempty"`
+	LabelLimit               int  `json:"label_limit,omitempty"`
+	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
+}
+
+type AGTParameters struct {
+	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
+	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
+	SelectorWorkerLimit  int `json:"selector_worker_limit,omitempty"`
+}
+
+type FedEULACustomTextParameter struct {
+	CustomText string `json:"custom_text,omitempty"`
+}
+
+type SessionTTLHoursParameter struct {
+	Hours int `json:"hours,omitempty"`
+}
+
+type StaleClientUpdatedLogic struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type RetainIngestedFilesParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type TimeoutLimitParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type APITokensParameter struct {
+	Enabled bool `json:"enabled"`
+}
+
+type EnvironmentTargetedAccessControlParameters struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type SupportAccountProvisioningParameters struct {
+	// Setting disabled as false means that you are explicitly opting into the feature
+	Enabled    bool        `json:"enabled,omitempty"`
+	SessionTTL ISODuration `json:"session_ttl,omitempty"`
+}
+
+type ClientMetricsParameter struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type APITokenExpirationParameter struct {
+	Enabled          bool `json:"enabled"`
+	ExpirationPeriod int  `json:"expiration_period" validate:"integer,min=1,max=365"`
+}
+
+type GraphStorageOptimizationParameter struct {
+	AfterBoot          bool `json:"after_boot"`
+	AfterAnalysis      bool `json:"after_analysis"`
+	MinIntervalSeconds int  `json:"min_interval_seconds"`
+}
 
 // # Param definitions
 
 //   - AllowAPIAccess: determines whether http API get/set operations
 //     will be allowed on this key
+//   - GetType: returns an empty instance of the type corresponding to
+//     this key
 //   - HydrationRules: generic to an individual param type, and determines
 //     how the param is read from the DB
 type ParamTypeDefinition struct {
 	AllowAPIAccess bool // framed such that default value is false = protected
+	GetType        func() any
 	HydrationRules any
 }
 
@@ -139,6 +222,7 @@ var (
 		// Example:
 		// GraphStorageOptimizationKey: {
 		// 	AllowAPIAccess: false,
+		//  GetType: func() any { return &GraphStorageOptimizationParameter{} },
 		// 	HydrationRules: ParamTypeHydrationRules[POCGraphStorageOptimizationParam]{
 		// 		Default: POCGraphStorageOptimizationParam{
 		// 			AfterBoot:          false,
@@ -152,26 +236,74 @@ var (
 		// 		},
 		// 	},
 		// },
-		PasswordExpirationWindow:            {AllowAPIAccess: true},
-		Neo4jConfigs:                        {AllowAPIAccess: true},
-		PruneTTL:                            {AllowAPIAccess: true},
-		CitrixRDPSupportKey:                 {AllowAPIAccess: true},
-		ReconciliationKey:                   {AllowAPIAccess: true},
-		ScheduledAnalysis:                   {AllowAPIAccess: true},
-		ClientMetricsKey:                    {AllowAPIAccess: true},
-		APITokenExpiration:                  {AllowAPIAccess: true},
-		TrustedProxiesConfig:                {},
-		FedEULACustomTextKey:                {},
-		TierManagementParameterKey:          {},
-		SessionTTLHours:                     {},
-		StaleClientUpdatedLogicKey:          {},
-		RetainIngestedFilesKey:              {},
-		AGTParameterKey:                     {},
-		TimeoutLimit:                        {},
-		APITokens:                           {},
-		EnvironmentTargetedAccessControlKey: {},
-		SupportAccountProvisioningKey:       {},
-		GraphStorageOptimizationKey:         {},
+		PasswordExpirationWindow: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &PasswordExpiration{} },
+		},
+		Neo4jConfigs: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &Neo4jParameters{} },
+		},
+		PruneTTL: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &PruneTTLParameters{} },
+		},
+		CitrixRDPSupportKey: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &CitrixRDPSupport{} },
+		},
+		ReconciliationKey: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &ReconciliationParameter{} },
+		},
+		ScheduledAnalysis: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &ScheduledAnalysisParameter{} },
+		},
+		ClientMetricsKey: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &ClientMetricsParameter{} },
+		},
+		APITokenExpiration: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return &APITokenExpirationParameter{} },
+		},
+		TrustedProxiesConfig: {
+			GetType: func() any { return &TrustedProxiesParameters{} },
+		},
+		FedEULACustomTextKey: {
+			GetType: func() any { return &FedEULACustomTextParameter{} },
+		},
+		TierManagementParameterKey: {
+			GetType: func() any { return &TieringParameters{} },
+		},
+		SessionTTLHours: {
+			GetType: func() any { return &SessionTTLHoursParameter{} },
+		},
+		StaleClientUpdatedLogicKey: {
+			GetType: func() any { return &StaleClientUpdatedLogic{} },
+		},
+		RetainIngestedFilesKey: {
+			GetType: func() any { return &RetainIngestedFilesParameter{} },
+		},
+		AGTParameterKey: {
+			GetType: func() any { return &AGTParameters{} },
+		},
+		TimeoutLimit: {
+			GetType: func() any { return &TimeoutLimitParameter{} },
+		},
+		APITokens: {
+			GetType: func() any { return &APITokensParameter{} },
+		},
+		EnvironmentTargetedAccessControlKey: {
+			GetType: func() any { return &EnvironmentTargetedAccessControlParameters{} },
+		},
+		SupportAccountProvisioningKey: {
+			GetType: func() any { return &SupportAccountProvisioningParameters{} },
+		},
+		GraphStorageOptimizationKey: {
+			GetType: func() any { return &GraphStorageOptimizationParameter{} },
+		},
 	}
 )
 
