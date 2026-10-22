@@ -14,6 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { common, dark, light } from '../../tailwind/colors';
+
+export const checkboxBorderColors = {
+    'checkbox-border': 'var(--border-control)',
+    'checkbox-hover': light.secondary.main,
+    'checkbox-hover-dark': dark.badge.secondary.outline,
+};
+
+export const checkboxTextColors = {
+    'checkbox-border': 'var(--border-control)',
+    'checkbox-check': common.white,
+    'checkbox-check-dark': common.dark,
+};
+
+export const checkboxBackgroundColors = {
+    'checkbox-hover': light.secondary.main,
+    'checkbox-hover-dark': dark.badge.secondary.outline,
+    'checkbox-unchecked-fill': 'var(--surface)',
+    'checkbox-fill': common.dark,
+    'checkbox-fill-dark': common.white,
+};
+
+export const checkboxRingOffsetColors = {
+    'checkbox-unchecked-fill': 'var(--surface)',
+};
 
 export const CheckboxVariants = cva(
     [
@@ -49,3 +74,15 @@ export const CheckboxVariants = cva(
         },
     }
 );
+
+export const checkboxIndicatorClasses = 'group flex items-center justify-center text-current';
+export const checkboxCheckedIconClasses = 'hidden h-full w-full group-data-[state=checked]:block';
+export const checkboxIndeterminateIconClasses = 'hidden h-full w-full group-data-[state=indeterminate]:block';
+
+export const checkboxLabelClasses = [
+    'inline-flex items-center gap-2 rounded-sm',
+    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-secondary',
+    'dark:[&:has(:focus-visible)]:ring-secondary-variant-2',
+    '[&:has(:focus-visible)]:ring-offset-2',
+    '[&:has(:focus-visible)]:ring-offset-checkbox-unchecked-fill',
+];

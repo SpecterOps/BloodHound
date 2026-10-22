@@ -45,15 +45,15 @@ const MultiSelectTriggerVariants = cva(
         'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px]',
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-inverse',
-        'data-[state=open]:bg-primary data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
+        'data-[state=open]:bg-primary data-[state=open]:text-inverse dark:data-[state=open]:text-inverse',
+        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled dark:disabled:border-input-border-disabled-dark disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:text-input-placeholder-text dark:aria-[invalid=true]:text-input-placeholder-text-dark aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:enabled:hover:text-input-placeholder-text dark:aria-[invalid=true]:enabled:hover:text-input-placeholder-text-dark aria-[invalid=true]:data-[state=open]:text-input-placeholder-text dark:aria-[invalid=true]:data-[state=open]:text-input-placeholder-text-dark aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
     ],
     {
         variants: {
             variant: {
                 outlined:
-                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
+                    'ring-1 ring-input-border-default dark:ring-input-border-default-dark bg-select-trigger-outlined-fill dark:bg-select-trigger-outlined-fill-dark text-input-placeholder-text dark:text-input-placeholder-text-dark [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
                 filled: 'bg-primary text-inverse',
             },
         },
@@ -334,7 +334,7 @@ const MultiSelect = ({
                 </MultiSelectTrigger>
             </PopoverTrigger>
             <PopoverContent
-                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-main'
+                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill dark:bg-select-content-fill-dark p-0 text-main'
                 align='start'>
                 {isSearchable && (
                     <div className='flex items-center gap-2 p-2'>
@@ -344,7 +344,7 @@ const MultiSelect = ({
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-input-placeholder-text focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-input-placeholder-text dark:placeholder:text-input-placeholder-text-dark focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
                 )}
@@ -352,7 +352,7 @@ const MultiSelect = ({
                 {/* TODO: Add theme-aware scrollbar color tokens to ScrollArea and remove this MultiSelect-specific override. */}
                 <ScrollArea
                     thumbColor='var(--multiselect-scrollbar-thumb)'
-                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:theme(textColor.input-placeholder-text-dark)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}

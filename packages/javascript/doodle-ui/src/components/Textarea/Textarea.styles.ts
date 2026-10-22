@@ -14,6 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export const textareaBackgroundColors = {
+    'textarea-fill': 'var(--surface)',
+};
+
+export const textareaBorderColors = {
+    'textarea-border-default': 'var(--border-control)',
+    'textarea-border-hover': 'var(--secondary)',
+};
+
 export const textareaStyles = [
     'w-full resize-none rounded-md border border-[color:var(--textarea-border-default)] bg-[color:var(--textarea-fill)] px-3 py-2 text-main placeholder:text-[color:var(--input-placeholder-text)]',
     'enabled:hover:border-[color:var(--textarea-border-hover)]',

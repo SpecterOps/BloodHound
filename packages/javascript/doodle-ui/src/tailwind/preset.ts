@@ -15,6 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import {
+    checkboxBackgroundColors,
+    checkboxBorderColors,
+    checkboxRingOffsetColors,
+    checkboxTextColors,
+} from '../components/Checkbox/Checkbox.styles';
+import { dataTableBackgroundColors, dataTableBoxShadows } from '../components/DataTable/DataTable.styles';
+import {
+    inputBackgroundColors,
+    inputBorderColors,
+    inputRingColors,
+    inputTextColors,
+} from '../components/Input/Input.styles';
+import { selectBackgroundColors, selectBorderColors, selectTextColors } from '../components/Select/Select.styles';
+import { textareaBackgroundColors, textareaBorderColors } from '../components/Textarea/Textarea.styles';
+import { toggleBackgroundColors, toggleBorderColors } from '../components/Toggle/Toggle.styles';
 import { palette } from './colors';
 
 export default {
@@ -33,16 +49,35 @@ export default {
         },
         extend: {
             backgroundColor: {
-                'input-fill-disabled': palette.neutral.light[100],
-                'input-fill-disabled-dark': palette.neutral.dark[400],
+                ...inputBackgroundColors,
                 'btn-disabled-fill': palette.neutral.light[200],
                 'btn-disabled-fill-dark': palette.neutral.dark[700],
+                ...selectBackgroundColors,
+                ...checkboxBackgroundColors,
+                ...textareaBackgroundColors,
+                ...toggleBackgroundColors,
+                ...dataTableBackgroundColors,
             },
             borderColor: {
+                ...inputBorderColors,
                 'btn-disabled-fill': palette.neutral.light[200],
                 'btn-disabled-fill-dark': palette.neutral.dark[700],
+                ...selectBorderColors,
+                ...checkboxBorderColors,
+                ...textareaBorderColors,
+                ...toggleBorderColors,
+            },
+            ringColor: {
+                ...inputRingColors,
+            },
+            ringOffsetColor: {
+                ...checkboxRingOffsetColors,
             },
             textColor: {
+                ...inputTextColors,
+                ...selectTextColors,
+                ...checkboxTextColors,
+
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
                 muted: 'var(--text-light)',
@@ -250,6 +285,7 @@ export default {
                 'fade-out': 'fade-out 300ms ease-out forwards',
             },
             boxShadow: {
+                ...dataTableBoxShadows,
                 inner1xl: '0px 1px 2px 0px rgba(0, 0, 0, 0.2) inset',
                 'outer-1': '0px 1px 2px 0px rgba(0, 0, 0, 0.2)',
                 'outer-2': '0px 2px 2px 0px rgba(0, 0, 0, 0.3)',

@@ -14,6 +14,35 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { common, dark, light, palette } from '../../tailwind/colors';
+
+const selectedItemTextDark = '#99A3FF';
+
+export const selectBackgroundColors = {
+    'select-trigger-fill': 'var(--surface-subtle)',
+    'select-trigger-outlined-fill': common.white,
+    'select-trigger-outlined-fill-dark': palette.neutral.dark[50],
+    'select-content-fill': common.white,
+    'select-content-fill-dark': palette.neutral.dark[400],
+    'select-separator-fill': palette.neutral.light[200],
+    'select-item-disabled-fill': palette.neutral.light[300],
+    'select-item-disabled-fill-dark': palette.neutral.dark[700],
+};
+
+export const selectTextColors = {
+    'select-trigger-placeholder-text': palette.neutral.light[400],
+    'select-trigger-placeholder-text-dark': dark.input.placeholder,
+    'select-item-checked-text': light.primary.main,
+    'select-item-checked-text-dark': selectedItemTextDark,
+};
+
+export const selectBorderColors = {
+    'select-border-default': palette.neutral.dark[700],
+    'select-border-default-dark': palette.neutral.light[400],
+    'select-border-focus': 'var(--control-accent)',
+    'select-content-border': palette.neutral.light[400],
+    'select-content-border-dark': palette.neutral.light[900],
+};
 
 export const SelectTriggerVariants = cva(
     [
