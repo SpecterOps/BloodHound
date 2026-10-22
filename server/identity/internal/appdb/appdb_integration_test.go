@@ -563,8 +563,7 @@ func TestStore_SchemaDrift_DeletedAt_Integration(t *testing.T) {
 }
 
 // seedUser inserts a user row directly via the pool with every non-defaulted
-// column populated so the strict pgx scanners in ListUsers do not encounter
-// NULLs, and returns its generated id.
+// column populated, and returns its generated id.
 func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string, supportAccount bool) uuid.UUID {
 	t.Helper()
 
@@ -882,4 +881,197 @@ func TestStore_ListActiveUsersMinimal_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []services.UserMinimal{{ID: nullDetailsID}}, users)
 	})
+}
+
+// seedNullPermission inserts a permission whose nullable columns are all NULL
+// and returns its generated id.
+func seedNullPermission(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32 {
+	t.Helper()
+
+	var permissionID int32
+	err := pool.QueryRow(ctx, `INSERT INTO permissions DEFAULT VALUES RETURNING id`).Scan(&permissionID)
+	require.NoError(t, err)
+
+	return permissionID
+}
+
+// seedNullRole inserts a role whose nullable columns are all NULL, grants it the
+// supplied permission, and returns its generated id.
+func seedNullRole(t *testing.T, ctx context.Context, pool *pgxpool.Pool, permissionID int32) int32 {
+	t.Helper()
+
+	var roleID int32
+	err := pool.QueryRow(ctx, `INSERT INTO roles DEFAULT VALUES RETURNING id`).Scan(&roleID)
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx, `INSERT INTO roles_permissions (role_id, permission_id) VALUES ($1, $2)`, roleID, permissionID)
+	require.NoError(t, err)
+
+	return roleID
+}
+
+// seedNullUser inserts a non-support user whose nullable columns are all NULL,
+// along with an environment access control entry and an auth secret that also
+// carry NULL columns, and assigns it the supplied role. It returns the user id.
+func seedNullUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, roleID int32) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx, `INSERT INTO users (id, all_environments, support_account) VALUES ($1, NULL, false)`, id.String())
+	require.NoError(t, err)
+
+	seedUserRole(t, ctx, pool, id, roleID)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO environment_targeted_access_control (user_id, environment_id, created_at) VALUES ($1, $2, NULL)`,
+		id.String(), "env-null-columns",
+	)
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx, `INSERT INTO auth_secrets (user_id) VALUES ($1)`, id.String())
+	require.NoError(t, err)
+
+	return id
+}
+
+// TestStore_NullColumns_Integration is a regression test for rows whose nullable
+// columns hold NULL, as on databases populated outside of gorm. The legacy gorm
+// reads coerced those NULLs to zero values; the pgx reads must do the same rather
+// than failing to scan.
+func TestStore_NullColumns_Integration(t *testing.T) {
+	type mock struct {
+		store *appdb.Store
+		pool  *pgxpool.Pool
+	}
+
+	type seeded struct {
+		permissionID int32
+		roleID       int32
+		userID       uuid.UUID
+	}
+
+	type expected struct {
+		assertResponse func(t *testing.T, ctx context.Context, mock mock, seeded seeded)
+	}
+
+	type testData struct {
+		name     string
+		expected expected
+	}
+
+	tt := []testData{
+		{
+			name: "Success: ListUsers returns a user with NULL columns and NULL association columns",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock, seeded seeded) {
+				users, err := mock.store.ListUsers(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+
+				byID := make(map[uuid.UUID]services.User, len(users))
+				for _, user := range users {
+					byID[user.ID] = user
+				}
+
+				user, ok := byID[seeded.userID]
+				require.True(t, ok, "expected the user with NULL columns to be returned")
+				assert.Empty(t, user.PrincipalName)
+				assert.False(t, user.IsDisabled)
+				assert.False(t, user.AllEnvironments)
+				assert.False(t, user.EULAAccepted)
+				assert.True(t, user.CreatedAt.IsZero())
+				assert.True(t, user.UpdatedAt.IsZero())
+
+				require.Len(t, user.Roles, 1)
+				assert.Equal(t, seeded.roleID, user.Roles[0].ID)
+				assert.Empty(t, user.Roles[0].Name)
+				require.Len(t, user.Roles[0].Permissions, 1)
+				assert.Equal(t, seeded.permissionID, user.Roles[0].Permissions[0].ID)
+				assert.Empty(t, user.Roles[0].Permissions[0].Authority)
+
+				require.Len(t, user.EnvironmentTargetedAccessControl, 1)
+				assert.True(t, user.EnvironmentTargetedAccessControl[0].CreatedAt.IsZero())
+
+				require.NotNil(t, user.AuthSecret)
+				assert.Empty(t, user.AuthSecret.DigestMethod)
+				assert.False(t, user.AuthSecret.TOTPActivated)
+				assert.True(t, user.AuthSecret.CreatedAt.IsZero())
+			}},
+		},
+		{
+			name: "Success: GetRole returns a role with NULL columns and NULL permission columns",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock, seeded seeded) {
+				role, err := mock.store.GetRole(ctx, seeded.roleID)
+				require.NoError(t, err)
+				assert.Equal(t, seeded.roleID, role.ID)
+				assert.Empty(t, role.Name)
+				assert.Empty(t, role.Description)
+				assert.True(t, role.CreatedAt.IsZero())
+				require.Len(t, role.Permissions, 1)
+				assert.Equal(t, seeded.permissionID, role.Permissions[0].ID)
+				assert.Empty(t, role.Permissions[0].Name)
+			}},
+		},
+		{
+			name: "Success: ListRoles returns a role with NULL columns",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock, seeded seeded) {
+				roles, err := mock.store.ListRoles(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+
+				var found *services.Role
+				for i := range roles {
+					if roles[i].ID == seeded.roleID {
+						found = &roles[i]
+					}
+				}
+				require.NotNil(t, found, "expected the role with NULL columns to be returned")
+				assert.Empty(t, found.Name)
+				require.Len(t, found.Permissions, 1)
+				assert.Equal(t, seeded.permissionID, found.Permissions[0].ID)
+			}},
+		},
+		{
+			name: "Success: GetPermission returns a permission with NULL columns",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock, seeded seeded) {
+				permission, err := mock.store.GetPermission(ctx, int(seeded.permissionID))
+				require.NoError(t, err)
+				assert.Equal(t, seeded.permissionID, permission.ID)
+				assert.Empty(t, permission.Authority)
+				assert.Empty(t, permission.Name)
+				assert.True(t, permission.CreatedAt.IsZero())
+			}},
+		},
+		{
+			name: "Success: ListPermissions returns a permission with NULL columns",
+			expected: expected{assertResponse: func(t *testing.T, ctx context.Context, mock mock, seeded seeded) {
+				permissions, err := mock.store.ListPermissions(ctx, params.Filters{}, params.SortItems{})
+				require.NoError(t, err)
+
+				var found bool
+				for _, permission := range permissions {
+					if permission.ID == seeded.permissionID {
+						found = true
+						assert.Empty(t, permission.Authority)
+						assert.Empty(t, permission.Name)
+					}
+				}
+				assert.True(t, found, "expected the permission with NULL columns to be returned")
+			}},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				ctx          = context.Background()
+				store, pool  = setupStoreAndPool(t)
+				mock         = mock{store: store, pool: pool}
+				permissionID = seedNullPermission(t, ctx, pool)
+				roleID       = seedNullRole(t, ctx, pool, permissionID)
+				userID       = seedNullUser(t, ctx, pool, roleID)
+			)
+
+			testCase.expected.assertResponse(t, ctx, mock, seeded{permissionID: permissionID, roleID: roleID, userID: userID})
+		})
+	}
 }

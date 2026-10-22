@@ -125,6 +125,7 @@ export const FileIngestDetailsPanel = ({ ingest }: Props) => {
             Header={IngestHeader}
             items={ingest}
             openIndex={0}
+            itemClassName='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 rounded-lg overflow-hidden'
         />
     );
 };

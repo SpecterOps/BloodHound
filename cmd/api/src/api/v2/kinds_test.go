@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -226,7 +227,7 @@ func TestResources_ListKinds(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(slices.Clone(mockKindsResp), nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -246,7 +247,7 @@ func TestResources_ListKinds(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(slices.Clone(mockKindsResp), nil)
 				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
 				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return(mockCustomNodeKindsResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
@@ -269,7 +270,7 @@ func TestResources_ListKinds(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(slices.Clone(mockKindsResp), nil)
 				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
 				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return(mockCustomNodeKindsResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
@@ -292,7 +293,7 @@ func TestResources_ListKinds(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(slices.Clone(mockKindsResp), nil)
 				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
 				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return(mockCustomNodeKindsResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
@@ -315,7 +316,7 @@ func TestResources_ListKinds(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(mockKindsResp, nil)
+				mock.mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(slices.Clone(mockKindsResp), nil)
 				mock.mockDB.EXPECT().GetGraphSchemaNodeKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(mockSchemaNodeKindsResp, 0, nil)
 				mock.mockDB.EXPECT().GetCustomNodeKinds(gomock.Any()).Return(mockCustomNodeKindsResp, nil)
 				mock.mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return(mockSrcKindsResp, nil)
