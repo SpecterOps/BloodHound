@@ -22,6 +22,7 @@ package modules
 import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	alerts "github.com/specterops/bloodhound/server/alerts"
@@ -88,5 +89,8 @@ func Register(deps Deps) Services {
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool)
 
-	return Services{AuditRuntime: audit.Register(deps.Pool)}
+	auditRuntime := audit.Register(deps.Pool)
+	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditRuntime.Service, deps.Router.MuxRouter(), deps.Router.IsAuditExcluded))
+
+	return Services{AuditRuntime: auditRuntime}
 }

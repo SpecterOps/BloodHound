@@ -19,6 +19,12 @@ model {
       technology 'Go'
     }
 
+    auditMiddleware = component 'Audit Middleware' {
+      #go
+      description 'Records intent before eligible route handlers and a bounded best-effort outcome afterward.'
+      technology 'Go / gorilla/mux'
+    }
+
     authenticator = component 'Authenticator' {
       #go
       description 'Validates credentials for login, manages SAML/OIDC SSO flows, and issues JWT session tokens.'
