@@ -39,6 +39,7 @@ type Identity interface {
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
 	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.User, error)
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)
+	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
@@ -145,6 +146,24 @@ func (s *Handlers) ListPermissions(response http.ResponseWriter, request *http.R
 	}
 
 	responses.WriteBasic(ctx, BuildPermissionListView(permissions), http.StatusOK, response)
+}
+
+// ListActiveUsersMinimal returns the id, email address and name of every active,
+// non-support user matching the filters and ordering parsed from the request
+// query parameters.
+func (s *Handlers) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	users, err := s.identity.ListActiveUsersMinimal(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildUserMinimalListView(users), http.StatusOK, response)
 }
 
 func handleIdentityError(request *http.Request, response http.ResponseWriter, err error) {

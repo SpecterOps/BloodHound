@@ -442,7 +442,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             sensors={sensors}
             disabled={!enableDragAndDrop}
             accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
-            <div className={cn('w-full bg-data-table-fill', className)} {...wrapperRest} ref={parentRef}>
+            <div
+                className={cn(
+                    'w-full border border-solid border-neutral-light-4 bg-neutral-1 shadow-none dark:border-neutral-900',
+                    className
+                )}
+                {...wrapperRest}
+                ref={parentRef}>
                 <div
                     style={{
                         height: `${virtualizer.getTotalSize()}px`,
@@ -454,7 +460,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                             width: tableWidth,
                         }}
                         className={cn(
-                            'after:inline-block after:h-[var(--prevent-vanishing-sticky-header)]',
+                            'after:block after:h-[var(--prevent-vanishing-sticky-header)]',
                             enableResizing && haveLeftPinnedColumns && 'table-fixed',
                             tableClassName
                         )}>
@@ -499,7 +505,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     scope='col'
                                                     enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                     className={cn(
-                                                        'bg-data-table-header-fill text-nowrap group relative z-10 overflow-x-clip',
+                                                        'bg-neutral-2 text-nowrap group relative z-10 overflow-x-clip',
                                                         `${header.column.getIsResizing() ? 'isResizing' : ''}`,
                                                         propsClassName
                                                     )}
@@ -607,14 +613,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             tabIndex={tableBodyRowTabIndex ?? (onRowClick ? 0 : undefined)}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className={cn(
-                                                'hover:bg-data-table-row-hover-fill',
+                                                'bg-neutral-1 hover:bg-data-table-row-hover-fill',
                                                 {
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
                                                     'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]':
                                                         row.getIsSelected(),
-                                                    // Not using CSS odd:even since those values are not tied to data in a virtualized table
-                                                    'bg-data-table-row-even-fill': row.index % 2 === 0,
-                                                    'bg-data-table-row-odd-fill': row.index % 2 !== 0,
                                                     'cursor-pointer': onRowClick,
                                                     'cursor-default': !onRowClick,
                                                     'focus:outline-none focus-visible:focus-ring focus-visible:bg-data-table-row-hover-fill':
