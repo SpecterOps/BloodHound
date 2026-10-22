@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
-import { badgeColors } from '../components/Badge/Badge.styles';
 import { buttonBackgroundColors, buttonBorderColors } from '../components/Button/Button.styles';
 import { menuBackgroundColors, menuBorderColors, menuTextColors } from '../components/Menu/Menu.styles';
 import { switchBackgroundColors } from '../components/Switch/Switch.styles';
@@ -46,8 +45,6 @@ export default {
             },
             textColor: menuTextColors,
             colors: {
-                ...badgeColors,
-
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
                 'neutral-2': 'var(--neutral-2)',

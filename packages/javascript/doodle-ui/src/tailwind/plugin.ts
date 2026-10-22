@@ -184,6 +184,25 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': palette.neutral.light[300],
             '--data-table-row-selected-outline': light.primary.main,
 
+            // // Components/Data Display/Badge & Chip / Badge
+            '--badge-primary-surface': light.badge.primary.fill,
+            '--badge-primary-accent': light.badge.primary.outline,
+            '--badge-secondary-surface': light.badge.secondary.fill,
+            '--badge-secondary-accent': light.badge.secondary.outline,
+            '--badge-grey-surface': light.badge.grey.fill,
+            '--badge-grey-accent': light.badge.grey.outline,
+            '--badge-red-surface': light.badge.red.fill,
+            '--badge-red-accent': light.badge.red.outline,
+            '--badge-orange-surface': light.badge.orange.fill,
+            '--badge-orange-accent': light.badge.orange.outline,
+            '--badge-green-surface': light.badge.green.fill,
+            '--badge-green-accent': light.badge.green.outline,
+            '--badge-blue-surface': light.badge.blue.fill,
+            '--badge-blue-accent': light.badge.blue.outline,
+            '--badge-error-surface': 'var(--status-error-main)',
+            '--badge-warning-surface': 'var(--status-warning-main)',
+            '--badge-success-surface': 'var(--status-success-main)',
+
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.light[300],
             // '--chip-indeterminate-hover': palette.neutral.light[600],
@@ -395,6 +414,25 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': palette.neutral.dark[400],
             '--data-table-row-hover-fill': palette.neutral.dark[600],
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
+
+            // // Components/Data Display/Badge & Chip / Badge
+            '--badge-primary-surface': dark.badge.primary.fill,
+            '--badge-primary-accent': dark.badge.primary.outline,
+            '--badge-secondary-surface': dark.badge.secondary.fill,
+            '--badge-secondary-accent': dark.badge.secondary.outline,
+            '--badge-grey-surface': dark.badge.grey.fill,
+            '--badge-grey-accent': dark.badge.grey.outline,
+            '--badge-red-surface': dark.badge.red.fill,
+            '--badge-red-accent': dark.badge.red.outline,
+            '--badge-orange-surface': dark.badge.orange.fill,
+            '--badge-orange-accent': dark.badge.orange.outline,
+            '--badge-green-surface': dark.badge.green.fill,
+            '--badge-green-accent': dark.badge.green.outline,
+            '--badge-blue-surface': dark.badge.blue.fill,
+            '--badge-blue-accent': dark.badge.blue.outline,
+            '--badge-error-surface': 'var(--status-error-fill)',
+            '--badge-warning-surface': 'var(--status-warning-fill)',
+            '--badge-success-surface': 'var(--status-success-fill)',
 
             // // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.dark[500],
