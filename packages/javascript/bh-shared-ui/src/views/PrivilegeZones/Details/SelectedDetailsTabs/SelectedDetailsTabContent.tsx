@@ -45,6 +45,7 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
         return (
             <div className='h-full'>
                 <EntityInfoPanel
+                    panelClassName='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'
                     selectedNode={selectedNode}
                     showPlaceholderMessage={true}
                     DataTable={EntityInfoDataTable}
