@@ -158,6 +158,7 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 'input-border-default': 'var(--input-border-default)',
+                'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',
