@@ -63,20 +63,14 @@ export default {
                 'neutral-dark-5': 'var(--neutral-dark-5)',
 
                 // New color tokens:
-                primary: 'var(--primary-main)',
-                'primary-main':
-                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
-                secondary: 'var(--secondary-main)',
-                'secondary-main':
-                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                secondary: 'var(--secondary)',
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                tertiary: 'var(--tertiary)', // this is a legacy token
-                'tertiary-main':
-                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                tertiary: 'var(--tertiary)',
                 'tertiary-variant': 'var(--tertiary-variant)',
 
                 // 'text-primary': 'var(--text-primary)',
@@ -85,7 +79,7 @@ export default {
                 disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
                 link: 'var(--link-main)',
-                'link-hover': '(--link-hover)',
+                'link-hover': 'var(--link-hover)',
                 error: 'var(--error)',
 
                 'common-dark': 'var(--common-dark)',
@@ -132,7 +126,6 @@ export default {
                 'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
                 'bhce-main': 'var(--bhce-main)',
-                'logo-neutral': 'var(--logo-neutral)',
 
                 // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
                 // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',
@@ -162,6 +155,7 @@ export default {
 
                 // 'input-label': 'var(--input-label)',
                 'input-border-default': 'var(--input-border-default)',
+                'input-border-focus': 'var(--input-border-focus)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',

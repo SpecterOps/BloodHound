@@ -50,14 +50,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // MAIN
             '--primary': light.primary.main,
-            '--primary-main': light.primary.main,
             '--primary-variant': light.primary.variant,
             '--secondary': light.secondary.main,
-            '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
-            // '--tertiary': light.tertiary.main,
-            '--tertiary-main': light.tertiary.main,
-            // '--tertiary-variant': light.tertiary.variant,
+            '--tertiary': light.tertiary.main,
+            '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
 
             // // NEUTRALS
@@ -145,6 +142,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components/Input
             // '--input-label': common.dark,
             '--input-border-default': palette.grey[700],
+            '--input-border-focus': light.secondary.main,
             // '--input-border-hover': light.secondary.main,
             '--input-border-disabled': palette.neutral.light[900],
             '--input-placeholder-text': text.placeholder,
@@ -258,8 +256,8 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--contrast': '#121212',
 
             '--secondary-variant-2': secondaryVariant2,
-            '--tertiary': '#02c577',
-            '--tertiary-variant': '#5cc791',
+            // '--tertiary': '#02c577',
+            // '--tertiary-variant': '#5cc791',
 
             // same as common.white
             '--neutral-1': '#ffffff',
@@ -294,14 +292,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
         '.dark': {
             // MAIN
             '--primary': dark.primary.main,
-            '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
-
-            '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
             // '--tertiary': dark.tertiary.main,
-            '--tertiary-main': dark.tertiary.main,
             // '--tertiary-variant': dark.tertiary.variant,
             '--disabled': dark.disabled,
 
@@ -334,8 +328,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // FOCUS
             '--focus-ring': dark.secondary.main,
             '--focus-ring-offset': palette.neutral.dark[50],
-            '--focus-ring-width': focusRingWidth,
-            '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],

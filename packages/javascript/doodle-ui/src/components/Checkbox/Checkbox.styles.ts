@@ -21,7 +21,7 @@ export const CheckboxVariants = cva(
         'enabled:hover:border-checkbox-hover enabled:active:border-primary-variant',
         'dark:border-checkbox-border dark:hover:border-checkbox-hover dark:active:border-primary-variant',
         'focus:outline-none',
-        'data-[state=checked]:bg-checkbox-fill data-[state=checked]:text-checkbox-check dark:data-[state=checked]:bg-primary-main',
+        'data-[state=checked]:bg-checkbox-fill data-[state=checked]:text-checkbox-check dark:data-[state=checked]:bg-primary',
         'enabled:hover:data-[state=checked]:border-checkbox-hover enabled:hover:data-[state=checked]:bg-checkbox-hover enabled:active:data-[state=checked]:bg-primary-variant',
         'dark:data-[state=checked]:hover:bg-checkbox-hover dark:data-[state=checked]:active:bg-primary-variant',
         'enabled:hover:data-[state=indeterminate]:border-checkbox-hover enabled:hover:data-[state=indeterminate]:bg-secondary',
