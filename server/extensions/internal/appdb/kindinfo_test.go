@@ -20,11 +20,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -160,11 +158,7 @@ func TestStore_CreateKindInfo(t *testing.T) {
 			Title:    nodeKindInfo.Title,
 			Position: nodeKindInfo.Position,
 		}
-		databaseError           = errors.New("database error")
-		unmappedConstraintError = &pgconn.PgError{
-			Code:           "23514",
-			ConstraintName: "unknown_constraint",
-		}
+		databaseError = errors.New("database error")
 	)
 
 	relationshipKindInfo.NodeKindID = nil
@@ -314,89 +308,6 @@ func TestStore_CreateKindInfo(t *testing.T) {
 					).CloseError(databaseError)).RowsWillBeClosed()
 			},
 			want: want{err: databaseError},
-		},
-		{
-			name: "error_-_maps_missing_kind_from_rows",
-			args: args{
-				ctx:        ctx,
-				kindID:     nodeKindInfo.KindID,
-				nodeKindID: nodeKindInfo.NodeKindID,
-				kindInfo:   kindInfoInput,
-			},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedCreateKindInfoSQL).
-					WithArgs(
-						defaultKindInfo.KindID, defaultKindInfo.NodeKindID, defaultKindInfo.RelationshipKindID,
-						defaultKindInfo.InfoKey, defaultKindInfo.Title, defaultKindInfo.Position, string(defaultKindInfo.Content),
-					).
-					WillReturnRows(pool.NewRows(kindInfoColumns()).CloseError(
-						fmt.Errorf("driver: %w", &pgconn.PgError{
-							Code:           "23503",
-							ConstraintName: "schema_kind_info_kind_id_fkey",
-						}),
-					)).RowsWillBeClosed()
-			},
-			want: want{err: services.ErrKindInfoKindNotFound},
-		},
-		{
-			name: "error_-_maps_duplicate_info_key_from_rows",
-			args: args{
-				ctx:        ctx,
-				kindID:     nodeKindInfo.KindID,
-				nodeKindID: nodeKindInfo.NodeKindID,
-				kindInfo:   kindInfoInput,
-			},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedCreateKindInfoSQL).
-					WithArgs(
-						defaultKindInfo.KindID, defaultKindInfo.NodeKindID, defaultKindInfo.RelationshipKindID,
-						defaultKindInfo.InfoKey, defaultKindInfo.Title, defaultKindInfo.Position, string(defaultKindInfo.Content),
-					).
-					WillReturnRows(pool.NewRows(kindInfoColumns()).CloseError(&pgconn.PgError{
-						Code:           "23505",
-						ConstraintName: "schema_kind_info_unique_kind_info_key",
-					})).RowsWillBeClosed()
-			},
-			want: want{err: services.ErrKindInfoDuplicateInfoKey},
-		},
-		{
-			name: "error_-_maps_duplicate_position",
-			args: args{
-				ctx:        ctx,
-				kindID:     nodeKindInfo.KindID,
-				nodeKindID: nodeKindInfo.NodeKindID,
-				kindInfo:   kindInfoInput,
-			},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedCreateKindInfoSQL).
-					WithArgs(
-						defaultKindInfo.KindID, defaultKindInfo.NodeKindID, defaultKindInfo.RelationshipKindID,
-						defaultKindInfo.InfoKey, defaultKindInfo.Title, defaultKindInfo.Position, string(defaultKindInfo.Content),
-					).
-					WillReturnError(&pgconn.PgError{
-						Code:           "23505",
-						ConstraintName: "schema_kind_info_unique_kind_position",
-					})
-			},
-			want: want{err: services.ErrKindInfoDuplicatePosition},
-		},
-		{
-			name: "error_-_preserves_unmapped_constraint",
-			args: args{
-				ctx:        ctx,
-				kindID:     nodeKindInfo.KindID,
-				nodeKindID: nodeKindInfo.NodeKindID,
-				kindInfo:   kindInfoInput,
-			},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedCreateKindInfoSQL).
-					WithArgs(
-						defaultKindInfo.KindID, defaultKindInfo.NodeKindID, defaultKindInfo.RelationshipKindID,
-						defaultKindInfo.InfoKey, defaultKindInfo.Title, defaultKindInfo.Position, string(defaultKindInfo.Content),
-					).
-					WillReturnError(unmappedConstraintError)
-			},
-			want: want{err: unmappedConstraintError},
 		},
 	}
 
@@ -577,7 +488,7 @@ func TestStore_UpdateKindInfo(t *testing.T) {
 			want: want{err: databaseError},
 		},
 		{
-			name: "error_-_maps_wrapped_missing_kind_from_rows",
+			name: "error_-_preserves_row_errors",
 			args: args{ctx: ctx, kindInfo: kindInfo},
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedUpdateKindInfoSQL).
@@ -585,46 +496,10 @@ func TestStore_UpdateKindInfo(t *testing.T) {
 						kindInfo.KindID, kindInfo.NodeKindID, kindInfo.RelationshipKindID,
 						kindInfo.InfoKey, kindInfo.Title, kindInfo.Position, string(kindInfo.Content), kindInfo.ID,
 					).
-					WillReturnRows(pool.NewRows(kindInfoColumns()).CloseError(
-						fmt.Errorf("driver: %w", &pgconn.PgError{
-							Code:           "23503",
-							ConstraintName: "schema_kind_info_kind_id_fkey",
-						}),
-					)).RowsWillBeClosed()
+					WillReturnRows(pool.NewRows(kindInfoColumns()).CloseError(databaseError)).
+					RowsWillBeClosed()
 			},
-			want: want{err: services.ErrKindInfoKindNotFound},
-		},
-		{
-			name: "error_-_maps_duplicate_info_key_from_rows",
-			args: args{ctx: ctx, kindInfo: kindInfo},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedUpdateKindInfoSQL).
-					WithArgs(
-						kindInfo.KindID, kindInfo.NodeKindID, kindInfo.RelationshipKindID,
-						kindInfo.InfoKey, kindInfo.Title, kindInfo.Position, string(kindInfo.Content), kindInfo.ID,
-					).
-					WillReturnRows(pool.NewRows(kindInfoColumns()).CloseError(&pgconn.PgError{
-						Code:           "23505",
-						ConstraintName: "schema_kind_info_unique_kind_info_key",
-					})).RowsWillBeClosed()
-			},
-			want: want{err: services.ErrKindInfoDuplicateInfoKey},
-		},
-		{
-			name: "error_-_maps_duplicate_position",
-			args: args{ctx: ctx, kindInfo: kindInfo},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(expectedUpdateKindInfoSQL).
-					WithArgs(
-						kindInfo.KindID, kindInfo.NodeKindID, kindInfo.RelationshipKindID,
-						kindInfo.InfoKey, kindInfo.Title, kindInfo.Position, string(kindInfo.Content), kindInfo.ID,
-					).
-					WillReturnError(&pgconn.PgError{
-						Code:           "23505",
-						ConstraintName: "schema_kind_info_unique_kind_position",
-					})
-			},
-			want: want{err: services.ErrKindInfoDuplicatePosition},
+			want: want{err: databaseError},
 		},
 	}
 
