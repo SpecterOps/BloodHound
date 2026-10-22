@@ -34,6 +34,7 @@ import { bezier } from 'src/rendering/utils/bezier';
 import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
+import { graphBounds } from 'src/views/Explore/representativeNodes';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
@@ -47,6 +48,7 @@ interface SigmaChartRef {
 interface GraphEventProps {
     highlightedItem: string | null;
     onClickNode?: (id: string) => void;
+    onDoubleClickNode?: (id: string) => void;
     onClickStage?: () => void;
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
@@ -85,6 +87,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     {
         highlightedItem,
         onClickNode,
+        onDoubleClickNode,
         onClickStage,
         onRightClickNode,
         showNodeLabels = true,
@@ -92,7 +95,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }: GraphEventProps,
     ref
 ) {
-    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const theme = useTheme();
     const isExploreGraphHighlight = useAppSelector((state) => state.global.view.isExploreGraphHighlight);
@@ -100,12 +102,16 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
+    useLayoutEffect(() => {
+        sigma.setCustomBBox(graph.getAttribute('originalBBox') ?? null);
+    }, [sigma, graph]);
 
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
 
     const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
-    const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
+    const draggedNode =
+        draggedMeta.id && graph.hasNode(draggedMeta.id) ? graph.getNodeAttributes(draggedMeta.id) : null;
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
@@ -136,10 +142,12 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
             runSequentialLayout: () => {
                 sequentialLayout(graph);
+                sigma.setCustomBBox(graphBounds(graph));
                 resetCamera(sigma);
             },
             runStandardLayout: () => {
                 standardLayout(graph);
+                sigma.setCustomBBox(graphBounds(graph));
                 resetCamera(sigma);
             },
         };
@@ -216,7 +224,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 }
             },
             mousemovebody: (event) => {
-                if (draggedNode && draggedMeta.offset) {
+                if (draggedNode && draggedMeta.offset && graph.hasNode(draggedMeta.id!)) {
                     // Get new position of node
                     const position = sigma.viewportToGraph(event);
 
@@ -244,6 +252,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
             doubleClickNode: (event) => {
                 // Prevent zoom when node is double clicked
                 preventAllDefaults(event);
+                setDraggedMeta(DEFAULT_DRAGGED_META);
+                onDoubleClickNode?.(event.node);
             },
             doubleClick: (event) => {
                 // Prevent zoom when graph is double clicked
@@ -273,6 +283,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         draggedNode,
         graph,
         onClickNode,
+        onDoubleClickNode,
         onClickStage,
         onRightClickNode,
         registerEvents,
@@ -333,7 +344,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
                 const newData: Attributes = {
                     ...data,
-                    hidden: false,
+                    hidden: data.hidden,
                     highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                     isDimmed,
@@ -374,18 +385,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }, [draggedNode, setSettings, showEdgeLabels]);
 
     useLayoutEffect(() => {
-        if (sigmaChartRef?.current) {
-            if (exploreLayout === 'sequential') {
-                sigmaChartRef?.current?.runSequentialLayout();
-            } else if (exploreLayout === 'standard') {
-                sigmaChartRef?.current?.runStandardLayout();
-            } else {
-                resetCamera(sigma);
-            }
-        } else {
-            resetCamera(sigma);
-        }
-    }, [sigma, exploreLayout, sigmaChartRef]);
+        resetCamera(sigma);
+    }, [sigma]);
 
     useLayoutEffect(() => {
         setSettings({

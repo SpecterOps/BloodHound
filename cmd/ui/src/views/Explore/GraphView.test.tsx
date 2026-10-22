@@ -27,10 +27,12 @@ import { MultiDirectedGraph } from 'graphology';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor, within } from 'src/test-utils';
+import { QueryClient } from 'react-query';
+import { act, render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
 
 const captureGraph = vi.hoisted(() => vi.fn());
+const captureProps = vi.hoisted(() => vi.fn());
 
 // Mock sigma here to avoid rendering conflicts in jsdom
 vi.mock('src/components/SigmaChart', async () => {
@@ -39,6 +41,7 @@ vi.mock('src/components/SigmaChart', async () => {
     return {
         default: forwardRef<unknown, { graph?: MultiDirectedGraph }>((props, ref) => {
             captureGraph(props.graph);
+            captureProps(props);
             useImperativeHandle(ref, () => ({
                 runStandardLayout: vi.fn(),
                 runSequentialLayout: vi.fn(),
@@ -439,6 +442,110 @@ describe('GraphView', () => {
         const searchNodesElAfter = screen.queryByPlaceholderText('Search Nodes');
 
         expect(searchNodesElAfter).toBeInTheDocument();
+    });
+
+    it('collapses leaves by default, ignores synthetic inspection, and expands through controls or double click', async () => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: { a: searchedNode, b: searchedNode, group: { ...searchedNode, kind: 'Group' } },
+                            edges: ['a', 'b'].map((source, id) => ({
+                                id,
+                                source,
+                                target: 'group',
+                                kind: 'MemberOf',
+                                label: 'MemberOf',
+                                lastSeen: '',
+                            })),
+                        },
+                    })
+                )
+            )
+        );
+        render(<GraphView />, {
+            route: '/explore?searchType=cypher&cypherSearch=encodedquery',
+            initialState: { global: { view: { ...baseGlobalView, isExploreLayoutSelected: true } } },
+        });
+        let graph = await waitFor(() => {
+            const current = captureGraph.mock.calls.at(-1)?.[0] as MultiDirectedGraph;
+            expect(current?.filterNodes((_id, attributes) => attributes.representative)).toHaveLength(1);
+            return current;
+        });
+        const representative = graph.findNode((_id, attributes) => attributes.representative)!;
+        const edge = graph.edges(representative)[0];
+        const collapse = screen.getByRole('button', { name: 'Collapse nodes' });
+        const expand = screen.getByRole('button', { name: 'Expand all nodes' });
+        expect(collapse).toBeDisabled();
+        expect(expand).toBeEnabled();
+        act(() => {
+            const props = captureProps.mock.calls.at(-1)![0];
+            props.onClickNode(representative);
+            props.onClickEdge(edge);
+        });
+        expect(graph.hasNode(representative)).toBe(true);
+        expect(captureProps.mock.calls.at(-1)![0].highlightedItem).toBeNull();
+        const user = userEvent.setup();
+        await user.click(expand);
+        graph = captureGraph.mock.calls.at(-1)![0];
+        expect(graph.getNodeAttribute(representative, 'hidden')).toBe(true);
+        expect(graph.getNodeAttribute('a', 'hidden')).toBe(false);
+        expect(screen.getByRole('button', { name: 'Expand all nodes' })).toBeDisabled();
+        await user.click(screen.getByRole('button', { name: 'Collapse nodes' }));
+        expect(graph.hasNode(representative)).toBe(true);
+        act(() => captureProps.mock.calls.at(-1)![0].onDoubleClickNode(representative));
+        expect(graph.getNodeAttribute(representative, 'hidden')).toBe(true);
+        expect(graph.getNodeAttribute('b', 'hidden')).toBe(false);
+        expect(captureGraph.mock.calls.at(-1)![0]).toBe(graph);
+        act(() => captureProps.mock.calls.at(-1)![0].onClickNode('a'));
+        expect(screen.getByRole('button', { name: 'Collapse nodes' })).toBeEnabled();
+        await user.click(screen.getByRole('button', { name: 'Collapse nodes' }));
+        expect(graph.hasNode(representative)).toBe(true);
+        expect(captureProps.mock.calls.at(-1)![0].highlightedItem).toBeNull();
+    });
+
+    it('replaces a loaded result with different representative members without projecting onto the stale graph', async () => {
+        const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        let ids = ['a', 'b'];
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: {
+                                ...Object.fromEntries(ids.map((id) => [id, searchedNode])),
+                                group: { ...searchedNode, kind: 'Group' },
+                            },
+                            edges: ids.map((source, id) => ({
+                                id,
+                                source,
+                                target: 'group',
+                                kind: 'MemberOf',
+                                label: 'MemberOf',
+                                lastSeen: '',
+                            })),
+                        },
+                    })
+                )
+            )
+        );
+        render(<GraphView />, {
+            queryClient,
+            route: '/explore?searchType=cypher&cypherSearch=encodedquery',
+            initialState: { global: { view: { ...baseGlobalView, isExploreLayoutSelected: true } } },
+        });
+        await waitFor(() => expect(captureGraph.mock.calls.at(-1)?.[0]?.hasNode('a')).toBe(true));
+        ids = ['c', 'd'];
+        await act(async () => {
+            await queryClient.invalidateQueries();
+        });
+        await waitFor(() => {
+            const graph = captureGraph.mock.calls.at(-1)![0] as MultiDirectedGraph;
+            expect(graph.hasNode('a')).toBe(false);
+            expect(graph.hasNode('c')).toBe(true);
+            expect(graph.filterNodes((_id, attributes) => attributes.representative)).toHaveLength(1);
+        });
     });
 
     describe('Layout selection and de-selection', () => {

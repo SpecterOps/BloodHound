@@ -24,6 +24,7 @@ import {
     GraphControls,
     GraphItemInformationPanel,
     GraphProgress,
+    GraphSimplificationControls,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
@@ -64,9 +65,10 @@ import {
 } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { initGraph } from 'src/views/Explore/utils';
+import { initGraph, standardLayout } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
+import { applyRepresentativeNodes, graphBounds, representativeGlyphs, representativeSets } from './representativeNodes';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
@@ -87,6 +89,9 @@ const GraphView: FC = () => {
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
+    const nodeSets = useMemo(() => (graphQuery.data ? representativeSets(graphQuery.data) : {}), [graphQuery.data]);
+    const [expandedNodes, setExpandedNodes] = useState<ReadonlySet<string>>(new Set());
+    useEffect(() => setExpandedNodes(new Set()), [graphQuery.data]);
     const { data: edgeTraversability } = useEdgeTraversability();
     // Read at graph build time so traversability updates do not rebuild the graph or rerun its layout.
     const edgeTraversabilityRef = useRef(edgeTraversability);
@@ -100,12 +105,24 @@ const GraphView: FC = () => {
     const graphHasDataQuery = useGraphHasData();
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const revealedMembers =
+        selectedItem && graphologyGraph?.hasEdge(selectedItem)
+            ? graphologyGraph.extremities(selectedItem)
+            : [selectedItem];
+    const effectivelyExpanded = new Set([
+        ...expandedNodes,
+        ...Object.entries(nodeSets)
+            .filter(([, set]) => set.members.some((member) => revealedMembers.includes(member)))
+            .map(([id]) => id),
+    ]);
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     const sigmaChartRef = useRef<any>(null);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const exploreLayoutRef = useRef(exploreLayout);
+    exploreLayoutRef.current = exploreLayout;
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
@@ -148,10 +165,26 @@ const GraphView: FC = () => {
         } else {
             const currentEdgeTraversability = edgeTraversabilityRef.current;
             const graph = initGraph(graphData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
+            if (exploreLayoutRef.current === 'standard') standardLayout(graph);
+            graph.setAttribute(
+                'glyphCapacity',
+                Object.values(nodeSets).reduce(
+                    (capacity, set) => Math.max(capacity, representativeGlyphs(graph, set.members).length + 1),
+                    4
+                )
+            );
+            graph.setAttribute('originalBBox', graphBounds(graph));
+            graph.setAttribute('representativeSets', nodeSets);
             appliedEdgeTraversabilityRef.current = currentEdgeTraversability;
             setGraphologyGraph(graph);
         }
-    }, [graphQuery.data, graphOptions]);
+    }, [graphQuery.data, graphOptions, nodeSets]);
+
+    useEffect(() => {
+        if (graphologyGraph?.getAttribute('representativeSets') === nodeSets) {
+            applyRepresentativeNodes(graphologyGraph, nodeSets, expandedNodes, selectedItem);
+        }
+    }, [graphologyGraph, nodeSets, expandedNodes, selectedItem]);
 
     // Update styles when schema metadata arrives without rebuilding the graph or its layout.
     useEffect(() => {
@@ -167,10 +200,11 @@ const GraphView: FC = () => {
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
+            if (nodeSets[event.node]) return;
             setSelectedItem(event.node);
             setContextMenu({ mouseX: event.event.original.clientX, mouseY: event.event.original.clientY });
         },
-        [setContextMenu, setSelectedItem]
+        [setContextMenu, setSelectedItem, nodeSets]
     );
 
     const handleKebabMenuClick = useCallback(
@@ -312,8 +346,15 @@ const GraphView: FC = () => {
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
-                onClickEdge={setSelectedItem}
-                onClickNode={setSelectedItem}
+                onClickEdge={(id) => {
+                    if (!graphologyGraph?.getEdgeAttribute(id, 'representative')) setSelectedItem(id);
+                }}
+                onClickNode={(id) => {
+                    if (!nodeSets[id]) setSelectedItem(id);
+                }}
+                onDoubleClickNode={(id) => {
+                    if (nodeSets[id]) setExpandedNodes((previous) => new Set([...previous, id]));
+                }}
                 onClickStage={clearSelectedItem}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
@@ -323,24 +364,35 @@ const GraphView: FC = () => {
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <GraphControls
-                    isExploreTableSelected={isExploreTableSelected}
-                    isExploreLayoutSelected={isExploreLayoutSelected}
-                    layoutOptions={baseGraphLayouts}
-                    selectedLayout={exploreLayout ?? defaultGraphLayout}
-                    onLayoutChange={setLayout}
-                    showNodeLabels={showNodeLabels}
-                    onToggleNodeLabels={toggleShowNodeLabels}
-                    showEdgeLabels={showEdgeLabels}
-                    onToggleEdgeLabels={toggleShowEdgeLabels}
-                    jsonData={graphQuery.data}
-                    onReset={() => sigmaChartRef.current?.resetCamera()}
-                    currentNodes={graphQuery.data?.nodes}
-                    onSearchedNodeClick={(node) => {
-                        node.id && setSelectedItem(node.id);
-                        sigmaChartRef?.current?.zoomTo(node.id);
-                    }}
-                />
+                <div className='flex gap-1 items-end'>
+                    <GraphControls
+                        isExploreTableSelected={isExploreTableSelected}
+                        isExploreLayoutSelected={isExploreLayoutSelected}
+                        layoutOptions={baseGraphLayouts}
+                        selectedLayout={exploreLayout ?? defaultGraphLayout}
+                        onLayoutChange={setLayout}
+                        showNodeLabels={showNodeLabels}
+                        onToggleNodeLabels={toggleShowNodeLabels}
+                        showEdgeLabels={showEdgeLabels}
+                        onToggleEdgeLabels={toggleShowEdgeLabels}
+                        jsonData={graphQuery.data}
+                        onReset={() => sigmaChartRef.current?.resetCamera()}
+                        currentNodes={graphQuery.data?.nodes}
+                        onSearchedNodeClick={(node) => {
+                            node.id && setSelectedItem(node.id);
+                            sigmaChartRef?.current?.zoomTo(node.id);
+                        }}
+                    />
+                    <GraphSimplificationControls
+                        canCollapse={effectivelyExpanded.size > 0}
+                        canExpand={Object.keys(nodeSets).some((id) => !effectivelyExpanded.has(id))}
+                        onCollapse={() => {
+                            clearSelectedItem();
+                            setExpandedNodes(new Set());
+                        }}
+                        onExpand={() => setExpandedNodes(new Set(Object.keys(nodeSets)))}
+                    />
+                </div>
             </div>
             <GraphItemInformationPanel />
             <FeatureFlag

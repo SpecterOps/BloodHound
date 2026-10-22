@@ -19,7 +19,7 @@ import '@react-sigma/core/lib/react-sigma.min.css';
 import { useTheme } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { forwardRef, RefAttributes } from 'react';
+import { forwardRef, RefAttributes, useMemo } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
@@ -37,6 +37,7 @@ interface SigmaChartProps {
     graph?: MultiDirectedGraph<Attributes, Attributes, Attributes>;
     highlightedItem: string | null;
     onClickNode: (id: string) => void;
+    onDoubleClickNode?: (id: string) => void;
     onClickEdge: (id: string) => void;
     onClickStage: () => void;
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
@@ -49,6 +50,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
         graph,
         highlightedItem,
         onClickNode,
+        onDoubleClickNode,
         onClickEdge,
         onClickStage,
         handleContextMenu,
@@ -58,6 +60,13 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
     ref
 ) {
     const theme = useTheme();
+    const nodeProgramClasses = useMemo(
+        () => ({
+            combined: getNodeCombinedProgram(),
+            glyphs: getNodeGlyphsProgram(graph?.getAttribute('glyphCapacity') ?? 4),
+        }),
+        [graph]
+    );
 
     return (
         <div
@@ -76,10 +85,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                 }}
                 graph={graph}
                 settings={{
-                    nodeProgramClasses: {
-                        combined: getNodeCombinedProgram(),
-                        glyphs: getNodeGlyphsProgram(),
-                    },
+                    nodeProgramClasses,
                     edgeProgramClasses: {
                         curved: CurvedEdgeArrowProgram,
                         self: SelfEdgeArrowProgram,
@@ -102,6 +108,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                 <GraphEvents
                     highlightedItem={highlightedItem ?? null}
                     onClickNode={onClickNode}
+                    onDoubleClickNode={onDoubleClickNode}
                     onClickStage={onClickStage}
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}

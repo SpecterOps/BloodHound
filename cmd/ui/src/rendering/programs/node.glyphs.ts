@@ -22,7 +22,7 @@
  * =====================================
  *
  * Program rendering nodes using GL_TRIANGLE by using an inscribed circle, with the
- * option to render up to 4 glyphs around the edge of the node using the same method.
+ * option to render glyphs around the edge of the node using the same method.
  * Derived from the "combined" node renderer found in this unmerged PR:
  * https://github.com/jacomyal/sigma.js/pull/1206
  *
@@ -51,8 +51,6 @@ const POINTS = 3,
       - borderColor (4xbyte = 1xfloat)
    */
     ATTRIBUTES = 13,
-    // Number of possible circles to be drawn -- 1 node + 4 glyphs
-    CIRCLES = 5,
     // maximum size of single texture in atlas
     MAX_TEXTURE_SIZE = 192,
     // maximum width of atlas texture (limited by browser)
@@ -69,7 +67,13 @@ type ImagePending = { status: 'pending'; image: HTMLImageElement };
 type ImageReady = { status: 'ready' } & Coordinates & Dimensions;
 type ImageType = ImageLoading | ImageError | ImagePending | ImageReady;
 
-export type Glyph = { location: GlyphLocation; image: string; backgroundColor: string; color: string };
+export type Glyph = {
+    location: GlyphLocation;
+    image: string;
+    backgroundColor: string;
+    color: string;
+    distance?: number;
+};
 // The numerical values of this enum are used to calculate angle of rotation for the glyph's origin
 export enum GlyphLocation {
     TOP_RIGHT,
@@ -96,7 +100,8 @@ class AbstractNodeGlyphsProgram extends AbstractNodeProgram {
  * hovered nodes (to prevent some flickering, mostly), this program must be
  * "built" for each sigma instance:
  */
-export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram {
+export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof AbstractNodeGlyphsProgram {
+    const CIRCLES = glyphCapacity + 1;
     /**
      * These attributes are shared between all instances of this exact class,
      * returned by this call to getNodeProgramImage:
@@ -401,6 +406,10 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             offset: number
         ): void {
             let i = offset * POINTS * ATTRIBUTES * CIRCLES;
+            if (hidden) {
+                this.array.fill(0, i, i + POINTS * ATTRIBUTES * CIRCLES);
+                return;
+            }
             const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
             const bgColor = data.graphBgColor ?? DEFAULT_BG_COLOR;
 
@@ -421,17 +430,15 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
 
             i += POINTS * ATTRIBUTES;
 
-            // Filter down to one of each glyph, favoring the last at each position
-            const glyphs = new Array(4).fill(undefined);
-            if (data.glyphs) {
-                data.glyphs.forEach((g) => (glyphs[g.location] = g));
-            }
+            const glyphs = Array.from({ length: glyphCapacity }, (_, index) => data.glyphs?.[index]);
 
             for (const glyph of glyphs) {
                 if (glyph) {
                     // Calculate coordinates of glyph based on node size and GlyphLocation enum value
-                    const x = (data.size / 2) * Math.sin((Math.PI / 4) * (2 * glyph.location + 1));
-                    const y = (data.size / 2) * Math.cos((Math.PI / 4) * (2 * glyph.location + 1));
+                    const x =
+                        (data.size / 2) * (glyph.distance ?? 1) * Math.sin((Math.PI / 4) * (2 * glyph.location + 1));
+                    const y =
+                        (data.size / 2) * (glyph.distance ?? 1) * Math.cos((Math.PI / 4) * (2 * glyph.location + 1));
 
                     this.fillCircleAttributeBuffer(
                         this.array,
@@ -476,26 +483,8 @@ export default function getNodeGlyphsProgram(): typeof AbstractNodeGlyphsProgram
             if (typeof imageSource === 'string' && !imageState) loadImage(imageSource);
 
             if (hidden) {
-                // x,y,size,color
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                // Texture:
-                array[i++] = 0;
-                array[i++] = 0;
-                array[i++] = 0;
-                // Angle:
-                array[i++] = 0;
-                // Translation:
-                array[i++] = 0;
-                array[i++] = 0;
-                // Border Color:
-                array[i++] = 0;
-                // Dim:
-                array[i++] = 0;
-                // BgColor:
-                array[i++] = 0;
+                array.fill(0, i, i + POINTS * ATTRIBUTES);
+                return;
             }
 
             const fcolor = floatColor(color);

@@ -19,7 +19,6 @@ import { useCreateDisableZoomRef } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
-    getEdgeDataFromKey,
     getEdgeLabelTextLength,
     getEdgeSourceAndTargetDisplayData,
 } from 'src/ducks/graph/utils';
@@ -56,9 +55,9 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
                     const edge: string = edges[i];
                     const attributes = graph.getEdgeAttributes(edge);
 
-                    const edgeData = getEdgeDataFromKey(attributes.exploreGraphId);
-                    if (edgeData === null) continue;
-                    const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
+                    if (attributes.hidden) continue;
+                    const [sourceId, targetId] = graph.extremities(edge);
+                    const nodeDisplayData = getEdgeSourceAndTargetDisplayData(sourceId, targetId, sigma);
                     if (nodeDisplayData === null) continue;
 
                     const { source, target } = nodeDisplayData;
