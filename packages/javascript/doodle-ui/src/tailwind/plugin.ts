@@ -16,6 +16,7 @@
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
+const darkDataTableRowSelectedOutline = '#4A42B5';
 const secondaryVariant2 = '#99a3ff';
 const focusRingWidth = '2px';
 const focusRingOffsetWidth = '2px';
@@ -132,6 +133,89 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.light[200],
+
+            // // Components/Checkbox
+            '--checkbox-invalid-hover-border': 'var(--status-error-main)',
+            '--checkbox-unchecked-active-hover-border': 'var(--primary-variant)',
+            '--checkbox-checked-active-hover-fill': 'var(--primary-variant)',
+            '--checkbox-border': 'var(--border-control)',
+            '--checkbox-hover': light.secondary.main,
+            '--checkbox-check': common.white,
+            '--checkbox-unchecked-fill': 'var(--surface)',
+            '--checkbox-fill': common.dark,
+            '--checkbox-checked-active-border': 'var(--primary)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-fill)',
+            '--checkbox-checked-fill': 'var(--checkbox-fill)',
+            '--checkbox-disabled-fill': palette.neutral.light[100],
+            '--checkbox-focus-ring': 'var(--secondary)',
+
+            // // Components/DataTable
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
+            '--data-table-row-even-fill': palette.neutral.light[200],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
+            '--data-table-row-selected': 'inset 0px 0px 0px 2px var(--primary)',
+            '--data-table-wrapper-border': 'var(--neutral-light-4)',
+            '--data-table-resize-fill': 'var(--neutral-5)',
+            '--data-table-resize-active-fill': 'var(--primary)',
+
+            // // Components/Input
+            '--input-disabled-invalid-border': 'var(--status-error-main)',
+            '--input-border-default': palette.grey[700],
+            '--input-border-focus': 'var(--control-accent)',
+            '--input-border-disabled': palette.neutral.light[900],
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
+            '--input-placeholder-text': text.placeholder,
+            '--input-fill': common.white,
+            '--input-fill-disabled': palette.neutral.light[100],
+            '--input-disabled-fill': palette.neutral.light[100],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
+
+            // // Components/Select
+            '--select-disabled-open-border': 'var(--primary)',
+            '--select-disabled-highlighted-fill': 'var(--secondary)',
+            '--select-trigger-fill': 'var(--surface-subtle)',
+            '--select-trigger-outlined-fill': common.white,
+            '--select-content-fill': common.white,
+            '--select-separator-fill': palette.neutral.light[200],
+            '--select-item-disabled-fill': palette.neutral.light[300],
+            '--select-trigger-placeholder-text': palette.neutral.light[400],
+            '--select-item-checked-text': light.primary.main,
+            '--select-border-default': palette.neutral.dark[700],
+            '--select-border-focus': 'var(--control-accent)',
+            '--select-content-border': palette.neutral.light[400],
+            '--select-open-fill': 'var(--primary)',
+            '--select-open-disabled-fill': 'var(--primary)',
+            '--select-disabled-placeholder-text': 'var(--disabled)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-open-focus-border': 'var(--primary)',
+            '--select-open-invalid-hover-focus-border': 'var(--primary)',
+            '--select-highlight-text': 'var(--common-white)',
+            '--select-placeholder-text': 'inherit',
+            '--select-disabled-fill': palette.neutral.light[100],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
+
+            // // Components/Textarea
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
+            '--textarea-disabled-fill': palette.neutral.light[100],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-hover)',
+
+            // // Components/Toggle
+            '--toggle-hover-border': 'var(--secondary)',
+            '--toggle-active-border': 'var(--primary-variant)',
+            '--toggle-selected-border': 'var(--primary)',
+            '--toggle-disabled-border': 'var(--btn-disabled-fill)',
+            '--toggle-disabled-hover-text': 'var(--disabled)',
+            '--toggle-btn-fill': 'var(--surface)',
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--toggle-btn-border': palette.neutral.light[500],
+            '--toggle-highlight-text': 'var(--common-white)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
@@ -330,6 +414,89 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.dark[700],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.dark[700],
+
+            // // Components/Checkbox
+            '--checkbox-invalid-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-unchecked-active-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-checked-active-hover-fill': 'var(--checkbox-hover)',
+            '--checkbox-border': 'var(--border-control)',
+            '--checkbox-hover': dark.badge.secondary.outline,
+            '--checkbox-check': common.dark,
+            '--checkbox-unchecked-fill': 'var(--surface)',
+            '--checkbox-fill': common.white,
+            '--checkbox-checked-active-border': 'var(--primary-variant)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-hover)',
+            '--checkbox-checked-fill': 'var(--primary)',
+            '--checkbox-disabled-fill': palette.neutral.dark[400],
+            '--checkbox-focus-ring': secondaryVariant2,
+
+            // // Components/DataTable
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
+            '--data-table-row-even-fill': palette.neutral.dark[500],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
+            '--data-table-row-selected': `inset 0px 0px 0px 2px ${darkDataTableRowSelectedOutline}`,
+            '--data-table-wrapper-border': 'var(--neutral-900)',
+            '--data-table-resize-fill': 'var(--neutral-light-5)',
+            '--data-table-resize-active-fill': 'var(--secondary)',
+
+            // // Components/Input
+            '--input-disabled-invalid-border': 'var(--input-border-disabled)',
+            '--input-border-default': palette.neutral.light[400],
+            '--input-border-focus': 'var(--control-accent)',
+            '--input-border-disabled': palette.neutral.dark[900],
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
+            '--input-placeholder-text': dark.input.placeholder,
+            '--input-fill': palette.neutral.dark[50],
+            '--input-fill-disabled': palette.neutral.dark[400],
+            '--input-disabled-fill': palette.neutral.dark[400],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
+
+            // // Components/Select
+            '--select-disabled-open-border': 'var(--input-border-disabled)',
+            '--select-disabled-highlighted-fill': 'var(--select-item-disabled-fill)',
+            '--select-trigger-fill': 'var(--surface-subtle)',
+            '--select-trigger-outlined-fill': palette.neutral.dark[50],
+            '--select-content-fill': palette.neutral.dark[400],
+            '--select-separator-fill': palette.neutral.light[200],
+            '--select-item-disabled-fill': palette.neutral.dark[700],
+            '--select-trigger-placeholder-text': dark.input.placeholder,
+            '--select-item-checked-text': secondaryVariant2,
+            '--select-border-default': palette.neutral.light[400],
+            '--select-border-focus': 'var(--control-accent)',
+            '--select-content-border': palette.neutral.light[900],
+            '--select-open-fill': 'var(--input-fill)',
+            '--select-open-disabled-fill': 'var(--select-disabled-fill)',
+            '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
+            '--select-highlight-text': 'var(--common-dark)',
+            '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-disabled-fill': palette.neutral.dark[400],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
+
+            // // Components/Textarea
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
+            '--textarea-disabled-fill': palette.neutral.dark[400],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-default)',
+
+            // // Components/Toggle
+            '--toggle-hover-border': 'var(--toggle-btn-border)',
+            '--toggle-active-border': 'var(--toggle-btn-border)',
+            '--toggle-selected-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-hover-text': 'var(--toggle-highlight-text)',
+            '--toggle-btn-fill': 'var(--surface)',
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--toggle-btn-border': palette.neutral.dark[600],
+            '--toggle-highlight-text': 'var(--common-dark)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],

@@ -15,22 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
-import {
-    checkboxBackgroundColors,
-    checkboxBorderColors,
-    checkboxRingOffsetColors,
-    checkboxTextColors,
-} from '../components/Checkbox/Checkbox.styles';
-import { dataTableBackgroundColors, dataTableBoxShadows } from '../components/DataTable/DataTable.styles';
-import {
-    inputBackgroundColors,
-    inputBorderColors,
-    inputRingColors,
-    inputTextColors,
-} from '../components/Input/Input.styles';
-import { selectBackgroundColors, selectBorderColors, selectTextColors } from '../components/Select/Select.styles';
-import { textareaBackgroundColors, textareaBorderColors } from '../components/Textarea/Textarea.styles';
-import { toggleBackgroundColors, toggleBorderColors } from '../components/Toggle/Toggle.styles';
+import { common, dark, palette, text } from './colors';
 
 export default {
     theme: {
@@ -48,30 +33,28 @@ export default {
         },
         extend: {
             backgroundColor: {
-                ...inputBackgroundColors,
-                ...selectBackgroundColors,
-                ...checkboxBackgroundColors,
-                ...textareaBackgroundColors,
-                ...toggleBackgroundColors,
-                ...dataTableBackgroundColors,
+                'input-fill-disabled': palette.neutral.light[100],
+                'input-fill-disabled-dark': palette.neutral.dark[400],
+                'select-trigger-outlined-fill': common.white,
+                'select-trigger-outlined-fill-dark': palette.neutral.dark[50],
+                'select-content-fill': common.white,
+                'select-content-fill-dark': palette.neutral.dark[400],
+                'checkbox-unchecked-fill': 'var(--surface)',
             },
             borderColor: {
-                ...inputBorderColors,
-                ...selectBorderColors,
-                ...checkboxBorderColors,
-                ...textareaBorderColors,
-                ...toggleBorderColors,
+                'input-border-default-dark': palette.neutral.light[400],
+                'input-border-disabled': palette.neutral.light[900],
+                'input-border-disabled-dark': palette.neutral.dark[900],
+                'checkbox-border': 'var(--border-control)',
             },
             ringColor: {
-                ...inputRingColors,
-            },
-            ringOffsetColor: {
-                ...checkboxRingOffsetColors,
+                'input-border-default': palette.grey[700],
+                'input-border-default-dark': palette.neutral.light[400],
             },
             textColor: {
-                ...inputTextColors,
-                ...selectTextColors,
-                ...checkboxTextColors,
+                'input-placeholder-text': text.placeholder,
+                'input-placeholder-text-dark': dark.input.placeholder,
+                'checkbox-border': 'var(--border-control)',
 
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
@@ -293,7 +276,6 @@ export default {
                 'fade-out': 'fade-out 300ms ease-out forwards',
             },
             boxShadow: {
-                ...dataTableBoxShadows,
                 inner1xl: '0px 1px 2px 0px rgba(0, 0, 0, 0.2) inset',
                 'outer-1': '0px 1px 2px 0px rgba(0, 0, 0, 0.2)',
                 'outer-2': '0px 2px 2px 0px rgba(0, 0, 0, 0.3)',
