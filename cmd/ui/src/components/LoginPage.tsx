@@ -41,7 +41,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ children }) => {
     return (
         <div className='flex justify-center items-center h-full'>
             <Container maxWidth='sm'>
-                <div className='bg-neutral-2 shadow-outer-1 px-16 pb-16 pt-8'>
+                <div className='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 px-16 pb-16 pt-8'>
                     <div className='h-full w-auto text-center box-border p-16'>
                         <img
                             src={`${import.meta.env.BASE_URL}${imageUrl}`}

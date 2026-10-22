@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType }) => {
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </IconButton>
             {isHidden ? <HiddenEntityIcon /> : <NodeIcon nodeType={nodeType} />}
-            <Tooltip tooltip={name} contentProps={{ side: 'bottom' }}>
+            <Tooltip tooltip={name} tooltipPosition='bottom'>
                 <h6
                     data-testid='explore_entity-information-panel_header-text'
                     className='truncate pl-2 pr-4 leading-10 grow'>

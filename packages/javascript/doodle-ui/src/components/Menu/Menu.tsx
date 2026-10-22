@@ -20,9 +20,7 @@ import * as React from 'react';
 import { cn } from '../utils';
 import {
     menuContentStyles,
-    menuItemIconStyles,
     menuItemStyles,
-    menuItemTextStyles,
     menuLabelStyles,
     menuSecondaryIconStyles,
     menuSeparatorStyles,
@@ -84,11 +82,17 @@ interface MenuItemProps extends React.ComponentPropsWithoutRef<typeof DropdownMe
 }
 
 const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.Item>, MenuItemProps>(
-    ({ className, icon, iconLeft = false, secondaryMenu = false, children, ...props }, ref) => (
-        <DropdownMenuPrimitive.Item ref={ref} className={cn(menuItemStyles, className)} {...props}>
-            {iconLeft && icon && <span className={menuItemIconStyles}>{icon}</span>}
-            <span className={menuItemTextStyles}>{children}</span>
-            {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className={menuSecondaryIconStyles} />}
+    ({ className, icon, iconLeft = false, secondaryMenu = false, asChild, children, ...props }, ref) => (
+        <DropdownMenuPrimitive.Item ref={ref} asChild={asChild} className={cn(menuItemStyles, className)} {...props}>
+            {asChild ? (
+                children
+            ) : (
+                <>
+                    {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
+                    <span className='flex-1 leading-4'>{children}</span>
+                    {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
+                </>
+            )}
         </DropdownMenuPrimitive.Item>
     )
 );

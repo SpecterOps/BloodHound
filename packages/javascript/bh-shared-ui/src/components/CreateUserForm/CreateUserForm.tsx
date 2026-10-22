@@ -166,9 +166,8 @@ const CreateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' data-testid='create-user-dialog_form' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <div className='w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
-                        <DialogTitle>{'Create User'}</DialogTitle>
-
+                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6'>
+                        <DialogTitle>Create User</DialogTitle>
                         <div className='flex flex-col mt-4 w-full' data-testid='create-user-dialog_content'>
                             <div className='mb-4'>
                                 <FormField
@@ -186,11 +185,11 @@ const CreateUserFormInner: React.FC<{
 
                                                 <Tooltip
                                                     tooltip='Only Read-Only and Users roles contain the environment target access control.'
-                                                    // refactor this in BED-7769
-                                                    triggerProps={{ className: 'mb-0.5 size-4 shrink-0 rounded-full' }}
+                                                    triggerProps={{ className: 'size-4 mb-0.5' }}
                                                     contentProps={{
                                                         className: 'max-w-80',
                                                     }}
+                                                    tooltipPosition='right'
                                                 />
                                             </div>
                                             <Select
