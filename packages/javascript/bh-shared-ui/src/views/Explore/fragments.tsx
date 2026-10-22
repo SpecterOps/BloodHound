@@ -120,7 +120,7 @@ export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFi
         <div
             className={cn(
                 '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
-                layout === 'spread' && 'rounded-lg text-xs'
+                layout === 'spread' && 'rounded-lg text-caption'
             )}>
             {children}
         </div>
